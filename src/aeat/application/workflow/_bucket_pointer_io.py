@@ -1,7 +1,7 @@
-"""Atomic IO for the ``<aeat-root>/active-bucket`` pointer file.
+"""Atomic IO for the ``<aeat-root>/active-profile`` pointer file.
 
-The pointer file is the third rung of the active-bucket precedence
-chain (``--bucket`` flag > ``AEAT_ACTIVE_BUCKET`` env > pointer file).
+The pointer file is the third rung of the active-profile precedence
+chain (``--profile`` flag > ``AEAT_ACTIVE_PROFILE`` env > pointer file).
 The write path uses the write-then-rename pattern so a crashed switch
 never produces a truncated pointer; the read path returns ``None``
 when the pointer is absent and the higher-level precedence resolver
@@ -15,7 +15,7 @@ from pathlib import Path
 
 from ._bucket_pointer import BucketPointer
 
-_POINTER_FILENAME = "active-bucket"
+_POINTER_FILENAME = "active-profile"
 
 
 def pointer_path(root: Path) -> Path:

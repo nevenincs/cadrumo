@@ -62,7 +62,7 @@ _EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
 _CP_RE = re.compile(r"\b(?:CP\s*|C\.P\.\s*)[0-9]{5}\b")
 # Name regex — only match when prefixed by a known label. Keeps the scrubber
 # from eating AEAT section headings like "AGENCIA TRIBUTARIA" or
-# "RESULTADO A INGRESAR" (audit M1).
+# "RESULTADO A INGRESAR".
 _NAME_PREFIX_GROUP = (
     r"(?:Apellidos y nombre|Apellidos|Nombre|Declarante|Titular|"
     r"Razon social|Razón social|Empresa)"
@@ -221,7 +221,7 @@ def scrub_text(
         scrubbed = _PRESENTATION_ID_RE.sub(lambda m: _scrub_pid(m, filename), scrubbed)
         touched.append("presentation_id")
 
-    # Names — only when prefixed by a known AEAT label (audit M1). This
+    # Names — only when prefixed by a known AEAT label. This
     # preserves the label prefix and rewrites only the trailing name tokens
     # so section headings like "RESULTADO A INGRESAR" survive.
     if _NAME_RE.search(scrubbed):

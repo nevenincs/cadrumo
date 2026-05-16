@@ -57,14 +57,9 @@ def _evaluate_expression(expr: dict | None, casilla_values: dict[str, Decimal]) 
 
     if not isinstance(expr, dict):
         return None
-    if "literal" in expr:
-        return Decimal(str(expr["literal"]))
-    if "casilla" in expr:
-        return casilla_values.get(expr["casilla"])
-    if "relation" in expr:
-        return casilla_values.get(expr["relation"])
-    if "binding" in expr or "parameter" in expr or "dispatch_table" in expr:
-        return None
+    leaf_value = _evaluate_leaf_expression(expr, casilla_values)
+    if leaf_value is not _LEAF_NOT_LEAF:
+        return leaf_value
     op = expr.get("op")
     args = expr.get("args") or []
     raw_values = [_evaluate_expression(a, casilla_values) for a in args]
@@ -72,22 +67,57 @@ def _evaluate_expression(expr: dict | None, casilla_values: dict[str, Decimal]) 
         return None
     arg_values: list[Decimal] = [v for v in raw_values if v is not None]
     try:
-        if op == "sum":
-            return sum(arg_values, Decimal("0"))
-        if op == "add" and len(arg_values) == 2:
-            return arg_values[0] + arg_values[1]
-        if op == "subtract" and len(arg_values) == 2:
-            return arg_values[0] - arg_values[1]
-        if op == "negate" and len(arg_values) == 1:
-            return -arg_values[0]
-        if op == "min":
-            return min(arg_values)
-        if op == "max":
-            return max(arg_values)
-        if op == "percent" and len(arg_values) == 2:
-            return arg_values[0] * arg_values[1] / Decimal("100")
+        return _apply_arithmetic_op(op, arg_values)
     except (ValueError, ArithmeticError):
         return None
+
+
+_LEAF_NOT_LEAF: object = object()
+"""Sentinel returned by :func:`_evaluate_leaf_expression` to mean "not a leaf".
+
+Distinct from ``None`` (which the leaf path returns when a casilla /
+relation lookup misses) so the caller can tell "tried as leaf and
+failed" from "wasn't a leaf in the first place".
+"""
+
+
+def _evaluate_leaf_expression(
+    expr: dict,
+    casilla_values: dict[str, Decimal],
+) -> Decimal | None | object:
+    """Return the leaf-shape value, ``None`` if the leaf can't resolve, or the sentinel."""
+    if "literal" in expr:
+        return Decimal(str(expr["literal"]))
+    if "casilla" in expr:
+        return casilla_values.get(expr["casilla"])
+    if "relation" in expr:
+        return casilla_values.get(expr["relation"])
+    if "binding" in expr or "parameter" in expr or "dispatch_table" in expr:
+        return None  # runtime-only leaf; replay can't resolve without context
+    return _LEAF_NOT_LEAF
+
+
+def _apply_arithmetic_op(op: object, args: list[Decimal]) -> Decimal | None:
+    """Best-effort scalar arithmetic for the seven ops the gate replays.
+
+    Returns ``None`` for unsupported ops (the gate skips those targets
+    rather than emit a false-positive). Raises through ValueError /
+    ArithmeticError so the caller can return None on math failures.
+    """
+    if op == "sum":
+        return sum(args, Decimal("0"))
+    if op == "add" and len(args) == 2:
+        return args[0] + args[1]
+    if op == "subtract" and len(args) == 2:
+        return args[0] - args[1]
+    if op == "negate" and len(args) == 1:
+        return -args[0]
+    if op == "min":
+        return min(args)
+    if op == "max":
+        return max(args)
+    if op == "percent" and len(args) == 2:
+        return args[0] * args[1] / Decimal("100")
     return None
 
 

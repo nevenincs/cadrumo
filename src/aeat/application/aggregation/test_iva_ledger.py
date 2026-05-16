@@ -14,7 +14,7 @@ from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
 from ...core.config import Settings
-from ...core.resources import bundled_path
+from ...core.resources import resources
 from ...domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
 from ...domain.transactions import (
     BusinessClassification,
@@ -438,8 +438,6 @@ def test_zero_and_super_reduced_rates_project_to_canonical_vat_categories() -> N
 
 
 def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
-    from ...domain.calculations.registry import load_registry_tree
-
     incoming = _transaction(
         "row-output",
         amount=Decimal("121.00"),
@@ -458,7 +456,7 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
         TransactionCatalogue.from_transactions((incoming, outgoing)),
         period="2026Q2",
     )
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos = resources().modelos.all()
     revision = next(item for item in modelos if item.id == "303").revisions["2009-y-siguientes"]
 
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, projection.observations)

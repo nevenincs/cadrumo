@@ -14,7 +14,7 @@ from itertools import pairwise
 
 import pytest
 
-from . import VAT_RATE_TABLE, EUMemberState, VATRateKind, lookup_rate
+from . import EUMemberState, VATRateKind, load_vat_rate_table, lookup_rate
 from .errors import VatRateNotFoundError, VatRateOverlapError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -69,7 +69,7 @@ def test_es_pre_2024_lookup_raises() -> None:
 
 
 def test_committed_registry_has_no_overlapping_windows() -> None:
-    for member_state, rates in VAT_RATE_TABLE.items():
+    for member_state, rates in load_vat_rate_table().items():
         by_kind: dict[VATRateKind, list[tuple[date, date]]] = {}
         for rate in rates:
             by_kind.setdefault(rate.kind, []).append((rate.effective_from, rate.effective_until or date.max))

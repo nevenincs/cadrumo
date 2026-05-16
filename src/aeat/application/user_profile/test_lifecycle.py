@@ -11,14 +11,13 @@ from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
 from ...core.config import Settings
+from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.user_profile import (
-    DEFAULT_USER_PROFILE_SCHEMA_PATH,
     ProfileAlreadyExistsError,
     ProfileSchemaValidationError,
     UserProfileFact,
     UserProfileStatus,
-    load_user_profile_schema,
 )
 from . import (
     DuplicateProfileCommand,
@@ -48,7 +47,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 @pytest.fixture(scope="module")
 def schema():
-    return load_user_profile_schema(DEFAULT_USER_PROFILE_SCHEMA_PATH)
+    return resources().user_profile_schema.singleton
 
 
 def _service(secure_objects, schema) -> ProfileLifecycleService:

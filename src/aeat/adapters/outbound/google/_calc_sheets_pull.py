@@ -35,8 +35,8 @@ from typing import Any, Final, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....application.storage.calc_sheets import collect_row_sets
-from ....application.storage.calc_sheets._layout import plan_layout
-from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata
+from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
+from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....domain.calculations.registry._formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -64,6 +64,14 @@ class OperatorEdit(BaseModel):
     pull adapter from the workbook's column metadata. They are not part of
     the canonical :class:`OperatorInput` contract; use
     :meth:`to_operator_input` to project this shape onto the canonical one.
+
+    ``value`` mirrors the cell's raw shape from Google Sheets. The union
+    is intentionally ambiguous between Decimal and numeric-shaped str
+    because the wire JSON representation cannot statically distinguish
+    them (pydantic serialises Decimal as a JSON string). The runtime
+    path in :func:`compute_from_pull` is what disambiguates via
+    :func:`_coerce_edit_value_to_decimal` for numeric input casillas and
+    :func:`_enum_binding_text` for enum bindings.
     """
 
     model_config = _STRICT_FROZEN
@@ -79,7 +87,15 @@ class OperatorEdit(BaseModel):
 
 
 class BindingEdit(BaseModel):
-    """One operator-edited binding cell value (numeric or enum)."""
+    """One operator-edited binding cell value (numeric or enum).
+
+    Same union-ambiguity reasoning as :class:`OperatorEdit.value` —
+    the wire JSON cannot statically distinguish a CCAA-shape ``"04"``
+    from a numeric ``Decimal("4")``. The runtime dispatch in
+    :func:`compute_from_pull` is what routes the value: enum bindings
+    go through :func:`_enum_binding_text` and numeric bindings go
+    through :func:`_coerce_edit_value_to_decimal`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -88,12 +104,24 @@ class BindingEdit(BaseModel):
 
 
 class RelationEdit(BaseModel):
-    """One pre-resolved cross-revision relation value mirrored in Tarifas."""
+    """One pre-resolved cross-revision relation value mirrored in Tarifas.
+
+    The provenance / source_filing_year / source_periods / resolved_at
+    fields are recovered from the workbook's developer metadata
+    (``aeat_relation:<relation>`` keys written by the apply adapter).
+    They are absent for relations that were edited manually in the
+    workbook without an apply round-trip; in that case the relation
+    is treated as ``provenance="operator_manual"`` by convention.
+    """
 
     model_config = _STRICT_FROZEN
 
     relation: RelationId
     value: Decimal | None = None
+    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = None
+    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_periods: tuple[str, ...] = ()
+    resolved_at: datetime | None = None
 
 
 class RowSetCellEdit(BaseModel):
@@ -381,12 +409,50 @@ def pull_operator_edits(
     filing_anchor = date(snapshot.filing_year, 12, 31)
     layout = plan_layout(snapshot.revision, bracket_filter_date=filing_anchor)
 
-    # Build one batchGet covering every operator-input casilla cell,
-    # every binding cell, and every relation mirror cell. The order
-    # is preserved so we can map the response rows back to ids.
+    operator_input_ids, operator_input_ranges = _operator_input_addresses(snapshot, layout)
+    binding_ids = list(layout.binding_cells)
+    binding_ranges = [layout.binding_cells[bid].qualified() for bid in binding_ids]
+    relation_ids = list(layout.relation_cells)
+    relation_ranges = [layout.relation_cells[rid].qualified() for rid in relation_ids]
+    all_ranges = operator_input_ranges + binding_ranges + relation_ranges
+    value_ranges = _batch_get_values(sheets, spreadsheet_id, all_ranges)
+
+    casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    cursor = 0
+    operator_edits, cursor, casilla_cells_read = _decode_operator_edits(
+        value_ranges, cursor, operator_input_ids, casilla_by_id
+    )
+    binding_edits, cursor, binding_cells_read = _decode_binding_edits(value_ranges, cursor, binding_ids)
+    relation_edits, cursor, relation_cells_read = _decode_relation_edits(
+        value_ranges, cursor, relation_ids, metadata_pairs
+    )
+
+    # Read row-set detail rows from the Detalle tab. Each row-set
+    # reserves first_data_row + 50 rows by N columns; we issue one
+    # batchGet covering each row-set's full data block and capture
+    # any non-blank cell as a RowSetCellEdit.
+    row_set_edits, row_set_cells_read = _read_row_set_edits(snapshot, sheets, spreadsheet_id)
+    cells_read = casilla_cells_read + binding_cells_read + relation_cells_read + row_set_cells_read
+
+    return PullResult(
+        spreadsheet_id=spreadsheet_id,
+        operator_edits=operator_edits,
+        binding_edits=binding_edits,
+        relation_edits=relation_edits,
+        row_set_edits=row_set_edits,
+        metadata=metadata,
+        metadata_match=metadata_match,
+        cells_read=cells_read,
+    )
+
+
+def _operator_input_addresses(
+    snapshot: RegistrySnapshot,
+    layout: SheetLayout,
+) -> tuple[list[CasillaId], list[str]]:
+    """Build the per-casilla (id, qualified-range) pair list for the batchGet."""
     operator_input_ids: list[CasillaId] = []
     operator_input_ranges: list[str] = []
-    casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind not in ("manual", "bound"):
             continue
@@ -395,91 +461,175 @@ def pull_operator_edits(
             continue
         operator_input_ids.append(casilla.id)
         operator_input_ranges.append(address.qualified())
+    return operator_input_ids, operator_input_ranges
 
-    binding_ids: list[BindingId] = list(layout.binding_cells)
-    binding_ranges: list[str] = [layout.binding_cells[bid].qualified() for bid in binding_ids]
 
-    relation_ids: list[RelationId] = list(layout.relation_cells)
-    relation_ranges: list[str] = [layout.relation_cells[rid].qualified() for rid in relation_ids]
+def _batch_get_values(
+    sheets: Any,
+    spreadsheet_id: str,
+    ranges: list[str],
+) -> list[Any]:
+    """One Sheets ``values.batchGet`` covering every supplied A1 range.
 
-    all_ranges = operator_input_ranges + binding_ranges + relation_ranges
-    if all_ranges:
-        response = _execute(
-            sheets.spreadsheets()
-            .values()
-            .batchGet(
-                spreadsheetId=spreadsheet_id,
-                ranges=all_ranges,
-                valueRenderOption="UNFORMATTED_VALUE",
-            ),
-            action="sheets.spreadsheets.values.batchGet",
-        )
-        value_ranges = response.get("valueRanges", []) or []
-    else:
-        value_ranges = []
+    Returns the raw ``valueRanges`` list from the response (each entry
+    is a ``{"range": ..., "values": [[cell, ...], ...]}`` dict shape).
+    Returns an empty list when ``ranges`` is empty, avoiding a wasted
+    API call.
+    """
+    if not ranges:
+        return []
+    response = _execute(
+        sheets.spreadsheets()
+        .values()
+        .batchGet(
+            spreadsheetId=spreadsheet_id,
+            ranges=ranges,
+            valueRenderOption="UNFORMATTED_VALUE",
+        ),
+        action="sheets.spreadsheets.values.batchGet",
+    )
+    return response.get("valueRanges", []) or []
 
+
+def _raw_cell_value(value_ranges: list[Any], cursor: int) -> object:
+    """Return the single-cell raw value at ``cursor`` in a batchGet response, or None."""
+    vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+    rows = vr.get("values", []) or []
+    return rows[0][0] if rows and rows[0] else None
+
+
+def _decode_operator_edits(
+    value_ranges: list[Any],
+    cursor: int,
+    operator_input_ids: list[CasillaId],
+    casilla_by_id: Mapping[CasillaId, object],
+) -> tuple[tuple[OperatorEdit, ...], int, int]:
+    """Map the per-casilla slice of the batchGet response into typed OperatorEdits."""
     cells_read = 0
-    operator_edits: list[OperatorEdit] = []
-    binding_edits: list[BindingEdit] = []
-    relation_edits: list[RelationEdit] = []
-
-    cursor = 0
+    edits: list[OperatorEdit] = []
     for casilla_id in operator_input_ids:
-        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
-        rows = vr.get("values", []) or []
-        raw = rows[0][0] if rows and rows[0] else None
         coerced = _coerce_value(raw)
         if coerced is not None:
             cells_read += 1
         casilla = casilla_by_id[casilla_id]
-        operator_edits.append(
+        edits.append(
             OperatorEdit(
                 casilla=casilla_id,
-                casilla_number=casilla.number,
-                label=casilla.label,
+                casilla_number=casilla.number,  # type: ignore[attr-defined]
+                label=casilla.label,  # type: ignore[attr-defined]
                 value=coerced,
             )
         )
+    return tuple(edits), cursor, cells_read
 
+
+def _decode_binding_edits(
+    value_ranges: list[Any],
+    cursor: int,
+    binding_ids: list[BindingId],
+) -> tuple[tuple[BindingEdit, ...], int, int]:
+    """Map the per-binding slice of the batchGet response into typed BindingEdits.
+
+    Booleans are stringified because :class:`BindingEdit.value`'s union
+    (``Decimal | str | None``) does not carry a bool path — the runtime
+    enum-binding semantics expect a textual representation here.
+    """
+    cells_read = 0
+    edits: list[BindingEdit] = []
     for binding_id in binding_ids:
-        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
-        rows = vr.get("values", []) or []
-        raw = rows[0][0] if rows and rows[0] else None
         coerced = _coerce_value(raw)
         if coerced is not None:
             cells_read += 1
         binding_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
-        binding_edits.append(BindingEdit(binding=binding_id, value=binding_value))
+        edits.append(BindingEdit(binding=binding_id, value=binding_value))
+    return tuple(edits), cursor, cells_read
 
+
+def _decode_relation_edits(
+    value_ranges: list[Any],
+    cursor: int,
+    relation_ids: list[RelationId],
+    metadata_pairs: Mapping[str, str],
+) -> tuple[tuple[RelationEdit, ...], int, int]:
+    """Map the per-relation slice of the batchGet response into typed RelationEdits.
+
+    Per-relation provenance metadata is recovered from the workbook's
+    developer metadata via the ``aeat_relation:<relation>`` key written
+    by the apply adapter. Recovering it on pull preserves the audit
+    trail (provenance tier, source filing year, source periods,
+    resolved-at instant) that would otherwise be silently dropped on
+    every round trip.
+    """
+    cells_read = 0
+    edits: list[RelationEdit] = []
     for relation_id in relation_ids:
-        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
-        rows = vr.get("values", []) or []
-        raw = rows[0][0] if rows and rows[0] else None
         coerced = _coerce_decimal(raw)
         if coerced is not None:
             cells_read += 1
-        relation_edits.append(RelationEdit(relation=relation_id, value=coerced))
+        provenance, source_filing_year, source_periods, resolved_at = _parse_relation_metadata(
+            metadata_pairs.get(f"aeat_relation:{relation_id}", "")
+        )
+        edits.append(
+            RelationEdit(
+                relation=relation_id,
+                value=coerced,
+                provenance=provenance,
+                source_filing_year=source_filing_year,
+                source_periods=source_periods,
+                resolved_at=resolved_at,
+            )
+        )
+    return tuple(edits), cursor, cells_read
 
-    # Read row-set detail rows from the Detalle tab. Each row-set
-    # reserves first_data_row + 50 rows by N columns; we issue one
-    # batchGet covering each row-set's full data block and capture
-    # any non-blank cell as a RowSetCellEdit.
-    row_set_edits, row_set_cells_read = _read_row_set_edits(snapshot, sheets, spreadsheet_id)
-    cells_read += row_set_cells_read
 
-    return PullResult(
-        spreadsheet_id=spreadsheet_id,
-        operator_edits=tuple(operator_edits),
-        binding_edits=tuple(binding_edits),
-        relation_edits=tuple(relation_edits),
-        row_set_edits=row_set_edits,
-        metadata=metadata,
-        metadata_match=metadata_match,
-        cells_read=cells_read,
+def _parse_relation_metadata(
+    raw: str,
+) -> tuple[
+    Literal["local_filing", "aeat_live", "operator_manual"] | None,
+    int | None,
+    tuple[str, ...],
+    datetime | None,
+]:
+    """Parse the ``"k=v; k=v"`` shape written by the apply adapter."""
+
+    if not raw:
+        return None, None, (), None
+    parts = [piece.strip() for piece in raw.split(";") if "=" in piece]
+    fields: dict[str, str] = {}
+    for part in parts:
+        key, _, value = part.partition("=")
+        fields[key.strip()] = value.strip()
+    raw_provenance = fields.get("provenance", "")
+    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = (
+        raw_provenance  # type: ignore[assignment]
+        if raw_provenance in ("local_filing", "aeat_live", "operator_manual")
+        else None
     )
+    source_filing_year: int | None = None
+    raw_year = fields.get("source_filing_year", "")
+    if raw_year:
+        try:
+            source_filing_year = int(raw_year)
+        except ValueError:
+            source_filing_year = None
+    source_periods: tuple[str, ...] = ()
+    raw_periods = fields.get("source_periods", "")
+    if raw_periods:
+        source_periods = tuple(piece for piece in raw_periods.split("+") if piece)
+    resolved_at: datetime | None = None
+    raw_resolved = fields.get("resolved_at", "")
+    if raw_resolved:
+        try:
+            resolved_at = datetime.fromisoformat(raw_resolved)
+        except ValueError:
+            resolved_at = None
+    return provenance, source_filing_year, source_periods, resolved_at
 
 
 def _read_row_set_edits(
@@ -497,16 +647,35 @@ def _read_row_set_edits(
     row_sets = collect_row_sets(snapshot.revision)
     if not row_sets:
         return ((), 0)
+    block_ranges = [_row_set_block_range(row_set) for row_set in row_sets]
+    value_ranges = _batch_get_values_for_row_sets(sheets, spreadsheet_id, block_ranges)
+    edits: list[RowSetEdit] = []
+    cells_read = 0
+    for row_set_index, row_set in enumerate(row_sets):
+        vr = value_ranges[row_set_index] if row_set_index < len(value_ranges) else {}
+        rows = vr.get("values", []) or []
+        cells, cells_in_block = _decode_row_set_block(rows, row_set)
+        cells_read += cells_in_block
+        edits.append(RowSetEdit(grouping=row_set.grouping, cells=cells))
+    return tuple(edits), cells_read
 
-    block_ranges: list[str] = []
-    for row_set in row_sets:
-        last_column = max(col.header_address.column for col in row_set.columns)
-        start_col_letters = _column_index_to_letters(1)
-        end_col_letters = _column_index_to_letters(last_column)
-        start_row = row_set.first_data_row
-        end_row = row_set.first_data_row + 49
-        block_ranges.append(f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}")
 
+def _row_set_block_range(row_set: Any) -> str:
+    """Build the A1 range covering the 50-row data block of one row-set."""
+    last_column = max(col.header_address.column for col in row_set.columns)
+    start_col_letters = _column_index_to_letters(1)
+    end_col_letters = _column_index_to_letters(last_column)
+    start_row = row_set.first_data_row
+    end_row = row_set.first_data_row + 49
+    return f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}"
+
+
+def _batch_get_values_for_row_sets(
+    sheets: Any,
+    spreadsheet_id: str,
+    block_ranges: list[str],
+) -> list[Any]:
+    """Sheets ``values.batchGet`` for row-set blocks; returns the raw valueRanges list."""
     response = _execute(
         sheets.spreadsheets()
         .values()
@@ -517,38 +686,52 @@ def _read_row_set_edits(
         ),
         action="sheets.spreadsheets.values.batchGet.row_sets",
     )
-    value_ranges = response.get("valueRanges", []) or []
+    return response.get("valueRanges", []) or []
 
-    edits: list[RowSetEdit] = []
-    cells_read = 0
-    for row_set_index, row_set in enumerate(row_sets):
-        vr = value_ranges[row_set_index] if row_set_index < len(value_ranges) else {}
-        rows = vr.get("values", []) or []
-        cells: list[RowSetCellEdit] = []
-        for local_row, row_values in enumerate(rows, start=1):
-            for col_index, raw in enumerate(row_values, start=1):
-                if raw is None or raw == "":
-                    continue
-                # Map the column index back to its binding via the row-set's
-                # ordered columns. row_set.columns is in column-allocation
-                # order (column 1, 2, ...).
-                if col_index > len(row_set.columns):
-                    continue
-                binding_id = row_set.columns[col_index - 1].binding
-                coerced = _coerce_value(raw)
-                if coerced is None:
-                    continue
-                cells_read += 1
-                coerced_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
-                cells.append(
-                    RowSetCellEdit(
-                        binding=binding_id,
-                        row_index=local_row,
-                        value=coerced_value,
-                    )
-                )
-        edits.append(RowSetEdit(grouping=row_set.grouping, cells=tuple(cells)))
-    return tuple(edits), cells_read
+
+def _decode_row_set_block(
+    rows: list[Any],
+    row_set: Any,
+) -> tuple[tuple[RowSetCellEdit, ...], int]:
+    """Decode one row-set's block of (local_row, col_index) cells into typed edits.
+
+    Returns the typed-cell tuple plus the non-blank-cells count for
+    this block. Cells whose column index exceeds the row-set's declared
+    columns are skipped — that's the Sheets-side defensive path when an
+    operator pastes data past the allocated column count.
+    """
+    cells: list[RowSetCellEdit] = []
+    cells_in_block = 0
+    for local_row, row_values in enumerate(rows, start=1):
+        for col_index, raw in enumerate(row_values, start=1):
+            cell = _decode_row_set_cell(raw, col_index, local_row, row_set)
+            if cell is None:
+                continue
+            cells.append(cell)
+            cells_in_block += 1
+    return tuple(cells), cells_in_block
+
+
+def _decode_row_set_cell(
+    raw: object,
+    col_index: int,
+    local_row: int,
+    row_set: Any,
+) -> RowSetCellEdit | None:
+    """Translate one Sheets cell into a typed RowSetCellEdit, or None to skip."""
+    if raw is None or raw == "":
+        return None
+    # Map the column index back to its binding via the row-set's
+    # ordered columns. row_set.columns is in column-allocation order
+    # (column 1, 2, ...).
+    if col_index > len(row_set.columns):
+        return None
+    binding_id = row_set.columns[col_index - 1].binding
+    coerced = _coerce_value(raw)
+    if coerced is None:
+        return None
+    coerced_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
+    return RowSetCellEdit(binding=binding_id, row_index=local_row, value=coerced_value)
 
 
 def _column_index_to_letters(column: int) -> str:
@@ -562,6 +745,103 @@ def _column_index_to_letters(column: int) -> str:
         remaining, ordinal = divmod(remaining - 1, 26)
         letters.append(chr(ord("A") + ordinal))
     return "".join(reversed(letters))
+
+
+class PullCoverageDiscrepancy(BaseModel):
+    """One coverage delta between a ``SheetExportPlan`` and a ``PullResult``.
+
+    The apply adapter writes a richly-shaped workbook (tariffs,
+    constraints, protected ranges, row-sets); the pull adapter
+    materialises a slimmer ``PullResult`` of operator-editable
+    surfaces. A corrupted or hand-edited workbook could have
+    structural cells stripped or row-set columns removed without
+    surfacing as a load error. ``verify_pull_coverage`` enumerates
+    every coverage mismatch as one of these typed records so callers
+    can choose to refuse the merge, log a warning, or surface a
+    diagnostic to the operator.
+
+    The check is intentionally caller-opt-in: not every consumer of
+    ``compute_from_pull`` carries the original ``SheetExportPlan``
+    (e.g. a fresh pull from a workbook the operator authored without
+    a prior apply). Callers that DO have the plan should run the
+    check before consuming the pull.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    kind: Literal[
+        "metadata_mismatch",
+        "row_set_missing",
+        "row_set_extra",
+        "binding_count_mismatch",
+        "relation_count_mismatch",
+    ]
+    detail: str = Field(min_length=1)
+    expected: str = ""
+    observed: str = ""
+
+
+def verify_pull_coverage(
+    plan: SheetExportPlan,
+    pull: "PullResult",
+) -> tuple[PullCoverageDiscrepancy, ...]:
+    """Return every coverage mismatch between ``plan`` and ``pull``.
+
+    Returns an empty tuple when the two sides agree on the surfaces
+    the pull captures. Non-empty tuples enumerate structural deltas:
+    missing row-set groupings, unexpected groupings, binding count
+    mismatch, relation count mismatch, or registry-metadata drift.
+
+    Tariffs, cell constraints, and protected ranges are NOT
+    re-validated against the workbook itself (the pull adapter never
+    reads them back); a future extension can compare developer-
+    metadata digests for those surfaces when the apply side stamps
+    them.
+    """
+
+    discrepancies: list[PullCoverageDiscrepancy] = []
+
+    # Metadata identity: registry coordinates must match exactly.
+    plan_meta = plan.metadata
+    pull_meta = pull.metadata
+    for field_name in ("modelo_id", "revision_id", "filing_year", "period"):
+        plan_value = getattr(plan_meta, field_name)
+        pull_value = getattr(pull_meta, field_name)
+        if pull_value != plan_value:
+            discrepancies.append(
+                PullCoverageDiscrepancy(
+                    kind="metadata_mismatch",
+                    detail=f"metadata field {field_name!r} differs between plan and pull",
+                    expected=str(plan_value),
+                    observed=str(pull_value),
+                )
+            )
+
+    # Row-set coverage: every grouping declared in the plan should
+    # produce a row-set edit (even if empty); extras signal that the
+    # workbook carries a row-set the plan did not declare.
+    planned_groupings = {row_set.grouping for row_set in plan.row_sets}
+    pulled_groupings = {edit.grouping for edit in pull.row_set_edits}
+    for missing in sorted(planned_groupings - pulled_groupings):
+        discrepancies.append(
+            PullCoverageDiscrepancy(
+                kind="row_set_missing",
+                detail=f"row-set grouping {missing!r} is declared by the plan but absent from the pull",
+                expected=missing,
+                observed="",
+            )
+        )
+    for extra in sorted(pulled_groupings - planned_groupings):
+        discrepancies.append(
+            PullCoverageDiscrepancy(
+                kind="row_set_extra",
+                detail=f"row-set grouping {extra!r} appears in the pull but is not declared by the plan",
+                expected="",
+                observed=extra,
+            )
+        )
+
+    return tuple(discrepancies)
 
 
 def compute_from_pull(
@@ -588,81 +868,121 @@ def compute_from_pull(
     invoking this helper.
     """
 
-    if pull.metadata_match != "matches":
-        raise StorageConflictError(
-            f"refusing to compute: workbook metadata_match={pull.metadata_match!r} "
-            f"does not bind to the supplied snapshot",
-            context={
-                "spreadsheet_id": pull.spreadsheet_id,
-                "metadata_match": pull.metadata_match,
-                "workbook_modelo": pull.metadata.modelo_id,
-                "snapshot_modelo": snapshot.modelo.id,
-            },
-            suggestion=(
-                "re-export the workbook against the current snapshot via "
-                "`aeat config google sync calc export`, then re-pull"
-            ),
-        )
+    _require_metadata_match(pull=pull, snapshot=snapshot)
+    inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
+    binding_values, enum_binding_values = _collect_binding_values(snapshot=snapshot, edits=pull.binding_edits)
+    relation_values = _collect_relation_values(snapshot=snapshot, edits=pull.relation_edits)
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+    )
 
-    edits_by_casilla = {edit.casilla: edit for edit in pull.operator_edits}
 
+def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> None:
+    """Refuse to compute when the workbook metadata doesn't bind to the snapshot."""
+    if pull.metadata_match == "matches":
+        return
+    raise StorageConflictError(
+        f"refusing to compute: workbook metadata_match={pull.metadata_match!r} "
+        f"does not bind to the supplied snapshot",
+        context={
+            "spreadsheet_id": pull.spreadsheet_id,
+            "metadata_match": pull.metadata_match,
+            "workbook_modelo": pull.metadata.modelo_id,
+            "snapshot_modelo": snapshot.modelo.id,
+        },
+        suggestion=(
+            "re-export the workbook against the current snapshot via "
+            "`aeat config google sync calc export`, then re-pull"
+        ),
+    )
+
+
+def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None) -> Decimal:
+    """Coerce an :class:`OperatorEdit.value` shape into a runtime Decimal.
+
+    None / unparseable text / unsupported type all collapse to
+    ``Decimal("0")`` so the runtime's "every non-computed casilla has a
+    value" precondition holds.
+    """
+    if value is None:
+        return Decimal("0")
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, bool):
+        return Decimal("1") if value else Decimal("0")
+    if isinstance(value, str):
+        try:
+            return Decimal(value)
+        except (InvalidOperation, ValueError):
+            return Decimal("0")
+    return Decimal("0")
+
+
+def _collect_input_casilla_values(
+    *,
+    snapshot: RegistrySnapshot,
+    edits: tuple[OperatorEdit, ...],
+) -> dict[CasillaId, Decimal]:
+    edits_by_casilla = {edit.casilla: edit for edit in edits}
     inputs: dict[CasillaId, Decimal] = {}
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind == "computed" or casilla.input_kind == "informational":
+        if casilla.input_kind in {"computed", "informational"}:
             continue
         edit = edits_by_casilla.get(casilla.id)
-        if edit is None or edit.value is None:
-            inputs[casilla.id] = Decimal("0")
-            continue
-        if isinstance(edit.value, Decimal):
-            inputs[casilla.id] = edit.value
-        elif isinstance(edit.value, bool):
-            inputs[casilla.id] = Decimal("1") if edit.value else Decimal("0")
-        elif isinstance(edit.value, str):
-            try:
-                inputs[casilla.id] = Decimal(edit.value)
-            except (InvalidOperation, ValueError):
-                inputs[casilla.id] = Decimal("0")
-        else:
-            inputs[casilla.id] = Decimal("0")
+        inputs[casilla.id] = _coerce_edit_value_to_decimal(edit.value if edit is not None else None)
+    return inputs
 
-    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
-    edits_by_binding = {edit.binding: edit for edit in pull.binding_edits}
 
+def _collect_binding_values(
+    *,
+    snapshot: RegistrySnapshot,
+    edits: tuple[BindingEdit, ...],
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    edits_by_binding = {edit.binding: edit for edit in edits}
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
-    for binding_id, definition in bindings_by_id.items():
-        edit = edits_by_binding.get(binding_id)
-        if definition.typed_enum:
-            # Enum binding: route the cell's text value into the
-            # enum-binding map; default to empty string when blank
-            # (the runtime will surface a clear validation error if
-            # the formula actually consults this binding without a
-            # supplied value).
-            if edit is None or edit.value is None:
-                continue
-            if isinstance(edit.value, str) and edit.value:
-                enum_binding_values[binding_id] = edit.value
-            elif isinstance(edit.value, Decimal):
-                # Operator typed a number into an enum binding cell
-                # — pass through as text so the runtime can decide.
-                enum_binding_values[binding_id] = format(edit.value, "f")
+    for binding in snapshot.revision.bindings:
+        edit = edits_by_binding.get(binding.id)
+        if binding.typed_enum:
+            text = _enum_binding_text(edit.value if edit is not None else None)
+            if text is not None:
+                enum_binding_values[binding.id] = text
         else:
-            # Numeric binding: default missing to zero so the runtime
-            # contract holds for every declared binding.
-            if edit is None or edit.value is None:
-                binding_values[binding_id] = Decimal("0")
-            elif isinstance(edit.value, Decimal):
-                binding_values[binding_id] = edit.value
-            elif isinstance(edit.value, str):
-                try:
-                    binding_values[binding_id] = Decimal(edit.value)
-                except (InvalidOperation, ValueError):
-                    binding_values[binding_id] = Decimal("0")
-            else:
-                binding_values[binding_id] = Decimal("0")
+            binding_values[binding.id] = _coerce_edit_value_to_decimal(
+                edit.value if edit is not None else None
+            )
+    return binding_values, enum_binding_values
 
-    edits_by_relation = {edit.relation: edit for edit in pull.relation_edits}
+
+def _enum_binding_text(value: Decimal | str | bool | None) -> str | None:
+    """Render an enum-binding edit value as text.
+
+    Returns ``None`` to mean "leave the binding unset" so the runtime
+    surfaces a clear validation error only when the formula actually
+    consults the binding without a supplied value.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value or None
+    if isinstance(value, Decimal):
+        # Operator typed a number into an enum binding cell — pass
+        # through as text so the runtime can decide.
+        return format(value, "f")
+    return None
+
+
+def _collect_relation_values(
+    *,
+    snapshot: RegistrySnapshot,
+    edits: tuple[RelationEdit, ...],
+) -> dict[RelationId, Decimal]:
+    edits_by_relation = {edit.relation: edit for edit in edits}
     relation_values: dict[RelationId, Decimal] = {}
     for relation in snapshot.revision.relations:
         # Skip relations that are not active for the snapshot's period.
@@ -676,15 +996,7 @@ def compute_from_pull(
             relation_values[relation.id] = Decimal("0")
         else:
             relation_values[relation.id] = edit.value
-
-    return calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        relation_values=relation_values,
-    )
+    return relation_values
 
 
 __all__ = [

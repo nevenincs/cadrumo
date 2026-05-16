@@ -16,9 +16,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...core.resources import bundled_path
+from ...core.resources import resources
 from ...domain.calculations.registry._errors import RegistryValidationError
-from ...domain.calculations.registry._loader import load_registry_tree
 from ._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,
@@ -46,8 +45,7 @@ class _Cell:
 
 
 def _modelo(modelo_id: str, revision_id: str):
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(m for m in modelos if m.id == modelo_id).revisions[revision_id]
+    return resources().modelos.get(modelo_id).revisions[revision_id]
 
 
 def test_assemble_withholding_groups_two_perceptors_into_two_observations() -> None:

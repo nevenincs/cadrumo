@@ -298,95 +298,18 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     """
     if not text.strip():
         raise JustificanteParseError(f"empty text extracted from {pdf_path}")
-
     normalised = _strip_accents(text)
-
-    csv_match = (
-        _CSV_AUTHENTICITY_FOOTER_RE.search(text)
-        or _CSV_AUTHENTICITY_FOOTER_RE.search(normalised)
-        or _CSV_LABEL_RE.search(text)
-        or _CSV_LABEL_RE.search(normalised)
-        or _CSV_LABEL_INVERTED_RE.search(text)
-        or _CSV_LABEL_INVERTED_RE.search(normalised)
-        or _CSV_LABEL_EN_RE.search(text)
-        or _CSV_LABEL_EN_RE.search(normalised)
-        or _CSV_FALLBACK_RE.search(normalised)
-    )
-    if csv_match is None:
-        raise JustificanteCsvNotFoundError(f"no Código Seguro de Verificación found in {pdf_path}")
-    csv_value = csv_match.group(1).upper()
-
+    csv_value = _extract_csv(text, normalised, pdf_path)
     modelo = _require(_MODELO_RE.search(normalised), "modelo")
-    ejercicio_match = _EJERCICIO_RE.search(normalised) or _EJERCICIO_LOOSE_RE.search(normalised)
-    ejercicio = ejercicio_match.group(1).strip() if ejercicio_match else None
-
-    # Period extraction has four tiers:
-    #   1. Labelled "Período <token>" (Modelo 100 modern body, M303).
-    #   2. Positional "[<NIF>] <YYYY> <token>" lines that pdfplumber
-    #      reads in form-laid-out quarterly receipts.
-    #   3. Anything else with an ejercicio: preserve the observed year.
-    #   4. Anything without period or ejercicio fails hard.
-    period_match = _PERIOD_RE.search(normalised)
-    if period_match is not None:
-        period = period_match.group(1).strip()
-    else:
-        positional_match = _PERIOD_POSITIONAL_RE.search(normalised)
-        if positional_match is not None:
-            period = positional_match.group("period").strip()
-            # Quarterly modelos older than 2024 print only the
-            # positional ``Y0000001S 2022 4T`` line — there is
-            # no labelled ``Ejercicio 2022``. Promote the year
-            # captured by the positional regex when the labelled
-            # extractors found nothing, so downstream code (and
-            # the deep-extractor binding) sees a populated year.
-            if ejercicio is None:
-                ejercicio = positional_match.group("year").strip()
-        elif ejercicio is not None:
-            period = ejercicio
-        else:
-            raise JustificanteParseError("could not locate required field: period")
-
+    period, ejercicio = _extract_period_and_ejercicio(normalised)
     nif_match = _NIF_RE.search(normalised) or _NIF_INVERTED_RE.search(normalised)
     nif = _require(nif_match, "tax_id").upper()
-
-    # Three timestamp shapes in the wild (see _parse_datetime docstring).
-    presented_at: datetime
-    presented_match = _PRESENTED_AT_RE.search(normalised)
-    if presented_match is not None:
-        presented_at = _parse_datetime(presented_match.group(1))
-    else:
-        annual_match = (
-            _PRESENTED_AT_ANNUAL_RE.search(normalised)
-            or _PRESENTED_AT_ANNUAL_INVERTED_RE.search(normalised)
-            or _PRESENTED_AT_EN_RE.search(normalised)
-        )
-        if annual_match is None:
-            raise JustificanteParseError("could not locate required field: presented_at")
-        presented_at = _parse_datetime(f"{annual_match.group(1)} {annual_match.group(2)}")
-
-    presentation_match = _PRESENTATION_ID_RE.search(normalised)
-    if presentation_match is None:
-        presentation_match = _PRESENTATION_ID_ANNUAL_RE.search(normalised)
-    presentation_id = presentation_match.group(1).strip() if presentation_match else None
-
-    ingresar_match = _TOTAL_INGRESAR_RE.search(normalised) or _NRC_IMPORTE_RE.search(normalised)
-    total_ingresar: Decimal | None = _parse_decimal(ingresar_match.group(1)) if ingresar_match else None
-
-    devolver_match = _TOTAL_DEVOLVER_RE.search(normalised)
-    total_devolver: Decimal | None = _parse_decimal(devolver_match.group(1)) if devolver_match else None
-
-    url_match = _URL_RE.search(text)
-    if url_match is None:
-        raise JustificanteParseError(f"no verification URL found in {pdf_path}")
-    verification_url_raw = url_match.group(0).rstrip(".,);")
-    try:
-        verification_url = TypeAdapter(AnyHttpUrl).validate_python(verification_url_raw)
-    except ValidationError as exc:
-        raise JustificanteParseError(f"invalid verification URL in {pdf_path}: {verification_url_raw!r}") from exc
-
+    presented_at = _extract_presented_at(normalised)
+    presentation_id = _extract_presentation_id(normalised)
+    total_ingresar, total_devolver = _extract_totals(normalised)
+    verification_url = _extract_verification_url(text, pdf_path)
     sha256 = sha256_file(pdf_path)
     parsed_at = datetime.now(tz=UTC)
-
     try:
         record = Justificante(
             csv=csv_value,
@@ -413,3 +336,95 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
         csv_value,
     )
     return record
+
+
+def _extract_csv(text: str, normalised: str, pdf_path: Path) -> str:
+    """Locate the Código Seguro de Verificación across the five regex tiers."""
+    csv_match = (
+        _CSV_AUTHENTICITY_FOOTER_RE.search(text)
+        or _CSV_AUTHENTICITY_FOOTER_RE.search(normalised)
+        or _CSV_LABEL_RE.search(text)
+        or _CSV_LABEL_RE.search(normalised)
+        or _CSV_LABEL_INVERTED_RE.search(text)
+        or _CSV_LABEL_INVERTED_RE.search(normalised)
+        or _CSV_LABEL_EN_RE.search(text)
+        or _CSV_LABEL_EN_RE.search(normalised)
+        or _CSV_FALLBACK_RE.search(normalised)
+    )
+    if csv_match is None:
+        raise JustificanteCsvNotFoundError(f"no Código Seguro de Verificación found in {pdf_path}")
+    return csv_match.group(1).upper()
+
+
+def _extract_period_and_ejercicio(normalised: str) -> tuple[str, str | None]:
+    """Resolve the (period, ejercicio) pair from four regex tiers.
+
+    1. Labelled "Período <token>" (Modelo 100 modern body, M303).
+    2. Positional "[<NIF>] <YYYY> <token>" lines that pdfplumber reads
+       in form-laid-out quarterly receipts.
+    3. Anything else with an ejercicio: preserve the observed year as
+       the period token.
+    4. Anything without period or ejercicio fails hard.
+    """
+    ejercicio_match = _EJERCICIO_RE.search(normalised) or _EJERCICIO_LOOSE_RE.search(normalised)
+    ejercicio = ejercicio_match.group(1).strip() if ejercicio_match else None
+    period_match = _PERIOD_RE.search(normalised)
+    if period_match is not None:
+        return period_match.group(1).strip(), ejercicio
+    positional_match = _PERIOD_POSITIONAL_RE.search(normalised)
+    if positional_match is not None:
+        period = positional_match.group("period").strip()
+        # Quarterly modelos older than 2024 print only the positional
+        # ``Y0000001S 2022 4T`` line — there is no labelled
+        # ``Ejercicio 2022``. Promote the year captured by the
+        # positional regex when the labelled extractors found nothing,
+        # so downstream code (and the deep-extractor binding) sees a
+        # populated year.
+        if ejercicio is None:
+            ejercicio = positional_match.group("year").strip()
+        return period, ejercicio
+    if ejercicio is not None:
+        return ejercicio, ejercicio
+    raise JustificanteParseError("could not locate required field: period")
+
+
+def _extract_presented_at(normalised: str) -> datetime:
+    """Resolve the presentation timestamp from one of three regex shapes."""
+    presented_match = _PRESENTED_AT_RE.search(normalised)
+    if presented_match is not None:
+        return _parse_datetime(presented_match.group(1))
+    annual_match = (
+        _PRESENTED_AT_ANNUAL_RE.search(normalised)
+        or _PRESENTED_AT_ANNUAL_INVERTED_RE.search(normalised)
+        or _PRESENTED_AT_EN_RE.search(normalised)
+    )
+    if annual_match is None:
+        raise JustificanteParseError("could not locate required field: presented_at")
+    return _parse_datetime(f"{annual_match.group(1)} {annual_match.group(2)}")
+
+
+def _extract_presentation_id(normalised: str) -> str | None:
+    """Optional presentation identifier; either standard or annual regex shape."""
+    presentation_match = _PRESENTATION_ID_RE.search(normalised) or _PRESENTATION_ID_ANNUAL_RE.search(normalised)
+    return presentation_match.group(1).strip() if presentation_match else None
+
+
+def _extract_totals(normalised: str) -> tuple[Decimal | None, Decimal | None]:
+    """Resolve the (total_a_ingresar, total_a_devolver) pair from regex matches."""
+    ingresar_match = _TOTAL_INGRESAR_RE.search(normalised) or _NRC_IMPORTE_RE.search(normalised)
+    total_ingresar: Decimal | None = _parse_decimal(ingresar_match.group(1)) if ingresar_match else None
+    devolver_match = _TOTAL_DEVOLVER_RE.search(normalised)
+    total_devolver: Decimal | None = _parse_decimal(devolver_match.group(1)) if devolver_match else None
+    return total_ingresar, total_devolver
+
+
+def _extract_verification_url(text: str, pdf_path: Path) -> AnyHttpUrl:
+    """Locate the verification URL and validate it as an AnyHttpUrl."""
+    url_match = _URL_RE.search(text)
+    if url_match is None:
+        raise JustificanteParseError(f"no verification URL found in {pdf_path}")
+    verification_url_raw = url_match.group(0).rstrip(".,);")
+    try:
+        return TypeAdapter(AnyHttpUrl).validate_python(verification_url_raw)
+    except ValidationError as exc:
+        raise JustificanteParseError(f"invalid verification URL in {pdf_path}: {verification_url_raw!r}") from exc

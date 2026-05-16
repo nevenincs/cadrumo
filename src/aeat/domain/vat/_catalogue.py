@@ -16,9 +16,6 @@ from ...core.resources import bundled_path
 from ._schema import VATCatalogue, VATCategory, VatCitation, VatCitationSource, VATRegulation
 from .errors import VatCatalogueError
 
-_DEFAULT_CATALOGUE_ROOT = bundled_path("registry", "aeat", "vat", "catalogues")
-
-
 def load_vat_catalogue(path: Path) -> VATCatalogue:
     """Load one VAT catalogue TOML file."""
 
@@ -61,10 +58,16 @@ def _load_vat_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> 
     return VATCatalogue(regulations=regulations)
 
 
-def load_vat_catalogues(root: Path = _DEFAULT_CATALOGUE_ROOT) -> Mapping[int, VATCatalogue]:
-    """Load every year-keyed VAT catalogue under ``root``."""
+def load_vat_catalogues(root: Path | None = None) -> Mapping[int, VATCatalogue]:
+    """Load every year-keyed VAT catalogue under ``root``.
 
-    resolved = root.resolve()
+    Resolves the bundled catalogues directory on every call when
+    no override is supplied; the ``bundled_path`` boundary is the
+    single resolution surface.
+    """
+
+    target = root if root is not None else bundled_path("registry", "aeat", "vat", "catalogues")
+    resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))
     fingerprint = tuple(_file_fingerprint(path) for path in paths)
     return _load_vat_catalogues_cached(str(resolved), fingerprint)
@@ -97,7 +100,7 @@ def _load_vat_catalogues_cached(
 def resolve_catalogue(*, on: date) -> VATCatalogue:
     """Return the exact VAT catalogue for ``on``."""
 
-    catalogue = VAT_CATALOGUES_BY_YEAR.get(on.year)
+    catalogue = load_vat_catalogues().get(on.year)
     if catalogue is None:
         raise VatCatalogueError(f"no VAT catalogue registered for year={on.year}")
     return catalogue
@@ -158,10 +161,7 @@ def _parse_citation(raw_citation: object) -> VatCitation:
     )
 
 
-VAT_CATALOGUES_BY_YEAR: Mapping[int, VATCatalogue] = load_vat_catalogues()
-
 __all__ = [
-    "VAT_CATALOGUES_BY_YEAR",
     "load_vat_catalogue",
     "load_vat_catalogues",
     "resolve_catalogue",

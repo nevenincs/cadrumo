@@ -1,6 +1,7 @@
 """Tests for the declaración parser boundary."""
 
 from __future__ import annotations
+from aeat.core.resources import resources
 
 from decimal import Decimal
 from pathlib import Path
@@ -11,7 +12,6 @@ from reportlab.pdfgen import canvas
 
 from aeat.tests import FIXTURES_DIR
 
-from ....domain.calculations.registry import default_registry_authority
 from . import DeclaracionParseError, parse_declaracion
 
 pytestmark = [
@@ -39,6 +39,15 @@ def test_parser_extracts_registry_profile_targets_from_pdf(tmp_path: Path) -> No
     assert filing.period == "1T"
     assert filing.tax_id == "00000000T"
     assert {value.casilla_id: value.printed_value for value in filing.values} == values
+    # The parser stamps the resolving registry snapshot's four-axis
+    # coordinate onto the observation so downstream consumers can
+    # detect AEAT template drift on subsequent registry releases
+    # The ref is populated from the snapshot the parser actually
+    # resolved against.
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "130"
+    assert filing.registry_snapshot_ref.filing_year == 2024
+    assert filing.registry_snapshot_ref.period == "1T"
 
 
 def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf(tmp_path: Path) -> None:
@@ -138,7 +147,7 @@ def _modelo_130_snapshot():
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return default_registry_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
+    return resources().modelos.authority.snapshot(modelo_id, filing_year=filing_year, period=period)
 
 
 def _write_declaration_pdf(

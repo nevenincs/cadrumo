@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -39,6 +40,36 @@ _Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, 
 type ProfileFactValue = str | bool | int | Decimal | date | None
 
 
+_DECIMAL_STRING_RE = re.compile(r"^-?\d+(?:\.\d+)?$")
+_DATE_STRING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _coerce_profile_fact_value(value: object) -> object:
+    """Restore Decimal / date types lost when ``ProfileFactValue`` was JSON-encoded.
+
+    JSON has no Decimal or date primitive, so ``model_dump_json`` emits both
+    as strings. On re-parse the union ``str | bool | int | Decimal | date``
+    would otherwise resolve to ``str`` first under pydantic's smart-union
+    matcher, silently dropping numeric / temporal semantics on persisted
+    facts (e.g. ``usage_ratios.business_ratio`` or
+    ``irpf.minimum_personal_amount``). This validator inspects strings
+    against the canonical Decimal and ISO date shapes and promotes them
+    back to the original Python type before the union resolves.
+    """
+
+    if isinstance(value, str) and _DATE_STRING_RE.fullmatch(value):
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return value
+    if isinstance(value, str) and _DECIMAL_STRING_RE.fullmatch(value):
+        try:
+            return Decimal(value)
+        except (ArithmeticError, ValueError):
+            return value
+    return value
+
+
 class UserProfileStatus(StrEnum):
     """Lifecycle status for a live profile root."""
 
@@ -69,6 +100,11 @@ class UserProfileFact(BaseModel):
     source: _Source = "manual_cli"
     valid_from: date | None = None
     valid_to: date | None = None
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def _restore_typed_value(cls, value: object) -> object:
+        return _coerce_profile_fact_value(value)
 
     @model_validator(mode="after")
     def _validate_window(self) -> UserProfileFact:

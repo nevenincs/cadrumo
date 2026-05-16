@@ -13,10 +13,10 @@ from decimal import Decimal
 import pytest
 
 from . import (
-    VAT_RATE_TABLE,
     EUMemberState,
     VATRateKind,
     VatRateNotFoundError,
+    load_vat_rate_table,
     lookup_rate,
 )
 
@@ -25,18 +25,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 def test_rate_table_covers_all_27_member_states() -> None:
     """The rate table carries an entry for every EUMemberState."""
-    assert set(VAT_RATE_TABLE.keys()) == set(EUMemberState)
+    assert set(load_vat_rate_table().keys()) == set(EUMemberState)
 
 
 def test_rate_table_has_at_least_50_entries() -> None:
     """Aggregate rate count must meet the at-least-50-entries acceptance threshold."""
-    total = sum(len(rates) for rates in VAT_RATE_TABLE.values())
+    total = sum(len(rates) for rates in load_vat_rate_table().values())
     assert total >= 50
 
 
 def test_es_rate_table_fully_expanded() -> None:
     """Spain must expose general / reduced / super_reduced / zero tiers."""
-    es_kinds = {rate.kind for rate in VAT_RATE_TABLE[EUMemberState.ES]}
+    es_kinds = {rate.kind for rate in load_vat_rate_table()[EUMemberState.ES]}
     assert {
         VATRateKind.GENERAL,
         VATRateKind.REDUCED,
@@ -69,7 +69,7 @@ def test_lookup_rate_respects_effective_from() -> None:
 
 def test_every_rate_window_is_well_ordered() -> None:
     """Every :class:`VATRate` with both bounds set must satisfy ``effective_from <= effective_until``."""
-    for rates in VAT_RATE_TABLE.values():
+    for rates in load_vat_rate_table().values():
         for rate in rates:
             if rate.effective_until is not None:
                 assert rate.effective_from <= rate.effective_until

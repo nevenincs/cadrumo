@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.resources import bundled_path
-from ...domain.calculations.registry import build_snapshot, expression_casilla_refs, load_registry_tree
+from ...core.resources import resources
+from ...domain.calculations.registry import expression_casilla_refs
 from ...domain.filing import FilingBuilderError
 from .runtime import build_runtime_schema_provider
 
@@ -22,15 +22,7 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
     assert casillas
     known_ids = {casilla.id for casilla in casillas}
     by_id = {casilla.id: casilla for casilla in casillas}
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "130")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2026,
-        period="1T",
-    )
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
     formulas = {formula.id: formula for formula in snapshot.revision.formulas}
     formula_bound = {
         casilla.id: tuple(dict.fromkeys(expression_casilla_refs(formulas[casilla.formula].expression)))

@@ -1,0 +1,171 @@
+"""CLI surface tests for ``aeat config profile census {refresh,show,compare,apply}``.
+
+Exercises the Typer surface end-to-end against a real seeded
+WorkflowState + the encrypted backend. Refresh is asserted to refuse
+cleanly with the "sede driver not wired" message; show/compare/apply
+are exercised against a snapshot captured via the application service
+directly (the production refresh path lands when P03.S27 wires the
+sede G313 adapter).
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+from typer.testing import CliRunner
+
+from aeat.adapters.persistence.storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.live._census import CensusSnapshotService
+from aeat.entrypoints.cli._config import profile_app
+
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+_G313 = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
+
+
+@pytest.fixture
+def cli_runner() -> CliRunner:
+    return CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_PROFILE_BUCKET_ROOT", str(tmp_path / "buckets"))
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs-secret",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        dispose_engine()
+        override_master_key_provider(None)
+        override_secret_store(None)
+
+
+def _seed_active_profile() -> None:
+    from aeat.application.user_profile._testing import register_minimal_profile
+    from aeat.application.workflow._persistence import workflow_state_repository
+
+    repo = workflow_state_repository()
+    repo.update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="default",
+            overrides={"identity.tax_id": "12345678Z", "activities.description": "software"},
+        )
+    )
+
+
+def _capture_snapshot() -> str:
+    from aeat.application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    bucket_id = state.profiles[state.active_profile].bucket_id
+    service = CensusSnapshotService(bucket_id=bucket_id)
+    snapshot = service.capture(
+        profile_id=state.active_profile,
+        captured_at=datetime.now(UTC),
+        source_url=_G313,
+        census_facts={
+            "census.establecimiento_type": "propio",
+            "census.elected_withholding_pct": "15",
+            "vivienda_office.total_m2": "120.00",
+            "vivienda_office.office_m2": "24.00",
+        },
+    )
+    return snapshot.snapshot_id
+
+
+def test_census_help_lists_four_verbs(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(profile_app, ["census", "--help"])
+
+    assert result.exit_code == 0
+    for verb in ("refresh", "show", "compare", "apply"):
+        assert verb in result.output
+
+
+def test_refresh_refuses_until_sede_driver_lands(cli_runner: CliRunner) -> None:
+    _seed_active_profile()
+
+    result = cli_runner.invoke(profile_app, ["census", "refresh"])
+
+    assert result.exit_code != 0
+    assert "not wired" in result.output.lower() or "sede" in result.output.lower()
+
+
+def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
+    _seed_active_profile()
+
+    result = cli_runner.invoke(profile_app, ["census", "show"])
+
+    assert result.exit_code != 0
+    assert "no census snapshot" in result.output.lower()
+
+
+def test_show_emits_active_snapshot(cli_runner: CliRunner) -> None:
+    _seed_active_profile()
+    snapshot_id = _capture_snapshot()
+
+    result = cli_runner.invoke(profile_app, ["census", "show"])
+
+    assert result.exit_code == 0
+    assert snapshot_id in result.output
+    assert "vivienda_office.total_m2\t120.00" in result.output
+    assert "state\tactive" in result.output
+
+
+def test_compare_reports_per_field_status(cli_runner: CliRunner) -> None:
+    _seed_active_profile()
+    _capture_snapshot()
+
+    result = cli_runner.invoke(profile_app, ["census", "compare"])
+
+    assert result.exit_code == 0
+    assert "census_only\tcensus.establecimiento_type" in result.output
+    assert "census_only\tvivienda_office.total_m2" in result.output
+
+
+def test_apply_writes_census_facts_onto_profile(cli_runner: CliRunner) -> None:
+    _seed_active_profile()
+    _capture_snapshot()
+
+    result = cli_runner.invoke(profile_app, ["census", "apply"])
+
+    assert result.exit_code == 0
+    assert "written\tcensus.establecimiento_type" in result.output
+    assert "written\tvivienda_office.office_m2" in result.output
+
+
+def test_compare_matches_after_apply(cli_runner: CliRunner) -> None:
+    _seed_active_profile()
+    _capture_snapshot()
+    cli_runner.invoke(profile_app, ["census", "apply"])
+
+    result = cli_runner.invoke(profile_app, ["census", "compare"])
+
+    assert result.exit_code == 0
+    assert "matches\tcensus.establecimiento_type" in result.output
+    assert "matches\tvivienda_office.total_m2" in result.output

@@ -10,7 +10,12 @@ from __future__ import annotations
 
 from ...core.errors import AeatError
 
-__all__ = ["UsageRatioError", "UsageRatioPersistenceError", "UsageRatioValidationError"]
+__all__ = [
+    "CensusRatioMismatchError",
+    "UsageRatioError",
+    "UsageRatioPersistenceError",
+    "UsageRatioValidationError",
+]
 
 
 class UsageRatioError(AeatError):
@@ -35,4 +40,24 @@ class UsageRatioValidationError(UsageRatioError, ValueError):
 
     Inherits from ValueError to maintain compatibility with Pydantic
     validators.
+    """
+
+
+class CensusRatioMismatchError(UsageRatioError):
+    """Raised when a persisted HOME_OFFICE ratio disagrees with the census.
+
+    Surfaced by
+    :func:`aeat.domain.usage_ratios.load_usage_ratios_with_census_guard`
+    when a pre-existing per-category override for a HOME_OFFICE category
+    deviates from the legally-binding census-derived value, or when the
+    operator has not yet captured a census snapshot at all. The
+    modelo-036-037-foundation ADR (2026-05-16 amendment) treats AEAT
+    as the binding legal source of truth: a profile in conflict with
+    the census must be refused at the load boundary so the calculation
+    surface never silently consumes a stale ratio.
+
+    The fix is operator-driven: either refresh the census via
+    ``aeat config profile census refresh`` and ``apply``, or unset the
+    diverging override via ``aeat app ledger ratios unset``. No
+    automatic migration; no shim.
     """

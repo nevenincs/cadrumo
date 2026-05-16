@@ -12,9 +12,6 @@ from ...core.resources import bundled_path
 from ._errors import UserProfileSchemaLoadError
 from ._schema import ProfileSchemaDefinition
 
-DEFAULT_USER_PROFILE_SCHEMA_PATH = bundled_path("registry", "aeat", "user_profile", "schema.toml")
-
-
 def _read_toml(path: Path) -> dict[str, object]:
     try:
         with path.open("rb") as fh:
@@ -37,11 +34,11 @@ def _freeze_toml(data: dict[str, object]) -> dict[str, object]:
     return {key: _freeze_toml_value(value) for key, value in data.items()}
 
 
-def load_user_profile_schema(path: Path = DEFAULT_USER_PROFILE_SCHEMA_PATH) -> ProfileSchemaDefinition:
+def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinition:
     """Load the centralized user-profile schema.
 
     Args:
-        path: TOML schema path. Defaults to the committed registry schema.
+        path: TOML schema path. Defaults to the bundled registry schema.
 
     Returns:
         A strict, frozen :class:`ProfileSchemaDefinition`.
@@ -51,7 +48,8 @@ def load_user_profile_schema(path: Path = DEFAULT_USER_PROFILE_SCHEMA_PATH) -> P
             fails strict schema validation.
     """
 
-    resolved = path.resolve()
+    target = path if path is not None else bundled_path("registry", "aeat", "user_profile", "schema.toml")
+    resolved = target.resolve()
     stat = resolved.stat()
     return _load_user_profile_schema_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 

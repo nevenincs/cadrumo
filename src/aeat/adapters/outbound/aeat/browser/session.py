@@ -94,14 +94,6 @@ class BrowserSession:
                     failure_mode=BrowserFailureMode.SESSION_BUSY,
                     context={"profile": self.profile.name},
                 )
-
-            # ``dict[str, Any]`` here is the irreducible adapter shape:
-            # the dict is spread into ``new_context(**context_kwargs)``
-            # whose typed kwargs are heterogeneous (storage_state,
-            # proxy, viewport, ...). Narrowing to ``object`` breaks the
-            # spread under Playwright's stubs; this is a third-party-API
-            # boundary where ``Any`` is the right type.
-            context_kwargs: dict[str, Any] = {}
             logger.info(
                 "browser context create starting profile=%s channel=%s headless=%s has_proxy=%s",
                 self.profile.name,
@@ -109,137 +101,17 @@ class BrowserSession:
                 self.settings.aeat_browser_headless,
                 bool(self.settings.aeat_proxy_url),
             )
-            proxy: ProxySettings | None = None
-            if self.settings.aeat_proxy_url:
-                proxy = ProxySettings(server=self.settings.aeat_proxy_url)
-                if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret:
-                    proxy["username"] = self.settings.aeat_proxy_username
-                    proxy["password"] = self.settings.aeat_proxy_password_secret
-                if self.settings.aeat_proxy_bypass:
-                    proxy["bypass"] = self.settings.aeat_proxy_bypass
-
-            try:
-                browser = await self.playwright.chromium.launch(
-                    channel=self.settings.aeat_browser_channel,
-                    headless=self.settings.aeat_browser_headless,
-                    proxy=proxy,
-                )
-            except Exception as exc:
-                logger.error(
-                    "browser launch failed failure_mode=%s profile=%s channel=%s headless=%s has_proxy=%s exc_type=%s",
-                    BrowserFailureMode.BROWSER_LAUNCH_FAILED,
-                    self.profile.name,
-                    self.settings.aeat_browser_channel,
-                    self.settings.aeat_browser_headless,
-                    bool(self.settings.aeat_proxy_url),
-                    type(exc).__name__,
-                    exc_info=True,
-                )
-                raise BrowserError(
-                    f"Failed to launch browser: {exc}",
-                    failure_mode=BrowserFailureMode.BROWSER_LAUNCH_FAILED,
-                    context={
-                        "profile": self.profile.name,
-                        "channel": self.settings.aeat_browser_channel,
-                        "headless": self.settings.aeat_browser_headless,
-                        "has_proxy": bool(self.settings.aeat_proxy_url),
-                        "cause_type": type(exc).__name__,
-                    },
-                ) from exc
-
+            proxy = self._build_proxy_settings()
+            browser = await self._launch_chromium(proxy)
             self._browser = browser
             try:
-                self.profile.ensure_storage_dir()
-                effective_storage_state_path = storage_state_path or self.profile.storage_state_path
-
-                context_kwargs = {
-                    "locale": self.profile.locale,
-                    "timezone_id": self.profile.timezone_id,
-                }
-                if self.profile.user_agent:
-                    context_kwargs["user_agent"] = self.profile.user_agent
-
-                if storage_state is not None:
-                    context_kwargs["storage_state"] = storage_state
-                elif effective_storage_state_path.exists():
-                    context_kwargs["storage_state"] = str(effective_storage_state_path)
-
+                context_kwargs = self._build_context_kwargs(
+                    storage_state_path=storage_state_path, storage_state=storage_state, provisioner=provisioner
+                )
+                context = await self._create_playwright_context(browser, context_kwargs)
+                await self._apply_evasion(context)
                 if provisioner is not None:
-                    context_kwargs.update(dict(provisioner.build_context_kwargs()))
-
-                try:
-                    context = await browser.new_context(**context_kwargs)
-                except Exception as exc:
-                    logger.error(
-                        "browser context creation failed failure_mode=%s profile=%s locale=%s timezone=%s "
-                        "storage_state_source=%s exc_type=%s",
-                        BrowserFailureMode.CONTEXT_CREATE_FAILED,
-                        self.profile.name,
-                        self.profile.locale,
-                        self.profile.timezone_id,
-                        _storage_state_source(context_kwargs),
-                        type(exc).__name__,
-                        exc_info=True,
-                    )
-                    raise BrowserError(
-                        f"Failed to create browser context: {exc}",
-                        failure_mode=BrowserFailureMode.CONTEXT_CREATE_FAILED,
-                        context={
-                            "profile": self.profile.name,
-                            "locale": self.profile.locale,
-                            "timezone_id": self.profile.timezone_id,
-                            "storage_state_source": _storage_state_source(context_kwargs),
-                            "cause_type": type(exc).__name__,
-                        },
-                    ) from exc
-                finally:
-                    # Keep provider materialised secrets live only for the
-                    # exact Playwright construction boundary.
-                    context_kwargs.pop("client_certificates", None)
-
-                try:
-                    await self.evasion_strategy.apply(context)
-                except Exception as exc:
-                    logger.error(
-                        "browser evasion failed failure_mode=%s profile=%s evasion_strategy=%s exc_type=%s",
-                        BrowserFailureMode.EVASION_FAILED,
-                        self.profile.name,
-                        type(self.evasion_strategy).__name__,
-                        type(exc).__name__,
-                        exc_info=True,
-                    )
-                    raise BrowserError(
-                        f"Failed to apply browser evasion strategy: {exc}",
-                        failure_mode=BrowserFailureMode.EVASION_FAILED,
-                        context={
-                            "profile": self.profile.name,
-                            "evasion_strategy": type(self.evasion_strategy).__name__,
-                            "cause_type": type(exc).__name__,
-                        },
-                    ) from exc
-
-                if provisioner is not None:
-                    try:
-                        provisioner.annotate_context(context)
-                    except Exception as exc:
-                        logger.error(
-                            "browser context annotation failed failure_mode=%s profile=%s provisioner=%s exc_type=%s",
-                            BrowserFailureMode.CONTEXT_ANNOTATION_FAILED,
-                            self.profile.name,
-                            type(provisioner).__name__,
-                            type(exc).__name__,
-                            exc_info=True,
-                        )
-                        raise BrowserError(
-                            f"Failed to annotate browser context: {exc}",
-                            failure_mode=BrowserFailureMode.CONTEXT_ANNOTATION_FAILED,
-                            context={
-                                "profile": self.profile.name,
-                                "provisioner": type(provisioner).__name__,
-                                "cause_type": type(exc).__name__,
-                            },
-                        ) from exc
-
+                    self._annotate_context_via_provisioner(context, provisioner)
                 logger.info("browser context create succeeded profile=%s", self.profile.name)
                 return context
             except BrowserError:
@@ -259,6 +131,166 @@ class BrowserSession:
                     failure_mode=BrowserFailureMode.CONTEXT_CREATE_FAILED,
                     context={"profile": self.profile.name, "cause_type": type(exc).__name__},
                 ) from exc
+
+    def _build_proxy_settings(self) -> ProxySettings | None:
+        """Translate the settings's proxy block into a Playwright ProxySettings record."""
+        if not self.settings.aeat_proxy_url:
+            return None
+        proxy = ProxySettings(server=self.settings.aeat_proxy_url)
+        if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret:
+            proxy["username"] = self.settings.aeat_proxy_username
+            proxy["password"] = self.settings.aeat_proxy_password_secret
+        if self.settings.aeat_proxy_bypass:
+            proxy["bypass"] = self.settings.aeat_proxy_bypass
+        return proxy
+
+    async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
+        """Launch Chromium with the profile's channel/headless/proxy config; raise BrowserError on failure."""
+        try:
+            return await self.playwright.chromium.launch(
+                channel=self.settings.aeat_browser_channel,
+                headless=self.settings.aeat_browser_headless,
+                proxy=proxy,
+            )
+        except Exception as exc:
+            logger.error(
+                "browser launch failed failure_mode=%s profile=%s channel=%s headless=%s has_proxy=%s exc_type=%s",
+                BrowserFailureMode.BROWSER_LAUNCH_FAILED,
+                self.profile.name,
+                self.settings.aeat_browser_channel,
+                self.settings.aeat_browser_headless,
+                bool(self.settings.aeat_proxy_url),
+                type(exc).__name__,
+                exc_info=True,
+            )
+            raise BrowserError(
+                f"Failed to launch browser: {exc}",
+                failure_mode=BrowserFailureMode.BROWSER_LAUNCH_FAILED,
+                context={
+                    "profile": self.profile.name,
+                    "channel": self.settings.aeat_browser_channel,
+                    "headless": self.settings.aeat_browser_headless,
+                    "has_proxy": bool(self.settings.aeat_proxy_url),
+                    "cause_type": type(exc).__name__,
+                },
+            ) from exc
+
+    def _build_context_kwargs(
+        self,
+        *,
+        storage_state_path: Path | None,
+        storage_state: dict[str, Any] | None,
+        provisioner: BrowserContextProvisioner | None,
+    ) -> dict[str, Any]:
+        """Compose the ``browser.new_context(**kwargs)`` dict from profile + storage + provisioner.
+
+        ``dict[str, Any]`` is the irreducible adapter shape: the dict is
+        spread into ``new_context(**context_kwargs)`` whose typed kwargs
+        are heterogeneous (storage_state, proxy, viewport, ...).
+        Narrowing to ``object`` breaks the spread under Playwright's
+        stubs; this is a third-party-API boundary where ``Any`` is the
+        right type.
+        """
+        self.profile.ensure_storage_dir()
+        effective_storage_state_path = storage_state_path or self.profile.storage_state_path
+        context_kwargs: dict[str, Any] = {
+            "locale": self.profile.locale,
+            "timezone_id": self.profile.timezone_id,
+        }
+        if self.profile.user_agent:
+            context_kwargs["user_agent"] = self.profile.user_agent
+        if storage_state is not None:
+            context_kwargs["storage_state"] = storage_state
+        elif effective_storage_state_path.exists():
+            context_kwargs["storage_state"] = str(effective_storage_state_path)
+        if provisioner is not None:
+            context_kwargs.update(dict(provisioner.build_context_kwargs()))
+        return context_kwargs
+
+    async def _create_playwright_context(
+        self, browser: Browser, context_kwargs: dict[str, Any]
+    ) -> BrowserContext:
+        """Wrap ``browser.new_context(...)`` with the typed BrowserError envelope.
+
+        Pops ``client_certificates`` from ``context_kwargs`` after the
+        call so provider-materialised secrets stay live only for the
+        exact Playwright construction boundary.
+        """
+        try:
+            return await browser.new_context(**context_kwargs)
+        except Exception as exc:
+            logger.error(
+                "browser context creation failed failure_mode=%s profile=%s locale=%s timezone=%s "
+                "storage_state_source=%s exc_type=%s",
+                BrowserFailureMode.CONTEXT_CREATE_FAILED,
+                self.profile.name,
+                self.profile.locale,
+                self.profile.timezone_id,
+                _storage_state_source(context_kwargs),
+                type(exc).__name__,
+                exc_info=True,
+            )
+            raise BrowserError(
+                f"Failed to create browser context: {exc}",
+                failure_mode=BrowserFailureMode.CONTEXT_CREATE_FAILED,
+                context={
+                    "profile": self.profile.name,
+                    "locale": self.profile.locale,
+                    "timezone_id": self.profile.timezone_id,
+                    "storage_state_source": _storage_state_source(context_kwargs),
+                    "cause_type": type(exc).__name__,
+                },
+            ) from exc
+        finally:
+            context_kwargs.pop("client_certificates", None)
+
+    async def _apply_evasion(self, context: BrowserContext) -> None:
+        """Apply the evasion strategy to ``context`` with a typed BrowserError envelope."""
+        try:
+            await self.evasion_strategy.apply(context)
+        except Exception as exc:
+            logger.error(
+                "browser evasion failed failure_mode=%s profile=%s evasion_strategy=%s exc_type=%s",
+                BrowserFailureMode.EVASION_FAILED,
+                self.profile.name,
+                type(self.evasion_strategy).__name__,
+                type(exc).__name__,
+                exc_info=True,
+            )
+            raise BrowserError(
+                f"Failed to apply browser evasion strategy: {exc}",
+                failure_mode=BrowserFailureMode.EVASION_FAILED,
+                context={
+                    "profile": self.profile.name,
+                    "evasion_strategy": type(self.evasion_strategy).__name__,
+                    "cause_type": type(exc).__name__,
+                },
+            ) from exc
+
+    def _annotate_context_via_provisioner(
+        self, context: BrowserContext, provisioner: BrowserContextProvisioner
+    ) -> None:
+        """Run the provisioner's post-construct annotation hook with typed error envelope."""
+        try:
+            provisioner.annotate_context(context)
+        except Exception as exc:
+            logger.error(
+                "browser context annotation failed failure_mode=%s profile=%s provisioner=%s exc_type=%s",
+                BrowserFailureMode.CONTEXT_ANNOTATION_FAILED,
+                self.profile.name,
+                type(provisioner).__name__,
+                type(exc).__name__,
+                exc_info=True,
+            )
+            raise BrowserError(
+                f"Failed to annotate browser context: {exc}",
+                failure_mode=BrowserFailureMode.CONTEXT_ANNOTATION_FAILED,
+                context={
+                    "profile": self.profile.name,
+                    "provisioner": type(provisioner).__name__,
+                    "cause_type": type(exc).__name__,
+                },
+            ) from exc
 
     async def close(self) -> None:
         """Close the retained Playwright browser, if any.

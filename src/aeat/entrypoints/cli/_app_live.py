@@ -9,12 +9,8 @@ from typing import Annotated, Literal
 import typer
 
 from ...application.live import FiledDataListingRow, capture_filed_data, capture_source_filed_data, list_filed_data
-from ...core.resources import bundled_path
 from ._common import _emit
 from ._i18n import tr
-
-_DEFAULT_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_DEFAULT_SOURCE_ROOT = bundled_path()
 
 _VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -77,10 +73,7 @@ def filed_list_cmd(
 
     resolved_from = year_from if year_from is not None else _date.today().year
     resolved_to = year_to if year_to is not None else _date.today().year
-    if modelo is None:
-        modelos = tuple(str(m.id) for m in resources().modelos.all())
-    else:
-        modelos = (modelo,)
+    modelos = tuple(str(m.id) for m in resources().modelos.all()) if modelo is None else (modelo,)
     all_rows: list[FiledDataListingRow] = []
     total_count = 0
     for code in modelos:
@@ -183,27 +176,25 @@ def filed_capture_sources_cmd(
         ),
     ] = Path("var/aeat/filed-declarations"),
     registry_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--registry-root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.app.live.registry_root_help"),
         ),
-    ] = _DEFAULT_REGISTRY_ROOT,
+    ] = None,
     source_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--source-root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.app.live.source_root_help"),
         ),
-    ] = _DEFAULT_SOURCE_ROOT,
+    ] = None,
 ) -> None:
     """Capture filed observations required by a target filing's dependencies."""
 

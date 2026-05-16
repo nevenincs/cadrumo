@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ._authority import ValidatedRegistryAuthority, default_registry_authority
+from ._authority import ValidatedRegistryAuthority
 from ._bindings import (
     CasillaObservation,
     CounterpartAggregationObservation,
@@ -365,7 +365,6 @@ __all__ = [
     "convert_binary_xls_with_libreoffice",
     "converted_binary_xls_with_libreoffice",
     "counterpart_binding_requirements",
-    "default_registry_authority",
     "derive_export_layouts_from_bindings",
     "detect_workbook_runner",
     "discover_workbooks",

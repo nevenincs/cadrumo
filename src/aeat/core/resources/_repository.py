@@ -15,14 +15,15 @@ no eviction, because the bundled data is immutable per install.
 
 from __future__ import annotations
 
-from typing import Generic, Hashable, Iterable, Protocol, TypeVar, runtime_checkable
+from collections.abc import Hashable, Iterable
+from typing import Generic, Protocol, TypeVar, runtime_checkable
 
 T = TypeVar("T")
 K = TypeVar("K", bound=Hashable)
 
 
 @runtime_checkable
-class ResourceRepository(Protocol, Generic[T, K]):
+class ResourceRepository(Protocol, Generic[T, K]):  # noqa: UP046
     """Typed read-only resource repository protocol."""
 
     def get(self, key: K) -> T:
@@ -38,7 +39,7 @@ class ResourceRepository(Protocol, Generic[T, K]):
         ...
 
 
-class Repository(Generic[T, K]):
+class Repository(Generic[T, K]):  # noqa: UP046
     """Default Repository implementation with an Identity Map cache.
 
     Subclasses override :meth:`_load` to read and validate one

@@ -30,6 +30,9 @@ class SpendingCategory(StrEnum):
     SUMINISTROS_HOME_OFFICE_AGUA = "suministros_home_office_agua"
     SUMINISTROS_HOME_OFFICE_GAS = "suministros_home_office_gas"
     SUMINISTROS_HOME_OFFICE_INTERNET = "suministros_home_office_internet"
+    AMORTIZACION_VIVIENDA_AFECTO = "amortizacion_vivienda_afecto"
+    IBI_VIVIENDA_AFECTO = "ibi_vivienda_afecto"
+    COMUNIDAD_VIVIENDA_AFECTO = "comunidad_vivienda_afecto"
     TELEFONIA_MOVIL = "telefonia_movil"
     TELEFONIA_FIJA = "telefonia_fija"
     MATERIAL_OFICINA = "material_oficina"
@@ -71,7 +74,8 @@ class SpendingCategoryFamily(StrEnum):
 
     SOCIAL_SECURITY = "social_security"
     PREMISES = "premises"
-    HOME_OFFICE = "home_office"
+    HOME_OFFICE_SUMINISTROS = "home_office_suministros"
+    HOME_OFFICE_OWNERSHIP = "home_office_ownership"
     TELECOMS = "telecoms"
     OFFICE = "office"
     VEHICLE = "vehicle"
@@ -95,11 +99,16 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
         SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
         SpendingCategory.IBI_LOCAL_AFECTO,
     ),
-    SpendingCategoryFamily.HOME_OFFICE: (
+    SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS: (
         SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_GAS,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET,
+    ),
+    SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP: (
+        SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
+        SpendingCategory.IBI_VIVIENDA_AFECTO,
+        SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
     ),
     SpendingCategoryFamily.TELECOMS: (
         SpendingCategory.TELEFONIA_MOVIL,

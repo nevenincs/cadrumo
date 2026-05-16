@@ -19,8 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import bundled_path
-from ....domain.calculations.registry._loader import load_registry_tree
+from ....core.resources import resources
 from ...outbound.storage._errors import StorageConflictError
 from ._calc_sheets_pull import (
     BindingEdit,
@@ -37,18 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 def _modelo_130_snapshot():
     from datetime import date
 
-    from ....domain.calculations.registry._snapshot import build_snapshot
-
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "130")
-    return build_snapshot(
-        modelo=modelo,
-        catalogues=catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-        on=date(2025, 4, 1),
-    )
+    return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def _matching_metadata(snapshot) -> PullMetadata:

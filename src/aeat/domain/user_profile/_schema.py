@@ -106,6 +106,7 @@ class ProfileFieldDefinition(BaseModel):
     model_selectors: tuple[_Selector, ...] = Field(default=())
     export_headers: tuple[_Selector, ...] = Field(default=())
     schedule_predicates: tuple[_Selector, ...] = Field(default=())
+    legal_refs: tuple[_Description, ...] = Field(default=())
 
     @field_validator("type", mode="before")
     @classmethod

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from aeat.core.resources import bundled_path, resources
 
 from ._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ._live_parity import (
@@ -19,7 +19,6 @@ from ._live_parity import (
     audit_oracle_bindings,
     audit_registry_oracle_bindings,
 )
-from ._loader import load_registry_tree
 from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -28,8 +27,7 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _modelo_130() -> ModeloDefinition:
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    return next(m for m in modelos if m.id == "130")
+    return resources().modelos.get("130")
 
 
 def _bind_oracle_id_on_first_cross_reference(modelo: ModeloDefinition, oracle_id: str) -> ModeloDefinition:
@@ -104,9 +102,8 @@ def test_binding_to_unregistered_oracle_fails_with_unknown_oracle_message() -> N
 
 
 def test_aggregate_audit_collects_failures_across_modelos() -> None:
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelo_130 = next(m for m in modelos if m.id == "130")
-    modelo_111 = next(m for m in modelos if m.id == "111")
+    modelo_130 = resources().modelos.get("130")
+    modelo_111 = resources().modelos.get("111")
 
     bound_130 = _bind_oracle_id_on_first_cross_reference(modelo_130, "missing-130")
     bound_111 = _bind_oracle_id_on_first_cross_reference(modelo_111, "missing-111")

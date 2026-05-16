@@ -26,7 +26,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...domain.categories import SpendingCategory, resolve_category_profiles
+from ...core.resources import resources
+from ...domain.categories import SpendingCategory
 from ...domain.renta import (
     RentaDeductibilityContext,
     RentaDeductibleExpenseFact,
@@ -56,7 +57,7 @@ def _observation(
         direction=RentaExpenseDirection.OUTGOING_EXPENSE,
         category=category,
     )
-    profile = resolve_category_profiles(2025)[category]
+    profile = resources().category_profiles.get(2025)[category]
     result = evaluate_renta_deductibility(
         fact,
         profile,

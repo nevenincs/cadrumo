@@ -17,11 +17,25 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...domain.categories import CATEGORY_PROFILES_2025, ProportionalityRule, SpendingCategory
+from ...domain.categories import (
+    ProportionalityRule,
+    SpendingCategory,
+    SpendingCategoryFamily,
+    effective_usage_ratio,
+    family_for,
+    resolve_category_profiles,
+)
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
     load_usage_ratios,
+)
+
+_HOME_OFFICE_FAMILIES = frozenset(
+    {
+        SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
+        SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
+    }
 )
 
 
@@ -73,7 +87,7 @@ def eligible_ratio_categories(profile: UsageRatioProfile) -> tuple[EligibleCateg
     """
     rows: list[EligibleCategoryRow] = []
     for category in sorted(ELIGIBLE_USAGE_RATIO_CATEGORIES, key=lambda c: c.value):
-        category_profile = CATEGORY_PROFILES_2025[category]
+        category_profile = resolve_category_profiles(2025)[category]
         rule: ProportionalityRule = category_profile.proportionality
         rows.append(
             EligibleCategoryRow(
@@ -170,10 +184,106 @@ def validate_ratios_for_bucket(
     )
 
 
+class RatiosCensusOverrideWarning(BaseModel):
+    """A non-fatal warning that the operator's per-category override
+    deviates from the legally-binding census-derived value.
+
+    The census is the binding legal source of truth per the
+    modelo-036-037-foundation ADR (2026-05-16 amendment). Operators
+    may still override (e.g. to model a planned afectación change),
+    but the engine emits a typed warning so downstream auditors can
+    review the divergence.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    category: SpendingCategory
+    override_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    census_derived_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    raw_afectacion_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+
+
+def census_business_pct_for(
+    category: SpendingCategory,
+    raw_afectacion_ratio: Decimal | None,
+    *,
+    year: int = 2025,
+) -> Decimal | None:
+    """Return the legally-effective business_pct for a category from census.
+
+    The per-category projection of
+    :func:`aeat.domain.usage_ratios.derive_home_office_ratios_from_census`:
+    given a single :class:`SpendingCategory` and the operator's bound
+    census ``office_m2 / total_m2``, returns the
+    ``raw_afectacion_ratio * statutory_multiplier`` value the classify
+    and allocate paths should stamp onto ``Transaction.business_pct``
+    when no operator override is present. Returns ``None`` for
+    categories outside the HOME_OFFICE families or when no census has
+    been applied yet, signalling to the caller that the operator's
+    explicit value (or the registry default) governs instead.
+    """
+
+    if raw_afectacion_ratio is None:
+        return None
+    if family_for(category) not in _HOME_OFFICE_FAMILIES:
+        return None
+    rule = resolve_category_profiles(year)[category].proportionality
+    return effective_usage_ratio(rule, raw_afectacion_ratio)
+
+
+def census_override_warning(
+    *,
+    category: SpendingCategory,
+    override_ratio: Decimal,
+    raw_afectacion_ratio: Decimal,
+    year: int = 2025,
+) -> RatiosCensusOverrideWarning | None:
+    """Return a typed warning when an override deviates from the census.
+
+    The check is silent for non-HOME_OFFICE categories: only the
+    suministros and ownership home-office families are legally bound
+    to the census-derived afectación ratio (LIRPF Art. 30.2 rule 5,
+    Ley 6/2017 BOE-A-2017-12544). For HOME_OFFICE categories the
+    helper computes the legally-effective ratio (raw afectación times
+    the rule's ``statutory_multiplier``) and compares it against
+    ``override_ratio`` for exact equality. A non-equal pair returns a
+    :class:`RatiosCensusOverrideWarning`; equal values (and
+    non-home-office categories) return ``None``.
+
+    Args:
+        category: The category being overridden via ``ratios set``.
+        override_ratio: The operator-supplied override.
+        raw_afectacion_ratio: ``office_m2 / total_m2`` from the bound
+            census snapshot.
+        year: Registry year whose proportionality rule drives the
+            derivation.
+
+    Returns:
+        A :class:`RatiosCensusOverrideWarning` if a warning should be
+        emitted, otherwise ``None``.
+    """
+
+    if family_for(category) not in _HOME_OFFICE_FAMILIES:
+        return None
+    rule = resolve_category_profiles(year)[category].proportionality
+    derived = effective_usage_ratio(rule, raw_afectacion_ratio)
+    if derived == override_ratio:
+        return None
+    return RatiosCensusOverrideWarning(
+        category=category,
+        override_ratio=override_ratio,
+        census_derived_ratio=derived,
+        raw_afectacion_ratio=raw_afectacion_ratio,
+    )
+
+
 __all__ = [
     "EligibleCategoryRow",
+    "RatiosCensusOverrideWarning",
     "RatiosValidationFinding",
     "RatiosValidationReport",
+    "census_business_pct_for",
+    "census_override_warning",
     "eligible_ratio_categories",
     "list_eligible_ratios_for_bucket",
     "validate_ratios_for_bucket",

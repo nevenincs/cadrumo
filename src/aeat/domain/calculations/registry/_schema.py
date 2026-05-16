@@ -438,6 +438,23 @@ class LiveCrossReferenceDecision(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
+        self._validate_evidence_tier_alignment()
+        self._validate_allowed_hosts_declared()
+        self._validate_authentication_constraints()
+        self._validate_synthetic_data_constraints()
+        for method in self.allowed_methods:
+            self._validate_allowed_method(method)
+        if self.applicability_condition_mode == "any" and not self.applicability_predicates:
+            raise RegistryValidationError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
+        return self
+
+    def _validate_evidence_tier_alignment(self) -> None:
+        """The evidence_tier must match the surface's regulatory class.
+
+        Live surfaces (simulators, integration test services) carry
+        executable parity evidence; read surfaces and static
+        documentation carry observation evidence only.
+        """
         if (
             self.surface in {"open_simulator", "integration_test_service", "authenticated_simulator"}
             and self.evidence_tier != "executable_parity_evidence"
@@ -445,8 +462,9 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} live surface requires executable parity evidence"
             )
-        if self.surface in {"public_read_surface", "authenticated_read_surface"} and (
-            self.evidence_tier == "executable_parity_evidence"
+        if (
+            self.surface in {"public_read_surface", "authenticated_read_surface"}
+            and self.evidence_tier == "executable_parity_evidence"
         ):
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} read surface is observation evidence, not parity"
@@ -455,6 +473,9 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} static documentation is not executable parity evidence"
             )
+
+    def _validate_allowed_hosts_declared(self) -> None:
+        """Every non-static surface must declare its allowed_hosts."""
         if (
             self.surface
             in {
@@ -467,8 +488,18 @@ class LiveCrossReferenceDecision(RegistryModel):
             and not self.allowed_hosts
         ):
             raise RegistryValidationError(f"cross-reference {self.id!r} must declare allowed_hosts")
+
+    def _validate_authentication_constraints(self) -> None:
+        """Per-surface auth + AEAT-authorization requirements.
+
+        Open simulators and public reads must not require auth;
+        authenticated reads must require both auth and AEAT
+        authorization; authenticated simulators must require auth.
+        """
         if self.surface == "open_simulator" and self.requires_authentication:
-            raise RegistryValidationError(f"cross-reference {self.id!r} open simulator must not require authentication")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} open simulator must not require authentication"
+            )
         if self.surface == "public_read_surface" and self.requires_authentication:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} public read surface must not require authentication"
@@ -485,41 +516,38 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} authenticated simulator must require authentication"
             )
+
+    def _validate_synthetic_data_constraints(self) -> None:
+        """Read surfaces and static docs must not accept synthetic data."""
         if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
             raise RegistryValidationError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
         if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} static documentation cannot accept synthetic data"
             )
-        for method in self.allowed_methods:
-            if method.upper() != method:
-                raise RegistryValidationError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
-            if self.surface in {"public_read_surface", "authenticated_read_surface"} and method not in {
-                "GET",
-                "HEAD",
-                "OPTIONS",
-            }:
-                raise RegistryValidationError(
-                    f"cross-reference {self.id!r} read surface method {method!r} is not read-only"
-                )
-            # authenticated_simulator declares the AEAT-prescribed query
-            # method (POST is the GROI / IXVI form-submit mechanism). The
-            # remote-state guard's HTTP-method check stays strict for
-            # ``kind="http"`` operations; only the cross-reference's
-            # allowed_methods declaration is widened.
-            if self.surface == "authenticated_simulator" and method not in {
-                "GET",
-                "HEAD",
-                "OPTIONS",
-                "POST",
-            }:
-                raise RegistryValidationError(
-                    f"cross-reference {self.id!r} authenticated simulator method "
-                    f"{method!r} not in (GET, HEAD, OPTIONS, POST)"
-                )
-        if self.applicability_condition_mode == "any" and not self.applicability_predicates:
-            raise RegistryValidationError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
-        return self
+
+    def _validate_allowed_method(self, method: str) -> None:
+        """Per-surface HTTP method allowlist + uppercase shape requirement."""
+        if method.upper() != method:
+            raise RegistryValidationError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
+        if self.surface in {"public_read_surface", "authenticated_read_surface"} and method not in {
+            "GET",
+            "HEAD",
+            "OPTIONS",
+        }:
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} read surface method {method!r} is not read-only"
+            )
+        # authenticated_simulator declares the AEAT-prescribed query
+        # method (POST is the GROI / IXVI form-submit mechanism). The
+        # remote-state guard's HTTP-method check stays strict for
+        # ``kind="http"`` operations; only the cross-reference's
+        # allowed_methods declaration is widened.
+        if self.surface == "authenticated_simulator" and method not in {"GET", "HEAD", "OPTIONS", "POST"}:
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} authenticated simulator method "
+                f"{method!r} not in (GET, HEAD, OPTIONS, POST)"
+            )
 
 
 class WorkbookParityReference(RegistryModel):

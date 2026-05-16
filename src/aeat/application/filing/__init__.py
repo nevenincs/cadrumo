@@ -7,12 +7,11 @@ from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
-from ...core.resources import bundled_path, resources
+from ...core.resources import resources
 from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
-    ValidatedRegistryAuthority,
     calculate_registry_snapshot,
 )
 from ...domain.calculations.registry._schema import RegistrySnapshotRef

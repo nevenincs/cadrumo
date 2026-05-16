@@ -14,7 +14,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Self
+from typing import Annotated, Self
 
 from pydantic import (
     BaseModel,
@@ -26,7 +26,6 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from typing import Annotated
 
 from ...domain.categories import SpendingCategory
 

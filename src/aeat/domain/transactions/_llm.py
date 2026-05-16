@@ -42,7 +42,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
-from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
+from ..categories import resolve_category_profiles, SpendingCategory
 from ._enums import BusinessClassification
 from ._errors import LLMClassifierError, TransactionValidationError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
@@ -190,7 +190,7 @@ def prompt_spec_with_every_spending_category(
     """Return a prompt spec that also asks the LLM to suggest a SpendingCategory.
 
     Pulls authoritative Spanish display labels from
-    :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` rather than
+    :data:`aeat.domain.categories.resolve_category_profiles(2025)` rather than
     inventing ad-hoc hints from the enum value -- the LLM picks
     categories far more accurately against the real AEAT terminology
     than against mangled snake_case. Categories with no registered
@@ -218,14 +218,14 @@ def _category_hint(value: SpendingCategory) -> str:
 
     Pulls the Spanish display label plus the proportionality kind and
     (first 80 chars of) ``notes`` from
-    :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` -- gives the
+    :data:`aeat.domain.categories.resolve_category_profiles(2025)` -- gives the
     LLM the authoritative AEAT terminology AND the deductibility
     context (e.g. ``full_deductible``, ``usage_ratio_home_area``) that
     disambiguates home-office from premises rent or drives MIXED vs
     BUSINESS decisions. Falls back to the humanised enum value when a
     category has no registered profile.
     """
-    profile = CATEGORY_PROFILES_2025.get(value)
+    profile = resolve_category_profiles(2025).get(value)
     if profile is None:
         return value.value.replace("_", " ")
     spanish_label = profile.display_label or value.value.replace("_", " ")

@@ -7,9 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from aeat.core.resources import bundled_path, resources
 
-from . import RegistrySnapshotError, ValidatedRegistryAuthority, calculate_registry_snapshot
+from . import RegistrySnapshotError, calculate_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -17,7 +17,7 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context() -> None:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
+    authority = resources().modelos.authority
 
     first = authority.snapshot("130", filing_year=2026, period="1T")
     second = authority.snapshot("130", filing_year=2026, period="1T")
@@ -28,7 +28,7 @@ def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context
 
 
 def test_authority_snapshot_runs_real_modelo_calculation() -> None:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
+    authority = resources().modelos.authority
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
 
     result = calculate_registry_snapshot(
@@ -53,14 +53,14 @@ def test_authority_snapshot_runs_real_modelo_calculation() -> None:
 
 
 def test_authority_rejects_unknown_modelo() -> None:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
+    authority = resources().modelos.authority
 
     with pytest.raises(RegistrySnapshotError, match="999"):
         authority.snapshot("999", filing_year=2026, period="1T")
 
 
 def test_authority_deadline_windows_are_validated_and_sorted() -> None:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
+    authority = resources().modelos.authority
 
     windows = authority.deadline_windows(2026, modelos=("130",))
 

@@ -65,7 +65,7 @@ def relation_source_requirements(
         else:
             source_periods = relation.source_periods or (period,)
         key = (
-            str(relation.source_modelo),
+            relation.source_modelo,
             source_year,
             tuple(source_periods),
             relation.source_output,

@@ -15,7 +15,7 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path
+from aeat.core.resources import resources
 from aeat.domain.calculations.registry import (
     CasillaObservation,
     DataBindingDefinition,
@@ -25,8 +25,6 @@ from aeat.domain.calculations.registry import (
     RegistryFilingObservation,
     RegistryValidationError,
     calculate_registry_snapshot,
-    default_registry_authority,
-    load_registry_tree,
     resolve_bound_casilla_inputs,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_previous_filing_binding_values,
@@ -43,8 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @lru_cache(maxsize=1)
 def _modelo_303_revision() -> ModeloRevision:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "303")
+    modelo = resources().modelos.get("303")
     return modelo.revisions["2009-y-siguientes"]
 
 
@@ -91,7 +88,7 @@ def _calculate_303_from_observations(
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
-    snapshot = default_registry_authority().snapshot("303", filing_year=filing_year, period=period)
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
     binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
@@ -108,7 +105,7 @@ def _calculate_390_from_observations_and_303_filings(
     observations: tuple[IvaLedgerObservation, ...],
     quarterly_results: dict[str, RegistryCalculationResult],
 ) -> RegistryCalculationResult:
-    snapshot = default_registry_authority().snapshot("390", filing_year=filing_year, period="0A")
+    snapshot = resources().modelos.authority.snapshot("390", filing_year=filing_year, period="0A")
     ledger_binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
     previous_filing_values = resolve_previous_filing_binding_values(
         snapshot.revision,

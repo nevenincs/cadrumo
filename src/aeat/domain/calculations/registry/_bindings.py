@@ -573,6 +573,14 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
     {"rectified_year", "rectified_period", "rectified_base_previous"}
 )
 
+# party_legal_name is optional on InvoiceObservation: the row-builder
+# omits it from the row dict when no observation in the bucket has a
+# non-None legal_name. A binding declaring row_field="party_legal_name"
+# therefore fails deterministically at runtime whenever its bucket has
+# only legal-name-absent observations. Reject it at snapshot-build so
+# the latent hazard cannot land via a TOML edit.
+_OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset({"party_legal_name"})
+
 
 def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate an invoice-source binding before it reaches runtime."""
@@ -606,6 +614,11 @@ def _validate_invoice_fact_and_aggregation(binding: DataBindingDefinition, selec
         if selector.row_field is None:
             raise RegistryValidationError(
                 f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
+            )
+        if selector.row_field in _OPTIONAL_ONLY_INVOICE_ROW_FIELDS:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} row_field {selector.row_field!r} is optional on the underlying "
+                f"observation and cannot be required by a row-producer binding"
             )
         if selector.grouping is None:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
@@ -1143,6 +1156,14 @@ class IvaLedgerObservation(BaseModel):
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
+    prorrata_reference_id: str | None = Field(default=None, min_length=1, max_length=128)
+    """Stable id of the linked :class:`ProrrataLedgerReference` row, when set.
+
+    Populated by the aggregator only on ``SOPORTADO`` (input VAT) flows
+    that carry a validated prorrata reference. Downstream Modelo 303 /
+    390 binding selectors filter prorrata-linked observations without
+    a manual join against the parallel ``prorrata_references`` tuple.
+    """
 
 
 class _IvaLedgerSelector(BaseModel):
@@ -2474,6 +2495,33 @@ class _ProfileSelector(BaseModel):
         return self
 
 
+_MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(
+    ("record", "field", "offset", "length")
+)
+"""Canonical record-field shape keys on the manual_input selector.
+
+Single source of truth for both the typed validator in
+:class:`_ManualInputSelector` and the layout-binding predicate at
+:func:`aeat.domain.calculations.registry._validate._is_layout_binding`.
+"""
+
+
+def is_layout_binding_selector(selector: Mapping[str, object]) -> bool:
+    """Return True when ``selector`` carries the record-field layout shape.
+
+    The predicate intentionally mirrors the record-shape keys declared
+    on :class:`_ManualInputSelector` rather than re-implementing the
+    check via raw key inspection. Validate gate behaviour stays
+    coupled to the typed model: if the manual_input record-shape key
+    set is ever extended or renamed, the layout predicate follows
+    automatically.
+    """
+
+    if "data_type" not in selector:
+        return False
+    return _MANUAL_INPUT_RECORD_SHAPE_KEYS.issubset(selector)
+
+
 class _ManualInputSelector(BaseModel):
     """Strict validator for the selector mapping of a manual_input binding.
 
@@ -2510,7 +2558,7 @@ class _ManualInputSelector(BaseModel):
     @model_validator(mode="after")
     def _validate_manual_input_shape(self) -> _ManualInputSelector:
         casilla_shape_keys = {"casilla"}
-        record_shape_keys = {"record", "field", "offset", "length"}
+        record_shape_keys = _MANUAL_INPUT_RECORD_SHAPE_KEYS
         has_casilla = self.casilla is not None
         has_record_shape = any(
             getattr(self, key) is not None for key in record_shape_keys
@@ -2602,8 +2650,8 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     handler-call-time helpers see. Without this projection the gate
     would reject any registry binding whose loaded selector still
     carries the (test-injected or legacy) ``source`` key, while the
-    handler would accept it — a stricter-than-runtime drift the
-    audit caught.
+    handler would accept it — a stricter-than-runtime drift that
+    must not land in production.
 
     Counterpart-source bindings (``ledger_transaction``,
     ``purchase_invoice_evidence``, ``payable_invoice``,

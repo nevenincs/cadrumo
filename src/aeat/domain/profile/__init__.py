@@ -14,6 +14,7 @@ from unicodedata import category, normalize
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ._ccaa import CCAA
+from ._constants import BucketId, ProfileName
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._keys import (
     ProfileKey,
@@ -146,9 +147,11 @@ def _normalize_region_token(raw: str) -> str:
 __all__ = [
     "CCAA",
     "PROFILE_KEYS",
+    "BucketId",
     "ForalRegimeError",
     "ProfileKey",
     "ProfileKeyRequirement",
+    "ProfileName",
     "ProfileNotConfiguredError",
     "RentaAscendantProfile",
     "RentaDeclarationType",

@@ -894,3 +894,72 @@ reference = "Ley 35/2006"
 locator = "art. 14 LIS por remisión"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.tributos_fiscalmente_deducibles.citations.1.quote"
+
+[[profiles]]
+category = "amortizacion_vivienda_afecto"
+display_label = "categories.registry.amortizacion_vivienda_afecto"
+vat_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+notes = "categories.registry.amortizacion_vivienda_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.b (regla 4ª, amortización vivienda afecta)"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "categories.registry.amortizacion_vivienda_afecto.citations.0.quote"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta - amortización"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = "categories.registry.amortizacion_vivienda_afecto.citations.1.quote"
+
+[[profiles]]
+category = "ibi_vivienda_afecto"
+display_label = "categories.registry.ibi_vivienda_afecto"
+vat_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+notes = "categories.registry.ibi_vivienda_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.b (regla 2ª, tributos no estatales vivienda afecta)"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "categories.registry.ibi_vivienda_afecto.citations.0.quote"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta - IBI"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = "categories.registry.ibi_vivienda_afecto.citations.1.quote"
+
+[[profiles]]
+category = "comunidad_vivienda_afecto"
+display_label = "categories.registry.comunidad_vivienda_afecto"
+vat_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+notes = "categories.registry.comunidad_vivienda_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.b (regla 2ª, gastos titularidad vivienda afecta)"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "categories.registry.comunidad_vivienda_afecto.citations.0.quote"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta - gastos de comunidad"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = "categories.registry.comunidad_vivienda_afecto.citations.1.quote"

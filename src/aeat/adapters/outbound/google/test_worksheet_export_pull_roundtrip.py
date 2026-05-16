@@ -29,9 +29,7 @@ from ....application.storage.calc_sheets import (
 )
 from ....application.storage.calc_sheets._engine import _registry_sha
 from ....application.storage.calc_sheets._records import OperatorInput
-from ....core.resources import bundled_path
-from ....domain.calculations.registry._loader import load_registry_tree
-from ....domain.calculations.registry._snapshot import build_snapshot
+from ....core.resources import resources
 from ._calc_sheets_pull import (
     BindingEdit,
     OperatorEdit,
@@ -47,16 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 def _modelo_130_snapshot():
     """Load a real modelo-130 snapshot from the bundled registry."""
 
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "130")
-    return build_snapshot(
-        modelo=modelo,
-        catalogues=catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-        on=date(2025, 4, 1),
-    )
+    return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def _operator_edits_from_export_plan(plan, snapshot) -> tuple[OperatorEdit, ...]:

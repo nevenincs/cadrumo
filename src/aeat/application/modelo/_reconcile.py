@@ -201,11 +201,11 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         ) from exc
 
     diffs: list[ModeloReconciliationDiff] = []
-    if str(work_unit.modelo) != justificante.modelo:
+    if work_unit.modelo != justificante.modelo:
         diffs.append(
             ModeloReconciliationDiff(
                 field_name="modelo",
-                work_unit_value=str(work_unit.modelo),
+                work_unit_value=work_unit.modelo,
                 evidence_value=justificante.modelo,
                 kind="modelo_mismatch",
             ),

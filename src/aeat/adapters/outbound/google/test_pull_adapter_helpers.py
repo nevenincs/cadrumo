@@ -18,9 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import bundled_path
-from ....domain.calculations.registry._loader import load_registry_tree
-from ....domain.calculations.registry._snapshot import build_snapshot
+from ....core.resources import resources
 from ._calc_sheets_pull import _classify_metadata_match, _coerce_decimal, _coerce_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
@@ -86,16 +84,7 @@ def test_coerce_decimal_parses_int_and_float() -> None:
 
 
 def _modelo_130_snapshot():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "130")
-    return build_snapshot(
-        modelo=modelo,
-        catalogues=catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-        on=date(2025, 4, 1),
-    )
+    return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def test_classify_metadata_returns_missing_for_empty_pairs() -> None:

@@ -12,13 +12,11 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.resources import bundled_path
-from ...domain.calculations.registry import build_snapshot, load_registry_tree
+from ...core.resources import resources
 from .runtime import RegistryCasillaSchema, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _TEST_MODELO = "130"
 _TEST_YEAR = 2026
 _TEST_PERIOD = "1T"
@@ -26,29 +24,13 @@ _TEST_PERIOD = "1T"
 
 def _source_casilla_refs() -> dict[str, tuple[str, ...]]:
     """Return {casilla_id: legal_refs} from the authoritative CasillaDefinition."""
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == _TEST_MODELO)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=_TEST_YEAR,
-        period=_TEST_PERIOD,
-    )
+    snapshot = resources().modelos.authority.snapshot(_TEST_MODELO, filing_year=_TEST_YEAR, period=_TEST_PERIOD)
     return {casilla.id: casilla.legal_refs for casilla in snapshot.revision.casillas}
 
 
 def _source_casilla_source_refs() -> dict[str, tuple[str, ...]]:
     """Return {casilla_id: source_refs} from the authoritative CasillaDefinition."""
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == _TEST_MODELO)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=_TEST_YEAR,
-        period=_TEST_PERIOD,
-    )
+    snapshot = resources().modelos.authority.snapshot(_TEST_MODELO, filing_year=_TEST_YEAR, period=_TEST_PERIOD)
     return {casilla.id: casilla.source_refs for casilla in snapshot.revision.casillas}
 
 

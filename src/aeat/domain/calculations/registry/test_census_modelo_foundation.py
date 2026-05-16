@@ -1,6 +1,7 @@
 """Tests for census modelo foundation ownership."""
 
 from __future__ import annotations
+from aeat.core.resources import resources
 
 import logging
 from typing import Any, cast
@@ -22,7 +23,6 @@ from . import (
     RegistryValidationError,
     census_modelo_ownership,
     census_modelo_ownership_map,
-    default_registry_authority,
     get_census_modelo_foundation_contract,
     is_active_census_modelo,
     resolve_census_modelo_foundation,
@@ -66,14 +66,14 @@ def test_modelo_036_is_active_event_triggered_foundation() -> None:
 
 def test_modelo_036_foundation_event_kinds_are_registry_backed() -> None:
     record = census_modelo_ownership("036")
-    snapshot = default_registry_authority().snapshot("036", filing_year=2025, period="alta")
+    snapshot = resources().modelos.authority.snapshot("036", filing_year=2025, period="alta")
 
     assert record.event_kinds == snapshot.revision.period_selector.periods
     assert snapshot.filing_schedules["modelo-036-event-triggered"].periods == record.event_kinds
 
 
 def test_active_036_work_unit_periods_resolve_from_committed_registry_revision() -> None:
-    snapshot = default_registry_authority().snapshot("036", filing_year=2025, period="alta")
+    snapshot = resources().modelos.authority.snapshot("036", filing_year=2025, period="alta")
 
     for period in snapshot.revision.period_selector.periods:
         result = resolve_census_modelo_work_unit_foundation(modelo="036", period=period)
@@ -96,7 +96,7 @@ def test_modelo_037_is_historical_metadata_superseded_by_036() -> None:
 
 
 def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_source() -> None:
-    authority = default_registry_authority()
+    authority = resources().modelos.authority
 
     with pytest.raises(RegistrySnapshotError):
         authority.validate_modelo("037")

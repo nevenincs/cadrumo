@@ -92,22 +92,36 @@ def _scan_banned_imports(path: Path) -> set[str]:
     hits: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            for alias in node.names:
-                name = alias.name
-                if name in BANNED_LIVE_IMPORTS:
-                    hits.add(name)
-                root = name.split(".", 1)[0]
-                if root in BANNED_LIVE_IMPORTS:
-                    hits.add(root)
+            hits.update(_banned_hits_for_import(node))
         elif isinstance(node, ast.ImportFrom):
-            if node.module is None:
-                continue
-            module = node.module
-            if module in BANNED_LIVE_IMPORTS:
-                hits.add(module)
-            root = module.split(".", 1)[0]
-            if root in BANNED_LIVE_IMPORTS:
-                hits.add(root)
+            hits.update(_banned_hits_for_import_from(node))
+    return hits
+
+
+def _banned_hits_for_import(node: ast.Import) -> set[str]:
+    """Collect banned-symbol hits from one ``import X[, Y...]`` statement."""
+    hits: set[str] = set()
+    for alias in node.names:
+        name = alias.name
+        if name in BANNED_LIVE_IMPORTS:
+            hits.add(name)
+        root = name.split(".", 1)[0]
+        if root in BANNED_LIVE_IMPORTS:
+            hits.add(root)
+    return hits
+
+
+def _banned_hits_for_import_from(node: ast.ImportFrom) -> set[str]:
+    """Collect banned-symbol hits from one ``from X import Y`` statement."""
+    if node.module is None:
+        return set()
+    hits: set[str] = set()
+    module = node.module
+    if module in BANNED_LIVE_IMPORTS:
+        hits.add(module)
+    root = module.split(".", 1)[0]
+    if root in BANNED_LIVE_IMPORTS:
+        hits.add(root)
     return hits
 
 

@@ -43,8 +43,7 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
-from ...core.resources import bundled_path
-from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
+from ...domain.calculations.registry import RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
@@ -944,8 +943,7 @@ def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, object]
         # Typed CasillaObservation envelope carrying full per-casilla
         # provenance (formula_id, operand_refs, operand_values,
         # legal_refs, source_refs). Without this projection the CLI
-        # JSON would strip every regulatory grounding signal — the
-        # exact failure the calc-engine grounding audit flagged.
+        # JSON would strip every regulatory grounding signal.
         "observations": [
             {
                 "casilla_id": obs.casilla_id,

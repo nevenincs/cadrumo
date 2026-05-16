@@ -9,6 +9,7 @@ on disk.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from pydantic import ValidationError
 
@@ -16,10 +17,26 @@ from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
-from ._errors import UsageRatioPersistenceError
+from ..categories import (
+    SpendingCategoryFamily,
+    categories_for_family,
+    effective_usage_ratio,
+    resolve_category_profiles,
+)
+from ._errors import (
+    CensusRatioMismatchError,
+    UsageRatioPersistenceError,
+    UsageRatioValidationError,
+)
 from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 
-__all__ = ["load_usage_ratios", "save_usage_ratios", "usage_ratios_object_key"]
+__all__ = [
+    "derive_home_office_ratios_from_census",
+    "load_usage_ratios",
+    "load_usage_ratios_with_census_guard",
+    "save_usage_ratios",
+    "usage_ratios_object_key",
+]
 
 _LOGGER = get_logger(__name__)
 _USAGE_RATIO_VERSION = 1
@@ -126,3 +143,139 @@ def save_usage_ratios(
             f"unable to write usage-ratio profile: {exc.__class__.__name__}: {exc}"
         ) from exc
     _LOGGER.info("saved %s usage ratios to secure database bucket_id=%s", len(profile.ratios), bucket_id)
+
+
+_HOME_OFFICE_FAMILIES = (
+    SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
+    SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
+)
+
+
+def _home_office_categories() -> frozenset:
+    return frozenset(
+        category
+        for family in _HOME_OFFICE_FAMILIES
+        for category in categories_for_family(family)
+    )
+
+
+def load_usage_ratios_with_census_guard(
+    *,
+    bucket_id: str,
+    raw_afectacion_ratio: Decimal | None,
+    year: int = 2025,
+    objects: SecureObjectRepository | None = None,
+) -> UsageRatioProfile:
+    """Load a usage-ratio profile and refuse on census disagreement.
+
+    Calls :func:`load_usage_ratios` and then enforces the binding-
+    census invariant for HOME_OFFICE_SUMINISTROS and
+    HOME_OFFICE_OWNERSHIP categories: every persisted override must
+    equal the census-derived value
+    (``raw_afectacion_ratio * statutory_multiplier``). When the
+    operator has not yet captured a census snapshot, any persisted
+    HOME_OFFICE override is refused as well, since there is no
+    legally-grounded reference to validate against.
+
+    The refusal is a clean break: no auto-migration, no silent
+    coercion, no warning-and-continue. The calling surface
+    (calculate / verify / file / build_draft / approve_draft /
+    export_draft) must therefore surface the underlying
+    :exc:`CensusRatioMismatchError` to the operator so they can
+    re-run ``aeat config profile census refresh + apply`` or unset
+    the diverging override.
+
+    Args:
+        bucket_id: Active workflow bucket id.
+        raw_afectacion_ratio: ``office_m2 / total_m2`` from the bound
+            census snapshot, or ``None`` if the operator has not yet
+            applied a census.
+        year: Registry year whose proportionality rules drive the
+            derivation.
+        objects: Optional injected repository (testing seam).
+
+    Returns:
+        The persisted :class:`UsageRatioProfile` when no HOME_OFFICE
+        override disagrees with the census.
+
+    Raises:
+        :exc:`CensusRatioMismatchError`: when at least one persisted
+            HOME_OFFICE override disagrees, or when any persisted
+            HOME_OFFICE override exists with ``raw_afectacion_ratio``
+            unset.
+    """
+
+    profile = load_usage_ratios(bucket_id=bucket_id, objects=objects)
+    home_office = _home_office_categories()
+    persisted_home_office = {
+        category: ratio for category, ratio in profile.ratios.items() if category in home_office
+    }
+    if not persisted_home_office:
+        return profile
+    if raw_afectacion_ratio is None:
+        offending = sorted(c.value for c in persisted_home_office)
+        raise CensusRatioMismatchError(
+            f"persisted HOME_OFFICE overrides require an applied census; "
+            f"offending categories: {offending}"
+        )
+    derived = derive_home_office_ratios_from_census(raw_afectacion_ratio, year=year)
+    mismatches = {
+        category: (persisted, derived.ratios[category])
+        for category, persisted in persisted_home_office.items()
+        if persisted != derived.ratios[category]
+    }
+    if mismatches:
+        rendered = ", ".join(
+            f"{category.value} persisted={persisted} census={census}"
+            for category, (persisted, census) in sorted(mismatches.items(), key=lambda kv: kv[0].value)
+        )
+        raise CensusRatioMismatchError(
+            f"persisted HOME_OFFICE overrides disagree with the bound census: {rendered}"
+        )
+    return profile
+
+
+def derive_home_office_ratios_from_census(
+    raw_afectacion_ratio: Decimal,
+    *,
+    year: int,
+) -> UsageRatioProfile:
+    """Build a :class:`UsageRatioProfile` for HOME_OFFICE categories from the census.
+
+    The operator's vivienda afectación ratio is the raw
+    ``office_m2 / total_m2`` computed from the AEAT-bound census facts
+    (LIRPF Art. 30.2 rule 5, Ley 6/2017 BOE-A-2017-12544). For every
+    HOME_OFFICE_SUMINISTROS category, the ratio is multiplied by the
+    registry rule's ``statutory_multiplier`` (legally 0.30 for utility
+    costs); for every HOME_OFFICE_OWNERSHIP category, the multiplier is
+    absent (effective factor 1.0) so the operator-chosen ratio is the
+    full deductible percentage.
+
+    Args:
+        raw_afectacion_ratio: ``office_m2 / total_m2`` as a Decimal in
+            [0, 1]. Higher values are rejected; AEAT exclusive-use
+            criteria forbid 100% afectación on the habitual vivienda.
+        year: Registry profile year (e.g. ``2025``) whose
+            proportionality rules drive the derivation.
+
+    Returns:
+        A :class:`UsageRatioProfile` carrying one entry per
+        HOME_OFFICE category, each set to its legally-effective
+        deductible percentage.
+
+    Raises:
+        :exc:`UsageRatioValidationError`: when ``raw_afectacion_ratio``
+            is outside [0, 1].
+    """
+
+    if raw_afectacion_ratio < Decimal("0") or raw_afectacion_ratio > Decimal("1"):
+        raise UsageRatioValidationError(
+            f"raw_afectacion_ratio must be in [0, 1]; got {raw_afectacion_ratio}",
+        )
+    registry = resolve_category_profiles(year)
+    derived: dict = {}
+    for family in _HOME_OFFICE_FAMILIES:
+        for category in categories_for_family(family):
+            profile = registry[category]
+            derived[category] = effective_usage_ratio(profile.proportionality, raw_afectacion_ratio)
+    return UsageRatioProfile(ratios=derived)

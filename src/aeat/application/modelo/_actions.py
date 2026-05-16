@@ -103,7 +103,15 @@ from ._borrador_binding import (
     resolve_modelo_100_borrador_bindings,
 )
 
-_BUCKET_EVENT_PAYLOAD_VERSION = 1
+_BUCKET_EVENT_PAYLOAD_VERSION = 2
+"""Schema version for the bucket-event payload dict emitted by this module.
+
+v1 -> v2: ``has_provenance`` key added on the
+``modelo.calculation.created`` payload signalling whether the linked
+revision carries a non-empty typed observations tuple. Audit tools
+reading the event log alone can detect grounding-loss regressions
+without joining against the encrypted revision catalogue.
+"""
 
 
 def _emit_bucket_event(
@@ -751,7 +759,6 @@ def calculate_modelo_revision(
 
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
-        ValidatedRegistryAuthority,
     )
     from ...domain.calculations.registry._formula_runtime import (
         calculate_registry_snapshot,
@@ -768,7 +775,6 @@ def calculate_modelo_revision(
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
-        from ...core.resources import bundled_path
 
         authority = _authority_via_resources()
     except FileNotFoundError as exc:
@@ -945,6 +951,13 @@ def calculate_modelo_revision(
             "source_transaction_count": str(len(source_transaction_ids)),
             "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
             "borrador_binding_count": str(len(borrador_result.bindings_sourced_from_borrador)),
+            # Signals whether the linked calculation revision carries a
+            # non-empty typed observations tuple. Audit tools reading
+            # the event log alone can detect grounding-loss regressions
+            # without joining against the encrypted revision catalogue;
+            # the ``object_id`` field above is the revision id, used as
+            # the join key for full provenance recovery.
+            "has_provenance": "true" if typed_observations else "false",
         },
     )
     return revision
@@ -970,8 +983,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
 ) -> CalculationRevision:
     """Calculate a modelo revision using bucket-local ledger aggregation."""
 
-    from ...core.resources import bundled_path
-    from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority
+    from ...domain.calculations.registry import RegistrySnapshotError
     from ..aggregation import resolve_modelo_ledger_binding_values_from_repositories
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
@@ -1245,10 +1257,8 @@ def _reject_unknown_override_casillas(
     if not overrides:
         return
 
-    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
-        ValidatedRegistryAuthority,
     )
 
     try:
@@ -1287,10 +1297,8 @@ def _reject_unknown_import_casillas(
     if not casilla_values:
         return
 
-    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
-        ValidatedRegistryAuthority,
     )
 
     try:
@@ -1340,10 +1348,8 @@ def _required_input_casillas_for_revision(
     bindings layer is responsible for them.
     """
 
-    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
-        ValidatedRegistryAuthority,
     )
 
     try:

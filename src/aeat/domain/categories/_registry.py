@@ -26,9 +26,6 @@ from ._proportionality import (
 )
 from ._spending_category import SpendingCategory
 
-_DEFAULT_PROFILE_ROOT = bundled_path("registry", "aeat", "categories", "profiles")
-
-
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
     """Load one year-keyed spending-category profile TOML file."""
 
@@ -76,11 +73,17 @@ def _load_category_profile_file_cached(
 
 
 def load_category_profile_registry(
-    root: Path = _DEFAULT_PROFILE_ROOT,
+    root: Path | None = None,
 ) -> Mapping[int, Mapping[SpendingCategory, CategoryProfile]]:
-    """Load every committed year-keyed spending-category profile registry."""
+    """Load every committed year-keyed spending-category profile registry.
 
-    resolved = root.resolve()
+    Resolves the bundled categories root on every call when no
+    override is supplied; the ``bundled_path`` boundary is the
+    single resolution surface.
+    """
+
+    target = root if root is not None else bundled_path("registry", "aeat", "categories", "profiles")
+    resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))
     fingerprint = tuple(_file_fingerprint(path) for path in paths)
     return _load_category_profile_registry_cached(str(resolved), fingerprint)
@@ -113,7 +116,7 @@ def _load_category_profile_registry_cached(
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
     """Return the exact category profile registry for ``year``."""
 
-    profiles = CATEGORY_PROFILE_REGISTRY_BY_YEAR.get(year)
+    profiles = load_category_profile_registry().get(year)
     if profiles is None:
         raise CategoryValidationError(f"no category profile registry registered for year={year}")
     return profiles
@@ -220,14 +223,7 @@ def _cap_period_or_none(value: object) -> StatutoryCapPeriod | None:
     return StatutoryCapPeriod(str(value))
 
 
-CATEGORY_PROFILE_REGISTRY_BY_YEAR: Mapping[int, Mapping[SpendingCategory, CategoryProfile]] = (
-    load_category_profile_registry()
-)
-CATEGORY_PROFILES_2025: Mapping[SpendingCategory, CategoryProfile] = resolve_category_profiles(2025)
-
 __all__ = [
-    "CATEGORY_PROFILES_2025",
-    "CATEGORY_PROFILE_REGISTRY_BY_YEAR",
     "load_category_profile_file",
     "load_category_profile_registry",
     "resolve_category_profiles",

@@ -14,7 +14,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal
+from typing import Any, Literal
 
 from openpyxl import load_workbook
 from openpyxl.formula import Tokenizer
@@ -278,64 +278,16 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
     modelo = _infer_modelo(relative)
 
     if suffix == ".xls":
-        evidence_tier, not_evidence_for = _evidence_for_workbook_kind("unsupported_binary_xls")
-        return WorkbookArtefactReport(
-            path=relative,
+        return _unsupported_binary_xls_report(
+            relative=relative,
             modelo=modelo,
-            extension=".xls",
-            bytes=byte_count,
-            sha256=digest,
-            workbook_kind="unsupported_binary_xls",
-            evidence_tier=evidence_tier,
-            not_evidence_for=not_evidence_for,
-            scan_status="unsupported",
-            formula_cells=0,
-            error="binary XLS requires isolated conversion before workbook formula inspection",
-            elapsed_seconds=_elapsed_decimal(started),
+            byte_count=byte_count,
+            digest=digest,
+            started=started,
         )
 
     try:
-        workbook = load_workbook(resolved_path, data_only=False, read_only=True)
-        sheets: list[str] = []
-        formulas: list[WorkbookCellRef] = []
-        references: list[WorkbookCellRef] = []
-        for worksheet in workbook.worksheets:
-            _raise_if_timed_out(started, opts.per_file_timeout_seconds, relative)
-            sheets.append(worksheet.title)
-            for row in worksheet.iter_rows(values_only=False):
-                _raise_if_timed_out(started, opts.per_file_timeout_seconds, relative)
-                for cell in row:
-                    value = cell.value
-                    if isinstance(value, str) and value.startswith("="):
-                        ref = WorkbookCellRef(sheet=worksheet.title, coordinate=cell.coordinate, formula=value)
-                        formulas.append(ref)
-                        if len(references) < opts.max_formula_refs:
-                            references.extend(
-                                _formula_references(
-                                    worksheet.title,
-                                    value,
-                                    opts.max_formula_refs - len(references),
-                                )
-                            )
-        workbook.close()
-        kind = _classify_xlsx(relative, formulas)
-        evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
-        return WorkbookArtefactReport(
-            path=relative,
-            modelo=modelo,
-            extension=".xlsx",
-            bytes=byte_count,
-            sha256=digest,
-            sheets=tuple(sheets),
-            formula_cells=len(formulas),
-            input_candidates=tuple(_dedupe_cells(references)),
-            output_candidates=tuple(formulas),
-            workbook_kind=kind,
-            evidence_tier=evidence_tier,
-            not_evidence_for=not_evidence_for,
-            scan_status="scanned",
-            elapsed_seconds=_elapsed_decimal(started),
-        )
+        sheets, formulas, references = _scan_xlsx_contents(resolved_path, relative, opts, started)
     except TimeoutError as exc:
         return _failed_report(
             relative=relative,
@@ -364,6 +316,102 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             error=f"{type(exc).__name__}: {exc}",
             started=started,
         )
+    kind = _classify_xlsx(relative, formulas)
+    evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
+    return WorkbookArtefactReport(
+        path=relative,
+        modelo=modelo,
+        extension=".xlsx",
+        bytes=byte_count,
+        sha256=digest,
+        sheets=tuple(sheets),
+        formula_cells=len(formulas),
+        input_candidates=tuple(_dedupe_cells(references)),
+        output_candidates=tuple(formulas),
+        workbook_kind=kind,
+        evidence_tier=evidence_tier,
+        not_evidence_for=not_evidence_for,
+        scan_status="scanned",
+        elapsed_seconds=_elapsed_decimal(started),
+    )
+
+
+def _unsupported_binary_xls_report(
+    *,
+    relative: str,
+    modelo: str | None,
+    byte_count: int,
+    digest: str,
+    started: float,
+) -> WorkbookArtefactReport:
+    """Stable .xls short-circuit report — binary XLS requires conversion before scanning."""
+    evidence_tier, not_evidence_for = _evidence_for_workbook_kind("unsupported_binary_xls")
+    return WorkbookArtefactReport(
+        path=relative,
+        modelo=modelo,
+        extension=".xls",
+        bytes=byte_count,
+        sha256=digest,
+        workbook_kind="unsupported_binary_xls",
+        evidence_tier=evidence_tier,
+        not_evidence_for=not_evidence_for,
+        scan_status="unsupported",
+        formula_cells=0,
+        error="binary XLS requires isolated conversion before workbook formula inspection",
+        elapsed_seconds=_elapsed_decimal(started),
+    )
+
+
+def _scan_xlsx_contents(
+    resolved_path: Path,
+    relative: str,
+    opts: WorkbookScanOptions,
+    started: float,
+) -> tuple[list[str], list[WorkbookCellRef], list[WorkbookCellRef]]:
+    """Open the workbook in read-only mode and collect (sheet titles, formulas, references)."""
+    workbook = load_workbook(resolved_path, data_only=False, read_only=True)
+    sheets: list[str] = []
+    formulas: list[WorkbookCellRef] = []
+    references: list[WorkbookCellRef] = []
+    try:
+        for worksheet in workbook.worksheets:
+            _raise_if_timed_out(started, opts.per_file_timeout_seconds, relative)
+            sheets.append(worksheet.title)
+            _scan_worksheet_cells(
+                worksheet,
+                relative=relative,
+                opts=opts,
+                started=started,
+                formulas=formulas,
+                references=references,
+            )
+    finally:
+        workbook.close()
+    return sheets, formulas, references
+
+
+def _scan_worksheet_cells(
+    worksheet: Any,  # openpyxl Worksheet; loose-typed because openpyxl ships incomplete stubs
+    *,
+    relative: str,
+    opts: WorkbookScanOptions,
+    started: float,
+    formulas: list[WorkbookCellRef],
+    references: list[WorkbookCellRef],
+) -> None:
+    """Walk one worksheet's cells, appending formulas and bounded references in place."""
+    for row in worksheet.iter_rows(values_only=False):
+        _raise_if_timed_out(started, opts.per_file_timeout_seconds, relative)
+        for cell in row:
+            value = cell.value
+            if not (isinstance(value, str) and value.startswith("=")):
+                continue
+            ref = WorkbookCellRef(sheet=worksheet.title, coordinate=cell.coordinate, formula=value)
+            formulas.append(ref)
+            if len(references) < opts.max_formula_refs:
+                references.extend(
+                    _formula_references(worksheet.title, value, opts.max_formula_refs - len(references))
+                )
 
 
 def inventory_workbook_coverage(

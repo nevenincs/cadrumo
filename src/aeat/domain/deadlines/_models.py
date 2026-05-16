@@ -136,6 +136,15 @@ class AutonomoProfile(BaseModel):
     bienes_extranjero_above_threshold: bool = False
     iva: FilingIVAProfile = Field(default_factory=FilingIVAProfile)
     enrollment: FilingEnrollment = Field(default_factory=FilingEnrollment)
+    fiscal_address_cadastral_reference: str = ""
+    fiscal_address_is_habitual_vivienda: bool = False
+    activity_start_date: date | None = None
+    activity_end_date: date | None = None
+    establecimiento_type: str = ""
+    elected_withholding_pct: str = ""
+    vivienda_office_total_m2: Decimal | None = None
+    vivienda_office_office_m2: Decimal | None = None
+    iae_epigraph: str = ""
     notes: str = ""
 
 

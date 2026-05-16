@@ -13,14 +13,9 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.core.resources import bundled_path
-from aeat.domain.rental._aggregates import (
-    CATASTRAL_REVISION_LOOKBACK_YEARS,
-    IMPUTACION_RATE_OLD_OR_NO_REVISION,
-    IMPUTACION_RATE_RECENT_REVISION,
-)
 from aeat.domain.rental._imputacion_parameters import (
-    LIRPF_ART_85_IMPUTACION,
     LirpfArt85ImputacionParameters,
+    load_imputacion_parameters,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -35,21 +30,21 @@ def _load_irpf_toml() -> dict[str, dict[str, dict[str, str]]]:
 def test_lirpf_art_85_parameters_match_registry_toml_values() -> None:
     raw = _load_irpf_toml()["parameters"]
 
-    assert LIRPF_ART_85_IMPUTACION.recent_revision_rate == Decimal(
+    assert load_imputacion_parameters().recent_revision_rate == Decimal(
         raw["lirpf-art-85:imputacion-rate-recent-revision"]["value"]
     )
-    assert LIRPF_ART_85_IMPUTACION.old_or_no_revision_rate == Decimal(
+    assert load_imputacion_parameters().old_or_no_revision_rate == Decimal(
         raw["lirpf-art-85:imputacion-rate-old-or-no-revision"]["value"]
     )
-    assert LIRPF_ART_85_IMPUTACION.catastral_revision_lookback_years == int(
+    assert load_imputacion_parameters().catastral_revision_lookback_years == int(
         raw["lirpf-art-85:catastral-revision-lookback-years"]["value"]
     )
 
 
-def test_rental_aggregate_constants_now_route_through_registry() -> None:
-    assert IMPUTACION_RATE_RECENT_REVISION is LIRPF_ART_85_IMPUTACION.recent_revision_rate
-    assert IMPUTACION_RATE_OLD_OR_NO_REVISION is LIRPF_ART_85_IMPUTACION.old_or_no_revision_rate
-    assert CATASTRAL_REVISION_LOOKBACK_YEARS is LIRPF_ART_85_IMPUTACION.catastral_revision_lookback_years
+def test_load_imputacion_parameters_returns_typed_model() -> None:
+    """The accessor returns a strict frozen Pydantic record."""
+    result = load_imputacion_parameters()
+    assert isinstance(result, LirpfArt85ImputacionParameters)
 
 
 def test_lirpf_art_85_parameters_each_cite_the_boe_authority() -> None:
@@ -86,7 +81,7 @@ def test_legal_section_carries_lirpf_art_85_citation_with_required_text() -> Non
 
 def test_lirpf_art_85_parameter_record_is_frozen() -> None:
     with pytest.raises(ValidationError):
-        setattr(LIRPF_ART_85_IMPUTACION, "recent_revision_rate", Decimal("0.05"))  # noqa: B010
+        setattr(load_imputacion_parameters(), "recent_revision_rate", Decimal("0.05"))  # noqa: B010
 
 
 def test_lirpf_art_85_corpus_excerpt_is_present() -> None:

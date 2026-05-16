@@ -466,6 +466,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.usage_ratios._errors.CensusRatioMismatchError",
+        ErrorCode(
+            code="REFUSED_FINANCIAL_USAGE_RATIOS_CENSUS_MISMATCH",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_financial_usage_ratios_census_mismatch",
+            default_suggestion="aeat config profile census refresh && aeat config profile census apply",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.vat.errors.VatCatalogueError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATALOGUE",
@@ -1981,6 +1992,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_036_terminal_state",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.CensusStaleRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_CENSUS_STALE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_census_stale",
+            default_suggestion="aeat app modelo work calculate",
             retryable=False,
             runbook_id=None,
         ),

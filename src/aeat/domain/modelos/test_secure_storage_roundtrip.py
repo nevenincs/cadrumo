@@ -39,7 +39,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
-    """Build a typed WorkUnit with deterministic id."""
+    """Build a typed WorkUnit using **non-default** values everywhere possible.
+
+    Every field defaulting to a value (state=DRAFT, discarded_at=None,
+    discarded_by=None, discard_reason=None) is overridden with a real
+    non-default value. This is the anti-tautology safeguard: if any
+    boundary silently drops a field and the load side re-defaults it,
+    the roundtrip equality would still hold under default-only
+    fixtures. Forcing every defaultable field to a distinct sentinel
+    makes a drop-and-redefault regression visible.
+    """
 
     now = datetime.now(UTC).replace(microsecond=0)
     bucket_id = "b" * 32
@@ -63,7 +72,15 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
         name=f"IVA-{filing_year}-{period}-{name_suffix}",
         created_at=now,
         updated_at=now,
-        state=WorkUnitState.DRAFT,
+        # Non-default lifecycle state so a save-drops-state regression
+        # would surface as state mismatch on load (default is DRAFT).
+        state=WorkUnitState.DISCARDED,
+        # Discard metadata is required when state is DISCARDED;
+        # populating it covers all three defaultable optional fields
+        # at once.
+        discarded_at=now,
+        discarded_by="cli/aeat",
+        discard_reason="superseded by amended revision for roundtrip test fixture",
     )
 
 
@@ -92,14 +109,24 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
         assert loaded == original
         loaded_unit = loaded.work_units[work_unit.work_unit_id]
         # Per-field witnesses: ModeloCode preservation, year/period
-        # round-trip, state enum identity, and the content-addressed
-        # work_unit_id all survive the encrypted-storage cycle.
+        # round-trip, state enum identity, content-addressed
+        # work_unit_id, and the discard metadata triple (which were
+        # the test's main anti-tautology guard — every defaultable
+        # field carries a real non-default value).
         assert loaded_unit.modelo == "303"
         assert loaded_unit.filing_year == 2025
         assert loaded_unit.period == "1T"
         assert loaded_unit.revision_id == "2025-y-siguientes"
-        assert loaded_unit.state is WorkUnitState.DRAFT
+        assert loaded_unit.state is WorkUnitState.DISCARDED
         assert loaded_unit.work_unit_id == work_unit.work_unit_id
+        # Discard metadata survives the cycle; a regression that
+        # dropped any of these three on save would leave them as
+        # None on load and fail the strict-equality check above,
+        # but also fail these explicit witnesses.
+        assert loaded_unit.discarded_at == work_unit.discarded_at
+        assert loaded_unit.discarded_by == "cli/aeat"
+        assert loaded_unit.discard_reason is not None
+        assert "superseded" in loaded_unit.discard_reason
     finally:
         engine.dispose()
         override_master_key_provider(None)

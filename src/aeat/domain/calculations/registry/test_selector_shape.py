@@ -9,8 +9,9 @@ at handler-call time.
 
 This file pins:
 
-  * the registry of typed selectors is non-empty and registers the
-    ten typed sources defined in ``_bindings``;
+  * the registry of typed selectors is non-empty and registers every
+    typed source key currently declared in
+    ``_BINDING_SELECTOR_REGISTRY``;
   * a well-shaped selector for each typed source passes the gate;
   * a misshapen selector for a typed source surfaces the violation
     as a typed diagnostic string (not as a silent pass);
@@ -25,11 +26,10 @@ import pytest
 
 from ._bindings import (
     _BINDING_SELECTOR_REGISTRY,
-    _InvoiceSelector,
-    _PreviousFilingSelector,
-    _WithholdingSelector,
     validate_binding_selector_shape,
+    validate_invoice_binding_definition,
 )
+from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -208,12 +208,41 @@ def test_invoice_selector_accepts_well_shaped_selector() -> None:
     assert validate_binding_selector_shape(binding) == []
 
 
+def test_invoice_row_field_party_legal_name_rejected_at_snapshot_build() -> None:
+    """An invoice row-producer binding cannot declare an optional-only row field.
+
+    ``party_legal_name`` is optional on ``InvoiceObservation``; the
+    row-builder omits the key from the row dict when no observation in
+    the bucket carries a legal name. A binding declaring
+    ``row_field = "party_legal_name"`` would therefore fail
+    deterministically at runtime whenever its bucket has only
+    legal-name-absent observations. The snapshot-build invariant must
+    reject this shape so the latent hazard cannot land via a TOML edit.
+    """
+
+    binding = _binding(
+        source="invoice",
+        selector={
+            "fact": "row_field",
+            "row_field": "party_legal_name",
+            "grouping": "operator_clave",
+        },
+    )
+    binding = binding.model_copy(update={"aggregation": {"op": "rows"}})
+    with pytest.raises(RegistryValidationError, match="party_legal_name"):
+        validate_invoice_binding_definition(binding)
+
+
 def test_free_form_source_returns_no_diagnostics() -> None:
     """A binding whose source has no registry entry short-circuits cleanly.
 
-    Sources like ``manual_input`` and ``profile`` are not yet typed
-    in the discriminator registry; the gate must return an empty
+    Sources like ``ledger``, ``rental``, ``vat``, and ``category`` are
+    intentionally free-form — they have no entry in
+    ``_BINDING_SELECTOR_REGISTRY``. The gate must return an empty
     failure list for them so existing registry data keeps loading.
+    Note that ``manual_input`` and ``profile`` ARE typed in the
+    registry today; do not add them to this test as free-form
+    references.
     """
 
     binding = _binding(

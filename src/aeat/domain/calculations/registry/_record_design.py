@@ -708,64 +708,105 @@ def _extract_pdf_page_lines(page: Page) -> tuple[str, ...]:
     return tuple(text.splitlines())
 
 
-def _extract_pdf_lines(lines: tuple[str, ...], *, source_label: str) -> tuple[RecordDesignSheet, ...]:
-    sheets: list[RecordDesignSheet] = []
-    current: _PdfSheetDraft | None = None
-    in_table = False
-    pending_name: str | None = None
+class _PdfParseState:
+    """Mutable state for the PDF record-design line parser.
 
-    for row_number, raw_line in enumerate(lines, start=1):
-        line = _clean_pdf_line(raw_line)
+    Encapsulates the three locals (``current`` draft sheet,
+    ``in_table`` flag, ``pending_name`` carried across page-name
+    boundaries) so the per-line dispatch can mutate them without
+    threading three out-parameters through every helper.
+    """
+
+    __slots__ = ("current", "in_table", "pending_name", "sheets", "source_label")
+
+    def __init__(self, *, source_label: str) -> None:
+        self.sheets: list[RecordDesignSheet] = []
+        self.current: _PdfSheetDraft | None = None
+        self.in_table: bool = False
+        self.pending_name: str | None = None
+        self.source_label = source_label
+
+    def finalise(self) -> tuple[RecordDesignSheet, ...]:
+        if self.current is not None:
+            self.sheets.append(self.current.finish(source_label=self.source_label))
+        non_empty = tuple(sheet for sheet in self.sheets if sheet.fields)
+        if not non_empty:
+            raise RegistryValidationError("record-design PDF did not contain parseable field rows")
+        return non_empty
+
+    def feed(self, line: str, row_number: int) -> None:
         if not line or _is_pdf_footer(line):
-            continue
-
-        page_name = _pdf_page_name(line)
-        if page_name is not None:
-            pending_name = page_name
-            if current is not None and current.name != page_name:
-                sheets.append(current.finish(source_label=source_label))
-                current = _PdfSheetDraft(page_name)
-            continue
-
-        heading_name = _pdf_record_heading_name(line)
-        if heading_name is not None:
-            if current is not None:
-                sheets.append(current.finish(source_label=source_label))
-            current = _PdfSheetDraft(heading_name)
-            in_table = False
-            continue
-
-        if _is_pdf_header(line):
-            if current is None:
-                current = _PdfSheetDraft(pending_name or "PDF record design")
-            in_table = True
-            continue
-
-        if not in_table and current is not None and not current.fields and _looks_like_title_continuation(line):
-            current.name = _normalise_pdf_sheet_name(_join_pdf_parts([current.name, line]))
-            continue
-
+            return
+        if self._consume_page_name(line):
+            return
+        if self._consume_record_heading(line):
+            return
+        if self._consume_table_header(line):
+            return
+        if self._consume_title_continuation(line):
+            return
         if _is_pdf_page_heading(line):
-            continue
+            return
+        if self._consume_field_row(line, row_number):
+            return
+        self._consume_field_continuation(line)
 
+    def _consume_page_name(self, line: str) -> bool:
+        page_name = _pdf_page_name(line)
+        if page_name is None:
+            return False
+        self.pending_name = page_name
+        if self.current is not None and self.current.name != page_name:
+            self.sheets.append(self.current.finish(source_label=self.source_label))
+            self.current = _PdfSheetDraft(page_name)
+        return True
+
+    def _consume_record_heading(self, line: str) -> bool:
+        heading_name = _pdf_record_heading_name(line)
+        if heading_name is None:
+            return False
+        if self.current is not None:
+            self.sheets.append(self.current.finish(source_label=self.source_label))
+        self.current = _PdfSheetDraft(heading_name)
+        self.in_table = False
+        return True
+
+    def _consume_table_header(self, line: str) -> bool:
+        if not _is_pdf_header(line):
+            return False
+        if self.current is None:
+            self.current = _PdfSheetDraft(self.pending_name or "PDF record design")
+        self.in_table = True
+        return True
+
+    def _consume_title_continuation(self, line: str) -> bool:
+        if self.in_table or self.current is None or self.current.fields:
+            return False
+        if not _looks_like_title_continuation(line):
+            return False
+        self.current.name = _normalise_pdf_sheet_name(_join_pdf_parts([self.current.name, line]))
+        return True
+
+    def _consume_field_row(self, line: str, row_number: int) -> bool:
         row = _parse_pdf_row(line, row_number)
-        if row is not None:
-            if current is None:
-                current = _PdfSheetDraft(pending_name or "PDF record design")
-            current.start_field(row)
-            in_table = True
-            continue
+        if row is None:
+            return False
+        if self.current is None:
+            self.current = _PdfSheetDraft(self.pending_name or "PDF record design")
+        self.current.start_field(row)
+        self.in_table = True
+        return True
 
-        if in_table and current is not None and current.current is not None:
-            current.current.append_continuation(line)
+    def _consume_field_continuation(self, line: str) -> None:
+        if self.in_table and self.current is not None and self.current.current is not None:
+            self.current.current.append_continuation(line)
 
-    if current is not None:
-        sheets.append(current.finish(source_label=source_label))
 
-    non_empty = tuple(sheet for sheet in sheets if sheet.fields)
-    if not non_empty:
-        raise RegistryValidationError("record-design PDF did not contain parseable field rows")
-    return non_empty
+def _extract_pdf_lines(lines: tuple[str, ...], *, source_label: str) -> tuple[RecordDesignSheet, ...]:
+    state = _PdfParseState(source_label=source_label)
+    for row_number, raw_line in enumerate(lines, start=1):
+        state.feed(_clean_pdf_line(raw_line), row_number)
+    return state.finalise()
 
 
 def _validate_pdf_sheet(sheet: RecordDesignSheet, *, source_label: str) -> None:

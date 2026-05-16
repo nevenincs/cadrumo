@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.resources import resources
 from ...domain.user_profile import (
-    DEFAULT_USER_PROFILE_SCHEMA_PATH,
     UserProfileFact,
     UserProfileRecord,
-    load_user_profile_schema,
 )
 from . import (
     ProfilePreflightService,
@@ -21,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(scope="module")
 def schema():
-    return load_user_profile_schema(DEFAULT_USER_PROFILE_SCHEMA_PATH)
+    return resources().user_profile_schema.singleton
 
 
 def test_validation_rejects_unknown_field_path(schema) -> None:

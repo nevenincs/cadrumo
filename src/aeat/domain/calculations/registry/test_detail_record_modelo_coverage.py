@@ -16,8 +16,7 @@ from collections.abc import Mapping
 import pytest
 
 from ....application.storage.calc_sheets import collect_row_sets
-from ....core.resources import bundled_path
-from ._loader import load_registry_tree
+from ....core.resources import resources
 from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -40,8 +39,7 @@ _DETAIL_RECORD_MODELOS: tuple[tuple[str, str, str, int], ...] = (
 
 @pytest.fixture(scope="module")
 def _modelos_by_id() -> Mapping[str, ModeloDefinition]:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    return {m.id: m for m in modelos}
+    return {m.id: m for m in resources().modelos.all()}
 
 
 @pytest.mark.parametrize(("modelo_id", "revision_id", "source_kind", "expected_cohorts"), _DETAIL_RECORD_MODELOS)

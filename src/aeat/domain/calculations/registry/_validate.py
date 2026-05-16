@@ -21,7 +21,11 @@ from ._runtime_graph import expression_casilla_refs
 from ._schema import (
     DataBindingDefinition,
     DatedValue,
+    DependencyClassificationDefinition,
+    ExportFieldDefinition,
+    ExportRecordDefinition,
     ExtractionProfileDefinition,
+    FormulaDefinition,
     FormulaExpression,
     LegalReference,
     ModeloDefinition,
@@ -78,8 +82,85 @@ def _duplicates(values: Iterable[str]) -> set[str]:
     return dupes
 
 
+_RECORD_ID_KINDS: tuple[tuple[str, str], ...] = (
+    ("casilla", "casillas"),
+    ("formula", "formulas"),
+    ("binding", "bindings"),
+    ("relation", "relations"),
+    ("parameter", "parameters"),
+    ("algorithm provider", "algorithm_providers"),
+    ("algorithm binding", "algorithm_bindings"),
+    ("export layout", "export_layouts"),
+    ("extraction profile", "extraction_profiles"),
+    ("cross-reference", "live_cross_references"),
+    ("workbook parity reference", "workbook_parity_refs"),
+    ("verification expectation", "verification_expectations"),
+    ("application link", "application_links"),
+    ("deadline window", "deadline_windows"),
+    ("filing schedule", "filing_schedules"),
+    ("support removal decision", "support_removal_decisions"),
+    ("construct", "constructs"),
+    ("dependency classification", "dependency_classifications"),
+)
+"""Maps the human-readable record kind name to the ``ModeloRevision`` attribute.
+
+Used to fold the 18 per-kind ``[record.id for record in revision.<kind>]``
+comprehensions in :meth:`RegistryValidator._validate_revision` into a
+single iteration over a typed table. The (kind, attribute) tuple shape
+is what every downstream consumer needs: the human-readable label
+appears in failure messages, the attribute is what we read.
+"""
+
+
+def _collect_record_id_lists(revision: ModeloRevision) -> dict[str, list[str]]:
+    """Return ``{kind: [record.id, ...]}`` for every record kind on the revision."""
+    return {kind: [record.id for record in getattr(revision, attr)] for kind, attr in _RECORD_ID_KINDS}
+
+
+def _emit_per_kind_duplicate_failures(
+    failures: list[str],
+    prefix: str,
+    ids_by_kind: Mapping[str, list[str]],
+) -> None:
+    """Append a "duplicate <kind> id <id>" failure for every duplicate id, per kind."""
+    for kind, ids in ids_by_kind.items():
+        for duplicate in sorted(_duplicates(ids)):
+            failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
+
+
+# Primary-id deduplication checks the union of every typed-record kind
+# EXCEPT ``provider`` (algorithm providers share a namespace with
+# algorithm-binding ``provider`` references; collisions there are not
+# duplicate-id offences).
+_PRIMARY_ID_KINDS: frozenset[str] = frozenset(kind for kind, _ in _RECORD_ID_KINDS) - {"algorithm provider"}
+
+
+def _emit_combined_primary_id_failures(
+    failures: list[str],
+    prefix: str,
+    ids_by_kind: Mapping[str, list[str]],
+) -> None:
+    """Cross-kind id uniqueness: no two record kinds may share an id."""
+    primary_ids: list[str] = []
+    for kind in _PRIMARY_ID_KINDS:
+        primary_ids.extend(ids_by_kind[kind])
+    for duplicate in sorted(_duplicates(primary_ids)):
+        failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
+
+
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
-    return {"record", "offset", "length", "data_type"}.issubset(binding.selector)
+    """Layout-binding predicate, delegated to the typed manual_input shape.
+
+    Layout bindings inject operator-typed values at fixed-width
+    record-field coordinates. The shape gate's source of truth lives
+    on :class:`_ManualInputSelector`; this predicate delegates to its
+    canonical record-shape key set rather than re-implementing the
+    check.
+    """
+
+    from ._bindings import is_layout_binding_selector
+
+    return is_layout_binding_selector(binding.selector)
 
 
 _COMMUNICATION_SURFACES = {"communication", "payer_delivery"}
@@ -222,7 +303,7 @@ class RegistryValidator:
         # level. Without this loop, callers that exercise
         # ``validate_registry`` directly (rather than going through
         # ``_build_validated_snapshot``) would skip the discriminator
-        # check entirely. Audit finding F4 on selector-binding drift.
+        # check entirely.
         from ._bindings import validate_binding_selector_shape
 
         for modelo in modelo_tuple:
@@ -257,70 +338,22 @@ class RegistryValidator:
         failures.extend(self._missing_refs(prefix, "revision", revision.legal_refs, self._legal, "legal"))
         failures.extend(self._missing_refs(prefix, "revision", revision.source_refs, self._sources, "source"))
 
-        casilla_ids = [casilla.id for casilla in revision.casillas]
-        formula_ids = [formula.id for formula in revision.formulas]
-        binding_ids = [binding.id for binding in revision.bindings]
-        relation_ids = [relation.id for relation in revision.relations]
-        parameter_ids = [parameter.id for parameter in revision.parameters]
-        provider_ids = [provider.id for provider in revision.algorithm_providers]
-        algorithm_binding_ids = [binding.id for binding in revision.algorithm_bindings]
-        export_layout_ids = [layout.id for layout in revision.export_layouts]
-        extraction_profile_ids = [profile.id for profile in revision.extraction_profiles]
-        cross_reference_ids = [cross_reference.id for cross_reference in revision.live_cross_references]
-        workbook_parity_ids = [workbook.id for workbook in revision.workbook_parity_refs]
-        verification_expectation_ids = [expectation.id for expectation in revision.verification_expectations]
-        application_link_ids = [link.id for link in revision.application_links]
-        deadline_window_ids = [window.id for window in revision.deadline_windows]
-        filing_schedule_ids = [schedule.id for schedule in revision.filing_schedules]
-        support_removal_decision_ids = [decision.id for decision in revision.support_removal_decisions]
-        construct_ids = [construct.id for construct in revision.constructs]
-        dependency_classification_ids = [classification.id for classification in revision.dependency_classifications]
-        if not workbook_parity_ids:
+        ids_by_kind = _collect_record_id_lists(revision)
+        if not ids_by_kind["workbook parity reference"]:
             failures.append(f"{prefix}: revision must declare official workbook parity coverage")
-        for kind, ids in (
-            ("casilla", casilla_ids),
-            ("formula", formula_ids),
-            ("binding", binding_ids),
-            ("relation", relation_ids),
-            ("parameter", parameter_ids),
-            ("algorithm provider", provider_ids),
-            ("algorithm binding", algorithm_binding_ids),
-            ("export layout", export_layout_ids),
-            ("extraction profile", extraction_profile_ids),
-            ("cross-reference", cross_reference_ids),
-            ("workbook parity reference", workbook_parity_ids),
-            ("verification expectation", verification_expectation_ids),
-            ("application link", application_link_ids),
-            ("deadline window", deadline_window_ids),
-            ("filing schedule", filing_schedule_ids),
-            ("support removal decision", support_removal_decision_ids),
-            ("construct", construct_ids),
-            ("dependency classification", dependency_classification_ids),
-        ):
-            for duplicate in sorted(_duplicates(ids)):
-                failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
-
-        primary_ids = (
-            casilla_ids
-            + formula_ids
-            + binding_ids
-            + relation_ids
-            + parameter_ids
-            + algorithm_binding_ids
-            + export_layout_ids
-            + extraction_profile_ids
-            + cross_reference_ids
-            + workbook_parity_ids
-            + verification_expectation_ids
-            + application_link_ids
-            + deadline_window_ids
-            + filing_schedule_ids
-            + support_removal_decision_ids
-            + construct_ids
-            + dependency_classification_ids
-        )
-        for duplicate in sorted(_duplicates(primary_ids)):
-            failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
+        _emit_per_kind_duplicate_failures(failures, prefix, ids_by_kind)
+        _emit_combined_primary_id_failures(failures, prefix, ids_by_kind)
+        # The ``_validate_support_removal_decisions`` call below still
+        # consumes the per-kind lists as kwargs; expose them as local
+        # aliases so the existing signature shape stays unchanged.
+        export_layout_ids = ids_by_kind["export layout"]
+        extraction_profile_ids = ids_by_kind["extraction profile"]
+        cross_reference_ids = ids_by_kind["cross-reference"]
+        workbook_parity_ids = ids_by_kind["workbook parity reference"]
+        verification_expectation_ids = ids_by_kind["verification expectation"]
+        application_link_ids = ids_by_kind["application link"]
+        deadline_window_ids = ids_by_kind["deadline window"]
+        filing_schedule_ids = ids_by_kind["filing schedule"]
 
         casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
         formula_by_id = {formula.id: formula for formula in revision.formulas}
@@ -484,7 +517,7 @@ class RegistryValidator:
         *,
         prefix: str,
         revision: ModeloRevision,
-        formulas: Mapping[str, object],
+        formulas: Mapping[str, FormulaDefinition],
         bindings: set[str],
         export_field_ids: set[str],
     ) -> None:
@@ -608,6 +641,17 @@ class RegistryValidator:
         prefix: str,
         revision: ModeloRevision,
     ) -> None:
+        # Run the discriminated-selector shape gate here so a
+        # standalone ``validate_registry`` call surfaces the same
+        # selector-shape errors as ``build_snapshot``. Without this,
+        # CI tools that validate the registry without building a
+        # snapshot silently skip the per-source shape gate.
+        from ._bindings import validate_binding_selector_shape
+
+        for binding in revision.bindings:
+            failures.extend(
+                f"{prefix}: {fail}" for fail in validate_binding_selector_shape(binding)
+            )
         for binding in revision.bindings:
             failures.extend(
                 self._missing_refs(prefix, f"binding {binding.id}", binding.legal_refs, self._legal, "legal")
@@ -755,14 +799,14 @@ class RegistryValidator:
         failures: list[str],
         *,
         prefix: str,
-        classification: object,
+        classification: DependencyClassificationDefinition,
         construct_by_id: Mapping[str, object],
         relation_by_id: Mapping[str, RelationDefinition],
     ) -> None:
-        owner = f"dependency classification {classification.id}"  # type: ignore[attr-defined]
-        failures.extend(self._missing_refs(prefix, owner, classification.legal_refs, self._legal, "legal"))  # type: ignore[attr-defined]
-        failures.extend(self._missing_refs(prefix, owner, classification.source_refs, self._sources, "source"))  # type: ignore[attr-defined]
-        for construct_id in classification.target_constructs:  # type: ignore[attr-defined]
+        owner = f"dependency classification {classification.id}"
+        failures.extend(self._missing_refs(prefix, owner, classification.legal_refs, self._legal, "legal"))
+        failures.extend(self._missing_refs(prefix, owner, classification.source_refs, self._sources, "source"))
+        for construct_id in classification.target_constructs:
             construct = construct_by_id.get(construct_id)
             if construct is None:
                 failures.append(
@@ -773,23 +817,23 @@ class RegistryValidator:
                 failures.append(
                     f"{prefix}: {owner} targets construct {construct_id!r} but the construct does not list it"
                 )
-        for relation_id in classification.relation_refs:  # type: ignore[attr-defined]
+        for relation_id in classification.relation_refs:
             relation = relation_by_id.get(relation_id)
             if relation is None:
                 failures.append(f"{prefix}: {owner} references unknown relation {relation_id!r}")
                 continue
-            if relation.source_modelo != classification.source_modelo:  # type: ignore[attr-defined]
+            if relation.source_modelo != classification.source_modelo:
                 failures.append(
-                    f"{prefix}: {owner} source_modelo {classification.source_modelo!r} does not match "  # type: ignore[attr-defined]
+                    f"{prefix}: {owner} source_modelo {classification.source_modelo!r} does not match "
                     f"relation {relation_id!r} source_modelo {relation.source_modelo!r}"
                 )
-            missing_legal_refs = sorted(set(relation.legal_refs).difference(classification.legal_refs))  # type: ignore[attr-defined]
+            missing_legal_refs = sorted(set(relation.legal_refs).difference(classification.legal_refs))
             if missing_legal_refs:
                 failures.append(
                     f"{prefix}: {owner} relation {relation_id!r} "
                     f"does not include relation legal refs {missing_legal_refs!r}"
                 )
-            missing_source_refs = sorted(set(relation.source_refs).difference(classification.source_refs))  # type: ignore[attr-defined]
+            missing_source_refs = sorted(set(relation.source_refs).difference(classification.source_refs))
             if missing_source_refs:
                 failures.append(
                     f"{prefix}: {owner} relation {relation_id!r} "
@@ -903,21 +947,21 @@ class RegistryValidator:
         *,
         prefix: str,
         revision: ModeloRevision,
-        record: object,
+        record: ExportRecordDefinition,
         casillas: set[str],
         bindings: set[str],
         casilla_by_id: Mapping[str, object],
     ) -> None:
-        if record.binding_record is not None:  # type: ignore[attr-defined]
+        if record.binding_record is not None:
             matching_bindings = [
                 binding
                 for binding in revision.bindings
-                if binding.selector.get("record") == record.binding_record  # type: ignore[attr-defined]
+                if binding.selector.get("record") == record.binding_record
             ]
             if not matching_bindings:
                 failures.append(
-                    f"{prefix}: export record {record.id!r} derives fields from unknown binding record "  # type: ignore[attr-defined]
-                    f"{record.binding_record!r}"  # type: ignore[attr-defined]
+                    f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
+                    f"{record.binding_record!r}"
                 )
             for binding in matching_bindings:
                 # Row-producer bindings (aggregation.op == "rows") source their
@@ -930,26 +974,26 @@ class RegistryValidator:
                 )
                 if missing_selector_keys:
                     failures.append(
-                        f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "  # type: ignore[attr-defined]
+                        f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
                         f"{missing_selector_keys!r}"
                     )
         if (
-            record.repeat == "binding_rows"  # type: ignore[attr-defined]
-            and not any(field.kind == "binding" for field in record.fields)  # type: ignore[attr-defined]
-            and record.binding_record is None  # type: ignore[attr-defined]
+            record.repeat == "binding_rows"
+            and not any(field.kind == "binding" for field in record.fields)
+            and record.binding_record is None
         ):
             failures.append(
-                f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"  # type: ignore[attr-defined]
+                f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"
             )
         if (
-            record.requires_positive_casilla is not None  # type: ignore[attr-defined]
-            and record.requires_positive_casilla not in casillas  # type: ignore[attr-defined]
+            record.requires_positive_casilla is not None
+            and record.requires_positive_casilla not in casillas
         ):
             failures.append(
-                f"{prefix}: export record {record.id!r} requires unknown positive casilla "  # type: ignore[attr-defined]
-                f"{record.requires_positive_casilla!r}"  # type: ignore[attr-defined]
+                f"{prefix}: export record {record.id!r} requires unknown positive casilla "
+                f"{record.requires_positive_casilla!r}"
             )
-        for field in record.fields:  # type: ignore[attr-defined]
+        for field in record.fields:
             self._validate_export_field(
                 failures,
                 prefix=prefix,
@@ -964,24 +1008,24 @@ class RegistryValidator:
         failures: list[str],
         *,
         prefix: str,
-        field: object,
+        field: ExportFieldDefinition,
         casillas: set[str],
         bindings: set[str],
         casilla_by_id: Mapping[str, object],
     ) -> None:
-        owner = f"export field {field.id}"  # type: ignore[attr-defined]
-        failures.extend(self._missing_refs(prefix, owner, field.legal_refs, self._legal, "legal"))  # type: ignore[attr-defined]
-        failures.extend(self._missing_refs(prefix, owner, field.source_refs, self._sources, "source"))  # type: ignore[attr-defined]
-        if field.casilla is not None and field.casilla not in casillas:  # type: ignore[attr-defined]
-            failures.append(f"{prefix}: {owner!r} references unknown casilla {field.casilla!r}")  # type: ignore[attr-defined]
+        owner = f"export field {field.id}"
+        failures.extend(self._missing_refs(prefix, owner, field.legal_refs, self._legal, "legal"))
+        failures.extend(self._missing_refs(prefix, owner, field.source_refs, self._sources, "source"))
+        if field.casilla is not None and field.casilla not in casillas:
+            failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}")
         if (
-            field.casilla is not None  # type: ignore[attr-defined]
-            and field.casilla in casilla_by_id  # type: ignore[attr-defined]
+            field.casilla is not None
+            and field.casilla in casilla_by_id
             and field.id not in casilla_by_id[field.casilla].export_refs  # type: ignore[attr-defined]
         ):
-            failures.append(f"{prefix}: {owner!r} is not declared by casilla {field.casilla!r}")  # type: ignore[attr-defined]
-        if field.binding is not None and field.binding not in bindings:  # type: ignore[attr-defined]
-            failures.append(f"{prefix}: {owner!r} references unknown binding {field.binding!r}")  # type: ignore[attr-defined]
+            failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}")
+        if field.binding is not None and field.binding not in bindings:
+            failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
 
     def _validate_extraction_profile_section(
         self,
@@ -1047,16 +1091,20 @@ class RegistryValidator:
             failures.extend(self._missing_refs(prefix, owner, workbook.legal_refs, self._legal, "legal"))
             failures.extend(self._missing_refs(prefix, owner, workbook.source_refs, self._sources, "source"))
             if workbook.workbook_source not in self._sources:
-                failures.append(f"{prefix}: {owner} references unknown source {workbook.workbook_source!r}")
+                failures.append(
+                    f"{prefix}: workbook parity {workbook.id!r} references unknown source {workbook.workbook_source!r}"
+                )
                 continue
             source = self._sources[workbook.workbook_source]
             if workbook.formula_coverage == "formula_form" and source.evidence_tier != "executable_parity_evidence":
                 failures.append(
-                    f"{prefix}: {owner} formula workbook requires executable parity evidence source"
+                    f"{prefix}: workbook parity {workbook.id!r} formula workbook requires "
+                    "executable parity evidence source"
                 )
             if workbook.formula_coverage != "formula_form" and source.evidence_tier == "executable_parity_evidence":
                 failures.append(
-                    f"{prefix}: {owner} non-formula workbook must not use executable parity evidence source"
+                    f"{prefix}: workbook parity {workbook.id!r} non-formula workbook must not use "
+                    "executable parity evidence source"
                 )
 
     def _validate_verification_expectation_section(

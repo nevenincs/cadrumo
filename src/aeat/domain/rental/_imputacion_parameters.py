@@ -93,17 +93,20 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     )
 
 
-LIRPF_ART_85_IMPUTACION: Final[LirpfArt85ImputacionParameters] = _load_parameters()
-"""Module-level frozen record loaded once at import time.
+def load_imputacion_parameters() -> LirpfArt85ImputacionParameters:
+    """Public accessor for the LIRPF art. 85 imputation parameters.
 
-Consumers — currently :mod:`aeat.domain.rental._aggregates` —
-reference ``LIRPF_ART_85_IMPUTACION.recent_revision_rate``,
-``.old_or_no_revision_rate``, and ``.catastral_revision_lookback_years``
-instead of carrying the values as Python literals.
-"""
+    Reads the three art. 85 parameters from the bundled legal-
+    parameter catalogue and returns the typed
+    :class:`LirpfArt85ImputacionParameters` record. Callers that
+    want the raw parameter mapping should use
+    :func:`aeat.domain.calculations.registry.load_legal_parameters_only`
+    or the ``resources().legal_parameters`` Repository instead.
+    """
+    return _load_parameters()
 
 
 __all__ = [
-    "LIRPF_ART_85_IMPUTACION",
     "LirpfArt85ImputacionParameters",
+    "load_imputacion_parameters",
 ]

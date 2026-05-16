@@ -40,32 +40,25 @@ def _is_production_module(path: Path) -> bool:
     name = path.name
     if name == "conftest.py":
         return False
-    if name.startswith("test_") or name.startswith("_test_"):
-        return False
-    return True
+    return not (name.startswith("test_") or name.startswith("_test_"))
 
 
 def _production_files() -> list[Path]:
     return sorted(p for p in _SRC.rglob("*.py") if _is_production_module(p))
 
 
-_PENDING_RETIREMENT_ALLOWLIST = frozenset(
-    {
-        # Files that still ship a legacy _DEFAULT_*_ROOT constant
-        # because their loader's retirement is scheduled for P09 of
-        # the resource-management-api migration. The allow-list is
-        # ratchet-only: a file removed from here cannot be re-added
-        # without explicit ADR amendment.
-        Path("src/aeat/domain/categories/_registry.py"),
-        Path("src/aeat/domain/deadlines/_engine.py"),
-        Path("src/aeat/domain/vat/_catalogue.py"),
-        # CLI typer.Option defaults need a stable Path at module-
-        # import time; bundled_path is the canonical boundary for
-        # this purpose and the file would still appear in the scan.
-        Path("src/aeat/entrypoints/cli/_app_live.py"),
-        Path("src/aeat/entrypoints/cli/registry.py"),
-    }
-)
+_PENDING_RETIREMENT_ALLOWLIST: frozenset[Path] = frozenset()
+"""Allow-list of files allowed to declare a ``_DEFAULT_*_ROOT`` constant.
+
+The allow-list is empty: every production module under
+``src/aeat/`` routes resource resolution through
+``aeat.core.resources`` exclusively. The companion test
+:func:`test_allowlist_only_contains_files_that_actually_offend`
+enforces that the allow-list cannot grow without the addition
+of a corresponding offending constant; the structural guard
+proper enforces that no file outside this set defines such a
+constant.
+"""
 
 
 def test_no_default_root_constants_in_production() -> None:
