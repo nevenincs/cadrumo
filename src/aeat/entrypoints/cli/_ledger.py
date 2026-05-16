@@ -730,6 +730,7 @@ def ledger_link(
     """Bind a transaction to invoice / evidence references in one call."""
 
     from ...application.invoices import link_invoice_transaction_repositories
+    from ...domain.invoices import InvoiceCatalogueRepository
     from ...domain.invoices._errors import InvoiceLinkError
 
     if invoice_id is None and evidence_id is None:
@@ -746,24 +747,39 @@ def ledger_link(
     bucket_id = transaction_repository.bucket_id
     actor_label = (actor or "operator").strip() or "operator"
 
-    invoice_event_ids: tuple[str, ...] = ()
     if invoice_id is not None:
-        try:
-            invoice_result = link_invoice_transaction_repositories(
-                bucket_id=bucket_id,
-                invoice_id=invoice_id,
-                transaction_id=resolved_id,
-                transaction_repository=transaction_repository,
+        # Pre-write bucket guard: load the invoice and verify it is
+        # scoped to the active bucket BEFORE invoking the linker.
+        # link_invoice_transaction_repositories mutates both invoice and
+        # transaction catalogues; a post-write check would leave a
+        # cross-bucket link persisted.
+        invoice_repo = InvoiceCatalogueRepository()
+        invoices_snapshot = invoice_repo.load()
+        invoice_record = invoices_snapshot.invoices.get(invoice_id)
+        if invoice_record is None:
+            raise _bad(
+                tr(
+                    "cli.ledger.link.errors.invoice_not_found",
+                    default="Invoice id not found in the active profile invoice catalogue.",
+                ),
             )
-        except InvoiceLinkError as exc:
-            raise _bad(str(exc)) from exc
-        if invoice_result.invoice.bucket_id not in (None, bucket_id):
+        if invoice_record.bucket_id not in (None, bucket_id):
             raise _bad(
                 tr(
                     "cli.ledger.link.errors.cross_bucket_invoice",
                     default="Invoice belongs to a different bucket than the active profile.",
                 ),
             )
+        try:
+            link_invoice_transaction_repositories(
+                bucket_id=bucket_id,
+                invoice_id=invoice_id,
+                transaction_id=resolved_id,
+                invoice_repository=invoice_repo,
+                transaction_repository=transaction_repository,
+            )
+        except InvoiceLinkError as exc:
+            raise _bad(str(exc)) from exc
 
     evidence_result_payload: dict[str, object] = {}
     if evidence_id is not None:
@@ -805,75 +821,92 @@ def ledger_link(
     help=tr(
         "cli.ledger.check.help",
         default=(
-            "Probe ledger transactions in the active bucket and report anomaly rows "
-            "(currently the same readiness checks as `preflight` aggregated over the "
-            "default current period). Local-only; never contacts AEAT."
+            "Probe ledger transactions in the addressed bucket (defaults to the active "
+            "profile bucket) and report anomaly rows aggregated across every period a "
+            "transaction touches. Local-only; never contacts AEAT."
         ),
     ),
 )
 def ledger_check(
     ctx: typer.Context,
-    period: str | None = typer.Option(
+    bucket_id_option: str | None = typer.Option(
         None,
-        "--period",
+        "--bucket-id",
         help=tr(
-            "cli.ledger.check.period_help",
-            default="Optional canonical period (defaults to all-period audit).",
+            "cli.ledger.check.bucket_id_help",
+            default="Bucket id to probe (defaults to the active profile bucket).",
         ),
     ),
 ) -> None:
-    """Surface ledger anomalies for the active bucket without mutating state."""
+    """Surface ledger anomalies for the addressed bucket without mutating state."""
 
     from ...application.ledger._preflight import preflight_transaction_catalogue
+    from ...domain.transactions import TransactionCatalogueRepository
 
-    transaction_repository = _tx_repo(_state())
-    catalogue = transaction_repository.load()
-    if period is None:
-        # Aggregate per-period readiness across every period a transaction
-        # touches, derived from the active bucket's transaction date range.
-        years = sorted(
-            {
-                (tx.raw.value_date or tx.raw.booked_date).year
-                for tx in catalogue.values()
-                if (tx.raw.value_date or tx.raw.booked_date) is not None
-            },
-        )
-        if not years:
-            payload = {
-                "bucket_id": transaction_repository.bucket_id,
-                "period": None,
-                "checked_transaction_count": 0,
-                "issues": [],
-                "ready": True,
-            }
-            lines = [
-                f"bucket\t{transaction_repository.bucket_id}",
-                "checked\t0",
-                "issues\t0",
-                "ready\ttrue",
-            ]
-            _emit(ctx, payload, lines)
-            return
-        # Pick the latest year as the "current" probe; callers wanting
-        # finer granularity should use --period.
-        period_to_check = str(years[-1])
+    if bucket_id_option is not None:
+        transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
     else:
-        period_to_check = _canonical_period(period)
+        transaction_repository = _tx_repo(_state())
+    bucket_id = transaction_repository.bucket_id
+    catalogue = transaction_repository.load()
 
-    report = preflight_transaction_catalogue(
-        bucket_id=transaction_repository.bucket_id,
-        period=period_to_check,
-        transactions=catalogue,
+    # Aggregate readiness across every year the catalogue's transactions
+    # touch (per-year periods are the largest periodic envelope the
+    # readiness service accepts). An "all-period audit" omits no anomaly.
+    years = sorted(
+        {
+            (tx.raw.value_date or tx.raw.booked_date).year
+            for tx in catalogue.values()
+            if (tx.raw.value_date or tx.raw.booked_date) is not None
+        },
     )
-    payload = report.model_dump(mode="json")
+    if not years:
+        payload = {
+            "bucket_id": bucket_id,
+            "periods": [],
+            "checked_transaction_count": 0,
+            "issues": [],
+            "ready": True,
+        }
+        lines = [
+            f"bucket\t{bucket_id}",
+            "periods\t",
+            "checked\t0",
+            "issues\t0",
+            "ready\ttrue",
+        ]
+        _emit(ctx, payload, lines)
+        return
+
+    aggregated_issues: list[object] = []
+    aggregated_payload_issues: list[dict[str, object]] = []
+    checked_total = 0
+    for year in years:
+        report = preflight_transaction_catalogue(
+            bucket_id=bucket_id,
+            period=str(year),
+            transactions=catalogue,
+        )
+        checked_total += report.checked_transaction_count
+        for issue in report.issues:
+            aggregated_issues.append(issue)
+            aggregated_payload_issues.append(issue.model_dump(mode="json"))
+
+    payload = {
+        "bucket_id": bucket_id,
+        "periods": [str(year) for year in years],
+        "checked_transaction_count": checked_total,
+        "issues": aggregated_payload_issues,
+        "ready": not aggregated_issues,
+    }
     lines = [
-        f"bucket\t{report.bucket_id}",
-        f"period\t{period_to_check}",
-        f"checked\t{report.checked_transaction_count}",
-        f"issues\t{len(report.issues)}",
-        f"ready\t{str(report.ready).lower()}",
+        f"bucket\t{bucket_id}",
+        f"periods\t{','.join(str(year) for year in years)}",
+        f"checked\t{checked_total}",
+        f"issues\t{len(aggregated_issues)}",
+        f"ready\t{str(not aggregated_issues).lower()}",
     ]
-    for issue in report.issues:
+    for issue in aggregated_issues:
         lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
     _emit(ctx, payload, lines)
 

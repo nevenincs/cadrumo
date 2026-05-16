@@ -697,11 +697,10 @@ cli:
       purchase_invoice_evidence_help: Id de justificante de factura de compra que
         soporta el movimiento
     check:
-      bucket_id_help: cli.ledger.check.bucket_id_help
-      help: Examina los movimientos del libro del bucket activo e informa de filas
-        con anomalías (actualmente las mismas comprobaciones de preparación que `preflight`
-        agregadas sobre el período actual por defecto). Local; nunca contacta con
-        AEAT.
+      bucket_id_help: Id del bucket a examinar (por defecto el bucket del perfil activo).
+      help: Examina los movimientos del libro del bucket direccionado (por defecto el
+        bucket del perfil activo) e informa de filas con anomalías agregadas a través
+        de cada período que los movimientos toquen. Local; nunca contacta con AEAT.
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       category_help: Id de categoría de gasto o ingreso
