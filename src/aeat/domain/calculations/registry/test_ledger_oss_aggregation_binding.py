@@ -14,13 +14,12 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path
+from aeat.core.resources import resources
 from aeat.domain.calculations.registry import (
     DataBindingDefinition,
     ModeloRevision,
     OssIossLedgerObservation,
     RegistryValidationError,
-    load_registry_tree,
     resolve_ledger_oss_aggregation_binding_values,
     validate_ledger_oss_aggregation_binding_definition,
 )
@@ -37,8 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @lru_cache(maxsize=1)
 def _modelo_369_union_revision() -> ModeloRevision:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "369")
+    modelo = resources().modelos.get("369")
     return modelo.revisions["esquema-union"]
 
 

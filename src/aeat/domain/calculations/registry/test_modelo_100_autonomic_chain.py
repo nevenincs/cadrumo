@@ -27,9 +27,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources import bundled_path
-
-from ._loader import load_registry_tree
+from aeat.core.resources import resources
 from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -59,8 +57,7 @@ _SUPPORTED_EJERCICIOS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024"
 
 
 def _committed_modelo_100() -> ModeloDefinition:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(modelo for modelo in modelos if modelo.id == "100")
+    return resources().modelos.get("100")
 
 
 @pytest.fixture(scope="module")
