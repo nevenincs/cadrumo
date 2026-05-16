@@ -316,6 +316,8 @@ cli:
         list_help: List registered work units, optionally filtered by bucket
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
+        relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
+          relation id; the VALUE is a decimal. Repeat to supply multiple relations.
         notes_help: Optional notes attached to the filing record
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: Work-unit period token; for Modelo 036 use alta, modificacion,
@@ -436,6 +438,8 @@ cli:
               carry-forward etc.)
             root_folder_required: No Drive root folder id is configured; run `aeat
               config google folder set <id>` first
+            snapshot_failure: 'Cannot build registry snapshot for modelo {modelo}
+              ({period} {year}): {detail}'
             unknown_modelo: Unknown modelo {modelo!r}; available modelos are {available}
             year_help: Filing year (e.g. 2025)
           export_help: Export the registry calculation surface for a modelo+period

@@ -342,6 +342,8 @@ cli:
         name_help: Nombre de visualización opcional de la unidad de trabajo
         notes_help: Notas opcionales asociadas al filing record
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
+        relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE. KEY
+          es un id de relación del registry; VALUE es un decimal. Repetible.
         period_help: Token de periodo de la unidad; para Modelo 036 usa alta, modificacion
           o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
@@ -463,6 +465,8 @@ cli:
               anuales, arrastre de trimestres anteriores, etc.)
             root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
               `aeat config google folder set <id>` primero
+            snapshot_failure: 'No se puede construir el snapshot del registry para
+              modelo {modelo} ({period} {year}): {detail}'
             unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
               son {available}
             year_help: Año de declaración (p. ej. 2025)

@@ -329,6 +329,8 @@ cli:
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: Token de periode de la unitat; per a Modelo 036 usa alta, modificacion
           o baja; exemples periodics inclouen Q1, 4T, 0A i 01
+        relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
+          KEY és un id de relació del registry; VALUE és un decimal. Repetible.
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         resume_help: cli.app.modelo.work.resume_help
@@ -447,6 +449,8 @@ cli:
               arrossegament de trimestres anteriors, etc.)
             root_folder_required: No hi ha cap carpeta arrel de Drive configurada;
               executeu `aeat config google folder set <id>` primer
+            snapshot_failure: 'No es pot construir el snapshot del registry per al
+              model {modelo} ({period} {year}): {detail}'
             unknown_modelo: Model desconegut {modelo!r}; els models disponibles són
               {available}
             year_help: Any de declaració (p. ex. 2025)

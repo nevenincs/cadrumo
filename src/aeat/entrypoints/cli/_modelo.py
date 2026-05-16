@@ -1081,6 +1081,20 @@ def work_calculate(
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
+    relation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--relation",
+            help=tr(
+                "cli.app.modelo.work.relation_help",
+                default=(
+                    "Prior-period relation value as KEY=VALUE. "
+                    "The KEY is a registry relation id; the VALUE is a "
+                    "decimal. Repeat to supply multiple relations."
+                ),
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
@@ -1107,6 +1121,15 @@ def work_calculate(
             # Non-decimal binding overrides flow into the enum-binding
             # channel (e.g. profile-sourced enums like CCAA).
             enum_binding_values[k] = v
+    relation_values: dict[str, Decimal] = {}
+    for spec in relation or ():
+        key, raw_value = _parse_kv_spec(spec, flag="--relation", transform=lambda value: value)
+        try:
+            relation_values[key] = Decimal(raw_value)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                f"--relation value for {key!r} is not a decimal: {raw_value!r}"
+            ) from exc
 
     try:
         revision = calculate_modelo_revision(
@@ -1116,6 +1139,7 @@ def work_calculate(
             binding_values=binding_values or None,
             enum_binding_values=enum_binding_values or None,
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+            relation_values=relation_values or None,
         )
     except (
         WorkUnitNotFoundError,
