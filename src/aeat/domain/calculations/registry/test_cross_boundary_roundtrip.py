@@ -247,6 +247,75 @@ def test_filing_draft_full_roundtrip() -> None:
     assert computed.formula_trace == ("iva.devengado", "iva.deducible")
 
 
+def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
+    """``FilingDraft.subject_tax_id`` runs the AEAT NIF/NIE/CIF checksum.
+
+    A malformed identifier must raise a pydantic ValidationError at
+    construction time, not surface downstream as a silent typed-str.
+    """
+
+    import pytest as _pytest
+    from pydantic import ValidationError
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    common_kwargs = dict(
+        draft_id="f" * 64,
+        modelo="303",
+        period="2025Q1",
+        profile_tax_id="12345678Z",
+        status=FilingDraftStatus.DRAFT,
+        values=(),
+        binding_values=(),
+        findings=(),
+        created_at=now,
+        updated_at=now,
+        schema_version="schema-2025-1",
+    )
+
+    # 12345678Z is a valid Spanish NIF (checksum letter for 12345678 is Z).
+    valid = FilingDraft(subject_tax_id="12345678Z", **common_kwargs)
+    assert valid.subject_tax_id == "12345678Z"
+
+    # Same digits with a wrong checksum letter must fail at validation.
+    with _pytest.raises(ValidationError):
+        FilingDraft(subject_tax_id="12345678A", **common_kwargs)
+
+
+def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
+    """A populated ``RegistrySnapshotRef`` survives strict JSON round-trip on FilingDraft."""
+
+    from ._schema import RegistrySnapshotRef
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2025-y-siguientes",
+        filing_year=2025,
+        period="1T",
+    )
+    original = FilingDraft(
+        draft_id="f" * 64,
+        modelo="303",
+        period="2025Q1",
+        profile_tax_id="12345678Z",
+        subject_tax_id="12345678Z",
+        snapshot_ref=ref,
+        status=FilingDraftStatus.DRAFT,
+        values=(),
+        binding_values=(),
+        findings=(),
+        created_at=now,
+        updated_at=now,
+        schema_version="schema-2025-1",
+    )
+
+    roundtripped = FilingDraft.model_validate_json(original.model_dump_json())
+
+    assert roundtripped == original
+    assert roundtripped.snapshot_ref == ref
+    assert roundtripped.subject_tax_id == "12345678Z"
+
+
 def test_calculation_revision_carries_typed_observations() -> None:
     """``CalculationRevision`` must persist the typed observation envelope.
 

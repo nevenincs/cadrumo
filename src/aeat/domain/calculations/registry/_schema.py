@@ -134,6 +134,24 @@ class RegistryModel(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
+class RegistrySnapshotRef(RegistryModel):
+    """Typed coordinates that identify a registry snapshot.
+
+    Replaces opaque ``schema_version: str`` strings in persisted records
+    (filing drafts, justificantes, etc.) with the four-axis registry
+    coordinate ``(modelo, revision_id, filing_year, period)``. A persisted
+    record carrying a ``RegistrySnapshotRef`` can be re-resolved against
+    the live registry catalogue with a single
+    :meth:`ValidatedRegistryAuthority.snapshot` call; an opaque schema
+    version cannot.
+    """
+
+    modelo: ModeloId
+    revision_id: RevisionId
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=32)
+
+
 class PeriodSelector(RegistryModel):
     years: tuple[int, ...] = ()
     year_from: int | None = None
