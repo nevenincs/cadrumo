@@ -521,6 +521,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._reconcile.ReconciliationEvidenceInvalidError",
+        ErrorCode(
+            code="REFUSED_RECONCILIATION_EVIDENCE_INVALID",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.reconciliation_evidence_invalid",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._reconcile.ReconciliationDeclarationSourceUnsupportedError",
+        ErrorCode(
+            code="REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.reconciliation_declaration_source_unsupported",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.overview._errors.OverviewError",
         ErrorCode(
             code="FAIL_OVERVIEW",
