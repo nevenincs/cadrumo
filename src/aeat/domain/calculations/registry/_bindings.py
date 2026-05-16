@@ -118,6 +118,24 @@ class RegistryFilingObservation(BaseModel):
         return {obs.casilla_id: obs.value for obs in self.observations}
 
 
+class OracleFilingObservation(RegistryFilingObservation):
+    """Observed casilla values whose source is a live AEAT oracle adapter.
+
+    A subtype of :class:`RegistryFilingObservation` that marks the
+    observation tuple as oracle-originated rather than locally computed.
+    The ``oracle_id`` field anchors the observation to the
+    ``LiveCrossReferenceDecision`` that produced it, so the application
+    layer can route oracle-originated values through the
+    cross-reference policy (synthetic-payload verification, replay
+    quarantine, etc.) without ambiguity about provenance.
+
+    Distinct from the parent only by the typed ``oracle_id`` field;
+    every other invariant is inherited unchanged.
+    """
+
+    oracle_id: str = Field(min_length=1, max_length=128)
+
+
 class RegistryFilingObservationRequirement(BaseModel):
     """Filed declaration required by one or more registry bindings."""
 
