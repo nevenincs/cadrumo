@@ -76,21 +76,38 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     With ``inline_sign=True``, byte 0 is the sign marker (``"N"`` for
     negatives, ``" "`` for non-negatives) and the remaining bytes carry
     the zero-padded absolute magnitude.
+
+    Audit export/import F1 — the previous implementation silently
+    decoded all-whitespace input to ``Decimal("0.00")``, leaving an
+    operator with no way to distinguish "filed as zero" from "field
+    was blank on the wire". The fichero-BOE spec requires every
+    CURRENCY field to be zero-padded with ASCII digits; blank bytes
+    are a wire-format error. Reject them explicitly so a malformed
+    payload surfaces as ``ExportFormatError`` at parse time instead
+    of as a silent ``0.00`` value the operator cannot inspect.
     """
     if inline_sign:
         if not raw:
-            return Decimal("0.00")
+            raise ExportFormatError("INLINE_SIGN CURRENCY field cannot be empty")
         sign_byte = raw[:1]
         magnitude_bytes = raw[1:]
         is_negative = sign_byte == b"N"
         text = magnitude_bytes.decode("ascii").strip()
-        cents = int(text) if text else 0
+        if not text:
+            raise ExportFormatError(
+                "INLINE_SIGN CURRENCY magnitude is blank; expected zero-padded digits "
+                "(use 0000000000 for an explicit zero, not whitespace)"
+            )
+        cents = int(text)
         result = (Decimal(cents) / Decimal(100)).quantize(Decimal("0.01"))
         return -result if is_negative else result
 
     text = raw.decode("ascii").strip()
     if not text:
-        return Decimal("0.00")
+        raise ExportFormatError(
+            "CURRENCY field is blank; expected zero-padded digits "
+            "(use 0000000000 for an explicit zero, not whitespace)"
+        )
     cents = int(text)
     return (Decimal(cents) / Decimal(100)).quantize(Decimal("0.01"))
 
