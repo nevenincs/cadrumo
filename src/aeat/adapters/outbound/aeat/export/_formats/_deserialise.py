@@ -158,65 +158,109 @@ def deserialise(
     casilla_values: dict[str, Decimal] = {}
 
     for spec in specs:
-        start = spec.offset - 1  # 1-based → 0-based slice
-        end = start + spec.length
-        raw = body[start:end]
-        if len(raw) != spec.length:
-            raise ExportFormatError(
-                f"field {spec.field_id!r} expects {spec.length} bytes "
-                f"at offset {spec.offset}; got {len(raw)} — payload too short?"
-            )
-
-        match spec.kind:
-            case FieldKind.RESERVED:
-                assert spec.literal_value is not None
-                expected = spec.literal_value.encode(encoding).ljust(spec.length, b" ")
-                if raw != expected and raw != spec.literal_value.encode(encoding):
-                    raise ExportFormatError(
-                        f"RESERVED field {spec.field_id!r} expected {spec.literal_value!r}; got {raw!r}",
-                    )
-                field_values[spec.field_id] = spec.literal_value
-
-            case FieldKind.CURRENCY:
-                inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
-                value = _decode_currency(raw, inline_sign=inline_sign)
-                field_values[spec.field_id] = value
-                if spec.casilla_id is not None:
-                    casilla_values[spec.casilla_id] = value
-
-            case FieldKind.DATE:
-                assert spec.date_fmt is not None
-                field_values[spec.field_id] = _decode_date(raw, spec.date_fmt)
-
-            case FieldKind.ALPHANUMERIC | FieldKind.NUMERIC:
-                # Preserve right-side padding stripped per justification.
-                text = raw.decode(encoding)
-                # Strip the pad char only on the padded side to preserve
-                # intentional inner whitespace.
-                if spec.pad_char == " ":
-                    text = text.rstrip(" ") if spec.justification.value == "left" else text.lstrip(" ")
-                elif spec.pad_char == "0":
-                    text = text.rstrip("0") if spec.justification.value == "left" else text.lstrip("0")
-                    # Edge case: a field whose canonical value IS all zeros
-                    # (e.g., "0000") normalises to ``"0"`` here. Semantic
-                    # contract on NUMERIC fields: an all-zero field is
-                    # canonically the value "zero" (the unsignaled-absent
-                    # case raises at the serialiser side when the field
-                    # is required). The original byte-level width is
-                    # recoverable from the field's ``spec.length`` if a
-                    # downstream consumer needs the padded form. This
-                    # mirrors ``_decode_currency`` which also collapses
-                    # all-zero CURRENCY fields to ``Decimal("0.00")``.
-                    # Export-import audit F3.
-                    if text == "":
-                        text = "0"
-                field_values[spec.field_id] = text
+        raw = _slice_field_bytes(body, spec)
+        _decode_field_into(
+            spec,
+            raw,
+            encoding=encoding,
+            field_values=field_values,
+            casilla_values=casilla_values,
+        )
 
     return ParsedRecord(
         field_values=field_values,
         casilla_values=casilla_values,
         raw_length=len(body),
     )
+
+
+def _slice_field_bytes(body: bytes, spec: RecordFieldSpec) -> bytes:
+    """Return the byte slice for one field, raising if the payload is too short."""
+    start = spec.offset - 1  # 1-based -> 0-based slice
+    end = start + spec.length
+    raw = body[start:end]
+    if len(raw) != spec.length:
+        raise ExportFormatError(
+            f"field {spec.field_id!r} expects {spec.length} bytes "
+            f"at offset {spec.offset}; got {len(raw)} — payload too short?"
+        )
+    return raw
+
+
+def _decode_field_into(
+    spec: RecordFieldSpec,
+    raw: bytes,
+    *,
+    encoding: FicheroBoeEncoding,
+    field_values: dict[str, str | Decimal | date],
+    casilla_values: dict[str, Decimal],
+) -> None:
+    """Dispatch one field's raw bytes to its kind-specific decoder.
+
+    Mutates ``field_values`` (always) and ``casilla_values`` (only for
+    CURRENCY fields that declare a casilla_id) in place. Keeping the
+    mutation sinks explicit at the call site preserves the serialiser/
+    deserialiser symmetry the fichero-BOE layout contract relies on.
+    """
+    match spec.kind:
+        case FieldKind.RESERVED:
+            _decode_reserved_field(spec, raw, encoding, field_values)
+        case FieldKind.CURRENCY:
+            _decode_currency_field(spec, raw, field_values, casilla_values)
+        case FieldKind.DATE:
+            assert spec.date_fmt is not None
+            field_values[spec.field_id] = _decode_date(raw, spec.date_fmt)
+        case FieldKind.ALPHANUMERIC | FieldKind.NUMERIC:
+            field_values[spec.field_id] = _decode_text_field(spec, raw, encoding)
+
+
+def _decode_reserved_field(
+    spec: RecordFieldSpec,
+    raw: bytes,
+    encoding: FicheroBoeEncoding,
+    field_values: dict[str, str | Decimal | date],
+) -> None:
+    """Decode a RESERVED literal field, accepting either padded or exact-width bytes."""
+    assert spec.literal_value is not None
+    expected = spec.literal_value.encode(encoding).ljust(spec.length, b" ")
+    if raw != expected and raw != spec.literal_value.encode(encoding):
+        raise ExportFormatError(
+            f"RESERVED field {spec.field_id!r} expected {spec.literal_value!r}; got {raw!r}",
+        )
+    field_values[spec.field_id] = spec.literal_value
+
+
+def _decode_currency_field(
+    spec: RecordFieldSpec,
+    raw: bytes,
+    field_values: dict[str, str | Decimal | date],
+    casilla_values: dict[str, Decimal],
+) -> None:
+    """Decode a CURRENCY field and mirror the value into casilla_values when bound."""
+    inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
+    value = _decode_currency(raw, inline_sign=inline_sign)
+    field_values[spec.field_id] = value
+    if spec.casilla_id is not None:
+        casilla_values[spec.casilla_id] = value
+
+
+def _decode_text_field(spec: RecordFieldSpec, raw: bytes, encoding: FicheroBoeEncoding) -> str:
+    """Decode an ALPHANUMERIC or NUMERIC field, stripping pad chars per justification.
+
+    All-zero NUMERIC fields normalise to ``"0"`` — the canonical
+    semantic for the unsignaled-zero case. The original byte-level
+    width is recoverable from ``spec.length`` if a downstream consumer
+    needs the padded form. This mirrors :func:`_decode_currency` which
+    also collapses all-zero CURRENCY fields to ``Decimal("0.00")``
+    (export-import audit F3).
+    """
+    text = raw.decode(encoding)
+    if spec.pad_char == " ":
+        return text.rstrip(" ") if spec.justification.value == "left" else text.lstrip(" ")
+    if spec.pad_char == "0":
+        text = text.rstrip("0") if spec.justification.value == "left" else text.lstrip("0")
+        return text or "0"
+    return text
 
 
 class ParsedEnvelope(BaseModel):
