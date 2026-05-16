@@ -210,3 +210,98 @@ def overview_calendar(
             f"\tdefaulted\t{len(cal.completeness.defaulted_modelos)}"
         )
     _emit(ctx, payload, lines)
+
+
+@app.command(
+    "agenda",
+    help=tr(
+        "cli.overview.agenda.help",
+        default=(
+            "Rank upcoming and past-due obligations around an as-of date. "
+            "Surfaces a single `next_due` plus due-today / due-soon / overdue cohorts. "
+            "Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def overview_agenda(
+    ctx: typer.Context,
+    as_of: str | None = typer.Option(
+        None,
+        "--date",
+        help=tr(
+            "cli.overview.agenda.date_help",
+            default="As-of date for the agenda (ISO YYYY-MM-DD); defaults to today.",
+        ),
+    ),
+    horizon_days: int = typer.Option(
+        14,
+        "--horizon",
+        help=tr(
+            "cli.overview.agenda.horizon_help",
+            default="Forward window (days) the `due_soon` cohort honours.",
+        ),
+    ),
+    allow_incomplete: bool = typer.Option(
+        False,
+        "--allow-incomplete",
+        help=tr(
+            "cli.overview.agenda.allow_incomplete_help",
+            default="Render the agenda even when profile data is incomplete.",
+        ),
+    ),
+) -> None:
+    """Surface the operator's next-due obligation with cohort breakdowns."""
+
+    from ...application.overview._agenda import build_overview_agenda
+    from ...application.user_profile._projections import record_to_values
+
+    current = _state()
+    as_of_date = _parse_iso_date(as_of, label="--date") if as_of else _date.today()
+    if horizon_days <= 0:
+        raise _bad(
+            tr(
+                "cli.overview.agenda.errors.invalid_horizon",
+                default="--horizon must be a positive integer (days).",
+            ),
+        )
+    record = current.active_profile_record()
+    raw_values = record_to_values(record) if record is not None else None
+    agenda = build_overview_agenda(
+        _profile_to_autonomo(current),
+        as_of=as_of_date,
+        horizon_days=horizon_days,
+        raw_values=raw_values,
+    )
+    if agenda.warnings and not allow_incomplete:
+        warning_summary = ", ".join(warning.code for warning in agenda.warnings)
+        raise _bad(
+            tr(
+                "cli.overview.calendar_refused_incomplete",
+                keys=warning_summary,
+            ),
+        )
+
+    payload = agenda.model_dump(mode="json")
+    lines: list[str] = [
+        f"as_of\t{agenda.as_of.isoformat()}",
+        f"horizon_days\t{agenda.horizon_days}",
+    ]
+    if agenda.next_due is not None:
+        lines.append(
+            f"next_due\t{agenda.next_due.modelo}\t{agenda.next_due.period}"
+            f"\tcloses={agenda.next_due.adjusted_closes_on.isoformat()}"
+        )
+    else:
+        lines.append("next_due\t(none)")
+    lines.append(f"due_today\t{len(agenda.due_today)}")
+    for entry in agenda.due_today:
+        lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
+    lines.append(f"due_soon\t{len(agenda.due_soon)}")
+    for entry in agenda.due_soon:
+        lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
+    lines.append(f"overdue\t{len(agenda.overdue)}")
+    for entry in agenda.overdue:
+        lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
+    for warning in agenda.warnings:
+        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+    _emit(ctx, payload, lines)

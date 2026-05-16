@@ -855,6 +855,16 @@ cli:
     app_help: Fordítási katalógusok auditálása és generálása
     scaffold_check_help: Eltérések jelentése locale fájlok írása nélkül
   overview:
+    agenda:
+      allow_incomplete_help: Az agenda generálása akkor is, ha a profil adatai hiányosak.
+      date_help: Az agenda referenciadátuma (ISO YYYY-MM-DD); alapértelmezetten ma.
+      errors:
+        invalid_horizon: A --horizon értéke pozitív egész szám kell legyen (napokban).
+      help: Rangsorolja a közelgő és lejárt kötelezettségeket egy referenciadátum körül.
+        Egyetlen `next_due` mezőt jelenít meg, valamint a due-today / due-soon / overdue
+        kohorszokat. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      horizon_help: Előrenéző ablak (napokban), amelyet a `due_soon` kohorsz figyelembe
+        vesz.
     allow_incomplete_help: Engedélyezi a naptárt alapértelmezett értékekkel, ha a
       profil nem deklarálja a regim kulcsokat. E nélkül a naptár elutasításra kerül,
       ha figyelmeztetések vannak.

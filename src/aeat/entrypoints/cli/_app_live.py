@@ -73,14 +73,12 @@ def filed_list_cmd(
 
     from datetime import date as _date
 
-    from ...core.resources import bundled_path
-    from ...domain.calculations.registry import ValidatedRegistryAuthority
+    from ...core.resources import resources
 
     resolved_from = year_from if year_from is not None else _date.today().year
     resolved_to = year_to if year_to is not None else _date.today().year
     if modelo is None:
-        authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-        modelos = tuple(str(m.id) for m in authority.modelos)
+        modelos = tuple(str(m.id) for m in resources().modelos.all())
     else:
         modelos = (modelo,)
     all_rows: list[FiledDataListingRow] = []

@@ -877,6 +877,15 @@ cli:
     app_help: Auditar y generar catálogos de traducción
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
   overview:
+    agenda:
+      allow_incomplete_help: Generar la agenda aunque los datos del perfil estén incompletos.
+      date_help: Fecha de referencia para la agenda (ISO YYYY-MM-DD); por defecto, hoy.
+      errors:
+        invalid_horizon: --horizon debe ser un número entero positivo (días).
+      help: Clasifica las obligaciones próximas y vencidas alrededor de una fecha de
+        referencia. Indica un único `next_due` más cohortes due-today / due-soon / overdue.
+        Local; nunca contacta con AEAT.
+      horizon_help: Ventana hacia adelante (en días) que considera la cohorte `due_soon`.
     allow_incomplete_help: Permitir el calendario con valores por defecto cuando faltan
       claves de regimen en el perfil. Sin esta opcion, el calendario se rechaza si
       hay advertencias.
@@ -885,9 +894,9 @@ cli:
       allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
         incompletos.
       from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
-      help: Genera el calendario de plazos para el perfil activo en la ventana de fechas
-        indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca contacta
-        con AEAT.
+      help: Genera el calendario de plazos para el perfil activo en la ventana de
+        fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
+        contacta con AEAT.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_help: Mostrar calendario de obligaciones para un rango de fechas
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta

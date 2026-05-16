@@ -468,7 +468,7 @@ class RegistryValidator:
         *,
         prefix: str,
         revision: ModeloRevision,
-        formulas: Mapping[str, FormulaDefinition],  # noqa: F821 - forward ref via string
+        formulas: Mapping[str, object],
         bindings: set[str],
         export_field_ids: set[str],
     ) -> None:

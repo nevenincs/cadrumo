@@ -850,6 +850,15 @@ cli:
     app_help: Audit and scaffold locale catalogues
     scaffold_check_help: Report drift without writing locale files
   overview:
+    agenda:
+      allow_incomplete_help: Render the agenda even when profile data is incomplete.
+      date_help: As-of date for the agenda (ISO YYYY-MM-DD); defaults to today.
+      errors:
+        invalid_horizon: --horizon must be a positive integer (days).
+      help: Rank upcoming and past-due obligations around an as-of date. Surfaces a
+        single `next_due` plus due-today / due-soon / overdue cohorts. Local-only;
+        never contacts AEAT.
+      horizon_help: Forward window (days) the `due_soon` cohort honours.
     allow_incomplete_help: Allow the calendar to be computed under defaults when regime
       keys are unset. Without this flag the calendar is refused when warnings exist.
     app_help: Review the active tax workspace
@@ -857,8 +866,8 @@ cli:
       allow_incomplete_help: Render the calendar even when profile data is incomplete.
       from_help: Inclusive start date for the calendar window (ISO YYYY-MM-DD).
       help: Render the deadline calendar for the active profile across the supplied
-        date window. Applies festivos and business-day shifts. Local-only; never
-        contacts AEAT.
+        date window. Applies festivos and business-day shifts. Local-only; never contacts
+        AEAT.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_help: Show the obligations calendar for a date range
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
