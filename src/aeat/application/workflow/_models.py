@@ -338,6 +338,23 @@ class WorkflowStepDetails(BaseModel):
     promote specific step kinds into a discriminated union without
     breaking the field type on :class:`WorkflowStep`.
 
+    Per-stage key catalogue (the documented contract external tools
+    consuming ``WorkflowResult.steps`` may rely on):
+
+    * Deadline checks: ``{"modelo", "period", "closes_on"}``.
+    * Draft / snapshot mismatch: ``{"draft_id", "modelo", "period",
+      "profile_tax_id", "schema_version"}``.
+    * Calculation validation failure: ``{"error_count"}`` and any
+      issue-specific keys.
+    * AEAT certificate health: ``{"provider_kind",
+      "provider_operator_impact", "cert_not_after", "cert_severity",
+      "cert_days_until_expiry"}``.
+    * Site-health alerts: ``{"status", "run_id"}``.
+
+    New keys may be added by the engine without bumping the workflow
+    schema version. Removal or rename is a breaking change and must
+    be paired with a workflow schema-version bump.
+
     Implements ``__getitem__``, ``__contains__``, and ``get`` so
     existing read-side code that treats ``step.details`` like a
     ``Mapping[str, str]`` keeps working without per-call-site
