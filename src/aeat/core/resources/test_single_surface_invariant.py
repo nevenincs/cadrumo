@@ -54,15 +54,6 @@ _PENDING_RETIREMENT_ALLOWLIST = frozenset(
         # this purpose. The constants live in the CLI layer only.
         Path("src/aeat/entrypoints/cli/_app_live.py"),
         Path("src/aeat/entrypoints/cli/registry.py"),
-        # _DEFAULT_PROFILE_ROOT in categories/_registry survives
-        # because its loader (load_category_profile_registry)
-        # is part of a different cleanup pass; the audit captures
-        # this as deferred.
-        Path("src/aeat/domain/categories/_registry.py"),
-        # _DEFAULT_REGISTRY_ROOT / _DEFAULT_SOURCE_ROOT in
-        # deadlines/_engine survive because DeadlineEngine's
-        # constructor takes them as optional arguments.
-        Path("src/aeat/domain/deadlines/_engine.py"),
     }
 )
 
