@@ -1143,6 +1143,14 @@ class IvaLedgerObservation(BaseModel):
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
+    prorrata_reference_id: str | None = Field(default=None, min_length=1, max_length=128)
+    """Stable id of the linked :class:`ProrrataLedgerReference` row, when set.
+
+    Populated by the aggregator only on ``SOPORTADO`` (input VAT) flows
+    that carry a validated prorrata reference. Downstream Modelo 303 /
+    390 binding selectors filter prorrata-linked observations without
+    a manual join against the parallel ``prorrata_references`` tuple.
+    """
 
 
 class _IvaLedgerSelector(BaseModel):
