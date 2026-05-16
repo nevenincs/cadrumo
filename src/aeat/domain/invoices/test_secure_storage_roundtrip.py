@@ -3,8 +3,6 @@
 :class:`InvoiceCatalogueRepository` persists :class:`InvoiceCatalogue`
 (a keyed mapping of typed :class:`Invoice` records) through
 :class:`SecureObjectRepository` at ``SensitivityClass.FINANCIAL``.
-Identified as untested in the persistence-boundary identity audit
-(`.vault/audit/2026-05-16-persistence-boundary-identity-swarm-audit.md`).
 """
 
 from __future__ import annotations

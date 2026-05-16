@@ -3,8 +3,7 @@
 Persists :class:`InventoryLedgerDocument` (a tuple of
 :class:`InventoryLedger` rows) under
 ``aeat.persistence.profile.inventory`` at
-``SensitivityClass.FINANCIAL``. Flagged as untested in the
-persistence-boundary identity audit.
+``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates non-default values on every
 optional axis of ``InventoryLedger`` (``opening_layers``,

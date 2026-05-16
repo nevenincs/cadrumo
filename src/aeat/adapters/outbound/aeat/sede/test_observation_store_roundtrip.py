@@ -4,8 +4,7 @@ Persists :class:`FiledDeclarationObservation` envelopes under the
 ``aeat.outbound.aeat.sede.filed_declaration.observations`` namespace and
 raw artefact bodies under
 ``aeat.outbound.aeat.sede.filed_declaration.artefacts``. Both sinks
-operate at ``SensitivityClass.FINANCIAL``. Flagged as untested in the
-persistence-boundary identity audit.
+operate at ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates non-default values on every
 optional field on :class:`FiledDeclarationObservation`

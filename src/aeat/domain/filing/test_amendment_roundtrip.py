@@ -2,8 +2,7 @@
 
 ``FilingAmendmentRepository`` persists :class:`FilingAmendment` records
 at ``SensitivityClass.AUDIT`` — corrective filings derived from a
-previously submitted filing. Flagged as untested in the persistence-
-boundary identity audit.
+previously submitted filing.
 
 Anti-tautology discipline: every defaultable field on the FilingDraft
 inside the amendment carries a non-default value, every CasillaChange

@@ -2,9 +2,7 @@
 
 :class:`WorkflowStateRepository` persists the operator-facing
 :class:`WorkflowState` through :class:`SecureObjectRepository` at
-``SensitivityClass.FINANCIAL``. Identified as untested in the
-persistence-boundary identity audit
-(`.vault/audit/2026-05-16-persistence-boundary-identity-swarm-audit.md`).
+``SensitivityClass.FINANCIAL``.
 """
 
 from __future__ import annotations

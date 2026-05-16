@@ -2,8 +2,7 @@
 
 Persists :class:`Borrador100Snapshot` records under
 ``aeat.application.live.borrador_100_snapshot`` at
-``SensitivityClass.FINANCIAL``. Flagged as untested in the
-persistence-boundary identity audit.
+``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates ``binding_values`` with one
 ``Decimal`` and one ``str`` value to stress the

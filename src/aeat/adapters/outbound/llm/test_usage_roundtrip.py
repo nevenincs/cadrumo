@@ -2,8 +2,7 @@
 
 ``UsageRecorder`` persists :class:`UsageRecord` rows under the
 ``aeat.outbound.llm.usage`` namespace at
-``SensitivityClass.DIAGNOSTIC``. Flagged as untested in the persistence-
-boundary identity audit.
+``SensitivityClass.DIAGNOSTIC``.
 
 Anti-tautology: writes two distinct records on different dates with
 non-default caller and prompt_id values; asserts both records round-trip

@@ -2,12 +2,10 @@
 
 ``SubmissionRepository`` persists :class:`SubmittedFiling` records at
 ``SensitivityClass.AUDIT`` — historical attested-filing records that
-must survive verbatim across the encrypted-storage boundary. Flagged
-as untested in the persistence-boundary identity audit
-(`.vault/audit/2026-05-16-persistence-boundary-identity-swarm-audit.md`).
+must survive verbatim across the encrypted-storage boundary.
 
-Anti-tautology discipline (`.vaultspec/rules/rules/aeat-roundtrip-discipline.md`):
-every defaultable field is set to a non-default value. ``status``
+Anti-tautology discipline: every defaultable field is set to a
+non-default value. ``status``
 is ACKNOWLEDGED (the most-constrained state — its model_validator
 requires both justificante_csv AND justificante_pdf_path), so the
 typed contract proves the boundary actually carries those values

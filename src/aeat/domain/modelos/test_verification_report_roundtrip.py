@@ -1,12 +1,9 @@
 """Strict roundtrip across the encrypted VerificationReportCatalogue boundary.
 
 ``VerificationReportCatalogueRepository`` persists :class:`VerificationReportCatalogue`
-through :class:`SecureObjectRepository`. Flagged as untested in the
-persistence-boundary identity audit
-(`.vault/audit/2026-05-16-persistence-boundary-identity-swarm-audit.md`).
+through :class:`SecureObjectRepository`.
 
-Anti-tautology discipline (`.vaultspec/rules/rules/aeat-roundtrip-discipline.md`):
-every defaultable field on the report carries a non-default value
+Anti-tautology discipline: every defaultable field on the report carries a non-default value
 so a save-drops-X / load-re-defaults-X regression would surface as
 strict inequality.
 """
