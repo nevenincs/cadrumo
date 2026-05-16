@@ -13,7 +13,6 @@ from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from aeat.domain.modelos._codes import ModeloCode
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from aeat.domain.modelos._work_unit import WorkUnit, derive_work_unit_id

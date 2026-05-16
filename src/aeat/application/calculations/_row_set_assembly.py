@@ -123,11 +123,19 @@ class _RowCellShape(Protocol):
     Kept here as a Protocol so the assembler module never imports the
     outbound adapter package — preserving the application→adapter
     direction of the hexagonal contract.
+
+    Fields are declared as read-only properties so frozen-dataclass
+    implementations (e.g. test doubles) satisfy the protocol without
+    pyrefly flagging a read-only/read-write mismatch against the
+    pydantic ``RowSetCellEdit`` model.
     """
 
-    binding: str
-    row_index: int
-    value: Decimal | str | None
+    @property
+    def binding(self) -> str: ...
+    @property
+    def row_index(self) -> int: ...
+    @property
+    def value(self) -> Decimal | str | None: ...
 
 
 def _cells_by_row(cells: Iterable[_RowCellShape]) -> dict[int, dict[str, Decimal | str | None]]:

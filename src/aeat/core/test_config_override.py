@@ -27,12 +27,18 @@ from .config import load_settings, override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
+# Synthetic in-test path prefix. Never written or read on disk; the
+# tests only assert how the override helper carries Path values through
+# pydantic validation. Using a sentinel keeps Bandit B108 (probable
+# insecure /tmp usage) quiet for this pure-data flow.
+_FAKE_PATH_PREFIX = "/non-existent-sentinel"
+
 
 def test_override_settings_swaps_scalar_field_inside_block() -> None:
     baseline = load_settings()
     assert baseline.aeat_log_dir is None
 
-    target = Path("/tmp/aeat-test-logs")
+    target = Path(f"{_FAKE_PATH_PREFIX}/aeat-test-logs")
     with override_settings(aeat_log_dir=target) as overridden:
         assert overridden.aeat_log_dir == target
         # load_settings inside the block returns the same overridden
@@ -44,8 +50,8 @@ def test_override_settings_restores_prior_value_on_normal_exit() -> None:
     baseline = load_settings()
     assert baseline.aeat_log_dir is None
 
-    with override_settings(aeat_log_dir=Path("/tmp/scratch")):
-        assert load_settings().aeat_log_dir == Path("/tmp/scratch")
+    with override_settings(aeat_log_dir=Path(f"{_FAKE_PATH_PREFIX}/scratch")):
+        assert load_settings().aeat_log_dir == Path(f"{_FAKE_PATH_PREFIX}/scratch")
 
     # On exit the ContextVar is reset; the baseline default is
     # observable again.
@@ -57,8 +63,9 @@ def test_override_settings_restores_prior_value_on_exception() -> None:
 
     assert load_settings().aeat_log_dir is None
 
-    with pytest.raises(RuntimeError, match="planned-failure"), override_settings(aeat_log_dir=Path("/tmp/scratch")):
-        assert load_settings().aeat_log_dir == Path("/tmp/scratch")
+    scratch = Path(f"{_FAKE_PATH_PREFIX}/scratch")
+    with pytest.raises(RuntimeError, match="planned-failure"), override_settings(aeat_log_dir=scratch):
+        assert load_settings().aeat_log_dir == scratch
         raise RuntimeError("planned-failure")
 
     # The finally branch of the context manager restored the prior
@@ -86,8 +93,8 @@ def test_override_settings_nested_blocks_compose_lifo() -> None:
 
     assert load_settings().aeat_log_dir is None
 
-    outer_path = Path("/tmp/outer")
-    inner_path = Path("/tmp/inner")
+    outer_path = Path(f"{_FAKE_PATH_PREFIX}/outer")
+    inner_path = Path(f"{_FAKE_PATH_PREFIX}/inner")
 
     with override_settings(aeat_log_dir=outer_path):
         assert load_settings().aeat_log_dir == outer_path
@@ -111,7 +118,7 @@ def test_override_settings_preserves_explicit_fields_set_signal() -> None:
     baseline_explicit = set(baseline.model_fields_set)
     assert "aeat_log_dir" not in baseline_explicit
 
-    with override_settings(aeat_log_dir=Path("/tmp/explicit")):
+    with override_settings(aeat_log_dir=Path(f"{_FAKE_PATH_PREFIX}/explicit")):
         overridden = load_settings()
         # The override key is now in the explicit set.
         assert "aeat_log_dir" in overridden.model_fields_set

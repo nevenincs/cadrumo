@@ -322,20 +322,21 @@ def test_holiday_is_frozen_and_forbids_extras() -> None:
         name="Test",
     )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        holiday.name = "Renamed"
+        setattr(holiday, "name", "Renamed")  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_deadline_shift_is_frozen_and_immutable() -> None:
     shift = shift_deadline(date(2025, 3, 4), modelo="303", ccaa_code=None)
     assert isinstance(shift, DeadlineShift)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        shift.shifted = True
+        setattr(shift, "shifted", True)  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_holiday_calendar_year_must_be_in_supported_range() -> None:
+    out_of_range_year: int = 1999
     with pytest.raises(ValidationError, match=r"year|greater than"):
         HolidayCalendar(
-            year=1999,
+            year=out_of_range_year,
             boe_ref="invalid",
             national=(),
             ccaa=(),

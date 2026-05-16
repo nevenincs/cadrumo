@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core.config import Settings
 from ....persistence.storage import (
     EphemeralMasterKeyProvider,
     override_master_key_provider,
@@ -28,7 +29,6 @@ from ....persistence.storage import (
 from ....persistence.storage.sql import SecureObjectRepository
 from ....persistence.storage.sql._orm import Base
 from ....persistence.storage.sql.engine import create_engine_from_settings
-from .....core.config import Settings
 from . import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]

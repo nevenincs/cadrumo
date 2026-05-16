@@ -96,7 +96,7 @@ async def test_ensure_reuses_persisted_session_without_acquiring_lock(tmp_path: 
     result = await ensure_authenticated_aeat_session(
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
-        provider_factory=_factory([provider]),  # pyright: ignore[reportArgumentType]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
+        provider_factory=_factory([provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
     )
 
     assert result.session is session
@@ -120,7 +120,7 @@ async def test_ensure_acquires_lock_then_authenticates_after_probe_failure(tmp_p
     result = await ensure_authenticated_aeat_session(
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
-        provider_factory=_factory([first_probe, second_probe, auth_provider]),  # pyright: ignore[reportArgumentType]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
+        provider_factory=_factory([first_probe, second_probe, auth_provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
     )
 
     assert result.session is session
@@ -145,7 +145,7 @@ async def test_ensure_fresh_skips_persisted_probe(tmp_path: Path) -> None:
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
         fresh=True,
-        provider_factory=_factory([auth_provider]),  # pyright: ignore[reportArgumentType]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
+        provider_factory=_factory([auth_provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
     )
 
     assert result.session is session

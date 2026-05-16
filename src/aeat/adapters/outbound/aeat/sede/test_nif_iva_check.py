@@ -96,7 +96,7 @@ def test_observation_model_rejects_empty_nif() -> None:
 def test_observation_model_is_frozen() -> None:
     observation = NifIvaCheckObservation(nif="DE111", verdict="valid")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        observation.nif = "FR222"
+        setattr(observation, "nif", "FR222")  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_result_model_defaults_to_empty_observations() -> None:

@@ -216,7 +216,7 @@ def test_health_model_is_frozen(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
     assert isinstance(result, CertificateHealth)
     with pytest.raises(ValueError, match=r"frozen|Instance is frozen"):
-        result.severity = CertificateHealthSeverity.CRITICAL
+        setattr(result, "severity", CertificateHealthSeverity.CRITICAL)  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_pre_expiry_error_is_aeat_error() -> None:

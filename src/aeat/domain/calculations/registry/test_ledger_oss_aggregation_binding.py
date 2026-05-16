@@ -250,4 +250,4 @@ def test_resolve_ignores_non_oss_bindings_on_the_revision() -> None:
 def test_oss_iross_ledger_observation_is_strict_and_frozen() -> None:
     obs = _observation()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        obs.iva_amount = Decimal("999")
+        setattr(obs, "iva_amount", Decimal("999"))  # noqa: B010 — exercise frozen-model __setattr__

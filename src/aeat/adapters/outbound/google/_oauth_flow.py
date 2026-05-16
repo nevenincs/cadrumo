@@ -214,9 +214,14 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
             raise GoogleAuthNetworkError(f"OAuth endpoint unreachable: {exc}") from exc
         raise
 
+    # `google.oauth2.credentials.Credentials` exposes `token_uri` at runtime
+    # but the `google-auth` stubs ship a narrower `Credentials` class on which
+    # the attribute isn't visible to pyrefly. The dynamic lookup below is the
+    # documented public API.
+    token_uri = getattr(credentials, "token_uri", None)
     return (
         str(credentials.refresh_token),
-        str(credentials.token_uri),
+        str(token_uri),
         _decode_email_from_id_token(credentials, audience=client.client_id),
         tuple(str(scope) for scope in (credentials.scopes or ())),
     )

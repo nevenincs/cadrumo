@@ -59,7 +59,7 @@ def test_provider_object_metadata_round_trip() -> None:
 def test_provider_object_metadata_is_frozen() -> None:
     payload = _metadata()
     with pytest.raises(ValidationError, match="frozen"):
-        payload.namespace = "other"
+        setattr(payload, "namespace", "other")  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_provider_object_metadata_rejects_negative_byte_length() -> None:

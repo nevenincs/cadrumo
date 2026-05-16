@@ -10,6 +10,7 @@ Tests:
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from decimal import Decimal
 from typing import Literal
@@ -101,9 +102,12 @@ def test_committed_registry_passes_referential_integrity(
         for revision in modelo.revisions.values():
             try:
                 snapshot = _snapshot_for_revision(modelo, registry_authority.catalogues, revision)
-            except Exception:
+            except Exception as exc:
                 # Pre-existing registry defects prevent snapshot construction;
-                # _check_all_id_references cannot fire here -- skip.
+                # _check_all_id_references cannot fire here -- log and skip.
+                logging.getLogger(__name__).debug(
+                    "skipping revision %s/%s: snapshot build failed: %s", modelo.id, revision.id, exc
+                )
                 continue
             _check_all_id_references(snapshot)  # must not raise
             passed += 1
@@ -319,7 +323,7 @@ def test_dangling_casilla_formula_reference() -> None:
     casilla = _minimal_casilla("01").model_copy(update={"input_kind": "computed", "formula": "nonexistent.formula"})
     revision = _minimal_revision(casillas=(casilla,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="casilla 01.formula"):
+    with pytest.raises(RegistryValidationError, match=r"casilla 01.formula"):
         _check_all_id_references(snapshot)
 
 
@@ -328,7 +332,7 @@ def test_dangling_casilla_binding_reference() -> None:
     casilla = _minimal_casilla("01").model_copy(update={"input_kind": "bound", "binding": "nonexistent.binding"})
     revision = _minimal_revision(casillas=(casilla,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="casilla 01.binding"):
+    with pytest.raises(RegistryValidationError, match=r"casilla 01.binding"):
         _check_all_id_references(snapshot)
 
 
@@ -337,7 +341,7 @@ def test_dangling_casilla_export_refs() -> None:
     casilla = _minimal_casilla("01").model_copy(update={"export_refs": ("nonexistent.export.field",)})
     revision = _minimal_revision(casillas=(casilla,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="casilla 01.export_refs"):
+    with pytest.raises(RegistryValidationError, match=r"casilla 01.export_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -347,7 +351,7 @@ def test_dangling_casilla_legal_refs() -> None:
     casilla = _minimal_casilla("01").model_copy(update={"legal_refs": (_DUMMY_LEGAL_ID, _extra)})
     revision = _minimal_revision(casillas=(casilla,))
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="casilla 01.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=r"casilla 01.legal_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -357,7 +361,7 @@ def test_dangling_casilla_source_refs() -> None:
     casilla = _minimal_casilla("01").model_copy(update={"source_refs": (_DUMMY_SOURCE_ID, _extra)})
     revision = _minimal_revision(casillas=(casilla,))
     snapshot = _build_snapshot_with_missing_source(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="casilla 01.source_refs"):
+    with pytest.raises(RegistryValidationError, match=r"casilla 01.source_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -372,7 +376,7 @@ def test_dangling_formula_target() -> None:
     )
     revision = _minimal_revision(formulas=(formula,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="formula test.formula.target"):
+    with pytest.raises(RegistryValidationError, match=r"formula test.formula.target"):
         _check_all_id_references(snapshot)
 
 
@@ -390,7 +394,7 @@ def test_dangling_formula_legal_refs() -> None:
     casilla_computed = casilla.model_copy(update={"input_kind": "computed", "formula": "test.formula"})
     revision = _minimal_revision(casillas=(casilla_computed,), formulas=(formula,))
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="formula test.formula.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=r"formula test.formula.legal_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -406,7 +410,7 @@ def test_dangling_parameter_source_refs() -> None:
     )
     revision = _minimal_revision(parameters=(parameter,))
     snapshot = _build_snapshot_with_missing_source(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="parameter test.param.source_refs"):
+    with pytest.raises(RegistryValidationError, match=r"parameter test.param.source_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -422,7 +426,7 @@ def test_dangling_binding_source_refs() -> None:
     )
     revision = _minimal_revision(bindings=(binding,))
     snapshot = _build_snapshot_with_missing_source(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="binding test.binding.source_refs"):
+    with pytest.raises(RegistryValidationError, match=r"binding test.binding.source_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -444,7 +448,7 @@ def test_dangling_relation_target_binding() -> None:
     )
     revision = _minimal_revision(relations=(relation,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="relation test.relation.target_binding"):
+    with pytest.raises(RegistryValidationError, match=r"relation test.relation.target_binding"):
         _check_all_id_references(snapshot)
 
 
@@ -465,7 +469,7 @@ def test_dangling_extraction_profile_target_casilla() -> None:
     )
     revision = _minimal_revision(extraction_profiles=(profile,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="extraction_profile test.profile.target_casillas"):
+    with pytest.raises(RegistryValidationError, match=r"extraction_profile test.profile.target_casillas"):
         _check_all_id_references(snapshot)
 
 
@@ -488,7 +492,7 @@ def test_dangling_cross_reference_legal_refs() -> None:
     )
     revision = _minimal_revision(live_cross_references=(cross_ref,))
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="cross_reference test.cross-ref.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=r"cross_reference test.cross-ref.legal_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -503,7 +507,7 @@ def test_dangling_workbook_parity_workbook_source() -> None:
     workbook = _minimal_workbook_ref(source_ref=_extra_source)
     revision = _minimal_revision(extra_workbook_ref=workbook)
     snapshot = _build_snapshot_with_missing_source(revision, _extra_source)
-    with pytest.raises(RegistryValidationError, match="workbook_parity_ref wp.test.workbook_source"):
+    with pytest.raises(RegistryValidationError, match=r"workbook_parity_ref wp.test.workbook_source"):
         _check_all_id_references(snapshot)
 
 
@@ -521,7 +525,7 @@ def test_dangling_verification_expectation_computed_casillas() -> None:
     )
     revision = _minimal_revision(verification_expectations=(expectation,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="verification_expectation test.expectation.computed_casillas"):
+    with pytest.raises(RegistryValidationError, match=r"verification_expectation test.expectation.computed_casillas"):
         _check_all_id_references(snapshot)
 
 
@@ -540,7 +544,7 @@ def test_dangling_application_link_legal_refs() -> None:
         application_links=(_minimal_application_link("filing"), link),
     )
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="application_link al.test2.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=r"application_link al.test2.legal_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -561,7 +565,7 @@ def test_dangling_deadline_window_legal_refs() -> None:
         deadline_windows=(window,),
     )
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="deadline_window dw.test.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=r"deadline_window dw.test.legal_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -580,7 +584,7 @@ def test_dangling_support_removal_decision_legal_refs() -> None:
     )
     revision = _minimal_revision(support_removal_decisions=(decision,))
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="support_removal_decision srd.test.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=r"support_removal_decision srd.test.legal_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -595,7 +599,7 @@ def test_dangling_construct_casilla_ref() -> None:
     )
     revision = _minimal_revision(constructs=(construct,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="construct ct.test.casillas"):
+    with pytest.raises(RegistryValidationError, match=r"construct ct.test.casillas"):
         _check_all_id_references(snapshot)
 
 
@@ -611,7 +615,7 @@ def test_dangling_dependency_classification_target_construct() -> None:
     )
     revision = _minimal_revision(dependency_classifications=(classification,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="dependency_classification dc.test.target_constructs"):
+    with pytest.raises(RegistryValidationError, match=r"dependency_classification dc.test.target_constructs"):
         _check_all_id_references(snapshot)
 
 
@@ -625,7 +629,7 @@ def test_dangling_export_layout_legal_refs() -> None:
     )
     revision = _minimal_revision(export_layouts=(layout,))
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="export_layout el.test.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=r"export_layout el.test.legal_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -660,7 +664,7 @@ def test_dangling_export_field_casilla_ref() -> None:
     )
     revision = _minimal_revision(casillas=(casilla,), export_layouts=(layout,))
     snapshot = _build_minimal_snapshot(revision)
-    with pytest.raises(RegistryValidationError, match="field el.test.field-01.casilla"):
+    with pytest.raises(RegistryValidationError, match=r"field el.test.field-01.casilla"):
         _check_all_id_references(snapshot)
 
 
@@ -670,7 +674,7 @@ def test_dangling_revision_legal_refs() -> None:
     revision = _minimal_revision()
     revision = revision.model_copy(update={"legal_refs": (_DUMMY_LEGAL_ID, _extra)})
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
-    with pytest.raises(RegistryValidationError, match="revision.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=r"revision.legal_refs"):
         _check_all_id_references(snapshot)
 
 
@@ -688,7 +692,7 @@ def test_dangling_modelo_source_refs() -> None:
     # Patch out the extra source ref from the snapshot's sources map.
     patched_sources = {k: v for k, v in snapshot.sources.items() if k != _extra}
     snapshot = snapshot.model_copy(update={"sources": patched_sources})
-    with pytest.raises(RegistryValidationError, match="modelo.source_refs"):
+    with pytest.raises(RegistryValidationError, match=r"modelo.source_refs"):
         _check_all_id_references(snapshot)
 
 

@@ -56,9 +56,8 @@ _WORKBOOK_CELL_REF_RE = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordina
 
 
 def _validate_workbook_cell_ref_str(value: object) -> object:
-    if isinstance(value, str):
-        if not _WORKBOOK_CELL_REF_RE.match(value):
-            raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
+    if isinstance(value, str) and not _WORKBOOK_CELL_REF_RE.match(value):
+        raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
     return value
 
 

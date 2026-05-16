@@ -257,7 +257,7 @@ class TestJustificanteModel:
     def test_model_is_frozen(self, tmp_path: Path) -> None:
         record = self._build(tmp_path)
         with pytest.raises(ValidationError):
-            record.csv = "OTHER"
+            setattr(record, "csv", "OTHER")  # noqa: B010 — exercise frozen-model __setattr__
 
     def test_extra_fields_rejected(self, tmp_path: Path) -> None:
         record = self._build(tmp_path)

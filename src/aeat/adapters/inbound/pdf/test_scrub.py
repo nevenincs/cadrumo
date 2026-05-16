@@ -219,7 +219,7 @@ class TestScrubSidecar:
         assert sidecar.fixture_tier == "l2"
         assert sidecar.scrub_version == SCRUB_VERSION
         with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-            sidecar.scrub_version = "0.0.0"
+            setattr(sidecar, "scrub_version", "0.0.0")  # noqa: B010 — exercise frozen-model __setattr__
 
     def test_sidecar_rejects_non_hex_sha(self, tmp_path: Path) -> None:
         """A sidecar with a non-hex SHA fails pydantic validation."""

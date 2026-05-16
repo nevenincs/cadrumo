@@ -29,6 +29,7 @@ class ModeloIdentifier(str):
         source_type: type[object],
         handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        del source_type, handler
         return core_schema.no_info_after_validator_function(
             cls,
             core_schema.str_schema(pattern=_MODELO_RE.pattern),
