@@ -662,8 +662,8 @@ cli:
     check:
       bucket_id_help: Bucket id to probe (defaults to the active profile bucket).
       help: Probe ledger transactions in the addressed bucket (defaults to the active
-        profile bucket) and report anomaly rows aggregated across every period a
-        transaction touches. Local-only; never contacts AEAT.
+        profile bucket) and report anomaly rows aggregated across every period a transaction
+        touches. Local-only; never contacts AEAT.
     classify:
       actor_help: Operator name recorded on the bucket event
       category_help: Spending or income category id
@@ -853,6 +853,13 @@ cli:
     allow_incomplete_help: Allow the calendar to be computed under defaults when regime
       keys are unset. Without this flag the calendar is refused when warnings exist.
     app_help: Review the active tax workspace
+    calendar:
+      allow_incomplete_help: Render the calendar even when profile data is incomplete.
+      from_help: Inclusive start date for the calendar window (ISO YYYY-MM-DD).
+      help: Render the deadline calendar for the active profile across the supplied
+        date window. Applies festivos and business-day shifts. Local-only; never
+        contacts AEAT.
+      to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_help: Show the obligations calendar for a date range
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
       config profile set <key> <value>'' or pass --allow-incomplete to see the calendar
