@@ -21,7 +21,12 @@ from ._model import (
     resolve_user_ratio,
     validate_usage_ratio_reference,
 )
-from ._service import load_usage_ratios, save_usage_ratios, usage_ratios_object_key
+from ._service import (
+    derive_home_office_ratios_from_census,
+    load_usage_ratios,
+    save_usage_ratios,
+    usage_ratios_object_key,
+)
 
 __all__ = [
     "ELIGIBLE_USAGE_RATIO_CATEGORIES",
@@ -30,6 +35,7 @@ __all__ = [
     "UsageRatioProfile",
     "UsageRatioReference",
     "UsageRatioValidationError",
+    "derive_home_office_ratios_from_census",
     "load_usage_ratios",
     "resolve_user_ratio",
     "save_usage_ratios",
