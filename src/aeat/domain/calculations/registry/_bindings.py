@@ -2342,3 +2342,56 @@ def resolve_refund_binding_row_values(
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
+
+
+# ---------------------------------------------------------------------------
+# Discriminated-selector registry
+#
+# Each entry pairs a ``DataBindingDefinition.source`` literal with the strict
+# pydantic model that the binding's selector must validate against. Sources
+# absent from this map are intentionally free-form for now: their selector
+# shape varies across legacy registries or is consumed by ad-hoc validators
+# elsewhere. As new typed selectors land, they should be registered here so
+# the snapshot-build gate validates them automatically.
+# ---------------------------------------------------------------------------
+
+
+_BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
+    "previous_filing": _PreviousFilingSelector,
+    "invoice": _InvoiceSelector,
+    "ledger_oss_aggregation": _OssIossLedgerSelector,
+    "ledger_iva_aggregation": _IvaLedgerSelector,
+    "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
+    "withholding": _WithholdingSelector,
+    "related_party_operation": _RelatedPartySelector,
+    "foreign_asset": _ForeignAssetSelector,
+    "atribucion_member": _AtributionSelector,
+    "refund_operation": _RefundSelector,
+}
+
+
+def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
+    """Validate ``binding.selector`` against the source's typed selector model.
+
+    Sources registered in :data:`_BINDING_SELECTOR_REGISTRY` get their
+    selector mapping piped through the strict pydantic model that owns
+    the per-source key set. Failures are returned as a list of
+    diagnostic strings rather than raised so the snapshot-build gate
+    can accumulate every failure across a revision in one pass.
+
+    Sources NOT in the registry are intentionally free-form today;
+    those bindings short-circuit with an empty failure list.
+    """
+
+    selector_model = _BINDING_SELECTOR_REGISTRY.get(binding.source)
+    if selector_model is None:
+        return []
+    try:
+        selector_model.model_validate(binding.selector)
+    except ValueError as exc:
+        return [
+            f"binding {binding.id!r} (source={binding.source!r}) "
+            f"selector violates {selector_model.__name__}: {exc}"
+        ]
+    return []
+    return resolved

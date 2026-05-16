@@ -2068,6 +2068,19 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
                 f"{sorted(missing_first_slice)!r} that are absent from the modelo-100 revision"
             )
 
+    # Per-source selector-shape validation: every binding whose source
+    # appears in the discriminated selector registry must satisfy the
+    # strict pydantic model declared for that source. Sources without
+    # a registered typed selector are accepted unchanged — the
+    # discriminator is incremental; new typed selectors land alongside
+    # their handler updates and are registered in _BINDING_SELECTOR_REGISTRY.
+    from ._bindings import validate_binding_selector_shape
+
+    for binding in revision.bindings:
+        failures.extend(
+            f"{prefix}: {fail}" for fail in validate_binding_selector_shape(binding)
+        )
+
     if failures:
         raise RegistryValidationError(
             "referential integrity check failed:\n" + "\n".join(f" - {f}" for f in sorted(failures))
