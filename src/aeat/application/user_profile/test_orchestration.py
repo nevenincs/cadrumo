@@ -11,12 +11,11 @@ from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
 from ...core.config import Settings
+from ...core.resources import resources
 from ...domain.user_profile import (
-    DEFAULT_USER_PROFILE_SCHEMA_PATH,
     ProfileNotFoundError,
     UserProfileFact,
     UserProfileStatus,
-    load_user_profile_schema,
 )
 from ..workflow._models import WorkflowState
 from ._orchestration import (
@@ -46,7 +45,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 @pytest.fixture(scope="module")
 def schema():
-    return load_user_profile_schema(DEFAULT_USER_PROFILE_SCHEMA_PATH)
+    return resources().user_profile_schema.singleton
 
 
 def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:

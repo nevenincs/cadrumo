@@ -77,10 +77,7 @@ def filed_list_cmd(
 
     resolved_from = year_from if year_from is not None else _date.today().year
     resolved_to = year_to if year_to is not None else _date.today().year
-    if modelo is None:
-        modelos = tuple(str(m.id) for m in resources().modelos.all())
-    else:
-        modelos = (modelo,)
+    modelos = tuple(str(m.id) for m in resources().modelos.all()) if modelo is None else (modelo,)
     all_rows: list[FiledDataListingRow] = []
     total_count = 0
     for code in modelos:

@@ -110,7 +110,7 @@ def __getattr__(name: str) -> object:
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = [
+__all__ = [  # noqa: F822 (LIRPF_ART_85_IMPUTACION is lazy via __getattr__)
     "LIRPF_ART_85_IMPUTACION",
     "LirpfArt85ImputacionParameters",
 ]

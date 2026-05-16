@@ -25,9 +25,6 @@ import pytest
 
 from ._bindings import (
     _BINDING_SELECTOR_REGISTRY,
-    _InvoiceSelector,
-    _PreviousFilingSelector,
-    _WithholdingSelector,
     validate_binding_selector_shape,
 )
 from ._schema import DataBindingDefinition

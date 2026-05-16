@@ -28,6 +28,7 @@ from __future__ import annotations
 import pytest
 
 from aeat.core.resources import resources
+
 from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

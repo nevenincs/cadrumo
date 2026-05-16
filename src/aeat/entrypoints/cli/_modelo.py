@@ -43,8 +43,7 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
-from ...core.resources import bundled_path
-from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
+from ...domain.calculations.registry import RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period

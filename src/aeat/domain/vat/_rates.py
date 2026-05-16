@@ -138,4 +138,4 @@ def __getattr__(name: str) -> object:
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = ["VAT_RATE_TABLE", "load_vat_rate_table"]
+__all__ = ["VAT_RATE_TABLE", "load_vat_rate_table"]  # noqa: F822 (lazy via __getattr__)

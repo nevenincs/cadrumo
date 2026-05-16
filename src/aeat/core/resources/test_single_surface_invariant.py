@@ -40,9 +40,7 @@ def _is_production_module(path: Path) -> bool:
     name = path.name
     if name == "conftest.py":
         return False
-    if name.startswith("test_") or name.startswith("_test_"):
-        return False
-    return True
+    return not (name.startswith("test_") or name.startswith("_test_"))
 
 
 def _production_files() -> list[Path]:

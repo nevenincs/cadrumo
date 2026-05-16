@@ -168,16 +168,17 @@ def recargo_rate_for(rate_kind: VATRateKind) -> Decimal | None:
     callers that handle labores del tabaco read
     ``LIVA_ART_161_RECARGO.tabaco_rate`` directly.
     """
+    rates = _get_liva_art_161_recargo()
     if rate_kind is VATRateKind.GENERAL:
-        return LIVA_ART_161_RECARGO.general_rate
+        return rates.general_rate
     if rate_kind is VATRateKind.REDUCED:
-        return LIVA_ART_161_RECARGO.reducido_rate
+        return rates.reducido_rate
     if rate_kind is VATRateKind.SUPER_REDUCED:
-        return LIVA_ART_161_RECARGO.super_reducido_rate
+        return rates.super_reducido_rate
     return None
 
 
-__all__ = [
+__all__ = [  # noqa: F822 (LIVA_ART_161_RECARGO is lazy via __getattr__)
     "LIVA_ART_161_RECARGO",
     "LivaArt161RecargoRates",
     "recargo_rate_for",
