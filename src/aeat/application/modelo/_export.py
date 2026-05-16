@@ -215,7 +215,7 @@ def export_modelo_revision(
     schema_provider = build_runtime_schema_provider(
         filing_year=work_unit.filing_year,
         period=work_unit.period,
-        modelos=(str(work_unit.modelo),),
+        modelos=(work_unit.modelo,),
     )
     inputs: dict[str, object] = {
         **dict(revision.inputs_snapshot),
@@ -224,7 +224,7 @@ def export_modelo_revision(
 
     try:
         draft = build_draft(
-            modelo=str(work_unit.modelo),
+            modelo=work_unit.modelo,
             period=work_unit.period,
             profile=filing_profile_from_autonomo(workflow_profile),
             inputs=inputs,
@@ -267,7 +267,7 @@ def export_modelo_revision(
         "byte_size": str(receipt.byte_size),
         "file_sha256": receipt.file_sha256,
         "format": receipt.format.value,
-        "modelo": str(work_unit.modelo),
+        "modelo": work_unit.modelo,
         "filing_year": str(work_unit.filing_year),
         "period": work_unit.period,
     }
@@ -306,7 +306,7 @@ def export_modelo_revision(
         calculation_revision_id=command.calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
         bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         output_path=command.output_path,
