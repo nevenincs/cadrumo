@@ -223,7 +223,7 @@ cli:
         group_help: cli.app.modelo.audit.group_help
         output_help: cli.app.modelo.audit.output_help
         replay_help: cli.app.modelo.audit.replay_help
-        view_help: cli.app.modelo.audit.view_help
+        show_help: Render an evidence bundle's manifest and referenced records
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -382,8 +382,8 @@ cli:
       configure_help: Configure the active authentication provider
       file_help: Path to the credential file (certificate or key)
       help: Configure the active authentication provider
-      no_active_bucket: 'No active profile bucket. Run ''aeat config init'' before
-        configuring authentication.'
+      no_active_bucket: No active profile bucket. Run 'aeat config init' before configuring
+        authentication.
       provider_help: Authentication provider id (e.g. certificado-electronico)
       providers_help: List supported authentication providers
       reserved_provider: 'Authentication provider reserved but not available: %{provider}.'

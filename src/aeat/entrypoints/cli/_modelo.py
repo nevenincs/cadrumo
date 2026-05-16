@@ -1842,9 +1842,9 @@ def _audit_bucket_id() -> str:
 
 
 @audit_app.command(
-    "view",
+    "show",
     help=tr(
-        "cli.app.modelo.audit.view_help",
+        "cli.app.modelo.audit.show_help",
         default="Render an evidence bundle's manifest and referenced records.",
     ),
 )

@@ -53,3 +53,55 @@ def test_modelo_audit_export_remains_distinct_from_modelo_export() -> None:
 
     sibling = invoke_cached_cli(["app", "modelo", "export", "--help"])
     assert sibling.exit_code != 0, sibling.output
+
+
+def test_root_does_not_register_bare_audit_alias() -> None:
+    """`aeat audit` is not a root verb. The evidence-bundle ADR
+    explicitly forbids root `aeat audit` or `aeat run` commands; the
+    audit surface only lives under `aeat app modelo audit`."""
+
+    result = invoke_cached_cli(["audit", "--help"])
+    assert result.exit_code != 0, result.output
+
+
+def test_root_does_not_register_bare_run_alias() -> None:
+    """`aeat run` is not a root verb per the evidence-bundle ADR.
+    Replay belongs under `aeat app modelo audit replay`, never at
+    the root."""
+
+    result = invoke_cached_cli(["run", "--help"])
+    assert result.exit_code != 0, result.output
+
+
+def test_app_does_not_register_audit_subgroup_outside_modelo() -> None:
+    """`aeat app audit` would split the audit verb tree away from the
+    work-unit-bound modelo verb tree. The evidence-bundle ADR scopes
+    the surface to `aeat app modelo audit`; any sibling `aeat app
+    audit` mount would be a redirection target that splits ownership."""
+
+    result = invoke_cached_cli(["app", "audit", "--help"])
+    assert result.exit_code != 0, result.output
+
+
+def test_modelo_audit_verbs_only_register_canonical_four() -> None:
+    """Only the four canonical audit verbs (show / check / export /
+    replay) are mounted under `aeat app modelo audit`. Any other leaf
+    (verify, status, list, browse, run, etc.) violates the ratified
+    grammar from the evidence-bundle ADR."""
+
+    forbidden_leaves = (
+        ("verify",),
+        ("run",),
+        ("status",),
+        ("list",),
+        ("browse",),
+        ("inspect",),
+    )
+    for leaf in forbidden_leaves:
+        result = invoke_cached_cli(["app", "modelo", "audit", *leaf, "--help"])
+        assert result.exit_code != 0, (leaf, result.output)
+
+    accepted_leaves = (("show",), ("check",), ("export",), ("replay",))
+    for leaf in accepted_leaves:
+        result = invoke_cached_cli(["app", "modelo", "audit", *leaf, "--help"])
+        assert result.exit_code == 0, (leaf, result.output)
