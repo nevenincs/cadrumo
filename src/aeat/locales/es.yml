@@ -304,6 +304,19 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
+      export:
+        actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
+        errors:
+          no_exportable_revision: La unidad de trabajo no tiene ninguna revisión de
+            cálculo verificada o presentada para exportar. Ejecuta `aeat app modelo
+            verify` primero.
+        help: Exporta una revisión de modelo verificada o presentada a un fichero local
+          compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
+        output_help: Ruta donde escribir el artefacto fichero-BOE.
+        revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
+          la revisión verificada o presentada más reciente de la unidad de trabajo.
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
+          inequívoco).
       reconcile:
         errors:
           exclusive_source: --from-justificante y --from-declaration son mutuamente
