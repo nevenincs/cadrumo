@@ -167,3 +167,49 @@ def test_unimplemented_repository_all_raises_not_implemented_error() -> None:
 
     with pytest.raises(NotImplementedError):
         list(repo.all())
+
+
+def test_resources_factory_composes_every_repository() -> None:
+    """The factory wires all twelve Repositories into the registry."""
+
+    resources.cache_clear()
+    registry = resources()
+
+    expected_fields = {
+        "apoderamientos",
+        "category_profiles",
+        "holiday_calendars",
+        "legal_parameters",
+        "manuals",
+        "modelos",
+        "normatives",
+        "recargo_bands",
+        "topics",
+        "user_profile_schema",
+        "vat_catalogues",
+        "vat_rate_tables",
+    }
+    assert set(registry.__dataclass_fields__.keys()) == expected_fields
+
+
+def test_resources_modelos_repository_loads_real_modelo() -> None:
+    """The composed registry's modelos surface backs onto real bundled data."""
+
+    resources.cache_clear()
+
+    modelo = resources().modelos.get("100")
+
+    assert modelo.id == "100"
+
+
+def test_resources_registry_clear_empties_every_repository() -> None:
+    """The aggregate clear() empties every Repository's Identity Map."""
+
+    resources.cache_clear()
+    registry = resources()
+    registry.modelos.get("100")
+    assert registry.modelos._cache != {}
+
+    registry.clear()
+
+    assert registry.modelos._cache == {}

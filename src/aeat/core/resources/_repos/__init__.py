@@ -12,6 +12,7 @@ from .category_profiles import CategoryProfileRepository
 from .holiday_calendars import HolidayCalendarRepository
 from .legal_parameters import LegalParameterRepository
 from .manuals import ManualKey, ManualRepository
+from .modelos import ModeloRepository
 from .normatives import NormativeRepository
 from .recargo_bands import RecargoBandsRepository
 from .topics import TopicCatalogueRepository
@@ -26,6 +27,7 @@ __all__ = [
     "LegalParameterRepository",
     "ManualKey",
     "ManualRepository",
+    "ModeloRepository",
     "NormativeRepository",
     "RecargoBandsRepository",
     "TopicCatalogueRepository",
