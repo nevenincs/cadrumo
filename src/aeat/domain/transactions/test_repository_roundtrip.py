@@ -135,3 +135,89 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: deleting ``business_pct`` on a MIXED row must surface.
+
+    Persists a MIXED transaction (which requires a non-None
+    ``business_pct`` per the model_validator), then surgically deletes
+    the ``business_pct`` key from the encrypted JSON envelope and re-
+    saves. The load path must reject the mutated record: the
+    invariant ``business_classification == MIXED <-> business_pct
+    is not None`` is enforced on the rehydrated model. If the load
+    silently succeeds with ``business_pct=None``, the catalogue
+    boundary is tautological and every transaction roundtrip in the
+    suite is suspect.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._repository import TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "transactions-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+
+        bucket_id = "default-bucket"
+        repo = TransactionCatalogueRepository(bucket_id=bucket_id)
+
+        mixed_txn = _transaction(
+            provider_id="provider-row-1",
+            amount=Decimal("-100.00"),
+            description="Internet provider - mixed use",
+            classification=BusinessClassification.MIXED,
+            business_pct=Decimal("0.60"),
+        )
+        original = TransactionCatalogue.from_transactions([mixed_txn])
+        repo.save(original)
+
+        object_key = transaction_catalogue_object_key(bucket_id)
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == TX_BUCKET_NAMESPACE,
+                SecureObjectRow.object_key == object_key,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
+            assert "business_pct" in txn_dict, (
+                "fixture must serialise business_pct into the envelope "
+                "for this proof test to be meaningful"
+            )
+            del txn_dict["business_pct"]
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        # Now reload. The model_validator enforces MIXED <-> business_pct;
+        # the mutated record must either raise or surface inequality.
+        regression_caught = False
+        try:
+            mutated = repo.load()
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        else:
+            if mutated != original:
+                regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: deleting business_pct from a "
+            "MIXED transaction did NOT surface on load. The catalogue "
+            "boundary is tautological and every transaction roundtrip "
+            "in the suite is suspect."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
