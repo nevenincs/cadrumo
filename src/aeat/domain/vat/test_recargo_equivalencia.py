@@ -10,9 +10,9 @@ from pydantic import ValidationError
 
 from aeat.core.resources import bundled_path
 from aeat.domain.vat import (
-    LIVA_ART_161_RECARGO,
     LivaArt161RecargoRates,
     VATRateKind,
+    load_recargo_rates,
     recargo_rate_for,
 )
 
@@ -27,18 +27,18 @@ def _load_recargo_toml() -> dict[str, dict[str, dict[str, str]]]:
 
 def test_recargo_rates_match_registry_toml_values() -> None:
     raw = _load_recargo_toml()["parameters"]
-    assert LIVA_ART_161_RECARGO.general_rate == Decimal(raw["liva-art-161:recargo-rate-general"]["value"])
-    assert LIVA_ART_161_RECARGO.reducido_rate == Decimal(raw["liva-art-161:recargo-rate-reducido"]["value"])
-    assert LIVA_ART_161_RECARGO.super_reducido_rate == Decimal(raw["liva-art-161:recargo-rate-super-reducido"]["value"])
-    assert LIVA_ART_161_RECARGO.tabaco_rate == Decimal(raw["liva-art-161:recargo-rate-tabaco"]["value"])
+    assert load_recargo_rates().general_rate == Decimal(raw["liva-art-161:recargo-rate-general"]["value"])
+    assert load_recargo_rates().reducido_rate == Decimal(raw["liva-art-161:recargo-rate-reducido"]["value"])
+    assert load_recargo_rates().super_reducido_rate == Decimal(raw["liva-art-161:recargo-rate-super-reducido"]["value"])
+    assert load_recargo_rates().tabaco_rate == Decimal(raw["liva-art-161:recargo-rate-tabaco"]["value"])
 
 
 def test_recargo_rates_match_liva_art_161_boe_text() -> None:
     """Sanity check: the loaded values match the BOE-cited percentages."""
-    assert LIVA_ART_161_RECARGO.general_rate == Decimal("0.052")  # 5.2 %
-    assert LIVA_ART_161_RECARGO.reducido_rate == Decimal("0.014")  # 1.4 %
-    assert LIVA_ART_161_RECARGO.super_reducido_rate == Decimal("0.005")  # 0.5 %
-    assert LIVA_ART_161_RECARGO.tabaco_rate == Decimal("0.0175")  # 1.75 %
+    assert load_recargo_rates().general_rate == Decimal("0.052")  # 5.2 %
+    assert load_recargo_rates().reducido_rate == Decimal("0.014")  # 1.4 %
+    assert load_recargo_rates().super_reducido_rate == Decimal("0.005")  # 0.5 %
+    assert load_recargo_rates().tabaco_rate == Decimal("0.0175")  # 1.75 %
 
 
 def test_recargo_parameters_each_cite_liva_art_161() -> None:
@@ -75,7 +75,7 @@ def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
 
 def test_recargo_record_is_frozen() -> None:
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(LIVA_ART_161_RECARGO, "general_rate", Decimal("0.999"))  # noqa: B010
+        setattr(load_recargo_rates(), "general_rate", Decimal("0.999"))  # noqa: B010
 
 
 def test_recargo_rate_for_general_returns_5_2_percent() -> None:

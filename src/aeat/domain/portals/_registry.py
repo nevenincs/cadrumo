@@ -14,7 +14,8 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 from ...core.logging import get_logger
-from ..calculations.registry import RegistryError, RegistrySnapshotError, default_registry_authority
+from ...core.resources import resources
+from ..calculations.registry import RegistryError, RegistrySnapshotError
 from ..modelos import ModeloCode
 from ._categories import PortalCategory
 from ._codes import Portal
@@ -249,7 +250,7 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
 
     try:
         try:
-            modelo = default_registry_authority().validate_modelo(str(code))
+            modelo = resources().modelos.authority.validate_modelo(str(code))
         except RegistrySnapshotError:
             _LOG.debug(
                 "portals: registry snapshot unavailable for modelo %s; no portal bindings",

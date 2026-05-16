@@ -24,7 +24,7 @@ Callers from outside this subpackage must import exclusively from
 
 from __future__ import annotations
 
-from ._catalogue import VAT_CATALOGUES_BY_YEAR, resolve_catalogue
+from ._catalogue import load_vat_catalogues, resolve_catalogue
 from ._classification import (
     CustomerResidency,
     CustomerTaxStatus,
@@ -72,9 +72,10 @@ from ._prorrata import (
     sum_deductible_amounts,
     validate_prorrata_reference,
 )
-from ._rates import VAT_RATE_TABLE
+from ._rates import load_vat_rate_table
 from ._recargo_equivalencia import (
     LivaArt161RecargoRates,
+    load_recargo_rates,
     recargo_rate_for,
 )
 from ._schema import (
@@ -105,10 +106,7 @@ from .errors import (
 __all__ = [
     "DEDUCIBLE_FLOW_DIRECTIONS",
     "DEVENGADA_FLOW_DIRECTIONS",
-    "LIVA_ART_161_RECARGO",
     "REGIME_PERIODICITY",
-    "VAT_CATALOGUES_BY_YEAR",
-    "VAT_RATE_TABLE",
     "CustomerResidency",
     "CustomerTaxStatus",
     "DeductionScope",
@@ -159,6 +157,9 @@ __all__ = [
     "is_deducible_flow",
     "is_devengada_flow",
     "is_especial_mandatory",
+    "load_recargo_rates",
+    "load_vat_catalogues",
+    "load_vat_rate_table",
     "load_vat_rules_from_manual",
     "lookup_rate",
     "recargo_rate_for",
@@ -172,17 +173,3 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str) -> object:
-    """Lazy resolver for ``LIVA_ART_161_RECARGO``.
-
-    Eager evaluation at module import time triggers a circular import
-    against ``aeat.domain.calculations.registry._bindings``. Resolving
-    the constant on first attribute access keeps the public surface
-    intact while breaking the cycle.
-    """
-
-    if name == "LIVA_ART_161_RECARGO":
-        from ._recargo_equivalencia import _get_liva_art_161_recargo
-
-        return _get_liva_art_161_recargo()
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

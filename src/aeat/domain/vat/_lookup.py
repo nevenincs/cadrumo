@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from ._catalogue import resolve_catalogue
-from ._rates import VAT_RATE_TABLE
+from ._rates import load_vat_rate_table
 from ._schema import EUMemberState, VATCatalogue, VATCategory, VATRate, VATRateKind
 from .errors import VatCatalogueError, VatCategoryNotFoundError, VatRateNotFoundError
 
@@ -34,7 +34,7 @@ def lookup_rate(
         :exc:`aeat.domain.vat.VatRateNotFoundError`: If no registered rate
             satisfies the query.
     """
-    rates = VAT_RATE_TABLE.get(member_state)
+    rates = load_vat_rate_table().get(member_state)
     if not rates:
         raise VatRateNotFoundError(f"no rates registered for member_state={member_state.value!r}")
     for rate in rates:

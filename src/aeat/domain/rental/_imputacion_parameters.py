@@ -93,24 +93,20 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     )
 
 
-_LIRPF_ART_85_IMPUTACION_CACHE: list[LirpfArt85ImputacionParameters] = []
+def load_imputacion_parameters() -> LirpfArt85ImputacionParameters:
+    """Public accessor for the LIRPF art. 85 imputation parameters.
+
+    Reads the three art. 85 parameters from the bundled legal-
+    parameter catalogue and returns the typed
+    :class:`LirpfArt85ImputacionParameters` record. Callers that
+    want the raw parameter mapping should use
+    :func:`aeat.domain.calculations.registry.load_legal_parameters_only`
+    or the ``resources().legal_parameters`` Repository instead.
+    """
+    return _load_parameters()
 
 
-def _get_lirpf_art_85_imputacion() -> LirpfArt85ImputacionParameters:
-    """Return the cached LIRPF art. 85 parameters, loading on first access."""
-    if not _LIRPF_ART_85_IMPUTACION_CACHE:
-        _LIRPF_ART_85_IMPUTACION_CACHE.append(_load_parameters())
-    return _LIRPF_ART_85_IMPUTACION_CACHE[0]
-
-
-def __getattr__(name: str) -> object:
-    """Lazy accessor for the legacy ``LIRPF_ART_85_IMPUTACION`` constant."""
-    if name == "LIRPF_ART_85_IMPUTACION":
-        return _get_lirpf_art_85_imputacion()
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
-__all__ = [  # noqa: F822 (LIRPF_ART_85_IMPUTACION is lazy via __getattr__)
-    "LIRPF_ART_85_IMPUTACION",
+__all__ = [
     "LirpfArt85ImputacionParameters",
+    "load_imputacion_parameters",
 ]
