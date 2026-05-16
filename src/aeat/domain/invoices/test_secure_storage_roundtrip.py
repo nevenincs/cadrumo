@@ -110,3 +110,84 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: mutating an identity-bearing invoice field must surface.
+
+    :class:`Invoice` derives ``invoice_id`` from the identity tuple
+    (kind, invoice_number, issued_at, counterparty_tax_id, currency,
+    grand_total) via :func:`derive_invoice_id`. The model's
+    construction-time validator re-derives the id and refuses any
+    record whose stored ``invoice_id`` doesn't match.
+
+    Persists a catalogue, reaches into ``SecureObjectRow`` via
+    ``session_scope``, surgically mutates the persisted
+    ``invoice_number`` from ``"F-2025-001"`` to ``"F-2025-999"``
+    without recomputing ``invoice_id``, and asserts the load path
+    catches the drift via the content-addressed id check.
+
+    If this test passes silently with a tampered invoice_number,
+    the invoice catalogue boundary is tautological and the
+    content-addressed identity is not actually enforced
+    post-persistence.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._repository import _INVOICE_NAMESPACE
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "invoice-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+        invoice = _populated_invoice(invoice_number="F-2025-001")
+        catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
+        repo = InvoiceCatalogueRepository()
+        repo.save(catalogue)
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _INVOICE_NAMESPACE,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            invoices = envelope["payload"]["invoices"]
+            invoice_dict = invoices[invoice.invoice_id]
+            assert invoice_dict["invoice_number"] == "F-2025-001", (
+                "fixture must serialise the invoice_number for this "
+                "proof test to be meaningful"
+            )
+            # Mutate the identity-bearing invoice_number without
+            # recomputing invoice_id. The derive-id check must trip.
+            invoice_dict["invoice_number"] = "F-2025-999"
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            repo.load()
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: mutating invoice_number "
+            "without recomputing invoice_id did NOT surface on load. "
+            "The invoice catalogue boundary is tautological and the "
+            "content-addressed identity is not actually enforced "
+            "post-persistence."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
