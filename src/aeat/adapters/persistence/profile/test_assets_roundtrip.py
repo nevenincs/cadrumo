@@ -123,3 +123,81 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: corrupting the VAT decomposition must surface.
+
+    :class:`AssetRecord` carries a model_validator that cross-checks
+    ``cost_basis == taxable_base + non-deductible VAT``. The
+    persistence boundary serialises every component; if the wire shape
+    silently strips one, the rehydrated record's invariant will fail
+    at load time (or, if it doesn't, the strict-equality witness will
+    flag the drift). Persists a populated ledger, reaches into the
+    encrypted SecureObjectRow via ``session_scope``, surgically
+    halves the persisted ``cost_basis`` (breaking the
+    ``cost_basis == taxable_base + non-deductible VAT`` cross-check),
+    and asserts the load path catches the drift.
+
+    If this test passes silently with a corrupted cost_basis, the
+    assets ledger boundary is tautological and every ledger
+    roundtrip in the suite is suspect.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...persistence.storage.sql._orm import SecureObjectRow
+    from ...persistence.storage.sql.session import session_scope
+    from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "assets-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+        assets_repo = AssetsLedgerRepository()
+        asset = _populated_asset()
+        assets_repo.save(AssetsLedgerDocument(assets=(asset,)))
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _ASSETS_NAMESPACE,
+                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+            )
+            row = session.execute(stmt).scalar_one()
+            document = _json.loads(row.payload.decode("utf-8"))
+            asset_dict = document["assets"][0]
+            assert asset_dict.get("cost_basis"), (
+                "fixture must serialise cost_basis onto the asset "
+                "for this proof test to be meaningful"
+            )
+            # Halve the cost_basis so the VAT decomposition cross-
+            # check fails ("cost_basis must equal taxable_base plus
+            # non-deductible VAT").
+            asset_dict["cost_basis"] = "5525.00"
+            row.payload = _json.dumps(document).encode("utf-8")
+
+        regression_caught = False
+        try:
+            assets_repo.load()
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: corrupting cost_basis to "
+            "break the VAT-decomposition cross-check did NOT surface "
+            "on load. The assets ledger boundary is tautological and "
+            "every ledger roundtrip in the suite is suspect."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
