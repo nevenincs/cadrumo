@@ -25,7 +25,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from aeat.core.resources import resources
 
 from ._aeat_nif_iva_oracle import ORACLE_ID as AEAT_NIF_IVA_ORACLE_ID
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
@@ -36,7 +36,6 @@ from ._live_parity import (
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
 )
-from ._loader import load_registry_tree
 from ._renta_web_open_oracle import RentaWebOpenOracle
 from ._schema import ModeloDefinition
 
@@ -51,8 +50,7 @@ RENTA_WEB_OPEN_ORACLE_ID = "modelo-100-renta-web-open"
 
 
 def _committed_modelos() -> tuple[ModeloDefinition, ...]:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return tuple(modelos)
+    return tuple(resources().modelos.all())
 
 
 def _full_production_catalogue() -> LiveParityCatalogue:

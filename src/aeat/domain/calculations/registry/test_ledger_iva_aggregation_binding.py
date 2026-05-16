@@ -15,7 +15,7 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path
+from aeat.core.resources import resources
 from aeat.domain.calculations.registry import (
     CasillaObservation,
     DataBindingDefinition,
@@ -26,7 +26,6 @@ from aeat.domain.calculations.registry import (
     RegistryValidationError,
     calculate_registry_snapshot,
     default_registry_authority,
-    load_registry_tree,
     resolve_bound_casilla_inputs,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_previous_filing_binding_values,
@@ -43,8 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @lru_cache(maxsize=1)
 def _modelo_303_revision() -> ModeloRevision:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "303")
+    modelo = resources().modelos.get("303")
     return modelo.revisions["2009-y-siguientes"]
 
 

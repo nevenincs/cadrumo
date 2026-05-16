@@ -17,7 +17,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources import resources
 from ._bindings import (
     AtributionMemberObservation,
     ForeignAssetObservation,
@@ -27,14 +27,11 @@ from ._bindings import (
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,
 )
-from ._loader import load_registry_tree
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _modelos():
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    return modelos
+    return resources().modelos.all()
 
 
 def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> None:
