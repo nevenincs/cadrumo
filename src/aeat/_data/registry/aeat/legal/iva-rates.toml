@@ -1,0 +1,39 @@
+[legal."ley-37-1992:art-90"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-90.html#a90"
+document_id = "BOE-A-1992-28740"
+article = "90"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a90"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "LIVA art 90: tipo impositivo general del IVA. Establece que el Impuesto se exigira al tipo del 21 por ciento, salvo lo dispuesto en el articulo 91 (tipos reducidos). El tipo aplicable a cada operacion sera el vigente en el momento del devengo (art 90 Dos)."
+required_text = [
+    "Tipo impositivo general",
+    "21 por ciento",
+    "vigente en el momento del devengo",
+]
+
+[legal."ley-37-1992:art-91"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-91.html#a91"
+document_id = "BOE-A-1992-28740"
+article = "91"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a91"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "LIVA art 91: tipos impositivos reducidos. Apartado Uno establece el tipo reducido del 10 por ciento aplicable a determinadas operaciones (productos para la nutricion humana, agua, medicamentos, viviendas, transporte de viajeros, hosteleria, etc.). Apartado Dos establece el tipo super-reducido del 4 por ciento para productos basicos (pan, leche, frutas, libros, medicamentos especificos, etc.) y operaciones para colectivos en riesgo de exclusion."
+required_text = [
+    "Tipos impositivos reducidos",
+    "10 por ciento",
+    "4 por ciento",
+]

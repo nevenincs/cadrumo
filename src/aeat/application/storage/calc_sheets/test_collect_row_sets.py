@@ -14,7 +14,7 @@ from itertools import pairwise
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 from ....domain.calculations.registry._loader import load_registry_tree
 from . import collect_row_sets
 
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _modelo_349_revision():
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     return next(m for m in modelos if m.id == "349").revisions["2020-y-siguientes"]
 
 
@@ -72,7 +72,7 @@ def test_collect_row_sets_columns_allocate_a_through_n_left_to_right() -> None:
 def test_collect_row_sets_returns_empty_for_revision_without_row_producers() -> None:
     """Modelos without any `aggregation.op = "rows"` bindings emit no row-sets."""
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     # Modelo 130 (IRPF pago fraccionado) has no row-producer bindings.
     revision = next(m for m in modelos if m.id == "130").revisions["2019-y-siguientes"]
 

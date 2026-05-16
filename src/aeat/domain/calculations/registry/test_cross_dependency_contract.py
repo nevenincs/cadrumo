@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._errors import RegistryValidationError
 from ._loader import load_registry_tree
@@ -24,7 +24,7 @@ from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _CALCULATION_ROLES = {"direct_calculation", "instalment_to_final_settlement", "periodic_to_annual_summary"}
 
 
@@ -35,7 +35,7 @@ def _registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
 @lru_cache(maxsize=1)
 def _validated_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     modelos, catalogues = _registry_tree()
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
     return modelos, catalogues
 
 
@@ -246,7 +246,7 @@ def test_dependency_classifications_preserve_relation_authority_basis() -> None:
         RegistryValidationError,
         match=r"dependency classification .* does not include relation source refs",
     ):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_relation_target_bindings_preserve_relation_authority_basis() -> None:
@@ -263,7 +263,7 @@ def test_relation_target_bindings_preserve_relation_authority_basis() -> None:
         RegistryValidationError,
         match=r"relation .* target binding .* does not include relation legal refs",
     ):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def _first_relation(

@@ -3,3 +3,15 @@
 Hosts the helpers that compare aggregated periodic filings against their
 annual summaries, surfacing arithmetic and identity drift before submission.
 """
+
+from ._errors import (
+    DeclarationParseError,
+    ReconciliationDriftError,
+    ReconciliationError,
+)
+
+__all__ = [
+    "DeclarationParseError",
+    "ReconciliationDriftError",
+    "ReconciliationError",
+]

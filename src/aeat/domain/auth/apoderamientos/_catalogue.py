@@ -8,8 +8,9 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core.errors import AeatError
+from ....core.resources import bundled_path
 
-_DEFAULT_CATALOGUE_PATH = Path(__file__).resolve().parents[5] / "registry" / "aeat" / "apoderamientos" / "scopes.toml"
+_DEFAULT_CATALOGUE_PATH = bundled_path("registry", "aeat", "apoderamientos", "scopes.toml")
 
 ALL_TOKEN = "ALL"
 

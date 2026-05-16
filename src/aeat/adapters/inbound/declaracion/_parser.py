@@ -10,6 +10,7 @@ from pathlib import Path
 
 from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     ExtractionProfileDefinition,
     RegistrySnapshot,
@@ -288,8 +289,8 @@ def _load_registry_snapshot(
     registry_root: Path | None,
     source_root: Path | None,
 ) -> RegistrySnapshot:
-    root = registry_root or PROJECT_ROOT / "registry" / "aeat"
-    authority = ValidatedRegistryAuthority.load(root, source_root=source_root or PROJECT_ROOT)
+    root = registry_root or bundled_path("registry", "aeat")
+    authority = ValidatedRegistryAuthority.load(root, source_root=source_root or bundled_path())
     try:
         return authority.snapshot(
             template.modelo,

@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._loader import load_registry_tree
 from ._schema import ModeloDefinition
@@ -59,7 +59,7 @@ _SUPPORTED_EJERCICIOS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024"
 
 
 def _committed_modelo_100() -> ModeloDefinition:
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return next(modelo for modelo in modelos if modelo.id == "100")
 
 

@@ -16,6 +16,8 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.i18n import Translatable as tr
+from ...core.identity import SubjectTaxId
+from ..calculations.registry._schema import RegistrySnapshotRef
 from ..submission import FilingFindingSeverity
 
 APPROVAL_BASIS_VERSION = "review-basis-v1"
@@ -149,6 +151,19 @@ class FilingDraft(BaseModel):
     modelo: str
     period: str
     profile_tax_id: str
+    # Typed Spanish NIF/NIE/CIF of the filing subject. Defaults to
+    # ``None`` so historical records that predate the field remain
+    # loadable; new drafts populate this from the validated profile
+    # substrate so the identity is re-checkable at persistence time.
+    subject_tax_id: SubjectTaxId | None = None
+    # Four-axis coordinates identifying the registry snapshot this
+    # draft was built against. Replaces the role of the opaque
+    # ``schema_version`` string for re-resolution against the live
+    # registry catalogue. Defaults to ``None`` for backward
+    # compatibility with persisted records that predate the field;
+    # newly built drafts populate this from the snapshot used to
+    # produce the casilla values.
+    snapshot_ref: RegistrySnapshotRef | None = None
     status: FilingDraftStatus
     values: tuple[FilingValue, ...]
     binding_values: tuple[FilingBindingValue, ...] = Field(default_factory=tuple)

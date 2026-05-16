@@ -357,7 +357,7 @@ class VATCatalogue(_VatStrictMutable):
                 )
         return self
 
-    def __iter__(self) -> Iterator[VATRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[VATRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over every loaded :class:`VATRegulation`."""
         return iter(self.regulations.values())
 

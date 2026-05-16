@@ -59,6 +59,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.live._borrador.BorradorSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_BORRADOR_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.borrador_snapshot_not_found",
+            default_suggestion="aeat app live borrador list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._operator.AuthConfigureNoActiveBucketError",
+        ErrorCode(
+            code="REFUSED_AUTH_CONFIGURE_NO_ACTIVE_BUCKET",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.auth_configure_no_active_bucket",
+            default_suggestion="aeat config init",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",
@@ -494,6 +516,83 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_100_borrador_binding",
             default_suggestion="aeat app live borrador 100 fetch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._reconcile.ReconciliationEvidenceInvalidError",
+        ErrorCode(
+            code="REFUSED_RECONCILIATION_EVIDENCE_INVALID",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.reconciliation_evidence_invalid",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._reconcile.ReconciliationDeclarationSourceUnsupportedError",
+        ErrorCode(
+            code="REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.reconciliation_declaration_source_unsupported",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.overview._errors.OverviewError",
+        ErrorCode(
+            code="FAIL_OVERVIEW",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.overview",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.overview._errors.OverviewCalendarError",
+        ErrorCode(
+            code="FAIL_OVERVIEW_CALENDAR",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.overview_calendar",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.overview._errors.OverviewAgendaError",
+        ErrorCode(
+            code="FAIL_OVERVIEW_AGENDA",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.overview_agenda",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.overview._errors.OverviewBacklogError",
+        ErrorCode(
+            code="FAIL_OVERVIEW_BACKLOG",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.overview_backlog",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.overview._errors.OverviewExplainError",
+        ErrorCode(
+            code="FAIL_OVERVIEW_EXPLAIN",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.overview_explain",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),

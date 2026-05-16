@@ -17,7 +17,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 from ._bindings import (
     AtributionMemberObservation,
     ForeignAssetObservation,
@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _modelos():
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     return modelos
 
 

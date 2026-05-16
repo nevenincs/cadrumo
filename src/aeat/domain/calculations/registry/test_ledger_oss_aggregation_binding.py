@@ -14,7 +14,7 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import (
     DataBindingDefinition,
     ModeloRevision,
@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @lru_cache(maxsize=1)
 def _modelo_369_union_revision() -> ModeloRevision:
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "369")
     return modelo.revisions["esquema-union"]
 

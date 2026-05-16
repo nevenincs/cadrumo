@@ -43,7 +43,7 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
-from ...core.config import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
@@ -1081,6 +1081,20 @@ def work_calculate(
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
+    relation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--relation",
+            help=tr(
+                "cli.app.modelo.work.relation_help",
+                default=(
+                    "Prior-period relation value as KEY=VALUE. "
+                    "The KEY is a registry relation id; the VALUE is a "
+                    "decimal. Repeat to supply multiple relations."
+                ),
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
@@ -1107,6 +1121,15 @@ def work_calculate(
             # Non-decimal binding overrides flow into the enum-binding
             # channel (e.g. profile-sourced enums like CCAA).
             enum_binding_values[k] = v
+    relation_values: dict[str, Decimal] = {}
+    for spec in relation or ():
+        key, raw_value = _parse_kv_spec(spec, flag="--relation", transform=lambda value: value)
+        try:
+            relation_values[key] = Decimal(raw_value)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                f"--relation value for {key!r} is not a decimal: {raw_value!r}"
+            ) from exc
 
     try:
         revision = calculate_modelo_revision(
@@ -1116,6 +1139,7 @@ def work_calculate(
             binding_values=binding_values or None,
             enum_binding_values=enum_binding_values or None,
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+            relation_values=relation_values or None,
         )
     except (
         WorkUnitNotFoundError,
@@ -1775,7 +1799,7 @@ def filing_record_import(
 
 
 def _service() -> RegistryQueryService:
-    authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     return RegistryQueryService(authority)
 
 
@@ -1794,7 +1818,7 @@ audit_app = typer.Typer(
     name="audit",
     help=tr(
         "cli.app.modelo.audit.group_help",
-        default="Evidence bundle audit verbs (view/check/export/replay).",
+        default="Evidence bundle audit verbs (show/check/export/replay).",
     ),
     no_args_is_help=True,
 )
@@ -1818,9 +1842,9 @@ def _audit_bucket_id() -> str:
 
 
 @audit_app.command(
-    "view",
+    "show",
     help=tr(
-        "cli.app.modelo.audit.view_help",
+        "cli.app.modelo.audit.show_help",
         default="Render an evidence bundle's manifest and referenced records.",
     ),
 )
@@ -1838,7 +1862,7 @@ def audit_show(
         f"bucket\t{bucket_id}",
         f"bundle_id\t{bundle.bundle_id}",
         f"work_unit_id\t{bundle.work_unit_id}",
-        f"manifest_hash\t{bundle.manifest_hash}",
+        f"manifest_version\t{bundle.manifest_version}",
         f"verification_state\t{bundle.verification_state.value}",
         f"records\t{len(bundle.records)}",
     ]
@@ -1866,9 +1890,8 @@ def audit_check(
         f"bucket\t{bucket_id}",
         f"bundle_id\t{report.bundle_id}",
         f"verification_state\t{report.verification_state.value}",
-        f"manifest_hash_matches\t{report.manifest_hash_matches}",
-        f"records_verified\t{report.records_verified}",
-        f"records_failed\t{report.records_failed}",
+        f"completeness_ratio\t{report.completeness_ratio}",
+        f"findings\t{len(report.findings)}",
     ]
     _emit(ctx, payload, lines)
 
@@ -1905,17 +1928,25 @@ def audit_export(
     ] = False,
 ) -> None:
     bucket_id = _audit_bucket_id()
-    bundle = _evidence_bundle_service().export(
+    service = _evidence_bundle_service()
+    output_path = service.export(
         bucket_id=bucket_id,
         bundle_id=bundle_id,
         output_path=output,
         force_incomplete=force_incomplete,
     )
-    payload = bundle.model_dump(mode="json")
+    bundle = service.show(bucket_id=bucket_id, bundle_id=bundle_id)
+    payload: dict[str, object] = {
+        "bucket_id": bucket_id,
+        "bundle_id": bundle.bundle_id,
+        "output": str(output_path),
+        "verification_state": bundle.verification_state.value,
+        "records": len(bundle.records),
+    }
     lines = [
         f"bucket\t{bucket_id}",
         f"bundle_id\t{bundle.bundle_id}",
-        f"output\t{output}",
+        f"output\t{output_path}",
         f"verification_state\t{bundle.verification_state.value}",
     ]
     _emit(ctx, payload, lines)
@@ -1942,7 +1973,8 @@ def audit_replay(
         f"bucket\t{bucket_id}",
         f"bundle_id\t{report.bundle_id}",
         f"verification_state\t{report.verification_state.value}",
-        f"records_replayed\t{report.records_verified}",
+        f"completeness_ratio\t{report.completeness_ratio}",
+        f"findings\t{len(report.findings)}",
     ]
     _emit(ctx, payload, lines)
 

@@ -1,0 +1,123 @@
+[legal."rdl-2-2004:art-78"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rdl-2-2004-art-78.html#a78"
+document_id = "BOE-A-2004-4214"
+article = "78"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4214#a78"
+published_at = 2004-03-09
+effective_from = 2004-03-10
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "TRLRHL art 78: naturaleza y hecho imponible del Impuesto sobre Actividades Economicas (IAE)."
+required_text = [
+    "naturaleza",
+    "hecho imponible",
+    "actividades empresariales",
+]
+
+[legal."rdl-2-2004:art-82"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rdl-2-2004-art-82.html#a82"
+document_id = "BOE-A-2004-4214"
+article = "82"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4214#a82"
+published_at = 2004-03-09
+effective_from = 2004-03-10
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "TRLRHL art 82: exenciones del IAE. Estaran exentos los sujetos pasivos cuyo importe neto de la cifra de negocios sea inferior a 1.000.000 EUR."
+required_text = [
+    "exentos del impuesto",
+    "importe neto de la cifra de negocios",
+    "1.000.000",
+]
+
+[legal."rdl-2-2004:art-90"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rdl-2-2004-art-90.html#a90"
+document_id = "BOE-A-2004-4214"
+article = "90"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4214#a90"
+published_at = 2004-03-09
+effective_from = 2004-03-10
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "TRLRHL art 90: gestion tributaria del IAE; matricula del impuesto y reglas de gestion compartida entre AEAT y administracion tributaria local."
+required_text = [
+    "matrícula",
+    "gestión tributaria",
+]
+
+[legal."orden-hac-2572-2003:apartado-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-2572-2003-art-1.html#a1"
+document_id = "BOE-A-2003-17642"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17642"
+published_at = 2003-09-18
+effective_from = 2003-09-19
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Apartado primero de la Orden HAC/2572/2003: aprobacion del modelo 840 de Declaracion del Impuesto sobre Actividades Economicas."
+required_text = [
+    "Aprobación",
+    "modelo 840",
+    "Impuesto sobre Actividades Económicas",
+]
+
+[legal."orden-hac-2572-2003:apartado-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-2572-2003-art-6.html#a6"
+document_id = "BOE-A-2003-17642"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17642"
+published_at = 2003-09-18
+effective_from = 2003-09-19
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Apartado sexto de la Orden HAC/2572/2003: plazos de presentacion del Modelo 840 (alta, variacion, baja) por remision a los articulos 5, 6 y 7 del Real Decreto 243/1995."
+required_text = [
+    "Plazo de presentación",
+    "alta, variación o baja",
+    "Real Decreto 243/1995",
+]
+
+[sources."aeat-dr-840"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_840/files/01-840-orden-hac-2572-2003-99-kb-pdf.pdf"
+sha256 = "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a"
+bytes = 101013
+retrieved_at = 2026-05-03
+applies_from = 2003-09-19
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr840.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-840-2003-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-2572-2003.html"
+sha256 = "1b820ea36307beb67372f1eb648d865d3dd912a1c3bf9d926b8455b551f9c722"
+bytes = 56203
+retrieved_at = 2026-05-06
+published_at = 2003-09-18
+applies_from = 2003-09-19
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17642"
+review_status = "reviewed"

@@ -13,6 +13,7 @@ from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration,
 )
 from ...adapters.persistence.storage import MasterKeyProvider
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     calculate_registry_snapshot,
     generate_parity_tape_path,
@@ -181,7 +182,7 @@ class RegistryRevisionInventory(NamedTuple):
 def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
     """Load the registry tree and return stable read-only inventory counts."""
 
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=Path("."))
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
     modelos = authority.modelos
     catalogues = authority.catalogues
     inventory = _revision_inventory(modelos)
@@ -272,8 +273,8 @@ def verify_filed_state(
     *,
     observation_path: Path,
     source_observation_paths: tuple[Path, ...] = (),
-    registry_root: Path = Path("registry/aeat"),
-    source_root: Path = Path("."),
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
     required_casillas: tuple[str, ...] = (),
     master_key_provider: MasterKeyProvider | None = None,
 ) -> FiledStateVerificationReport:
@@ -287,7 +288,10 @@ def verify_filed_state(
     registry_source_observations = tuple(
         registry_observation_from_filed_declaration(observation) for observation in source_observations
     )
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    authority = ValidatedRegistryAuthority.load(
+        registry_root or bundled_path("registry", "aeat"),
+        source_root=source_root or bundled_path(),
+    )
     snapshot = authority.snapshot(
         filed_observation.modelo,
         filing_year=filed_observation.ejercicio,

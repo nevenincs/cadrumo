@@ -512,12 +512,25 @@ def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...
     return tuple(lines)
 
 
+from ._errors import (
+    OverviewAgendaError,
+    OverviewBacklogError,
+    OverviewCalendarError,
+    OverviewError,
+    OverviewExplainError,
+)
+
 __all__ = [
     "CalendarCompleteness",
     "CalendarWarning",
+    "OverviewAgendaError",
+    "OverviewBacklogError",
     "OverviewCalendar",
     "OverviewCalendarEntry",
+    "OverviewCalendarError",
     "OverviewCalendarRange",
+    "OverviewError",
+    "OverviewExplainError",
     "OverviewPeriodState",
     "OverviewStatusReport",
     "build_overview_calendar",

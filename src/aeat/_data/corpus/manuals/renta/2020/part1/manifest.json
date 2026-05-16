@@ -1,0 +1,11 @@
+{
+  "content_length": 32387072,
+  "fetched_at": "2026-05-06T00:00:00Z",
+  "manual_id": "renta",
+  "part": "part1",
+  "relative_pdf_path": "source.pdf",
+  "sha256": "2916a4ee52ec0cf6d5c68600fdc1de8604d2eda19db4a8aa3232e23ff34ef8ab",
+  "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2020/ManualRenta2020_es_es.pdf",
+  "synthetic": false,
+  "year": 2020
+}

@@ -1,0 +1,32 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "309",
+  "retrieved_at": "2026-05-06",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "309",
+      "title": "309 - 01-309-ejercicios-2023-y-siguientes.xls",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/dr309e23.xls",
+      "stored_path": "files/01-309-ejercicios-2023-y-siguientes.xls",
+      "original_filename": "01-309-ejercicios-2023-y-siguientes.xls",
+      "content_type": "application/octet-stream",
+      "bytes": 192000,
+      "sha256": "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5",
+      "retrieved_at": "2026-05-06"
+    }
+  ]
+}

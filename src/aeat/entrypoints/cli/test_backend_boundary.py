@@ -21,6 +21,7 @@ import typer
 
 from aeat.application.review import LedgerReviewFilterKey
 from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.entrypoints.cli import _ledger
 from aeat.tests.cli_runner import invoke_cached_cli
 
@@ -440,7 +441,7 @@ def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_foundation.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_registry_data.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_queries.py",
-        PROJECT_ROOT / "registry" / "aeat" / "modelos" / "036.toml",
+        bundled_path("registry", "aeat", "modelos", "036.toml"),
     )
     forbidden_tokens = (
         "036, 037",

@@ -13,14 +13,14 @@ from aeat.application.aggregation import (
     PerModeloAggregationProvider,
     resolve_per_modelo_registry_binding_values,
 )
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _modelo_349_revision():
-    authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     return authority.snapshot("349", filing_year=2026, period="1T").revision
 
 

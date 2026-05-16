@@ -11,3 +11,11 @@ class MissingExchangeRateError(CurrencyError):
 
 class UnsupportedCurrencyError(CurrencyError):
     """Raised when an unknown currency code is encountered."""
+
+
+class ExchangeRateProviderError(CurrencyError):
+    """Raised when an upstream exchange-rate adapter fails to respond."""
+
+
+class StaleExchangeRateError(CurrencyError):
+    """Raised when the only available rate is outside the acceptable freshness window."""

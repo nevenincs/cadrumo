@@ -1,0 +1,32 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "322",
+  "retrieved_at": "2026-05-06",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "322",
+      "title": "322 - 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR322e26v11.xlsx",
+      "stored_path": "files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx",
+      "original_filename": "01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 774672,
+      "sha256": "f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76",
+      "retrieved_at": "2026-05-06"
+    }
+  ]
+}

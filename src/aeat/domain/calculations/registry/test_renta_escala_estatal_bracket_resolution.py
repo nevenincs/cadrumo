@@ -22,14 +22,14 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 from ._errors import RegistryValidationError
 from ._formula_runtime import _resolve_bracket
 from ._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _BACKPORTED_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _POST_AMENDMENT_YEARS = (2021, 2022, 2023, 2024, 2025)
 

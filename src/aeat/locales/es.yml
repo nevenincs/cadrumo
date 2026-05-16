@@ -227,14 +227,20 @@ cli:
         purchase_invoice_evidence, payable_invoice y collectible_invoice.
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       audit:
-        bundle_id_help: cli.app.modelo.audit.bundle_id_help
-        check_help: cli.app.modelo.audit.check_help
-        export_help: cli.app.modelo.audit.export_help
-        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
-        group_help: cli.app.modelo.audit.group_help
-        output_help: cli.app.modelo.audit.output_help
-        replay_help: cli.app.modelo.audit.replay_help
-        view_help: cli.app.modelo.audit.view_help
+        bundle_id_help: Identificador del paquete de evidencia (SHA-256 completo o
+          prefijo inequívoco).
+        check_help: Reverificar un paquete de evidencia recalculando los digests de los
+          registros.
+        export_help: Generar un archivo ZIP determinista del paquete de evidencia
+          (manifest.json se escribe el último).
+        force_incomplete_help: Permitir la exportación cuando la verificación señale el
+          paquete como incompleto.
+        group_help: Verbos de auditoría del paquete de evidencia (show/check/export/replay).
+        output_help: Ruta de salida para el ZIP del paquete.
+        replay_help: Reproducir la verificación del caso de evidencia para entrega forense;
+          nunca contacta con AEAT ni realiza envíos.
+        show_help: Mostrar el manifiesto y los registros referenciados de un paquete
+          de evidencia
       bindings:
         app_help: Inspeccionar y previsualizar los bindings de un modelo tributario
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -254,7 +260,8 @@ cli:
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
-        form_number_help: Filtrar casillas por número de casilla impreso en el BOE (p. ej. 46)
+        form_number_help: Filtrar casillas por número de casilla impreso en el BOE
+          (p. ej. 46)
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
           computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
@@ -336,6 +343,12 @@ cli:
         history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
+        invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
+          en minúsculas más separadores . _ : -, máx. 128 caracteres)'
+        invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
+          más separadores . _ : -, máx. 64 caracteres)'
+        invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
+          64 caracteres (resumen SHA-256)
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por bucket
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
@@ -345,6 +358,8 @@ cli:
         period_help: Token de periodo de la unidad; para Modelo 036 usa alta, modificacion
           o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
+        relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
+          KEY es un id de relación del registry; VALUE es un decimal. Repetible.
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
         resume_help: cli.app.modelo.work.resume_help
         resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
@@ -357,12 +372,6 @@ cli:
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
-        invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
-          64 caracteres (resumen SHA-256)
-        invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
-          más separadores . _ : -, máx. 64 caracteres)'
-        invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
-          en minúsculas más separadores . _ : -, máx. 128 caracteres)'
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
   common:
     errors:
@@ -403,6 +412,8 @@ cli:
       configure_help: Configurar el proveedor de autenticación activo
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
+      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config init'
+        antes de configurar la autenticación.
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
@@ -463,6 +474,8 @@ cli:
               anuales, arrastre de trimestres anteriores, etc.)
             root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
               `aeat config google folder set <id>` primero
+            snapshot_failure: 'No se puede construir el snapshot del registry para
+              modelo {modelo} ({period} {year}): {detail}'
             unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
               son {available}
             year_help: Año de declaración (p. ej. 2025)
@@ -470,16 +483,15 @@ cli:
             y período a una hoja de Google Sheets dentro de `aeat-vault/`
           help: Superficie de cálculo esquema-a-hoja (exportar y recuperar)
           pull:
-            assemble_observations_help: Tras recuperar, reensambla las celdas de
-              filas de la pestaña Detalle en observaciones tipadas (perceptores,
-              bienes en el extranjero, operaciones vinculadas, miembros de
-              atribución, operaciones de devolución) y emítelas en el payload junto
-              a los row_set_edits brutos
-            compute_help: Tras recuperar las ediciones, ejecuta el motor Decimal
-              local contra ellas y emite los valores calculados de las casillas
-            compute_refused_stale: 'rechazo a calcular contra un libro cuyas marcas
-              de metadatos no coinciden con el snapshot suministrado
-              (metadata_match={metadata_match}); reexporte y vuelva a recuperar'
+            assemble_observations_help: Tras recuperar, reensambla las celdas de filas
+              de la pestaña Detalle en observaciones tipadas (perceptores, bienes
+              en el extranjero, operaciones vinculadas, miembros de atribución, operaciones
+              de devolución) y emítelas en el payload junto a los row_set_edits brutos
+            compute_help: Tras recuperar las ediciones, ejecuta el motor Decimal local
+              contra ellas y emite los valores calculados de las casillas
+            compute_refused_stale: rechazo a calcular contra un libro cuyas marcas
+              de metadatos no coinciden con el snapshot suministrado (metadata_match={metadata_match});
+              reexporte y vuelva a recuperar
             spreadsheet_id_help: Identificador del archivo de Drive del libro del
               que leer las ediciones del operador (debe estar marcado como propio
               de la app y vinculado al snapshot suministrado)
@@ -1099,6 +1111,42 @@ review:
     t_791512: review.adapters.t_791512
     t_870243: review.adapters.t_870243
     t_968325: review.adapters.t_968325
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Fecha de adquisición
+      amount: Importe
+      asset_class_code: Clave del bien
+      asset_identifier: Identificación del bien
+      base_imponible: Base imponible
+      base_imponible_assigned: Base imponible atribuida
+      clave: Clave
+      counterparty_legal_name: Razón social de la contraparte
+      counterparty_tax_id: NIF de la contraparte
+      country_code: Código de país
+      currency_code: Código de divisa
+      ingreso_a_cuenta: Ingreso a cuenta
+      member_legal_name: Razón social del miembro
+      member_state_code: Estado miembro
+      member_tax_id: NIF del miembro
+      operation_date: Fecha de la operación
+      operation_kind_code: Clave de operación
+      party_legal_name: Razón social
+      party_tax_id: NIF
+      perceptor_legal_name: Apellidos y nombre del perceptor
+      perceptor_tax_id: NIF del perceptor
+      percibido_dinerario: Percepciones dinerarias
+      percibido_especie: Percepciones en especie
+      rectified_base_previous: Base imponible anterior (rectificación)
+      rectified_period: Periodo rectificado
+      rectified_year: Ejercicio rectificado
+      refund_amount: Importe a devolver
+      retencion_practicada: Retención practicada
+      share_percentage: Porcentaje de participación
+      subclave: Subclave
+      supplier_tax_id: NIF del proveedor
+      transfer_pricing_method_code: Método de valoración
+      valuation_amount: Valoración
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
@@ -1511,39 +1559,3 @@ wizard:
     main:
       title: Main test
     title: Test
-sheets:
-  detalle:
-    headers:
-      acquisition_date: Fecha de adquisición
-      amount: Importe
-      asset_class_code: Clave del bien
-      asset_identifier: Identificación del bien
-      base_imponible: Base imponible
-      base_imponible_assigned: Base imponible atribuida
-      clave: Clave
-      counterparty_legal_name: Razón social de la contraparte
-      counterparty_tax_id: NIF de la contraparte
-      country_code: Código de país
-      currency_code: Código de divisa
-      ingreso_a_cuenta: Ingreso a cuenta
-      member_legal_name: Razón social del miembro
-      member_state_code: Estado miembro
-      member_tax_id: NIF del miembro
-      operation_date: Fecha de la operación
-      operation_kind_code: Clave de operación
-      party_legal_name: Razón social
-      party_tax_id: NIF
-      perceptor_legal_name: Apellidos y nombre del perceptor
-      perceptor_tax_id: NIF del perceptor
-      percibido_dinerario: Percepciones dinerarias
-      percibido_especie: Percepciones en especie
-      rectified_base_previous: Base imponible anterior (rectificación)
-      rectified_period: Periodo rectificado
-      rectified_year: Ejercicio rectificado
-      refund_amount: Importe a devolver
-      retencion_practicada: Retención practicada
-      share_percentage: Porcentaje de participación
-      subclave: Subclave
-      supplier_tax_id: NIF del proveedor
-      transfer_pricing_method_code: Método de valoración
-      valuation_amount: Valoración

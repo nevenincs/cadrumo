@@ -1,0 +1,49 @@
+# Recargo bands per Ley 58/2003 art-27 (Ley General Tributaria) for
+# self-assessments filed after the deadline without prior AEAT notice.
+#
+# Bands reflect the post-Ley 11/2021 escalation: 1% per month for the
+# first 12 months, 15% plus interest after 12 months. The bands here
+# group adjacent months into operator-readable brackets so the CLI can
+# render a concise next-action pointer; the surcharge_pct is the
+# midpoint applicable to a filing landing inside the band.
+#
+# Reference: ley-58-2003:art-27.2
+
+[[band]]
+id = "within_30_days"
+min_days_late = 1
+max_days_late = 30
+surcharge_pct = "1.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "within_3_months"
+min_days_late = 31
+max_days_late = 90
+surcharge_pct = "3.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "within_6_months"
+min_days_late = 91
+max_days_late = 180
+surcharge_pct = "6.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "within_12_months"
+min_days_late = 181
+max_days_late = 365
+surcharge_pct = "12.00"
+interest_applies = false
+legal_ref = "ley-58-2003:art-27.2"
+
+[[band]]
+id = "after_12_months"
+min_days_late = 366
+surcharge_pct = "15.00"
+interest_applies = true
+legal_ref = "ley-58-2003:art-27.2"

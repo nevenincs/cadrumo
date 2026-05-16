@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.categories import SpendingCategory, resolve_category_profiles
 from aeat.domain.renta import (
     RentaDeductibilityContext,
@@ -31,12 +31,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _modelo_100_2025_snapshot():
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "100")
     return build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="0A",
     )

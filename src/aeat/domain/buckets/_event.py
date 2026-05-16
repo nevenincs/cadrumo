@@ -68,6 +68,7 @@ class BucketEventType(StrEnum):
     MODELO_FILED_SUPERSEDED = "modelo.filed_superseded"
     MODELO_AMENDED = "modelo.amended"
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
+    MODELO_RECONCILED = "modelo.reconciled"
     # Work-unit lifecycle
     MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"
     MODELO_WORK_UNIT_RENAMED = "modelo.work_unit.renamed"
@@ -300,7 +301,7 @@ class BucketEventHistoryCatalogue(BaseModel):
     def values(self) -> ValuesView[BucketEvent]:
         return self.events.values()
 
-    def __iter__(self) -> Iterator[BucketEvent]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.events.values())
 
     def __len__(self) -> int:

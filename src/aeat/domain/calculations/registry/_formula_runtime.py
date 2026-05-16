@@ -626,9 +626,9 @@ def read_parameter(
     Raises :class:`RegistryValidationError` if the modelo / revision / parameter
     is not registered, or if the date context selects 0 or >1 dated values.
     """
-    from aeat.core.paths import PROJECT_ROOT
+    from aeat.core.resources import bundled_path
 
-    root = registry_root if registry_root is not None else PROJECT_ROOT / "registry" / "aeat"
+    root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
     modelos, _catalogues = load_registry_tree(root)
     modelo_match = next((m for m in modelos if m.id == modelo_id), None)
     if modelo_match is None:

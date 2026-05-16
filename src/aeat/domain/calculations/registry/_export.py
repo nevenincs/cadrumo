@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Literal, TypeGuard
 
 from ._errors import RegistryValidationError
+from ._ids import CasillaId, ExportFieldId
 from ._schema import (
     DataBindingDefinition,
     ExportFieldDefinition,
@@ -27,8 +28,8 @@ class ResolvedExportLayout(RegistryModel):
 
     layout: ExportLayoutDefinition
     ordered_fields: tuple[ExportFieldDefinition, ...]
-    fields_by_id: Mapping[str, ExportFieldDefinition]
-    fields_by_casilla: Mapping[str, tuple[ExportFieldDefinition, ...]]
+    fields_by_id: Mapping[ExportFieldId, ExportFieldDefinition]
+    fields_by_casilla: Mapping[CasillaId, tuple[ExportFieldDefinition, ...]]
 
 
 def resolve_export_layout(snapshot: RegistrySnapshot, layout_id: str | None = None) -> ResolvedExportLayout:

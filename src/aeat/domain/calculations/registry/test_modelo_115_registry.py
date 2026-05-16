@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _load_modelo(modelo_id: str):
@@ -22,11 +22,11 @@ def _load_modelo(modelo_id: str):
 def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
     modelo, catalogues = _load_modelo("115")
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="1T",
     )

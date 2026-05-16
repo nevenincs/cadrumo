@@ -24,10 +24,10 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AeatError
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_TOPIC_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat" / "topics"
+_TOPIC_REGISTRY_ROOT = bundled_path("registry", "aeat", "topics")
 
 
 class TopicNotFoundError(AeatError):

@@ -48,7 +48,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
 
 # ---------------------------------------------------------------------------
@@ -192,7 +192,7 @@ MODELOS_WITHOUT_SHIFT: tuple[str, ...] = ("369",)
 # ---------------------------------------------------------------------------
 
 
-_CALENDARS_DIR = PROJECT_ROOT / "registry" / "aeat" / "calendars"
+_CALENDARS_DIR = bundled_path("registry", "aeat", "calendars")
 
 
 def _calendar_path(year: int) -> Path:
@@ -217,7 +217,7 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
     path = _calendar_path(year)
     if not path.exists():
         raise DeadlineValidationError(
-            f"holiday calendar for year {year} not registered; expected {path.relative_to(PROJECT_ROOT)}"
+            f"holiday calendar for year {year} not registered (expected file: {path.name})"
         )
     with path.open("rb") as fp:
         raw = tomllib.load(fp)

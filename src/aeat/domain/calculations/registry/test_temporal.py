@@ -16,7 +16,7 @@ from datetime import date
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._errors import RegistrySnapshotError
 from ._loader import load_registry_tree
@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _committed_modelo_100() -> ModeloDefinition:
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return next(modelo for modelo in modelos if modelo.id == "100")
 
 

@@ -27,6 +27,7 @@ from ._ids import (
     FormulaId,
     LegalRefId,
     ModeloId,
+    OracleId,
     ParameterId,
     RecordId,
     RelationId,
@@ -34,6 +35,7 @@ from ._ids import (
     SourceRefId,
     SupportRemovalDecisionId,
     VerificationExpectationId,
+    WorkbookFixtureId,
     WorkbookParityRefId,
 )
 
@@ -130,6 +132,24 @@ class RegistryModel(BaseModel):
     """Strict frozen base for registry schema objects."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class RegistrySnapshotRef(RegistryModel):
+    """Typed coordinates that identify a registry snapshot.
+
+    Replaces opaque ``schema_version: str`` strings in persisted records
+    (filing drafts, justificantes, etc.) with the four-axis registry
+    coordinate ``(modelo, revision_id, filing_year, period)``. A persisted
+    record carrying a ``RegistrySnapshotRef`` can be re-resolved against
+    the live registry catalogue with a single
+    :meth:`ValidatedRegistryAuthority.snapshot` call; an opaque schema
+    version cannot.
+    """
+
+    modelo: ModeloId
+    revision_id: RevisionId
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=32)
 
 
 class PeriodSelector(RegistryModel):
@@ -366,7 +386,7 @@ class LiveCrossReferenceDecision(RegistryModel):
     # Resolution against the catalogue happens at calculation time, not at
     # registry-load time, so the registry remains loadable when adapters
     # are imported lazily.
-    oracle_id: str | None = Field(default=None, min_length=1, max_length=128)
+    oracle_id: OracleId | None = None
     # Optional applicability gate: when non-empty the cross-reference is
     # only applicable to a taxpayer profile whose values satisfy these
     # predicates under the chosen mode. An empty tuple (the default) means
@@ -485,7 +505,7 @@ class LiveCrossReferenceDecision(RegistryModel):
 class WorkbookParityReference(RegistryModel):
     id: WorkbookParityRefId
     workbook_source: SourceRefId
-    fixture_id: str
+    fixture_id: WorkbookFixtureId
     formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
     runner_required: bool
     output_cells: Mapping[str, WorkbookCellRefStr] = Field(default_factory=dict)
@@ -1019,7 +1039,7 @@ class RelationDefinition(RegistryModel):
     ]
     source_modelo: ModeloId
     source_revision_selector: Mapping[str, str | int]
-    source_output: CasillaId | str
+    source_output: CasillaId
     target_binding: BindingId
     period_alignment: Mapping[str, str | int]
     source_periods: tuple[str, ...] = ()

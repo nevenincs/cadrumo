@@ -9,8 +9,12 @@ from typing import Annotated, Literal
 import typer
 
 from ...application.live import FiledDataListingRow, capture_filed_data, capture_source_filed_data, list_filed_data
+from ...core.resources import bundled_path
 from ._common import _emit
 from ._i18n import tr
+
+_DEFAULT_REGISTRY_ROOT = bundled_path("registry", "aeat")
+_DEFAULT_SOURCE_ROOT = bundled_path()
 
 _VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -69,13 +73,13 @@ def filed_list_cmd(
 
     from datetime import date as _date
 
-    from ...core.config import PROJECT_ROOT
+    from ...core.resources import bundled_path
     from ...domain.calculations.registry import ValidatedRegistryAuthority
 
     resolved_from = year_from if year_from is not None else _date.today().year
     resolved_to = year_to if year_to is not None else _date.today().year
     if modelo is None:
-        authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
         modelos = tuple(str(m.id) for m in authority.modelos)
     else:
         modelos = (modelo,)
@@ -190,7 +194,7 @@ def filed_capture_sources_cmd(
             readable=True,
             help=tr("cli.app.live.registry_root_help"),
         ),
-    ] = Path("registry/aeat"),
+    ] = _DEFAULT_REGISTRY_ROOT,
     source_root: Annotated[
         Path,
         typer.Option(
@@ -201,7 +205,7 @@ def filed_capture_sources_cmd(
             readable=True,
             help=tr("cli.app.live.source_root_help"),
         ),
-    ] = Path("."),
+    ] = _DEFAULT_SOURCE_ROOT,
 ) -> None:
     """Capture filed observations required by a target filing's dependencies."""
 

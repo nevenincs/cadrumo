@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._scenarios import (
     RegistryCalculationScenario,
@@ -24,7 +24,7 @@ from ._scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 _RELATION_ZERO_VALUES_2025 = {
     "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
@@ -139,7 +139,7 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
             RegistryScenarioExpectedOutput(target="0522", value=Decimal("0.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
     assert_registry_scenario_matches(report)
 
 
@@ -165,7 +165,7 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
             RegistryScenarioExpectedOutput(target="0435", value=Decimal("25000.00"), operand_refs=("0432", "0433")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
     assert_registry_scenario_matches(report)
 
 
@@ -184,5 +184,5 @@ def test_base_liquidable_general_applies_reductions() -> None:
             RegistryScenarioExpectedOutput(target="0500", value=Decimal("35600.00")),
         ),
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
     assert_registry_scenario_matches(report)

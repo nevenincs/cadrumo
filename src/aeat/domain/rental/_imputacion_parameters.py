@@ -24,7 +24,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 
 
 class LirpfArt85ImputacionParameters(BaseModel):
@@ -76,13 +76,15 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     # parameter-only loader is needed here to avoid import-time cycles.
     from ..calculations.registry._loader import load_legal_parameters_only
 
-    parameters = load_legal_parameters_only(PROJECT_ROOT / "registry" / "aeat")
+    parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
     try:
         recent_raw = parameters[_RECENT_REVISION_PARAM_ID].value
         old_raw = parameters[_OLD_OR_NO_REVISION_PARAM_ID].value
         lookback_raw = parameters[_LOOKBACK_PARAM_ID].value
     except KeyError as exc:
-        raise KeyError(f"registry/aeat/legal/irpf.toml is missing LIRPF art. 85 parameter {exc.args[0]!r}") from exc
+        raise KeyError(
+            f"the IRPF legal-parameter catalogue is missing LIRPF art. 85 parameter {exc.args[0]!r}"
+        ) from exc
 
     return LirpfArt85ImputacionParameters(
         recent_revision_rate=Decimal(recent_raw),

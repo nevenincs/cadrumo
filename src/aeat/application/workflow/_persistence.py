@@ -83,6 +83,22 @@ class WorkflowStateRepository:
     def save(self, state: WorkflowState) -> None:
         """Persist state in the encrypted database object store."""
 
+        write = self.to_secure_object_write(state)
+        self._objects.save_many((write,))
+        _clear_output_language_cache()
+        _logger.debug("persisted workflow state to secure backend")
+
+    def to_secure_object_write(self, state: WorkflowState):
+        """Return the secure-object upsert for ``state`` without committing it.
+
+        Lets callers co-transactionally persist the workflow state and a
+        sibling secure-object payload (typically an updated
+        bucket-event-history catalogue) via a single
+        :meth:`SecureObjectRepository.save_many` call.
+        """
+
+        from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
+
         try:
             payload = WorkflowState.model_validate({**state.__dict__, "updated_at": utc_now()})
         except ValueError as exc:
@@ -93,7 +109,7 @@ class WorkflowStateRepository:
             classification=SensitivityClass.FINANCIAL,
             payload=payload,
         )
-        self._objects.save(
+        return SecureObjectWrite(
             namespace=_STATE_NAMESPACE,
             object_key=_STATE_OBJECT_KEY,
             classification=SensitivityClass.FINANCIAL,
@@ -101,8 +117,6 @@ class WorkflowStateRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
-        _clear_output_language_cache()
-        _logger.debug("persisted workflow state to secure backend")
 
     def fingerprint_state(
         self,

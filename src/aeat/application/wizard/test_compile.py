@@ -31,7 +31,7 @@ from aeat.domain.profile._keys import ProfileKeyRequirement
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-class _DummyAnswers(BaseModel):
+class _EmptyAnswersBase(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -65,7 +65,7 @@ def _flow(questions: tuple[WizardQuestion, ...]) -> WizardFlow:
                 questions=questions,
             ),
         ),
-        answers_model=_DummyAnswers,
+        answers_model=_EmptyAnswersBase,
     )
 
 
@@ -152,7 +152,7 @@ def test_duplicate_profile_key_raises() -> None:
                 ),
             ),
         ),
-        answers_model=_DummyAnswers,
+        answers_model=_EmptyAnswersBase,
     )
     with pytest.raises(WizardCompileError, match=r"wizard|compile"):
         compile_profile_keys((flow_a, flow_b))

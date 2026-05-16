@@ -70,7 +70,12 @@ from ....application.storage.calc_sheets import (
     RelationValues,
     build_export_plan,
 )
-from ....core.config import PROJECT_ROOT, load_settings
+from ....core.config import load_settings
+from ....core.resources import bundled_path
+from ....domain.calculations.registry._errors import (
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.calculations.registry._snapshot import build_snapshot
 from .._common import _emit
@@ -639,7 +644,7 @@ def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
 
 
 def _load_snapshot(modelo: str, period: str, year: int):
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     chosen = next((candidate for candidate in modelos if candidate.id == modelo), None)
     if chosen is None:
         available = ", ".join(sorted(candidate.id for candidate in modelos))
@@ -650,13 +655,28 @@ def _load_snapshot(modelo: str, period: str, year: int):
                 available=available,
             ),
         )
-    return build_snapshot(
-        chosen,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=year,
-        period=period,
-    )
+    try:
+        return build_snapshot(
+            chosen,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=year,
+            period=period,
+        )
+    except (RegistrySnapshotError, RegistryValidationError) as exc:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.google.sync.calc.export.snapshot_failure",
+                modelo=modelo,
+                period=period,
+                year=year,
+                detail=str(exc),
+                default=(
+                    "Cannot build registry snapshot for modelo "
+                    f"{modelo} ({period} {year}): {exc}"
+                ),
+            ),
+        ) from exc
 
 
 @calc_app.command("export", help=tr("cli.config.google.sync.calc.export_help"))

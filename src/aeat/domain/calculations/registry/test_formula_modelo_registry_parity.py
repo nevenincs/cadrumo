@@ -4,18 +4,18 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import RegistryValidator, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces() -> None:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
     required_surfaces = {"calculation", "verification", "review", "approval", "reconciliation", "workflow"}
 
     for modelo in modelos:

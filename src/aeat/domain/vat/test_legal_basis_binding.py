@@ -32,7 +32,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.invoices import IvaRate
 from aeat.domain.invoices._enums import iva_rate_percentage
 from aeat.domain.vat import (
@@ -56,12 +56,12 @@ def _strip_html(html: str) -> str:
 
 
 def _read_corpus_excerpt(name: str) -> str:
-    path = PROJECT_ROOT / "corpus" / "normatives" / "html" / name
+    path = bundled_path("corpus", "normatives", "html") / name
     return path.read_text(encoding="utf-8")
 
 
 def _legal_entry(toml_relative: str, article_id: str) -> dict[str, str | list[str]]:
-    path = PROJECT_ROOT / "registry" / "aeat" / "legal" / toml_relative
+    path = bundled_path("registry", "aeat", "legal") / toml_relative
     with path.open("rb") as handle:
         data = tomllib.load(handle)
     return data["legal"][article_id]
@@ -268,7 +268,7 @@ def test_registry_tree_loader_recognises_all_rate_articles() -> None:
     and validation fails — this test catches the regression upstream."""
     from aeat.domain.calculations.registry import load_registry_tree
 
-    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     assert "ley-37-1992:art-90" in catalogues.legal
     assert "ley-37-1992:art-91" in catalogues.legal
     assert "ley-37-1992:art-161" in catalogues.legal

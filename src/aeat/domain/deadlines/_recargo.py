@@ -24,11 +24,11 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
 from ._models import RecargoBand, Recovery
 
-_DEFAULT_BRACKET_PATH = PROJECT_ROOT / "registry" / "aeat" / "legal" / "ley-58-2003-recargo-bands.toml"
+_DEFAULT_BRACKET_PATH = bundled_path("registry", "aeat", "legal", "ley-58-2003-recargo-bands.toml")
 
 
 def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:

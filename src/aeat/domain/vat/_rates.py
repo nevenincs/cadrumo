@@ -12,11 +12,11 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ._schema import EUMemberState, VATRate, VATRateKind
 from .errors import VatCatalogueError, VatRateOverlapError, VatValidationError
 
-_DEFAULT_RATE_REGISTRY = PROJECT_ROOT / "registry" / "aeat" / "vat" / "rates.toml"
+_DEFAULT_RATE_REGISTRY = bundled_path("registry", "aeat", "vat", "rates.toml")
 
 
 def load_vat_rate_table(path: Path = _DEFAULT_RATE_REGISTRY) -> Mapping[EUMemberState, tuple[VATRate, ...]]:

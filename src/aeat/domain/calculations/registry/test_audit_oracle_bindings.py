@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ._live_parity import (
@@ -24,7 +24,7 @@ from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _modelo_130() -> ModeloDefinition:

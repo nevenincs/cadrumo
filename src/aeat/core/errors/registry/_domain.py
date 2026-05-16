@@ -1326,6 +1326,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.transactions._errors.LedgerLinkError",
+        ErrorCode(
+            code="FAIL_LEDGER_LINK",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.ledger_link",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.transactions._errors.LedgerCheckError",
+        ErrorCode(
+            code="FAIL_LEDGER_CHECK",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.ledger_check",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.transactions._errors.LedgerPreflightError",
+        ErrorCode(
+            code="REFUSED_LEDGER_PREFLIGHT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.ledger_preflight",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.rental._errors.RentalValidationError",
         ErrorCode(
             code="ERROR_RENTAL_VALIDATION",
@@ -1788,6 +1821,50 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.user_profile._errors.ProfileExportError",
+        ErrorCode(
+            code="FAIL_PROFILE_EXPORT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.profile_export",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileImportError",
+        ErrorCode(
+            code="FAIL_PROFILE_IMPORT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.profile_import",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileImportSignatureError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_IMPORT_SIGNATURE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.profile_import_signature",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileImportCollisionError",
+        ErrorCode(
+            code="REFUSED_PROFILE_IMPORT_COLLISION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_import_collision",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.currency._errors.CurrencyError",
         ErrorCode(
             code="FAIL_CURRENCY_ERROR",
@@ -1815,6 +1892,116 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_UNSUPPORTED_CURRENCY",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.unsupported_currency",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.ExchangeRateProviderError",
+        ErrorCode(
+            code="FAIL_EXCHANGE_RATE_PROVIDER",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.exchange_rate_provider",
+            default_suggestion=None,
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.StaleExchangeRateError",
+        ErrorCode(
+            code="FAIL_STALE_EXCHANGE_RATE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.stale_exchange_rate",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.filing.reconciliation._errors.ReconciliationError",
+        ErrorCode(
+            code="FAIL_RECONCILIATION",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.reconciliation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.ModeloExportError",
+        ErrorCode(
+            code="FAIL_MODELO_EXPORT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.modelo_export",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.ModeloExportManifestError",
+        ErrorCode(
+            code="FAIL_MODELO_EXPORT_MANIFEST",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.modelo_export_manifest",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.Modelo036LifecycleError",
+        ErrorCode(
+            code="FAIL_MODELO_036_LIFECYCLE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.modelo_036_lifecycle",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.Modelo036PriorAltaRequiredError",
+        ErrorCode(
+            code="REFUSED_MODELO_036_PRIOR_ALTA_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_036_prior_alta_required",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.Modelo036TerminalStateError",
+        ErrorCode(
+            code="REFUSED_MODELO_036_TERMINAL_STATE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_036_terminal_state",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.filing.reconciliation._errors.DeclarationParseError",
+        ErrorCode(
+            code="FAIL_DECLARATION_PARSE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.declaration_parse",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.filing.reconciliation._errors.ReconciliationDriftError",
+        ErrorCode(
+            code="REFUSED_RECONCILIATION_DRIFT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.reconciliation_drift",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

@@ -19,6 +19,7 @@ from ...adapters.outbound.aeat.sede import (
 from ...application.auth import ensure_authenticated_aeat_session
 from ...core.access_gate import AeatAccessGate
 from ...core.config import Settings, load_settings
+from ...core.resources import bundled_path
 from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
@@ -229,13 +230,16 @@ async def capture_source_filed_data(
     year: int,
     period: str,
     output_root: Path,
-    registry_root: Path = Path("registry/aeat"),
-    source_root: Path = Path("."),
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
     """Capture filed observations required by a target filing's registry dependencies."""
 
     session, settings = await _active_verified_session()
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    authority = ValidatedRegistryAuthority.load(
+        registry_root or bundled_path("registry", "aeat"),
+        source_root=source_root or bundled_path(),
+    )
     snapshot = authority.snapshot(
         modelo,
         filing_year=year,

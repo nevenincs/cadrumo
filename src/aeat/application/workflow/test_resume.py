@@ -211,3 +211,35 @@ def test_resume_context_run_id_satisfies_engine_resumed_from_contract(tmp_path: 
         resumed_from=forwarded,
     )
     assert chained.resumed_from == run_id
+
+
+def test_resume_for_unknown_run_id_is_indistinguishable_from_stale(tmp_path: Path) -> None:
+    """A ``resumed_from`` run id that no longer resolves through the persistence
+    layer surfaces as the same :class:`WorkflowError` the resume action raises
+    for a never-saved run, locking the contract that stale and absent ids
+    share one error path. The engine itself cannot verify existence; the
+    upstream resume action is the gate."""
+
+    with pytest.raises(WorkflowError, match=r"workflow run not found"):
+        resume_modelo_workflow("c" * 16)
+
+
+def test_resume_is_idempotent_for_a_persistently_aborted_run(tmp_path: Path) -> None:
+    """Calling ``resume_modelo_workflow`` twice on the same aborted run
+    returns equivalent contexts. The action is read-only over the prior
+    record and does not mutate it, so repeated resume requests must
+    produce the same ``(modelo, period, obligation, aborted_reason)``
+    payload."""
+
+    run_id = "f" * 16
+    save_run(
+        _aborted_result(
+            run_id=run_id,
+            reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+            obligation=_obligation(),
+        ),
+    )
+    first = resume_modelo_workflow(run_id)
+    second = resume_modelo_workflow(run_id)
+    assert first == second
+    assert first.resumed_from_run_id == second.resumed_from_run_id == run_id

@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry._loader import load_registry_tree
 from ._row_set_assembly import _GROUPING_DISPATCH
 
@@ -36,7 +36,7 @@ _INVOICE_GROUPINGS: frozenset[str] = frozenset({"operator_clave", "operator_clav
 
 
 def _all_row_producer_groupings() -> set[str]:
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     groupings: set[str] = set()
     for modelo in modelos:
         for revision in modelo.revisions.values():

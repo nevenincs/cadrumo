@@ -12,7 +12,7 @@ from ._models import (
 from ._service import CurrencyNormalizationService, ExchangeRateProvider
 
 
-class DummyRateProvider(ExchangeRateProvider):
+class _TableRateProvider(ExchangeRateProvider):
     def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
         if currency == "USD":
             return Decimal("0.85")
@@ -44,7 +44,7 @@ def test_currency_normalization_missing_provider() -> None:
 
 
 def test_currency_normalization_missing_rate() -> None:
-    svc = CurrencyNormalizationService(rate_provider=DummyRateProvider())
+    svc = CurrencyNormalizationService(rate_provider=_TableRateProvider())
     amount = MonetaryAmount(amount=Decimal("100.00"), currency="JPY")
     result = svc.normalize(amount, date(2026, 1, 1))
 
@@ -54,7 +54,7 @@ def test_currency_normalization_missing_rate() -> None:
 
 
 def test_currency_normalization_success() -> None:
-    svc = CurrencyNormalizationService(rate_provider=DummyRateProvider())
+    svc = CurrencyNormalizationService(rate_provider=_TableRateProvider())
     amount = MonetaryAmount(amount=Decimal("100.00"), currency="USD")
     result = svc.normalize(amount, date(2026, 1, 1))
 

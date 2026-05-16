@@ -35,7 +35,7 @@ from ._models import WizardCondition, WizardFlow, WizardQuestion, WizardSection,
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-class _DummyAnswers(BaseModel):
+class _EmptyAnswersBase(BaseModel):
     """Minimal pydantic answers model required by WizardFlow."""
 
 
@@ -72,7 +72,7 @@ def _flow(*questions: WizardQuestion) -> WizardFlow:
                 questions=questions,
             ),
         ),
-        answers_model=_DummyAnswers,
+        answers_model=_EmptyAnswersBase,
     )
 
 

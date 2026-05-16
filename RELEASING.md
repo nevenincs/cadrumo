@@ -99,6 +99,41 @@ as a `@pytest.mark.unit` tripwire.
 Never hand-edit one version surface without the other two — the
 unit test will fail.
 
+## Bundled corpus and registry size
+
+The packaging strategy ratified by
+[`.vault/adr/2026-05-15-corpus-registry-packaging-adr.md`](.vault/adr/2026-05-15-corpus-registry-packaging-adr.md)
+relocates the on-disk corpus and registry trees under
+`src/aeat/_data/` so the existing
+`packages = ["src/aeat"]` hatchling directive ships them inside the
+wheel. The resulting wheel carries approximately **139 MB of
+git-tracked data** (≈ 120 MB of which is the 66 tracked PDF
+evidence files spanning the Renta manual allow-list and the
+`aeat_official/disenos_registro` design-record archive).
+
+PyPI applies a **default per-file upload cap of 100 MB**. A wheel
+above that threshold cannot be published to public PyPI without an
+explicit file-size-limit grant from the PyPI admins. The release
+owner has three honest options at publish time:
+
+1. **Request a file-size grant** from PyPI for the `aeat`
+   distribution. Standard procedure; PyPI maintainers review the
+   justification (bundled tax-grounding corpus, ~315 MB combined
+   wheel + sdist) and lift the cap per-project.
+2. **Trim the bundled PDF surface via a future extras split.**
+   Introduce an `aeat[full-pdf]` extra that carries the evidence
+   PDFs and ship a leaner base wheel. The locator boundary
+   (`aeat.core.resources.packaged_data`) absorbs the split without
+   changes to consumer code.
+3. **Publish only via a private index** (internal PyPI mirror,
+   Cloudsmith, Azure Artifacts, etc.) where the 100 MB cap does not
+   apply.
+
+This document captures the trade-off; it does **not** commit the
+project to any one path. The decision is made at the first publish
+attempt by the release owner. The bundled-in-wheel approach itself
+is ratified and not subject to renegotiation at release time.
+
 ## Non-goals
 
 - GitHub Actions workflows of any kind.

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._bindings import CasillaObservation, RegistryFilingObservation
 from ._errors import RegistryValidationError
@@ -24,12 +24,12 @@ _MODELO_130_COMPUTED_CASILLAS = ("03", "04", "07", "09", "11", "12", "13", "14",
 
 
 def _modelo_130_snapshot() -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "130")
     return build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="1T",
     )

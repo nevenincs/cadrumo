@@ -1,0 +1,104 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "111",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 7,
+  "artefacts": [
+    {
+      "modelo": "111",
+      "title": "111 - Orden EHA/3127/2009 (Ejercicios 2019 y siguientes, actualizado Mayo 2021) (179 KB - xls )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr111e16v18.xls",
+      "stored_path": "files/01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xls",
+      "original_filename": "dr111e16v18.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 182784,
+      "sha256": "ad26dbb538caaba681d6869e7ef7c8d472602f55f94b7adf67e1f011402d97af",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "111",
+      "title": "111 - 01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xlsx",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr111e16v18.xls",
+      "stored_path": "files/01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xlsx",
+      "original_filename": "01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 39564,
+      "sha256": "3a533d3f4cb888416da9ccfe856c1252001233303d712a83d7efc5b214b9add0",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "111",
+      "title": "111 - Ejercicios 2004 a 2009 (49 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111_2007.pdf",
+      "stored_path": "files/02-111-ejercicios-2004-a-2009-49-kb-pdf.pdf",
+      "original_filename": "dr111_2007.pdf",
+      "content_type": "application/pdf",
+      "bytes": 46050,
+      "sha256": "a37964d357a17636c35de6e9e8d395e58fdc7dae0c7f341cf3476687f164bab3",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "111",
+      "title": "111 - Ejercicios 2010 a 2011 (32 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111v14.pdf",
+      "stored_path": "files/03-111-ejercicios-2010-a-2011-32-kb-pdf.pdf",
+      "original_filename": "dr111v14.pdf",
+      "content_type": "application/pdf",
+      "bytes": 29374,
+      "sha256": "2290c55c7a745c8447143520474a520be87dc7295535a4386e42991fbf61c787",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "111",
+      "title": "111 - Ejercicios anteriores al 2001 (65 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111_2000.pdf",
+      "stored_path": "files/04-111-ejercicios-anteriores-al-2001-65-kb-pdf.pdf",
+      "original_filename": "dr111_2000.pdf",
+      "content_type": "application/pdf",
+      "bytes": 66008,
+      "sha256": "9d862b0552e5aa4674b483de9e7e02c67caec040205973fe693a026275e2fd37",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "111",
+      "title": "111 - Orden EHA/3127/2009 (Ejercicios 2012 a 2015) (35 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111_v16.pdf",
+      "stored_path": "files/05-111-orden-eha-3127-2009-ejercicios-2012-a-2015-35-kb-pdf.pdf",
+      "original_filename": "dr111_v16.pdf",
+      "content_type": "application/pdf",
+      "bytes": 35270,
+      "sha256": "72e1821365be6b9b33c4a45e9eba1fafdae0c714837cfc7dd52b2f46c6a4919d",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "111",
+      "title": "111 - Orden EHA/3127/2009 (Ejercicios 2016 hasta 2018) (167 KB - xls )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111e16v17.xls",
+      "stored_path": "files/06-111-orden-eha-3127-2009-ejercicios-2016-hasta-2018-167-kb-xls.xls",
+      "original_filename": "dr111e16v17.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 171520,
+      "sha256": "86568ecc2250b143355f5e40bcbb4393667960ba8228862f6a2ac3cbcc90e192",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

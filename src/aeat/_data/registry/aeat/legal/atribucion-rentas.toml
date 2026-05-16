@@ -1,0 +1,136 @@
+[legal."orden-hap-2250-2015:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2250-2015-art-1.html#a1"
+document_id = "BOE-A-2015-11596"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a1"
+published_at = 2015-10-29
+effective_from = 2015-10-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden HAP/2250/2015: aprobacion del modelo 184 'Declaracion informativa anual de Entidades en regimen de atribucion de rentas' y de los disenos de registro a los que deberan ajustarse los ficheros que contengan la informacion a suministrar."
+required_text = [
+    "Aprobación del modelo 184",
+    "Declaración informativa anual de Entidades en régimen de atribución de rentas",
+    "diseños de registro",
+]
+
+[legal."orden-hap-2250-2015:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2250-2015-art-2.html#a2"
+document_id = "BOE-A-2015-11596"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a2"
+published_at = 2015-10-29
+effective_from = 2015-10-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 2 de la Orden HAP/2250/2015: obligados a presentar el modelo 184. Entidades en regimen de atribucion de rentas (Seccion 2.a del titulo X de la Ley 35/2006 LIRPF y Capitulo V del TRLIRNR aprobado por RDLeg 5/2004). Excluidas las entidades sin actividad economica con rentas inferiores a 3.000 EUR anuales y las entidades en el extranjero sin miembros residentes en territorio espanol."
+required_text = [
+    "Están obligadas a presentar el modelo 184",
+    "régimen de atribución de rentas",
+    "3.000 euros anuales",
+]
+
+[legal."orden-hap-2250-2015:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2250-2015-art-3.html#a3"
+document_id = "BOE-A-2015-11596"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a3"
+published_at = 2015-10-29
+effective_from = 2015-10-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 3 de la Orden HAP/2250/2015: objeto de la informacion. Sera objeto de declaracion la informacion definida en el apartado 1 del articulo 70 del Reglamento del IRPF (RD 439/2007). Las entidades constituidas en el extranjero con presencia en territorio espanol unicamente declararan la parte de renta atribuible a los miembros residentes."
+required_text = [
+    "Objeto de la información",
+    "artículo 70 del Reglamento del Impuesto sobre la Renta de las Personas Físicas",
+    "miembros residentes",
+]
+
+[legal."orden-hap-2250-2015:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2250-2015-art-4.html#a4"
+document_id = "BOE-A-2015-11596"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a4"
+published_at = 2015-10-29
+effective_from = 2015-10-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 4 de la Orden HAP/2250/2015: plazo de presentacion del Modelo 184. La presentacion se realizara en el mes de febrero de cada ano en relacion con las rentas obtenidas por la entidad y las rentas atribuibles a cada uno de sus miembros en el ano natural inmediato anterior."
+required_text = [
+    "Plazo de presentación",
+    "mes de febrero",
+    "año natural inmediato anterior",
+]
+
+[legal."orden-hap-2250-2015:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2250-2015-art-5.html#a5"
+document_id = "BOE-A-2015-11596"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a5"
+published_at = 2015-10-29
+effective_from = 2015-10-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 5 de la Orden HAP/2250/2015: formas de presentacion del modelo 184. Presentacion electronica por Internet conforme a los articulos 12 y 13 de la Orden HAP/2194/2013 que regula los procedimientos generales para presentacion de autoliquidaciones y declaraciones informativas tributarias."
+required_text = [
+    "Formas de presentación del modelo 184",
+    "presentación electrónica por Internet",
+    "Orden HAP/2194/2013",
+]
+
+[sources."aeat-dr-184-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf"
+sha256 = "b1e2b7884946061d5584f03253745b2936bcd99359f4b096acfe238c42bc9fba"
+bytes = 373652
+retrieved_at = 2026-05-06
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_184_2025.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-184-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_184/files/modelo-184-procedure.html"
+sha256 = "55bbf7f3eeb78039fe73edfa4e30cb6aced764174729cdc72e87f9968ed2f1eb"
+bytes = 48554
+retrieved_at = 2026-05-06
+applies_from = 2015-10-30
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI04.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-184-2015-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2250-2015.html"
+sha256 = "f3c87561ebbfc1357e07e222c0ea6f1c7418dcd630ece1591cb795d157e8d800"
+bytes = 247708
+retrieved_at = 2026-05-06
+published_at = 2015-10-29
+applies_from = 2015-10-30
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596"
+review_status = "reviewed"

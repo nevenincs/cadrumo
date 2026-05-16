@@ -7,6 +7,9 @@ Exercises the borrowed-vs-self-owned browser-session lifecycle of
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from pathlib import Path
+
 import pytest
 
 import aeat.adapters.outbound.aeat.verify as verify_module
@@ -76,7 +79,14 @@ class _RecordingBrowserSession:
         self.create_context_calls = 0
         self.close_calls = 0
 
-    async def create_context(self) -> _RecordingContext:
+    async def create_context(
+        self,
+        *,
+        provisioner: object | None = None,
+        storage_state_path: Path | None = None,
+        storage_state: Mapping[str, object] | None = None,
+    ) -> _RecordingContext:
+        del provisioner, storage_state_path, storage_state
         self.create_context_calls += 1
         return self.context
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
 
@@ -85,7 +85,7 @@ _FULL_CUOTA_CHAIN_TARGETS = (
 
 
 def _modelo_100():
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return next(m for m in modelos if m.id == "100"), _catalogues
 
 

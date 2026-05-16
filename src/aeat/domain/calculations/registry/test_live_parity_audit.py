@@ -25,7 +25,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._aeat_nif_iva_oracle import ORACLE_ID as AEAT_NIF_IVA_ORACLE_ID
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
@@ -51,7 +51,7 @@ RENTA_WEB_OPEN_ORACLE_ID = "modelo-100-renta-web-open"
 
 
 def _committed_modelos() -> tuple[ModeloDefinition, ...]:
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return tuple(modelos)
 
 

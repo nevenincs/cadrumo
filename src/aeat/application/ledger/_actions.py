@@ -2054,7 +2054,7 @@ def _blocking_modelo_references(
                 work_unit_id=work_unit.work_unit_id,
                 calculation_revision_id=revision.calculation_revision_id,
                 revision_state=revision.state.value,
-                modelo=str(work_unit.modelo),
+                modelo=work_unit.modelo,
                 filing_year=work_unit.filing_year,
                 period=work_unit.period,
             )

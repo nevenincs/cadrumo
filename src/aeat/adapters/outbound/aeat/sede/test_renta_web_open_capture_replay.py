@@ -27,14 +27,14 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.paths import PROJECT_ROOT
+from .....core.resources import bundled_path
 from .....domain.calculations.registry import RentaWebOpenLivePayload, RentaWebOpenSyntheticProfile
 from .....entrypoints.cli._live import requires_live_enabled
 from ._renta_web_open import collect_renta_web_open_observation
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
-_REPLAY_DIR = PROJECT_ROOT / "corpus" / "parity_replays" / "renta_web_open"
+_REPLAY_DIR = bundled_path("corpus", "parity_replays", "renta_web_open")
 
 _BASELINE_EXPECTED: dict[str, Decimal] = {
     "Resultado de la declaración": Decimal("0.00"),

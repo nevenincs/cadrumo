@@ -28,7 +28,7 @@ from ._translations import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-class _DummyAnswers(BaseModel):
+class _EmptyAnswersBase(BaseModel):
     """Minimal pydantic answers model required by WizardFlow."""
 
 
@@ -63,7 +63,7 @@ def _build_minimal_flow(*, with_help: bool = False, with_choice_description: boo
         title=tr("wizard.test.title"),
         description=tr("wizard.test.description"),
         sections=(section,),
-        answers_model=_DummyAnswers,
+        answers_model=_EmptyAnswersBase,
     )
 
 

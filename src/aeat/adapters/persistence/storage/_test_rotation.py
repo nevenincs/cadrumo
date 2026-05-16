@@ -558,12 +558,14 @@ class TestDefaultBlobStoreRoots:
         blob_store_dir.mkdir()
         attachments_dir.mkdir()
 
-        class _StubSettings:
-            aeat_secret_store_dir = secret_store_dir
-            aeat_blob_store_dir = blob_store_dir
-            aeat_attachments_dir = attachments_dir
+        from ....core.config import Settings
 
-        roots = default_blob_store_roots(_StubSettings())
+        settings = Settings(
+            aeat_secret_store_dir=secret_store_dir,
+            aeat_blob_store_dir=blob_store_dir,
+            aeat_attachments_dir=attachments_dir,
+        )
+        roots = default_blob_store_roots(settings)
         assert blob_store_dir in roots, f"blob_store_dir must be in roots; got {roots!r}"
         assert secret_store_dir not in roots, f"secret_store_dir is the wrong root for SecretStore blobs; got {roots!r}"
 
@@ -576,26 +578,29 @@ class TestDefaultBlobStoreRoots:
         shared = tmp_path / "shared-blobs"
         shared.mkdir()
 
-        class _StubSettings:
-            aeat_secret_store_dir = tmp_path / "secrets"
-            aeat_blob_store_dir = shared
-            aeat_attachments_dir = shared
+        from ....core.config import Settings
 
-        roots = default_blob_store_roots(_StubSettings())
+        settings = Settings(
+            aeat_secret_store_dir=tmp_path / "secrets",
+            aeat_blob_store_dir=shared,
+            aeat_attachments_dir=shared,
+        )
+        roots = default_blob_store_roots(settings)
         assert len(roots) == 1, f"expected one deduped root; got {roots!r}"
 
     def test_skips_missing_directories(self, tmp_path: Path) -> None:
         # Pre-provision installations have no blob store yet — the
         # helper must omit non-existent directories so the rotation
         # reports a clean (0, 0, 0) instead of an OS-level error.
+        from ....core.config import Settings
         from . import default_blob_store_roots
 
-        class _StubSettings:
-            aeat_secret_store_dir = tmp_path / "secrets"
-            aeat_blob_store_dir = tmp_path / "missing-blobs"
-            aeat_attachments_dir = tmp_path / "missing-attachments"
-
-        roots = default_blob_store_roots(_StubSettings())
+        settings = Settings(
+            aeat_secret_store_dir=tmp_path / "secrets",
+            aeat_blob_store_dir=tmp_path / "missing-blobs",
+            aeat_attachments_dir=tmp_path / "missing-attachments",
+        )
+        roots = default_blob_store_roots(settings)
         assert roots == ()
 
 

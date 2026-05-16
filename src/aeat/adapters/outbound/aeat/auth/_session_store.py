@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -23,8 +23,8 @@ class PersistedBrowserSession(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     schema_version: int = Field(default=_SESSION_VERSION, ge=1)
-    storage_state: dict[str, Any]
-    metadata: dict[str, Any]
+    storage_state: Mapping[str, object]
+    metadata: Mapping[str, object]
     written_at: datetime
 
     @property
@@ -40,7 +40,7 @@ def exists(path: Path) -> bool:
     return SecureObjectRepository().exists(_SESSION_NAMESPACE, _key(path))
 
 
-def save(path: Path, *, storage_state: dict[str, Any], metadata: dict[str, Any]) -> None:
+def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[str, object]) -> None:
     """Persist ``storage_state`` and ``metadata`` encrypted at SESSION class."""
 
     payload = PersistedBrowserSession(
@@ -78,7 +78,7 @@ def delete(path: Path) -> bool:
     return SecureObjectRepository().delete(_SESSION_NAMESPACE, _key(path))
 
 
-def storage_state_sha256(storage_state: dict[str, Any]) -> str:
+def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     """Return the canonical SHA-256 of a Playwright storage-state payload."""
 
     return _storage_state_sha256(storage_state)
@@ -88,6 +88,6 @@ def _key(path: Path) -> str:
     return Path(path).as_posix()
 
 
-def _storage_state_sha256(storage_state: dict[str, Any]) -> str:
+def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     payload = json.dumps(storage_state, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()

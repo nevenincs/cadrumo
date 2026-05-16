@@ -35,11 +35,17 @@ import time
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
-    from googleapiclient._apis.sheets.v4.resources import SheetsResource
-    from googleapiclient._apis.sheets.v4.schemas import BatchUpdateValuesRequest, ValueRange
+    # The `googleapiclient._apis.*` namespace exists only inside the
+    # `google-api-python-client-stubs` distribution. Some type-checkers
+    # (pyrefly) only follow the project-local `search_path` and never see
+    # site-packages stubs, so the typed forms below collapse to `Any` for
+    # those tools while still giving pyright / ty / mypy the real shapes.
+    SheetsResource = Any
+    BatchUpdateValuesRequest = Any
+    ValueRange = Any
 
 from pydantic import BaseModel, ConfigDict, Field
 

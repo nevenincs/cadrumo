@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._aeat_nif_iva_oracle import ORACLE_ID as AEAT_NIF_IVA_ORACLE_ID
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
@@ -29,7 +29,7 @@ from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 # Concrete (oracle_id, surface) inputs paired with the registered
 # production adapter that supplies the surface_kind. Every entry sits

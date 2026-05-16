@@ -12,13 +12,13 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import build_snapshot, load_registry_tree
 from .runtime import RegistryCasillaSchema, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _TEST_MODELO = "130"
 _TEST_YEAR = 2026
 _TEST_PERIOD = "1T"
@@ -31,7 +31,7 @@ def _source_casilla_refs() -> dict[str, tuple[str, ...]]:
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD,
     )
@@ -45,7 +45,7 @@ def _source_casilla_source_refs() -> dict[str, tuple[str, ...]]:
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD,
     )

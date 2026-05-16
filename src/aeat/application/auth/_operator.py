@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from ...core.config import Settings
+from ...core.errors import AeatError
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import clear_auth_acquisition_lock
 from ._actions import update_auth
@@ -72,24 +73,104 @@ def list_operator_auth_providers() -> AuthProvidersReport:
     return AuthProvidersReport(providers=list_auth_providers())
 
 
+class AuthConfigureNoActiveBucketError(AeatError):
+    """Raised when ``configure_operator_auth`` runs before an active profile bucket exists.
+
+    The bucket-event-history ADR requires every event to be scoped to a
+    bucket id. Provider configuration must happen after
+    ``aeat config init`` has activated a profile bucket; running before
+    that point would either leave a silent audit hole or require deferred
+    replay, both of which the ADR refuses. Surfacing the refusal here
+    keeps the bootstrap contract explicit at the CLI surface.
+    """
+
+
 def configure_operator_auth(provider: str, *, certificate_path: Path | None = None) -> AuthConfigureResult:
-    """Configure the active auth provider in workflow state."""
+    """Configure the active auth provider in workflow state.
+
+    Persists the workflow-state update and a typed
+    ``AUTH_PROVIDER_CONFIGURED`` event into the bucket-event-history
+    catalogue in a single SQL transaction (via
+    :meth:`SecureObjectRepository.save_many`), so a crash between the
+    two writes cannot leave the state mutated without the catalogue
+    event landing. The certificate path is recorded as a payload value
+    when supplied because it is a filesystem reference, not credential
+    material; certificate passwords, private keys, and session tokens
+    never enter the payload.
+
+    Raises:
+        AuthConfigureNoActiveBucketError: When no active profile bucket
+            exists yet. The operator must run ``aeat config init`` first.
+    """
+
+    from datetime import UTC, datetime
+
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+    from ..workflow._persistence import workflow_state_repository
 
     listing = _implemented_provider(provider)
 
-    from ..workflow._persistence import workflow_state_repository
-
-    workflow_state_repository().update(
-        lambda current: _append_bucket_event(
-            update_auth(
-                current,
-                provider=listing.id,
-                certificate_path=str(certificate_path) if certificate_path is not None else None,
-            ),
-            action="auth.provider.configured",
-            object_id=listing.id,
+    state_repo = workflow_state_repository()
+    current_state = state_repo.load()
+    if current_state.active_profile_bucket_id() is None:
+        raise AuthConfigureNoActiveBucketError(
+            "no active profile bucket; run `aeat config init` before configuring auth",
         )
+
+    next_state = _append_bucket_event(
+        update_auth(
+            current_state,
+            provider=listing.id,
+            certificate_path=str(certificate_path) if certificate_path is not None else None,
+        ),
+        action="auth.provider.configured",
+        object_id=listing.id,
     )
+    active_bucket_id = next_state.active_profile_bucket_id()
+    assert active_bucket_id is not None  # invariant: update_auth preserves the active profile
+
+    occurred_at = datetime.now(UTC)
+    payload: dict[str, str] = {"provider_id": listing.id}
+    if certificate_path is not None:
+        payload["certificate_path"] = str(certificate_path)
+    actor = "operator"
+    event_id = derive_bucket_event_id(
+        bucket_id=active_bucket_id,
+        event_type=BucketEventType.AUTH_PROVIDER_CONFIGURED,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=listing.id,
+        payload=payload,
+    )
+    catalogue_repo = BucketEventHistoryRepository()
+    next_catalogue = append_bucket_event(
+        catalogue_repo.load(),
+        BucketEvent(
+            event_id=event_id,
+            bucket_id=active_bucket_id,
+            event_type=BucketEventType.AUTH_PROVIDER_CONFIGURED,
+            occurred_at=occurred_at,
+            actor=actor,
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=listing.id,
+            payload_version=1,
+            payload=payload,
+        ),
+    )
+
+    state_write = state_repo.to_secure_object_write(next_state)
+    catalogue_write = catalogue_repo.to_secure_object_write(next_catalogue)
+    SecureObjectRepository().save_many((state_write, catalogue_write))
+
     return AuthConfigureResult(provider=listing.id, file=str(certificate_path) if certificate_path is not None else "")
 
 

@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...vat import (
     EUMemberState,
@@ -105,11 +105,35 @@ class RegistryFilingObservation(BaseModel):
     period: str = Field(min_length=1, max_length=8)
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
-    @computed_field  # type: ignore[prop-decorator]
     @property
     def casilla_values(self) -> Mapping[str, Decimal]:
-        """Read-only mapping view: casilla_id → Decimal derived from typed observations."""
+        """Read-only mapping view: casilla_id -> Decimal derived from typed observations.
+
+        Deliberately a plain ``@property`` and NOT a pydantic
+        ``computed_field``: the typed envelope (``observations``) is
+        canonical storage. Exposing this derived view in JSON would
+        round-trip self-incompatibly under ``extra='forbid'`` because
+        the loader would refuse the duplicate field on the way back in.
+        """
         return {obs.casilla_id: obs.value for obs in self.observations}
+
+
+class OracleFilingObservation(RegistryFilingObservation):
+    """Observed casilla values whose source is a live AEAT oracle adapter.
+
+    A subtype of :class:`RegistryFilingObservation` that marks the
+    observation tuple as oracle-originated rather than locally computed.
+    The ``oracle_id`` field anchors the observation to the
+    ``LiveCrossReferenceDecision`` that produced it, so the application
+    layer can route oracle-originated values through the
+    cross-reference policy (synthetic-payload verification, replay
+    quarantine, etc.) without ambiguity about provenance.
+
+    Distinct from the parent only by the typed ``oracle_id`` field;
+    every other invariant is inherited unchanged.
+    """
+
+    oracle_id: str = Field(min_length=1, max_length=128)
 
 
 class RegistryFilingObservationRequirement(BaseModel):
@@ -1303,7 +1327,14 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
     return resolved
 
 
-COUNTERPART_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
+CounterpartSourceKind = Literal[
+    "invoice",
+    "ledger_transaction",
+    "purchase_invoice_evidence",
+    "payable_invoice",
+    "collectible_invoice",
+]
+COUNTERPART_BINDING_SOURCE_KINDS: frozenset[CounterpartSourceKind] = frozenset(
     {"invoice", "ledger_transaction", "purchase_invoice_evidence", "payable_invoice", "collectible_invoice"}
 )
 
@@ -1317,7 +1348,7 @@ class CounterpartAggregationObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    source_kind: str = Field(default="ledger_transaction", min_length=1, max_length=64)
+    source_kind: CounterpartSourceKind = Field(default="ledger_transaction")
     source_id: str = Field(min_length=1, max_length=128)
     party_tax_id: str = Field(min_length=1, max_length=64)
     country_code: str = Field(min_length=2, max_length=2)

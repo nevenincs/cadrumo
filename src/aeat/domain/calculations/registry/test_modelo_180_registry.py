@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import (
     CasillaObservation,
@@ -22,7 +22,7 @@ from ._relations import relation_source_requirements, resolve_relation_values_fr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _load_modelo(modelo_id: str):
@@ -38,11 +38,11 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
 ) -> None:
     modelo, catalogues = _load_modelo("180")
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=filing_year,
         period=period,
     )
@@ -70,7 +70,7 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="0A",
     )
@@ -78,7 +78,7 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
     snapshot_115 = build_snapshot(
         modelo_115,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="1T",
     )
@@ -94,7 +94,7 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="0A",
     )
@@ -102,7 +102,7 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
     snapshot_115 = build_snapshot(
         modelo_115,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="1T",
     )
@@ -147,7 +147,7 @@ def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="0A",
     )

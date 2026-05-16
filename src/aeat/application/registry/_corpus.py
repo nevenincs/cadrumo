@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
-from typing import cast, get_args
+from typing import get_args
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -825,25 +825,38 @@ def _domain_manual_id(manual_id: RegistryManualId) -> ManualId:
 def _manual_rule_kind(kind: str | None) -> RuleKind | None:
     if kind is None:
         return None
+    match kind:
+        case "computation":
+            return "computation"
+        case "applicability":
+            return "applicability"
+        case "valuation":
+            return "valuation"
+        case "deductibility":
+            return "deductibility"
+        case "formal_obligation":
+            return "formal_obligation"
+        case "procedural":
+            return "procedural"
+        case "other":
+            return "other"
     allowed = tuple(str(value) for value in get_args(RuleKind))
-    if kind not in allowed:
-        _LOGGER.warning(
-            "registry.manuals.rules refused unknown rule kind",
-            extra={
-                "registry_service": "registry.manuals.rules",
-                "registry_rule_kind": kind,
-                "registry_allowed_rule_kinds": allowed,
-            },
-        )
-        raise RegistryApplicationInputError(
-            f"manual rule kind must be one of {allowed!r}; got {kind!r}",
-            context={
-                "registry_service": "registry.manuals.rules",
-                "rule_kind": kind,
-                "allowed_rule_kinds": allowed,
-            },
-        )
-    return cast(RuleKind, kind)
+    _LOGGER.warning(
+        "registry.manuals.rules refused unknown rule kind",
+        extra={
+            "registry_service": "registry.manuals.rules",
+            "registry_rule_kind": kind,
+            "registry_allowed_rule_kinds": allowed,
+        },
+    )
+    raise RegistryApplicationInputError(
+        f"manual rule kind must be one of {allowed!r}; got {kind!r}",
+        context={
+            "registry_service": "registry.manuals.rules",
+            "rule_kind": kind,
+            "allowed_rule_kinds": allowed,
+        },
+    )
 
 
 def _load_manual_manifest(
