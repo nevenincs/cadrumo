@@ -573,6 +573,15 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
     {"rectified_year", "rectified_period", "rectified_base_previous"}
 )
 
+# party_legal_name is optional on InvoiceObservation: the row-builder
+# omits it from the row dict when no observation in the bucket has a
+# non-None legal_name. A binding declaring row_field="party_legal_name"
+# therefore fails deterministically at runtime whenever its bucket has
+# only legal-name-absent observations. Reject it at snapshot-build so
+# the latent hazard cannot land via a TOML edit. Selector-binding-drift
+# audit F7.
+_OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset({"party_legal_name"})
+
 
 def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate an invoice-source binding before it reaches runtime."""
@@ -606,6 +615,11 @@ def _validate_invoice_fact_and_aggregation(binding: DataBindingDefinition, selec
         if selector.row_field is None:
             raise RegistryValidationError(
                 f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
+            )
+        if selector.row_field in _OPTIONAL_ONLY_INVOICE_ROW_FIELDS:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} row_field {selector.row_field!r} is optional on the underlying "
+                f"observation and cannot be required by a row-producer binding"
             )
         if selector.grouping is None:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")

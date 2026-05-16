@@ -27,7 +27,9 @@ import pytest
 from ._bindings import (
     _BINDING_SELECTOR_REGISTRY,
     validate_binding_selector_shape,
+    validate_invoice_binding_definition,
 )
+from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -204,6 +206,31 @@ def test_invoice_selector_accepts_well_shaped_selector() -> None:
         },
     )
     assert validate_binding_selector_shape(binding) == []
+
+
+def test_invoice_row_field_party_legal_name_rejected_at_snapshot_build() -> None:
+    """An invoice row-producer binding cannot declare an optional-only row field.
+
+    ``party_legal_name`` is optional on ``InvoiceObservation``; the
+    row-builder omits the key from the row dict when no observation in
+    the bucket carries a legal name. A binding declaring
+    ``row_field = "party_legal_name"`` would therefore fail
+    deterministically at runtime whenever its bucket has only
+    legal-name-absent observations. The snapshot-build invariant must
+    reject this shape (selector-binding-drift audit F7).
+    """
+
+    binding = _binding(
+        source="invoice",
+        selector={
+            "fact": "row_field",
+            "row_field": "party_legal_name",
+            "grouping": "operator_clave",
+        },
+    )
+    binding = binding.model_copy(update={"aggregation": {"op": "rows"}})
+    with pytest.raises(RegistryValidationError, match="party_legal_name"):
+        validate_invoice_binding_definition(binding)
 
 
 def test_free_form_source_returns_no_diagnostics() -> None:
