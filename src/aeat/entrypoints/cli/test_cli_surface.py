@@ -18,6 +18,7 @@ import json
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -180,198 +181,206 @@ def test_app_ledger_import_dry_run_does_not_persist(
     assert json.loads(after.output)["transactions"] == 0
 
 
+def _run_ledger_cli_json(args: list[str]) -> dict[str, object]:
+    """Invoke the CLI with ``--format json`` prefixed, assert exit-0, return parsed JSON."""
+    result = _invoke(["--format", "json", *args])
+    assert result.exit_code == 0, result.output
+    return cast(dict[str, object], json.loads(result.output))
+
+
+def _ledger_add_manual_transaction() -> dict[str, object]:
+    """Create the seed manual transaction the rest of the workflow operates on."""
+    payload = _run_ledger_cli_json(
+        [
+            "app", "ledger", "add",
+            "--date", "2026-05-02",
+            "--amount", "-121.00",
+            "--direction", "OUTGOING",
+            "--description", "cash office supplies",
+            "--counterparty", "Proveedor SL",
+            "--classification", "BUSINESS",
+            "--category-id", "office-supplies",
+            "--taxable-base", "100.00",
+            "--iva-rate", "0.21",
+            "--iva-amount", "21.00",
+            "--idempotency-key", "cash-office-2026-05-02",
+        ]
+    )
+    assert payload["bucket_id"] == "operator"
+    assert len(cast(str, payload["transaction_id"])) == 64
+    transaction = cast(dict[str, object], payload["transaction"])
+    assert transaction["business_classification"] == "BUSINESS"
+    assert transaction["taxable_base"] == "100"
+    assert transaction["iva_rate"] == "0.21"
+    assert payload["bucket_event_ids"]
+    return payload
+
+
+def _ledger_list_and_view(transaction_id: str) -> None:
+    """The list verb returns the seed row, the view verb returns its full record."""
+    listed = _run_ledger_cli_json(["app", "ledger", "list"])
+    assert listed["bucket_id"] == "operator"
+    rows = cast(list[dict[str, object]], listed["rows"])
+    assert [row["transaction_id"] for row in rows] == [transaction_id]
+    assert rows[0]["review_status"] == "reviewed"
+
+    read = _run_ledger_cli_json(["app", "ledger", "view", transaction_id])
+    assert read["bucket_id"] == "operator"
+    assert read["transaction_id"] == transaction_id
+    assert read["review_status"] == "reviewed"
+    transaction = cast(dict[str, object], read["transaction"])
+    assert transaction["description"] == "cash office supplies"
+
+
+def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
+    """Update the seed transaction's amount + description; assert the diff."""
+    edited = _run_ledger_cli_json(
+        [
+            "app", "ledger", "update",
+            "--id", transaction_id,
+            "--amount", "-121.50",
+            "--direction", "OUTGOING",
+            "--description", "cash office supplies corrected",
+        ]
+    )
+    transaction = cast(dict[str, object], edited["transaction"])
+    assert Decimal(cast(str, transaction["amount"])) == Decimal("-121.50")
+    assert transaction["description"] == "cash office supplies corrected"
+    assert edited["bucket_event_ids"]
+    return edited
+
+
+def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
+    """Re-classify the updated transaction; verify BUSINESS + new category id."""
+    classified = _run_ledger_cli_json(
+        [
+            "app", "ledger", "classify",
+            "--id", transaction_id,
+            "--classification", "BUSINESS",
+            "--category-id", "office-supplies-adjusted",
+            "--taxable-base", "100.00",
+            "--iva-rate", "0.21",
+            "--iva-amount", "21.00",
+        ]
+    )
+    transaction = cast(dict[str, object], classified["transaction"])
+    assert transaction["business_classification"] == "BUSINESS"
+    assert transaction["category_id"] == "office-supplies-adjusted"
+    assert classified["review_status"] == "reviewed"
+    return classified
+
+
+def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
+    """Persist a usage-ratio profile so the next allocate verb can resolve TELEFONIA_MOVIL."""
+    from aeat.domain.categories import SpendingCategory
+    from aeat.domain.usage_ratios import UsageRatioProfile, save_usage_ratios
+
+    save_usage_ratios(
+        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")}),
+        bucket_id=bucket_id,
+    )
+
+
+def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
+    """Allocate a usage ratio to the transaction; verify MIXED classification + pct."""
+    allocated = _run_ledger_cli_json(
+        [
+            "app", "ledger", "allocate",
+            "--id", transaction_id,
+            "--business-pct", "0.60",
+            "--category-id", "telefonia_movil",
+            "--usage-ratio-id", "telefonia_movil",
+        ]
+    )
+    transaction = cast(dict[str, object], allocated["transaction"])
+    assert transaction["business_classification"] == "MIXED"
+    assert Decimal(cast(str, transaction["business_pct"])) == Decimal("0.60")
+    assert transaction["usage_ratio_id"] == "telefonia_movil"
+    return allocated
+
+
+def _assert_ledger_status_one_ready_row() -> None:
+    """After one reviewed transaction the status verb reports a single ready row."""
+    status = _run_ledger_cli_json(["app", "ledger", "status", "--period", "2026-05"])
+    assert status["bucket_id"] == "operator"
+    assert status["total_count"] == 1
+    assert status["active_count"] == 1
+    assert status["reviewed_count"] == 1
+    assert status["pending_review_count"] == 0
+    assert status["checked_transaction_count"] == 1
+    assert status["readiness_issue_count"] == 0
+    assert status["ready"] is True
+
+
+def _assert_ledger_track_returns_lineage(
+    transaction_id: str,
+    *,
+    expected_created_event_id: str,
+) -> None:
+    """The track verb returns the transaction body plus its lineage triple."""
+    tracked = _run_ledger_cli_json(["app", "ledger", "track", transaction_id])
+    assert tracked["bucket_id"] == "operator"
+    transaction = cast(dict[str, object], tracked["transaction"])
+    assert transaction["transaction_id"] == transaction_id
+    tracking = cast(dict[str, object], tracked["tracking"])
+    assert tracking["created_event_id"] == expected_created_event_id
+    assert tracking["edit_lineage"]
+    assert tracking["lifecycle_lineage"] == []
+
+
+def _assert_ledger_review_returns_transaction(transaction_id: str) -> None:
+    """The review verb returns the transaction by id with the post-update description."""
+    reviewed = _run_ledger_cli_json(["app", "ledger", "review", "--id", transaction_id])
+    assert reviewed["id"] == transaction_id
+    assert reviewed["description"] == "cash office supplies corrected"
+    assert reviewed["review_status"] == "reviewed"
+
+
+def _assert_ledger_review_filtered_by_period_returns_empty(transaction_id: str) -> None:
+    """Review with a period filter that doesn't match returns an empty rows list."""
+    filtered_out = _run_ledger_cli_json(
+        ["app", "ledger", "review", "--id", transaction_id, "--filter", "period=2026-06"]
+    )
+    assert filtered_out == {"rows": [], "filters": ["period=2026-06", f"id={transaction_id}"]}
+
+
 def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    """End-to-end ledger CLI flow: add → list/view → update → classify → allocate → status → track → review.
+
+    Each step is a small helper that owns its CLI invocation, JSON
+    parsing, and the assertions specific to that step. The test body
+    reads as a linear narrative of the workflow with the
+    transaction-id and intermediate payloads threaded through.
+    """
     _isolate(monkeypatch, tmp_path)
     init = _invoke(
         ["config", "init", "--quiet", "--profile", "operator", "--tax-id", "12345678Z", "--activity", "Test"]
     )
     assert init.exit_code == 0, init.output
 
-    created = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2026-05-02",
-            "--amount",
-            "-121.00",
-            "--direction",
-            "OUTGOING",
-            "--description",
-            "cash office supplies",
-            "--counterparty",
-            "Proveedor SL",
-            "--classification",
-            "BUSINESS",
-            "--category-id",
-            "office-supplies",
-            "--taxable-base",
-            "100.00",
-            "--iva-rate",
-            "0.21",
-            "--iva-amount",
-            "21.00",
-            "--idempotency-key",
-            "cash-office-2026-05-02",
-        ]
-    )
+    created = _ledger_add_manual_transaction()
+    transaction_id = cast(str, created["transaction_id"])
+    created_event_id = cast(list[str], created["bucket_event_ids"])[0]
 
-    assert created.exit_code == 0, created.output
-    payload = json.loads(created.output)
-    assert payload["bucket_id"] == "operator"
-    assert len(payload["transaction_id"]) == 64
-    assert payload["transaction"]["business_classification"] == "BUSINESS"
-    assert payload["transaction"]["taxable_base"] == "100"
-    assert payload["transaction"]["iva_rate"] == "0.21"
-    assert payload["bucket_event_ids"]
-
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    listed_payload = json.loads(listed.output)
-    assert listed_payload["bucket_id"] == "operator"
-    assert [row["transaction_id"] for row in listed_payload["rows"]] == [payload["transaction_id"]]
-    assert listed_payload["rows"][0]["review_status"] == "reviewed"
-
-    read = _invoke(["--format", "json", "app", "ledger", "view", payload["transaction_id"]])
-    assert read.exit_code == 0, read.output
-    read_payload = json.loads(read.output)
-    assert read_payload["bucket_id"] == "operator"
-    assert read_payload["transaction_id"] == payload["transaction_id"]
-    assert read_payload["review_status"] == "reviewed"
-    assert read_payload["transaction"]["description"] == "cash office supplies"
-
-    edited = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "update",
-            "--id",
-            payload["transaction_id"],
-            "--amount",
-            "-121.50",
-            "--direction",
-            "OUTGOING",
-            "--description",
-            "cash office supplies corrected",
-        ]
-    )
-    assert edited.exit_code == 0, edited.output
-    edited_payload = json.loads(edited.output)
-    assert Decimal(edited_payload["transaction"]["amount"]) == Decimal("-121.50")
-    assert edited_payload["transaction"]["description"] == "cash office supplies corrected"
-    assert edited_payload["bucket_event_ids"]
-
-    classified = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "classify",
-            "--id",
-            edited_payload["transaction_id"],
-            "--classification",
-            "BUSINESS",
-            "--category-id",
-            "office-supplies-adjusted",
-            "--taxable-base",
-            "100.00",
-            "--iva-rate",
-            "0.21",
-            "--iva-amount",
-            "21.00",
-        ]
-    )
-    assert classified.exit_code == 0, classified.output
-    classified_payload = json.loads(classified.output)
-    assert classified_payload["transaction"]["business_classification"] == "BUSINESS"
-    assert classified_payload["transaction"]["category_id"] == "office-supplies-adjusted"
-    assert classified_payload["review_status"] == "reviewed"
-
-    from aeat.domain.categories import SpendingCategory
-    from aeat.domain.usage_ratios import UsageRatioProfile, save_usage_ratios
-
-    save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")}),
-        bucket_id="operator",
-    )
-    allocated = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "allocate",
-            "--id",
-            classified_payload["transaction_id"],
-            "--business-pct",
-            "0.60",
-            "--category-id",
-            "telefonia_movil",
-            "--usage-ratio-id",
-            "telefonia_movil",
-        ]
-    )
-    assert allocated.exit_code == 0, allocated.output
-    allocated_payload = json.loads(allocated.output)
-    assert allocated_payload["transaction"]["business_classification"] == "MIXED"
-    assert Decimal(allocated_payload["transaction"]["business_pct"]) == Decimal("0.60")
-    assert allocated_payload["transaction"]["usage_ratio_id"] == "telefonia_movil"
-
-    status = _invoke(["--format", "json", "app", "ledger", "status", "--period", "2026-05"])
-    assert status.exit_code == 0, status.output
-    status_payload = json.loads(status.output)
-    assert status_payload["bucket_id"] == "operator"
-    assert status_payload["total_count"] == 1
-    assert status_payload["active_count"] == 1
-    assert status_payload["reviewed_count"] == 1
-    assert status_payload["pending_review_count"] == 0
-    assert status_payload["checked_transaction_count"] == 1
-    assert status_payload["readiness_issue_count"] == 0
-    assert status_payload["ready"] is True
-
-    tracked = _invoke(["--format", "json", "app", "ledger", "track", allocated_payload["transaction_id"]])
-    assert tracked.exit_code == 0, tracked.output
-    tracked_payload = json.loads(tracked.output)
-    assert tracked_payload["bucket_id"] == "operator"
-    assert tracked_payload["transaction"]["transaction_id"] == allocated_payload["transaction_id"]
-    assert tracked_payload["tracking"]["created_event_id"] == payload["bucket_event_ids"][0]
-    assert tracked_payload["tracking"]["edit_lineage"]
-    assert tracked_payload["tracking"]["lifecycle_lineage"] == []
-
-    reviewed = _invoke(["--format", "json", "app", "ledger", "review", "--id", allocated_payload["transaction_id"]])
-    assert reviewed.exit_code == 0, reviewed.output
-    reviewed_payload = json.loads(reviewed.output)
-    assert reviewed_payload["id"] == allocated_payload["transaction_id"]
-    assert reviewed_payload["description"] == "cash office supplies corrected"
-    assert reviewed_payload["review_status"] == "reviewed"
-
-    filtered_out = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "review",
-            "--id",
-            allocated_payload["transaction_id"],
-            "--filter",
-            "period=2026-06",
-        ]
-    )
-    assert filtered_out.exit_code == 0, filtered_out.output
-    assert json.loads(filtered_out.output) == {
-        "rows": [],
-        "filters": ["period=2026-06", f"id={allocated_payload['transaction_id']}"],
-    }
+    _ledger_list_and_view(transaction_id)
+    # Each downstream verb may rewrite the transaction id because the
+    # ledger row is content-addressed (changing amount/category changes
+    # the SHA). Re-thread the new id between steps so the verb chain
+    # tracks the same logical row.
+    edited = _ledger_update_transaction(transaction_id)
+    transaction_id = cast(str, edited["transaction_id"])
+    classified = _ledger_classify_transaction(transaction_id)
+    transaction_id = cast(str, classified["transaction_id"])
+    _seed_usage_ratio_for_telefonia(bucket_id="operator")
+    allocated = _ledger_allocate_transaction(transaction_id)
+    transaction_id = cast(str, allocated["transaction_id"])
+    _assert_ledger_status_one_ready_row()
+    _assert_ledger_track_returns_lineage(transaction_id, expected_created_event_id=created_event_id)
+    _assert_ledger_review_returns_transaction(transaction_id)
+    _assert_ledger_review_filtered_by_period_returns_empty(transaction_id)
 
 
 def test_app_ledger_lifecycle_attach_remove_reset_and_export_use_backend_bucket(
