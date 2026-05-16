@@ -282,6 +282,17 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
+      reconcile:
+        errors:
+          exclusive_source: --from-justificante and --from-declaration are mutually
+            exclusive.
+          missing_source: Supply --from-justificante PATH or --from-declaration PATH.
+        from_declaration_help: Path to the filed declaration PDF to reconcile against
+          (reserved; parser pending).
+        from_justificante_help: Path to the AEAT justificante PDF to reconcile against.
+        help: Reconcile a modelo work unit against external evidence (justificante PDF).
+          Local-only; never contacts AEAT.
+        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation

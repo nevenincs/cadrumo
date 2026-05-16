@@ -218,11 +218,12 @@ cli:
       audit:
         bundle_id_help: Identificador del paquet d'evidència (SHA-256 complet o prefix
           inequívoc).
-        check_help: Reverificar un paquet d'evidència recalculant els digests dels registres.
-        export_help: Generar un fitxer ZIP determinista del paquet d'evidència
-          (manifest.json s'escriu l'últim).
-        force_incomplete_help: Permetre l'exportació quan la verificació indiqui que el
-          paquet és incomplet.
+        check_help: Reverificar un paquet d'evidència recalculant els digests dels
+          registres.
+        export_help: Generar un fitxer ZIP determinista del paquet d'evidència (manifest.json
+          s'escriu l'últim).
+        force_incomplete_help: Permetre l'exportació quan la verificació indiqui que
+          el paquet és incomplet.
         group_help: Verbs d'auditoria del paquet d'evidència (show/check/export/replay).
         output_help: Ruta de sortida per al ZIP del paquet.
         replay_help: Reproduir la verificació del cas d'evidència per al lliurament
@@ -286,6 +287,18 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
+      reconcile:
+        errors:
+          exclusive_source: --from-justificante i --from-declaration són mútuament
+            excloents.
+          missing_source: Indica --from-justificante RUTA o --from-declaration RUTA.
+        from_declaration_help: Ruta al PDF de la declaració presentada per reconciliar
+          (reservat; parser pendent).
+        from_justificante_help: Ruta al PDF del justificant AEAT per reconciliar.
+        help: Reconciliar una unitat de treball de modelo amb evidència externa (PDF
+          de justificant). Local; mai contacta amb AEAT.
+        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
+          inequívoc).
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per

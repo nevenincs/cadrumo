@@ -229,16 +229,16 @@ cli:
       audit:
         bundle_id_help: Identificador del paquete de evidencia (SHA-256 completo o
           prefijo inequívoco).
-        check_help: Reverificar un paquete de evidencia recalculando los digests de los
-          registros.
+        check_help: Reverificar un paquete de evidencia recalculando los digests de
+          los registros.
         export_help: Generar un archivo ZIP determinista del paquete de evidencia
           (manifest.json se escribe el último).
-        force_incomplete_help: Permitir la exportación cuando la verificación señale el
-          paquete como incompleto.
+        force_incomplete_help: Permitir la exportación cuando la verificación señale
+          el paquete como incompleto.
         group_help: Verbos de auditoría del paquete de evidencia (show/check/export/replay).
         output_help: Ruta de salida para el ZIP del paquete.
-        replay_help: Reproducir la verificación del caso de evidencia para entrega forense;
-          nunca contacta con AEAT ni realiza envíos.
+        replay_help: Reproducir la verificación del caso de evidencia para entrega
+          forense; nunca contacta con AEAT ni realiza envíos.
         show_help: Mostrar el manifiesto y los registros referenciados de un paquete
           de evidencia
       bindings:
@@ -304,6 +304,18 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
+      reconcile:
+        errors:
+          exclusive_source: --from-justificante y --from-declaration son mutuamente
+            excluyentes.
+          missing_source: Indica --from-justificante RUTA o --from-declaration RUTA.
+        from_declaration_help: Ruta al PDF de la declaración presentada para reconciliar
+          (reservado; parser pendiente).
+        from_justificante_help: Ruta al PDF del justificante AEAT para reconciliar.
+        help: Reconciliar una unidad de trabajo de modelo con evidencia externa (PDF
+          de justificante). Local; nunca contacta con AEAT.
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
+          inequívoco).
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
