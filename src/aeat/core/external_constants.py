@@ -12,11 +12,10 @@ from __future__ import annotations
 
 import tomllib
 from functools import lru_cache
+from importlib.resources import files
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
-
-_DEFAULT_TOML_PATH = Path(__file__).resolve().parent / "external_constants.toml"
 
 
 class _Frozen(BaseModel):
@@ -108,10 +107,16 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
     """Return the parsed external-constants registry.
 
     Cached per-process; the first call reads and validates
-    ``external_constants.toml`` from the package directory.
+    ``external_constants.toml`` from the package directory via
+    ``importlib.resources`` so the resolution path is identical
+    under editable installs and built wheels.
     """
 
-    target = path or _DEFAULT_TOML_PATH
-    with target.open("rb") as handle:
-        payload = tomllib.load(handle)
+    if path is not None:
+        with path.open("rb") as handle:
+            payload = tomllib.load(handle)
+    else:
+        payload = tomllib.loads(
+            files(__package__).joinpath("external_constants.toml").read_text(encoding="utf-8")
+        )
     return ExternalConstants.model_validate(payload)
