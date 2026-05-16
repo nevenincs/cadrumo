@@ -64,6 +64,14 @@ class OperatorEdit(BaseModel):
     pull adapter from the workbook's column metadata. They are not part of
     the canonical :class:`OperatorInput` contract; use
     :meth:`to_operator_input` to project this shape onto the canonical one.
+
+    ``value`` mirrors the cell's raw shape from Google Sheets. The union
+    is intentionally ambiguous between Decimal and numeric-shaped str
+    because the wire JSON representation cannot statically distinguish
+    them (pydantic serialises Decimal as a JSON string). The runtime
+    path in :func:`compute_from_pull` is what disambiguates via
+    :func:`_coerce_edit_value_to_decimal` for numeric input casillas and
+    :func:`_enum_binding_text` for enum bindings.
     """
 
     model_config = _STRICT_FROZEN
@@ -79,7 +87,15 @@ class OperatorEdit(BaseModel):
 
 
 class BindingEdit(BaseModel):
-    """One operator-edited binding cell value (numeric or enum)."""
+    """One operator-edited binding cell value (numeric or enum).
+
+    Same union-ambiguity reasoning as :class:`OperatorEdit.value` —
+    the wire JSON cannot statically distinguish a CCAA-shape ``"04"``
+    from a numeric ``Decimal("4")``. The runtime dispatch in
+    :func:`compute_from_pull` is what routes the value: enum bindings
+    go through :func:`_enum_binding_text` and numeric bindings go
+    through :func:`_coerce_edit_value_to_decimal`.
+    """
 
     model_config = _STRICT_FROZEN
 
