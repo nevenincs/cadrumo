@@ -49,19 +49,20 @@ def _production_files() -> list[Path]:
 
 _PENDING_RETIREMENT_ALLOWLIST = frozenset(
     {
-        # Files that still ship a legacy _DEFAULT_*_ROOT constant
-        # because their loader's retirement is scheduled for P09 of
-        # the resource-management-api migration. The allow-list is
-        # ratchet-only: a file removed from here cannot be re-added
-        # without explicit ADR amendment.
-        Path("src/aeat/domain/categories/_registry.py"),
-        Path("src/aeat/domain/deadlines/_engine.py"),
-        Path("src/aeat/domain/vat/_catalogue.py"),
         # CLI typer.Option defaults need a stable Path at module-
         # import time; bundled_path is the canonical boundary for
-        # this purpose and the file would still appear in the scan.
+        # this purpose. The constants live in the CLI layer only.
         Path("src/aeat/entrypoints/cli/_app_live.py"),
         Path("src/aeat/entrypoints/cli/registry.py"),
+        # _DEFAULT_PROFILE_ROOT in categories/_registry survives
+        # because its loader (load_category_profile_registry)
+        # is part of a different cleanup pass; the audit captures
+        # this as deferred.
+        Path("src/aeat/domain/categories/_registry.py"),
+        # _DEFAULT_REGISTRY_ROOT / _DEFAULT_SOURCE_ROOT in
+        # deadlines/_engine survive because DeadlineEngine's
+        # constructor takes them as optional arguments.
+        Path("src/aeat/domain/deadlines/_engine.py"),
     }
 )
 
