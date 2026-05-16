@@ -90,7 +90,7 @@ Mint the operator-facing service plus the bucket-event and error machinery.
 
 Wire the CENSUS_STALE flag and refusal contract through every service that consumes census-derived facts.
 
-- [ ] `P05.S43` - add census_stamped_stale_at and census_stale_reason fields to WorkUnit; `src/aeat/domain/modelos/_work_unit.py`.
+- [x] `P05.S43` - add census_stamped_stale_at and census_stale_reason fields to WorkUnit; `src/aeat/domain/modelos/_work_unit.py`.
 - [ ] `P05.S44` - add the same fields to CalculationRevision; `src/aeat/domain/modelos/_calculation_revision.py`.
 - [ ] `P05.S45` - add the same fields to FilingDraft; `src/aeat/domain/filing/_draft.py`.
 - [ ] `P05.S46` - add the same fields to FilingRecord; `src/aeat/domain/modelos/_filing_record.py`.
