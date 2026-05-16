@@ -341,10 +341,19 @@ class _PreviousFilingSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_source_spec(self) -> _PreviousFilingSelector:
-        if bool(self.source_casillas) == bool(self.source_output):
+        # Three legal shapes:
+        # (a) ``source_casillas`` only — direct aggregation over
+        #     declared casillas on the source filing.
+        # (b) ``source_output`` (+ optional ``relation``) — single
+        #     casilla on the source filing, copy or relation-routed.
+        # (c) neither — a relation-only binding where the linked
+        #     ``RelationDefinition`` carries the source-output
+        #     contract (period_alignment, source_periods, etc.).
+        # Shape (c) bindings have ``source_modelo`` set but defer to
+        # the relation declaration for the rest.
+        if self.source_casillas and self.source_output is not None:
             raise RegistryValidationError(
-                "previous-filing selector must declare exactly one of source_casillas (aggregation) "
-                "or source_output (direct value copy)"
+                "previous-filing selector cannot declare both source_casillas and source_output"
             )
         if self.relation is not None and self.source_output is None:
             raise RegistryValidationError(
@@ -2371,7 +2380,7 @@ def resolve_refund_binding_row_values(
     return resolved
 
 
-_ManualInputDataType = Literal["boolean", "integer", "text", "decimal"]
+_ManualInputDataType = Literal["boolean", "integer", "text", "decimal", "money"]
 
 
 class _ProfileSelector(BaseModel):
@@ -2579,6 +2588,14 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     diagnostic strings rather than raised so the snapshot-build gate
     can accumulate every failure across a revision in one pass.
 
+    The selector is projected through :func:`_selector_as_dict` before
+    validation so the gate sees the SAME normalised mapping the
+    handler-call-time helpers see. Without this projection the gate
+    would reject any registry binding whose loaded selector still
+    carries the (test-injected or legacy) ``source`` key, while the
+    handler would accept it — a stricter-than-runtime drift the
+    audit caught.
+
     Sources NOT in the registry are intentionally free-form today;
     those bindings short-circuit with an empty failure list.
     """
@@ -2587,7 +2604,7 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     if selector_model is None:
         return []
     try:
-        selector_model.model_validate(binding.selector)
+        selector_model.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         return [
             f"binding {binding.id!r} (source={binding.source!r}) "

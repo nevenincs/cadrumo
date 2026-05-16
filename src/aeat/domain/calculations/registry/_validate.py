@@ -218,6 +218,22 @@ class RegistryValidator:
             failures.extend(self._validate_relation_closure(modelo_tuple, modelos_by_id))
             failures.extend(self._validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
 
+        # Per-source selector-shape gate at registry-tree validation
+        # level. Without this loop, callers that exercise
+        # ``validate_registry`` directly (rather than going through
+        # ``_build_validated_snapshot``) would skip the discriminator
+        # check entirely. Audit finding F4 on selector-binding drift.
+        from ._bindings import validate_binding_selector_shape
+
+        for modelo in modelo_tuple:
+            for revision in modelo.revisions.values():
+                prefix = f"modelo {modelo.id} revision {revision.id}"
+                for binding in revision.bindings:
+                    failures.extend(
+                        f"{prefix}: {fail}"
+                        for fail in validate_binding_selector_shape(binding)
+                    )
+
         if failures:
             _REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, tuple(failures))
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
