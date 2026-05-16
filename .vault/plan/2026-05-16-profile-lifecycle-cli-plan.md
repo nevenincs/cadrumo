@@ -1,192 +1,250 @@
 ---
 tags:
-  - '#plan'
-  - '#profile-lifecycle-cli'
-date: '2026-05-16'
+  - "#plan"
+  - "#profile-lifecycle-cli"
+date: "2026-05-16"
 tier: L2
 related:
-  - '[[2026-05-16-profile-lifecycle-cli-adr]]'
-  - '[[2026-05-16-profile-lifecycle-cli-research]]'
-  - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]'
-  - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
-  - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'
+  - "[[2026-05-16-profile-lifecycle-cli-adr]]"
+  - "[[2026-05-16-profile-lifecycle-cli-research]]"
+  - "[[2026-05-14-profile-bucket-lifecycle-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
+  - "[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]"
+  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `profile-lifecycle-cli` plan
 
-### Phase `P01` - typed identity primitives and `"default"` retirement
+Reality-grounded replan after a six-agent codebase audit. The May-14
+profile-bucket lifecycle ADR's architectural primitives are already
+shipped under `src/aeat/adapters/persistence/storage/`:
+`BucketSession`, per-bucket directory layout, per-bucket lockfile,
+manifest with KDF params, keystore separation, plaintext pointer
+file IO. None of these need creating. Two parallel chains coexist:
+the new infrastructure is built but not yet wired into the live
+crypto / active-profile resolution path, and the operator CLI
+surface still exposes the cryptic verbs (`init`, `use`, `duplicate`,
+`remove`, `view`, `status`, `validate`, `preflight`) the
+2026-05-16 ADR retires.
 
-Introduce the typed primitives downstream phases will use and
-delete the hard-coded `"default"` profile name. There is no
-`DEFAULT_PROFILE_NAME` constant - `create NAME` always requires
-an operator-typed name, so the literal disappears entirely.
+This plan is therefore a **cutover** plus a **CLI surface
+rename + four missing verbs**, not a build. P01 closed in commit
+`5fe2e2ca` (typed `ProfileName` / `BucketId` aliases). Subsequent
+phases wire the shipped foundation into the live path, retire
+zombie state, rename / merge / extend the CLI verbs, drift-fix the
+persistence boundary, and close the gate.
 
-- [x] `P01.S01` - create the `ProfileName` typed alias with kebab-case validation; `src/aeat/domain/profile/_constants.py`.
-- [x] `P01.S02` - create the `BucketId` typed alias (internal storage-layer identifier, never operator-facing); `src/aeat/domain/bucket/_constants.py`.
-- [x] `P01.S03` - export the new profile module from the domain package; `src/aeat/domain/profile/__init__.py`.
-- [x] `P01.S04` - export the new bucket module from the domain package; `src/aeat/domain/bucket/__init__.py`.
-- [ ] `P01.S05` - delete the `"default"` literal in the wizard command builder; `src/aeat/application/wizard/_commands.py`.
-- [ ] `P01.S06` - delete the `"default"` literal in the wizard persistence handler; `src/aeat/application/wizard/_persistence.py`.
-- [ ] `P01.S07` - delete the `"default"` literal in the workflow-state default factory; `src/aeat/application/workflow/_models.py`.
-- [ ] `P01.S08` - delete the `"default"` literal in the setup service bootstrap; `src/aeat/application/setup/_service.py`.
-- [ ] `P01.S09` - sweep and delete remaining `"default"` profile-name literal callers; `src/aeat`.
-- [x] `P01.S10` - add unit tests asserting `ProfileName` rejects empty, whitespace, and non-kebab inputs; `src/aeat/domain/profile/test_constants.py`.
-- [x] `P01.S11` - add unit tests asserting `BucketId` rejects empty, whitespace, and non-kebab inputs; `src/aeat/domain/bucket/test_constants.py`.
+## Proposed Changes
 
-### Phase `P02` - storage layout foundation
+P02 cuts the active-profile resolution path over to the shipped
+pointer-file infrastructure (renaming `active-bucket` →
+`active-profile` along the way), removes the zombie
+`Settings.aeat_default_profile_name`, removes
+`WorkflowState.active_profile` and updates every consumer, and
+deletes the `"default"` literal in the wizard now that the
+foundation supports name-required creation. P03 rewires the live
+crypto decrypt path to consume `BucketSession`-held key material
+and removes the ClassVar caches in `_master_key.py`. P04 closes
+the five still-live persistence-boundary findings (the manifest
+write-order finding is already resolved). P05 renames the CLI
+verbs to plain English and merges overlapping ones; the
+operator-facing names land alongside the deletions of their
+predecessors. P06 adds the four genuinely missing operator verbs
+(`rename`, `edit`, `export`, `import`, `logout`) plus the three
+absent typed errors, and replaces `duplicate` with
+`create --copy-from`. P07 removes the Google adapter's `--profile`
+overrides and regenerates the four locale catalogues. P08 retires
+the dev-shaped `repair list NAMESPACE` to `aeat.diagnostics` and
+runs the full gate.
 
-Land the May-14 ADR's per-profile directory layout, the plaintext
-active-profile pointer file with precedence chain, and the legacy
-`var/` refusal. No CLI surface change in this phase; the
-foundation must hold before the operator verbs wire onto it.
+The single-cut mandate holds: every Step that deletes a shipped
+verb lands its replacement in the same commit. No shims, no
+aliases, no parallel modules. Originals get augmented; duplicates
+do not exist.
 
-- [ ] `P02.S12` - rename `ProfileBucketPointer` to `BucketPointer` and collapse the `profile_id` / `bucket_id` aliasing; `src/aeat/application/workflow/_models.py`.
-- [ ] `P02.S13` - delete `WorkflowState.active_profile` field; `src/aeat/application/workflow/_models.py`.
-- [ ] `P02.S14` - delete `Settings.aeat_default_profile_name`; `src/aeat/application/_settings.py`.
-- [ ] `P02.S15` - introduce the `<aeat-root>/active-profile` plaintext pointer file reader and writer; `src/aeat/application/profile/_active_pointer.py`.
-- [ ] `P02.S16` - implement the active-profile precedence chain (`--profile` flag, `AEAT_ACTIVE_PROFILE` env, pointer file); `src/aeat/application/profile/_active_pointer.py`.
-- [ ] `P02.S17` - introduce `NoActiveProfileError` typed error with operator-facing message; `src/aeat/application/profile/_errors.py`.
-- [ ] `P02.S18` - introduce `LegacyLayoutDetectedError` typed error refusing legacy `var/` on startup; `src/aeat/application/profile/_errors.py`.
-- [ ] `P02.S19` - register the new error codes in the central registry; `src/aeat/core/errors/_registry.py`.
-- [ ] `P02.S20` - provision per-profile directory layout under `<aeat-root>/buckets/<bucket-id>/{db,blobs,audit}/` in the lifecycle service; `src/aeat/application/setup/_service.py`.
-- [ ] `P02.S21` - add the legacy-layout refusal check on startup; `src/aeat/application/_bootstrap.py`.
-- [ ] `P02.S22` - add tests for the active-profile precedence chain across all three sources; `src/aeat/application/profile/test_active_pointer.py`.
-- [ ] `P02.S23` - add tests for the legacy-layout refusal path; `src/aeat/application/test_bootstrap_legacy_refusal.py`.
+## Steps
 
-### Phase `P03` - session lifecycle and adapter re-keying
+### Phase `P01` - typed identity primitives (DONE)
 
-Replace ClassVar caches with the in-memory `BucketSession`,
-implement explicit teardown on switch / logout / exit, and re-key
-every auth and google adapter that read the active profile from
-removed surfaces.
+P01 closed in commit `5fe2e2ca` with `ProfileName` and `BucketId`
+aliases under `src/aeat/domain/profile/_constants.py` and
+`src/aeat/domain/buckets/_constants.py` (promoted from a
+module-private `_BucketId`). All P01 steps below remain in the
+plan body for historical traceability; the literal-`"default"`
+sweep (S05 - S09) was deferred into P02 because removing the
+literal without the foundation-replacement breaks callers.
 
-- [ ] `P03.S24` - introduce the `BucketSession` object holding the KEK, SQLAlchemy engine, storage adapter providers; `src/aeat/application/profile/_session.py`.
-- [ ] `P03.S25` - remove the `KeyringMasterKeyProvider._cache` ClassVar; `replace with `BucketSession`-scoped state; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P03.S26` - remove the `FileFallbackMasterKeyProvider._cached_passphrase` / `_cached_master_key` ClassVars; `replace with session-scoped state; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P03.S27` - replace the module-level SQLAlchemy engine singleton with a session-owned engine registry; `src/aeat/adapters/persistence/storage/sql/_engine.py`.
-- [ ] `P03.S28` - add the per-profile filesystem lockfile acquisition / release at `<aeat-root>/buckets/<bucket-id>/.lock`; `src/aeat/application/profile/_session.py`.
-- [ ] `P03.S29` - implement explicit session teardown on switch (engine close, key zeroise, adapter handle release); `src/aeat/application/profile/_session.py`.
-- [ ] `P03.S30` - re-key `_acquisition_lock.py` to read the active profile from the precedence chain; `src/aeat/application/auth/_acquisition_lock.py`.
-- [ ] `P03.S31` - re-key `_sessions.py` to read the active profile from the precedence chain; `src/aeat/application/auth/_sessions.py`.
-- [ ] `P03.S32` - remove the `profile_override` parameter from `resolve_active_profile`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
-- [ ] `P03.S33` - remove the `--profile` flag from every `aeat config google` verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P03.S34` - rename the Google Drive mirror folder string from `aeat-vault` to `aeat-profile`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
-- [ ] `P03.S35` - add the session-bytes-change-on-switch property test; `src/aeat/application/profile/test_session_lifecycle.py`.
-- [ ] `P03.S36` - add the per-profile lockfile contention test (second process gets `BucketBusyError`); `src/aeat/application/profile/test_session_lockfile.py`.
+- [x] `P01.S01` - `ProfileName` typed alias; `src/aeat/domain/profile/_constants.py`.
+- [x] `P01.S02` - `BucketId` typed alias; `src/aeat/domain/buckets/_constants.py`.
+- [x] `P01.S03` - export from profile package; `src/aeat/domain/profile/__init__.py`.
+- [x] `P01.S04` - export from buckets package; `src/aeat/domain/buckets/__init__.py`.
+- [x] `P01.S10` - validation tests; `src/aeat/domain/profile/test_constants.py`.
+- [x] `P01.S11` - bucket-id parity tests; `src/aeat/domain/profile/test_constants.py`.
 
-### Phase `P04` - persistence-boundary cleanup (the six findings)
+### Phase `P02` - cut the active-profile resolution over to the shipped pointer file
 
-Land the six backend findings the ADR commits to. Independent of
-the CLI surface; closes the boundary on the path the new verbs
-traverse.
+The plaintext pointer file IO at
+`src/aeat/application/workflow/_bucket_pointer_io.py` is already
+shipped (atomic write-then-rename, roundtrip tests). The
+`BucketPointer` model is already shipped at
+`src/aeat/application/workflow/_bucket_pointer.py`. Neither is
+read by the active-profile resolution path today; the path still
+reads `WorkflowState.active_profile` inside the encrypted state
+row. This phase wires the existing infrastructure into the live
+path, renames `active-bucket` to `active-profile` in the file
+constant, removes the zombie settings field, and deletes
+`WorkflowState.active_profile` with every consumer updated in the
+same commit window.
 
-- [ ] `P04.S37` - reorder bucket-creation writes so the SQL row commits before the manifest rename; `src/aeat/application/setup/_service.py`.
-- [ ] `P04.S38` - remove the `dict[str, object]` union arm from `WorkflowState.invoice_reviews`; `src/aeat/application/workflow/_models.py`.
-- [ ] `P04.S39` - remove the `dict[str, object]` union arm from `WorkflowState.ledger_reviews`; `src/aeat/application/workflow/_models.py`.
-- [ ] `P04.S40` - add the public `iter_records()` method to the user-profile repository; `src/aeat/application/user_profile/_repository.py`.
-- [ ] `P04.S41` - replace the private `_objects` access in `_iter_profiles` with the public iterator; `src/aeat/application/user_profile/_lifecycle.py`.
-- [ ] `P04.S42` - add the anti-tautology probe test against the profile boundary; `src/aeat/application/profile/test_lifecycle_anti_tautology.py`.
-- [ ] `P04.S43` - extend the `WorkflowState` roundtrip to populate `invoice_reviews` and `ledger_reviews` with non-default values; `src/aeat/application/workflow/test_persistence_roundtrip.py`.
-- [ ] `P04.S44` - add the manifest / SQL row write-order atomicity test; `src/aeat/application/setup/test_service_atomicity.py`.
+- [ ] `P02.S12` - rename the pointer filename constant from `active-bucket` to `active-profile`; `src/aeat/application/workflow/_bucket_pointer_io.py`.
+- [ ] `P02.S13` - extend `active_bucket_id_or_raise` to consult `--profile` flag, `AEAT_ACTIVE_PROFILE` env var, then pointer file via `read_pointer`, before falling back to `WorkflowState`; `src/aeat/application/workflow/_models.py`.
+- [ ] `P02.S14` - update every caller of `active_profile_bucket_id` / `active_profile_record` to flow through the new precedence chain; `src/aeat/entrypoints/cli/_common.py`.
+- [ ] `P02.S15` - update `register_active_profile` and `select_profile` to write the pointer file via `write_pointer`; `src/aeat/application/user_profile/_orchestration.py`.
+- [ ] `P02.S16` - delete the zombie `aeat_default_profile_name` field; `src/aeat/core/config.py`.
+- [ ] `P02.S17` - delete `WorkflowState.active_profile` field and the `active_profile_record` / `active_profile_bucket_id` properties; `src/aeat/application/workflow/_models.py`.
+- [ ] `P02.S18` - delete the `"default"` literal fall-through in the wizard; `src/aeat/application/wizard/_commands.py`.
+- [ ] `P02.S19` - call `provision_bucket_directory` and `write_manifest` from `initialize_workspace` so profile creation provisions the per-bucket directory tree atomically; `src/aeat/application/setup/_service.py`.
+- [ ] `P02.S20` - thread per-bucket SQLite URL through `create_engine_from_settings` from the resolved `BucketPaths.db_dir`; `src/aeat/adapters/persistence/storage/sql/_engine.py`.
+- [ ] `P02.S21` - wire the local blob-store factory to read its root from `BucketPaths.blobs_dir`; `src/aeat/adapters/outbound/storage/_factory.py`.
+- [ ] `P02.S22` - add the startup guard that raises `LegacyLayoutDetectedError` when `<aeat-root>/var/` exists and `<aeat-root>/buckets/` does not; `src/aeat/application/_bootstrap.py`.
+- [ ] `P02.S23` - precedence-chain test (flag wins over env, env wins over pointer, pointer wins over absence); `src/aeat/application/workflow/test_active_profile_resolution.py`.
+- [ ] `P02.S24` - regression test asserting the pointer-file integration writes on profile create; `src/aeat/application/user_profile/test_orchestration_pointer.py`.
+- [ ] `P02.S25` - regression test asserting `initialize_workspace` provisions the bucket directory tree and writes the manifest; `src/aeat/application/setup/test_service_provisions_bucket.py`.
+- [ ] `P02.S26` - legacy-layout refusal test (run startup against a synthesised legacy `var/` tree, assert `LegacyLayoutDetectedError`); `src/aeat/application/test_bootstrap_legacy_refusal.py`.
 
-### Phase `P05` - profile lifecycle application service
+### Phase `P03` - rewire the live crypto path through `BucketSession`
 
-Build the new service surface the operator CLI verbs delegate to.
-Service lands before the CLI; every P06 Step wires into a tested
-service.
+`BucketSession` is fully shipped at
+`src/aeat/adapters/persistence/storage/master_key/_bucket_session.py`
+with instance-scoped `_kek_buffer` / `_dek_buffer`, idle-timeout,
+zeroising close, and an AST guard test asserting zero ClassVar
+state. It is not wired into the production decrypt path: today
+`src/aeat/adapters/persistence/storage/sql/_encrypted_columns.py`
+calls `get_master_key_provider().get_master_key()` directly,
+caching the master key in `ClassVar` buffers inside
+`KeyringMasterKeyProvider` and `FileFallbackMasterKeyProvider`.
+Two parallel chains coexist. This phase removes the ClassVar
+chain and routes the live decrypt path through `BucketSession`.
 
-- [ ] `P05.S45` - create the `ProfileLifecycleService` consolidating `create`, `switch`, `logout`, `edit`, `rename`, `delete`, `export`, `import`; `src/aeat/application/profile/_lifecycle.py`.
-- [ ] `P05.S46` - define remaining typed errors `ProfileLockedError`, `ProfileNameCollisionError`, `ProfileNotFoundError`; `src/aeat/application/profile/_errors.py`.
-- [ ] `P05.S47` - register the new error codes in the central registry; `src/aeat/core/errors/_registry.py`.
-- [ ] `P05.S48` - implement `create NAME --copy-from SRC` with fresh KEK, salt, recovery mnemonic, and keystore entry; `src/aeat/application/profile/_clone.py`.
-- [ ] `P05.S49` - implement `export NAME --to FILE` producing a sealed archive (ciphertext tree, manifest, recovery-wrapped key); `src/aeat/application/profile/_export.py`.
-- [ ] `P05.S50` - implement `import FILE` registering an archive as a locked profile; `src/aeat/application/profile/_export.py`.
-- [ ] `P05.S51` - wire bucket-event emission for `profile.created`, `profile.activated`, `profile.updated`, `profile.cloned`, `profile.renamed`, `profile.deleted`, `bucket.created`, `bucket.deleted`, `bucket.exported`, `bucket.imported`, `bucket.session.closed`; `src/aeat/application/profile/_lifecycle.py`.
-- [ ] `P05.S52` - add lifecycle service tests covering create / switch / logout happy paths; `src/aeat/application/profile/test_lifecycle.py`.
-- [ ] `P05.S53` - add lifecycle service tests covering edit / rename / delete; `src/aeat/application/profile/test_lifecycle.py`.
-- [ ] `P05.S54` - add lifecycle service tests covering name-collision refusal on create / rename / import; `src/aeat/application/profile/test_lifecycle.py`.
-- [ ] `P05.S55` - add the `--copy-from` cryptographic isolation test (fresh nonces, salts, keystore entries on target); `src/aeat/application/profile/test_clone.py`.
-- [ ] `P05.S56` - add the export/import roundtrip test against a real temporary `<aeat-root>`; `src/aeat/application/profile/test_export_roundtrip.py`.
+- [ ] `P03.S27` - rewire `_resolve_master_key` to read from the active `BucketSession` instead of `get_master_key_provider().get_master_key()`; `src/aeat/adapters/persistence/storage/sql/_encrypted_columns.py`.
+- [ ] `P03.S28` - delete the `_lock` / `_cache` `ClassVar`s from `KeyringMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [ ] `P03.S29` - delete the `_lock` / `_cached_passphrase` / `_cached_master_key` `ClassVar`s from `FileFallbackMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [ ] `P03.S30` - delete the `_purge_caches_at_exit` atexit hook now that the ClassVar caches are gone; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [ ] `P03.S31` - register an atexit hook that closes any open `BucketSession`; `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py`.
+- [ ] `P03.S32` - regression test asserting `_encrypted_columns` decrypt path reads through `BucketSession`; `src/aeat/adapters/persistence/storage/sql/test_encrypted_columns_session.py`.
+- [ ] `P03.S33` - AST-guard test asserting `KeyringMasterKeyProvider` and `FileFallbackMasterKeyProvider` carry zero `ClassVar` state; `src/aeat/adapters/persistence/storage/master_key/test_master_key_no_classvars.py`.
 
-### Phase `P06` - operator CLI surface migration
+### Phase `P04` - persistence-boundary drift fixes (five still-live findings)
 
-Mount `aeat config profile` with the ten operator verbs, delete
-the legacy `init` and `profile` subgroup wiring in the same
-commits, rewrite the top-level help summary. Every cryptic verb
-gone.
+The sixth finding (manifest / SQL row write-order atomicity) is
+already resolved - the manifest layer no longer exists; profile
+creation is a single atomic state-repository update. Five remain.
 
-- [ ] `P06.S57` - mount the `aeat config profile` Typer subgroup; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S58` - wire `aeat config profile create NAME` with all wizard prompts, password prompt, and `--copy-from`; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S59` - wire `aeat config profile switch NAME` with password prompt and session teardown of previous; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S60` - wire `aeat config profile logout` closing the active session; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S61` - wire `aeat config profile list [--with-status]` reading manifests without unlock; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S62` - wire `aeat config profile show [NAME]` with default-to-active and missing-fields header; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S63` - wire `aeat config profile edit [NAME]` with default-to-active and current-value defaults; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S64` - wire `aeat config profile rename NAME NEW` updating manifest, pointer file, and keystore alias; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S65` - wire `aeat config profile delete NAME` with `--yes` plus typed-back-NAME double-confirm; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S66` - wire `aeat config profile export [NAME] --to FILE` with default-to-active; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S67` - wire `aeat config profile import FILE` registering the locked archive; `src/aeat/entrypoints/cli/_config/_profile.py`.
-- [ ] `P06.S68` - delete the legacy `aeat config init` command and `build_wizard_command` mounting; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P06.S69` - delete every legacy `aeat config profile *` verb (use, view, validate, preflight, status, remove, duplicate, list, get, set, unset); `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P06.S70` - rewrite the top-level `_config_help` summary to advertise every profile verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P06.S71` - add the post-command next-step hint footer pointing at leaf verbs; `src/aeat/entrypoints/cli/_config/_profile.py`.
+- [ ] `P04.S34` - remove the `dict[str, object]` union arm from `WorkflowState.invoice_reviews`; `src/aeat/application/workflow/_models.py`.
+- [ ] `P04.S35` - remove the `dict[str, object]` union arm from `WorkflowState.ledger_reviews`; `src/aeat/application/workflow/_models.py`.
+- [ ] `P04.S36` - add public `iter_records()` to the user-profile repository and replace the private `_objects` access in `_iter_profiles`; `src/aeat/application/user_profile/_repository.py`.
+- [ ] `P04.S37` - replace the private access call site; `src/aeat/application/user_profile/_lifecycle.py`.
+- [ ] `P04.S38` - anti-tautology probe test (save profile, mutate encrypted payload, reload, assert `ValidationError` or strict inequality); `src/aeat/application/user_profile/test_repository_anti_tautology.py`.
+- [ ] `P04.S39` - extend the existing `WorkflowState` roundtrip to populate `invoice_reviews` and `ledger_reviews` with non-default values; `src/aeat/application/workflow/test_state_persistence_roundtrip.py`.
 
-### Phase `P07` - dev-facing surface retirement
+### Phase `P05` - rename existing CLI verbs to plain English (single-cut)
 
-Delete the dev-shaped `aeat config repair list NAMESPACE` from
-the operator CLI and land the engineer surface as a module
-entrypoint.
+Five existing verbs rename to their operator-friendly forms. Each
+rename is a single commit deleting the old name and landing the
+new name. No aliases, no shims. The wizard backend
+(`build_wizard_command`) is reused under the new verb names; only
+the Typer registration changes.
 
-- [ ] `P07.S72` - delete the `aeat config repair list` verb from the operator CLI; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P07.S73` - create the `aeat.diagnostics` module entrypoint; `src/aeat/diagnostics/__main__.py`.
-- [ ] `P07.S74` - implement the `diagnostics secure-objects list` subcommand; `src/aeat/diagnostics/_secure_objects.py`.
-- [ ] `P07.S75` - implement the `diagnostics profile get / set / unset KEY` subcommands; `src/aeat/diagnostics/_profile.py`.
-- [ ] `P07.S76` - implement the `diagnostics profile activity [NAME]` subcommand reading bucket-event-history; `src/aeat/diagnostics/_profile.py`.
-- [ ] `P07.S77` - add smoke tests for every diagnostics subcommand; `src/aeat/diagnostics/test_diagnostics.py`.
+- [ ] `P05.S40` - rename `aeat config init` to `aeat config profile create NAME`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P05.S41` - rename `aeat config profile use` to `switch`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P05.S42` - rename `aeat config profile remove` to `delete`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P05.S43` - merge `view` and `status` into one `show` verb that defaults to the active profile and emits a readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P05.S44` - delete `validate` and `preflight` verbs; their schema-validation surface folds into `show`'s readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P05.S45` - delete `get` / `set` / `unset` verbs from the operator CLI; they re-home under `python -m aeat.diagnostics`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P05.S46` - rewrite the top-level `_config_help` summary to advertise every operator profile verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
 
-### Phase `P08` - locale catalogue regeneration
+### Phase `P06` - add the genuinely missing operator verbs
 
-Re-scaffold every operator-facing string across the four
-catalogues through the locale CLI. No hand edits.
+Four verbs (`rename`, `edit`, `export`, `import`, `logout`) and
+the three absent typed errors are genuinely new. The domain type
+`UserProfilePortableExport` already exists at
+`src/aeat/domain/user_profile/_values.py`; the export verb wires
+it. `duplicate` collapses into `create --copy-from`.
 
-- [ ] `P08.S78` - run the locale scaffold pass to surface every new and removed string; `src/aeat/locales`.
-- [ ] `P08.S79` - translate the Spanish catalogue against the new operator vocabulary; `src/aeat/locales/es.yml`.
-- [ ] `P08.S80` - translate the English catalogue; `src/aeat/locales/en.yml`.
-- [ ] `P08.S81` - translate the Catalan catalogue; `src/aeat/locales/ca.yml`.
-- [ ] `P08.S82` - translate the Hungarian catalogue; `src/aeat/locales/hu.yml`.
-- [ ] `P08.S83` - run the locale audit and resolve every diagnostic; `src/aeat/locales`.
+- [ ] `P06.S47` - add `BootstrapAlreadyCompleteError` typed error and register it; `src/aeat/application/workflow/_errors.py`.
+- [ ] `P06.S48` - add `ProfileNameCollisionError` typed error and register it; `src/aeat/application/workflow/_errors.py`.
+- [ ] `P06.S49` - add `ProfileLockedError` typed error and register it; `src/aeat/application/workflow/_errors.py`.
+- [ ] `P06.S50` - add `rename(profile_id, new_name)` to the lifecycle service; `src/aeat/application/user_profile/_lifecycle.py`.
+- [ ] `P06.S51` - add `aeat config profile rename NAME NEW` Typer verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P06.S52` - add `aeat config profile edit [NAME]` Typer verb that re-runs the wizard against an existing record; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P06.S53` - add `export(profile_id) -> UserProfilePortableExport` plus archive sealer to the lifecycle service; `src/aeat/application/user_profile/_lifecycle.py`.
+- [ ] `P06.S54` - add `import_archive(path) -> ProfileId` plus archive validator to the lifecycle service; `src/aeat/application/user_profile/_lifecycle.py`.
+- [ ] `P06.S55` - add `aeat config profile export [NAME] --to FILE` and `aeat config profile import FILE` Typer verbs; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P06.S56` - add `aeat config profile logout` Typer verb that closes the active `BucketSession`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P06.S57` - replace `duplicate` Typer verb with `create --copy-from NAME` flag landing in the same commit as `duplicate` deletes; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P06.S58` - tests for rename / edit / export / import / logout / copy-from happy paths and refusals; `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`.
 
-### Phase `P09` - test surface rewrite and full gate
+### Phase `P07` - google adapter cleanup and locale regeneration
 
-Rewrite the lifecycle test surface against the new operator
-verbs, add the new tests for default-to-active behaviour and
-password-prompt UX, and run every quality gate. Plan completes
-when this phase is green.
+- [ ] `P07.S59` - remove the `profile_override` parameter from `resolve_active_profile`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
+- [ ] `P07.S60` - remove the `--profile` flag from every `aeat config google` verb; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P07.S61` - run the locale scaffold + audit across es/en/ca/hu for every renamed string; `src/aeat/locales`.
 
-- [ ] `P09.S84` - rewrite the lifecycle CLI verbs test against the new ten-verb surface; `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`.
-- [ ] `P09.S85` - delete the legacy verb tests in the same commit as the rewrite lands; `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`.
-- [ ] `P09.S86` - add the default-to-active behaviour test for `show`, `edit`, `export`; `src/aeat/entrypoints/cli/test_profile_default_active.py`.
-- [ ] `P09.S87` - add the `switch` password-prompt UX test (correct password, wrong password, three-strikes); `src/aeat/entrypoints/cli/test_profile_switch_password.py`.
-- [ ] `P09.S88` - add the `logout` session-state-transition test; `src/aeat/entrypoints/cli/test_profile_logout.py`.
-- [ ] `P09.S89` - add the `create --copy-from` end-to-end test; `src/aeat/entrypoints/cli/test_profile_copy_from.py`.
-- [ ] `P09.S90` - add the `delete` double-confirm refusal-on-wrong-name test; `src/aeat/entrypoints/cli/test_profile_delete_confirm.py`.
-- [ ] `P09.S91` - add the `list --with-status` enrichment columns test; `src/aeat/entrypoints/cli/test_profile_list_with_status.py`.
-- [ ] `P09.S92` - add the top-level help discoverability test asserting every profile verb is advertised; `src/aeat/entrypoints/cli/test_config_help_advertises_profile.py`.
-- [ ] `P09.S93` - update the apex workflow verification test to reflect the deletion of `init` wiring; `src/aeat/entrypoints/cli/test_apex_workflow_verification.py`.
-- [ ] `P09.S94` - run the full pytest suite and resolve every failure; `src/aeat`.
-- [ ] `P09.S95` - run `ruff check` and resolve every diagnostic; `src/aeat`.
-- [ ] `P09.S96` - run `mypy` and resolve every diagnostic; `src/aeat`.
-- [ ] `P09.S97` - run the vault audit and confirm no new errors; `.vault`.
-- [ ] `P09.S98` - run the manual operator smoke (fresh root, create, switch, logout, switch back, edit, export, import, delete) and capture the transcript; `.vault/exec/2026-05-16-profile-lifecycle-cli`.
+### Phase `P08` - diagnostics entrypoint and full gate
+
+- [ ] `P08.S62` - delete the `aeat config repair list NAMESPACE` operator verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P08.S63` - add `python -m aeat.diagnostics` module entrypoint with `profile get / set / unset / activity` and `secure-objects list` subcommands; `src/aeat/diagnostics/__main__.py`.
+- [ ] `P08.S64` - smoke tests for the diagnostics entrypoint; `src/aeat/diagnostics/test_diagnostics.py`.
+- [ ] `P08.S65` - run the full pytest suite and resolve every failure; `src/aeat`.
+- [ ] `P08.S66` - run `ruff check` and resolve every diagnostic; `src/aeat`.
+- [ ] `P08.S67` - run `mypy` and resolve every diagnostic; `src/aeat`.
+- [ ] `P08.S68` - run the vault audit and confirm no new errors; `.vault`.
+- [ ] `P08.S69` - run a manual operator smoke against a fresh root and capture the transcript; `.vault/exec/2026-05-16-profile-lifecycle-cli`.
+
+## Parallelization
+
+The phases land sequentially: P02 (pointer cutover) before P03
+(crypto cutover) because the precedence chain reads come into the
+crypto-path code; P03 before P05 (CLI rename) because the new
+verbs invoke the cutover-completed services; P05 / P06 may
+interleave per-commit. P04 drift fixes are independent of the
+cutover and may overlap; treat as serial for simplicity. P07 and
+P08 must close last.
+
+Within each phase the single-cut mandate holds: every Step that
+deletes a shipped name lands its replacement in the same commit
+window. Specific collocations: P02.S12 + S13 + S14 + S15 (pointer
+rename + chain + caller updates + write site) ship together;
+P02.S16 + S17 (zombie field + active_profile field delete) ship
+together; P03.S22 + S23 + S24 + S25 + S26 (ClassVar removals +
+atexit swap + decrypt-path rewire test) ship together; P05.S34
+through S40 (CLI rename block) may ship as one or two commits.
+
+## Verification
+
+Plan completion criteria:
+
+- Every Step closed.
+- `uv run pytest` exits zero.
+- `uv run ruff check` exits zero.
+- `uv run mypy src/aeat` exits zero.
+- `python -m aeat.locales audit` exits zero.
+- `uv run --no-sync vaultspec-core vault check all` introduces no
+  new errors beyond those present at plan start.
+- The manual operator smoke transcript shows the full flow against
+  a fresh root: create first profile, create second with
+  `--copy-from`, switch, logout, switch back, edit, rename,
+  export, import, delete.
+- `vault plan check` exits zero against this plan.
+- No `aeat config init` verb survives. No `aeat config profile
+  use / view / status / validate / preflight / remove / duplicate
+  / get / set / unset` verb survives.
+- No `WorkflowState.active_profile` field, no
+  `Settings.aeat_default_profile_name`, no `"default"` literal in
+  the wizard, no `ClassVar` cache in `KeyringMasterKeyProvider` or
+  `FileFallbackMasterKeyProvider`, no `dict[str, object]` union
+  arm on `WorkflowState.invoice_reviews` or `ledger_reviews`, no
+  private `_objects` reach in `_iter_profiles`.
+- The May-12 and May-13 ADRs carry `superseded by
+  [[2026-05-16-profile-lifecycle-cli-adr]]` in their status lines.
