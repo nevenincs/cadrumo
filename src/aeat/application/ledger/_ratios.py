@@ -203,6 +203,34 @@ class RatiosCensusOverrideWarning(BaseModel):
     raw_afectacion_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
 
 
+def census_business_pct_for(
+    category: SpendingCategory,
+    raw_afectacion_ratio: Decimal | None,
+    *,
+    year: int = 2025,
+) -> Decimal | None:
+    """Return the legally-effective business_pct for a category from census.
+
+    The per-category projection of
+    :func:`aeat.domain.usage_ratios.derive_home_office_ratios_from_census`:
+    given a single :class:`SpendingCategory` and the operator's bound
+    census ``office_m2 / total_m2``, returns the
+    ``raw_afectacion_ratio * statutory_multiplier`` value the classify
+    and allocate paths should stamp onto ``Transaction.business_pct``
+    when no operator override is present. Returns ``None`` for
+    categories outside the HOME_OFFICE families or when no census has
+    been applied yet, signalling to the caller that the operator's
+    explicit value (or the registry default) governs instead.
+    """
+
+    if raw_afectacion_ratio is None:
+        return None
+    if family_for(category) not in _HOME_OFFICE_FAMILIES:
+        return None
+    rule = resolve_category_profiles(year)[category].proportionality
+    return effective_usage_ratio(rule, raw_afectacion_ratio)
+
+
 def census_override_warning(
     *,
     category: SpendingCategory,
@@ -254,6 +282,7 @@ __all__ = [
     "RatiosCensusOverrideWarning",
     "RatiosValidationFinding",
     "RatiosValidationReport",
+    "census_business_pct_for",
     "census_override_warning",
     "eligible_ratio_categories",
     "list_eligible_ratios_for_bucket",
