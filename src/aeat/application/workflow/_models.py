@@ -18,11 +18,12 @@ chain) finds those names already present.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from ..auth._models import AuthState
 from ._utils import utc_now
@@ -284,6 +285,53 @@ class SiteHealthAlert(BaseModel):
     run_id: str = Field(min_length=1, max_length=128)
 
 
+class WorkflowStepDetails(BaseModel):
+    """Operator-visible details attached to a workflow step.
+
+    Carries arbitrary string-keyed diagnostic values emitted by the
+    workflow engine. The model is intentionally permissive
+    (``extra='allow'``) so existing call sites can continue to pass
+    free-form dicts; the boundary is now a typed pydantic record
+    instead of an opaque ``dict[str, str]``, so a future PR can
+    promote specific step kinds into a discriminated union without
+    breaking the field type on :class:`WorkflowStep`.
+
+    Implements ``__getitem__``, ``__contains__``, and ``get`` so
+    existing read-side code that treats ``step.details`` like a
+    ``Mapping[str, str]`` keeps working without per-call-site
+    migration; the typed model now anchors the storage shape.
+
+    Frozen and strict on the inner values to preserve the
+    boundary-strictness guarantee on workflow diagnostics.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="allow")
+
+    def __getitem__(self, key: str) -> object:
+        return self.__pydantic_extra__[key] if self.__pydantic_extra__ else self.__dict__[key]
+
+    def __contains__(self, key: object) -> bool:
+        extra = self.__pydantic_extra__ or {}
+        return key in extra or key in self.__dict__
+
+    def get(self, key: str, default: object = None) -> object:
+        if self.__pydantic_extra__ and key in self.__pydantic_extra__:
+            return self.__pydantic_extra__[key]
+        return self.__dict__.get(key, default)
+
+    def items(self) -> Mapping[str, object]:
+        merged: dict[str, object] = dict(self.__pydantic_extra__ or {})
+        return merged
+
+
+def _coerce_workflow_step_details(value: object) -> object:
+    if value is None or isinstance(value, WorkflowStepDetails):
+        return value
+    if isinstance(value, Mapping):
+        return WorkflowStepDetails.model_validate(dict(value))
+    return value
+
+
 class WorkflowStep(BaseModel):
     """A single step in a :class:`WorkflowResult`."""
 
@@ -294,7 +342,10 @@ class WorkflowStep(BaseModel):
     ended_at: datetime | None = None
     success: bool | None = None
     summary: str
-    details: dict[str, str] | None = None
+    details: Annotated[
+        WorkflowStepDetails | Mapping[str, str] | None,
+        BeforeValidator(_coerce_workflow_step_details),
+    ] = None
     site_health_alert: SiteHealthAlert | None = None
 
     @model_validator(mode="after")
