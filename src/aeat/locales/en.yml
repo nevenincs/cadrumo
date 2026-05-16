@@ -306,6 +306,13 @@ cli:
         help: Reconcile a modelo work unit against external evidence (justificante
           PDF). Local-only; never contacts AEAT.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
+      reconcile_from_justificante:
+        help: Reconcile a modelo work unit against a justificante PDF. Sugar for operators
+          who think "reconcile from this justificante" rather than "reconcile, source =
+          justificante". Shares the modelo_reconcile application service entry point with
+          the flag-based form. Local-only; never contacts AEAT.
+        justificante_path_help: Path to the AEAT justificante PDF to reconcile against.
+        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation

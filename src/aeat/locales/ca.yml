@@ -314,6 +314,15 @@ cli:
           de justificant). Local; mai contacta amb AEAT.
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
           inequívoc).
+      reconcile_from_justificante:
+        help: Reconciliar una unitat de treball de modelo amb un PDF de justificant.
+          Sucre per a operadors que pensen "reconciliar des d'aquest justificant" en
+          lloc de "reconciliar, font = justificant". Comparteix el mateix punt d'entrada
+          del servei modelo_reconcile amb la forma basada en flags. Local; mai contacta
+          amb AEAT.
+        justificante_path_help: Ruta al PDF del justificant AEAT per reconciliar.
+        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
+          inequívoc).
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
