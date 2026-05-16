@@ -311,16 +311,31 @@ def find_rules(
     Yields:
         :class:`Rule` records matching every supplied filter.
     """
+    for rule in _iter_catalogue_rules(catalogue, settings=settings):
+        if _rule_matches(rule, casilla_id=casilla_id, kind=kind, lang=lang):
+            yield rule
+
+
+def _iter_catalogue_rules(catalogue: ManualCatalogue, *, settings: Settings | None) -> Iterator[Rule]:
+    """Flatten manual -> section -> rule into a single rule stream."""
     for manual in catalogue.manuals:
         for section in iter_sections(manual, settings=settings):
-            for rule in section.rules:
-                if kind is not None and rule.kind is not kind:
-                    continue
-                if casilla_id is not None and casilla_id not in rule.references_casillas:
-                    continue
-                if lang is not None and not _rule_renders_in_language(rule, lang):
-                    continue
-                yield rule
+            yield from section.rules
+
+
+def _rule_matches(
+    rule: Rule,
+    *,
+    casilla_id: str | None,
+    kind: RuleKind | None,
+    lang: str | None,
+) -> bool:
+    """Return True when ``rule`` satisfies every supplied filter (None == no filter)."""
+    if kind is not None and rule.kind is not kind:
+        return False
+    if casilla_id is not None and casilla_id not in rule.references_casillas:
+        return False
+    return not (lang is not None and not _rule_renders_in_language(rule, lang))
 
 
 def _rule_renders_in_language(rule: Rule, lang: str) -> bool:
