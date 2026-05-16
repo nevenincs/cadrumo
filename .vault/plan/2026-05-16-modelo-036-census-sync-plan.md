@@ -79,12 +79,12 @@ Mint the operator-facing service plus the bucket-event and error machinery.
 - [ ] `P04.S34` - add CENSUS_DEPENDENT_STAMPED_STALE modelo.census.dependent_stamped_stale to BucketEventType; `src/aeat/domain/buckets/_event.py`.
 - [ ] `P04.S35` - add CensusSyncError base plus CensusNotAvailableError CensusFieldValidationError CensusApplyConflictError; `src/aeat/application/profile/_census_errors.py`.
 - [ ] `P04.S36` - register every new error in the application error registry; `src/aeat/core/errors/registry/_application.py`.
-- [ ] `P04.S37` - add CensusProfileComparison pydantic envelope carrying the field-by-field comparison in operator-readable form; `src/aeat/application/profile/_census_sync.py`.
-- [ ] `P04.S38` - add CensusSyncService.refresh_census; `src/aeat/application/profile/_census_sync.py`.
-- [ ] `P04.S39` - add CensusSyncService.show_census; `src/aeat/application/profile/_census_sync.py`.
-- [ ] `P04.S40` - add CensusSyncService.compare_census_with_profile; `src/aeat/application/profile/_census_sync.py`.
-- [ ] `P04.S41` - add CensusSyncService.apply_census_to_profile that overwrites profile walks dependents stamps stale emits events; `src/aeat/application/profile/_census_sync.py`.
-- [ ] `P04.S42` - real-behavior service tests for each verb; `src/aeat/application/profile/test_census_sync.py`.
+- [x] `P04.S37` - add CensusProfileComparison pydantic envelope carrying the field-by-field comparison in operator-readable form; `src/aeat/application/profile/_census_sync.py`.
+- [x] `P04.S38` - add CensusSyncService.refresh_census; `src/aeat/application/profile/_census_sync.py`.
+- [x] `P04.S39` - add CensusSyncService.show_census; `src/aeat/application/profile/_census_sync.py`.
+- [x] `P04.S40` - add CensusSyncService.compare_census_with_profile; `src/aeat/application/profile/_census_sync.py`.
+- [x] `P04.S41` - add CensusSyncService.apply_census_to_profile that overwrites profile walks dependents stamps stale emits events; `src/aeat/application/profile/_census_sync.py`.
+- [x] `P04.S42` - real-behavior service tests for each verb; `src/aeat/application/profile/test_census_sync.py`.
 
 ### Phase `P05` - stale-cascade refusals across six downstream services
 
