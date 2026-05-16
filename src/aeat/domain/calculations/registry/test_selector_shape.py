@@ -72,6 +72,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         "atribucion_member",
         "refund_operation",
         "manual_input",
+        "profile",
     }
     assert set(_BINDING_SELECTOR_REGISTRY) == expected
 
@@ -165,11 +166,33 @@ def test_withholding_selector_accepts_well_shaped_selector() -> None:
     binding = _binding(
         source="withholding",
         selector={
-            "fact": "retencion_practicada_sum",
+            "fact": "retencion_sum",
             "claves": ("A", "G"),
         },
     )
     assert validate_binding_selector_shape(binding) == []
+
+
+def test_withholding_selector_rejects_unknown_fact() -> None:
+    """An unknown fact value fails the typed-Literal contract.
+
+    Audit selector-drift F2: the fact field was previously a bare
+    ``str`` so bogus values passed the snapshot-build gate and were
+    only rejected at handler-call time. With the Literal in place,
+    the gate catches them now.
+    """
+
+    binding = _binding(
+        source="withholding",
+        selector={
+            "fact": "bogus_fact_value",
+            "claves": ("A",),
+        },
+        binding_id="bad-withholding-fact",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-withholding-fact" in failures[0]
 
 
 def test_invoice_selector_accepts_well_shaped_selector() -> None:
@@ -178,7 +201,7 @@ def test_invoice_selector_accepts_well_shaped_selector() -> None:
     binding = _binding(
         source="invoice",
         selector={
-            "fact": "base_amount_sum",
+            "fact": "base_sum",
             "grouping": "operator_clave",
         },
     )
@@ -300,6 +323,120 @@ def test_manual_input_boolean_casilla_requires_value_strings() -> None:
     failures = validate_binding_selector_shape(binding)
     assert failures
     assert "bad-boolean" in failures[0]
+
+
+def test_profile_selector_accepts_scalar_shape() -> None:
+    """A scalar profile_key selector (taxpayer.tax.id etc) passes the gate."""
+
+    binding = _binding(
+        source="profile",
+        selector={
+            "profile_key": "tax.id",
+            "xsd_path": "/DatosIdentificativos/Declarante/DPNIF_D",
+            "dictionary_field": "DPNIF_D",
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_profile_selector_accepts_composite_shape() -> None:
+    """A composite profile_keys + format selector passes the gate."""
+
+    binding = _binding(
+        source="profile",
+        selector={
+            "profile_keys": ("surnames", "name"),
+            "format": "surnames_name",
+            "xsd_path": "/DatosIdentificativos/Declarante/DP_APENOM_D",
+            "dictionary_field": "DP_APENOM_D",
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_profile_selector_accepts_model_scalar_shape() -> None:
+    """A profile_model + field selector (non-repeating) passes the gate.
+
+    The TaxResidenceProfile shape on M100 uses this: ``profile_model``
+    plus ``field`` without ``collection``, addressing a scalar field on
+    a typed profile sub-model. The validator must accept this shape;
+    ``collection`` is only required when ``repeating = true``.
+    """
+
+    binding = _binding(
+        source="profile",
+        selector={
+            "profile_model": "TaxResidenceProfile",
+            "field": "ccaa",
+            "xsd_attribute": "codigoCADeclaracion",
+            "dictionary_field": "ZCCAD",
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_profile_selector_rejects_multiple_shapes() -> None:
+    """Declaring scalar + composite shapes in the same selector fails."""
+
+    binding = _binding(
+        source="profile",
+        selector={
+            "profile_key": "tax.id",
+            "profile_keys": ("a", "b"),
+            "format": "surnames_name",
+        },
+        binding_id="bad-double-shape",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-double-shape" in failures[0]
+
+
+def test_profile_selector_required_when_pair_must_match() -> None:
+    """required_when_profile_key without required_when_value is rejected."""
+
+    binding = _binding(
+        source="profile",
+        selector={
+            "profile_key": "spouse.tax.id",
+            "required_when_profile_key": "declaration.type",
+            # missing required_when_value
+        },
+        binding_id="bad-required-when",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-required-when" in failures[0]
+
+
+def test_counterpart_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
+    """Counterpart fact/op cross-invariants fire at the snapshot-build gate.
+
+    A counterpart-source binding that declares ``fact = "operator_count"``
+    must pair it with ``aggregation.op = "count_distinct"`` (per the
+    handler-call-time invariant in ``_validated_counterpart_selector``).
+    A binding that pairs operator_count with op="sum" is structurally
+    malformed; without this lifted invariant the snapshot-build gate
+    would pass it and the resolver would only raise at handler-call
+    time. Audit selector-drift F3.
+    """
+
+    binding = DataBindingDefinition(
+        id="bad-counterpart-fact-op",
+        source="collectible_invoice",
+        selector={
+            "fact": "operator_count",
+            "claves": ("E", "M"),
+            "rectification_scope": "exclude_rectifications",
+        },
+        aggregation={"op": "sum"},  # mismatched op — should be "count_distinct"
+        legal_refs=("lirpf.art-99",),
+        source_refs=("aeat.test",),
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-counterpart-fact-op" in failures[0]
+    assert "counterpart invariants" in failures[0]
 
 
 def test_collectible_invoice_rejects_lowercase_clave() -> None:

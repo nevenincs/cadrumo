@@ -7,38 +7,55 @@ instance. Tests that override :class:`aeat.core.config.Settings`
 to change the bundled-data location must call
 ``resources.cache_clear()`` to force a rebuild on the next
 access.
-
-The Repository fields land in subsequent phases of the
-resource-management-api migration. For the foundation phase the
-registry has no fields; the surface exists so consumers can
-import :func:`resources` and the test suite can validate the
-factory contract.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cache
+
+from ._repos import (
+    ApoderamientosRepository,
+    CategoryProfileRepository,
+    HolidayCalendarRepository,
+    LegalParameterRepository,
+    ManualRepository,
+    NormativeRepository,
+    RecargoBandsRepository,
+    TopicCatalogueRepository,
+    UserProfileSchemaRepository,
+    VatCatalogueRepository,
+    VatRateTableRepository,
+)
+from ._repos.modelos import ModeloRepository
 
 
 @dataclass(slots=True, frozen=True)
 class ResourceRegistry:
     """Aggregate of every Repository the project exposes.
 
-    Repository fields are added per migration phase. Each
-    Repository owns its Identity Map cache; the registry
-    aggregates them and exposes a uniform :meth:`clear` method.
+    Each field holds one Repository instance owning its own
+    Identity Map. The :meth:`clear` method empties every
+    Repository's cache uniformly; tests that override Settings
+    between cases call it via the module-level ``resources``
+    factory's ``cache_clear``.
     """
 
+    apoderamientos: ApoderamientosRepository = field(default_factory=ApoderamientosRepository)
+    category_profiles: CategoryProfileRepository = field(default_factory=CategoryProfileRepository)
+    holiday_calendars: HolidayCalendarRepository = field(default_factory=HolidayCalendarRepository)
+    legal_parameters: LegalParameterRepository = field(default_factory=LegalParameterRepository)
+    manuals: ManualRepository = field(default_factory=ManualRepository)
+    modelos: ModeloRepository = field(default_factory=ModeloRepository)
+    normatives: NormativeRepository = field(default_factory=NormativeRepository)
+    recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
+    topics: TopicCatalogueRepository = field(default_factory=TopicCatalogueRepository)
+    user_profile_schema: UserProfileSchemaRepository = field(default_factory=UserProfileSchemaRepository)
+    vat_catalogues: VatCatalogueRepository = field(default_factory=VatCatalogueRepository)
+    vat_rate_tables: VatRateTableRepository = field(default_factory=VatRateTableRepository)
+
     def clear(self) -> None:
-        """Clear every Repository's Identity Map.
-
-        Iterates over every dataclass field whose value is a
-        Repository instance and calls ``clear_cache()``. The
-        method tolerates the empty foundation-phase registry
-        (no fields) without error.
-        """
-
+        """Clear every Repository's Identity Map."""
         from ._repository import ResourceRepository
 
         for attr in self.__dataclass_fields__:
@@ -51,11 +68,19 @@ class ResourceRegistry:
 def resources() -> ResourceRegistry:
     """Return the process-wide resource registry.
 
-    Cached at first call. Tests that mutate Settings between
-    cases call ``resources.cache_clear()`` to rebuild the
-    registry with the new Settings values. Production code does
-    not need to clear the cache because the bundled data is
-    immutable for the process lifetime.
+    Cached at first call. The factory reads Settings once at
+    construction and threads operator-supplied roots through to
+    the Repositories that honour an env-override seam
+    (manuals, normatives, vat catalogues). Tests that mutate
+    Settings between cases call ``resources.cache_clear()`` to
+    rebuild with the new values.
     """
 
-    return ResourceRegistry()
+    from ..config import load_settings
+
+    settings = load_settings()
+    return ResourceRegistry(
+        manuals=ManualRepository(root=settings.aeat_manuals_root),
+        normatives=NormativeRepository(root=settings.aeat_normatives_root),
+        vat_catalogues=VatCatalogueRepository(root=settings.aeat_vat_catalogue_root),
+    )

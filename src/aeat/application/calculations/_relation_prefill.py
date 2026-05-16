@@ -32,7 +32,9 @@ from decimal import Decimal
 from typing import Final
 
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
+from ...core.logging import get_logger
 from ...domain.calculations.registry._bindings import RegistryFilingObservation
+from ...domain.calculations.registry._errors import RegistryValidationError
 from ...domain.calculations.registry._relations import (
     resolve_relation_values_from_observations,
 )
@@ -40,6 +42,7 @@ from ...domain.calculations.registry._schema import RegistrySnapshot
 from ._observations_repository import CalculationObservationRepository
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
+_log = get_logger(__name__)
 
 
 def _gather_observations_for_snapshot(
@@ -63,7 +66,7 @@ def _gather_observations_for_snapshot(
             relation.source_revision_selector.get("filing_year_delta", 0) if relation.source_revision_selector else 0
         )
         source_year = target_year + delta
-        for payload in repository.iter_modelo(str(relation.source_modelo)):
+        for payload in repository.iter_modelo(relation.source_modelo):
             obs = payload.observation
             if obs.filing_year != source_year:
                 continue
@@ -117,13 +120,23 @@ def resolve_relations_from_local_store(
                 filing_year=snapshot.filing_year,
                 period=snapshot.period,
             )
-        except Exception:
-            # The runtime resolver raises when a relation requires
-            # observations the local store does not yet hold. We
-            # downgrade rather than fail — the engine will emit
-            # blank cells the operator fills by hand. The pull
-            # adapter still surfaces "operator_manual" provenance
-            # so the substrate side knows the value isn't authoritative.
+        except RegistryValidationError as exc:
+            # The runtime resolver raises ``RegistryValidationError``
+            # when a relation requires observations the local store
+            # does not yet hold. Downgrade with a logged warning so
+            # the engine emits blank cells the operator fills by
+            # hand, but the operator-substrate log records the
+            # specific resolver complaint rather than silently
+            # falling back to ``operator_manual`` provenance.
+            _log.warning(
+                "relation prefill: resolver refused observations for "
+                "modelo=%s filing_year=%s period=%s; "
+                "engine will emit blank relation cells: %s",
+                snapshot.modelo.id,
+                snapshot.filing_year,
+                snapshot.period,
+                exc,
+            )
             resolved_map = {}
     else:
         resolved_map = {}
@@ -147,7 +160,7 @@ def resolve_relations_from_local_store(
                 resolved_at=when,
                 note=_provenance_note(
                     relation.id,
-                    str(relation.source_modelo),
+                    relation.source_modelo,
                     tuple(relation.source_periods),
                     target_year,
                     when,

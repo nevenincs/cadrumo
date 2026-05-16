@@ -26,7 +26,6 @@ structural / graph-wiring assertions, and Python primitive contracts.
 from __future__ import annotations
 
 import ast
-import contextlib
 import tomllib
 from decimal import Decimal
 from itertools import combinations
@@ -101,53 +100,86 @@ def _extract_scenarios(text: str) -> list[tuple[dict[str, Decimal], list[tuple[s
     except SyntaxError:
         return findings
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "_scenario_2025"
+        ):
             continue
-        if not isinstance(node.func, ast.Name) or node.func.id != "_scenario_2025":
-            continue
-        overrides: dict[str, Decimal] = {}
-        expected: list[tuple[str, Decimal]] = []
-        for kw in node.keywords:
-            if kw.arg == "overrides" and isinstance(kw.value, ast.Dict):
-                for k, v in zip(kw.value.keys, kw.value.values, strict=False):
-                    if not (isinstance(k, ast.Constant) and isinstance(k.value, str)):
-                        continue
-                    if not (isinstance(v, ast.Call) and isinstance(v.func, ast.Name) and v.func.id == "Decimal"):
-                        continue
-                    if v.args and isinstance(v.args[0], ast.Constant):
-                        raw = v.args[0].value
-                        if isinstance(raw, str):
-                            overrides[k.value] = Decimal(raw)
-            if kw.arg == "expected" and isinstance(kw.value, ast.Tuple):
-                for elt in kw.value.elts:
-                    if not (isinstance(elt, ast.Call) and isinstance(elt.func, ast.Name)):
-                        continue
-                    if elt.func.id != "RegistryScenarioExpectedOutput":
-                        continue
-                    tgt: str | None = None
-                    val: Decimal | None = None
-                    for kkw in elt.keywords:
-                        if (
-                            kkw.arg == "target"
-                            and isinstance(kkw.value, ast.Constant)
-                            and isinstance(kkw.value.value, str)
-                        ):
-                            tgt = kkw.value.value
-                        if kkw.arg == "value" and isinstance(kkw.value, ast.Call):
-                            inner = kkw.value
-                            if (
-                                isinstance(inner.func, ast.Name)
-                                and inner.func.id == "Decimal"
-                                and inner.args
-                                and isinstance(inner.args[0], ast.Constant)
-                                and isinstance(inner.args[0].value, str)
-                            ):
-                                val = Decimal(inner.args[0].value)
-                    if tgt and val is not None:
-                        expected.append((tgt, val))
+        overrides = _scenario_overrides(node)
+        expected = _scenario_expected(node)
         if expected:
             findings.append((overrides, expected))
     return findings
+
+
+def _decimal_literal_value(node: ast.expr | None) -> Decimal | None:
+    """Return ``Decimal("<raw>")`` if ``node`` matches that exact AST shape."""
+    if not (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Decimal"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
+    ):
+        return None
+    try:
+        return Decimal(node.args[0].value)
+    except (ValueError, ArithmeticError):
+        return None
+
+
+def _scenario_overrides(node: ast.Call) -> dict[str, Decimal]:
+    """Read the ``overrides=`` mapping kwarg into a plain {str: Decimal} dict."""
+    overrides: dict[str, Decimal] = {}
+    for kw in node.keywords:
+        if kw.arg != "overrides" or not isinstance(kw.value, ast.Dict):
+            continue
+        for k, v in zip(kw.value.keys, kw.value.values, strict=False):
+            if not (isinstance(k, ast.Constant) and isinstance(k.value, str)):
+                continue
+            decimal_value = _decimal_literal_value(v)
+            if decimal_value is not None:
+                overrides[k.value] = decimal_value
+    return overrides
+
+
+def _scenario_expected(node: ast.Call) -> list[tuple[str, Decimal]]:
+    """Read the ``expected=`` tuple kwarg into [(target, value), …]."""
+    expected: list[tuple[str, Decimal]] = []
+    for kw in node.keywords:
+        if kw.arg != "expected" or not isinstance(kw.value, ast.Tuple):
+            continue
+        for elt in kw.value.elts:
+            target_value = _expected_target_value(elt)
+            if target_value is not None:
+                expected.append(target_value)
+    return expected
+
+
+def _expected_target_value(node: ast.expr) -> tuple[str, Decimal] | None:
+    """Read one ``RegistryScenarioExpectedOutput(target=…, value=Decimal("…"))`` literal."""
+    if not (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "RegistryScenarioExpectedOutput"
+    ):
+        return None
+    target: str | None = None
+    value: Decimal | None = None
+    for kkw in node.keywords:
+        if (
+            kkw.arg == "target"
+            and isinstance(kkw.value, ast.Constant)
+            and isinstance(kkw.value.value, str)
+        ):
+            target = kkw.value.value
+        elif kkw.arg == "value":
+            value = _decimal_literal_value(kkw.value)
+    if target and value is not None:
+        return (target, value)
+    return None
 
 
 _TAUTOLOGY_WAIVERS: frozenset[str] = frozenset()
@@ -216,68 +248,70 @@ def _scan_hand_summed_aggregations(test_dir: Path) -> list[str]:
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef) or not node.name.startswith("test_"):
                 continue
-            literals: list[Decimal] = []
-            for inner in ast.walk(node):
-                if not isinstance(inner, ast.Call):
-                    continue
-                if not (isinstance(inner.func, ast.Name) and inner.func.id == "Decimal"):
-                    continue
-                if not inner.args or not isinstance(inner.args[0], ast.Constant):
-                    continue
-                raw = inner.args[0].value
-                if not isinstance(raw, str):
-                    continue
-                with contextlib.suppress(Exception):
-                    literals.append(Decimal(raw))
-            if len(literals) < 3:
-                continue
-            for assertion in (n for n in ast.walk(node) if isinstance(n, ast.Assert)):
-                if not isinstance(assertion.test, ast.Compare):
-                    continue
-                if not assertion.test.ops or not isinstance(assertion.test.ops[0], ast.Eq):
-                    continue
-                rhs = assertion.test.comparators[0] if assertion.test.comparators else None
-                if not (
-                    isinstance(rhs, ast.Call)
-                    and isinstance(rhs.func, ast.Name)
-                    and rhs.func.id == "Decimal"
-                    and rhs.args
-                    and isinstance(rhs.args[0], ast.Constant)
-                    and isinstance(rhs.args[0].value, str)
-                ):
-                    continue
-                try:
-                    target = Decimal(rhs.args[0].value)
-                except (ValueError, ArithmeticError):
-                    continue
-                if target == Decimal("0"):
-                    continue
-                # Drop additive identities so the scanner does not flag
-                # cases like ``x = x + 0`` or ``0 + 0 + x = x`` where the
-                # "sum" is trivially the target itself.
-                useful = [lit for lit in literals if lit != Decimal("0") and lit != target]
-                if len(useful) < 2:
-                    continue
-                hit_combo: tuple[Decimal, ...] | None = None
-                for size in (2, 3, 4):
-                    if len(useful) < size:
-                        continue
-                    for combo in combinations(useful, size):
-                        if sum(combo, Decimal("0")) == target:
-                            hit_combo = combo
-                            break
-                    if hit_combo is not None:
-                        break
-                if hit_combo is not None:
-                    waiver_key = f"{path.relative_to(PROJECT_ROOT).as_posix()}::{node.name}"
-                    if waiver_key in _HAND_SUMMED_WAIVERS:
-                        continue
-                    flagged.append(
-                        f"{waiver_key} "
-                        f"line {assertion.lineno}: target {target} equals sum of "
-                        f"{len(hit_combo)} earlier literals {hit_combo} — hand-summed pattern"
-                    )
+            flagged.extend(_scan_function_for_hand_sums(node, path))
     return flagged
+
+
+def _collect_decimal_literals(node: ast.FunctionDef) -> list[Decimal]:
+    """Return every ``Decimal("<raw>")`` literal value used anywhere in ``node``."""
+    literals: list[Decimal] = []
+    for inner in ast.walk(node):
+        value = _decimal_literal_value(inner) if isinstance(inner, ast.expr) else None
+        if value is not None:
+            literals.append(value)
+    return literals
+
+
+def _find_hand_summed_combo(target: Decimal, literals: list[Decimal]) -> tuple[Decimal, ...] | None:
+    """Return the first 2-to-4-literal subset that sums to target, or None."""
+    # Drop additive identities so the scanner does not flag cases like
+    # ``x = x + 0`` or ``0 + 0 + x = x`` where the "sum" is trivially the
+    # target itself.
+    useful = [lit for lit in literals if lit != Decimal("0") and lit != target]
+    if len(useful) < 2:
+        return None
+    for size in (2, 3, 4):
+        if len(useful) < size:
+            continue
+        for combo in combinations(useful, size):
+            if sum(combo, Decimal("0")) == target:
+                return combo
+    return None
+
+
+def _scan_function_for_hand_sums(node: ast.FunctionDef, path: Path) -> list[str]:
+    """Apply the hand-summed-aggregation rule to one test function."""
+    literals = _collect_decimal_literals(node)
+    if len(literals) < 3:
+        return []
+    flagged: list[str] = []
+    for assertion in (n for n in ast.walk(node) if isinstance(n, ast.Assert)):
+        target = _assertion_decimal_target(assertion)
+        if target is None or target == Decimal("0"):
+            continue
+        hit_combo = _find_hand_summed_combo(target, literals)
+        if hit_combo is None:
+            continue
+        waiver_key = f"{path.relative_to(PROJECT_ROOT).as_posix()}::{node.name}"
+        if waiver_key in _HAND_SUMMED_WAIVERS:
+            continue
+        flagged.append(
+            f"{waiver_key} "
+            f"line {assertion.lineno}: target {target} equals sum of "
+            f"{len(hit_combo)} earlier literals {hit_combo} — hand-summed pattern"
+        )
+    return flagged
+
+
+def _assertion_decimal_target(assertion: ast.Assert) -> Decimal | None:
+    """Return the right-hand Decimal literal of an ``assert lhs == Decimal("…")`` shape, else None."""
+    test = assertion.test
+    if not isinstance(test, ast.Compare):
+        return None
+    if not test.ops or not isinstance(test.ops[0], ast.Eq):
+        return None
+    rhs = test.comparators[0] if test.comparators else None
+    return _decimal_literal_value(rhs)
 
 
 _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(

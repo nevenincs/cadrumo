@@ -164,6 +164,83 @@ def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) ->
     return value
 
 
+def _coerce_raw_transaction(raw: object) -> RawTransaction:
+    """Accept a RawTransaction or a mapping/JSON-like and produce the typed record."""
+    if isinstance(raw, RawTransaction):
+        return raw
+    try:
+        return RawTransaction.model_validate(raw)
+    except ValidationError:
+        return RawTransaction.model_validate_json(
+            json.dumps(raw, default=_json_default, ensure_ascii=True)
+        )
+
+
+_TRANSACTION_DECIMAL_KEYS: tuple[str, ...] = (
+    "business_pct",
+    "taxable_base",
+    "iva_rate",
+    "iva_amount",
+    "classification_confidence",
+)
+_TRANSACTION_COLLECTION_KEYS: tuple[str, ...] = (
+    "evidence_provenance",
+    "edit_lineage",
+    "lifecycle_lineage",
+)
+
+
+def _coerce_transaction_enum_fields(payload: dict[str, object]) -> None:
+    """Promote str enum payload values to their declared enum class."""
+    enum_coercers: tuple[tuple[str, type], ...] = (
+        ("direction", TransactionDirection),
+        ("business_classification", BusinessClassification),
+        ("lifecycle_state", TransactionLifecycleState),
+    )
+    for key, enum_cls in enum_coercers:
+        value = payload.get(key)
+        if isinstance(value, str):
+            payload[key] = enum_cls(value)
+
+
+def _coerce_transaction_decimal_fields(payload: dict[str, object]) -> None:
+    """Promote str payload values to Decimal for every decimal-typed key."""
+    for key in _TRANSACTION_DECIMAL_KEYS:
+        value = payload.get(key)
+        if isinstance(value, str):
+            payload[key] = Decimal(value)
+
+
+def _coerce_transaction_temporal_fields(payload: dict[str, object]) -> None:
+    """Parse the single str-typed datetime field via the shared helper."""
+    if isinstance(payload.get("classified_at"), str):
+        payload["classified_at"] = _parse_datetime(payload["classified_at"])
+
+
+def _normalize_transaction_optional_strings(payload: dict[str, object]) -> None:
+    """Trim optional id strings and collapse empty strings to None."""
+    for key in ("source_import_id", "purchase_invoice_evidence_id"):
+        value = payload.get(key)
+        if not isinstance(value, str):
+            continue
+        if key not in payload:
+            continue
+        normalized = value.strip()
+        payload[key] = normalized or None
+
+
+def _coerce_transaction_collection_fields(payload: dict[str, object]) -> None:
+    """Coerce identifier tuples and history sequences into their canonical shape."""
+    if "attachment_ids" in payload:
+        payload["attachment_ids"] = _coerce_identifier_tuple(payload["attachment_ids"])
+    history = payload.get("classification_history")
+    if history is not None:
+        payload["classification_history"] = _coerce_history(history)
+    for key in _TRANSACTION_COLLECTION_KEYS:
+        if key in payload:
+            payload[key] = _coerce_history(payload[key])
+
+
 class ClassificationHistoryEntry(BaseModel):
     """One frozen record in a transaction's classification chain.
 
@@ -602,52 +679,17 @@ class Transaction(BaseModel):
         payload = dict(data)
         if "raw" not in payload:
             return data
-        raw = payload["raw"]
-        if isinstance(raw, RawTransaction):
-            raw_transaction = raw
-        else:
-            try:
-                raw_transaction = RawTransaction.model_validate(raw)
-            except ValidationError:
-                raw_transaction = RawTransaction.model_validate_json(
-                    json.dumps(raw, default=_json_default, ensure_ascii=True)
-                )
+        raw_transaction = _coerce_raw_transaction(payload["raw"])
         derived = derive_transaction_id(raw_transaction)
         existing = payload.get("transaction_id")
         if existing is not None and str(existing).strip() != derived:
             raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
         payload["raw"] = raw_transaction
-        if isinstance(payload.get("direction"), str):
-            payload["direction"] = TransactionDirection(payload["direction"])
-        raw_state = payload.get("business_classification")
-        if isinstance(raw_state, str):
-            payload["business_classification"] = BusinessClassification(raw_state)
-        lifecycle_state = payload.get("lifecycle_state")
-        if isinstance(lifecycle_state, str):
-            payload["lifecycle_state"] = TransactionLifecycleState(lifecycle_state)
-        if isinstance(payload.get("business_pct"), str):
-            payload["business_pct"] = Decimal(payload["business_pct"])
-        for key in ("taxable_base", "iva_rate", "iva_amount"):
-            if isinstance(payload.get(key), str):
-                payload[key] = Decimal(payload[key])
-        if isinstance(payload.get("classified_at"), str):
-            payload["classified_at"] = _parse_datetime(payload["classified_at"])
-        if isinstance(payload.get("classification_confidence"), str):
-            payload["classification_confidence"] = Decimal(payload["classification_confidence"])
-        history = payload.get("classification_history")
-        if history is not None:
-            payload["classification_history"] = _coerce_history(history)
-        if "source_import_id" in payload and isinstance(payload["source_import_id"], str):
-            normalized_import_id = payload["source_import_id"].strip()
-            payload["source_import_id"] = normalized_import_id if normalized_import_id else None
-        if "purchase_invoice_evidence_id" in payload and isinstance(payload["purchase_invoice_evidence_id"], str):
-            normalized_evidence_id = payload["purchase_invoice_evidence_id"].strip()
-            payload["purchase_invoice_evidence_id"] = normalized_evidence_id if normalized_evidence_id else None
-        if "attachment_ids" in payload:
-            payload["attachment_ids"] = _coerce_identifier_tuple(payload["attachment_ids"])
-        for key in ("evidence_provenance", "edit_lineage", "lifecycle_lineage"):
-            if key in payload:
-                payload[key] = _coerce_history(payload[key])
+        _coerce_transaction_enum_fields(payload)
+        _coerce_transaction_decimal_fields(payload)
+        _coerce_transaction_temporal_fields(payload)
+        _normalize_transaction_optional_strings(payload)
+        _coerce_transaction_collection_fields(payload)
         payload["transaction_id"] = derived
         return payload
 

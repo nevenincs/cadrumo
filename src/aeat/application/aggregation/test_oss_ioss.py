@@ -127,7 +127,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
             }
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        candidate.base_amount = Decimal("200")
+        setattr(candidate, "base_amount", Decimal("200"))  # noqa: B010
 
 
 def test_candidate_rejects_negative_amounts() -> None:

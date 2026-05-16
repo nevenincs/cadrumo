@@ -155,9 +155,12 @@ class SecretScrubbingFilter(logging.Filter):
 
         if isinstance(record.args, tuple | list) and isinstance(record.msg, str):
             scrubbed_args = _scrub_positional_args(record.msg, tuple(record.args))
-            record.args = (  # ty: ignore[invalid-assignment]
-                list(scrubbed_args) if isinstance(record.args, list) else tuple(scrubbed_args)
-            )
+            # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
+            # | Mapping[str, object] | None``; ``list`` is not in the
+            # union even though logging accepts it at runtime.
+            # Normalising to a tuple sidesteps the union mismatch
+            # without changing the runtime contract.
+            record.args = tuple(scrubbed_args)
         elif record.args:
             record.args = _scrub_value(record.args)
 

@@ -10,7 +10,8 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
-from ...domain.categories import SpendingCategory, resolve_category_profiles
+from ...core.resources import resources
+from ...domain.categories import SpendingCategory
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
@@ -188,7 +189,7 @@ def aggregate_renta_ledger_expenses(
 
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.year
-    profiles = resolve_category_profiles(resolved_profile_year)
+    profiles = resources().category_profiles.get(resolved_profile_year)
     context = RentaDeductibilityContext(
         profile_year=resolved_profile_year,
         usage_ratios=dict(usage_ratios or {}),

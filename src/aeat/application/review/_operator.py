@@ -37,11 +37,14 @@ class ReviewQueueRow(BaseModel):
     canonical_next_command: str = Field(min_length=1)
     since: datetime
     summary: str = Field(min_length=1)
-    # Regulatory grounding propagated from the underlying review item.
-    # For FindingReviewItem rows, this carries the FilingValidationFinding's
-    # references_rules tuple verbatim. Empty for non-finding rows (transactions,
-    # invoices) where no rule grounding is attached at the review surface.
-    references_rules: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(default_factory=tuple)
+    """Legal references (BOE permalinks or canonical IDs) justifying the finding.
+
+    Populated for ``modelo_finding`` items from the underlying
+    :attr:`~aeat.domain.filing.FilingValidationFinding.references_rules`.
+    Empty for transaction / invoice items where the obligation is not
+    directly grounded in a registry legal reference.
+    """
 
 
 class ReviewQueueReport(BaseModel):
@@ -167,9 +170,7 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             summary=_render_summary(item.summary),
         )
     if isinstance(item, FindingReviewItem):
-        references_rules: tuple[str, ...] = (
-            item.source.references_rules if item.source is not None else ()
-        )
+        legal_refs = item.source.references_rules if item.source is not None else ()
         return ReviewQueueRow(
             item_id=item.item_id,
             kind="modelo_finding",
@@ -186,7 +187,7 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             canonical_next_command=item.drill_command,
             since=item.since,
             summary=_render_summary(item.summary),
-            references_rules=references_rules,
+            legal_refs=tuple(legal_refs),
         )
     raise ReviewError(f"unsupported review item type: {type(item).__name__}")
 

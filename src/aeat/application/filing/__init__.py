@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
-from ...core.resources import bundled_path
+from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
@@ -15,6 +15,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
 )
+from ...domain.calculations.registry._schema import RegistrySnapshotRef
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
     AmendmentKind,
@@ -120,6 +121,13 @@ def build_draft(
     """
 
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
+    filing_year, registry_period = _registry_period(period)
+    snapshot_ref = RegistrySnapshotRef(
+        modelo=snapshot.modelo.id,
+        revision_id=snapshot.revision.id,
+        filing_year=filing_year,
+        period=registry_period,
+    )
     collection = schema_provider.get_collection(modelo)
     if collection.schema_version != f"registry:{snapshot.modelo.id}:{snapshot.revision.id}":
         raise FilingBuilderError(
@@ -179,6 +187,11 @@ def build_draft(
     created_at = utc_now()
     value_tuple = tuple(sorted(values, key=lambda value: value.casilla_id))
     binding_value_tuple = tuple(sorted(filing_binding_values, key=lambda value: value.binding_id))
+    # Propagate identity from the validated profile substrate into the
+    # draft. ``profile.tax_id`` is already validated against the AEAT
+    # checksum via ``SubjectTaxId`` on the profile model, so the
+    # post-validation result type-checks at the FilingDraft boundary
+    # and survives every downstream encrypted-persistence roundtrip.
     draft = FilingDraft(
         draft_id=compute_draft_id(
             modelo=modelo,
@@ -191,6 +204,8 @@ def build_draft(
         modelo=modelo,
         period=period,
         profile_tax_id=profile.tax_id,
+        subject_tax_id=profile.tax_id,
+        snapshot_ref=snapshot_ref,
         status=FilingDraftStatus.DRAFT,
         values=value_tuple,
         binding_values=binding_value_tuple,
@@ -209,7 +224,7 @@ def build_draft(
 def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
     filing_year, registry_period = _registry_period(period)
     try:
-        authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+        authority = resources().modelos.authority
         return authority.snapshot(
             modelo,
             filing_year=filing_year,

@@ -341,10 +341,19 @@ class _PreviousFilingSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_source_spec(self) -> _PreviousFilingSelector:
-        if bool(self.source_casillas) == bool(self.source_output):
+        # Three legal shapes:
+        # (a) ``source_casillas`` only — direct aggregation over
+        #     declared casillas on the source filing.
+        # (b) ``source_output`` (+ optional ``relation``) — single
+        #     casilla on the source filing, copy or relation-routed.
+        # (c) neither — a relation-only binding where the linked
+        #     ``RelationDefinition`` carries the source-output
+        #     contract (period_alignment, source_periods, etc.).
+        # Shape (c) bindings have ``source_modelo`` set but defer to
+        # the relation declaration for the rest.
+        if self.source_casillas and self.source_output is not None:
             raise RegistryValidationError(
-                "previous-filing selector must declare exactly one of source_casillas (aggregation) "
-                "or source_output (direct value copy)"
+                "previous-filing selector cannot declare both source_casillas and source_output"
             )
         if self.relation is not None and self.source_output is None:
             raise RegistryValidationError(
@@ -496,7 +505,7 @@ class _InvoiceSelector(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    fact: _InvoiceFact
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
     vat_regime: str | None = Field(default=None, max_length=64)
@@ -555,12 +564,10 @@ def invoice_binding_requirements(
     return tuple(requirements)
 
 
-_INVOICE_FACTS = {
-    "operator_count",
-    "base_sum",
-    "rectified_base_delta_sum",
-    "row_field",
-}
+_InvoiceFact = Literal["operator_count", "base_sum", "rectified_base_delta_sum", "row_field"]
+_INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
+    {"operator_count", "base_sum", "rectified_base_delta_sum", "row_field"}
+)
 
 _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
     {"rectified_year", "rectified_period", "rectified_base_previous"}
@@ -1692,10 +1699,17 @@ class WithholdingObservationRequirement(BaseModel):
         return value
 
 
+_WithholdingFact = Literal["row_field", "perceptor_count", "percibido_sum", "retencion_sum"]
+
+
 class _WithholdingSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    # Promoted from ``str`` to a typed Literal so the snapshot-build
+    # shape gate rejects unknown fact values, mirroring the runtime
+    # check the handler does against _WITHHOLDING_FACTS. Audit
+    # selector-drift F2.
+    fact: _WithholdingFact
     claves: tuple[str, ...] = ()
     row_field: _WithholdingRowField | None = None
     grouping: _WithholdingGrouping | None = None
@@ -1936,7 +1950,11 @@ class RelatedPartyOperationObservation(BaseModel):
 class _RelatedPartySelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    # Only ``row_field`` is a legal fact for related-party-operation
+    # bindings; every handler raises on anything else. Promoting to a
+    # Literal at the type level mirrors the runtime check at the
+    # snapshot-build gate. Audit selector-drift F2.
+    fact: Literal["row_field"]
     row_field: _RelatedPartyRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
@@ -2065,7 +2083,7 @@ class ForeignAssetObservation(BaseModel):
 class _ForeignAssetSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    fact: Literal["row_field"]
     row_field: _ForeignAssetRowField | None = None
     asset_classes: tuple[str, ...] = ()
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
@@ -2202,7 +2220,7 @@ class AtributionMemberObservation(BaseModel):
 class _AtributionSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    fact: Literal["row_field"]
     row_field: _AtributionRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
@@ -2310,7 +2328,7 @@ class RefundOperationObservation(BaseModel):
 class _RefundSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    fact: Literal["row_field"]
     row_field: _RefundRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
@@ -2371,7 +2389,89 @@ def resolve_refund_binding_row_values(
     return resolved
 
 
-_ManualInputDataType = Literal["boolean", "integer", "text", "decimal"]
+_ManualInputDataType = Literal["boolean", "integer", "text", "decimal", "money"]
+
+
+class _ProfileSelector(BaseModel):
+    """Strict validator for the selector mapping of a profile-source binding.
+
+    Profile-source bindings read values from the taxpayer profile substrate
+    (declarante, conyuge, hijos, ascendientes, ...). They land on the
+    fichero-BOE record either as a typed scalar (single ``profile_key``)
+    or via a composite projection (``profile_keys`` with a ``format``
+    rendering function), and optionally as a sub-collection field of a
+    typed profile model (``profile_model`` + ``collection`` + ``field``).
+
+    Two cross-cutting fields apply to every shape:
+
+    * ``xsd_path`` / ``xsd_attribute`` / ``dictionary_field``: how the
+      value is addressed on the on-wire record.
+    * ``required_when_profile_key`` / ``required_when_value``: a
+      conditional applicability gate; only certain profile shapes set
+      these.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    # Scalar shape
+    profile_key: str | None = Field(default=None, min_length=1, max_length=128)
+    # Composite shape
+    profile_keys: tuple[str, ...] = ()
+    # Collection shape (typed sub-models on the profile)
+    profile_model: str | None = Field(default=None, min_length=1, max_length=128)
+    collection: str | None = Field(default=None, min_length=1, max_length=64)
+    field: str | None = Field(default=None, min_length=1, max_length=128)
+    repeating: bool = False
+    # On-wire addressing
+    xsd_path: str | None = Field(default=None, min_length=1, max_length=512)
+    xsd_attribute: str | None = Field(default=None, min_length=1, max_length=128)
+    dictionary_field: str | None = Field(default=None, min_length=1, max_length=128)
+    # Rendering / formatting
+    format: str | None = Field(default=None, min_length=1, max_length=64)
+    valid_at: str | None = Field(default=None, min_length=1, max_length=32)
+    # Conditional applicability
+    required_when_profile_key: str | None = Field(default=None, min_length=1, max_length=128)
+    required_when_value: str | None = Field(default=None, min_length=1, max_length=256)
+
+    @model_validator(mode="after")
+    def _validate_profile_shape(self) -> _ProfileSelector:
+        has_scalar = self.profile_key is not None
+        has_composite = bool(self.profile_keys)
+        has_collection = self.profile_model is not None
+        shape_count = sum((has_scalar, has_composite, has_collection))
+        if shape_count != 1:
+            raise RegistryValidationError(
+                "profile selector must declare exactly one of profile_key (scalar), "
+                "profile_keys (composite), or profile_model (collection)"
+            )
+        if has_composite and self.format is None:
+            raise RegistryValidationError(
+                "profile composite selector (profile_keys) requires a format renderer"
+            )
+        if has_collection:
+            if self.field is None:
+                raise RegistryValidationError(
+                    "profile model selector must declare field"
+                )
+            # ``collection`` is only required when the profile model
+            # selector targets a repeating sub-collection
+            # (``repeating = true`` plus a named ``collection``). Scalar
+            # fields on a typed profile model (e.g. ``profile_model =
+            # "TaxResidenceProfile"`` + ``field = "ccaa"``) omit
+            # ``collection`` because the field IS at the model root.
+            if self.repeating and self.collection is None:
+                raise RegistryValidationError(
+                    "profile collection selector with repeating=true must declare collection"
+                )
+        # required_when_* must be paired
+        if (self.required_when_profile_key is None) != (
+            self.required_when_value is None
+        ):
+            raise RegistryValidationError(
+                "profile selector required_when_profile_key and required_when_value "
+                "must be declared together"
+            )
+        return self
 
 
 class _ManualInputSelector(BaseModel):
@@ -2484,6 +2584,7 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "atribucion_member": _AtributionSelector,
     "refund_operation": _RefundSelector,
     "manual_input": _ManualInputSelector,
+    "profile": _ProfileSelector,
 }
 
 
@@ -2496,6 +2597,23 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     diagnostic strings rather than raised so the snapshot-build gate
     can accumulate every failure across a revision in one pass.
 
+    The selector is projected through :func:`_selector_as_dict` before
+    validation so the gate sees the SAME normalised mapping the
+    handler-call-time helpers see. Without this projection the gate
+    would reject any registry binding whose loaded selector still
+    carries the (test-injected or legacy) ``source`` key, while the
+    handler would accept it — a stricter-than-runtime drift the
+    audit caught.
+
+    Counterpart-source bindings (``ledger_transaction``,
+    ``purchase_invoice_evidence``, ``payable_invoice``,
+    ``collectible_invoice``) additionally run the fact/op cross-check
+    invariants that the handler-call-time ``_validated_counterpart_selector``
+    enforces — so a snapshot whose binding declared
+    ``fact = "operator_count"`` paired with ``aggregation.op = "sum"``
+    (a real cross-shape error) is caught at registry-build time
+    rather than only when the resolver is invoked.
+
     Sources NOT in the registry are intentionally free-form today;
     those bindings short-circuit with an empty failure list.
     """
@@ -2504,11 +2622,23 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     if selector_model is None:
         return []
     try:
-        selector_model.model_validate(binding.selector)
+        selector_model.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         return [
             f"binding {binding.id!r} (source={binding.source!r}) "
             f"selector violates {selector_model.__name__}: {exc}"
         ]
+    # Counterpart-source bindings get the additional fact/op
+    # invariants that ``_validated_counterpart_selector`` runs at
+    # handler-call time, lifted up here so registry-build catches
+    # them too. Audit selector-drift F3.
+    if binding.source in COUNTERPART_BINDING_SOURCE_KINDS:
+        try:
+            _validated_counterpart_selector(binding)
+        except RegistryValidationError as exc:
+            return [
+                f"binding {binding.id!r} (source={binding.source!r}) "
+                f"counterpart invariants violated: {exc}"
+            ]
     return []
     return resolved

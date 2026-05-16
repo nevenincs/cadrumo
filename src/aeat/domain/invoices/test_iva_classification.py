@@ -110,7 +110,7 @@ def test_classification_record_validates_settlement_sides_against_flow() -> None
 def test_classification_record_is_frozen() -> None:
     classification = classify_invoice_line_for_iva(iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.ISSUED)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        classification.flow_direction = IvaFlowDirection.SOPORTADO
+        setattr(classification, "flow_direction", IvaFlowDirection.SOPORTADO)  # noqa: B010
 
 
 def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejected() -> None:

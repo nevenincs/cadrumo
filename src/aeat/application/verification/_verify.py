@@ -173,11 +173,13 @@ def _verification_policy(snapshot: RegistrySnapshot) -> _VerificationPolicy:
 
 def _load_snapshot(declaracion: DeclaracionObservation, *, registry_root: Path | None) -> RegistrySnapshot:
     try:
+        from ...core.resources import resources
+
         filing_year, registry_period = _registry_period(declaracion.period, declaracion.ejercicio)
-        authority = ValidatedRegistryAuthority.load(
-            registry_root or bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-        )
+        if registry_root is None:
+            authority = resources().modelos.authority
+        else:
+            authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
         return authority.snapshot(
             declaracion.modelo,
             filing_year=filing_year,

@@ -290,8 +290,8 @@ cli:
         view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
-        explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula a la
-          sortida de text. El payload JSON els porta sempre.
+        explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula
+          a la sortida de text. El payload JSON els porta sempre.
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
           exemples periodics inclouen 2026Q1 i 2026-01
@@ -312,6 +312,15 @@ cli:
         from_justificante_help: Ruta al PDF del justificant AEAT per reconciliar.
         help: Reconciliar una unitat de treball de modelo amb evidència externa (PDF
           de justificant). Local; mai contacta amb AEAT.
+        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
+          inequívoc).
+      reconcile_from_justificante:
+        help: Reconciliar una unitat de treball de modelo amb un PDF de justificant.
+          Sucre per a operadors que pensen "reconciliar des d'aquest justificant" en
+          lloc de "reconciliar, font = justificant". Comparteix el mateix punt d'entrada
+          del servei modelo_reconcile amb la forma basada en flags. Local; mai contacta
+          amb AEAT.
+        justificante_path_help: Ruta al PDF del justificant AEAT per reconciliar.
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
           inequívoc).
       verification_report:
@@ -862,18 +871,45 @@ cli:
     app_help: Auditar i generar catàlegs de traducció
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
   overview:
-    allow_incomplete_help: Permet el calendari amb valors per defecte quan falten
-      claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha
-      advertencies.
+    agenda:
+      allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
+        incompletes.
+      date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte,
+        avui.
+      errors:
+        invalid_horizon: --horizon ha de ser un nombre enter positiu (dies).
+      help: Classifica les obligacions properes i vençudes al voltant d'una data de
+        referència. Indica un únic `next_due` més les cohorts due-today / due-soon
+        / overdue. Local; mai contacta amb AEAT.
+      horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
-    calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
+    backlog:
+      allow_incomplete_help: Generar el backlog encara que les dades del perfil siguin
+        incompletes.
+      from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans
+        d'avui.
+      help: Llista les obligacions vençudes que l'operador encara no ha presentat.
+        Ordenades de més antiga a més recent per prioritzar el triatge. Local; mai
+        contacta amb AEAT.
+      to_help: Data de fi inclusiva (ISO YYYY-MM-DD); per defecte, avui.
+    calendar:
+      allow_incomplete_help: Generar el calendari encara que les dades del perfil
+        siguin incompletes.
+      from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
+      help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
+        indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
+        amb AEAT.
+      to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
       ''aeat config profile set <clau> <valor>'' o useu --allow-incomplete per veure
       el calendari calculat amb valors per defecte.'
-    calendar_requires_dates: Useu --from i --to quan consulteu el calendari
     drafts: Esborranys
-    from_help: Data inicial del calendari (AAAA-MM-DD)
-    header: "Model\tPeríode\tEstat\tObre\tTanca"
+    explain:
+      help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
+        l'indicador binari, el text registral de justificació i les dades del perfil
+        de les quals depèn la decisió. Local; mai contacta amb AEAT.
+      modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
+      year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
     status:
@@ -903,7 +939,6 @@ cli:
       transactions_empty: Encara no s'han importat moviments bancaris.
       transactions_present: '%{count} moviment(s) bancaris estan disponibles al llibre.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
-    to_help: Data final del calendari (AAAA-MM-DD)
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
     app_help: Gestió del registre de models fiscals

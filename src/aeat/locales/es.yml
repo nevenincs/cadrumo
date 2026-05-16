@@ -331,6 +331,15 @@ cli:
           de justificante). Local; nunca contacta con AEAT.
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
+      reconcile_from_justificante:
+        help: Reconciliar una unidad de trabajo de modelo con un PDF de justificante.
+          Azúcar para operadores que piensan "reconciliar desde este justificante" en
+          lugar de "reconciliar, fuente = justificante". Comparte el mismo punto de
+          entrada del servicio modelo_reconcile con la forma basada en flags. Local;
+          nunca contacta con AEAT.
+        justificante_path_help: Ruta al PDF del justificante AEAT para reconciliar.
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
+          inequívoco).
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
@@ -698,9 +707,10 @@ cli:
         soporta el movimiento
     check:
       bucket_id_help: Id del bucket a examinar (por defecto el bucket del perfil activo).
-      help: Examina los movimientos del libro del bucket direccionado (por defecto el
-        bucket del perfil activo) e informa de filas con anomalías agregadas a través
-        de cada período que los movimientos toquen. Local; nunca contacta con AEAT.
+      help: Examina los movimientos del libro del bucket direccionado (por defecto
+        el bucket del perfil activo) e informa de filas con anomalías agregadas a
+        través de cada período que los movimientos toquen. Local; nunca contacta con
+        AEAT.
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       category_help: Id de categoría de gasto o ingreso
@@ -876,18 +886,45 @@ cli:
     app_help: Auditar y generar catálogos de traducción
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
   overview:
-    allow_incomplete_help: Permitir el calendario con valores por defecto cuando faltan
-      claves de regimen en el perfil. Sin esta opcion, el calendario se rechaza si
-      hay advertencias.
+    agenda:
+      allow_incomplete_help: Generar la agenda aunque los datos del perfil estén incompletos.
+      date_help: Fecha de referencia para la agenda (ISO YYYY-MM-DD); por defecto,
+        hoy.
+      errors:
+        invalid_horizon: --horizon debe ser un número entero positivo (días).
+      help: Clasifica las obligaciones próximas y vencidas alrededor de una fecha
+        de referencia. Indica un único `next_due` más cohortes due-today / due-soon
+        / overdue. Local; nunca contacta con AEAT.
+      horizon_help: Ventana hacia adelante (en días) que considera la cohorte `due_soon`.
     app_help: Revisar el estado actual del espacio de trabajo fiscal
-    calendar_help: Mostrar calendario de obligaciones para un rango de fechas
+    backlog:
+      allow_incomplete_help: Generar el backlog aunque los datos del perfil estén
+        incompletos.
+      from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días
+        antes de hoy.
+      help: Lista las obligaciones vencidas que el operador aún no ha presentado.
+        Ordenadas de más antigua a más reciente para priorizar la triaje. Local; nunca
+        contacta con AEAT.
+      to_help: Fecha de fin inclusiva (ISO YYYY-MM-DD); por defecto, hoy.
+    calendar:
+      allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
+        incompletos.
+      from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
+      help: Genera el calendario de plazos para el perfil activo en la ventana de
+        fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
+        contacta con AEAT.
+      to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
       ''aeat config profile set <clave> <valor>'' o usa --allow-incomplete para ver
       el calendario calculado bajo valores por defecto.'
-    calendar_requires_dates: Use --from y --to al consultar el calendario
     drafts: Borradores
-    from_help: Fecha inicial del calendario (AAAA-MM-DD)
-    header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
+    explain:
+      help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
+        el indicador binario, el texto registral de justificación y los datos del
+        perfil de los que depende la decisión. Local; nunca contacta con AEAT.
+      modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
+      year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
+        actual.
     period: Periodo
     period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
     status:
@@ -920,7 +957,6 @@ cli:
       transactions_present: '%{count} movimiento(s) bancarios estan disponibles en
         el libro.'
     status_help: Mostrar el estado del perfil, libro y modelos
-    to_help: Fecha final del calendario (AAAA-MM-DD)
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
     app_help: Gestión del registro de modelos fiscales

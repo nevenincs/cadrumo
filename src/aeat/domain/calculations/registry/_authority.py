@@ -142,15 +142,20 @@ def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority
     return authority
 
 
-@cache
 def default_registry_authority() -> ValidatedRegistryAuthority:
-    """Return the process-wide registry authority anchored at the bundled data root.
+    """Return the process-wide registry authority via the resource registry.
 
-    The ``source_root`` passed to :class:`ValidatedRegistryAuthority`
-    is the packaged-data root so the ``corpus_ref`` and
-    ``raw_evidence_locator`` strings inside registry TOMLs continue
-    to be interpreted as logical paths under the bundled corpus
-    (e.g. ``corpus/aeat_official/...``).
+    Delegates to :func:`aeat.core.resources.resources` so the
+    authority instance is shared with every other consumer that
+    goes through ``resources().modelos``. The previous
+    ``@cache`` decorator was redundant once the registry took
+    ownership of the authority lifecycle; the
+    :class:`ModeloRepository` caches the authority on the
+    registry's behalf.
     """
 
-    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    from ....core.resources import resources
+
+    authority = resources().modelos.authority
+    assert isinstance(authority, ValidatedRegistryAuthority)
+    return authority

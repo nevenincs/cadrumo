@@ -285,8 +285,8 @@ cli:
         view_help: Egy filing record megjelenítése azonosító alapján
       formulas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
-        explain_help: A szövegkimenetbe is belekerülnek a képletet alátámasztó
-          legal_refs és source_refs hivatkozások. A JSON payload mindig tartalmazza őket.
+        explain_help: A szövegkimenetbe is belekerülnek a képletet alátámasztó legal_refs
+          és source_refs hivatkozások. A JSON payload mindig tartalmazza őket.
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
           periodikus peldak: 2026Q1 es 2026-01'
@@ -308,6 +308,14 @@ cli:
         from_justificante_help: Az AEAT justificante PDF útvonala az egyeztetéshez.
         help: Egy modelo munkaegység egyeztetése külső bizonyítékkal (justificante
           PDF). Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+        work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
+      reconcile_from_justificante:
+        help: Egy modelo munkaegység egyeztetése egy justificante PDF-fel. Cukor azoknak
+          az operátoroknak, akik úgy gondolkodnak, hogy "egyeztetés ebből a justificantéből"
+          a "egyeztetés, forrás = justificante" helyett. Ugyanazt a modelo_reconcile
+          szolgáltatás belépési pontot használja, mint a flag-alapú forma. Csak helyi;
+          soha nem kapcsolódik az AEAT-hoz.
+        justificante_path_help: Az AEAT justificante PDF útvonala az egyeztetéshez.
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       verification_report:
         app_help: Rögzített verifikációs jelentések megtekintése
@@ -855,18 +863,43 @@ cli:
     app_help: Fordítási katalógusok auditálása és generálása
     scaffold_check_help: Eltérések jelentése locale fájlok írása nélkül
   overview:
-    allow_incomplete_help: Engedélyezi a naptárt alapértelmezett értékekkel, ha a
-      profil nem deklarálja a regim kulcsokat. E nélkül a naptár elutasításra kerül,
-      ha figyelmeztetések vannak.
+    agenda:
+      allow_incomplete_help: Az agenda generálása akkor is, ha a profil adatai hiányosak.
+      date_help: Az agenda referenciadátuma (ISO YYYY-MM-DD); alapértelmezetten ma.
+      errors:
+        invalid_horizon: A --horizon értéke pozitív egész szám kell legyen (napokban).
+      help: Rangsorolja a közelgő és lejárt kötelezettségeket egy referenciadátum
+        körül. Egyetlen `next_due` mezőt jelenít meg, valamint a due-today / due-soon
+        / overdue kohorszokat. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      horizon_help: Előrenéző ablak (napokban), amelyet a `due_soon` kohorsz figyelembe
+        vesz.
     app_help: Az aktuális adózási munkaterület áttekintése
-    calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
+    backlog:
+      allow_incomplete_help: A backlog generálása akkor is, ha a profil adatai hiányosak.
+      from_help: Inkluzív kezdő dátum (ISO YYYY-MM-DD); alapértelmezetten 365 nappal
+        a mai nap előtt.
+      help: Felsorolja a lejárt, még be nem nyújtott kötelezettségeket. A legrégebbiek
+        kerülnek előre, hogy a legsürgetőbb triázsolható legyen először. Csak helyi;
+        soha nem kapcsolódik az AEAT-hoz.
+      to_help: Inkluzív záró dátum (ISO YYYY-MM-DD); alapértelmezetten ma.
+    calendar:
+      allow_incomplete_help: A naptár generálása akkor is, ha a profil adatai hiányosak.
+      from_help: A naptárablak kezdő dátuma, inkluzív (ISO YYYY-MM-DD).
+      help: A határidőnaptár generálása az aktív profilra a megadott dátumablakban.
+        Alkalmazza az ünnepnapokat és a munkanapi eltolásokat. Csak helyi; soha nem
+        kapcsolódik az AEAT-hoz.
+      to_help: A naptárablak záró dátuma, inkluzív (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
       Futtasd: ''aeat config profile set <kulcs> <érték>'' vagy add meg --allow-incomplete
       a naptár alapértelmezett értékekkel történő számításához.'
-    calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
-    from_help: Naptár kezdő dátuma (YYYY-MM-DD)
-    header: "Modell\tIdőszak\tÁllapot\tNyit\tZár"
+    explain:
+      help: Lebontja egy modelo alkalmazhatóságát az aktív profilra. Megmutatja a
+        bináris indikátort, a regisztrációs alapú indoklást és a profil tényeit, amelyektől
+        a döntés függ. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      modelo_help: AEAT modelo azonosító (pl. 303, 130, 100).
+      year_help: Az alkalmazhatóság értékeléséhez használt adóév; alapértelmezetten
+        az aktuális év.
     period: Időszak
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
     status:
@@ -895,7 +928,6 @@ cli:
       transactions_empty: Meg nincs importalt banki tranzakcio.
       transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
-    to_help: Naptár záró dátuma (YYYY-MM-DD)
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
     app_help: Adózási modellek nyilvántartásának kezelése
