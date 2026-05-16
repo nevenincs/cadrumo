@@ -35,7 +35,7 @@ from typing import Any, Final, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....application.storage.calc_sheets import collect_row_sets
-from ....application.storage.calc_sheets._layout import plan_layout
+from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata
 from ....domain.calculations.registry._formula_runtime import (
     RegistryCalculationResult,
@@ -397,12 +397,48 @@ def pull_operator_edits(
     filing_anchor = date(snapshot.filing_year, 12, 31)
     layout = plan_layout(snapshot.revision, bracket_filter_date=filing_anchor)
 
-    # Build one batchGet covering every operator-input casilla cell,
-    # every binding cell, and every relation mirror cell. The order
-    # is preserved so we can map the response rows back to ids.
+    operator_input_ids, operator_input_ranges = _operator_input_addresses(snapshot, layout)
+    binding_ids = list(layout.binding_cells)
+    binding_ranges = [layout.binding_cells[bid].qualified() for bid in binding_ids]
+    relation_ids = list(layout.relation_cells)
+    relation_ranges = [layout.relation_cells[rid].qualified() for rid in relation_ids]
+    all_ranges = operator_input_ranges + binding_ranges + relation_ranges
+    value_ranges = _batch_get_values(sheets, spreadsheet_id, all_ranges)
+
+    casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    cursor = 0
+    operator_edits, cursor, casilla_cells_read = _decode_operator_edits(
+        value_ranges, cursor, operator_input_ids, casilla_by_id
+    )
+    binding_edits, cursor, binding_cells_read = _decode_binding_edits(value_ranges, cursor, binding_ids)
+    relation_edits, cursor, relation_cells_read = _decode_relation_edits(value_ranges, cursor, relation_ids)
+
+    # Read row-set detail rows from the Detalle tab. Each row-set
+    # reserves first_data_row + 50 rows by N columns; we issue one
+    # batchGet covering each row-set's full data block and capture
+    # any non-blank cell as a RowSetCellEdit.
+    row_set_edits, row_set_cells_read = _read_row_set_edits(snapshot, sheets, spreadsheet_id)
+    cells_read = casilla_cells_read + binding_cells_read + relation_cells_read + row_set_cells_read
+
+    return PullResult(
+        spreadsheet_id=spreadsheet_id,
+        operator_edits=operator_edits,
+        binding_edits=binding_edits,
+        relation_edits=relation_edits,
+        row_set_edits=row_set_edits,
+        metadata=metadata,
+        metadata_match=metadata_match,
+        cells_read=cells_read,
+    )
+
+
+def _operator_input_addresses(
+    snapshot: RegistrySnapshot,
+    layout: SheetLayout,
+) -> tuple[list[CasillaId], list[str]]:
+    """Build the per-casilla (id, qualified-range) pair list for the batchGet."""
     operator_input_ids: list[CasillaId] = []
     operator_input_ranges: list[str] = []
-    casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind not in ("manual", "bound"):
             continue
@@ -411,91 +447,110 @@ def pull_operator_edits(
             continue
         operator_input_ids.append(casilla.id)
         operator_input_ranges.append(address.qualified())
+    return operator_input_ids, operator_input_ranges
 
-    binding_ids: list[BindingId] = list(layout.binding_cells)
-    binding_ranges: list[str] = [layout.binding_cells[bid].qualified() for bid in binding_ids]
 
-    relation_ids: list[RelationId] = list(layout.relation_cells)
-    relation_ranges: list[str] = [layout.relation_cells[rid].qualified() for rid in relation_ids]
+def _batch_get_values(
+    sheets: Any,
+    spreadsheet_id: str,
+    ranges: list[str],
+) -> list[Any]:
+    """One Sheets ``values.batchGet`` covering every supplied A1 range.
 
-    all_ranges = operator_input_ranges + binding_ranges + relation_ranges
-    if all_ranges:
-        response = _execute(
-            sheets.spreadsheets()
-            .values()
-            .batchGet(
-                spreadsheetId=spreadsheet_id,
-                ranges=all_ranges,
-                valueRenderOption="UNFORMATTED_VALUE",
-            ),
-            action="sheets.spreadsheets.values.batchGet",
-        )
-        value_ranges = response.get("valueRanges", []) or []
-    else:
-        value_ranges = []
+    Returns the raw ``valueRanges`` list from the response (each entry
+    is a ``{"range": ..., "values": [[cell, ...], ...]}`` dict shape).
+    Returns an empty list when ``ranges`` is empty, avoiding a wasted
+    API call.
+    """
+    if not ranges:
+        return []
+    response = _execute(
+        sheets.spreadsheets()
+        .values()
+        .batchGet(
+            spreadsheetId=spreadsheet_id,
+            ranges=ranges,
+            valueRenderOption="UNFORMATTED_VALUE",
+        ),
+        action="sheets.spreadsheets.values.batchGet",
+    )
+    return response.get("valueRanges", []) or []
 
+
+def _raw_cell_value(value_ranges: list[Any], cursor: int) -> object:
+    """Return the single-cell raw value at ``cursor`` in a batchGet response, or None."""
+    vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+    rows = vr.get("values", []) or []
+    return rows[0][0] if rows and rows[0] else None
+
+
+def _decode_operator_edits(
+    value_ranges: list[Any],
+    cursor: int,
+    operator_input_ids: list[CasillaId],
+    casilla_by_id: Mapping[CasillaId, object],
+) -> tuple[tuple[OperatorEdit, ...], int, int]:
+    """Map the per-casilla slice of the batchGet response into typed OperatorEdits."""
     cells_read = 0
-    operator_edits: list[OperatorEdit] = []
-    binding_edits: list[BindingEdit] = []
-    relation_edits: list[RelationEdit] = []
-
-    cursor = 0
+    edits: list[OperatorEdit] = []
     for casilla_id in operator_input_ids:
-        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
-        rows = vr.get("values", []) or []
-        raw = rows[0][0] if rows and rows[0] else None
         coerced = _coerce_value(raw)
         if coerced is not None:
             cells_read += 1
         casilla = casilla_by_id[casilla_id]
-        operator_edits.append(
+        edits.append(
             OperatorEdit(
                 casilla=casilla_id,
-                casilla_number=casilla.number,
-                label=casilla.label,
+                casilla_number=casilla.number,  # type: ignore[attr-defined]
+                label=casilla.label,  # type: ignore[attr-defined]
                 value=coerced,
             )
         )
+    return tuple(edits), cursor, cells_read
 
+
+def _decode_binding_edits(
+    value_ranges: list[Any],
+    cursor: int,
+    binding_ids: list[BindingId],
+) -> tuple[tuple[BindingEdit, ...], int, int]:
+    """Map the per-binding slice of the batchGet response into typed BindingEdits.
+
+    Booleans are stringified because :class:`BindingEdit.value`'s union
+    (``Decimal | str | None``) does not carry a bool path — the runtime
+    enum-binding semantics expect a textual representation here.
+    """
+    cells_read = 0
+    edits: list[BindingEdit] = []
     for binding_id in binding_ids:
-        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
-        rows = vr.get("values", []) or []
-        raw = rows[0][0] if rows and rows[0] else None
         coerced = _coerce_value(raw)
         if coerced is not None:
             cells_read += 1
         binding_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
-        binding_edits.append(BindingEdit(binding=binding_id, value=binding_value))
+        edits.append(BindingEdit(binding=binding_id, value=binding_value))
+    return tuple(edits), cursor, cells_read
 
+
+def _decode_relation_edits(
+    value_ranges: list[Any],
+    cursor: int,
+    relation_ids: list[RelationId],
+) -> tuple[tuple[RelationEdit, ...], int, int]:
+    """Map the per-relation slice of the batchGet response into typed RelationEdits."""
+    cells_read = 0
+    edits: list[RelationEdit] = []
     for relation_id in relation_ids:
-        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
-        rows = vr.get("values", []) or []
-        raw = rows[0][0] if rows and rows[0] else None
         coerced = _coerce_decimal(raw)
         if coerced is not None:
             cells_read += 1
-        relation_edits.append(RelationEdit(relation=relation_id, value=coerced))
-
-    # Read row-set detail rows from the Detalle tab. Each row-set
-    # reserves first_data_row + 50 rows by N columns; we issue one
-    # batchGet covering each row-set's full data block and capture
-    # any non-blank cell as a RowSetCellEdit.
-    row_set_edits, row_set_cells_read = _read_row_set_edits(snapshot, sheets, spreadsheet_id)
-    cells_read += row_set_cells_read
-
-    return PullResult(
-        spreadsheet_id=spreadsheet_id,
-        operator_edits=tuple(operator_edits),
-        binding_edits=tuple(binding_edits),
-        relation_edits=tuple(relation_edits),
-        row_set_edits=row_set_edits,
-        metadata=metadata,
-        metadata_match=metadata_match,
-        cells_read=cells_read,
-    )
+        edits.append(RelationEdit(relation=relation_id, value=coerced))
+    return tuple(edits), cursor, cells_read
 
 
 def _read_row_set_edits(
