@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 import pytest
 
@@ -13,59 +13,150 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
-def test_registry_relations_reference_existing_modelo_outputs_and_target_bindings() -> None:
+@pytest.fixture(scope="module")
+def _registry_relation_cases() -> tuple[
+    tuple[ModeloDefinition, ModeloRevision, RelationDefinition, dict[str, ModeloDefinition]], ...
+]:
+    """Pre-load the committed registry once and expose every (modelo, revision, relation) triple.
+
+    Module-scoped fixture so the costly :func:`load_registry_tree` walk
+    runs exactly once per pytest module. The ``by_id`` lookup is
+    snapshotted alongside each triple so the per-case body never
+    re-loads the tree.
+    """
     modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
     by_id = {modelo.id: modelo for modelo in modelos}
+    return tuple(
+        (modelo, revision, relation, by_id)
+        for modelo, revision, relation in _relations(modelos)
+    )
 
+
+def _relation_consistency_errors(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    relation: RelationDefinition,
+    by_id: Mapping[str, ModeloDefinition],
+) -> list[str]:
+    """Return every consistency offence the (modelo, revision, relation) triple carries.
+
+    Per-relation checks split out so each one reads as a single rule:
+    target binding present → source modelo present → at least one
+    matching source revision → each source revision's outputs +
+    periods + offset-derived periods accept the relation's claim.
+    """
     errors: list[str] = []
-    for modelo, revision, relation in _relations(modelos):
-        target_bindings = {binding.id for binding in revision.bindings}
-        if relation.target_binding not in target_bindings:
-            errors.append(f"{modelo.id}/{revision.id}/{relation.id}: unknown target binding {relation.target_binding}")
+    errors.extend(_target_binding_errors(modelo, revision, relation))
+    source_modelo = by_id.get(relation.source_modelo)
+    if source_modelo is None:
+        errors.append(
+            f"{modelo.id}/{revision.id}/{relation.id}: unknown source modelo {relation.source_modelo}"
+        )
+        return errors
+    matching_revisions = tuple(_matching_source_revisions(source_modelo, relation))
+    if not matching_revisions:
+        errors.append(f"{modelo.id}/{revision.id}/{relation.id}: no source revision matches selector")
+        return errors
+    for source_revision in matching_revisions:
+        errors.extend(
+            _source_revision_consistency_errors(modelo, revision, relation, source_modelo, source_revision)
+        )
+    return errors
 
-        source_modelo = by_id.get(relation.source_modelo)
-        if source_modelo is None:
-            errors.append(f"{modelo.id}/{revision.id}/{relation.id}: unknown source modelo {relation.source_modelo}")
-            continue
 
-        matching_revisions = tuple(_matching_source_revisions(source_modelo, relation))
-        if not matching_revisions:
-            errors.append(f"{modelo.id}/{revision.id}/{relation.id}: no source revision matches selector")
-            continue
+def _target_binding_errors(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    relation: RelationDefinition,
+) -> list[str]:
+    target_bindings = {binding.id for binding in revision.bindings}
+    if relation.target_binding in target_bindings:
+        return []
+    return [
+        f"{modelo.id}/{revision.id}/{relation.id}: unknown target binding {relation.target_binding}"
+    ]
 
-        for source_revision in matching_revisions:
-            source_outputs = {casilla.id for casilla in source_revision.casillas}
-            if relation.source_output not in source_outputs:
-                errors.append(
-                    f"{modelo.id}/{revision.id}/{relation.id}: source output {relation.source_output} "
-                    f"not defined by {source_modelo.id}/{source_revision.id}"
-                )
 
-            revision_periods = set(source_revision.period_selector.periods)
-            relation_periods = set(relation.source_periods)
-            if relation_periods and not relation_periods.issubset(revision_periods):
-                unknown_periods = sorted(relation_periods - revision_periods)
-                errors.append(
-                    f"{modelo.id}/{revision.id}/{relation.id}: source periods {unknown_periods} "
-                    f"not accepted by {source_modelo.id}/{source_revision.id}"
-                )
+def _source_revision_consistency_errors(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    relation: RelationDefinition,
+    source_modelo: ModeloDefinition,
+    source_revision: ModeloRevision,
+) -> list[str]:
+    """Three checks against one source-revision candidate: outputs, periods, offset-derived periods."""
+    errors: list[str] = []
+    source_outputs = {casilla.id for casilla in source_revision.casillas}
+    if relation.source_output not in source_outputs:
+        errors.append(
+            f"{modelo.id}/{revision.id}/{relation.id}: source output {relation.source_output} "
+            f"not defined by {source_modelo.id}/{source_revision.id}"
+        )
+    revision_periods = set(source_revision.period_selector.periods)
+    relation_periods = set(relation.source_periods)
+    if relation_periods and not relation_periods.issubset(revision_periods):
+        unknown_periods = sorted(relation_periods - revision_periods)
+        errors.append(
+            f"{modelo.id}/{revision.id}/{relation.id}: source periods {unknown_periods} "
+            f"not accepted by {source_modelo.id}/{source_revision.id}"
+        )
+    errors.extend(
+        _offset_derived_period_errors(
+            modelo, revision, relation, source_modelo, source_revision, revision_periods=revision_periods
+        )
+    )
+    return errors
 
-            if relation.source_period_offset_from_target is not None:
-                from ._relations import _derive_offset_source_period
 
-                derived: set[str] = set()
-                for target_period in relation.target_periods:
-                    candidate = _derive_offset_source_period(relation, target_period=target_period)
-                    if candidate is not None:
-                        derived.add(candidate)
-                unknown_derived = sorted(derived - revision_periods)
-                if unknown_derived:
-                    errors.append(
-                        f"{modelo.id}/{revision.id}/{relation.id}: offset-derived source periods "
-                        f"{unknown_derived} not accepted by {source_modelo.id}/{source_revision.id}"
-                    )
+def _offset_derived_period_errors(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    relation: RelationDefinition,
+    source_modelo: ModeloDefinition,
+    source_revision: ModeloRevision,
+    *,
+    revision_periods: set[str],
+) -> list[str]:
+    """For offset-driven relations, verify every derived source period is in revision_periods."""
+    if relation.source_period_offset_from_target is None:
+        return []
+    from ._relations import _derive_offset_source_period
 
-    assert not errors
+    derived: set[str] = set()
+    for target_period in relation.target_periods:
+        candidate = _derive_offset_source_period(relation, target_period=target_period)
+        if candidate is not None:
+            derived.add(candidate)
+    unknown_derived = sorted(derived - revision_periods)
+    if not unknown_derived:
+        return []
+    return [
+        f"{modelo.id}/{revision.id}/{relation.id}: offset-derived source periods "
+        f"{unknown_derived} not accepted by {source_modelo.id}/{source_revision.id}"
+    ]
+
+
+def test_registry_relations_reference_existing_modelo_outputs_and_target_bindings(
+    _registry_relation_cases: tuple[
+        tuple[ModeloDefinition, ModeloRevision, RelationDefinition, Mapping[str, ModeloDefinition]], ...
+    ],
+) -> None:
+    """Every relation in the committed registry must point at real source/target rows.
+
+    The body now reads as a flat fold over the (modelo, revision,
+    relation) cases; per-case logic is in :func:`_relation_consistency_errors`
+    and its three concern-specific helpers
+    (:func:`_target_binding_errors`,
+    :func:`_source_revision_consistency_errors`,
+    :func:`_offset_derived_period_errors`). When the assertion fails
+    the message lists every offending triple at once so the developer
+    can fix the registry in a single edit rather than chasing one
+    triple per test-run cycle.
+    """
+    errors: list[str] = []
+    for modelo, revision, relation, by_id in _registry_relation_cases:
+        errors.extend(_relation_consistency_errors(modelo, revision, relation, by_id))
+    assert not errors, "registry relation-consistency offences:\n  " + "\n  ".join(errors)
 
 
 def test_previous_filing_bindings_reference_existing_source_modelo_outputs_and_periods() -> None:

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
     from playwright.async_api import Page
@@ -285,142 +285,13 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             assert_click_target_safe=assert_click_target_safe,
         )
 
-        # Capture full HTML + a button/link inventory.
         html_content = await page.content()
-        button_inventory_lines: list[str] = []
-        button_inventory_lines.append("=== <button> elements ===")
-        buttons = await page.locator("button").all()
-        for idx, btn in enumerate(buttons[:120]):
-            try:
-                text = (await btn.inner_text(timeout=1_000)).strip()
-            except Exception:
-                _log.debug("explore DOM button text unreadable index=%d", idx, exc_info=True)
-                text = "(unreadable)"
-            try:
-                disabled = await btn.get_attribute("disabled")
-            except Exception:
-                _log.debug("explore DOM button disabled attribute unreadable index=%d", idx, exc_info=True)
-                disabled = None
-            button_inventory_lines.append(f"  [{idx}] text={text!r} disabled={disabled!r}")
-        button_inventory_lines.append("")
-        button_inventory_lines.append("=== <a> link elements ===")
-        anchors = await page.locator("a").all()
-        for idx, anchor in enumerate(anchors[:120]):
-            try:
-                text = (await anchor.inner_text(timeout=1_000)).strip()
-            except Exception:
-                _log.debug("explore DOM anchor text unreadable index=%d", idx, exc_info=True)
-                text = "(unreadable)"
-            try:
-                href = await anchor.get_attribute("href")
-            except Exception:
-                _log.debug("explore DOM anchor href unreadable index=%d", idx, exc_info=True)
-                href = None
-            button_inventory_lines.append(f"  [{idx}] text={text!r} href={href!r}")
-        button_inventory_lines.append("")
-        button_inventory_lines.append("=== ZK-shape elements with click handlers ===")
-        # ZK uses .z-button and .z-toolbarbutton instead of native <button>.
-        for cls in (".z-button", ".z-toolbarbutton", ".z-menuitem", ".z-listitem"):
-            els = await page.locator(cls).all()
-            button_inventory_lines.append(f"\n  -- {cls} ({len(els)} found) --")
-            for idx, el in enumerate(els[:60]):
-                try:
-                    text = (await el.inner_text(timeout=1_000)).strip()
-                except Exception:
-                    _log.debug("explore DOM ZK element text unreadable class=%s index=%d", cls, idx, exc_info=True)
-                    text = "(unreadable)"
-                button_inventory_lines.append(f"    [{idx}] text={text!r}")
-        button_inventory_lines.append("\n=== input elements (dialog textboxes etc.) ===")
-        inputs = await page.locator("input").all()
-        for idx, inp in enumerate(inputs[:60]):
-            try:
-                title = await inp.get_attribute("title")
-                placeholder = await inp.get_attribute("placeholder")
-                input_type = await inp.get_attribute("type")
-                name = await inp.get_attribute("name")
-                value = await inp.input_value(timeout=500)
-            except Exception:
-                _log.debug("explore DOM input inventory metadata unreadable index=%d", idx, exc_info=True)
-                title = placeholder = input_type = name = value = "?"
-            button_inventory_lines.append(
-                f"  [{idx}] type={input_type!r} title={title!r}"
-                f" placeholder={placeholder!r} name={name!r} value={value!r}"
-            )
-        button_inventory_lines.append("\n=== visible dialogs / modals ===")
-        for cls in (".z-window", ".z-window-modal", "[role='dialog']"):
-            els = await page.locator(cls).all()
-            for idx, el in enumerate(els[:10]):
-                try:
-                    visible = await el.is_visible()
-                    text = (await el.inner_text(timeout=1_000))[:200]
-                except Exception:
-                    _log.debug(
-                        "explore DOM visible dialog metadata unreadable selector=%s index=%d",
-                        cls,
-                        idx,
-                        exc_info=True,
-                    )
-                    visible = False
-                    text = "(unreadable)"
-                if visible:
-                    button_inventory_lines.append(f"  {cls}[{idx}] visible text-preview={text!r}")
-        # Page-evaluate DOM walk: enumerate every element with role,
-        # aria-label, title, or ZK-class attributes, including across
-        # shadow roots. Captures the Buscar casilla dialog widgets that
-        # ZK lazy-loads outside the main page.content() snapshot.
-        a11y_lines: list[str] = []
-        try:
-            elements = await page.evaluate(
-                """
-                () => {
-                  const out = [];
-                  function walk(root, depth) {
-                    if (!root) return;
-                    const all = root.querySelectorAll('*');
-                    for (const el of all) {
-                      const role = el.getAttribute('role');
-                      const aria = el.getAttribute('aria-label');
-                      const title = el.getAttribute('title');
-                      const cls = (el.className && typeof el.className === 'string') ? el.className : '';
-                      const _zkRe1 = /\\bz-(window|popup|textbox|decimalbox|doublebox|combobox)\\b/;
-                      const _zkRe2 = /\\bz-(button|toolbarbutton|menuitem|listitem)\\b/;
-                      const isZk = _zkRe1.test(cls) || _zkRe2.test(cls);
-                      if (role || aria || title || isZk) {
-                        const text = (el.innerText || '').slice(0, 80).replace(/\\s+/g, ' ').trim();
-                        out.push({
-                          role: role || '',
-                          aria: aria || '',
-                          title: title || '',
-                          cls: cls.slice(0, 60),
-                          text: text,
-                          tag: el.tagName.toLowerCase(),
-                          visible: !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length),
-                        });
-                      }
-                      if (el.shadowRoot) walk(el.shadowRoot, depth + 1);
-                    }
-                  }
-                  walk(document, 0);
-                  return out;
-                }
-                """
-            )
-            for entry in elements[:400]:
-                if not entry.get("visible"):
-                    continue
-                a11y_lines.append(
-                    f"<{entry['tag']}> "
-                    f"role={entry['role']!r} aria={entry['aria']!r} "
-                    f"title={entry['title']!r} cls={entry['cls']!r} "
-                    f"text={entry['text']!r}"
-                )
-        except Exception as exc:
-            _log.debug("explore DOM page.evaluate walk failed", exc_info=True)
-            a11y_lines = [f"(page.evaluate walk failed: {type(exc).__name__}: {exc})"]
+        inventory_text = await _capture_dom_inventory(page)
+        a11y_text = await _capture_a11y_tree(page)
         return (
             html_content,
-            "\n".join(button_inventory_lines),
-            "\n".join(a11y_lines),
+            inventory_text,
+            a11y_text,
             buscar_dialog_snapshot,
             apartados_dialog_snapshot,
         )
@@ -428,6 +299,177 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
         if context is not None:
             await context.close()
         await browser_session.close()
+
+
+async def _safe_inner_text(locator: object, *, stage: str) -> str:
+    """Read ``locator.inner_text`` with a fallback string on any failure."""
+    try:
+        return (await locator.inner_text(timeout=1_000)).strip()  # type: ignore[attr-defined]
+    except Exception:
+        _log.debug("explore DOM inner_text unreadable: %s", stage, exc_info=True)
+        return "(unreadable)"
+
+
+async def _safe_get_attribute(locator: object, attr: str, *, stage: str) -> str | None:
+    """Read ``locator.get_attribute(attr)`` with a fallback on any failure."""
+    try:
+        return await locator.get_attribute(attr)  # type: ignore[attr-defined]
+    except Exception:
+        _log.debug("explore DOM attribute %r unreadable: %s", attr, stage, exc_info=True)
+        return None
+
+
+async def _capture_button_inventory(page: object) -> list[str]:
+    """Inventory native ``<button>`` elements with their text + disabled attribute."""
+    lines: list[str] = ["=== <button> elements ==="]
+    buttons = await page.locator("button").all()  # type: ignore[attr-defined]
+    for idx, btn in enumerate(buttons[:120]):
+        stage = f"button[{idx}]"
+        text = await _safe_inner_text(btn, stage=stage)
+        disabled = await _safe_get_attribute(btn, "disabled", stage=stage)
+        lines.append(f"  [{idx}] text={text!r} disabled={disabled!r}")
+    return lines
+
+
+async def _capture_anchor_inventory(page: object) -> list[str]:
+    """Inventory ``<a>`` link elements with their text + href."""
+    lines: list[str] = ["=== <a> link elements ==="]
+    anchors = await page.locator("a").all()  # type: ignore[attr-defined]
+    for idx, anchor in enumerate(anchors[:120]):
+        stage = f"anchor[{idx}]"
+        text = await _safe_inner_text(anchor, stage=stage)
+        href = await _safe_get_attribute(anchor, "href", stage=stage)
+        lines.append(f"  [{idx}] text={text!r} href={href!r}")
+    return lines
+
+
+async def _capture_zk_inventory(page: object) -> list[str]:
+    """Inventory ZK-class clickable elements (.z-button / .z-toolbarbutton / etc.)."""
+    lines: list[str] = ["=== ZK-shape elements with click handlers ==="]
+    for cls in (".z-button", ".z-toolbarbutton", ".z-menuitem", ".z-listitem"):
+        els = await page.locator(cls).all()  # type: ignore[attr-defined]
+        lines.append(f"\n  -- {cls} ({len(els)} found) --")
+        for idx, el in enumerate(els[:60]):
+            text = await _safe_inner_text(el, stage=f"{cls}[{idx}]")
+            lines.append(f"    [{idx}] text={text!r}")
+    return lines
+
+
+async def _capture_input_inventory(page: object) -> list[str]:
+    """Inventory ``<input>`` elements (dialog textboxes etc.)."""
+    lines: list[str] = ["\n=== input elements (dialog textboxes etc.) ==="]
+    inputs = await page.locator("input").all()  # type: ignore[attr-defined]
+    for idx, inp in enumerate(inputs[:60]):
+        try:
+            title = await inp.get_attribute("title")  # type: ignore[attr-defined]
+            placeholder = await inp.get_attribute("placeholder")  # type: ignore[attr-defined]
+            input_type = await inp.get_attribute("type")  # type: ignore[attr-defined]
+            name = await inp.get_attribute("name")  # type: ignore[attr-defined]
+            value = await inp.input_value(timeout=500)  # type: ignore[attr-defined]
+        except Exception:
+            _log.debug("explore DOM input inventory metadata unreadable index=%d", idx, exc_info=True)
+            title = placeholder = input_type = name = value = "?"
+        lines.append(
+            f"  [{idx}] type={input_type!r} title={title!r}"
+            f" placeholder={placeholder!r} name={name!r} value={value!r}"
+        )
+    return lines
+
+
+async def _capture_dialog_inventory(page: object) -> list[str]:
+    """Inventory visible dialog / modal containers."""
+    lines: list[str] = ["\n=== visible dialogs / modals ==="]
+    for cls in (".z-window", ".z-window-modal", "[role='dialog']"):
+        els = await page.locator(cls).all()  # type: ignore[attr-defined]
+        for idx, el in enumerate(els[:10]):
+            try:
+                visible = await el.is_visible()  # type: ignore[attr-defined]
+                text = (await el.inner_text(timeout=1_000))[:200]  # type: ignore[attr-defined]
+            except Exception:
+                _log.debug(
+                    "explore DOM visible dialog metadata unreadable selector=%s index=%d",
+                    cls,
+                    idx,
+                    exc_info=True,
+                )
+                visible = False
+                text = "(unreadable)"
+            if visible:
+                lines.append(f"  {cls}[{idx}] visible text-preview={text!r}")
+    return lines
+
+
+async def _capture_dom_inventory(page: object) -> str:
+    """Concatenate the five DOM-inventory views into one newline-joined string."""
+    sections = (
+        await _capture_button_inventory(page),
+        [""],
+        await _capture_anchor_inventory(page),
+        [""],
+        await _capture_zk_inventory(page),
+        await _capture_input_inventory(page),
+        await _capture_dialog_inventory(page),
+    )
+    return "\n".join(line for section in sections for line in section)
+
+
+# Page-evaluate DOM walk: enumerate every element carrying role /
+# aria-label / title / ZK-class attributes, including across shadow
+# roots. Captures the Buscar casilla dialog widgets that ZK lazy-loads
+# outside the main page.content() snapshot.
+_A11Y_WALK_JS: Final[str] = """
+() => {
+  const out = [];
+  function walk(root, depth) {
+    if (!root) return;
+    const all = root.querySelectorAll('*');
+    for (const el of all) {
+      const role = el.getAttribute('role');
+      const aria = el.getAttribute('aria-label');
+      const title = el.getAttribute('title');
+      const cls = (el.className && typeof el.className === 'string') ? el.className : '';
+      const _zkRe1 = /\\bz-(window|popup|textbox|decimalbox|doublebox|combobox)\\b/;
+      const _zkRe2 = /\\bz-(button|toolbarbutton|menuitem|listitem)\\b/;
+      const isZk = _zkRe1.test(cls) || _zkRe2.test(cls);
+      if (role || aria || title || isZk) {
+        const text = (el.innerText || '').slice(0, 80).replace(/\\s+/g, ' ').trim();
+        out.push({
+          role: role || '',
+          aria: aria || '',
+          title: title || '',
+          cls: cls.slice(0, 60),
+          text: text,
+          tag: el.tagName.toLowerCase(),
+          visible: !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length),
+        });
+      }
+      if (el.shadowRoot) walk(el.shadowRoot, depth + 1);
+    }
+  }
+  walk(document, 0);
+  return out;
+}
+"""
+
+
+async def _capture_a11y_tree(page: object) -> str:
+    """Walk the accessibility tree across shadow roots; return one line per visible entry."""
+    try:
+        elements = await page.evaluate(_A11Y_WALK_JS)  # type: ignore[attr-defined]
+    except Exception as exc:
+        _log.debug("explore DOM page.evaluate walk failed", exc_info=True)
+        return f"(page.evaluate walk failed: {type(exc).__name__}: {exc})"
+    lines: list[str] = []
+    for entry in elements[:400]:
+        if not entry.get("visible"):
+            continue
+        lines.append(
+            f"<{entry['tag']}> "
+            f"role={entry['role']!r} aria={entry['aria']!r} "
+            f"title={entry['title']!r} cls={entry['cls']!r} "
+            f"text={entry['text']!r}"
+        )
+    return "\n".join(lines)
 
 
 def test_explore_renta_web_open_resumen_dom() -> None:
