@@ -97,7 +97,7 @@ def _load_vat_catalogues_cached(
 def resolve_catalogue(*, on: date) -> VATCatalogue:
     """Return the exact VAT catalogue for ``on``."""
 
-    catalogue = VAT_CATALOGUES_BY_YEAR.get(on.year)
+    catalogue = _get_vat_catalogues_by_year().get(on.year)
     if catalogue is None:
         raise VatCatalogueError(f"no VAT catalogue registered for year={on.year}")
     return catalogue
@@ -158,7 +158,22 @@ def _parse_citation(raw_citation: object) -> VatCitation:
     )
 
 
-VAT_CATALOGUES_BY_YEAR: Mapping[int, VATCatalogue] = load_vat_catalogues()
+_VAT_CATALOGUES_BY_YEAR_CACHE: list[Mapping[int, VATCatalogue]] = []
+
+
+def _get_vat_catalogues_by_year() -> Mapping[int, VATCatalogue]:
+    """Return the cached VAT catalogues, loading on first access."""
+    if not _VAT_CATALOGUES_BY_YEAR_CACHE:
+        _VAT_CATALOGUES_BY_YEAR_CACHE.append(load_vat_catalogues())
+    return _VAT_CATALOGUES_BY_YEAR_CACHE[0]
+
+
+def __getattr__(name: str) -> object:
+    """Lazy accessor for the legacy ``VAT_CATALOGUES_BY_YEAR`` constant."""
+    if name == "VAT_CATALOGUES_BY_YEAR":
+        return _get_vat_catalogues_by_year()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "VAT_CATALOGUES_BY_YEAR",

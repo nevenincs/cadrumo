@@ -93,14 +93,21 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     )
 
 
-LIRPF_ART_85_IMPUTACION: Final[LirpfArt85ImputacionParameters] = _load_parameters()
-"""Module-level frozen record loaded once at import time.
+_LIRPF_ART_85_IMPUTACION_CACHE: list[LirpfArt85ImputacionParameters] = []
 
-Consumers — currently :mod:`aeat.domain.rental._aggregates` —
-reference ``LIRPF_ART_85_IMPUTACION.recent_revision_rate``,
-``.old_or_no_revision_rate``, and ``.catastral_revision_lookback_years``
-instead of carrying the values as Python literals.
-"""
+
+def _get_lirpf_art_85_imputacion() -> LirpfArt85ImputacionParameters:
+    """Return the cached LIRPF art. 85 parameters, loading on first access."""
+    if not _LIRPF_ART_85_IMPUTACION_CACHE:
+        _LIRPF_ART_85_IMPUTACION_CACHE.append(_load_parameters())
+    return _LIRPF_ART_85_IMPUTACION_CACHE[0]
+
+
+def __getattr__(name: str) -> object:
+    """Lazy accessor for the legacy ``LIRPF_ART_85_IMPUTACION`` constant."""
+    if name == "LIRPF_ART_85_IMPUTACION":
+        return _get_lirpf_art_85_imputacion()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 __all__ = [

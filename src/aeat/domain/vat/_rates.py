@@ -115,6 +115,27 @@ def _assert_no_overlap(
                 )
 
 
-VAT_RATE_TABLE: Mapping[EUMemberState, tuple[VATRate, ...]] = load_vat_rate_table()
+_VAT_RATE_TABLE_CACHE: list[Mapping[EUMemberState, tuple[VATRate, ...]]] = []
+
+
+def _get_vat_rate_table() -> Mapping[EUMemberState, tuple[VATRate, ...]]:
+    """Return the cached VAT rate table, loading on first access."""
+    if not _VAT_RATE_TABLE_CACHE:
+        _VAT_RATE_TABLE_CACHE.append(load_vat_rate_table())
+    return _VAT_RATE_TABLE_CACHE[0]
+
+
+def __getattr__(name: str) -> object:
+    """Module-level lazy accessor for the legacy ``VAT_RATE_TABLE`` constant.
+
+    Eager module-level loading triggered file IO at every import
+    of any consumer that touched :mod:`aeat.domain.vat`. The lazy
+    accessor preserves the public ``from ... import VAT_RATE_TABLE``
+    surface without paying the load cost at import time.
+    """
+    if name == "VAT_RATE_TABLE":
+        return _get_vat_rate_table()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = ["VAT_RATE_TABLE", "load_vat_rate_table"]
