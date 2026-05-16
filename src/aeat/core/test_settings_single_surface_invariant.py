@@ -152,42 +152,70 @@ def _violations_in(path: Path) -> list[tuple[int, str, str]]:
     aliases = _collect_environ_aliases(tree)
     violations: list[tuple[int, str, str]] = []
     for node in ast.walk(tree):
-        # ENVIRON[KEY] — including aliased environ names
         if isinstance(node, ast.Subscript):
-            target = node.value
-            if _is_os_environ(target) or (isinstance(target, ast.Name) and target.id in aliases):
-                key = _aeat_key_from_arg(node.slice, constants)
-                if key is not None:
-                    violations.append((node.lineno, key, f"{_target_label(target)}[...]"))
-                elif _is_string_with_aeat_format_template(node.slice):
-                    violations.append((node.lineno, "AEAT_<dynamic>", f"{_target_label(target)}[f-string]"))
+            _scan_subscript_environ_read(node, constants, aliases, violations)
         elif isinstance(node, ast.Call):
-            func = node.func
-            # ENVIRON.{get,pop,setdefault}(KEY, ...) — including aliased environ
-            if isinstance(func, ast.Attribute) and func.attr in {"get", "pop", "setdefault"} and node.args:
-                target = func.value
-                if _is_os_environ(target) or (isinstance(target, ast.Name) and target.id in aliases):
-                    key = _aeat_key_from_arg(node.args[0], constants)
-                    if key is not None:
-                        violations.append((node.lineno, key, f"{_target_label(target)}.{func.attr}(...)"))
-                    elif _is_string_with_aeat_format_template(node.args[0]):
-                        violations.append(
-                            (node.lineno, "AEAT_<dynamic>", f"{_target_label(target)}.{func.attr}(f-string)")
-                        )
-            # os.getenv(KEY, ...) or getenv(KEY, ...) when from os import getenv
-            elif isinstance(func, ast.Attribute) and func.attr == "getenv" and node.args:
-                if isinstance(func.value, ast.Name) and func.value.id == "os":
-                    key = _aeat_key_from_arg(node.args[0], constants)
-                    if key is not None:
-                        violations.append((node.lineno, key, "os.getenv(...)"))
-                    elif _is_string_with_aeat_format_template(node.args[0]):
-                        violations.append((node.lineno, "AEAT_<dynamic>", "os.getenv(f-string)"))
-            elif isinstance(func, ast.Name) and func.id == "getenv" and node.args:
-                # from os import getenv -> bare getenv("AEAT_FOO")
-                key = _aeat_key_from_arg(node.args[0], constants)
-                if key is not None:
-                    violations.append((node.lineno, key, "getenv(...)"))
+            _scan_call_environ_read(node, constants, aliases, violations)
     return violations
+
+
+def _scan_subscript_environ_read(
+    node: ast.Subscript,
+    constants: dict[str, str],
+    aliases: set[str],
+    violations: list[tuple[int, str, str]],
+) -> None:
+    """``ENVIRON[KEY]`` form — including aliased environ names."""
+    target = node.value
+    if not (_is_os_environ(target) or (isinstance(target, ast.Name) and target.id in aliases)):
+        return
+    key = _aeat_key_from_arg(node.slice, constants)
+    if key is not None:
+        violations.append((node.lineno, key, f"{_target_label(target)}[...]"))
+    elif _is_string_with_aeat_format_template(node.slice):
+        violations.append((node.lineno, "AEAT_<dynamic>", f"{_target_label(target)}[f-string]"))
+
+
+def _scan_call_environ_read(
+    node: ast.Call,
+    constants: dict[str, str],
+    aliases: set[str],
+    violations: list[tuple[int, str, str]],
+) -> None:
+    """``ENVIRON.get/pop/setdefault(...)`` and ``os.getenv(...)`` / bare ``getenv(...)`` calls."""
+    if not node.args:
+        return
+    func = node.func
+    if isinstance(func, ast.Attribute) and func.attr in {"get", "pop", "setdefault"}:
+        target = func.value
+        if _is_os_environ(target) or (isinstance(target, ast.Name) and target.id in aliases):
+            _record_call_violation(
+                node, constants, violations, label=f"{_target_label(target)}.{func.attr}"
+            )
+        return
+    if isinstance(func, ast.Attribute) and func.attr == "getenv":
+        if isinstance(func.value, ast.Name) and func.value.id == "os":
+            _record_call_violation(node, constants, violations, label="os.getenv")
+        return
+    if isinstance(func, ast.Name) and func.id == "getenv":
+        # from os import getenv -> bare getenv("AEAT_FOO")
+        key = _aeat_key_from_arg(node.args[0], constants)
+        if key is not None:
+            violations.append((node.lineno, key, "getenv(...)"))
+
+
+def _record_call_violation(
+    node: ast.Call,
+    constants: dict[str, str],
+    violations: list[tuple[int, str, str]],
+    *,
+    label: str,
+) -> None:
+    key = _aeat_key_from_arg(node.args[0], constants)
+    if key is not None:
+        violations.append((node.lineno, key, f"{label}(...)"))
+    elif _is_string_with_aeat_format_template(node.args[0]):
+        violations.append((node.lineno, "AEAT_<dynamic>", f"{label}(f-string)"))
 
 
 def _is_os_environ(node: ast.expr) -> bool:
