@@ -141,3 +141,84 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: flipping DISCARDED to DRAFT while retaining metadata must surface.
+
+    :class:`WorkUnit` enforces a lifecycle invariant:
+    DRAFT work units must NOT carry discard metadata; DISCARDED ones
+    MUST. The catalogue also enforces that the dict key equals the
+    work unit's content-addressed work_unit_id.
+
+    Persists a DISCARDED work unit (with discard metadata populated),
+    reaches into ``SecureObjectRow`` via ``session_scope``, surgically
+    flips the persisted ``state`` from ``"discarded"`` back to
+    ``"draft"`` without clearing the discard metadata, and asserts
+    the load path catches the drift via the model_validator's
+    DRAFT-must-not-carry-discard-metadata check.
+
+    If this test ever passes silently with the flipped state, the
+    work-unit catalogue boundary is tautological and the lifecycle
+    state machine is not actually enforced post-persistence.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._repository import _WORK_UNIT_NAMESPACE, _WORK_UNIT_OBJECT_KEY
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "work-unit-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+        work_unit = _populated_work_unit()
+        catalogue = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
+        repo = WorkUnitCatalogueRepository()
+        repo.save(catalogue)
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _WORK_UNIT_NAMESPACE,
+                SecureObjectRow.object_key == _WORK_UNIT_OBJECT_KEY,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            work_units = envelope["payload"]["work_units"]
+            unit_dict = work_units[work_unit.work_unit_id]
+            assert unit_dict["state"] == "discarded", (
+                "fixture must serialise state as 'discarded' for this "
+                "proof test to be meaningful"
+            )
+            # Flip state back to draft while leaving discard metadata
+            # in place. The DRAFT invariant must trip on load.
+            unit_dict["state"] = "draft"
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            repo.load()
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: flipping state from "
+            "DISCARDED to DRAFT while retaining discard metadata did "
+            "NOT surface on load. The work-unit catalogue boundary "
+            "is tautological and the lifecycle state machine is not "
+            "actually enforced post-persistence."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
