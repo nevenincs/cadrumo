@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 
 from ._export import derive_export_layouts_from_bindings
-from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._temporal import select_revision
 from ._validate import RegistryValidator, _check_all_id_references
 
@@ -74,72 +74,7 @@ def _build_validated_snapshot(
 
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
-    legal_ids = set(modelo.legal_refs).union(revision.legal_refs)
-    source_ids = set(modelo.source_refs).union(revision.source_refs)
-    for casilla in revision.casillas:
-        legal_ids.update(casilla.legal_refs)
-        source_ids.update(casilla.source_refs)
-    for formula in revision.formulas:
-        legal_ids.update(formula.legal_refs)
-        source_ids.update(formula.source_refs)
-    for parameter in revision.parameters:
-        legal_ids.update(parameter.legal_refs)
-        source_ids.update(parameter.source_refs)
-    for binding in revision.bindings:
-        legal_ids.update(binding.legal_refs)
-        source_ids.update(binding.source_refs)
-    for relation in revision.relations:
-        legal_ids.update(relation.legal_refs)
-        source_ids.update(relation.source_refs)
-    for provider in revision.algorithm_providers:
-        legal_ids.update(provider.legal_refs)
-        source_ids.update(provider.source_refs)
-    for algorithm_binding in revision.algorithm_bindings:
-        legal_ids.update(algorithm_binding.legal_refs)
-        source_ids.update(algorithm_binding.source_refs)
-    for layout in revision.export_layouts:
-        legal_ids.update(layout.legal_refs)
-        source_ids.update(layout.source_refs)
-        for record in layout.records:
-            for field in record.fields:
-                legal_ids.update(field.legal_refs)
-                source_ids.update(field.source_refs)
-    for profile in revision.extraction_profiles:
-        legal_ids.update(profile.legal_refs)
-        source_ids.update(profile.source_refs)
-    for cross_reference in revision.live_cross_references:
-        legal_ids.update(cross_reference.legal_refs)
-        source_ids.update(cross_reference.source_refs)
-    for workbook in revision.workbook_parity_refs:
-        legal_ids.update(workbook.legal_refs)
-        source_ids.update(workbook.source_refs)
-    for expectation in revision.verification_expectations:
-        legal_ids.update(expectation.legal_refs)
-        source_ids.update(expectation.source_refs)
-    for link in revision.application_links:
-        legal_ids.update(link.legal_refs)
-        source_ids.update(link.source_refs)
-    for window in revision.deadline_windows:
-        legal_ids.update(window.legal_refs)
-        source_ids.update(window.source_refs)
-        for condition in window.applicability_conditions:
-            legal_ids.update(condition.legal_refs)
-            source_ids.update(condition.source_refs)
-    for schedule in revision.filing_schedules:
-        legal_ids.update(schedule.legal_refs)
-        source_ids.update(schedule.source_refs)
-        for condition in schedule.profile_conditions:
-            legal_ids.update(condition.legal_refs)
-            source_ids.update(condition.source_refs)
-    for decision in revision.support_removal_decisions:
-        legal_ids.update(decision.legal_refs)
-        source_ids.update(decision.source_refs)
-    for construct in revision.constructs:
-        legal_ids.update(construct.legal_refs)
-        source_ids.update(construct.source_refs)
-    for classification in revision.dependency_classifications:
-        legal_ids.update(classification.legal_refs)
-        source_ids.update(classification.source_refs)
+    legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
     snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -164,3 +99,68 @@ def _build_validated_snapshot(
     )
     _check_all_id_references(snapshot)
     return snapshot
+
+
+def _collect_snapshot_ref_ids(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+) -> tuple[set[str], set[str]]:
+    """Walk every record kind and return its (legal_ids, source_ids) pair.
+
+    The snapshot's ``legal`` / ``sources`` mappings carry only the
+    refs actually exercised by the slice — this helper aggregates the
+    every-record-kind union the calculation-grounding rule mandates
+    (legal_refs + source_refs preserved through every domain
+    boundary). Flat records share one walk; the three nesting record
+    kinds (export_layouts, deadline_windows, filing_schedules) carry
+    their own explicit blocks because they nest inner records that
+    also carry refs.
+    """
+    legal_ids = set(modelo.legal_refs).union(revision.legal_refs)
+    source_ids = set(modelo.source_refs).union(revision.source_refs)
+    flat_records = (
+        revision.casillas,
+        revision.formulas,
+        revision.parameters,
+        revision.bindings,
+        revision.relations,
+        revision.algorithm_providers,
+        revision.algorithm_bindings,
+        revision.extraction_profiles,
+        revision.live_cross_references,
+        revision.workbook_parity_refs,
+        revision.verification_expectations,
+        revision.application_links,
+        revision.support_removal_decisions,
+        revision.constructs,
+        revision.dependency_classifications,
+    )
+    for kind_records in flat_records:
+        for record in kind_records:
+            legal_ids.update(record.legal_refs)
+            source_ids.update(record.source_refs)
+    # Export layouts carry refs on the layout itself plus on every
+    # field inside every record. Walk both axes explicitly so a future
+    # binding-aware field gate still sees every nested ref.
+    for layout in revision.export_layouts:
+        legal_ids.update(layout.legal_refs)
+        source_ids.update(layout.source_refs)
+        for export_record in layout.records:
+            for field in export_record.fields:
+                legal_ids.update(field.legal_refs)
+                source_ids.update(field.source_refs)
+    # Deadline windows + filing schedules each nest applicability /
+    # profile conditions that carry their own refs.
+    for window in revision.deadline_windows:
+        legal_ids.update(window.legal_refs)
+        source_ids.update(window.source_refs)
+        for condition in window.applicability_conditions:
+            legal_ids.update(condition.legal_refs)
+            source_ids.update(condition.source_refs)
+    for schedule in revision.filing_schedules:
+        legal_ids.update(schedule.legal_refs)
+        source_ids.update(schedule.source_refs)
+        for condition in schedule.profile_conditions:
+            legal_ids.update(condition.legal_refs)
+            source_ids.update(condition.source_refs)
+    return legal_ids, source_ids
