@@ -641,4 +641,48 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.profile._census_errors.CensusSyncError",
+        ErrorCode(
+            code="FAIL_CENSUS_SYNC",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.census_sync",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.profile._census_errors.CensusNotAvailableError",
+        ErrorCode(
+            code="REFUSED_CENSUS_NOT_AVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.census_not_available",
+            default_suggestion="aeat config auth configure",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.profile._census_errors.CensusFieldValidationError",
+        ErrorCode(
+            code="REFUSED_CENSUS_FIELD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.census_field_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.profile._census_errors.CensusApplyConflictError",
+        ErrorCode(
+            code="REFUSED_CENSUS_APPLY_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.census_apply_conflict",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
