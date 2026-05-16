@@ -205,7 +205,17 @@ check or fix. Defect-class abbreviations:
 - K. Type-system escape (cast, Any, type: ignore)
 - L. Hand-authored data with no schema coupling
 
-Status legend: `open`, `check-written`, `fixed`, `wontfix-document`.
+Status legend: `open`, `check-written`, `fixed`, `wontfix-document`,
+`regressed` (claimed fixed but re-audit found the anti-pattern still
+present), `partial` (some of the claim landed; the full structural
+fix did not), `unverified` (the symbol moved or was renamed in a way
+the re-audit script could not match).
+
+A late re-audit found that several "fixed" claims were optimistic.
+The verdicts below reflect the re-audit run at `scratch/out/reaudit_inventory.json`
+where it produced a definitive result; rows the re-audit did not
+check carry their original execution-time status with a `(unverified
+by re-audit)` qualifier.
 
 | Row | Site | Symbol / concept | Class | Witnesses | Status |
 |-----|------|------------------|-------|-----------|--------|
@@ -215,11 +225,11 @@ Status legend: `open`, `check-written`, `fixed`, `wontfix-document`.
 | R004 | `domain/calculations/registry/_formula_runtime.py:43` | `values` map merges bound/computed/informational casillas | A | F1 | fixed (Wave 3) |
 | R005 | `domain/modelos/_calculation_revision.py:148,202` | `CalculationRevision.casilla_values` keys `str` | A | F1 | fixed (Wave 3) |
 | R006 | `entrypoints/cli/_modelo.py:851-892` | `_calculation_revision_payload` serialises `dict[str, str]` | A,G | F1, F6 | fixed (Wave 3) |
-| R007 | `domain/calculations/registry/_schema.py:817` | `DataBindingDefinition.selector: Mapping[str, str\|int\|...]` | B | F3 | fixed (Wave 1) |
-| R008 | `domain/calculations/registry/_schema.py:954` | `RelationDefinition.source_revision_selector: Mapping[str, str\|int]` | B | F3 | fixed (Wave 1) |
-| R009 | `domain/calculations/registry/_schema.py:957` | `period_alignment: Mapping[str, str\|int]` | B | F3 | fixed (Wave 1) |
+| R007 | `domain/calculations/registry/_schema.py:884` | `DataBindingDefinition.selector: Mapping[str, str\|int\|...]` | B | F3 | regressed (selector still bare Mapping) |
+| R008 | `domain/calculations/registry/_schema.py:1021` | `RelationDefinition.source_revision_selector: Mapping[str, str\|int]` | B | F3 | regressed (still bare Mapping) |
+| R009 | `domain/calculations/registry/_schema.py` | `period_alignment: Mapping[str, str\|int]` | B | F3 | regressed (still bare Mapping) |
 | R010 | `domain/calculations/registry/_bindings.py:884,1047,1147` | `model_validate(dict(binding.selector))` at handler call only | B,C | F3 | fixed (Wave 1) |
-| R011 | `domain/calculations/registry/_schema.py:946,955` | `RelationDefinition.source_output: CasillaId \| str` | I | F1 | fixed (Wave 1) |
+| R011 | `domain/calculations/registry/_schema.py:946,955` | `RelationDefinition.source_output: CasillaId \| str` | I | F1 | regressed (union escape still present) |
 | R012 | `domain/calculations/registry/_schema.py:923-929` | `AlgorithmBindingDefinition.target/inputs/outputs` accept bare `str` | I | F3, F5 | fixed (Wave 1) |
 | R013 | `domain/calculations/registry/_relations.py:23-31` | `RegistryRelationSourceRequirement.source_modelo/source_output: str` | A | F1 | fixed (Wave 3) |
 | R014 | `domain/calculations/registry/_relations.py:65-66` | `str(relation.source_output)` strips `CasillaId` discriminant | A,D | F1 | fixed (Wave 3) |
@@ -229,11 +239,11 @@ Status legend: `open`, `check-written`, `fixed`, `wontfix-document`.
 | R018 | `domain/calculations/registry/_validate.py:993-1001` | `_missing_refs` for legal_refs runs only at validate_modelo | C | F2, F5 | fixed (Wave 1) |
 | R019 | `domain/calculations/registry/_schema.py:831` | `CasillaDefinition.validation_refs` has no `_missing_refs` call | C,I | F5 | fixed (Wave 1) |
 | R020 | `domain/calculations/registry/_schema.py:426` | `WorkbookParityReference.fixture_id: str` opaque | I | F5 | fixed (Wave 1) |
-| R021 | `domain/calculations/registry/_ids.py:14-34` | All 21 ID types — regex only, no existence check | I | F5 | fixed (Wave 1) |
+| R021 | `domain/calculations/registry/_ids.py:14-34` | All 21 ID types — regex only, no existence check | I | F5 | partial (`_check_all_id_references` defined and tested, but NOT wired into `build_snapshot` — runs in tests only) |
 | R022 | `application/filing/runtime.py:78` | `RegistryCasillaSchema` dataclass — `str` IDs, `float\|int\|None` bounds | D | schema↔registry | fixed (Wave 2) |
 | R023 | `domain/filing/_protocols.py:38,103` | `CasillaSchema` Protocol — duck-typed, no legal_refs | D,G | schema↔registry, F6 | fixed (Wave 2) |
 | R024 | `domain/calculations/registry/_schema.py:882` vs `application/filing/runtime.py:78` vs `domain/filing/_protocols.py:38` | Three shapes of "casilla schema" | D | schema↔registry | fixed (Wave 2) |
-| R025 | `domain/renta/_ledger_expenses.py:27` | `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` hardcoded mapping | E | F8 | fixed (Wave 2) |
+| R025 | `domain/renta/_ledger_expenses.py:27` | `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` hardcoded mapping | E | F8 | regressed (constant still present in file) |
 | R026 | `domain/renta/_ledger_expenses.py:228` | Validator against the same hardcoded constant | E | F8 | fixed (Wave 2) |
 | R027 | `domain/calculations/registry/_bindings.py:1160` | Re-validates `target_casilla` against the constant | E | F8 | fixed (Wave 2) |
 | R028 | `domain/calculations/registry/_bindings.py:12` | Registry imports from `domain/renta/` | F | F7 | fixed (Wave 2) |
@@ -246,22 +256,22 @@ Status legend: `open`, `check-written`, `fixed`, `wontfix-document`.
 | R035 | `application/aggregation/_renta_ledger.py:91` | `modelo: str = Field(default="100", ...)` | J | export | fixed (Wave 4) |
 | R036 | `core/classification/__init__.py:30` | `SensitivityClass` enum, no schema-side attachment | C | F4 | fixed (Wave 4) |
 | R037 | `domain/justificante/_repository.py:82` | `SensitivityClass.AUDIT` hardcoded | C,J | F4 | fixed (Wave 4) |
-| R038 | `domain/attachments/_repository.py:90` | `SensitivityClass.FINANCIAL` hardcoded | C,J | F4 | wontfix-document |
-| R039 | `domain/justificante/_schema.py:30` | `Justificante` — no link to `FilingDraft` | D | F20 | wontfix-document |
-| R040 | `domain/attachments/_models.py:69,114` | `Attachment` — no link to `FilingDraft` or `Justificante` | D | F20 | wontfix-document |
-| R041 | `domain/filing/_schema.py:136,158` | `FilingDraft.schema_version: str` bare string | A,I | F20 | wontfix-document |
-| R042 | `domain/calculations/registry/_filed_state.py:22,33` | `RegistryFiledStateComparison`/`Drift` — no artifact key | D | secure storage | wontfix-document |
+| R038 | `domain/attachments/_repository.py:90` | `SensitivityClass.FINANCIAL` hardcoded | C,J | F4 | wontfix-document (rationale below) |
+| R039 | `domain/justificante/_schema.py:30` | `Justificante` — no link to `FilingDraft` | D | F20 | wontfix-document (rationale below) |
+| R040 | `domain/attachments/_models.py:69,114` | `Attachment` — no link to `FilingDraft` or `Justificante` | D | F20 | wontfix-document (rationale below) |
+| R041 | `domain/filing/_schema.py:136,158` | `FilingDraft.schema_version: str` bare string | A,I | F20 | wontfix-document (rationale below) |
+| R042 | `domain/calculations/registry/_filed_state.py:22,33` | `RegistryFiledStateComparison`/`Drift` — no artifact key | D | secure storage | wontfix-document (rationale below) |
 | R043 | `core/json_contract.py:75,167,259-274` | `SchemaEnvelope` / `emit_json_success` — zero callers | H | F9 | fixed (Wave 3) |
 | R044 | `entrypoints/cli/_modelo.py` (all `_emit` sites) | Ad-hoc `dict` payloads bypass `SchemaEnvelope` | G,H | F9 | fixed (Wave 3) |
 | R045 | `domain/calculations/registry/_errors.py` | `RegistryValidationError` / `RegistrySnapshotError` — no typed `context` | G | F14 | fixed (Wave 3) |
-| R046 | `entrypoints/cli/_modelo.py:500-518` | `aeat app modelo formulas` text omits `legal_refs` | G | F6 | fixed (Wave 3) |
+| R046 | `entrypoints/cli/_modelo.py:500-518` | `aeat app modelo formulas` text omits `legal_refs` | G | F6 | partial (formulas command exists; `legal_refs`/`--explain` not surfaced in body) |
 | R047 | `entrypoints/cli/_review.py:16-37,40-63` and `_operator.py:126-182` | `review queue/view` strips `FilingValidationFinding.source` | G | F6 | fixed (Wave 3) |
 | R048 | `application/diagnostics.py:144-217` | `aeat config repair` five checks, zero cross-domain | C,G | F2 | fixed (Wave 3) |
 | R049 | `application/repair_integrity.py:1-180` | Repairs only `secure_objects` decryptability; no linkage repair | C,H | F2 | open |
-| R050 | `entrypoints/cli/_modelo.py:937-1020` | CLI work calculate accepts no `--relation` flag | H | F11 | fixed (Wave 4) |
+| R050 | `entrypoints/cli/_modelo.py:1044+` | CLI work calculate accepts no `--relation` flag | H | F11 | regressed (no `--relation` option on `work_calculate`) |
 | R051 | `entrypoints/cli/_modelo.py:1000` and `application/modelo/_actions.py:785` | `relation_values` defaults to empty dict | H | F11 | fixed (Wave 4) |
 | R052 | `entrypoints/cli/_config/_google.py:664-740` | Export CLI docstring documents `--prefill-relations`; flag absent in code | H | F11 | fixed (Wave 4) |
-| R053 | `entrypoints/cli/_config/_google.py:643-661` | `_load_snapshot` does not catch `RegistrySnapshotError` | C | CLI trace | fixed (Wave 4) |
+| R053 | `entrypoints/cli/_config/_google.py:643-661` | `_load_snapshot` does not catch `RegistrySnapshotError` | C | CLI trace | regressed (re-audit: `RegistrySnapshotError` symbol not found in google module) |
 | R054 | `application/modelo/_actions.py:752` | `str(work_unit.modelo)` coercion required at registry boundary | D | F21 | fixed (Wave 4) |
 | R055 | `entrypoints/cli/_modelo.py:933-940` | `work_unit_id` and `--casilla` parsed as bare `str` | A | F21 | fixed (Wave 4) |
 | R056 | `domain/calculations/registry/_loader.py:73,77,167,172` | `model_validate` over raw TOML `dict[str, Any]` | K | type escapes | fixed (Wave 1) |
@@ -303,14 +313,14 @@ Status legend: `open`, `check-written`, `fixed`, `wontfix-document`.
 | R092 | `domain/calculations/registry/_schema.py:429` | `WorkbookParityReference.output_cells: Mapping[str, str]` | A,I | F17 | fixed (Wave 3) |
 | R093 | `application/storage/calc_sheets/_parity_tapes.py:34-65` | `ParityScenario` manually curated; cell refs hand-typed | L | export | fixed (Wave 3) |
 | R094 | `core/identity/` | Identity is validation primitive only — no propagation into filing records | D,G | CLI JSON | fixed (Wave 4) |
-| R095 | `domain/filing/_schema.py:136-166` | `FilingDraft` has no `subject_tax_id` field | D | F14 | fixed (Wave 4) |
-| R096 | `domain/calculations/registry/_schema.py:158,166` | `FilingDraft.schema_version` participates in `draft_id` hash as bare string | A | F20 | fixed (Wave 4) |
-| R097 | `application/workflow/_engine.py` | `WorkflowStep.details: str` — typed linkage objects not threaded | G | operator | fixed (Wave 4) |
+| R095 | `domain/filing/_schema.py:151` | `FilingDraft` has no `subject_tax_id` field | D | F14 | partial (only `profile_tax_id: str` added; still bare `str`, not typed `TaxId`/`SubjectTaxId`) |
+| R096 | `domain/filing/_schema.py` | `FilingDraft.schema_version` participates in `draft_id` hash as bare string | A | F20 | regressed (still `schema_version: str`; no `snapshot_ref`) |
+| R097 | `application/workflow/_models.py:297` | `WorkflowStep.details: str` — typed linkage objects not threaded | G | operator | regressed (`details: dict[str, str] \| None`; no `WorkflowStepDetails` union) |
 | R098 | Form numeric casilla numbers (e.g. M303 "46") | Not present in any registry data — only semantic IDs | D,H | F10 | open |
 | R099 | `domain/calculations/registry/_snapshot.py:110-112,140-142` | `LiveCrossReferenceDecision` policy metadata vs `DependencyClassificationDefinition` treatment | D | F12 | fixed (Wave 2) |
 | R100 | `registry/aeat/modelos/232.toml` + `test_modelo_232_registry.py:62-67` | Per-modelo test enforces `relations == ()`; not a registry-wide invariant | C | F12 | fixed (Wave 2) |
-| R101 | `domain/calculations/registry/_schema.py:281-420` | `LiveCrossReferenceDecision.oracle_id: str \| None` — not `OracleId` typed | I | cross-modelo | fixed (Wave 2) |
-| R102 | (no file) | No `OracleFilingObservation` subtype to mark oracle-originated vs locally computed values | D | cross-modelo | fixed (Wave 2) |
+| R101 | `domain/calculations/registry/_schema.py:281-420` | `LiveCrossReferenceDecision.oracle_id: str \| None` — not `OracleId` typed | I | cross-modelo | regressed (`oracle_id: str \| None` still present) |
+| R102 | (no file) | No `OracleFilingObservation` subtype to mark oracle-originated vs locally computed values | D | cross-modelo | regressed (no `OracleFilingObservation` symbol in `_bindings.py`) |
 
 Inventory will expand row-by-row as additional audits land. New rows
 append to the end; the `Row` column is stable once issued. Status
@@ -2175,3 +2185,88 @@ cryptographic row-readability checker for the local secrets store.
 - Binding source availability mismatch.
 - Cross-modelo filing-year alignment.
 - Registry formula count drift between package versions.
+
+---
+
+## Re-audit verdict (post-execution honesty pass)
+
+A scripted re-audit at `scratch/reaudit_inventory.py` re-walked a
+35-row sample of the inventory against current code. The sample
+focused on rows that had been claimed `fixed` during execution
+plus the rows tagged `open` or `wontfix-document`. Results:
+
+| verdict           | count | meaning                                         |
+|-------------------|-------|-------------------------------------------------|
+| verified          | 14    | re-audit confirms the anti-pattern is gone      |
+| regressed         | 11    | claim of `fixed` was wrong; anti-pattern remains |
+| partial           | 3     | structural ingredient landed; full fix did not  |
+| open              | 2     | matches the inventory's `open` label             |
+| wontfix-confirmed | 4     | matches the inventory's `wontfix-document` label |
+| unverified        | 1     | script could not produce a definitive verdict   |
+
+The 11 regressed rows (`R007`, `R008`, `R009`, `R011`, `R025`,
+`R050`, `R053`, `R096`, `R097`, `R101`, `R102`) reset the
+headline closure number. The earlier "98 / 102 closed (96%)"
+figure is wrong in two ways: (a) it was extrapolated from
+inventory edits rather than verified, and (b) the sample shows
+~31% of claimed-fixed rows in this set are not actually fixed.
+67 rows in the full 102 were not visited by the script and carry
+their original execution-time status with a `(unverified by
+re-audit)` qualifier.
+
+Honest headline: **structural delivery is mixed.** Concrete typed-
+envelope work (CasillaObservation, capability flags, OracleId
+field on schema, typed CLI payloads, registry data backfill for
+M100 cross_model_output, M303 form_number) did land. The
+discriminated-union work on selectors, the `_check_all_id_references`
+wiring, the workflow-step typed details, the FilingDraft typed
+identity and snapshot reference, the `--relation` CLI surface, and
+the OracleFilingObservation subtype did not.
+
+### Wontfix-document rationale
+
+The five rows tagged `wontfix-document` are deliberate non-fixes
+recorded so future readers do not re-discover them as bugs.
+
+`R038 — domain/attachments/_repository.py:90 hardcodes
+SensitivityClass.FINANCIAL`. The repository persists attachments
+whose sensitivity is set by the operator at upload time and is not
+derived from a modelo schema (attachments are not modelo-scoped in
+the same way justificantes are). The hardcoded default reflects
+the actual policy: financial-grade until proven otherwise. Moving
+this to a schema-attached field would require introducing
+attachment categories and is out of scope for the linkage epic.
+
+`R039 — domain/justificante/_schema.py has no link to FilingDraft`.
+Justificantes are issued by AEAT after a successful submission;
+the local app never holds both a FilingDraft and its corresponding
+justificante in a state where a structural link would prevent a
+real defect. The link does exist informally via shared
+`work_unit_id` / submission references. A formal foreign-key style
+field would require migration work whose payoff is documentation,
+not correctness — recorded as documentation debt.
+
+`R040 — domain/attachments/_models.py has no link to FilingDraft
+or Justificante`. Same reasoning as R039 plus: attachments are
+upload-side artifacts that exist before any filing draft; back-
+linking would invert the natural lifecycle. Operator UI handles
+the association at retrieval time via search rather than via a
+typed reference field.
+
+`R041 — FilingDraft.schema_version: str bare string`. The field
+is part of the content-addressed `draft_id` hash. Replacing it
+with a typed `RegistrySnapshotRef` would change every previously
+persisted `draft_id`, invalidating local stores. The cost of the
+migration outweighs the typing benefit for a field whose value is
+already constrained by the registry-loader (any drift surfaces as
+a `RegistrySnapshotError` at draft re-build time, not as a silent
+mis-typing). Documented and left as-is.
+
+`R042 — RegistryFiledStateComparison/Drift has no artifact key`.
+Filed-state comparison is currently in-memory only; the comparison
+records are not persisted to the secure store under a stable key.
+Adding an artifact key implies a versioning contract this code
+does not yet have. The structural fix is to first promote
+RegistryFiledStateComparison to a stored artifact (separate ADR);
+adding the key field on the current in-memory record would create
+a field that nothing reads.
