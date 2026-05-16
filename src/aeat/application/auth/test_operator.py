@@ -78,14 +78,20 @@ def test_configure_operator_auth_event_payload_records_certificate_path(tmp_path
     assert payload["certificate_path"] == str(cert_path)
 
 
-def test_configure_operator_auth_without_active_profile_records_no_typed_event() -> None:
-    """When no active profile bucket exists yet (early bootstrap), the
-    workflow-state-internal event log still records the transition but
-    the typed catalogue receives no AUTH_PROVIDER_CONFIGURED event,
-    because there is no bucket to scope it to. The bucket-event-history
-    ADR requires every event to carry a bucket id."""
+def test_configure_operator_auth_refuses_when_no_active_profile_bucket() -> None:
+    """``configure_operator_auth`` refuses with
+    :class:`AuthConfigureNoActiveBucketError` when no active profile
+    bucket exists. The bucket-event-history ADR requires every event
+    to be scoped to a bucket id; running provider configuration before
+    ``aeat config init`` activates a profile would either silently drop
+    the audit event or require deferred replay. Surfacing the refusal
+    at the application service keeps the bootstrap order explicit and
+    leaves no audit hole."""
 
-    configure_operator_auth("certificate")
+    from ._operator import AuthConfigureNoActiveBucketError
+
+    with pytest.raises(AuthConfigureNoActiveBucketError, match=r"aeat config init"):
+        configure_operator_auth("certificate")
 
     catalogue = BucketEventHistoryRepository().load()
     typed_auth_events = [
@@ -94,3 +100,56 @@ def test_configure_operator_auth_without_active_profile_records_no_typed_event()
         if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
     ]
     assert typed_auth_events == []
+
+
+def test_configure_operator_auth_reserved_provider_emits_no_event() -> None:
+    """Reserved-provider slots (``clave_pin``, ``clave_permanente``,
+    ``dnie_pkcs``) must "fail closed without mutating config,
+    credentials, sessions, locks, or events" per the config-auth-shape
+    ADR. Surfacing the refusal must precede every persisted side
+    effect."""
+
+    from ._operator import AuthProviderReservedError
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    state_before = workflow_state_repository().load()
+    auth_provider_before = state_before.auth.provider
+
+    for reserved in ("clave_pin", "clave_permanente", "dnie_pkcs"):
+        with pytest.raises(AuthProviderReservedError):
+            configure_operator_auth(reserved)
+
+    state_after = workflow_state_repository().load()
+    assert state_after.auth.provider == auth_provider_before
+
+    catalogue = BucketEventHistoryRepository().load()
+    typed_auth_events = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
+    ]
+    assert typed_auth_events == []
+
+
+def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:
+    """Repeated ``configure_operator_auth`` calls append distinct events
+    to the append-only catalogue. The bucket-event-history ADR records
+    immutable ids; two emissions that share content but differ in
+    timestamp produce two distinct ``event_id`` hashes by construction
+    because ``derive_bucket_event_id`` mixes the timestamp into the
+    digest."""
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+
+    configure_operator_auth("certificate")
+    configure_operator_auth("certificate")
+
+    catalogue = BucketEventHistoryRepository().load()
+    matching = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
+    ]
+    assert len(matching) >= 2
+    ids = {event.event_id for event in matching}
+    assert len(ids) == len(matching)
