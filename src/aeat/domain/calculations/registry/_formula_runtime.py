@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from pathlib import Path
@@ -228,195 +229,212 @@ def _evaluate_expression(
             operand_refs=operand_refs,
             operand_values=operand_values,
         )
+    ctx = _EvalContext(
+        values=values,
+        binding_values=binding_values,
+        parameters=parameters,
+        date_context=date_context,
+        relation_values=relation_values,
+        operand_refs=operand_refs,
+        operand_values=operand_values,
+        enum_binding_values=resolved_enum_bindings,
+    )
     op = expression.op
     if op == "lookup_bracket":
-        if len(expression.args) != 2:
-            raise RegistryValidationError("formula op 'lookup_bracket' expects 2 args")
-        bracket_arg = expression.args[1]
-        if bracket_arg.parameter is None:
-            raise RegistryValidationError("formula op 'lookup_bracket' requires args[1] to be a parameter leaf")
-        bracket_param = parameters.get(bracket_arg.parameter)
-        if bracket_param is None:
-            raise RegistryValidationError(f"parameter {bracket_arg.parameter!r} not registered")
-        if bracket_param.data_type != "bracket_table":
-            raise RegistryValidationError(
-                f"parameter {bracket_arg.parameter!r} must declare data_type='bracket_table' "
-                f"to be used by lookup_bracket"
-            )
-        base = _evaluate_expression(
-            expression.args[0],
-            values=values,
-            binding_values=binding_values,
-            parameters=parameters,
-            date_context=date_context,
-            relation_values=relation_values,
-            operand_refs=operand_refs,
-            operand_values=operand_values,
-            enum_binding_values=resolved_enum_bindings,
-        )
-        operand_refs.append(bracket_arg.parameter)
-        result = _resolve_bracket(bracket_param, base, date_context)
-        operand_values.append(result)
-        return result
+        return _evaluate_lookup_bracket(expression, ctx)
     if op == "lookup_bracket_by_ccaa":
-        if len(expression.args) != 3:
-            raise RegistryValidationError("formula op 'lookup_bracket_by_ccaa' expects 3 args")
-        binding_arg = expression.args[1]
-        dispatch_arg = expression.args[2]
-        if binding_arg.binding is None:
-            raise RegistryValidationError("formula op 'lookup_bracket_by_ccaa' requires args[1] to be a binding leaf")
-        if dispatch_arg.dispatch_table is None:
-            raise RegistryValidationError(
-                "formula op 'lookup_bracket_by_ccaa' requires args[2] to be a dispatch_table leaf"
-            )
-        if binding_arg.binding not in resolved_enum_bindings:
-            raise RegistryValidationError(
-                f"enum binding {binding_arg.binding!r} has no supplied value; required by lookup_bracket_by_ccaa"
-            )
-        dispatch_key = resolved_enum_bindings[binding_arg.binding]
-        dispatch_table = dispatch_arg.dispatch_table
-        if dispatch_key not in dispatch_table:
-            raise RegistryValidationError(
-                f"lookup_bracket_by_ccaa dispatch_table is missing CCAA {dispatch_key!r} "
-                f"(declared keys: {sorted(dispatch_table)})"
-            )
-        bracket_param_id = dispatch_table[dispatch_key]
-        bracket_param = parameters.get(bracket_param_id)
-        if bracket_param is None:
-            raise RegistryValidationError(f"parameter {bracket_param_id!r} not registered")
-        if bracket_param.data_type != "bracket_table":
-            raise RegistryValidationError(
-                f"parameter {bracket_param_id!r} must declare data_type='bracket_table' "
-                f"to be used by lookup_bracket_by_ccaa"
-            )
-        base = _evaluate_expression(
-            expression.args[0],
-            values=values,
-            binding_values=binding_values,
-            parameters=parameters,
-            date_context=date_context,
-            relation_values=relation_values,
-            operand_refs=operand_refs,
-            operand_values=operand_values,
-            enum_binding_values=resolved_enum_bindings,
-        )
-        operand_refs.append(binding_arg.binding)
-        operand_refs.append(bracket_param_id)
-        result = _resolve_bracket(bracket_param, base, date_context)
-        operand_values.append(result)
-        return result
+        return _evaluate_lookup_bracket_by_ccaa(expression, ctx)
     if op == "lookup_parameter_by_entity_type":
-        # Dispatch a scalar parameter lookup by an enum binding (e.g.
-        # entity_type → tipo gravamen for IS modelo 200). Three args:
-        # args[0] is unused (placeholder for symmetry with the bracket
-        # variant); args[1] is the binding leaf carrying the enum
-        # value; args[2] is the dispatch_table mapping enum keys to
-        # parameter ids.
-        if len(expression.args) != 3:
-            raise RegistryValidationError(
-                "formula op 'lookup_parameter_by_entity_type' expects 3 args",
-                translated_message="errors.calc.lookup_dispatch_arg_count",
-                context={"op": op, "expected": "3"},
-            )
-        binding_arg = expression.args[1]
-        dispatch_arg = expression.args[2]
-        if binding_arg.binding is None:
-            raise RegistryValidationError(
-                "formula op 'lookup_parameter_by_entity_type' requires args[1] to be a binding leaf",
-                translated_message="errors.calc.lookup_dispatch_arg_kind",
-                context={"op": op, "position": "args[1]", "expected_kind": "binding"},
-            )
-        if dispatch_arg.dispatch_table is None:
-            raise RegistryValidationError(
-                "formula op 'lookup_parameter_by_entity_type' requires args[2] to be a dispatch_table leaf",
-                translated_message="errors.calc.lookup_dispatch_arg_kind",
-                context={"op": op, "position": "args[2]", "expected_kind": "dispatch_table"},
-            )
-        if binding_arg.binding not in resolved_enum_bindings:
-            raise RegistryValidationError(
-                f"enum binding {binding_arg.binding!r} has no supplied value;"
-                " required by lookup_parameter_by_entity_type",
-                translated_message="errors.calc.enum_binding_value_missing",
-                context={"binding_id": binding_arg.binding, "op": op},
-            )
-        dispatch_key = resolved_enum_bindings[binding_arg.binding]
-        dispatch_table = dispatch_arg.dispatch_table
-        if dispatch_key not in dispatch_table:
-            raise RegistryValidationError(
-                f"lookup_parameter_by_entity_type dispatch_table is missing key {dispatch_key!r} "
-                f"(declared keys: {sorted(dispatch_table)})",
-                translated_message="errors.calc.dispatch_key_unknown",
-                context={
-                    "op": op,
-                    "binding_id": binding_arg.binding,
-                    "dispatch_key": dispatch_key,
-                    "available_keys": ",".join(sorted(dispatch_table)),
-                },
-            )
-        scalar_param_id = dispatch_table[dispatch_key]
-        scalar_param = parameters.get(scalar_param_id)
-        if scalar_param is None:
-            raise RegistryValidationError(
-                f"parameter {scalar_param_id!r} not registered",
-                translated_message="errors.calc.parameter_unknown",
-                context={"parameter_id": scalar_param_id},
-            )
-        if scalar_param.data_type == "bracket_table":
-            raise RegistryValidationError(
-                f"parameter {scalar_param_id!r} declares data_type='bracket_table'; "
-                f"lookup_parameter_by_entity_type requires a scalar parameter (decimal / money / integer / ratio)",
-                translated_message="errors.calc.dispatch_parameter_kind",
-                context={"parameter_id": scalar_param_id, "op": op},
-            )
-        result = _resolve_parameter(scalar_param, date_context)
-        operand_refs.append(binding_arg.binding)
-        operand_refs.append(scalar_param_id)
-        operand_values.append(result)
-        return result
+        return _evaluate_lookup_parameter_by_entity_type(expression, ctx)
     if op == "if_then_else":
-        # Short-circuit: evaluate the predicate first, then only the
-        # selected branch. Eager evaluation of both branches would
-        # surface false-branch errors (e.g. divide-by-zero) even when
-        # the predicate routes around them — defeating the conditional.
-        if len(expression.args) != 3:
-            raise RegistryValidationError("formula op 'if_then_else' expects 3 args")
-        predicate_value = _evaluate_expression(
-            expression.args[0],
-            values=values,
-            binding_values=binding_values,
-            parameters=parameters,
-            date_context=date_context,
-            relation_values=relation_values,
-            operand_refs=operand_refs,
-            operand_values=operand_values,
-            enum_binding_values=resolved_enum_bindings,
+        return _evaluate_if_then_else(expression, ctx)
+    args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
+    return _evaluate_args_op(op, args)
+
+
+@dataclass(frozen=True)
+class _EvalContext:
+    """Bundles the runtime sinks + maps threaded through every recursive call.
+
+    Kept frozen and slot-equivalent so the dispatcher can hand the same
+    context to every per-op evaluator without copying. The two list
+    sinks (operand_refs, operand_values) ARE mutated in place — they
+    accumulate evaluation provenance for the explainability surface.
+    """
+
+    values: Mapping[str, Decimal]
+    binding_values: Mapping[str, Decimal]
+    parameters: Mapping[str, ParameterDefinition]
+    date_context: Mapping[str, date]
+    relation_values: Mapping[str, Decimal]
+    operand_refs: list[str]
+    operand_values: list[Decimal]
+    enum_binding_values: Mapping[str, str]
+
+
+def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Convenience: re-enter the dispatcher carrying every context field forward."""
+    return _evaluate_expression(
+        expression,
+        values=ctx.values,
+        binding_values=ctx.binding_values,
+        parameters=ctx.parameters,
+        date_context=ctx.date_context,
+        relation_values=ctx.relation_values,
+        operand_refs=ctx.operand_refs,
+        operand_values=ctx.operand_values,
+        enum_binding_values=ctx.enum_binding_values,
+    )
+
+
+def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    if len(expression.args) != 2:
+        raise RegistryValidationError("formula op 'lookup_bracket' expects 2 args")
+    bracket_arg = expression.args[1]
+    if bracket_arg.parameter is None:
+        raise RegistryValidationError("formula op 'lookup_bracket' requires args[1] to be a parameter leaf")
+    bracket_param = ctx.parameters.get(bracket_arg.parameter)
+    if bracket_param is None:
+        raise RegistryValidationError(f"parameter {bracket_arg.parameter!r} not registered")
+    if bracket_param.data_type != "bracket_table":
+        raise RegistryValidationError(
+            f"parameter {bracket_arg.parameter!r} must declare data_type='bracket_table' "
+            f"to be used by lookup_bracket"
         )
-        selected_branch = expression.args[1] if predicate_value != _ZERO else expression.args[2]
-        return _evaluate_expression(
-            selected_branch,
-            values=values,
-            binding_values=binding_values,
-            parameters=parameters,
-            date_context=date_context,
-            relation_values=relation_values,
-            operand_refs=operand_refs,
-            operand_values=operand_values,
-            enum_binding_values=resolved_enum_bindings,
+    base = _evaluate_with_ctx(expression.args[0], ctx)
+    ctx.operand_refs.append(bracket_arg.parameter)
+    result = _resolve_bracket(bracket_param, base, ctx.date_context)
+    ctx.operand_values.append(result)
+    return result
+
+
+def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    if len(expression.args) != 3:
+        raise RegistryValidationError("formula op 'lookup_bracket_by_ccaa' expects 3 args")
+    binding_arg = expression.args[1]
+    dispatch_arg = expression.args[2]
+    if binding_arg.binding is None:
+        raise RegistryValidationError("formula op 'lookup_bracket_by_ccaa' requires args[1] to be a binding leaf")
+    if dispatch_arg.dispatch_table is None:
+        raise RegistryValidationError(
+            "formula op 'lookup_bracket_by_ccaa' requires args[2] to be a dispatch_table leaf"
         )
-    args = [
-        _evaluate_expression(
-            arg,
-            values=values,
-            binding_values=binding_values,
-            parameters=parameters,
-            date_context=date_context,
-            relation_values=relation_values,
-            operand_refs=operand_refs,
-            operand_values=operand_values,
-            enum_binding_values=resolved_enum_bindings,
+    if binding_arg.binding not in ctx.enum_binding_values:
+        raise RegistryValidationError(
+            f"enum binding {binding_arg.binding!r} has no supplied value; required by lookup_bracket_by_ccaa"
         )
-        for arg in expression.args
-    ]
+    dispatch_key = ctx.enum_binding_values[binding_arg.binding]
+    dispatch_table = dispatch_arg.dispatch_table
+    if dispatch_key not in dispatch_table:
+        raise RegistryValidationError(
+            f"lookup_bracket_by_ccaa dispatch_table is missing CCAA {dispatch_key!r} "
+            f"(declared keys: {sorted(dispatch_table)})"
+        )
+    bracket_param_id = dispatch_table[dispatch_key]
+    bracket_param = ctx.parameters.get(bracket_param_id)
+    if bracket_param is None:
+        raise RegistryValidationError(f"parameter {bracket_param_id!r} not registered")
+    if bracket_param.data_type != "bracket_table":
+        raise RegistryValidationError(
+            f"parameter {bracket_param_id!r} must declare data_type='bracket_table' "
+            f"to be used by lookup_bracket_by_ccaa"
+        )
+    base = _evaluate_with_ctx(expression.args[0], ctx)
+    ctx.operand_refs.append(binding_arg.binding)
+    ctx.operand_refs.append(bracket_param_id)
+    result = _resolve_bracket(bracket_param, base, ctx.date_context)
+    ctx.operand_values.append(result)
+    return result
+
+
+def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Dispatch a scalar parameter lookup by an enum binding (e.g. entity_type → tipo gravamen for IS modelo 200).
+
+    Three args: args[0] is unused (placeholder for symmetry with the
+    bracket variant); args[1] is the binding leaf carrying the enum
+    value; args[2] is the dispatch_table mapping enum keys to
+    parameter ids.
+    """
+    op = "lookup_parameter_by_entity_type"
+    if len(expression.args) != 3:
+        raise RegistryValidationError(
+            "formula op 'lookup_parameter_by_entity_type' expects 3 args",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": "3"},
+        )
+    binding_arg = expression.args[1]
+    dispatch_arg = expression.args[2]
+    if binding_arg.binding is None:
+        raise RegistryValidationError(
+            "formula op 'lookup_parameter_by_entity_type' requires args[1] to be a binding leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[1]", "expected_kind": "binding"},
+        )
+    if dispatch_arg.dispatch_table is None:
+        raise RegistryValidationError(
+            "formula op 'lookup_parameter_by_entity_type' requires args[2] to be a dispatch_table leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[2]", "expected_kind": "dispatch_table"},
+        )
+    if binding_arg.binding not in ctx.enum_binding_values:
+        raise RegistryValidationError(
+            f"enum binding {binding_arg.binding!r} has no supplied value;"
+            " required by lookup_parameter_by_entity_type",
+            translated_message="errors.calc.enum_binding_value_missing",
+            context={"binding_id": binding_arg.binding, "op": op},
+        )
+    dispatch_key = ctx.enum_binding_values[binding_arg.binding]
+    dispatch_table = dispatch_arg.dispatch_table
+    if dispatch_key not in dispatch_table:
+        raise RegistryValidationError(
+            f"lookup_parameter_by_entity_type dispatch_table is missing key {dispatch_key!r} "
+            f"(declared keys: {sorted(dispatch_table)})",
+            translated_message="errors.calc.dispatch_key_unknown",
+            context={
+                "op": op,
+                "binding_id": binding_arg.binding,
+                "dispatch_key": dispatch_key,
+                "available_keys": ",".join(sorted(dispatch_table)),
+            },
+        )
+    scalar_param_id = dispatch_table[dispatch_key]
+    scalar_param = ctx.parameters.get(scalar_param_id)
+    if scalar_param is None:
+        raise RegistryValidationError(
+            f"parameter {scalar_param_id!r} not registered",
+            translated_message="errors.calc.parameter_unknown",
+            context={"parameter_id": scalar_param_id},
+        )
+    if scalar_param.data_type == "bracket_table":
+        raise RegistryValidationError(
+            f"parameter {scalar_param_id!r} declares data_type='bracket_table'; "
+            f"lookup_parameter_by_entity_type requires a scalar parameter (decimal / money / integer / ratio)",
+            translated_message="errors.calc.dispatch_parameter_kind",
+            context={"parameter_id": scalar_param_id, "op": op},
+        )
+    result = _resolve_parameter(scalar_param, ctx.date_context)
+    ctx.operand_refs.append(binding_arg.binding)
+    ctx.operand_refs.append(scalar_param_id)
+    ctx.operand_values.append(result)
+    return result
+
+
+def _evaluate_if_then_else(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Short-circuit: evaluate the predicate first, then only the selected branch.
+
+    Eager evaluation of both branches would surface false-branch
+    errors (e.g. divide-by-zero) even when the predicate routes around
+    them — defeating the conditional.
+    """
+    if len(expression.args) != 3:
+        raise RegistryValidationError("formula op 'if_then_else' expects 3 args")
+    predicate_value = _evaluate_with_ctx(expression.args[0], ctx)
+    selected_branch = expression.args[1] if predicate_value != _ZERO else expression.args[2]
+    return _evaluate_with_ctx(selected_branch, ctx)
+
+
+def _evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
+    """Dispatch an N-arg arithmetic / comparison op once every arg has been evaluated."""
     if op in {"add", "sum"}:
         return sum(args, _ZERO)
     if op == "subtract":
