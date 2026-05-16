@@ -234,7 +234,8 @@ cli:
         group_help: cli.app.modelo.audit.group_help
         output_help: cli.app.modelo.audit.output_help
         replay_help: cli.app.modelo.audit.replay_help
-        view_help: cli.app.modelo.audit.view_help
+        show_help: Mostrar el manifiesto y los registros referenciados de un paquete
+          de evidencia
       bindings:
         app_help: Inspeccionar y previsualizar los bindings de un modelo tributario
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -406,8 +407,8 @@ cli:
       configure_help: Configurar el proveedor de autenticación activo
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
-      no_active_bucket: 'No hay un bucket de perfil activo. Ejecuta ''aeat config init''
-        antes de configurar la autenticación.'
+      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config init'
+        antes de configurar la autenticación.
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:

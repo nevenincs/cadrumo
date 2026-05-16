@@ -223,7 +223,7 @@ cli:
         group_help: cli.app.modelo.audit.group_help
         output_help: cli.app.modelo.audit.output_help
         replay_help: cli.app.modelo.audit.replay_help
-        view_help: cli.app.modelo.audit.view_help
+        show_help: Mostrar el manifest i els registres referenciats d'un paquet d'evidència
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -390,8 +390,8 @@ cli:
       configure_help: Configurar el proveïdor d'autenticació actiu
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
-      no_active_bucket: 'No hi ha un bucket de perfil actiu. Executa ''aeat config init''
-        abans de configurar l''autenticació.'
+      no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config init'
+        abans de configurar l'autenticació.
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
       providers_help: Llistar proveïdors d'autenticació suportats
       reserved_provider: 'Proveïdor d''autenticació reservat però no implementat:
