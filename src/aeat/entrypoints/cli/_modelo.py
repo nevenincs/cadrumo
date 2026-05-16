@@ -1821,8 +1821,9 @@ def filing_record_import(
 
 
 def _service() -> RegistryQueryService:
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-    return RegistryQueryService(authority)
+    from ...core.resources import resources
+
+    return RegistryQueryService(resources().modelos.authority)
 
 
 def _as_of(raw: str | None) -> date | None:

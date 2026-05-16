@@ -23,133 +23,60 @@ related:
 
 # `resource-management-api` plan
 
-Consolidate the 31 named loader functions, 11 production module-
-level `_DEFAULT_*_ROOT` constants, 20+ scattered `@lru_cache`
-decorators, 5 separate `ValidatedRegistryAuthority.load`
-construction paths, and 9 CLI typer-argument defaults behind a
-single typed `Repository[T, K]` per resource type registry at
-`aeat.core.resources`. Builds directly on the corpus-registry-
-packaging boundary; the existing `packaged_data`, `bundled_path`,
-`as_path` surface stays exposed via the new package's `_boundary`
-module.
-
-## Proposed Changes
-
-Twelve Repositories cover the existing surface: six singletons
-(apoderamientos, user-profile schema, topics, recargo bands, VAT
-rate tables, legal parameters), three year-keyed (holiday
-calendars, category profiles, VAT catalogues), one composite-
-keyed (manuals via `(manual_id, year, part)`), one singleton
-with rich lookup (normatives), and one façade over
-`ValidatedRegistryAuthority` (modelos).
-
-The Settings env-override seam for `aeat_manuals_root`,
-`aeat_normatives_root`, and `aeat_vat_catalogue_root` is
-preserved verbatim; the `resources()` factory reads Settings
-once at construction and hands resolved roots to the three
-relevant Repository constructors. Cache surface collapses from
-20+ heuristic `@lru_cache` decorators (sizes 1 through 4096) to
-one unbounded `dict[K, T]` Identity Map per Repository. The
-error model gains three top-level types
-(`ResourceNotFoundError`, `ResourceValidationError`,
-`ResourceBackendError`) that superclass the existing per-domain
-errors without breaking existing `except` clauses.
-
-A pre-execution discovery sweep using parallel Sonnet agents on
-top of the prior Haiku sweep surfaced two classes of test that
-must be treated differently:
-
-(a) Tests that load a typed domain resource (a `Manual`, a
-`VATCatalogue`, a `ModeloDefinition`, etc.) migrate to the
-Repository surface: `resources().manuals.get(...)` replaces
-`load_manual(...)`, etc. The semantic shape is preserved.
-
-(b) Tests that deliberately read a raw bundled file via
-`bundled_path(...).read_text()` or `bundled_path(...).glob(...)`
-to verify the on-disk tree SHAPE (the existence of a manifest,
-the presence of a TOML key, the count of files in a directory)
-STAY on the `bundled_path` boundary and do not migrate to
-Repository calls. These tests test the data layout itself, not
-the Repository contract. The structural-guard test in P10.S92
-explicitly allow-lists this pattern: direct `bundled_path`
-reads are permitted inside test files that verify the data-
-tree shape; only consumer code in production paths is guarded.
-
-The discovery sweep also identified two additional eager module-
-level loads beyond the four originally documented in the ADR:
-`VAT_RATE_TABLE` in `domain.vat._rates:118` and
-`LIVA_ART_161_RECARGO` in `domain.vat._recargo_equivalencia:114`
-(set via a private `_load_rates` wrapper that lazily imports
-`load_legal_parameters_only`). These retire in P09 alongside the
-originally-named eager loads. The sweep also catalogued every
-`__init__.py` re-export of loader symbols across 19 packages;
-P09.S96 prunes the now-obsolete public `load_*` names from
-`__all__`.
-
-The migration is sliceable Repository by Repository. Each slice
-introduces one Repository, migrates its production consumers,
-migrates its test consumers, and retires its legacy
-`_DEFAULT_*_ROOT` constant. The diff is mechanical and the
-quality gate runs at every phase boundary. All identifier-
-affecting structure under the Steps section is owned by the
-`vault plan` CLI.
-
-## Steps
-
 ### Phase `P01` - foundation: Repository base + ResourceRegistry shell + resources() factory
 
 Land the new src/aeat/core/resources/ package replacing the single-file module. Introduce Repository[T, K] base, ResourceKey discriminated union, ResourceLoadError hierarchy, empty ResourceRegistry shell, and resources() factory. Re-export packaged_data/bundled_path/as_path from a _boundary module so existing imports keep working. No consumer migrates yet; the slice is purely additive.
 
-- [ ] `P01.S01` - Convert src/aeat/core/resources.py into a package and move existing packaged_data, bundled_path, as_path into a _boundary submodule; `src/aeat/core/resources/_boundary.py`.
-- [ ] `P01.S02` - Implement the Repository protocol and a default base class with an Identity Map dict cache and clear_cache method; `src/aeat/core/resources/_repository.py`.
-- [ ] `P01.S03` - Implement the ResourceKey discriminated union plus the twelve typed key models (one per Repository); `src/aeat/core/resources/_keys.py`.
-- [ ] `P01.S04` - Implement the three top-level error classes ResourceLoadError, ResourceNotFoundError, ResourceValidationError, ResourceBackendError; `src/aeat/core/resources/_errors.py`.
-- [ ] `P01.S05` - Implement the ResourceRegistry dataclass and resources() factory function reading Settings once at construction; `src/aeat/core/resources/_registry.py`.
-- [ ] `P01.S06` - Re-export the foundation surface from the new package __init__ preserving backwards-compatible imports of packaged_data, bundled_path, as_path; `src/aeat/core/resources/__init__.py`.
-- [ ] `P01.S07` - Add real-behaviour foundation tests covering Repository base, ResourceKey discrimination, error hierarchy, and registry factory; `src/aeat/core/resources/test_registry.py`.
+- [x] `P01.S01` - Convert src/aeat/core/resources.py into a package and move existing packaged_data, bundled_path, as_path into a _boundary submodule; `src/aeat/core/resources/_boundary.py`.
+- [x] `P01.S02` - Implement the Repository protocol and a default base class with an Identity Map dict cache and clear_cache method; `src/aeat/core/resources/_repository.py`.
+- [x] `P01.S03` - Implement the ResourceKey discriminated union plus the twelve typed key models (one per Repository); `src/aeat/core/resources/_keys.py`.
+- [x] `P01.S04` - Implement the three top-level error classes ResourceLoadError, ResourceNotFoundError, ResourceValidationError, ResourceBackendError; `src/aeat/core/resources/_errors.py`.
+- [x] `P01.S05` - Implement the ResourceRegistry dataclass and resources() factory function reading Settings once at construction; `src/aeat/core/resources/_registry.py`.
+- [x] `P01.S06` - Re-export the foundation surface from the new package __init__ preserving backwards-compatible imports of packaged_data, bundled_path, as_path; `src/aeat/core/resources/__init__.py`.
+- [x] `P01.S07` - Add real-behaviour foundation tests covering Repository base, ResourceKey discrimination, error hierarchy, and registry factory; `src/aeat/core/resources/test_registry.py`.
 
 ### Phase `P02` - singleton repositories
 
 Implement eight singleton-keyed Repositories: apoderamientos, user_profile_schema, topics, recargo_bands, vat_rate_tables, legal_parameters, plus the two retiring module-level eager loads (VAT_CATALOGUES_BY_YEAR consumers and LIRPF_ART_85_IMPUTACION consumers). Each Repository owns its Identity Map.
 
-- [ ] `P02.S08` - Implement ApoderamientosRepository wrapping load_default_catalogue with K=None singleton convention and .singleton property; `src/aeat/core/resources/_repos/apoderamientos.py`.
-- [ ] `P02.S09` - Implement UserProfileSchemaRepository wrapping load_user_profile_schema as a singleton; `src/aeat/core/resources/_repos/user_profile.py`.
-- [ ] `P02.S10` - Implement TopicCatalogueRepository wrapping load_topic_catalogue as a singleton with _TOPIC_REGISTRY_ROOT folded in; `src/aeat/core/resources/_repos/topics.py`.
-- [ ] `P02.S11` - Implement RecargoBandsRepository wrapping load_recargo_bands as a singleton; `src/aeat/core/resources/_repos/recargo_bands.py`.
-- [ ] `P02.S12` - Implement VatRateTableRepository wrapping load_vat_rate_table as a singleton; `src/aeat/core/resources/_repos/vat_rate_tables.py`.
-- [ ] `P02.S13` - Implement LegalParameterRepository wrapping load_legal_parameters_only as a singleton; `src/aeat/core/resources/_repos/legal_parameters.py`.
-- [ ] `P02.S14` - Add real-behaviour tests for the six singleton Repositories covering get, .singleton sugar, and clear_cache; `src/aeat/core/resources/_repos/test_singletons.py`.
+- [x] `P02.S08` - Implement ApoderamientosRepository wrapping load_default_catalogue with K=None singleton convention and .singleton property; `src/aeat/core/resources/_repos/apoderamientos.py`.
+- [x] `P02.S09` - Implement UserProfileSchemaRepository wrapping load_user_profile_schema as a singleton; `src/aeat/core/resources/_repos/user_profile.py`.
+- [x] `P02.S10` - Implement TopicCatalogueRepository wrapping load_topic_catalogue as a singleton with _TOPIC_REGISTRY_ROOT folded in; `src/aeat/core/resources/_repos/topics.py`.
+- [x] `P02.S11` - Implement RecargoBandsRepository wrapping load_recargo_bands as a singleton; `src/aeat/core/resources/_repos/recargo_bands.py`.
+- [x] `P02.S12` - Implement VatRateTableRepository wrapping load_vat_rate_table as a singleton; `src/aeat/core/resources/_repos/vat_rate_tables.py`.
+- [x] `P02.S13` - Implement LegalParameterRepository wrapping load_legal_parameters_only as a singleton; `src/aeat/core/resources/_repos/legal_parameters.py`.
+- [x] `P02.S14` - Add real-behaviour tests for the six singleton Repositories covering get, .singleton sugar, and clear_cache; `src/aeat/core/resources/_repos/test_singletons.py`.
 
 ### Phase `P03` - year-keyed repositories
 
 Implement three int-year-keyed Repositories: holiday_calendars, category_profiles, vat_catalogues. Each takes a Settings-derived root where applicable.
 
-- [ ] `P03.S15` - Implement HolidayCalendarRepository with int-year key wrapping load_holiday_calendar; `src/aeat/core/resources/_repos/holiday_calendars.py`.
-- [ ] `P03.S16` - Implement CategoryProfileRepository with int-year key wrapping load_category_profile_registry and resolve_category_profiles; `src/aeat/core/resources/_repos/category_profiles.py`.
-- [ ] `P03.S17` - Implement VatCatalogueRepository with int-year key wrapping load_vat_catalogues and resolve_catalogue; `absorb the AEAT_VAT_CATALOGUE_ROOT Settings field; `src/aeat/core/resources/_repos/vat_catalogues.py`.
-- [ ] `P03.S18` - Add real-behaviour tests for the three year-keyed Repositories; `src/aeat/core/resources/_repos/test_year_keyed.py`.
+- [x] `P03.S15` - Implement HolidayCalendarRepository with int-year key wrapping load_holiday_calendar; `src/aeat/core/resources/_repos/holiday_calendars.py`.
+- [x] `P03.S16` - Implement CategoryProfileRepository with int-year key wrapping load_category_profile_registry and resolve_category_profiles; `src/aeat/core/resources/_repos/category_profiles.py`.
+- [x] `P03.S17` - Implement VatCatalogueRepository with int-year key wrapping load_vat_catalogues and resolve_catalogue; `absorb the AEAT_VAT_CATALOGUE_ROOT Settings field; `src/aeat/core/resources/_repos/vat_catalogues.py`.
+- [x] `P03.S18` - Add real-behaviour tests for the three year-keyed Repositories; `src/aeat/core/resources/_repos/test_year_keyed.py`.
 
 ### Phase `P04` - manual repository with composite key
 
 Implement ManualRepository with the composite (manual_id, year, part) Pydantic key. Subsume resolve_part_root, load_manual, load_section, iter_sections, find_rules, load_catalogue, load_manifest, verify_fetched_pdf, verify_manual_dir.
 
-- [ ] `P04.S19` - Implement ManualRepository with composite ManualKey covering resolve_part_root, load_manual, load_section, iter_sections, find_rules, load_catalogue, load_manifest, verify_fetched_pdf, verify_manual_dir; `src/aeat/core/resources/_repos/manuals.py`.
-- [ ] `P04.S20` - Add real-behaviour tests for ManualRepository covering composite key resolution, catalogue iteration, and section lookup; `src/aeat/core/resources/_repos/test_manuals.py`.
+- [x] `P04.S19` - Implement ManualRepository with composite ManualKey covering resolve_part_root, load_manual, load_section, iter_sections, find_rules, load_catalogue, load_manifest, verify_fetched_pdf, verify_manual_dir; `src/aeat/core/resources/_repos/manuals.py`.
+- [x] `P04.S20` - Add real-behaviour tests for ManualRepository covering composite key resolution, catalogue iteration, and section lookup; `src/aeat/core/resources/_repos/test_manuals.py`.
 
 ### Phase `P05` - normative repository
 
 Implement NormativeRepository with a singleton catalogue plus typed lookup methods (find_reference, find_articulo). Settings env-override seam preserved for aeat_normatives_root.
 
-- [ ] `P05.S21` - Implement NormativeRepository with singleton catalogue plus find_reference and find_articulo lookup methods; `absorb the AEAT_NORMATIVES_ROOT Settings field; `src/aeat/core/resources/_repos/normatives.py`.
-- [ ] `P05.S22` - Add real-behaviour tests for NormativeRepository covering singleton get, reference lookup, and articulo lookup; `src/aeat/core/resources/_repos/test_normatives.py`.
+- [x] `P05.S21` - Implement NormativeRepository with singleton catalogue plus find_reference and find_articulo lookup methods; `absorb the AEAT_NORMATIVES_ROOT Settings field; `src/aeat/core/resources/_repos/normatives.py`.
+- [x] `P05.S22` - Add real-behaviour tests for NormativeRepository covering singleton get, reference lookup, and articulo lookup; `src/aeat/core/resources/_repos/test_normatives.py`.
 
 ### Phase `P06` - modelo repository as a facade over ValidatedRegistryAuthority
 
 Implement ModeloRepository as a thin wrapper around the existing ValidatedRegistryAuthority. Preserve its validator and snapshot caches. Migrate the five separate ValidatedRegistryAuthority.load construction paths to resources().modelos.
 
-- [ ] `P06.S23` - Implement ModeloRepository as a thin facade over ValidatedRegistryAuthority preserving its validator and snapshot caches; `key is ModeloKey(id: str); `src/aeat/core/resources/_repos/modelos.py`.
-- [ ] `P06.S24` - Add real-behaviour tests for ModeloRepository covering get, all, and the authority backing surface; `src/aeat/core/resources/_repos/test_modelos.py`.
-- [ ] `P06.S25` - Wire all twelve Repositories into the ResourceRegistry dataclass and verify the resources() factory composes them correctly under Settings overrides; `src/aeat/core/resources/_registry.py`.
+- [x] `P06.S23` - Implement ModeloRepository as a thin facade over ValidatedRegistryAuthority preserving its validator and snapshot caches; `key is ModeloKey(id: str); `src/aeat/core/resources/_repos/modelos.py`.
+- [x] `P06.S24` - Add real-behaviour tests for ModeloRepository covering get, all, and the authority backing surface; `src/aeat/core/resources/_repos/test_modelos.py`.
+- [x] `P06.S25` - Wire all twelve Repositories into the ResourceRegistry dataclass and verify the resources() factory composes them correctly under Settings overrides; `src/aeat/core/resources/_registry.py`.
 
 ### Phase `P07` - production consumer migration
 
@@ -241,112 +168,3 @@ Run ruff + ty + pytest. Add a structural test asserting the registry is the only
 - [ ] `P10.S91` - Run the project quality gate ruff, ty, pytest with the unit marker, and the structural audits declared in the justfile; `justfile`.
 - [ ] `P10.S92` - Add a structural test asserting resources() is the only resource-access surface in the project by grepping for bundled_path and _DEFAULT_*_ROOT outside core/resources/; `src/aeat/core/resources/test_single_surface_invariant.py`.
 - [ ] `P10.S93` - Update operator-facing release documentation only if the migration changed the operator surface; `RELEASING.md`.
-
-## Parallelization
-
-The canonical execution order is `P01 -> P02 -> P03 -> P04 ->
-P05 -> P06 -> P07 -> P08 -> P09 -> P10`. Within phases:
-
-P01 (foundation) is strictly sequential because the steps build
-on each other: S01 (package conversion) precedes S02 (Repository
-base), which precedes S03 (key models), S04 (errors), S05
-(registry), S06 (init re-exports), and S07 (foundation tests).
-
-P02 (singleton repositories) parallelises freely across its six
-Repository implementations (S08-S13). S14 (tests) strictly
-follows.
-
-P03 (year-keyed repositories) parallelises across S15-S17. S18
-(tests) strictly follows.
-
-P04 (manuals) and P05 (normatives) are independent of P02-P03
-once P01 is in place and can run alongside P02-P03 if a
-parallel executor is available. P04 has 2 sequential steps; P05
-has 2 sequential steps.
-
-P06 (modelos) strictly follows P01-P05 because the registry-wire
-step (S25) needs every Repository class to exist first.
-
-P07 (production consumer migration) strictly follows P06 because
-consumers call `resources()` which composes every Repository.
-Within P07, the 36 file-scoped steps parallelise freely; conflicts
-arise only when two steps touch the same file, which file
-scoping prevents.
-
-P08 (test consumer migration) strictly follows P07. The 23
-cohesive-area steps parallelise across test directories;
-conflicts are prevented by the directory-disjoint scoping.
-
-P09 (retirement) strictly follows P08 because the legacy
-constants and decorators can only be removed once no consumer
-references them. Within P09, S85-S90 plus S94-S96 may all run
-in parallel (each step is file-disjoint).
-
-P10 (quality gate) strictly follows P09. S91, S92, S93 may run
-in parallel.
-
-## Verification
-
-The plan is complete when every Step is closed and the
-following real-behaviour checks pass:
-
-The foundation tests in `src/aeat/core/resources/test_registry.py`
-and the per-Repository test modules under
-`src/aeat/core/resources/_repos/test_*.py` exercise every
-Repository's `get`, `find`, `all`, `clear_cache`, and the
-singleton `.singleton` sugar with real bundled data.
-
-The structural single-surface invariant test in
-`src/aeat/core/resources/test_single_surface_invariant.py`
-greps the project for any `bundled_path(` or
-`_DEFAULT_*_ROOT =` outside `src/aeat/core/resources/` and
-fails the gate if any are found. The test catches future
-regressions where a contributor adds a parallel resource-access
-surface.
-
-No occurrence of `load_registry_tree`, `load_modelo_file`,
-`load_modelo_directory`, `load_catalogue_file`,
-`load_legal_parameters_only`, `load_manual`, `load_section`,
-`iter_sections`, `find_rules`, `resolve_part_root`,
-`load_manifest`, `verify_fetched_pdf`, `verify_manual_dir`,
-`load_catalogue` (manuals or normatives), `find_reference`,
-`find_articulo`, `verify_catalogue`, `load_vat_catalogue`,
-`load_vat_catalogues`, `resolve_catalogue`, `load_vat_rate_table`,
-`load_recargo_bands`, `load_holiday_calendar`,
-`load_category_profile_file`, `load_category_profile_registry`,
-`resolve_category_profiles`, `load_user_profile_schema`,
-`load_topic_catalogue`, or `load_default_catalogue` is imported
-or called from any consumer module outside its owning Repository
-implementation.
-
-No occurrence of `_DEFAULT_CATALOGUE_PATH`,
-`_DEFAULT_PROFILE_ROOT`, `_DEFAULT_REGISTRY_ROOT`,
-`_DEFAULT_SOURCE_ROOT`, `_CALENDARS_DIR`,
-`_DEFAULT_BRACKET_PATH`, `DEFAULT_USER_PROFILE_SCHEMA_PATH`,
-`_DEFAULT_CATALOGUE_ROOT`, `_DEFAULT_RATE_REGISTRY`,
-`_TOPIC_REGISTRY_ROOT`, or `_DEFAULT_WORKBOOK_ROOT` remains
-anywhere under `src/aeat/`.
-
-No module-level eager load of bundled data remains (the
-historical `VAT_CATALOGUES_BY_YEAR`, `VAT_RATE_TABLE`,
-`LIRPF_ART_85_IMPUTACION`, and `LIVA_ART_161_RECARGO` module-
-level constants are gone; their consumers go through Repository
-methods).
-
-The Settings env-override seam continues to work for
-`AEAT_MANUALS_ROOT`, `AEAT_NORMATIVES_ROOT`, and
-`AEAT_VAT_CATALOGUE_ROOT`. Override tests under
-`src/aeat/application/registry/test_corpus.py` and any test that
-uses `override_settings(aeat_*_root=...)` pass without
-modification.
-
-The full project quality gate completes clean: ruff, ty,
-pytest with the unit marker, and the structural audits
-declared in the justfile.
-
-The built-wheel manifest assertion from the prior corpus-
-registry-packaging feature in
-`src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`
-continues to pass; the new `src/aeat/core/resources/` package
-rides along inside the existing `packages = ["src/aeat"]`
-hatchling directive.

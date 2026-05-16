@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
-from ...core.resources import bundled_path
+from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
@@ -209,7 +209,7 @@ def build_draft(
 def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
     filing_year, registry_period = _registry_period(period)
     try:
-        authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+        authority = resources().modelos.authority
         return authority.snapshot(
             modelo,
             filing_year=filing_year,

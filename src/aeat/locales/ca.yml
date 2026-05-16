@@ -862,6 +862,16 @@ cli:
     app_help: Auditar i generar catàlegs de traducció
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
   overview:
+    agenda:
+      allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
+        incompletes.
+      date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte, avui.
+      errors:
+        invalid_horizon: --horizon ha de ser un nombre enter positiu (dies).
+      help: Classifica les obligacions properes i vençudes al voltant d'una data de
+        referència. Indica un únic `next_due` més les cohorts due-today / due-soon /
+        overdue. Local; mai contacta amb AEAT.
+      horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
     allow_incomplete_help: Permet el calendari amb valors per defecte quan falten
       claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha
       advertencies.
@@ -871,8 +881,8 @@ cli:
         siguin incompletes.
       from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
       help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
-        indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta amb
-        AEAT.
+        indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
+        amb AEAT.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
     calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
