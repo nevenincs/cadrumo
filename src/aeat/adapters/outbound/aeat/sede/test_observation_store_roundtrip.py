@@ -121,3 +121,97 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: stripping ``artefacts`` to empty must surface.
+
+    :class:`FiledDeclarationObservation` enforces
+    ``artefacts: tuple[..., ...] = Field(min_length=1)`` — every
+    persisted observation MUST carry at least one artefact (the source
+    PDF or register row that proves AEAT served it). A persisted
+    observation whose artefacts tuple is silently emptied would
+    invalidate the entire content-addressing chain that proves the
+    observation reflects what AEAT actually filed.
+
+    Persists an observation, reaches into ``SecureObjectRow`` via
+    ``session_scope``, surgically empties the ``artefacts`` tuple in
+    the encrypted JSON envelope, and asserts the load path catches
+    the drift via the ``min_length=1`` constraint.
+
+    If this test passes silently with an empty artefacts tuple, the
+    observation store's evidence-of-AEAT-serve contract is
+    tautological and the boundary cannot be trusted as a filed-
+    observation audit trail.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ....persistence.storage.sql._orm import SecureObjectRow
+    from ....persistence.storage.sql.session import session_scope
+    from ._observation_store import _OBSERVATION_NAMESPACE
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "sede-observation-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+        store = FiledDeclarationObservationStore(tmp_path / "sede-cache")
+
+        body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
+        artefact = FiledDeclarationArtefact(
+            kind="declaration_pdf",
+            source_url=AnyHttpUrl(
+                "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
+            ),
+            content_type="application/pdf",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        )
+        observation_key = ("100", 2023, "0A", "202310013522456T")
+        persisted_artefact = store.persist_artefact(observation_key, artefact, body)
+        observation = _populated_observation(persisted_artefact)
+        logical_path = store.persist_observation(observation)
+
+        with session_scope(engine) as session:
+            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+            obs_rows = [r for r in all_rows if r.namespace == _OBSERVATION_NAMESPACE]
+            assert len(obs_rows) == 1, (
+                f"expected one observation row, found {len(obs_rows)} "
+                f"(namespaces: {sorted({r.namespace for r in all_rows})})"
+            )
+            row = obs_rows[0]
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            payload = envelope["payload"]
+            assert payload.get("artefacts"), (
+                "fixture must serialise a non-empty artefacts tuple for "
+                "this proof test to be meaningful"
+            )
+            payload["artefacts"] = []
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            store.load_observation(logical_path)
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: stripping artefacts to empty "
+            "did NOT surface on load. The observation store's evidence-"
+            "of-AEAT-serve contract is tautological and the boundary "
+            "cannot be trusted as a filed-observation audit trail."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
