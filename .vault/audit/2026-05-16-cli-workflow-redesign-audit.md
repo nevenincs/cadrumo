@@ -113,59 +113,86 @@ called once concrete `InvoiceReviewRecord` and `LedgerReviewRecord`
 imports are available, unblocking the entire ratios test suite that
 the parallel type-normalization pass had briefly broken.
 
-### Task queue triaged
+### Outstanding work — to be executed in this worktree
 
-The remediation worktree's internal task queue was triaged from
-roughly 313 entries down to 92. The cuts removed:
+This worktree owns the remaining implementation work. No waves are
+delegated to a separate worktree. The active queue (re-recorded
+2026-05-16 after a triage correction) tracks the upcoming sequence:
 
-- Service-implementation tasks for W63 (reconcile), W68 (export),
-  W74 (profile export/import), W77 (BucketMaintenanceService),
-  W72 (ledger link/check/preflight), W81 (overview verb tree),
-  W85 (reconcile-from-justificante and Modelo 036 lifecycle), and
-  W28 (currency normalization). These waves require multi-file
-  service skeletons, CLI verb mounts, i18n in four locales, and
-  end-to-end fixtures. They are tracked in the apex plan and
-  belong in their own dedicated worktrees rather than in a
-  `chore/eliminate-shims` remediation branch.
-- Per-wave "re-check after X lands" follow-ups for the same set,
-  which are trivially blocked on the same implementations.
-- Documentation tasks (README, developer notes, per-feature docs)
-  that the user did not request and that conflict with the
-  source-hygiene rule against feature-specific doc files. Commit
-  messages and PR descriptions carry the same context.
-- Vague vocabulary / locale-parity audits that cannot be acted on
-  without an accompanying implementation surface to audit.
-- W57 evidence-bundle deduplication, which requires a source-level
-  audit and rewrite that is out of scope here.
+- W83 emissions for `auth.provider.configured`,
+  `config.env.updated`, `setup.state.migrated`, plus the
+  fresh-profile integration test.
+- W57 evidence-bundle deduplication: audit duplicate
+  implementations, delete non-canonical branches, migrate internal
+  callers to `EvidenceBundleService`, fix the test_evidence.py
+  import error, add negative tests for retired aliases, end-to-end
+  audit workflow test.
+- W63 modelo reconcile service + Pydantic command/report
+  contracts, CLI verb mount under `aeat app modelo reconcile`,
+  surface tests, four-locale i18n.
+- W68 modelo export service + command/result contracts, CLI verb,
+  surface tests, four-locale i18n; help-text gate against any
+  phrasing implying live submission.
+- W28 currency normalization wiring into aggregation, exchange-
+  rate provider adapter, persistence path, CLI `aeat config
+  currency` subgroup, error/_emit/boundary wiring, four-locale
+  i18n, end-to-end coverage.
+- W74 profile export/import services, `aeat config profile
+  export/import PATH` verbs, lifecycle event emission, service-
+  contract and CLI tests, four-locale i18n, child ADR closure
+  amendment.
+- W77 `BucketMaintenanceService` skeleton + browse / search /
+  export / import / rename / delete methods, Pydantic command and
+  result contracts, six `aeat config bucket` verbs, four-locale
+  i18n, lifecycle event emission, boundary inventory update,
+  central error boundary wiring, parent and child ADR amendments,
+  service-contract tests, destructive-action safeguards,
+  determinism, collision-handling, ordering, and pagination tests.
+- W72 ledger.link / ledger.check / ledger.preflight backend
+  actions, three CLI verbs, surface tests, end-to-end modelo
+  lifecycle test through the reconciled verb tree, regression
+  test for the canonical ledger spine, four-locale i18n.
+- W81 OverviewCalendar / Agenda / Backlog / Explain services per
+  the adjudicated separate-verb shape, four `aeat app overview`
+  verbs, `next_due` field in the agenda payload, CLI surface
+  tests, four-locale i18n, festivos/shift_deadline integration
+  tests for every modelo cadence.
+- W85 reconcile from-justificante backend and CLI subcommand,
+  Modelo 036 alta / modificacion / baja lifecycle services with
+  state-machine enforcement (modificacion requires prior alta;
+  baja is terminal), three CLI verbs, lifecycle events,
+  four-locale i18n, foundation ADR amendment.
+- Apex / child ADR amendments closing out W77 (bucket-event-
+  history), W83 (init-time vocabulary), W63/W72/W85 (reconcile
+  unification), W68 (export-surface distinction), and the apex
+  §3.4 / §4.2 dual-annotation amendment.
+- Plan-body follow-ups for W02, W08, W23, W48, W69.
+- Cross-cutting harness work: W71 contract conformance once each
+  noun group lands, locale parity audit across four locales, full
+  pytest sweep, full `vault check all`, feature index rebuild, and
+  the release commit.
 
-### Apex plan steps tied to remaining waves
+### Apex plan step bookkeeping
 
-The apex plan retains every step record for the deferred waves
-above. No retroactive uncheck or check operations were performed
-through `vault plan` because the parallel type-normalization agent
-is still rewriting some of the same surfaces. Mass step edits at
-this moment would either conflict with that work or freeze a
-mid-flight state. The W43 / W44 / W48 / W77 ratios / W80 / W84
-steps are already checked or carry `**Audit note (2026-05-15)**`
-callouts marking their actual verdict, which the apex §12 overlay
-ratifies.
+The apex plan step rows for the open waves stay as they are until
+this worktree lands the corresponding code. Each implementation
+commit will run `vault plan step check` for its rows alongside the
+matching `<Step Record>` under `.vault/exec/`. The 2026-05-15 audit
+overlay in apex §12 already records the verdict for the R-rows
+inherited from the prior cycle; the §12 overlay is the historical
+trail and does not need to be re-edited per commit.
 
 ## Recommendations
 
-Treat the W63 / W68 / W74 services / W77 BucketMaintenanceService /
-W72 link-check-preflight / W81 overview verb tree / W85 reconcile-
-from-justificante + Modelo 036 lifecycle / W28 currency wiring as
-separate, charter-bound work items that each warrant their own
-worktree, ADR-backed scope, and execution record sequence.
+Sequence the open work as it appears in the task queue. The first
+implementation passes that need to land are the ones that unblock
+the cross-cutting harness work: W77 BucketMaintenanceService (gates
+the `vault check all` clean-room baseline), W83 init-time events
+(gates the integration test asserting init emissions land), W74
+profile export/import (gates schema-migration testing), then W63 /
+W68 / W72 / W81 / W85 in the order their ADRs were ratified. W28
+currency wiring slots in alongside whichever modelo wave needs
+multi-currency aggregation first.
 
-When those waves land, the apex plan steps for the affected R-rows
-can be re-checked via `vault plan step check` in the originating
-worktree, alongside the corresponding `<Step Record>`. The audit
-overlay in apex §12 stays as the historical record of the gap and
-the close-out path.
-
-Cross-cutting final gates that remain pending — full pytest sweep
-after the parallel type pass settles, full `vault check all`,
-feature-index rebuild, and the release commit — should run from a
-single coordinating worktree after the in-flight type and packaging
-moves stabilise.
+The 2026-05-16 task queue is the authoritative sequencing record;
+the apex plan is the authoritative scope record.
