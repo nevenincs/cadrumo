@@ -882,9 +882,9 @@ cli:
         incompletes.
       from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans
         d'avui.
-      help: Llista les obligacions vençudes que l'operador encara no ha presentat. Ordenades
-        de més antiga a més recent per prioritzar el triatge. Local; mai contacta amb
-        AEAT.
+      help: Llista les obligacions vençudes que l'operador encara no ha presentat.
+        Ordenades de més antiga a més recent per prioritzar el triatge. Local; mai
+        contacta amb AEAT.
       to_help: Data de fi inclusiva (ISO YYYY-MM-DD); per defecte, avui.
     calendar:
       allow_incomplete_help: Generar el calendari encara que les dades del perfil
@@ -900,6 +900,12 @@ cli:
       el calendari calculat amb valors per defecte.'
     calendar_requires_dates: Useu --from i --to quan consulteu el calendari
     drafts: Esborranys
+    explain:
+      help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra l'indicador
+        binari, el text registral de justificació i les dades del perfil de les quals
+        depèn la decisió. Local; mai contacta amb AEAT.
+      modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
+      year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
     from_help: Data inicial del calendari (AAAA-MM-DD)
     header: "Model\tPeríode\tEstat\tObre\tTanca"
     period: Període

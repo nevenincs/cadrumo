@@ -383,3 +383,58 @@ def overview_backlog(
     for warning in backlog.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
     _emit(ctx, payload, lines)
+
+
+@app.command(
+    "explain",
+    help=tr(
+        "cli.overview.explain.help",
+        default=(
+            "Decompose a modelo's applicability against the active profile. Surfaces "
+            "the binary applicable flag, the registry-backed rationale text, and the "
+            "profile facts the decision depends on. Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def overview_explain(
+    ctx: typer.Context,
+    modelo: str = typer.Argument(
+        ...,
+        help=tr(
+            "cli.overview.explain.modelo_help",
+            default="AEAT modelo identifier (e.g. 303, 130, 100).",
+        ),
+    ),
+    year: int | None = typer.Option(
+        None,
+        "--year",
+        help=tr(
+            "cli.overview.explain.year_help",
+            default="Fiscal year for the applicability evaluation; defaults to the current year.",
+        ),
+    ),
+) -> None:
+    """Explain why a modelo does or does not apply to the active profile."""
+
+    from ...application.overview._errors import OverviewExplainError
+    from ...application.overview._explain import build_overview_explain
+
+    current = _state()
+    try:
+        result = build_overview_explain(
+            _profile_to_autonomo(current),
+            modelo=modelo,
+            year=year,
+        )
+    except OverviewExplainError as exc:
+        raise _bad(str(exc)) from exc
+    payload = result.model_dump(mode="json")
+    lines: list[str] = [
+        f"modelo\t{result.modelo}",
+        f"year\t{result.year}",
+        f"applicable\t{str(result.applicable).lower()}",
+        f"rationale\t{result.rationale}",
+    ]
+    for fact_name, fact_value in sorted(result.profile_facts.items()):
+        lines.append(f"profile_fact\t{fact_name}\t{fact_value}")
+    _emit(ctx, payload, lines)

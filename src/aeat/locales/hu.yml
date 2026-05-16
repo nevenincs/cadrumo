@@ -890,6 +890,13 @@ cli:
       a naptár alapértelmezett értékekkel történő számításához.'
     calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
+    explain:
+      help: Lebontja egy modelo alkalmazhatóságát az aktív profilra. Megmutatja a bináris
+        indikátort, a regisztrációs alapú indoklást és a profil tényeit, amelyektől
+        a döntés függ. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      modelo_help: AEAT modelo azonosító (pl. 303, 130, 100).
+      year_help: Az alkalmazhatóság értékeléséhez használt adóév; alapértelmezetten az
+        aktuális év.
     from_help: Naptár kezdő dátuma (YYYY-MM-DD)
     header: "Modell\tIdőszak\tÁllapot\tNyit\tZár"
     period: Időszak

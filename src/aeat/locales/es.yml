@@ -892,12 +892,13 @@ cli:
       hay advertencias.
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     backlog:
-      allow_incomplete_help: Generar el backlog aunque los datos del perfil estén incompletos.
-      from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días antes
-        de hoy.
-      help: Lista las obligaciones vencidas que el operador aún no ha presentado. Ordenadas
-        de más antigua a más reciente para priorizar la triaje. Local; nunca contacta
-        con AEAT.
+      allow_incomplete_help: Generar el backlog aunque los datos del perfil estén
+        incompletos.
+      from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días
+        antes de hoy.
+      help: Lista las obligaciones vencidas que el operador aún no ha presentado.
+        Ordenadas de más antigua a más reciente para priorizar la triaje. Local; nunca
+        contacta con AEAT.
       to_help: Fecha de fin inclusiva (ISO YYYY-MM-DD); por defecto, hoy.
     calendar:
       allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
@@ -913,6 +914,13 @@ cli:
       el calendario calculado bajo valores por defecto.'
     calendar_requires_dates: Use --from y --to al consultar el calendario
     drafts: Borradores
+    explain:
+      help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
+        el indicador binario, el texto registral de justificación y los datos del perfil
+        de los que depende la decisión. Local; nunca contacta con AEAT.
+      modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
+      year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
+        actual.
     from_help: Fecha inicial del calendario (AAAA-MM-DD)
     header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
     period: Periodo
