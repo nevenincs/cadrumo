@@ -8,6 +8,7 @@ related:
   - '[[2026-05-15-corpus-registry-packaging-adr]]'
   - '[[2026-05-15-corpus-registry-packaging-plan]]'
   - '[[2026-05-15-corpus-registry-packaging-research]]'
+  - '[[2026-05-16-corpus-registry-packaging-audit]]'
 ---
 
 # `corpus-registry-packaging` feature index
@@ -19,6 +20,10 @@ Auto-generated index of all documents tagged with `#corpus-registry-packaging`.
 ### adr
 
 - `2026-05-15-corpus-registry-packaging-adr` - `corpus-registry-packaging` adr: Bundle corpus and registry trees as in-wheel package resources | (**status:** `accepted`)
+
+### audit
+
+- `2026-05-16-corpus-registry-packaging-audit` - `corpus-registry-packaging` audit: post-execution review of in-wheel bundling
 
 ### plan
 
