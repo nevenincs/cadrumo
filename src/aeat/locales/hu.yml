@@ -860,15 +860,23 @@ cli:
       date_help: Az agenda referenciadátuma (ISO YYYY-MM-DD); alapértelmezetten ma.
       errors:
         invalid_horizon: A --horizon értéke pozitív egész szám kell legyen (napokban).
-      help: Rangsorolja a közelgő és lejárt kötelezettségeket egy referenciadátum körül.
-        Egyetlen `next_due` mezőt jelenít meg, valamint a due-today / due-soon / overdue
-        kohorszokat. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      help: Rangsorolja a közelgő és lejárt kötelezettségeket egy referenciadátum
+        körül. Egyetlen `next_due` mezőt jelenít meg, valamint a due-today / due-soon
+        / overdue kohorszokat. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
       horizon_help: Előrenéző ablak (napokban), amelyet a `due_soon` kohorsz figyelembe
         vesz.
     allow_incomplete_help: Engedélyezi a naptárt alapértelmezett értékekkel, ha a
       profil nem deklarálja a regim kulcsokat. E nélkül a naptár elutasításra kerül,
       ha figyelmeztetések vannak.
     app_help: Az aktuális adózási munkaterület áttekintése
+    backlog:
+      allow_incomplete_help: A backlog generálása akkor is, ha a profil adatai hiányosak.
+      from_help: Inkluzív kezdő dátum (ISO YYYY-MM-DD); alapértelmezetten 365 nappal
+        a mai nap előtt.
+      help: Felsorolja a lejárt, még be nem nyújtott kötelezettségeket. A legrégebbiek
+        kerülnek előre, hogy a legsürgetőbb triázsolható legyen először. Csak helyi;
+        soha nem kapcsolódik az AEAT-hoz.
+      to_help: Inkluzív záró dátum (ISO YYYY-MM-DD); alapértelmezetten ma.
     calendar:
       allow_incomplete_help: A naptár generálása akkor is, ha a profil adatai hiányosak.
       from_help: A naptárablak kezdő dátuma, inkluzív (ISO YYYY-MM-DD).

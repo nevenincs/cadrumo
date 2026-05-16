@@ -855,13 +855,19 @@ cli:
       date_help: As-of date for the agenda (ISO YYYY-MM-DD); defaults to today.
       errors:
         invalid_horizon: --horizon must be a positive integer (days).
-      help: Rank upcoming and past-due obligations around an as-of date. Surfaces a
-        single `next_due` plus due-today / due-soon / overdue cohorts. Local-only;
+      help: Rank upcoming and past-due obligations around an as-of date. Surfaces
+        a single `next_due` plus due-today / due-soon / overdue cohorts. Local-only;
         never contacts AEAT.
       horizon_help: Forward window (days) the `due_soon` cohort honours.
     allow_incomplete_help: Allow the calendar to be computed under defaults when regime
       keys are unset. Without this flag the calendar is refused when warnings exist.
     app_help: Review the active tax workspace
+    backlog:
+      allow_incomplete_help: Render the backlog even when profile data is incomplete.
+      from_help: Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before today.
+      help: List past-due obligations the operator has not yet filed. Sorted oldest
+        first so the most-overdue items triage first. Local-only; never contacts AEAT.
+      to_help: Inclusive end date (ISO YYYY-MM-DD); defaults to today.
     calendar:
       allow_incomplete_help: Render the calendar even when profile data is incomplete.
       from_help: Inclusive start date for the calendar window (ISO YYYY-MM-DD).
