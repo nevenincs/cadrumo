@@ -1158,6 +1158,10 @@ def bucket_history(
     _emit(ctx, payload, lines)
 
 
+from ._profile_census import register as _register_profile_census
+
+_register_profile_census(profile_app)
+
 app.add_typer(profile_app, name="profile")
 auth_app.add_typer(apoderado_app, name="apoderado")
 app.add_typer(auth_app, name="auth")
