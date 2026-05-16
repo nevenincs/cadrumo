@@ -9,8 +9,9 @@ at handler-call time.
 
 This file pins:
 
-  * the registry of typed selectors is non-empty and registers the
-    ten typed sources defined in ``_bindings``;
+  * the registry of typed selectors is non-empty and registers every
+    typed source key currently declared in
+    ``_BINDING_SELECTOR_REGISTRY``;
   * a well-shaped selector for each typed source passes the gate;
   * a misshapen selector for a typed source surfaces the violation
     as a typed diagnostic string (not as a silent pass);
@@ -208,9 +209,13 @@ def test_invoice_selector_accepts_well_shaped_selector() -> None:
 def test_free_form_source_returns_no_diagnostics() -> None:
     """A binding whose source has no registry entry short-circuits cleanly.
 
-    Sources like ``manual_input`` and ``profile`` are not yet typed
-    in the discriminator registry; the gate must return an empty
+    Sources like ``ledger``, ``rental``, ``vat``, and ``category`` are
+    intentionally free-form — they have no entry in
+    ``_BINDING_SELECTOR_REGISTRY``. The gate must return an empty
     failure list for them so existing registry data keeps loading.
+    Note that ``manual_input`` and ``profile`` ARE typed in the
+    registry today; do not add them to this test as free-form
+    references.
     """
 
     binding = _binding(
