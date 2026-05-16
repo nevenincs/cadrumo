@@ -8,7 +8,7 @@ from pathlib import Path
 from ._export import derive_export_layouts_from_bindings
 from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._temporal import select_revision
-from ._validate import RegistryValidator
+from ._validate import RegistryValidator, _check_all_id_references
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None]
 _SnapshotCacheValue = tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]
@@ -140,7 +140,7 @@ def _build_validated_snapshot(
     for classification in revision.dependency_classifications:
         legal_ids.update(classification.legal_refs)
         source_ids.update(classification.source_refs)
-    return RegistrySnapshot(
+    snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
         filing_year=filing_year,
@@ -162,3 +162,5 @@ def _build_validated_snapshot(
             classification.id: classification for classification in revision.dependency_classifications
         },
     )
+    _check_all_id_references(snapshot)
+    return snapshot
