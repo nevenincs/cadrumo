@@ -73,7 +73,9 @@ class AuthAcquisitionLockedError(AeatError):
 def auth_acquisition_lock_path(settings: Settings, kind: AuthProviderKind) -> Path:
     """Return the profile/provider-scoped lock path."""
 
-    return settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-{kind.value}-auth.lock"
+    from ..workflow._models import require_active_bucket_id
+
+    return settings.aeat_token_dir / f"{require_active_bucket_id()}-{kind.value}-auth.lock"
 
 
 def inspect_auth_acquisition_lock(
@@ -155,9 +157,11 @@ def acquire_auth_acquisition_lock(
     path = auth_acquisition_lock_path(settings, kind)
     path.parent.mkdir(parents=True, exist_ok=True)
     now = datetime.now(UTC)
+    from ..workflow._models import require_active_bucket_id
+
     record = AuthAcquisitionLockRecord(
         provider_kind=kind,
-        profile_name=settings.aeat_default_profile_name,
+        profile_name=require_active_bucket_id(),
         pid=os.getpid(),
         hostname=socket.gethostname(),
         created_at=now,

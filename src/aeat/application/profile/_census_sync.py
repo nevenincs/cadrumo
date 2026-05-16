@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Final
 
@@ -277,6 +278,38 @@ class CensusSyncService:
         if not self._profiles.exists(profile_id):
             return None
         return self._profiles.load(profile_id)
+
+    def bound_raw_afectacion_ratio(self, *, profile_id: str) -> Decimal | None:
+        """Return ``office_m2 / total_m2`` from the active census snapshot.
+
+        Used by the ledger ratios CLI and the manual-transaction
+        classify path to apply the legally-effective
+        :func:`aeat.application.ledger._ratios.census_override_warning`
+        and :func:`aeat.application.ledger._ratios.census_business_pct_for`
+        helpers without each consumer re-implementing the snapshot
+        lookup. Returns ``None`` when no ACTIVE snapshot exists OR when
+        either ``vivienda_office.total_m2`` / ``vivienda_office.office_m2``
+        is absent / non-decimal / zero.
+        """
+
+        snapshot = self._snapshots.latest_active(profile_id=profile_id)
+        if snapshot is None:
+            return None
+        total_raw = snapshot.census_facts.get("vivienda_office.total_m2")
+        office_raw = snapshot.census_facts.get("vivienda_office.office_m2")
+        if total_raw is None or office_raw is None:
+            return None
+        try:
+            total = Decimal(total_raw)
+            office = Decimal(office_raw)
+        except (InvalidOperation, ValueError):
+            return None
+        if total <= Decimal("0") or office < Decimal("0"):
+            return None
+        ratio = office / total
+        if ratio > Decimal("1"):
+            return None
+        return ratio
 
 
 def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:

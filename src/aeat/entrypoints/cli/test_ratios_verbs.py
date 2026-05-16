@@ -131,3 +131,107 @@ def test_ratios_unset_emits_ledger_ratios_unset_event(cli_runner: CliRunner) -> 
     assert matching
     assert matching[-1].payload["prior"] == "0.5"
     assert matching[-1].payload["new"] == ""
+
+
+def _capture_census_with_vivienda_office(office_m2: str, total_m2: str) -> None:
+    """Capture a census snapshot for the active profile with the supplied m².
+
+    Used by census-override-warning tests so the ratios_set handler has
+    a bound raw afectación ratio to compare the operator-supplied value
+    against.
+    """
+
+    from datetime import UTC, datetime
+
+    from aeat.application.live._census import CensusSnapshotService
+
+    state = workflow_state_repository().load()
+    bucket_id = state.profiles[state.active_profile].bucket_id
+    service = CensusSnapshotService(bucket_id=bucket_id)
+    service.capture(
+        profile_id=state.active_profile,
+        captured_at=datetime.now(UTC),
+        source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
+        census_facts={
+            "vivienda_office.total_m2": total_m2,
+            "vivienda_office.office_m2": office_m2,
+        },
+    )
+
+
+def test_ratios_set_emits_census_override_warning_when_suministros_diverges(
+    cli_runner: CliRunner,
+) -> None:
+    """Setting a HOME_OFFICE suministros ratio at a value different from
+    raw_afectacion * 0.30 (LIRPF Art. 30.2 rule 5) emits the warning
+    event. The set itself still lands — the operator may legitimately
+    model a planned change — but the divergence is recorded."""
+
+    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    _capture_census_with_vivienda_office(office_m2="20", total_m2="100")
+
+    set_result = cli_runner.invoke(ratios_app, ["set", "suministros_home_office_luz", "0.5"])
+    assert set_result.exit_code == 0, set_result.output
+
+    catalogue = BucketEventHistoryRepository().load()
+    warnings = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING
+        and event.object_id == "suministros_home_office_luz"
+    ]
+    assert warnings, (
+        "LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING must fire when the operator "
+        "overrides a suministros ratio away from the LIRPF Art. 30.2 rule 5 value"
+    )
+    payload = warnings[-1].payload
+    assert payload["override_ratio"] == "0.5"
+    assert payload["census_derived_ratio"] == "0.060"
+    assert payload["raw_afectacion_ratio"] == "0.2"
+
+
+def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw(
+    cli_runner: CliRunner,
+) -> None:
+    """When the operator sets the legally-correct value (raw * 0.30),
+    no warning fires. Witnesses that the warning isn't spuriously
+    emitted on every HOME_OFFICE set."""
+
+    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    _capture_census_with_vivienda_office(office_m2="20", total_m2="100")
+
+    set_result = cli_runner.invoke(ratios_app, ["set", "suministros_home_office_luz", "0.06"])
+    assert set_result.exit_code == 0, set_result.output
+
+    catalogue = BucketEventHistoryRepository().load()
+    warnings = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING
+    ]
+    assert not warnings, (
+        "no warning should fire when the override exactly matches the "
+        "census-derived value"
+    )
+
+
+def test_ratios_set_silent_for_non_home_office_category(cli_runner: CliRunner) -> None:
+    """The override-warning event is HOME_OFFICE-scoped per the ADR:
+    other categories don't carry the census-binding contract."""
+
+    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    _capture_census_with_vivienda_office(office_m2="20", total_m2="100")
+
+    set_result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "0.9"])
+    assert set_result.exit_code == 0, set_result.output
+
+    catalogue = BucketEventHistoryRepository().load()
+    warnings = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING
+    ]
+    assert not warnings

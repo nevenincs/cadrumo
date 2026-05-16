@@ -429,6 +429,28 @@ class Settings(BaseSettings):
         description="Subprocess-IPC marker carrying the original run_id when a CLI invocation is a replay re-entry",
     )
 
+    # ── TTY / colour ────────────────────────────────────────────────────────
+    aeat_force_color: bool = Field(
+        default=False,
+        description=(
+            "Force ANSI colour output even when stdout is not a TTY. "
+            "Operators set this when piping aeat output through a terminal "
+            "renderer (less -R, gh actions, etc.). Defaults to False; the "
+            "should_use_color() helper consults this and the standard NO_COLOR "
+            "convention through Settings rather than reading os.environ directly."
+        ),
+    )
+    no_color: bool = Field(
+        default=False,
+        description=(
+            "Disable ANSI colour output regardless of TTY state. Mirrors the "
+            "widely-adopted no-color.org convention via the NO_COLOR environment "
+            "variable; pydantic-settings reads NO_COLOR (uppercased field name) "
+            "out of os.environ on Settings() instantiation, so the no-color "
+            "convention is honoured without per-call-site os.environ reads."
+        ),
+    )
+
     # ── Diagnostic logging ──────────────────────────────────────────────────
     aeat_log_dir: Path | None = Field(
         default=None,
@@ -494,9 +516,14 @@ class Settings(BaseSettings):
         default=True,
         description="Run browser in headless mode",
     )
-    aeat_default_profile_name: str = Field(
-        default="default",
-        description="Default profile name for the browser session",
+    aeat_active_profile: str | None = Field(
+        default=None,
+        description=(
+            "Per-shell override for the active operator profile. When set, "
+            "wins over the <aeat-root>/active-profile pointer file in the "
+            "active-profile precedence chain. Leave unset for normal "
+            "installs; the pointer file is the canonical default."
+        ),
     )
     aeat_proxy_url: str = Field(
         default="",
