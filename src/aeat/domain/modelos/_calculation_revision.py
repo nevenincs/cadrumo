@@ -46,6 +46,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ..calculations.registry._bindings import CasillaObservation
 from ._errors import ModeloValidationError
 
 
@@ -200,6 +201,13 @@ class CalculationRevision(BaseModel):
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     bindings_sourced_from_borrador: tuple[str, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[str, Decimal] = Field(default_factory=dict)
+    # Typed envelope carrying formula provenance for every computed
+    # casilla. Defaults to () so already-persisted revisions remain
+    # loadable. New revisions populate this from the engine's typed
+    # entries so the operand_refs / operand_values / legal_refs /
+    # source_refs trace survives the domain boundary that previously
+    # dropped them when only ``casilla_values`` was persisted.
+    observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
     created_at: datetime
     updated_at: datetime
     verified_at: datetime | None = None

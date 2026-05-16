@@ -30,6 +30,7 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry._bindings import CasillaObservation
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.filing import FilingDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -842,6 +843,18 @@ def calculate_modelo_revision(
         )
     )
     casilla_values = {key: value for key, value in engine_result.values.items()}
+    typed_observations: tuple[CasillaObservation, ...] = tuple(
+        CasillaObservation(
+            casilla_id=entry.target,
+            value=entry.value,
+            formula_id=entry.formula_id,
+            operand_refs=entry.operand_refs,
+            operand_values=entry.operand_values,
+            legal_refs=entry.legal_refs,
+            source_refs=entry.source_refs,
+        )
+        for entry in engine_result.entries
+    )
 
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -867,6 +880,7 @@ def calculate_modelo_revision(
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
         casilla_values=casilla_values,
+        observations=typed_observations,
         created_at=now,
         updated_at=now,
     )
