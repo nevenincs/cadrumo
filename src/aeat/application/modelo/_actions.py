@@ -103,7 +103,15 @@ from ._borrador_binding import (
     resolve_modelo_100_borrador_bindings,
 )
 
-_BUCKET_EVENT_PAYLOAD_VERSION = 1
+_BUCKET_EVENT_PAYLOAD_VERSION = 2
+"""Schema version for the bucket-event payload dict emitted by this module.
+
+v1 -> v2: ``has_provenance`` key added on the
+``modelo.calculation.created`` payload signalling whether the linked
+revision carries a non-empty typed observations tuple. Audit tools
+reading the event log alone can detect grounding-loss regressions
+without joining against the encrypted revision catalogue.
+"""
 
 
 def _emit_bucket_event(
@@ -943,6 +951,13 @@ def calculate_modelo_revision(
             "source_transaction_count": str(len(source_transaction_ids)),
             "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
             "borrador_binding_count": str(len(borrador_result.bindings_sourced_from_borrador)),
+            # Signals whether the linked calculation revision carries a
+            # non-empty typed observations tuple. Audit tools reading
+            # the event log alone can detect grounding-loss regressions
+            # without joining against the encrypted revision catalogue;
+            # the ``object_id`` field above is the revision id, used as
+            # the join key for full provenance recovery.
+            "has_provenance": "true" if typed_observations else "false",
         },
     )
     return revision
