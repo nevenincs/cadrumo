@@ -588,81 +588,121 @@ def compute_from_pull(
     invoking this helper.
     """
 
-    if pull.metadata_match != "matches":
-        raise StorageConflictError(
-            f"refusing to compute: workbook metadata_match={pull.metadata_match!r} "
-            f"does not bind to the supplied snapshot",
-            context={
-                "spreadsheet_id": pull.spreadsheet_id,
-                "metadata_match": pull.metadata_match,
-                "workbook_modelo": pull.metadata.modelo_id,
-                "snapshot_modelo": snapshot.modelo.id,
-            },
-            suggestion=(
-                "re-export the workbook against the current snapshot via "
-                "`aeat config google sync calc export`, then re-pull"
-            ),
-        )
+    _require_metadata_match(pull=pull, snapshot=snapshot)
+    inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
+    binding_values, enum_binding_values = _collect_binding_values(snapshot=snapshot, edits=pull.binding_edits)
+    relation_values = _collect_relation_values(snapshot=snapshot, edits=pull.relation_edits)
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+    )
 
-    edits_by_casilla = {edit.casilla: edit for edit in pull.operator_edits}
 
+def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> None:
+    """Refuse to compute when the workbook metadata doesn't bind to the snapshot."""
+    if pull.metadata_match == "matches":
+        return
+    raise StorageConflictError(
+        f"refusing to compute: workbook metadata_match={pull.metadata_match!r} "
+        f"does not bind to the supplied snapshot",
+        context={
+            "spreadsheet_id": pull.spreadsheet_id,
+            "metadata_match": pull.metadata_match,
+            "workbook_modelo": pull.metadata.modelo_id,
+            "snapshot_modelo": snapshot.modelo.id,
+        },
+        suggestion=(
+            "re-export the workbook against the current snapshot via "
+            "`aeat config google sync calc export`, then re-pull"
+        ),
+    )
+
+
+def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None) -> Decimal:
+    """Coerce an :class:`OperatorEdit.value` shape into a runtime Decimal.
+
+    None / unparseable text / unsupported type all collapse to
+    ``Decimal("0")`` so the runtime's "every non-computed casilla has a
+    value" precondition holds.
+    """
+    if value is None:
+        return Decimal("0")
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, bool):
+        return Decimal("1") if value else Decimal("0")
+    if isinstance(value, str):
+        try:
+            return Decimal(value)
+        except (InvalidOperation, ValueError):
+            return Decimal("0")
+    return Decimal("0")
+
+
+def _collect_input_casilla_values(
+    *,
+    snapshot: RegistrySnapshot,
+    edits: tuple[OperatorEdit, ...],
+) -> dict[CasillaId, Decimal]:
+    edits_by_casilla = {edit.casilla: edit for edit in edits}
     inputs: dict[CasillaId, Decimal] = {}
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind == "computed" or casilla.input_kind == "informational":
+        if casilla.input_kind in {"computed", "informational"}:
             continue
         edit = edits_by_casilla.get(casilla.id)
-        if edit is None or edit.value is None:
-            inputs[casilla.id] = Decimal("0")
-            continue
-        if isinstance(edit.value, Decimal):
-            inputs[casilla.id] = edit.value
-        elif isinstance(edit.value, bool):
-            inputs[casilla.id] = Decimal("1") if edit.value else Decimal("0")
-        elif isinstance(edit.value, str):
-            try:
-                inputs[casilla.id] = Decimal(edit.value)
-            except (InvalidOperation, ValueError):
-                inputs[casilla.id] = Decimal("0")
-        else:
-            inputs[casilla.id] = Decimal("0")
+        inputs[casilla.id] = _coerce_edit_value_to_decimal(edit.value if edit is not None else None)
+    return inputs
 
-    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
-    edits_by_binding = {edit.binding: edit for edit in pull.binding_edits}
 
+def _collect_binding_values(
+    *,
+    snapshot: RegistrySnapshot,
+    edits: tuple[BindingEdit, ...],
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    edits_by_binding = {edit.binding: edit for edit in edits}
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
-    for binding_id, definition in bindings_by_id.items():
-        edit = edits_by_binding.get(binding_id)
-        if definition.typed_enum:
-            # Enum binding: route the cell's text value into the
-            # enum-binding map; default to empty string when blank
-            # (the runtime will surface a clear validation error if
-            # the formula actually consults this binding without a
-            # supplied value).
-            if edit is None or edit.value is None:
-                continue
-            if isinstance(edit.value, str) and edit.value:
-                enum_binding_values[binding_id] = edit.value
-            elif isinstance(edit.value, Decimal):
-                # Operator typed a number into an enum binding cell
-                # — pass through as text so the runtime can decide.
-                enum_binding_values[binding_id] = format(edit.value, "f")
+    for binding in snapshot.revision.bindings:
+        edit = edits_by_binding.get(binding.id)
+        if binding.typed_enum:
+            text = _enum_binding_text(edit.value if edit is not None else None)
+            if text is not None:
+                enum_binding_values[binding.id] = text
         else:
-            # Numeric binding: default missing to zero so the runtime
-            # contract holds for every declared binding.
-            if edit is None or edit.value is None:
-                binding_values[binding_id] = Decimal("0")
-            elif isinstance(edit.value, Decimal):
-                binding_values[binding_id] = edit.value
-            elif isinstance(edit.value, str):
-                try:
-                    binding_values[binding_id] = Decimal(edit.value)
-                except (InvalidOperation, ValueError):
-                    binding_values[binding_id] = Decimal("0")
-            else:
-                binding_values[binding_id] = Decimal("0")
+            binding_values[binding.id] = _coerce_edit_value_to_decimal(
+                edit.value if edit is not None else None
+            )
+    return binding_values, enum_binding_values
 
-    edits_by_relation = {edit.relation: edit for edit in pull.relation_edits}
+
+def _enum_binding_text(value: Decimal | str | bool | None) -> str | None:
+    """Render an enum-binding edit value as text.
+
+    Returns ``None`` to mean "leave the binding unset" so the runtime
+    surfaces a clear validation error only when the formula actually
+    consults the binding without a supplied value.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value or None
+    if isinstance(value, Decimal):
+        # Operator typed a number into an enum binding cell — pass
+        # through as text so the runtime can decide.
+        return format(value, "f")
+    return None
+
+
+def _collect_relation_values(
+    *,
+    snapshot: RegistrySnapshot,
+    edits: tuple[RelationEdit, ...],
+) -> dict[RelationId, Decimal]:
+    edits_by_relation = {edit.relation: edit for edit in edits}
     relation_values: dict[RelationId, Decimal] = {}
     for relation in snapshot.revision.relations:
         # Skip relations that are not active for the snapshot's period.
@@ -676,15 +716,7 @@ def compute_from_pull(
             relation_values[relation.id] = Decimal("0")
         else:
             relation_values[relation.id] = edit.value
-
-    return calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        relation_values=relation_values,
-    )
+    return relation_values
 
 
 __all__ = [
