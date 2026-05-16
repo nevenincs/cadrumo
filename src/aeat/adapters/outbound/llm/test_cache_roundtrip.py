@@ -112,3 +112,85 @@ def test_llm_cache_entry_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: deleting ``response.text`` from the persisted entry must surface.
+
+    Builds a populated cache entry, persists it, surgically mutates
+    the encrypted JSON payload to delete the ``text`` field on the
+    nested response, then calls ``read()``. The cache module's
+    ``_entry_from_payload`` re-validates the dict against
+    :class:`CachedEntry` via ``model_validate_json``, so a missing
+    required ``text`` field must raise ``LLMCacheError`` (the cache's
+    declared boundary error). If the read returns silently with a
+    None / default text, every LLM cache roundtrip in the suite is
+    tautological.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...persistence.storage.sql._orm import SecureObjectRow
+    from ...persistence.storage.sql.session import session_scope
+    from ._cache import _CACHE_NAMESPACE
+    from ._errors import LLMCacheError
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "llm-cache-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+
+        created_at = datetime.now(UTC).replace(microsecond=0)
+        request = _populated_request()
+        response = _populated_response(created_at)
+        cache = LLMCache(root_dir=tmp_path / "llm-cache")
+        cache.write(request, response)
+
+        # Reach into the encrypted row and surgically delete ``text``
+        # from the nested response on the redacted entry. The column
+        # accessor handles encrypt/decrypt automatically; the
+        # _CACHE_NAMESPACE filter pins the right row.
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _CACHE_NAMESPACE,
+            )
+            row = session.execute(stmt).scalar_one()
+            decoded = _json.loads(row.payload.decode("utf-8"))
+            entry_payload = decoded["entry"]
+            assert "text" in entry_payload["response"], (
+                "fixture must serialise response.text into the redacted "
+                "entry for this proof test to be meaningful"
+            )
+            del entry_payload["response"]["text"]
+            decoded["entry"] = entry_payload
+            row.payload = _json.dumps(decoded).encode("utf-8")
+
+        # Now read() must reject the mutated entry. LLMResponse.text
+        # is required (no default), so the strict pydantic re-parse
+        # must raise. The cache wraps re-parse failures in
+        # LLMCacheError.
+        regression_caught = False
+        try:
+            cache.read(request, response.provider, response.model)
+        except LLMCacheError:
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: deleting LLMResponse.text from "
+            "the persisted cache entry did NOT surface as LLMCacheError. "
+            "The cache boundary is tautological and every LLM cache "
+            "roundtrip in the suite is suspect."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
