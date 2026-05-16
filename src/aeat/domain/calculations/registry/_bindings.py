@@ -2482,6 +2482,33 @@ class _ProfileSelector(BaseModel):
         return self
 
 
+_MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(
+    ("record", "field", "offset", "length")
+)
+"""Canonical record-field shape keys on the manual_input selector.
+
+Single source of truth for both the typed validator in
+:class:`_ManualInputSelector` and the layout-binding predicate at
+:func:`aeat.domain.calculations.registry._validate._is_layout_binding`.
+"""
+
+
+def is_layout_binding_selector(selector: Mapping[str, object]) -> bool:
+    """Return True when ``selector`` carries the record-field layout shape.
+
+    The predicate intentionally mirrors the record-shape keys declared
+    on :class:`_ManualInputSelector` rather than re-implementing the
+    check via raw key inspection. Validate gate behaviour stays
+    coupled to the typed model: if the manual_input record-shape key
+    set is ever extended or renamed, the layout predicate follows
+    automatically (selector-binding-drift audit F5).
+    """
+
+    if "data_type" not in selector:
+        return False
+    return _MANUAL_INPUT_RECORD_SHAPE_KEYS.issubset(selector)
+
+
 class _ManualInputSelector(BaseModel):
     """Strict validator for the selector mapping of a manual_input binding.
 
@@ -2518,7 +2545,7 @@ class _ManualInputSelector(BaseModel):
     @model_validator(mode="after")
     def _validate_manual_input_shape(self) -> _ManualInputSelector:
         casilla_shape_keys = {"casilla"}
-        record_shape_keys = {"record", "field", "offset", "length"}
+        record_shape_keys = _MANUAL_INPUT_RECORD_SHAPE_KEYS
         has_casilla = self.casilla is not None
         has_record_shape = any(
             getattr(self, key) is not None for key in record_shape_keys

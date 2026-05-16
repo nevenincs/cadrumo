@@ -83,7 +83,18 @@ def _duplicates(values: Iterable[str]) -> set[str]:
 
 
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
-    return {"record", "offset", "length", "data_type"}.issubset(binding.selector)
+    """Layout-binding predicate, delegated to the typed manual_input shape.
+
+    Layout bindings inject operator-typed values at fixed-width
+    record-field coordinates. The shape gate's source of truth lives
+    on :class:`_ManualInputSelector`; this predicate delegates to its
+    canonical record-shape key set rather than re-implementing the
+    check (selector-binding-drift audit F5).
+    """
+
+    from ._bindings import is_layout_binding_selector
+
+    return is_layout_binding_selector(binding.selector)
 
 
 _COMMUNICATION_SURFACES = {"communication", "payer_delivery"}
