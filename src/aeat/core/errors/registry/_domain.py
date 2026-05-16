@@ -1997,6 +1997,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.modelos._errors.CensusStaleRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_CENSUS_STALE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_census_stale",
+            default_suggestion="aeat app modelo work calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.filing.reconciliation._errors.DeclarationParseError",
         ErrorCode(
             code="FAIL_DECLARATION_PARSE",

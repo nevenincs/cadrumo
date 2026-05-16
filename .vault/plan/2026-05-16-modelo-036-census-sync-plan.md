@@ -94,7 +94,7 @@ Wire the CENSUS_STALE flag and refusal contract through every service that consu
 - [ ] `P05.S44` - add the same fields to CalculationRevision; `src/aeat/domain/modelos/_calculation_revision.py`.
 - [ ] `P05.S45` - add the same fields to FilingDraft; `src/aeat/domain/filing/_draft.py`.
 - [ ] `P05.S46` - add the same fields to FilingRecord; `src/aeat/domain/modelos/_filing_record.py`.
-- [ ] `P05.S47` - add CensusStaleRefusedError and register it in the domain error registry; `src/aeat/domain/modelos/_errors.py`.
+- [x] `P05.S47` - add CensusStaleRefusedError and register it in the domain error registry; `src/aeat/domain/modelos/_errors.py`.
 - [ ] `P05.S48` - refuse on stale in calculate_modelo_revision; `src/aeat/application/modelo/_actions.py`.
 - [ ] `P05.S49` - refuse on stale in verify_modelo_revision; `src/aeat/application/modelo/_actions.py`.
 - [ ] `P05.S50` - refuse on stale in file_modelo_revision; `src/aeat/application/modelo/_actions.py`.
