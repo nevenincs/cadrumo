@@ -416,7 +416,13 @@ def test_dangling_binding_source_refs() -> None:
     binding = DataBindingDefinition(
         id="test.binding",
         source="manual_input",
-        selector={"source": "manual_input", "field": "x"},
+        selector={
+            "record": "DPA",
+            "field": "test",
+            "offset": 1,
+            "length": 1,
+            "data_type": "integer",
+        },
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID, _extra),
     )
