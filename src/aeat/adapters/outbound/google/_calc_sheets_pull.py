@@ -568,16 +568,35 @@ def _read_row_set_edits(
     row_sets = collect_row_sets(snapshot.revision)
     if not row_sets:
         return ((), 0)
+    block_ranges = [_row_set_block_range(row_set) for row_set in row_sets]
+    value_ranges = _batch_get_values_for_row_sets(sheets, spreadsheet_id, block_ranges)
+    edits: list[RowSetEdit] = []
+    cells_read = 0
+    for row_set_index, row_set in enumerate(row_sets):
+        vr = value_ranges[row_set_index] if row_set_index < len(value_ranges) else {}
+        rows = vr.get("values", []) or []
+        cells, cells_in_block = _decode_row_set_block(rows, row_set)
+        cells_read += cells_in_block
+        edits.append(RowSetEdit(grouping=row_set.grouping, cells=cells))
+    return tuple(edits), cells_read
 
-    block_ranges: list[str] = []
-    for row_set in row_sets:
-        last_column = max(col.header_address.column for col in row_set.columns)
-        start_col_letters = _column_index_to_letters(1)
-        end_col_letters = _column_index_to_letters(last_column)
-        start_row = row_set.first_data_row
-        end_row = row_set.first_data_row + 49
-        block_ranges.append(f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}")
 
+def _row_set_block_range(row_set: Any) -> str:
+    """Build the A1 range covering the 50-row data block of one row-set."""
+    last_column = max(col.header_address.column for col in row_set.columns)
+    start_col_letters = _column_index_to_letters(1)
+    end_col_letters = _column_index_to_letters(last_column)
+    start_row = row_set.first_data_row
+    end_row = row_set.first_data_row + 49
+    return f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}"
+
+
+def _batch_get_values_for_row_sets(
+    sheets: Any,
+    spreadsheet_id: str,
+    block_ranges: list[str],
+) -> list[Any]:
+    """Sheets ``values.batchGet`` for row-set blocks; returns the raw valueRanges list."""
     response = _execute(
         sheets.spreadsheets()
         .values()
@@ -588,38 +607,52 @@ def _read_row_set_edits(
         ),
         action="sheets.spreadsheets.values.batchGet.row_sets",
     )
-    value_ranges = response.get("valueRanges", []) or []
+    return response.get("valueRanges", []) or []
 
-    edits: list[RowSetEdit] = []
-    cells_read = 0
-    for row_set_index, row_set in enumerate(row_sets):
-        vr = value_ranges[row_set_index] if row_set_index < len(value_ranges) else {}
-        rows = vr.get("values", []) or []
-        cells: list[RowSetCellEdit] = []
-        for local_row, row_values in enumerate(rows, start=1):
-            for col_index, raw in enumerate(row_values, start=1):
-                if raw is None or raw == "":
-                    continue
-                # Map the column index back to its binding via the row-set's
-                # ordered columns. row_set.columns is in column-allocation
-                # order (column 1, 2, ...).
-                if col_index > len(row_set.columns):
-                    continue
-                binding_id = row_set.columns[col_index - 1].binding
-                coerced = _coerce_value(raw)
-                if coerced is None:
-                    continue
-                cells_read += 1
-                coerced_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
-                cells.append(
-                    RowSetCellEdit(
-                        binding=binding_id,
-                        row_index=local_row,
-                        value=coerced_value,
-                    )
-                )
-        edits.append(RowSetEdit(grouping=row_set.grouping, cells=tuple(cells)))
-    return tuple(edits), cells_read
+
+def _decode_row_set_block(
+    rows: list[Any],
+    row_set: Any,
+) -> tuple[tuple[RowSetCellEdit, ...], int]:
+    """Decode one row-set's block of (local_row, col_index) cells into typed edits.
+
+    Returns the typed-cell tuple plus the non-blank-cells count for
+    this block. Cells whose column index exceeds the row-set's declared
+    columns are skipped — that's the Sheets-side defensive path when an
+    operator pastes data past the allocated column count.
+    """
+    cells: list[RowSetCellEdit] = []
+    cells_in_block = 0
+    for local_row, row_values in enumerate(rows, start=1):
+        for col_index, raw in enumerate(row_values, start=1):
+            cell = _decode_row_set_cell(raw, col_index, local_row, row_set)
+            if cell is None:
+                continue
+            cells.append(cell)
+            cells_in_block += 1
+    return tuple(cells), cells_in_block
+
+
+def _decode_row_set_cell(
+    raw: object,
+    col_index: int,
+    local_row: int,
+    row_set: Any,
+) -> RowSetCellEdit | None:
+    """Translate one Sheets cell into a typed RowSetCellEdit, or None to skip."""
+    if raw is None or raw == "":
+        return None
+    # Map the column index back to its binding via the row-set's
+    # ordered columns. row_set.columns is in column-allocation order
+    # (column 1, 2, ...).
+    if col_index > len(row_set.columns):
+        return None
+    binding_id = row_set.columns[col_index - 1].binding
+    coerced = _coerce_value(raw)
+    if coerced is None:
+        return None
+    coerced_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
+    return RowSetCellEdit(binding=binding_id, row_index=local_row, value=coerced_value)
 
 
 def _column_index_to_letters(column: int) -> str:
