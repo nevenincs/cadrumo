@@ -32,7 +32,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 

@@ -18,11 +18,11 @@ from ...application.registry import (
 )
 from ...core.resources import bundled_path
 from ._common import _emit
+from ._i18n import tr
+from ._registry_corpus import citations_app, manuals_app
 
 _DEFAULT_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _DEFAULT_WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
-from ._i18n import tr
-from ._registry_corpus import citations_app, manuals_app
 
 app = typer.Typer(
     name="registry",

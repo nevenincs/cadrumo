@@ -9,8 +9,7 @@ from typing import cast
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
-
+from ....core.resources import bundled_path
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import (
     CasillaObservation,

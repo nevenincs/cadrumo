@@ -39,6 +39,7 @@ from aeat.application.aggregation import (
     validate_oss_ioss_observations,
 )
 from aeat.application.aggregation._errors import AggregationValidationError
+from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import (
     ModeloRevision,

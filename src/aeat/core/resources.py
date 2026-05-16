@@ -17,11 +17,11 @@ read-only bundled data.
 from __future__ import annotations
 
 import atexit
+from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
 from importlib.resources import as_file, files
 from importlib.resources.abc import Traversable
 from pathlib import Path
-from typing import Iterator
 
 _PACKAGE_DATA: Traversable = files("aeat").joinpath("_data")
 _RESOURCE_STACK: ExitStack = ExitStack()

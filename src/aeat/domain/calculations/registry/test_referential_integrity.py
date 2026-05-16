@@ -17,6 +17,7 @@ from typing import Literal
 import pytest
 
 from ....core.classification import SensitivityClass
+from ....core.resources import bundled_path
 from . import RegistryValidationError
 from ._authority import ValidatedRegistryAuthority
 from ._loader import load_registry_tree
@@ -57,7 +58,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    from aeat.core.paths import PROJECT_ROOT
 
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return modelos, catalogues

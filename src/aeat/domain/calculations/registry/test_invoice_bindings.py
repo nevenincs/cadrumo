@@ -477,9 +477,7 @@ def test_registry_modelo_349_has_no_bare_invoice_source_kind() -> None:
     kind was a pre-taxonomy conflation; this test pins the migrated
     state so a regression surfaces immediately at registry load."""
 
-    from pathlib import Path
 
-    from aeat.core.paths import PROJECT_ROOT
     from aeat.domain.calculations.registry._loader import load_modelo_file
 
     modelo_path = bundled_path("registry", "aeat", "modelos", "349.toml")

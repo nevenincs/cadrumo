@@ -12,6 +12,7 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
+from ....core.resources import bundled_path
 from ._live_parity import (
     CrossReferenceApplicability,
     evaluate_cross_reference_applicability,
@@ -137,7 +138,6 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
     arithmetic.
     """
 
-    from aeat.core.paths import PROJECT_ROOT
 
     from . import load_registry_tree
 
@@ -167,7 +167,6 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
 
 
 def _load_binding(modelo_id: str, revision_id: str, cross_reference_id: str) -> LiveCrossReferenceDecision:
-    from aeat.core.paths import PROJECT_ROOT
 
     from . import load_registry_tree
 
@@ -215,7 +214,6 @@ def test_oss_369_filing_schedules_select_only_when_oss_enrolled() -> None:
     gate is then defense-in-depth at the binding layer.
     """
 
-    from aeat.core.paths import PROJECT_ROOT
 
     from . import applicable_filing_schedules, load_registry_tree
 
@@ -294,7 +292,6 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     deadline-window predicate validation.
     """
 
-    from aeat.core.paths import PROJECT_ROOT
 
     from ...user_profile._loader import load_user_profile_schema
     from ...user_profile._registry_contract import (
@@ -353,7 +350,6 @@ def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> 
     fails alongside any TOML edit.
     """
 
-    from aeat.core.paths import PROJECT_ROOT
 
     from . import load_registry_tree
 

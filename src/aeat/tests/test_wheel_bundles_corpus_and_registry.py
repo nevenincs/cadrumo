@@ -38,7 +38,7 @@ def _git_ls_files_data() -> list[str]:
     """Return git-tracked paths under ``src/aeat/_data`` relative to the project root."""
 
     completed = subprocess.run(
-        ["git", "ls-files", "src/aeat/_data/corpus", "src/aeat/_data/registry"],
+        ["git", "ls-files", "src/aeat/_data/corpus", "src/aeat/_data/registry"],  # noqa: S607
         cwd=_PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -77,8 +77,8 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
             "without the project's build driver"
         )
     out_dir = tmp_path_factory.mktemp("wheel-out")
-    subprocess.run(
-        ["uv", "build", "--wheel", "--out-dir", str(out_dir)],
+    subprocess.run(  # noqa: S603
+        ["uv", "build", "--wheel", "--out-dir", str(out_dir)],  # noqa: S607
         cwd=_PROJECT_ROOT,
         capture_output=True,
         text=True,

@@ -8,6 +8,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import IvaLedgerObservation
 from aeat.domain.invoices._enums import InvoiceKind, IvaRate
 from aeat.domain.invoices._iva_classification import (
@@ -197,7 +198,6 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     from datetime import date
     from decimal import Decimal
 
-    from aeat.core.paths import PROJECT_ROOT
     from aeat.domain.calculations.registry import (
         load_registry_tree,
         resolve_ledger_iva_aggregation_binding_values,

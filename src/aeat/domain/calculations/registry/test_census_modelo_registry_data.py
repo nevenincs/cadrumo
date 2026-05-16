@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree

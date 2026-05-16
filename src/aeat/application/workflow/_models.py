@@ -270,7 +270,10 @@ def update_declaration_pointer(
 
 from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
 from ...domain.deadlines import FilingObligation
-from ..review._models import InvoiceReviewRecord, LedgerReviewRecord  # noqa: F401  (resolves WorkflowState forward refs)
+from ..review._models import (
+    InvoiceReviewRecord,
+    LedgerReviewRecord,
+)
 
 WorkflowState.model_rebuild()
 
