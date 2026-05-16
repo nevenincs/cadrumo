@@ -1419,42 +1419,74 @@ class RegistryValidator:
         modelo: ModeloDefinition,
         selector: Mapping[str, str | int],
     ) -> tuple[tuple[ModeloRevision, ...], list[str]]:
-        allowed = {"revision", "revision_id", "year", "year_from", "year_to", "filing_year_delta"}
-        failures = [f"selector uses unknown key {key!r}" for key in sorted(set(selector).difference(allowed))]
+        failures = RegistryValidator._validate_relation_source_selector_keys(selector)
         revision_id = selector.get("revision_id", selector.get("revision"))
         year = selector.get("year")
         year_from = selector.get("year_from")
         year_to = selector.get("year_to")
+        selected = tuple(
+            revision
+            for revision in modelo.revisions.values()
+            if RegistryValidator._relation_source_revision_matches(
+                revision,
+                revision_id=revision_id if isinstance(revision_id, str) else None,
+                year=year if isinstance(year, int) else None,
+                year_from=year_from if isinstance(year_from, int) else None,
+                year_to=year_to if isinstance(year_to, int) else None,
+            )
+        )
+        return selected, failures
 
+    @staticmethod
+    def _validate_relation_source_selector_keys(selector: Mapping[str, str | int]) -> list[str]:
+        """Return every shape failure on the relation source-revision selector dict.
+
+        Concerns checked in one pass: unknown keys, type-shape on
+        revision_id / year / year_from / year_to / filing_year_delta,
+        and the year-vs-year_range exclusivity / order invariants.
+        """
+        allowed = {"revision", "revision_id", "year", "year_from", "year_to", "filing_year_delta"}
+        failures = [f"selector uses unknown key {key!r}" for key in sorted(set(selector).difference(allowed))]
+        revision_id = selector.get("revision_id", selector.get("revision"))
         if revision_id is not None and not isinstance(revision_id, str):
             failures.append("selector revision_id must be a string")
-        for key, value in (("year", year), ("year_from", year_from), ("year_to", year_to)):
+        for key in ("year", "year_from", "year_to"):
+            value = selector.get(key)
             if value is not None and not isinstance(value, int):
                 failures.append(f"selector {key} must be an integer")
         delta = selector.get("filing_year_delta")
         if delta is not None and not isinstance(delta, int):
             failures.append("selector filing_year_delta must be an integer")
+        year = selector.get("year")
+        year_from = selector.get("year_from")
+        year_to = selector.get("year_to")
         if year is not None and (year_from is not None or year_to is not None):
             failures.append("selector must use year or year_from/year_to, not both")
         if year_to is not None and year_from is None:
             failures.append("selector year_to requires year_from")
         if isinstance(year_from, int) and isinstance(year_to, int) and year_to < year_from:
             failures.append("selector year_to must be on or after year_from")
+        return failures
 
-        selected: list[ModeloRevision] = []
-        for revision in modelo.revisions.values():
-            if isinstance(revision_id, str) and revision.id != revision_id:
-                continue
-            if isinstance(year, int) and not revision.period_selector.includes_year(year):
-                continue
-            if isinstance(year_from, int) and not RegistryValidator._revision_intersects_year_range(
-                revision,
-                year_from=year_from,
-                year_to=year_to if isinstance(year_to, int) else None,
-            ):
-                continue
-            selected.append(revision)
-        return tuple(selected), failures
+    @staticmethod
+    def _relation_source_revision_matches(
+        revision: ModeloRevision,
+        *,
+        revision_id: str | None,
+        year: int | None,
+        year_from: int | None,
+        year_to: int | None,
+    ) -> bool:
+        """Return True when ``revision`` satisfies every dimension of the relation source selector."""
+        if revision_id is not None and revision.id != revision_id:
+            return False
+        if year is not None and not revision.period_selector.includes_year(year):
+            return False
+        return year_from is None or RegistryValidator._revision_intersects_year_range(
+            revision,
+            year_from=year_from,
+            year_to=year_to,
+        )
 
     @staticmethod
     def _relation_filing_year_delta(selector: Mapping[str, str | int]) -> int:
