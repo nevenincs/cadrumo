@@ -309,6 +309,14 @@ cli:
         help: Egy modelo munkaegység egyeztetése külső bizonyítékkal (justificante
           PDF). Csak helyi; soha nem kapcsolódik az AEAT-hoz.
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
+      reconcile_from_justificante:
+        help: Egy modelo munkaegység egyeztetése egy justificante PDF-fel. Cukor azoknak
+          az operátoroknak, akik úgy gondolkodnak, hogy "egyeztetés ebből a justificantéből"
+          a "egyeztetés, forrás = justificante" helyett. Ugyanazt a modelo_reconcile
+          szolgáltatás belépési pontot használja, mint a flag-alapú forma. Csak helyi;
+          soha nem kapcsolódik az AEAT-hoz.
+        justificante_path_help: Az AEAT justificante PDF útvonala az egyeztetéshez.
+        work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       verification_report:
         app_help: Rögzített verifikációs jelentések megtekintése
         list_help: Verifikációs jelentések listázása, opcionálisan egy kalkulációs

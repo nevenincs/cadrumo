@@ -2113,6 +2113,25 @@ def modelo_history(
     _emit(ctx, payload, lines)
 
 
+def _render_reconciliation_report(ctx: typer.Context, report: object) -> None:
+    """Render a :class:`ModeloReconciliationReport` to the active emitter."""
+
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"work_unit_id\t{report.work_unit_id}",
+        f"bucket\t{report.bucket_id}",
+        f"source_kind\t{report.source_kind.value}",
+        f"source_path\t{report.source_path}",
+        f"verdict\t{report.verdict.value}",
+        f"diffs\t{len(report.diffs)}",
+    ]
+    for diff in report.diffs:
+        lines.append(
+            f"diff\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}",
+        )
+    _emit(ctx, payload, lines)
+
+
 @app.command(
     "reconcile",
     help=tr(
@@ -2200,21 +2219,59 @@ def modelo_reconcile_verb(
             source_path=source_path,
         ),
     )
+    _render_reconciliation_report(ctx, report)
 
-    payload = report.model_dump(mode="json")
-    lines = [
-        f"work_unit_id\t{report.work_unit_id}",
-        f"bucket\t{report.bucket_id}",
-        f"source_kind\t{report.source_kind.value}",
-        f"source_path\t{report.source_path}",
-        f"verdict\t{report.verdict.value}",
-        f"diffs\t{len(report.diffs)}",
-    ]
-    for diff in report.diffs:
-        lines.append(
-            f"diff\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}",
-        )
-    _emit(ctx, payload, lines)
+
+@app.command(
+    "reconcile-from-justificante",
+    help=tr(
+        "cli.app.modelo.reconcile_from_justificante.help",
+        default=(
+            "Reconcile a modelo work unit against a justificante PDF. Sugar for "
+            "operators who think \"reconcile from this justificante\" rather than "
+            "\"reconcile, source = justificante\". Shares the modelo_reconcile "
+            "application service entry point with the flag-based form. Local-only; "
+            "never contacts AEAT."
+        ),
+    ),
+)
+def modelo_reconcile_from_justificante_verb(
+    ctx: typer.Context,
+    justificante_path: Annotated[
+        Path,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.reconcile_from_justificante.justificante_path_help",
+                default="Path to the AEAT justificante PDF to reconcile against.",
+            ),
+        ),
+    ],
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.reconcile_from_justificante.work_unit_id_help",
+                default="Work unit id (SHA-256 or unambiguous prefix).",
+            ),
+        ),
+    ],
+) -> None:
+    """Reconcile a work unit against the supplied justificante PDF."""
+
+    from ...application.modelo._reconcile import (
+        ModeloReconciliationCommand,
+        ModeloReconciliationSourceKind,
+        modelo_reconcile,
+    )
+
+    report = modelo_reconcile(
+        ModeloReconciliationCommand(
+            work_unit_id=work_unit_id,
+            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_path=justificante_path,
+        ),
+    )
+    _render_reconciliation_report(ctx, report)
 
 
 @app.command(
