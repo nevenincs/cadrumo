@@ -16,7 +16,11 @@ from ...application.registry import (
     verify_registry_tree,
     verify_registry_workbooks,
 )
+from ...core.resources import bundled_path
 from ._common import _emit
+
+_DEFAULT_REGISTRY_ROOT = bundled_path("registry", "aeat")
+_DEFAULT_WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 from ._i18n import tr
 from ._registry_corpus import citations_app, manuals_app
 
@@ -66,7 +70,7 @@ def inspect_registry_cmd(
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = Path("registry/aeat"),
+    ] = _DEFAULT_REGISTRY_ROOT,
 ) -> None:
     """Load the read-only registry tree and report inventory counts."""
 
@@ -105,7 +109,7 @@ def verify_registry_cmd(
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = Path("registry/aeat"),
+    ] = _DEFAULT_REGISTRY_ROOT,
     source_root: Annotated[
         Path,
         typer.Option(
@@ -156,7 +160,7 @@ def audit_oracles_cmd(
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = Path("registry/aeat"),
+    ] = _DEFAULT_REGISTRY_ROOT,
     environment: Annotated[
         str,
         typer.Option(
@@ -232,7 +236,7 @@ def verify_filed_state_cmd(
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = Path("registry/aeat"),
+    ] = _DEFAULT_REGISTRY_ROOT,
     source_root: Annotated[
         Path,
         typer.Option(
@@ -291,7 +295,7 @@ def verify_workbooks_cmd(
             readable=True,
             help=tr("cli.registry.workbooks_root_help"),
         ),
-    ] = Path("corpus/aeat_official/disenos_registro"),
+    ] = _DEFAULT_WORKBOOK_ROOT,
     limit: Annotated[
         int | None,
         typer.Option("--limit", min=1, help=tr("cli.registry.workbooks_limit_help")),
@@ -372,7 +376,7 @@ def run_parity_cmd(
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = Path("registry/aeat"),
+    ] = _DEFAULT_REGISTRY_ROOT,
     source_root: Annotated[
         Path,
         typer.Option(
@@ -451,7 +455,7 @@ def replay_parity_cmd(
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = Path("registry/aeat"),
+    ] = _DEFAULT_REGISTRY_ROOT,
     source_root: Annotated[
         Path,
         typer.Option(

@@ -31,7 +31,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     CasillaDefinition,
     ExportLayoutDefinition,
@@ -228,8 +228,8 @@ def build_runtime_schema_provider(
 ) -> RegistrySchemaProvider:
     """Build the production schema provider from validated registry TOML."""
 
-    root = (registry_root or PROJECT_ROOT / "registry" / "aeat").resolve()
-    resolved_source_root = (source_root or PROJECT_ROOT).resolve()
+    root = (registry_root or bundled_path("registry", "aeat")).resolve()
+    resolved_source_root = (source_root or bundled_path()).resolve()
     selected_ids = _normalize_modelo_selection(modelos)
     selected_tuple = None if selected_ids is None else tuple(sorted(selected_ids))
     return _build_runtime_schema_provider_cached(

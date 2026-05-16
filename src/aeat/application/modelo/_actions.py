@@ -767,9 +767,9 @@ def calculate_modelo_revision(
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
-        from ...core.config import PROJECT_ROOT
+        from ...core.resources import bundled_path
 
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
             f"registry root {_registry_root()} is missing; cannot calculate"
@@ -926,7 +926,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
 ) -> CalculationRevision:
     """Calculate a modelo revision using bucket-local ledger aggregation."""
 
-    from ...core.config import PROJECT_ROOT
+    from ...core.resources import bundled_path
     from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority
     from ..aggregation import resolve_modelo_ledger_binding_values_from_repositories
 
@@ -939,7 +939,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
         snapshot = authority.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
@@ -1138,20 +1138,16 @@ def mark_revision_verified_complete(
 
 
 def _registry_root() -> Path:
-    """Resolve the registry root relative to the project root.
+    """Resolve the registry root from the packaged data tree.
 
-    The previous string default ``"registry/aeat"`` plus
-    ``source_root=Path(".")`` was CWD-relative — running the action
-    from any directory that wasn't the repo root (production daemon,
-    background worker, wheel install, subprocess) raised
-    ``FileNotFoundError`` for every modelo. Routing through
-    ``aeat.core.config.PROJECT_ROOT`` makes the resolution
-    independent of the caller's working directory.
+    Calling :func:`aeat.core.resources.bundled_path` makes the
+    resolution independent of the caller's working directory and
+    keeps the editable-install and built-wheel surfaces in sync.
     """
 
-    from ...core.config import PROJECT_ROOT
+    from ...core.resources import bundled_path
 
-    return PROJECT_ROOT / "registry" / "aeat"
+    return bundled_path("registry", "aeat")
 
 
 def _reject_incomplete_amendment_casillas(
@@ -1199,14 +1195,14 @@ def _reject_unknown_override_casillas(
     if not overrides:
         return
 
-    from ...core.config import PROJECT_ROOT
+    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
         ValidatedRegistryAuthority,
     )
 
     try:
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
     except FileNotFoundError as exc:
         raise AmendmentOverrideCasillaError(
             f"registry root {_registry_root()} is missing; cannot validate amendment overrides"
@@ -1241,14 +1237,14 @@ def _reject_unknown_import_casillas(
     if not casilla_values:
         return
 
-    from ...core.config import PROJECT_ROOT
+    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
         ValidatedRegistryAuthority,
     )
 
     try:
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
     except FileNotFoundError as exc:
         raise ExternalFilingImportError(
             f"registry root {_registry_root()} is missing; cannot validate imported casilla ids"
@@ -1294,14 +1290,14 @@ def _required_input_casillas_for_revision(
     bindings layer is responsible for them.
     """
 
-    from ...core.config import PROJECT_ROOT
+    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
         ValidatedRegistryAuthority,
     )
 
     try:
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
     except FileNotFoundError:
         return None
 

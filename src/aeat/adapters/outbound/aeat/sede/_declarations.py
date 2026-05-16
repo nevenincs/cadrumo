@@ -39,7 +39,7 @@ from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .....core.logging import get_logger
-from .....core.paths import PROJECT_ROOT
+from .....core.resources import bundled_path
 from .....domain.calculations.registry import (
     CasillaObservation,
     ExportFieldDefinition,
@@ -1174,14 +1174,14 @@ def _store_artefact(
 
 
 def _registry_snapshot_for_declaration(declaration: Declaration) -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next((candidate for candidate in modelos if candidate.id == declaration.modelo), None)
     if modelo is None:
         raise SedeParseError(f"registry has no modelo definition for AEAT declaration {declaration.modelo!r}")
     return build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=declaration.ejercicio,
         period=declaration.period,
     )
@@ -1217,7 +1217,7 @@ def _observed_casillas_from_submitted_file(
     parsed = parse_export_payload(
         resolved.layout,
         body,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         sources=snapshot.sources,
     )
     _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)

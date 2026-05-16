@@ -26,6 +26,7 @@ from ..adapters.persistence.storage.sql.secure_objects import (
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.logging import default_log_file_path, get_logger
+from ..core.resources import bundled_path
 from ..domain.calculations.registry import ValidatedRegistryAuthority
 from .wizard._status import WizardStatusReport, build_wizard_status
 from .workflow import workflow_state_repository
@@ -133,7 +134,7 @@ class ConfigRepairReport(BaseModel):
 def build_cli_version_report(registry_root: Path | None = None) -> CliVersionReport:
     """Return the package and registry summary for CLI version surfaces."""
 
-    root = registry_root or PROJECT_ROOT / "registry" / "aeat"
+    root = registry_root or bundled_path("registry", "aeat")
     return CliVersionReport(
         package_name="aeat",
         package_version=__version__,
@@ -144,7 +145,7 @@ def build_cli_version_report(registry_root: Path | None = None) -> CliVersionRep
 def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface."""
 
-    root = registry_root or PROJECT_ROOT / "registry" / "aeat"
+    root = registry_root or bundled_path("registry", "aeat")
     registry = _build_registry_version_summary(root)
     checks: list[DiagnosticCheck] = [
         DiagnosticCheck(
@@ -306,7 +307,7 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
 
 def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
     try:
-        authority = ValidatedRegistryAuthority.load(registry_root, source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
     except Exception as exc:  # pragma: no cover - covered by later repair diagnostics.
         _log.debug("registry version summary load failed for %s", registry_root, exc_info=True)
         return RegistryVersionSummary(

@@ -10,7 +10,7 @@ from typing import Protocol
 
 from ...adapters.inbound.declaracion import DeclaracionObservation
 from ...core.logging import get_logger
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
@@ -175,8 +175,8 @@ def _load_snapshot(declaracion: DeclaracionObservation, *, registry_root: Path |
     try:
         filing_year, registry_period = _registry_period(declaracion.period, declaracion.ejercicio)
         authority = ValidatedRegistryAuthority.load(
-            registry_root or PROJECT_ROOT / "registry" / "aeat",
-            source_root=PROJECT_ROOT,
+            registry_root or bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
         )
         return authority.snapshot(
             declaracion.modelo,
