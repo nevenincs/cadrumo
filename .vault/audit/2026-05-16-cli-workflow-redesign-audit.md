@@ -113,6 +113,30 @@ called once concrete `InvoiceReviewRecord` and `LedgerReviewRecord`
 imports are available, unblocking the entire ratios test suite that
 the parallel type-normalization pass had briefly broken.
 
+### W57 evidence-bundle deduplication resolved 2026-05-16
+
+A source-level audit (Explore agent, read-only) sweeping every
+`src/aeat/` module for parallel EvidenceBundle instantiations,
+manifest.json writers, evidence ZIP builders, audit verb backends,
+and `modelo.audit.*` emission sites found **zero duplicates**. The
+canonical service `EvidenceBundleService` at
+`src/aeat/application/evidence/_service.py` is the only ZIP archive
+builder for evidence/audit artifacts; the four `aeat app modelo
+audit {show,check,export,replay}` verbs delegate through
+`_evidence_bundle_service()` at the CLI layer with no parallel
+implementations elsewhere.
+
+`src/aeat/application/evidence/test_evidence.py` collects and
+runs all 14 tests cleanly (no import error).
+
+W57 sub-tasks for duplicate removal, alias deletion, internal-caller
+migration, fixture cleanup, boundary inventory update, and import-
+error fix are therefore no-ops in the current tree. The W57
+behavioural follow-ups (negative tests for retired aliases,
+command-behaviour coverage of audit show/check/export/replay,
+end-to-end audit workflow test, help-text vocabulary audit) remain
+open since they add new test coverage rather than remove duplicates.
+
 ### Conditional emissions resolved 2026-05-16
 
 The config-init-shape ADR ratifies two conditional events:
