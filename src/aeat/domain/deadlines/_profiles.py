@@ -11,6 +11,8 @@ record.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
+from decimal import Decimal, InvalidOperation
 
 from ._errors import ProfileError
 from ._models import AutonomoProfile, FilingEnrollment, FilingIVAProfile, IVARegime
@@ -86,8 +88,41 @@ def autonomo_profile_from_mapping(
             large_company=typed.enrollment_large_company,
             public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
         ),
+        fiscal_address_cadastral_reference=canonical.get("address.cadastral_reference", ""),
+        fiscal_address_is_habitual_vivienda=_parse_bool(canonical.get("address.is_habitual_vivienda")),
+        activity_start_date=_parse_date(canonical.get("census.activity_start_date")),
+        activity_end_date=_parse_date(canonical.get("census.activity_end_date")),
+        establecimiento_type=canonical.get("census.establecimiento_type", ""),
+        elected_withholding_pct=canonical.get("census.elected_withholding_pct", ""),
+        vivienda_office_total_m2=_parse_decimal(canonical.get("vivienda_office.total_m2")),
+        vivienda_office_office_m2=_parse_decimal(canonical.get("vivienda_office.office_m2")),
+        iae_epigraph=canonical.get("activities.iae_epigraph", ""),
         notes=typed.notes,
     )
+
+
+def _parse_bool(raw: str | None) -> bool:
+    if not raw:
+        return False
+    return raw.strip().lower() in {"true", "1", "yes", "y", "si", "sí"}
+
+
+def _parse_date(raw: str | None) -> date | None:
+    if not raw:
+        return None
+    try:
+        return date.fromisoformat(raw.strip())
+    except ValueError as exc:
+        raise ProfileError(f"invalid census date {raw!r}; expected ISO-8601") from exc
+
+
+def _parse_decimal(raw: str | None) -> Decimal | None:
+    if not raw:
+        return None
+    try:
+        return Decimal(raw.strip())
+    except InvalidOperation as exc:
+        raise ProfileError(f"invalid census decimal {raw!r}") from exc
 
 
 def _stringify(raw: object) -> str:
