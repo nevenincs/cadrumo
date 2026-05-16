@@ -140,7 +140,7 @@ def test_export_refuses_when_no_active_bucket(
                 output_path=tmp_path / "out.txt",
                 actor="operator",
             ),
-            profile=_profile(),
+            workflow_profile=_profile(),
         )
 
 
@@ -160,7 +160,7 @@ def test_export_refuses_unknown_revision(
                 output_path=tmp_path / "out.txt",
                 actor="operator",
             ),
-            profile=_profile(),
+            workflow_profile=_profile(),
         )
 
 
@@ -185,7 +185,7 @@ def test_export_refuses_draft_revision(
                 output_path=tmp_path / "out.txt",
                 actor="operator",
             ),
-            profile=_profile(),
+            workflow_profile=_profile(),
         )
 
 
@@ -212,5 +212,5 @@ def test_export_refuses_cross_bucket_revision(
                 output_path=tmp_path / "out.txt",
                 actor="operator",
             ),
-            profile=_profile(),
+            workflow_profile=_profile(),
         )
