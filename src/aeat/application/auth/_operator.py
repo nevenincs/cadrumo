@@ -73,13 +73,21 @@ def list_operator_auth_providers() -> AuthProvidersReport:
 
 
 def configure_operator_auth(provider: str, *, certificate_path: Path | None = None) -> AuthConfigureResult:
-    """Configure the active auth provider in workflow state."""
+    """Configure the active auth provider in workflow state.
+
+    Emits a typed ``AUTH_PROVIDER_CONFIGURED`` event into the
+    bucket-event-history catalogue scoped to the active profile's
+    bucket. The certificate path is recorded as a payload value when
+    supplied because it is a filesystem reference, not credential
+    material; certificate passwords, private keys, and session tokens
+    never enter the payload.
+    """
 
     listing = _implemented_provider(provider)
 
     from ..workflow._persistence import workflow_state_repository
 
-    workflow_state_repository().update(
+    updated = workflow_state_repository().update(
         lambda current: _append_bucket_event(
             update_auth(
                 current,
@@ -90,7 +98,73 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
             object_id=listing.id,
         )
     )
+    _emit_auth_provider_configured_event(
+        active_bucket_id=updated.active_profile_bucket_id(),
+        provider_id=listing.id,
+        certificate_path=certificate_path,
+    )
     return AuthConfigureResult(provider=listing.id, file=str(certificate_path) if certificate_path is not None else "")
+
+
+def _emit_auth_provider_configured_event(
+    *,
+    active_bucket_id: str | None,
+    provider_id: str,
+    certificate_path: Path | None,
+) -> None:
+    """Append an ``AUTH_PROVIDER_CONFIGURED`` event to the catalogue.
+
+    No-ops when the workflow state does not yet have an active profile
+    bucket; provider configuration during initial bootstrap may run
+    before a bucket exists, and the workflow-state-internal event log
+    already records the transition for those cases.
+    """
+
+    if active_bucket_id is None:
+        return
+
+    from datetime import UTC, datetime
+
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+
+    occurred_at = datetime.now(UTC)
+    payload: dict[str, str] = {"provider_id": provider_id}
+    if certificate_path is not None:
+        payload["certificate_path"] = str(certificate_path)
+    actor = "operator"
+    event_id = derive_bucket_event_id(
+        bucket_id=active_bucket_id,
+        event_type=BucketEventType.AUTH_PROVIDER_CONFIGURED,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=provider_id,
+        payload=payload,
+    )
+    repo = BucketEventHistoryRepository()
+    repo.save(
+        append_bucket_event(
+            repo.load(),
+            BucketEvent(
+                event_id=event_id,
+                bucket_id=active_bucket_id,
+                event_type=BucketEventType.AUTH_PROVIDER_CONFIGURED,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PROFILE,
+                object_id=provider_id,
+                payload_version=1,
+                payload=payload,
+            ),
+        )
+    )
 
 
 def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
