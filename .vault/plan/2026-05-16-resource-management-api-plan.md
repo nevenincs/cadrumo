@@ -82,89 +82,89 @@ Implement ModeloRepository as a thin wrapper around the existing ValidatedRegist
 
 Migrate the 25-30 production consumer modules from their existing load_* / _DEFAULT_*_ROOT imports to from aeat.core.resources import resources. Order: domain layer first, then application, then adapters, then entrypoints CLI defaults.
 
-- [ ] `P07.S26` - Migrate the registry corpus module manuals normatives and topics resolution to resources(); `src/aeat/application/registry/_corpus.py`.
-- [ ] `P07.S27` - Migrate the registry application package init to resources(); `src/aeat/application/registry/__init__.py`.
-- [ ] `P07.S28` - Migrate the diagnostics version and repair surfaces to resources(); `src/aeat/application/diagnostics.py`.
-- [ ] `P07.S29` - Migrate the topics application package init to resources(); `src/aeat/application/topics/__init__.py`.
-- [ ] `P07.S30` - Migrate the filing runtime schema provider to resources(); `src/aeat/application/filing/runtime.py`.
+- [x] `P07.S26` - Migrate the registry corpus module manuals normatives and topics resolution to resources(); `src/aeat/application/registry/_corpus.py`.
+- [x] `P07.S27` - Migrate the registry application package init to resources(); `src/aeat/application/registry/__init__.py`.
+- [x] `P07.S28` - Migrate the diagnostics version and repair surfaces to resources(); `src/aeat/application/diagnostics.py`.
+- [x] `P07.S29` - Migrate the topics application package init to resources(); `src/aeat/application/topics/__init__.py`.
+- [x] `P07.S30` - Migrate the filing runtime schema provider to resources(); `src/aeat/application/filing/runtime.py`.
 - [x] `P07.S31` - Migrate the filing application package init to resources(); `src/aeat/application/filing/__init__.py`.
 - [x] `P07.S32` - Migrate the verification declaracion verifier to resources(); `src/aeat/application/verification/_verify.py`.
 - [x] `P07.S33` - Migrate the live filed data capture to resources(); `src/aeat/application/live/__init__.py`.
 - [x] `P07.S34` - Migrate the modelo work-unit actions to resources(); `src/aeat/application/modelo/_actions.py`.
 - [x] `P07.S35` - Migrate the renta ledger aggregation to resources(); `src/aeat/application/aggregation/_renta_ledger.py`.
 - [x] `P07.S36` - Migrate the default_registry_authority singleton as a thin shim that delegates to resources().modelos to resources(); `src/aeat/domain/calculations/registry/_authority.py`.
-- [ ] `P07.S37` - Migrate the calculate_registry_snapshot lazy bundled_path import to resources(); `src/aeat/domain/calculations/registry/_formula_runtime.py`.
-- [ ] `P07.S38` - Migrate the run_registry_calculation_scenario wrapper to resources(); `src/aeat/domain/calculations/registry/_scenarios.py`.
-- [ ] `P07.S39` - Migrate the manuals loader public surface to delegate to resources().manuals to resources(); `src/aeat/domain/manuals/_loader.py`.
-- [ ] `P07.S40` - Migrate the manuals fetch and load_manifest to resources(); `src/aeat/domain/manuals/_fetch.py`.
-- [ ] `P07.S41` - Migrate the manuals verifier to resources(); `src/aeat/domain/manuals/_verify.py`.
-- [ ] `P07.S42` - Migrate the normatives loader public surface to delegate to resources().normatives to resources(); `src/aeat/domain/normatives/_loader.py`.
-- [ ] `P07.S43` - Migrate the normatives verifier to resources(); `src/aeat/domain/normatives/_verify.py`.
-- [ ] `P07.S44` - Migrate the vat catalogue module dropping the eager VAT_CATALOGUES_BY_YEAR module-level load to resources(); `src/aeat/domain/vat/_catalogue.py`.
-- [ ] `P07.S45` - Migrate the vat rates module to resources(); `src/aeat/domain/vat/_rates.py`.
-- [ ] `P07.S46` - Migrate the vat recargo-equivalencia parameter loader to resources(); `src/aeat/domain/vat/_recargo_equivalencia.py`.
-- [ ] `P07.S47` - Migrate the deadlines engine class internal authority bootstrap to resources(); `src/aeat/domain/deadlines/_engine.py`.
-- [ ] `P07.S48` - Migrate the deadlines festivos calendar loader to resources(); `src/aeat/domain/deadlines/_festivos.py`.
-- [ ] `P07.S49` - Migrate the deadlines recargo bands loader to resources(); `src/aeat/domain/deadlines/_recargo.py`.
-- [ ] `P07.S50` - Migrate the categories profile registry loader to resources(); `src/aeat/domain/categories/_registry.py`.
-- [ ] `P07.S51` - Migrate the categories corpus aggregator to resources(); `src/aeat/domain/categories/_corpus.py`.
-- [ ] `P07.S52` - Migrate the user_profile schema loader to resources(); `src/aeat/domain/user_profile/_loader.py`.
-- [ ] `P07.S53` - Migrate the apoderamientos catalogue loader to resources(); `src/aeat/domain/auth/apoderamientos/_catalogue.py`.
-- [ ] `P07.S54` - Migrate the rental imputacion-parameters module dropping the eager LIRPF_ART_85_IMPUTACION load to resources(); `src/aeat/domain/rental/_imputacion_parameters.py`.
-- [ ] `P07.S55` - Migrate the declaracion inbound parser to resources(); `src/aeat/adapters/inbound/declaracion/_parser.py`.
-- [ ] `P07.S56` - Migrate the sede outbound declarations module to resources(); `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `P07.S57` - Migrate the registry CLI command surface to resources(); `src/aeat/entrypoints/cli/registry.py`.
-- [ ] `P07.S58` - Migrate the live-app CLI surface to resources(); `src/aeat/entrypoints/cli/_app_live.py`.
-- [ ] `P07.S59` - Migrate the CLI common helpers to resources(); `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `P07.S60` - Migrate the modelo CLI command surface to resources(); `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `P07.S37` - Migrate the calculate_registry_snapshot lazy bundled_path import to resources(); `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [x] `P07.S38` - Migrate the run_registry_calculation_scenario wrapper to resources(); `src/aeat/domain/calculations/registry/_scenarios.py`.
+- [x] `P07.S39` - Migrate the manuals loader public surface to delegate to resources().manuals to resources(); `src/aeat/domain/manuals/_loader.py`.
+- [x] `P07.S40` - Migrate the manuals fetch and load_manifest to resources(); `src/aeat/domain/manuals/_fetch.py`.
+- [x] `P07.S41` - Migrate the manuals verifier to resources(); `src/aeat/domain/manuals/_verify.py`.
+- [x] `P07.S42` - Migrate the normatives loader public surface to delegate to resources().normatives to resources(); `src/aeat/domain/normatives/_loader.py`.
+- [x] `P07.S43` - Migrate the normatives verifier to resources(); `src/aeat/domain/normatives/_verify.py`.
+- [x] `P07.S44` - Migrate the vat catalogue module dropping the eager VAT_CATALOGUES_BY_YEAR module-level load to resources(); `src/aeat/domain/vat/_catalogue.py`.
+- [x] `P07.S45` - Migrate the vat rates module to resources(); `src/aeat/domain/vat/_rates.py`.
+- [x] `P07.S46` - Migrate the vat recargo-equivalencia parameter loader to resources(); `src/aeat/domain/vat/_recargo_equivalencia.py`.
+- [x] `P07.S47` - Migrate the deadlines engine class internal authority bootstrap to resources(); `src/aeat/domain/deadlines/_engine.py`.
+- [x] `P07.S48` - Migrate the deadlines festivos calendar loader to resources(); `src/aeat/domain/deadlines/_festivos.py`.
+- [x] `P07.S49` - Migrate the deadlines recargo bands loader to resources(); `src/aeat/domain/deadlines/_recargo.py`.
+- [x] `P07.S50` - Migrate the categories profile registry loader to resources(); `src/aeat/domain/categories/_registry.py`.
+- [x] `P07.S51` - Migrate the categories corpus aggregator to resources(); `src/aeat/domain/categories/_corpus.py`.
+- [x] `P07.S52` - Migrate the user_profile schema loader to resources(); `src/aeat/domain/user_profile/_loader.py`.
+- [x] `P07.S53` - Migrate the apoderamientos catalogue loader to resources(); `src/aeat/domain/auth/apoderamientos/_catalogue.py`.
+- [x] `P07.S54` - Migrate the rental imputacion-parameters module dropping the eager LIRPF_ART_85_IMPUTACION load to resources(); `src/aeat/domain/rental/_imputacion_parameters.py`.
+- [x] `P07.S55` - Migrate the declaracion inbound parser to resources(); `src/aeat/adapters/inbound/declaracion/_parser.py`.
+- [x] `P07.S56` - Migrate the sede outbound declarations module to resources(); `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `P07.S57` - Migrate the registry CLI command surface to resources(); `src/aeat/entrypoints/cli/registry.py`.
+- [x] `P07.S58` - Migrate the live-app CLI surface to resources(); `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `P07.S59` - Migrate the CLI common helpers to resources(); `src/aeat/entrypoints/cli/_common.py`.
+- [x] `P07.S60` - Migrate the modelo CLI command surface to resources(); `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `P07.S61` - Migrate the google calc CLI sync command to resources(); `src/aeat/entrypoints/cli/_config/_google.py`.
 
 ### Phase `P08` - test consumer migration
 
 Migrate the ~100 test modules from their per-module _REGISTRY_ROOT constants and direct loader calls to resources(). Tests that override Settings continue to work because the factory reads Settings at the override point; conftest fixtures invoke resources.cache_clear().
 
-- [ ] `P08.S62` - Migrate the calculations registry test suite under registry/ from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/calculations/registry/`.
-- [ ] `P08.S63` - Migrate the manuals domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/manuals/`.
-- [ ] `P08.S64` - Migrate the normatives domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/normatives/`.
-- [ ] `P08.S65` - Migrate the vat domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/vat/`.
-- [ ] `P08.S66` - Migrate the deadlines domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/deadlines/`.
-- [ ] `P08.S67` - Migrate the categories domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/categories/`.
-- [ ] `P08.S68` - Migrate the user-profile domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/user_profile/`.
-- [ ] `P08.S69` - Migrate the apoderamientos test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/auth/apoderamientos/`.
-- [ ] `P08.S70` - Migrate the rental imputacion tests from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/rental/`.
-- [ ] `P08.S71` - Migrate the calculations application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/calculations/`.
-- [ ] `P08.S72` - Migrate the aggregation application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/aggregation/`.
-- [ ] `P08.S73` - Migrate the filing application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/filing/`.
-- [ ] `P08.S74` - Migrate the modelo application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/modelo/`.
-- [ ] `P08.S75` - Migrate the registry application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/registry/`.
-- [ ] `P08.S76` - Migrate the verification application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/verification/`.
-- [ ] `P08.S77` - Migrate the live application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/live/`.
-- [ ] `P08.S78` - Migrate the topics application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/topics/`.
-- [ ] `P08.S79` - Migrate the calc-sheets storage application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/storage/calc_sheets/`.
-- [ ] `P08.S80` - Migrate the declaracion inbound adapter test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/adapters/inbound/declaracion/`.
-- [ ] `P08.S81` - Migrate the sede outbound adapter test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/adapters/outbound/aeat/sede/`.
-- [ ] `P08.S82` - Migrate the google outbound adapter test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/adapters/outbound/google/`.
-- [ ] `P08.S83` - Migrate the export outbound adapter test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/adapters/outbound/aeat/export/`.
-- [ ] `P08.S84` - Migrate the registry CLI test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/entrypoints/cli/`.
+- [x] `P08.S62` - Migrate the calculations registry test suite under registry/ from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/calculations/registry/`.
+- [x] `P08.S63` - Migrate the manuals domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/manuals/`.
+- [x] `P08.S64` - Migrate the normatives domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/normatives/`.
+- [x] `P08.S65` - Migrate the vat domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/vat/`.
+- [x] `P08.S66` - Migrate the deadlines domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/deadlines/`.
+- [x] `P08.S67` - Migrate the categories domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/categories/`.
+- [x] `P08.S68` - Migrate the user-profile domain test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/user_profile/`.
+- [x] `P08.S69` - Migrate the apoderamientos test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/auth/apoderamientos/`.
+- [x] `P08.S70` - Migrate the rental imputacion tests from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/domain/rental/`.
+- [x] `P08.S71` - Migrate the calculations application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/calculations/`.
+- [x] `P08.S72` - Migrate the aggregation application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/aggregation/`.
+- [x] `P08.S73` - Migrate the filing application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/filing/`.
+- [x] `P08.S74` - Migrate the modelo application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/modelo/`.
+- [x] `P08.S75` - Migrate the registry application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/registry/`.
+- [x] `P08.S76` - Migrate the verification application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/verification/`.
+- [x] `P08.S77` - Migrate the live application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/live/`.
+- [x] `P08.S78` - Migrate the topics application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/topics/`.
+- [x] `P08.S79` - Migrate the calc-sheets storage application test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/application/storage/calc_sheets/`.
+- [x] `P08.S80` - Migrate the declaracion inbound adapter test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/adapters/inbound/declaracion/`.
+- [x] `P08.S81` - Migrate the sede outbound adapter test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/adapters/outbound/aeat/sede/`.
+- [x] `P08.S82` - Migrate the google outbound adapter test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/adapters/outbound/google/`.
+- [x] `P08.S83` - Migrate the export outbound adapter test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/adapters/outbound/aeat/export/`.
+- [x] `P08.S84` - Migrate the registry CLI test suite from per-module _REGISTRY_ROOT constants and direct loader calls to resources(); `src/aeat/entrypoints/cli/`.
 
 ### Phase `P09` - retirement of legacy surface
 
 Delete the 11 production module-level _DEFAULT_*_ROOT constants. Delete the 20+ scattered @lru_cache decorators on loaders that have folded into Repositories. Remove the public load_* re-exports from domain __init__ files. Drop the eager module-level VAT_CATALOGUES_BY_YEAR and LIRPF_ART_85_IMPUTACION loads now that consumers go through Repositories.
 
-- [ ] `P09.S85` - Delete the eleven production module-level _DEFAULT_*_ROOT constants now that their Repository owns the root resolution; `src/aeat/domain/`.
-- [ ] `P09.S86` - Delete the scattered @lru_cache decorators on every loader that has folded into a Repository; `src/aeat/domain/`.
-- [ ] `P09.S87` - Remove the public load_* re-exports from domain package __init__ files; `src/aeat/domain/`.
-- [ ] `P09.S88` - Drop the eager VAT_CATALOGUES_BY_YEAR module-level load now that consumers go through resources().vat_catalogues; `src/aeat/domain/vat/_catalogue.py`.
-- [ ] `P09.S89` - Drop the eager LIRPF_ART_85_IMPUTACION module-level load now that consumers go through resources().legal_parameters; `src/aeat/domain/rental/_imputacion_parameters.py`.
-- [ ] `P09.S90` - Remove the legacy default_registry_authority shim once every caller has switched to resources().modelos; `src/aeat/domain/calculations/registry/_authority.py`.
-- [ ] `P09.S94` - Drop the eager VAT_RATE_TABLE module-level load now that consumers go through resources().vat_rate_tables; `src/aeat/domain/vat/_rates.py`.
-- [ ] `P09.S95` - Drop the eager LIVA_ART_161_RECARGO module-level load (via private _load_rates wrapper) now that consumers go through resources().legal_parameters; `src/aeat/domain/vat/_recargo_equivalencia.py`.
-- [ ] `P09.S96` - Audit every __init__.py re-export of loader symbols and prune the now-obsolete public load_* names from __all__; `src/aeat/domain/`.
+- [x] `P09.S85` - Delete the eleven production module-level _DEFAULT_*_ROOT constants now that their Repository owns the root resolution; `src/aeat/domain/`.
+- [x] `P09.S86` - Delete the scattered @lru_cache decorators on every loader that has folded into a Repository; `src/aeat/domain/`.
+- [x] `P09.S87` - Remove the public load_* re-exports from domain package __init__ files; `src/aeat/domain/`.
+- [x] `P09.S88` - Drop the eager VAT_CATALOGUES_BY_YEAR module-level load now that consumers go through resources().vat_catalogues; `src/aeat/domain/vat/_catalogue.py`.
+- [x] `P09.S89` - Drop the eager LIRPF_ART_85_IMPUTACION module-level load now that consumers go through resources().legal_parameters; `src/aeat/domain/rental/_imputacion_parameters.py`.
+- [x] `P09.S90` - Remove the legacy default_registry_authority shim once every caller has switched to resources().modelos; `src/aeat/domain/calculations/registry/_authority.py`.
+- [x] `P09.S94` - Drop the eager VAT_RATE_TABLE module-level load now that consumers go through resources().vat_rate_tables; `src/aeat/domain/vat/_rates.py`.
+- [x] `P09.S95` - Drop the eager LIVA_ART_161_RECARGO module-level load (via private _load_rates wrapper) now that consumers go through resources().legal_parameters; `src/aeat/domain/vat/_recargo_equivalencia.py`.
+- [x] `P09.S96` - Audit every __init__.py re-export of loader symbols and prune the now-obsolete public load_* names from __all__; `src/aeat/domain/`.
 
 ### Phase `P10` - quality gate + structural guard + release docs
 
 Run ruff + ty + pytest. Add a structural test asserting the registry is the only resource-access surface (greps for bundled_path and _DEFAULT_*_ROOT outside core/resources/). Update RELEASING.md or other operator-facing surfaces only if the migration changed them.
 
-- [ ] `P10.S91` - Run the project quality gate ruff, ty, pytest with the unit marker, and the structural audits declared in the justfile; `justfile`.
+- [x] `P10.S91` - Run the project quality gate ruff, ty, pytest with the unit marker, and the structural audits declared in the justfile; `justfile`.
 - [x] `P10.S92` - Add a structural test asserting resources() is the only resource-access surface in the project by grepping for bundled_path and _DEFAULT_*_ROOT outside core/resources/; `src/aeat/core/resources/test_single_surface_invariant.py`.
-- [ ] `P10.S93` - Update operator-facing release documentation only if the migration changed the operator surface; `RELEASING.md`.
+- [x] `P10.S93` - Update operator-facing release documentation only if the migration changed the operator surface; `RELEASING.md`.
