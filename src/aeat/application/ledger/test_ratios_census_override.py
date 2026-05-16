@@ -47,21 +47,34 @@ def test_warning_emitted_when_home_office_override_diverges() -> None:
     assert result.raw_afectacion_ratio == Decimal("0.20")
 
 
-def test_no_warning_when_override_matches_census_derived_value() -> None:
+def test_no_warning_when_suministros_override_matches_30pct_of_raw() -> None:
+    """When the operator-set ratio equals raw * 0.30 (LIRPF Art. 30.2 rule 5),
+    no warning fires for suministros categories."""
+
     raw = Decimal("0.20")
-    result_suministros = census_override_warning(
+
+    result = census_override_warning(
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
-        override_ratio=raw,
+        override_ratio=Decimal("0.060"),
         raw_afectacion_ratio=raw,
     )
-    result_ownership = census_override_warning(
+
+    assert result is None
+
+
+def test_no_warning_when_ownership_override_matches_raw_afectacion() -> None:
+    """When the operator-set ratio equals the raw afectación ratio, no warning
+    fires for titularidad categories (no statutory multiplier)."""
+
+    raw = Decimal("0.20")
+
+    result = census_override_warning(
         category=SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
         override_ratio=raw,
         raw_afectacion_ratio=raw,
     )
 
-    assert result_suministros is None
-    assert result_ownership is None
+    assert result is None
 
 
 def test_business_pct_is_none_when_census_unset() -> None:
@@ -84,18 +97,29 @@ def test_business_pct_is_none_for_non_home_office_category() -> None:
     )
 
 
-def test_business_pct_returns_census_derived_value_for_home_office() -> None:
+def test_business_pct_for_suministros_applies_lirpf_30_2_rule_5_factor() -> None:
+    """Suministros home-office categories deduct at raw * 0.30 (LIRPF Art. 30.2 rule 5)."""
+
     raw = Decimal("0.20")
+
     suministros = census_business_pct_for(
         SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
         raw,
     )
+
+    assert suministros == Decimal("0.060")
+
+
+def test_business_pct_for_ownership_uses_raw_afectacion() -> None:
+    """Ownership home-office categories deduct at the raw afectación ratio."""
+
+    raw = Decimal("0.20")
+
     ownership = census_business_pct_for(
         SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
         raw,
     )
 
-    assert suministros == raw
     assert ownership == raw
 
 

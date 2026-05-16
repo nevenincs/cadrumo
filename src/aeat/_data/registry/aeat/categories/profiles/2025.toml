@@ -140,6 +140,7 @@ vat_hint = "general"
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
 default_ratio = "0.30"
+statutory_multiplier = "0.30"
 notes = "categories.registry.suministros_home_office_luz.notes"
 
 [[profiles.proportionality.citations]]
@@ -164,6 +165,7 @@ vat_hint = "general"
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
 default_ratio = "0.30"
+statutory_multiplier = "0.30"
 notes = "categories.registry.suministros_home_office_agua.notes"
 
 [[profiles.proportionality.citations]]
@@ -188,6 +190,7 @@ vat_hint = "general"
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
 default_ratio = "0.30"
+statutory_multiplier = "0.30"
 notes = "categories.registry.suministros_home_office_gas.notes"
 
 [[profiles.proportionality.citations]]
@@ -212,6 +215,7 @@ vat_hint = "general"
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
 default_ratio = "0.30"
+statutory_multiplier = "0.30"
 notes = "categories.registry.suministros_home_office_internet.notes"
 
 [[profiles.proportionality.citations]]
