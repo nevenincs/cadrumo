@@ -115,3 +115,85 @@ def test_attachment_blob_and_manifest_round_trip(tmp_path: Path) -> None:
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: corrupting attachment_id vs sha256 must surface.
+
+    :class:`Attachment` carries a model_validator enforcing
+    ``attachment_id == sha256`` — the content-addressing guarantee
+    the attachment store relies on. A persisted manifest whose
+    sha256 is mutated post-save (without also rewriting
+    attachment_id) must fail load via the model_validator.
+
+    Persists a manifest, reaches into ``SecureObjectRow`` via
+    ``session_scope``, surgically flips the sha256 field to a
+    different digest while leaving attachment_id intact, and asserts
+    the load path catches the drift.
+
+    If this test passes silently with a corrupted sha256, the
+    attachment store's content-addressing guarantee is tautological
+    and the bytes-on-disk no longer prove the manifest's identity.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from .attachment import _ATTACHMENT_MANIFEST_NAMESPACE
+    from .sql._orm import SecureObjectRow
+    from .sql.session import session_scope
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "attachment-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+        store = AttachmentStore()
+        payload = b"sample attachment body for anti-tautology proof"
+        digest = store.put_bytes(payload)
+        attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
+        store.write_manifest(attachment)
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+                SecureObjectRow.object_key == attachment.attachment_id,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            manifest = envelope["payload"]
+            assert manifest["sha256"] == manifest["attachment_id"], (
+                "fixture must persist matching sha256 + attachment_id "
+                "for this proof test to be meaningful"
+            )
+            # Flip sha256 to a different digest without touching the
+            # attachment_id. The model_validator must trip on the
+            # content-addressing mismatch.
+            tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
+            manifest["sha256"] = tampered_digest
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            store.load_manifest(attachment.attachment_id)
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: mutating sha256 without "
+            "rewriting attachment_id did NOT surface on load. The "
+            "attachment store's content-addressing guarantee is "
+            "tautological and bytes-on-disk no longer prove the "
+            "manifest's identity."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
