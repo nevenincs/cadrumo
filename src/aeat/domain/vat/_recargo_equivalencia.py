@@ -111,7 +111,39 @@ def _load_rates() -> LivaArt161RecargoRates:
         raise VatValidationError(f"failed to parse recargo rates as Decimal: {exc}") from exc
 
 
-LIVA_ART_161_RECARGO: Final[LivaArt161RecargoRates] = _load_rates()
+_LIVA_ART_161_RECARGO_CACHE: list[LivaArt161RecargoRates] = []
+
+
+def _get_liva_art_161_recargo() -> LivaArt161RecargoRates:
+    """Return the cached LIVA art. 161 recargo rates, loading on first access.
+
+    Module-level eager loading of ``_load_rates()`` triggered a real
+    circular import: the load path pulls in
+    ``aeat.domain.calculations.registry._bindings``, which imports
+    enums (``EUMemberState`` etc) back from ``aeat.domain.vat`` — but
+    this module is itself part of ``aeat.domain.vat``'s import chain,
+    so ``vat`` is mid-initialisation when ``_bindings`` tries to read
+    from it. Lazy first-access loading sidesteps the cycle without
+    weakening the public contract: every consumer that previously read
+    the module constant now reads through the property accessor.
+    """
+
+    if not _LIVA_ART_161_RECARGO_CACHE:
+        _LIVA_ART_161_RECARGO_CACHE.append(_load_rates())
+    return _LIVA_ART_161_RECARGO_CACHE[0]
+
+
+def __getattr__(name: str) -> object:
+    """Module-level lazy accessor for the legacy ``LIVA_ART_161_RECARGO`` constant.
+
+    Callers that read the constant trigger the cycle-safe lazy load
+    transparently. The lookup matches Python's PEP 562 module
+    ``__getattr__`` contract.
+    """
+
+    if name == "LIVA_ART_161_RECARGO":
+        return _get_liva_art_161_recargo()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 """Module-level frozen record loaded once at import time.
 
 Consumers reference ``LIVA_ART_161_RECARGO.general_rate`` etc. for the

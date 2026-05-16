@@ -74,7 +74,6 @@ from ._prorrata import (
 )
 from ._rates import VAT_RATE_TABLE
 from ._recargo_equivalencia import (
-    LIVA_ART_161_RECARGO,
     LivaArt161RecargoRates,
     recargo_rate_for,
 )
@@ -171,3 +170,19 @@ __all__ = [
     "validate_prorrata_reference",
     "verify_catalogue",
 ]
+
+
+def __getattr__(name: str) -> object:
+    """Lazy resolver for ``LIVA_ART_161_RECARGO``.
+
+    Eager evaluation at module import time triggers a circular import
+    against ``aeat.domain.calculations.registry._bindings``. Resolving
+    the constant on first attribute access keeps the public surface
+    intact while breaking the cycle.
+    """
+
+    if name == "LIVA_ART_161_RECARGO":
+        from ._recargo_equivalencia import _get_liva_art_161_recargo
+
+        return _get_liva_art_161_recargo()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

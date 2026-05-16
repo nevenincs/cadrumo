@@ -37,9 +37,11 @@ def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
         kind=InvoiceKind.ISSUED,
         invoice_number=invoice_number,
         issued_at=date(2025, 3, 15),
-        counterparty_name="Cliente Test SL",
-        counterparty_tax_id="A12345678",
-        counterparty_country="ES",
+        counterparty_name="Test Counterparty GmbH",
+        # German VAT id; bypasses the AEAT CIF checksum since the
+        # invoice domain accepts any non-Spanish counterparty.
+        counterparty_tax_id="DE123456789",
+        counterparty_country="DE",
         base_total=Decimal("1000.00"),
         iva_total=Decimal("210.00"),
         grand_total=Decimal("1210.00"),
@@ -56,7 +58,7 @@ def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
             ),
         ),
         payment_status=PaymentStatus.PENDING,
-        linked_transaction_ids=("tx-001",),
+        linked_transaction_ids=("a" * 64,),
         notes="Test invoice for roundtrip coverage.",
     )
 
@@ -100,7 +102,7 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
         assert loaded_a.base_total == Decimal("1000.00")
         assert loaded_a.iva_total == Decimal("210.00")
         assert loaded_a.grand_total == Decimal("1210.00")
-        assert loaded_a.linked_transaction_ids == ("tx-001",)
+        assert loaded_a.linked_transaction_ids == ("a" * 64,)
         assert len(loaded_a.lines) == 1
         loaded_line = loaded_a.lines[0]
         assert loaded_line.iva_rate is IvaRate.RATE_21
