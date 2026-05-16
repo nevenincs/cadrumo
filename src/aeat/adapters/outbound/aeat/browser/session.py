@@ -95,6 +95,12 @@ class BrowserSession:
                     context={"profile": self.profile.name},
                 )
 
+            # ``dict[str, Any]`` here is the irreducible adapter shape:
+            # the dict is spread into ``new_context(**context_kwargs)``
+            # whose typed kwargs are heterogeneous (storage_state,
+            # proxy, viewport, ...). Narrowing to ``object`` breaks the
+            # spread under Playwright's stubs; this is a third-party-API
+            # boundary where ``Any`` is the right type.
             context_kwargs: dict[str, Any] = {}
             logger.info(
                 "browser context create starting profile=%s channel=%s headless=%s has_proxy=%s",
