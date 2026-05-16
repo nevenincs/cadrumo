@@ -82,26 +82,26 @@ Migrate every PROJECT_ROOT / corpus / ... and PROJECT_ROOT / registry / aeat joi
 
 Migrate every test module that joins PROJECT_ROOT against corpus or registry to the resource locator, run the project quality gate, and update the release-engineering documentation with the PyPI per-file-size implications of the in-wheel bundling decision.
 
-- [ ] `P04.S34` - Migrate the calculations registry test suite registry-root resolution to packaged_data; `src/aeat/domain/calculations/registry/`.
-- [ ] `P04.S35` - Migrate the VAT domain test suite registry and normatives resolution to packaged_data; `src/aeat/domain/vat/`.
-- [ ] `P04.S36` - Migrate the calculations row-set and detail-record tests to packaged_data; `src/aeat/application/calculations/`.
-- [ ] `P04.S37` - Migrate the aggregation test suite registry-root resolution to packaged_data; `src/aeat/application/aggregation/`.
-- [ ] `P04.S38` - Migrate the calc-sheets storage tests registry-root resolution to packaged_data; `src/aeat/application/storage/calc_sheets/`.
-- [ ] `P04.S39` - Migrate the filing application test suite registry-root resolution to packaged_data; `src/aeat/application/filing/`.
-- [ ] `P04.S40` - Migrate the modelo application test suite registry-root resolution to packaged_data; `src/aeat/application/modelo/`.
-- [ ] `P04.S41` - Migrate the registry corpus application tests to packaged_data; `src/aeat/application/registry/`.
-- [ ] `P04.S42` - Migrate the manuals domain tests to packaged_data and Settings overrides; `src/aeat/domain/manuals/`.
-- [ ] `P04.S43` - Migrate the normatives domain tests to packaged_data; `src/aeat/domain/normatives/`.
-- [ ] `P04.S44` - Migrate the rental imputacion test suite registry-root resolution to packaged_data; `src/aeat/domain/rental/`.
-- [ ] `P04.S45` - Migrate the user-profile registry-contract tests to packaged_data; `src/aeat/domain/user_profile/`.
-- [ ] `P04.S46` - Migrate the invoices iva-classification tests to packaged_data; `src/aeat/domain/invoices/`.
-- [ ] `P04.S47` - Migrate the sede outbound test suite registry, parity-replay and groi-samples resolution to packaged_data; `src/aeat/adapters/outbound/aeat/sede/`.
-- [ ] `P04.S48` - Migrate the CLI entrypoint test suite registry-root and corpus workbook-root resolution to packaged_data; `src/aeat/entrypoints/cli/`.
-- [ ] `P04.S49` - Run the project quality gate of ruff, ty, pytest, and structural audits across the touched surface; `justfile`.
-- [ ] `P04.S50` - Document the PyPI 100 MB per-file cap acknowledgement and the three release-time options (file-size grant request, future PDF extras split, private-index publication); `RELEASING.md`.
-- [ ] `P04.S62` - Migrate the nine f-string path-composition sites in tests that embed corpus and registry fragments to packaged_data composition; `src/aeat/domain/`.
-- [ ] `P04.S63` - Migrate the justificante parser tests that glob corpus/aeat_official PDFs to packaged_data composition; `src/aeat/adapters/inbound/justificante/`.
-- [ ] `P04.S66` - Audit the four locale YAML files for CLI help strings that quote the old corpus or registry path prefix and update any operator-visible mentions; `src/aeat/locales/`.
+- [x] `P04.S34` - Migrate the calculations registry test suite registry-root resolution to packaged_data; `src/aeat/domain/calculations/registry/`.
+- [x] `P04.S35` - Migrate the VAT domain test suite registry and normatives resolution to packaged_data; `src/aeat/domain/vat/`.
+- [x] `P04.S36` - Migrate the calculations row-set and detail-record tests to packaged_data; `src/aeat/application/calculations/`.
+- [x] `P04.S37` - Migrate the aggregation test suite registry-root resolution to packaged_data; `src/aeat/application/aggregation/`.
+- [x] `P04.S38` - Migrate the calc-sheets storage tests registry-root resolution to packaged_data; `src/aeat/application/storage/calc_sheets/`.
+- [x] `P04.S39` - Migrate the filing application test suite registry-root resolution to packaged_data; `src/aeat/application/filing/`.
+- [x] `P04.S40` - Migrate the modelo application test suite registry-root resolution to packaged_data; `src/aeat/application/modelo/`.
+- [x] `P04.S41` - Migrate the registry corpus application tests to packaged_data; `src/aeat/application/registry/`.
+- [x] `P04.S42` - Migrate the manuals domain tests to packaged_data and Settings overrides; `src/aeat/domain/manuals/`.
+- [x] `P04.S43` - Migrate the normatives domain tests to packaged_data; `src/aeat/domain/normatives/`.
+- [x] `P04.S44` - Migrate the rental imputacion test suite registry-root resolution to packaged_data; `src/aeat/domain/rental/`.
+- [x] `P04.S45` - Migrate the user-profile registry-contract tests to packaged_data; `src/aeat/domain/user_profile/`.
+- [x] `P04.S46` - Migrate the invoices iva-classification tests to packaged_data; `src/aeat/domain/invoices/`.
+- [x] `P04.S47` - Migrate the sede outbound test suite registry, parity-replay and groi-samples resolution to packaged_data; `src/aeat/adapters/outbound/aeat/sede/`.
+- [x] `P04.S48` - Migrate the CLI entrypoint test suite registry-root and corpus workbook-root resolution to packaged_data; `src/aeat/entrypoints/cli/`.
+- [x] `P04.S49` - Run the project quality gate of ruff, ty, pytest, and structural audits across the touched surface; `justfile`.
+- [x] `P04.S50` - Document the PyPI 100 MB per-file cap acknowledgement and the three release-time options (file-size grant request, future PDF extras split, private-index publication); `RELEASING.md`.
+- [x] `P04.S62` - Migrate the nine f-string path-composition sites in tests that embed corpus and registry fragments to packaged_data composition; `src/aeat/domain/`.
+- [x] `P04.S63` - Migrate the justificante parser tests that glob corpus/aeat_official PDFs to packaged_data composition; `src/aeat/adapters/inbound/justificante/`.
+- [x] `P04.S66` - Audit the four locale YAML files for CLI help strings that quote the old corpus or registry path prefix and update any operator-visible mentions; `src/aeat/locales/`.
 
 ### Phase `P05` - physical relocation and operator-config update
 
