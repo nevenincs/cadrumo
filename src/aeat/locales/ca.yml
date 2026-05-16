@@ -865,17 +865,27 @@ cli:
     agenda:
       allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
         incompletes.
-      date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte, avui.
+      date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte,
+        avui.
       errors:
         invalid_horizon: --horizon ha de ser un nombre enter positiu (dies).
       help: Classifica les obligacions properes i vençudes al voltant d'una data de
-        referència. Indica un únic `next_due` més les cohorts due-today / due-soon /
-        overdue. Local; mai contacta amb AEAT.
+        referència. Indica un únic `next_due` més les cohorts due-today / due-soon
+        / overdue. Local; mai contacta amb AEAT.
       horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
     allow_incomplete_help: Permet el calendari amb valors per defecte quan falten
       claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha
       advertencies.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
+    backlog:
+      allow_incomplete_help: Generar el backlog encara que les dades del perfil siguin
+        incompletes.
+      from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans
+        d'avui.
+      help: Llista les obligacions vençudes que l'operador encara no ha presentat. Ordenades
+        de més antiga a més recent per prioritzar el triatge. Local; mai contacta amb
+        AEAT.
+      to_help: Data de fi inclusiva (ISO YYYY-MM-DD); per defecte, avui.
     calendar:
       allow_incomplete_help: Generar el calendari encara que les dades del perfil
         siguin incompletes.

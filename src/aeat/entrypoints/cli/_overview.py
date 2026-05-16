@@ -305,3 +305,81 @@ def overview_agenda(
     for warning in agenda.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
     _emit(ctx, payload, lines)
+
+
+@app.command(
+    "backlog",
+    help=tr(
+        "cli.overview.backlog.help",
+        default=(
+            "List past-due obligations the operator has not yet filed. Sorted oldest "
+            "first so the most-overdue items triage first. Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def overview_backlog(
+    ctx: typer.Context,
+    from_date: str | None = typer.Option(
+        None,
+        "--from",
+        help=tr(
+            "cli.overview.backlog.from_help",
+            default="Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before today.",
+        ),
+    ),
+    to_date: str | None = typer.Option(
+        None,
+        "--to",
+        help=tr(
+            "cli.overview.backlog.to_help",
+            default="Inclusive end date (ISO YYYY-MM-DD); defaults to today.",
+        ),
+    ),
+    allow_incomplete: bool = typer.Option(
+        False,
+        "--allow-incomplete",
+        help=tr(
+            "cli.overview.backlog.allow_incomplete_help",
+            default="Render the backlog even when profile data is incomplete.",
+        ),
+    ),
+) -> None:
+    """Surface the operator's past-due backlog without mutating state."""
+
+    from ...application.overview._backlog import build_overview_backlog
+    from ...application.user_profile._projections import record_to_values
+
+    current = _state()
+    parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None
+    parsed_to = _parse_iso_date(to_date, label="--to") if to_date else None
+    record = current.active_profile_record()
+    raw_values = record_to_values(record) if record is not None else None
+    backlog = build_overview_backlog(
+        _profile_to_autonomo(current),
+        from_date=parsed_from,
+        to_date=parsed_to,
+        raw_values=raw_values,
+    )
+    if backlog.warnings and not allow_incomplete:
+        warning_summary = ", ".join(warning.code for warning in backlog.warnings)
+        raise _bad(
+            tr(
+                "cli.overview.calendar_refused_incomplete",
+                keys=warning_summary,
+            ),
+        )
+
+    payload = backlog.model_dump(mode="json")
+    lines: list[str] = [
+        f"from\t{backlog.range.from_date.isoformat()}",
+        f"to\t{backlog.range.to_date.isoformat()}",
+        f"as_of\t{backlog.as_of.isoformat()}",
+        f"late_count\t{backlog.late_count}",
+    ]
+    for entry in backlog.items:
+        lines.append(
+            f"{entry.modelo}\t{entry.period}\tcloses={entry.adjusted_closes_on.isoformat()}"
+        )
+    for warning in backlog.warnings:
+        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+    _emit(ctx, payload, lines)
