@@ -14,7 +14,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ..categories import CATEGORY_PROFILES_2025, ProportionalityKind, SpendingCategory
+from ..categories import resolve_category_profiles, ProportionalityKind, SpendingCategory
 from . import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
@@ -123,7 +123,7 @@ def test_resolve_user_ratio_returns_set_or_none() -> None:
 def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
     """``ELIGIBLE_USAGE_RATIO_CATEGORIES`` must track the registry verbatim.
 
-    The eligibility set is derived from ``CATEGORY_PROFILES_2025`` at import
+    The eligibility set is derived from ``resolve_category_profiles(2025)`` at import
     time. This test re-derives it from the registry using the same predicate
     and asserts equality, so a kind-table edit in the registry (adding or
     removing a ``USAGE_RATIO_*`` category) cannot silently drift from what the
@@ -132,7 +132,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
     """
     derived_from_registry = frozenset(
         category
-        for category, profile in CATEGORY_PROFILES_2025.items()
+        for category, profile in resolve_category_profiles(2025).items()
         if profile.proportionality.kind
         in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}
     )
@@ -157,7 +157,7 @@ def test_consumer_fallback_pattern_documentation() -> None:
         user_value = resolve_user_ratio(profile, category)
         if user_value is not None:
             return user_value
-        return CATEGORY_PROFILES_2025[category].proportionality.default_ratio
+        return resolve_category_profiles(2025)[category].proportionality.default_ratio
 
     assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ) == Decimal("0.21")
     assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA) == Decimal("0.30")

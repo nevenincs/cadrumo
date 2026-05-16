@@ -17,7 +17,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...domain.categories import CATEGORY_PROFILES_2025, ProportionalityRule, SpendingCategory
+from ...domain.categories import ProportionalityRule, SpendingCategory, resolve_category_profiles
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
@@ -73,7 +73,7 @@ def eligible_ratio_categories(profile: UsageRatioProfile) -> tuple[EligibleCateg
     """
     rows: list[EligibleCategoryRow] = []
     for category in sorted(ELIGIBLE_USAGE_RATIO_CATEGORIES, key=lambda c: c.value):
-        category_profile = CATEGORY_PROFILES_2025[category]
+        category_profile = resolve_category_profiles(2025)[category]
         rule: ProportionalityRule = category_profile.proportionality
         rows.append(
             EligibleCategoryRow(

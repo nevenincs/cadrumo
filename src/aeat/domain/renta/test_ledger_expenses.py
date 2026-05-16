@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from ...core.i18n import Translatable as tr
 from ..categories import (
-    CATEGORY_PROFILES_2025,
+    resolve_category_profiles(2025),
     CategoryCitation,
     CategoryCitationSource,
     CategoryProfile,
@@ -88,7 +88,7 @@ def test_full_deductible_first_slice_fact_builds_binding_ready_observation() -> 
     fact = _fact(category=SpendingCategory.CUOTAS_AUTONOMOS_SS, amount=Decimal("294.00"))
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.CUOTAS_AUTONOMOS_SS],
+        resolve_category_profiles(2025)[SpendingCategory.CUOTAS_AUTONOMOS_SS],
         _context(),
     )
 
@@ -114,7 +114,7 @@ def test_transaction_only_fact_uses_operation_date_and_prevents_invoice_evidence
     )
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.GASTOS_BANCARIOS],
+        resolve_category_profiles(2025)[SpendingCategory.GASTOS_BANCARIOS],
         _context(),
     )
 
@@ -135,7 +135,7 @@ def test_linked_refund_preserves_category_and_becomes_negative_observation() -> 
     )
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.GASTOS_FINANCIEROS],
+        resolve_category_profiles(2025)[SpendingCategory.GASTOS_FINANCIEROS],
         _context(),
     )
 
@@ -164,7 +164,7 @@ def test_usage_ratio_default_splits_deductible_and_non_deductible_amounts() -> N
 
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO],
+        resolve_category_profiles(2025)[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO],
         _context(),
     )
 
@@ -179,12 +179,12 @@ def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists() -> 
 
     missing = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.TELEFONIA_MOVIL],
+        resolve_category_profiles(2025)[SpendingCategory.TELEFONIA_MOVIL],
         _context(),
     )
     with_ratio = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.TELEFONIA_MOVIL],
+        resolve_category_profiles(2025)[SpendingCategory.TELEFONIA_MOVIL],
         _context(usage_ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.25")}),
     )
 
@@ -200,7 +200,7 @@ def test_statutory_annual_cap_limits_health_insurance_amount() -> None:
 
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.SEGUROS_SALUD_AUTONOMO],
+        resolve_category_profiles(2025)[SpendingCategory.SEGUROS_SALUD_AUTONOMO],
         _context(statutory_cap_person_count=1),
     )
 
@@ -212,7 +212,7 @@ def test_statutory_annual_cap_limits_health_insurance_amount() -> None:
 
 def test_daily_statutory_cap_variant_requires_days_and_variant() -> None:
     fact = _fact(category=SpendingCategory.MANUTENCION_DIETAS_NACIONAL, amount=Decimal("80.00"))
-    profile = CATEGORY_PROFILES_2025[SpendingCategory.MANUTENCION_DIETAS_NACIONAL]
+    profile = resolve_category_profiles(2025)[SpendingCategory.MANUTENCION_DIETAS_NACIONAL]
 
     missing = evaluate_renta_deductibility(fact, profile, _context())
     capped = evaluate_renta_deductibility(
@@ -288,7 +288,7 @@ def test_first_slice_rejects_eligible_categories_without_contract_mapping() -> N
     fact = _fact(category=SpendingCategory.MATERIAL_OFICINA, amount=Decimal("55.00"))
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.MATERIAL_OFICINA],
+        resolve_category_profiles(2025)[SpendingCategory.MATERIAL_OFICINA],
         _context(),
     )
 
@@ -300,7 +300,7 @@ def test_tax_year_mismatch_is_rejected_before_observation_creation() -> None:
     fact = _fact(category=SpendingCategory.ASESORIA_FISCAL, amount=Decimal("120.00"))
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.ASESORIA_FISCAL],
+        resolve_category_profiles(2025)[SpendingCategory.ASESORIA_FISCAL],
         _context(),
     )
 
@@ -326,7 +326,7 @@ def test_result_model_rejects_mismatched_category_family() -> None:
     fact = _fact(category=SpendingCategory.GASTOS_BANCARIOS)
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.GASTOS_BANCARIOS],
+        resolve_category_profiles(2025)[SpendingCategory.GASTOS_BANCARIOS],
         _context(),
     )
     payload = result.model_dump()
@@ -340,7 +340,7 @@ def test_observation_model_rejects_mismatched_first_slice_casilla() -> None:
     fact = _fact(category=SpendingCategory.GASTOS_BANCARIOS)
     result = evaluate_renta_deductibility(
         fact,
-        CATEGORY_PROFILES_2025[SpendingCategory.GASTOS_BANCARIOS],
+        resolve_category_profiles(2025)[SpendingCategory.GASTOS_BANCARIOS],
         _context(),
     )
     observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
