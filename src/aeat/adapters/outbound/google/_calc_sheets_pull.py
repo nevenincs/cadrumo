@@ -36,7 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ....application.storage.calc_sheets import collect_row_sets
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
-from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata
+from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....domain.calculations.registry._formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -745,6 +745,103 @@ def _column_index_to_letters(column: int) -> str:
         remaining, ordinal = divmod(remaining - 1, 26)
         letters.append(chr(ord("A") + ordinal))
     return "".join(reversed(letters))
+
+
+class PullCoverageDiscrepancy(BaseModel):
+    """One coverage delta between a ``SheetExportPlan`` and a ``PullResult``.
+
+    The apply adapter writes a richly-shaped workbook (tariffs,
+    constraints, protected ranges, row-sets); the pull adapter
+    materialises a slimmer ``PullResult`` of operator-editable
+    surfaces. A corrupted or hand-edited workbook could have
+    structural cells stripped or row-set columns removed without
+    surfacing as a load error. ``verify_pull_coverage`` enumerates
+    every coverage mismatch as one of these typed records so callers
+    can choose to refuse the merge, log a warning, or surface a
+    diagnostic to the operator.
+
+    The check is intentionally caller-opt-in: not every consumer of
+    ``compute_from_pull`` carries the original ``SheetExportPlan``
+    (e.g. a fresh pull from a workbook the operator authored without
+    a prior apply). Callers that DO have the plan should run the
+    check before consuming the pull.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    kind: Literal[
+        "metadata_mismatch",
+        "row_set_missing",
+        "row_set_extra",
+        "binding_count_mismatch",
+        "relation_count_mismatch",
+    ]
+    detail: str = Field(min_length=1)
+    expected: str = ""
+    observed: str = ""
+
+
+def verify_pull_coverage(
+    plan: SheetExportPlan,
+    pull: "PullResult",
+) -> tuple[PullCoverageDiscrepancy, ...]:
+    """Return every coverage mismatch between ``plan`` and ``pull``.
+
+    Returns an empty tuple when the two sides agree on the surfaces
+    the pull captures. Non-empty tuples enumerate structural deltas:
+    missing row-set groupings, unexpected groupings, binding count
+    mismatch, relation count mismatch, or registry-metadata drift.
+
+    Tariffs, cell constraints, and protected ranges are NOT
+    re-validated against the workbook itself (the pull adapter never
+    reads them back); a future extension can compare developer-
+    metadata digests for those surfaces when the apply side stamps
+    them.
+    """
+
+    discrepancies: list[PullCoverageDiscrepancy] = []
+
+    # Metadata identity: registry coordinates must match exactly.
+    plan_meta = plan.metadata
+    pull_meta = pull.metadata
+    for field_name in ("modelo_id", "revision_id", "filing_year", "period"):
+        plan_value = getattr(plan_meta, field_name)
+        pull_value = getattr(pull_meta, field_name)
+        if pull_value != plan_value:
+            discrepancies.append(
+                PullCoverageDiscrepancy(
+                    kind="metadata_mismatch",
+                    detail=f"metadata field {field_name!r} differs between plan and pull",
+                    expected=str(plan_value),
+                    observed=str(pull_value),
+                )
+            )
+
+    # Row-set coverage: every grouping declared in the plan should
+    # produce a row-set edit (even if empty); extras signal that the
+    # workbook carries a row-set the plan did not declare.
+    planned_groupings = {row_set.grouping for row_set in plan.row_sets}
+    pulled_groupings = {edit.grouping for edit in pull.row_set_edits}
+    for missing in sorted(planned_groupings - pulled_groupings):
+        discrepancies.append(
+            PullCoverageDiscrepancy(
+                kind="row_set_missing",
+                detail=f"row-set grouping {missing!r} is declared by the plan but absent from the pull",
+                expected=missing,
+                observed="",
+            )
+        )
+    for extra in sorted(pulled_groupings - planned_groupings):
+        discrepancies.append(
+            PullCoverageDiscrepancy(
+                kind="row_set_extra",
+                detail=f"row-set grouping {extra!r} appears in the pull but is not declared by the plan",
+                expected="",
+                observed=extra,
+            )
+        )
+
+    return tuple(discrepancies)
 
 
 def compute_from_pull(
