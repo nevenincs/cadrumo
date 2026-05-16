@@ -826,6 +826,7 @@ def auth_configure(
     """Configure the active authentication provider."""
 
     from ....application.auth import AuthProviderReservedError, configure_operator_auth
+    from ....application.auth._operator import AuthConfigureNoActiveBucketError
 
     try:
         result = configure_operator_auth(provider, certificate_path=file)
@@ -833,6 +834,8 @@ def auth_configure(
         raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
     except AuthProviderReservedError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider)) from exc
+    except AuthConfigureNoActiveBucketError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.no_active_bucket")) from exc
     _emit(ctx, result.model_dump(mode="json"), (f"provider\t{result.provider}", f"file\t{result.file}"))
 
 

@@ -321,6 +321,12 @@ cli:
         history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
+        invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
+          en minúscules més separadors . _ : -, màx. 128 caràcters)'
+        invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
+          més separadors . _ : -, màx. 64 caràcters)'
+        invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
+          de 64 caràcters (resum SHA-256)
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per bucket
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
@@ -329,9 +335,9 @@ cli:
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: Token de periode de la unitat; per a Modelo 036 usa alta, modificacion
           o baja; exemples periodics inclouen Q1, 4T, 0A i 01
+        reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.
-        reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         resume_help: cli.app.modelo.work.resume_help
         resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
@@ -344,12 +350,6 @@ cli:
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
-        invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules de
-          64 caràcters (resum SHA-256)
-        invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
-          més separadors . _ : -, màx. 64 caràcters)'
-        invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
-          en minúscules més separadors . _ : -, màx. 128 caràcters)'
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
   common:
     errors:
@@ -390,6 +390,8 @@ cli:
       configure_help: Configurar el proveïdor d'autenticació actiu
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
+      no_active_bucket: 'No hi ha un bucket de perfil actiu. Executa ''aeat config init''
+        abans de configurar l''autenticació.'
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
       providers_help: Llistar proveïdors d'autenticació suportats
       reserved_provider: 'Proveïdor d''autenticació reservat però no implementat:
@@ -460,14 +462,13 @@ cli:
           pull:
             assemble_observations_help: Després de recuperar, reensambla les cel·les
               de files de la pestanya Detalle en observacions tipades (perceptors,
-              béns a l'estranger, operacions vinculades, membres d'atribució,
-              operacions de devolució) i emet-les al payload al costat dels
-              row_set_edits crus
+              béns a l'estranger, operacions vinculades, membres d'atribució, operacions
+              de devolució) i emet-les al payload al costat dels row_set_edits crus
             compute_help: Després de recuperar les edicions, executa el motor Decimal
               local sobre elles i emet els valors calculats de les caselles
-            compute_refused_stale: 'rebutjant calcular contra un llibre les marques
-              de metadades del qual no coincideixen amb el snapshot subministrat
-              (metadata_match={metadata_match}); reexporteu i torneu a recuperar'
+            compute_refused_stale: rebutjant calcular contra un llibre les marques
+              de metadades del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match});
+              reexporteu i torneu a recuperar
             spreadsheet_id_help: Identificador del fitxer de Drive del llibre del
               qual llegir les edicions de l'operador (ha d'estar marcat com a propi
               de l'app i lligat al snapshot subministrat)
@@ -1085,6 +1086,42 @@ review:
     t_791512: review.adapters.t_791512
     t_870243: review.adapters.t_870243
     t_968325: review.adapters.t_968325
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Data d'adquisició
+      amount: Import
+      asset_class_code: Clau del bé
+      asset_identifier: Identificació del bé
+      base_imponible: Base imposable
+      base_imponible_assigned: Base imposable atribuïda
+      clave: Clau
+      counterparty_legal_name: Raó social de la contrapart
+      counterparty_tax_id: NIF de la contrapart
+      country_code: Codi de país
+      currency_code: Codi de divisa
+      ingreso_a_cuenta: Ingrés a compte
+      member_legal_name: Raó social del membre
+      member_state_code: Estat membre
+      member_tax_id: NIF del membre
+      operation_date: Data de l'operació
+      operation_kind_code: Clau d'operació
+      party_legal_name: Raó social
+      party_tax_id: NIF
+      perceptor_legal_name: Cognoms i nom del perceptor
+      perceptor_tax_id: NIF del perceptor
+      percibido_dinerario: Percepcions dineràries
+      percibido_especie: Percepcions en espècie
+      rectified_base_previous: Base imposable anterior (rectificació)
+      rectified_period: Període rectificat
+      rectified_year: Exercici rectificat
+      refund_amount: Import a retornar
+      retencion_practicada: Retenció practicada
+      share_percentage: Percentatge de participació
+      subclave: Subclau
+      supplier_tax_id: NIF del proveïdor
+      transfer_pricing_method_code: Mètode de valoració
+      valuation_amount: Valoració
 topic:
   authentication:
     body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat
@@ -1497,39 +1534,3 @@ wizard:
     main:
       title: Main test
     title: Test
-sheets:
-  detalle:
-    headers:
-      acquisition_date: Data d'adquisició
-      amount: Import
-      asset_class_code: Clau del bé
-      asset_identifier: Identificació del bé
-      base_imponible: Base imposable
-      base_imponible_assigned: Base imposable atribuïda
-      clave: Clau
-      counterparty_legal_name: Raó social de la contrapart
-      counterparty_tax_id: NIF de la contrapart
-      country_code: Codi de país
-      currency_code: Codi de divisa
-      ingreso_a_cuenta: Ingrés a compte
-      member_legal_name: Raó social del membre
-      member_state_code: Estat membre
-      member_tax_id: NIF del membre
-      operation_date: Data de l'operació
-      operation_kind_code: Clau d'operació
-      party_legal_name: Raó social
-      party_tax_id: NIF
-      perceptor_legal_name: Cognoms i nom del perceptor
-      perceptor_tax_id: NIF del perceptor
-      percibido_dinerario: Percepcions dineràries
-      percibido_especie: Percepcions en espècie
-      rectified_base_previous: Base imposable anterior (rectificació)
-      rectified_period: Període rectificat
-      rectified_year: Exercici rectificat
-      refund_amount: Import a retornar
-      retencion_practicada: Retenció practicada
-      share_percentage: Percentatge de participació
-      subclave: Subclau
-      supplier_tax_id: NIF del proveïdor
-      transfer_pricing_method_code: Mètode de valoració
-      valuation_amount: Valoració
