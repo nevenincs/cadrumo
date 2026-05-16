@@ -156,3 +156,33 @@ Required engine surface:
   `resumed_from=context.resumed_from_run_id` to `run_for_period`.
 
 The CLI `aeat app modelo work resume` surface is unchanged.
+
+## 2026-05-16 closure — engine linkage shipped
+
+The engine-linkage gap recorded above is now closed:
+
+- `WorkflowResult.resumed_from: str | None` ships in
+  `src/aeat/application/workflow/_models.py` with field validation.
+- `WorkflowEngine.run_for_period(..., resumed_from: str | None = None)`
+  ships in `src/aeat/application/workflow/_engine.py` and validates the
+  parameter shape at the boundary (16-char lowercase hex), forwarding
+  the value into the produced `WorkflowResult`.
+- The revision-verify gate
+  (`_run_revision_workflow_gate` in
+  `src/aeat/application/modelo/_actions.py`) accepts an optional
+  `resumed_from` and forwards it to `run_for_period`, so callers
+  driving a fresh attempt over a prior aborted run preserve the
+  linkage end-to-end.
+
+Real-behavior coverage:
+
+- Unit: `test_run_for_period_propagates_resumed_from_into_result`,
+  `test_run_for_period_rejects_malformed_resumed_from`
+  (`src/aeat/application/workflow/test_engine.py`).
+- End-to-end: `test_resume_context_run_id_satisfies_engine_resumed_from_contract`,
+  `test_resume_is_idempotent_for_a_persistently_aborted_run`,
+  `test_resume_for_unknown_run_id_is_indistinguishable_from_stale`
+  (`src/aeat/application/workflow/test_resume.py`).
+
+Existence verification of the prior run remains the upstream resume
+action's responsibility — the engine validates shape only.
