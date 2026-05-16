@@ -16,6 +16,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....domain.calculations.registry._schema import RegistrySnapshotRef
 from ..pdf._shared import ExtractedCasilla
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -97,6 +98,17 @@ class DeclaracionObservation(BaseModel):
     ejercicio: str = Field(min_length=4, max_length=4)
     tax_id: str = Field(min_length=4, max_length=32)
     template_revision: TemplateRevision
+    registry_snapshot_ref: RegistrySnapshotRef | None = None
+    """Four-axis registry coordinate captured at parse time.
+
+    Populated by the parser from the active ``RegistrySnapshot`` so a
+    persisted observation can be re-resolved against the live registry
+    catalogue with a single
+    :meth:`ValidatedRegistryAuthority.snapshot` call. ``None`` for
+    legacy observations parsed before this field existed; new
+    observations carry the ref to detect silent AEAT template drift
+    on subsequent registry releases (export-import audit F6).
+    """
     values: tuple[ExtractedCasilla, ...]
     warnings: tuple[ExtractionWarning, ...] = ()
     source_pdf_path: Path

@@ -39,6 +39,15 @@ def test_parser_extracts_registry_profile_targets_from_pdf(tmp_path: Path) -> No
     assert filing.period == "1T"
     assert filing.tax_id == "00000000T"
     assert {value.casilla_id: value.printed_value for value in filing.values} == values
+    # The parser stamps the resolving registry snapshot's four-axis
+    # coordinate onto the observation so downstream consumers can
+    # detect AEAT template drift on subsequent registry releases
+    # (export-import audit F6). The ref is populated from the
+    # snapshot the parser actually resolved against.
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "130"
+    assert filing.registry_snapshot_ref.filing_year == 2024
+    assert filing.registry_snapshot_ref.period == "1T"
 
 
 def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf(tmp_path: Path) -> None:
