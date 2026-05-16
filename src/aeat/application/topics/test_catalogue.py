@@ -77,25 +77,16 @@ def test_every_topic_renders_title_and_body_in_default_locale() -> None:
         assert body and body != topic.body_key, f"topic {topic.slug!r}: body missing in default locale"
 
 
+_FORBIDDEN_IMPORT_ROOTS: frozenset[str] = frozenset({"click", "rich", "typer", "aeat.entrypoints"})
+_FORBIDDEN_IMPORT_NAMES: frozenset[str] = frozenset(
+    {"_emit", "emit_json_document", "emit_json_success", "render_command_output"}
+)
+_FORBIDDEN_CALL_NAMES: frozenset[str] = frozenset({"echo", "print"})
+
+
 def test_topic_catalogue_package_has_no_cli_or_rendering_surface() -> None:
     """Topics are backend catalogue records; CLI exposure belongs to registry."""
 
-    forbidden_import_roots = {
-        "click",
-        "rich",
-        "typer",
-        "aeat.entrypoints",
-    }
-    forbidden_import_names = {
-        "_emit",
-        "emit_json_document",
-        "emit_json_success",
-        "render_command_output",
-    }
-    forbidden_call_names = {
-        "echo",
-        "print",
-    }
     offenders: list[str] = []
     for module in sorted(_TOPICS_PACKAGE_ROOT.rglob("*.py")):
         relative = module.relative_to(_TOPICS_PACKAGE_ROOT)
@@ -103,24 +94,46 @@ def test_topic_catalogue_package_has_no_cli_or_rendering_surface() -> None:
             continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
         for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    root = alias.name.split(".", 1)[0]
-                    if root in forbidden_import_roots or alias.name in forbidden_import_names:
-                        offenders.append(f"{relative}: import {alias.name}")
-            elif isinstance(node, ast.ImportFrom):
-                imported_module = node.module or ""
-                root = imported_module.split(".", 1)[0]
-                if root in forbidden_import_roots or imported_module.startswith("aeat.entrypoints"):
-                    offenders.append(f"{relative}: from {imported_module} import ...")
-                for alias in node.names:
-                    if alias.name in forbidden_import_names:
-                        offenders.append(f"{relative}: import {alias.name}")
-            elif isinstance(node, ast.Call):
-                callee = node.func
-                if isinstance(callee, ast.Name) and callee.id in forbidden_call_names:
-                    offenders.append(f"{relative}: call {callee.id}")
-                elif isinstance(callee, ast.Attribute) and callee.attr in forbidden_call_names:
-                    offenders.append(f"{relative}: call {callee.attr}")
-
+            offenders.extend(_scan_node_for_cli_surface(node, relative))
     assert offenders == []
+
+
+def _scan_node_for_cli_surface(node: ast.AST, relative: Path) -> list[str]:
+    """Return the per-node CLI-surface offences (empty when the node is clean)."""
+    if isinstance(node, ast.Import):
+        return _scan_import(node, relative)
+    if isinstance(node, ast.ImportFrom):
+        return _scan_import_from(node, relative)
+    if isinstance(node, ast.Call):
+        return _scan_call(node, relative)
+    return []
+
+
+def _scan_import(node: ast.Import, relative: Path) -> list[str]:
+    offenders: list[str] = []
+    for alias in node.names:
+        root = alias.name.split(".", 1)[0]
+        if root in _FORBIDDEN_IMPORT_ROOTS or alias.name in _FORBIDDEN_IMPORT_NAMES:
+            offenders.append(f"{relative}: import {alias.name}")
+    return offenders
+
+
+def _scan_import_from(node: ast.ImportFrom, relative: Path) -> list[str]:
+    offenders: list[str] = []
+    imported_module = node.module or ""
+    root = imported_module.split(".", 1)[0]
+    if root in _FORBIDDEN_IMPORT_ROOTS or imported_module.startswith("aeat.entrypoints"):
+        offenders.append(f"{relative}: from {imported_module} import ...")
+    for alias in node.names:
+        if alias.name in _FORBIDDEN_IMPORT_NAMES:
+            offenders.append(f"{relative}: import {alias.name}")
+    return offenders
+
+
+def _scan_call(node: ast.Call, relative: Path) -> list[str]:
+    callee = node.func
+    if isinstance(callee, ast.Name) and callee.id in _FORBIDDEN_CALL_NAMES:
+        return [f"{relative}: call {callee.id}"]
+    if isinstance(callee, ast.Attribute) and callee.attr in _FORBIDDEN_CALL_NAMES:
+        return [f"{relative}: call {callee.attr}"]
+    return []
