@@ -21,7 +21,11 @@ from ._runtime_graph import expression_casilla_refs
 from ._schema import (
     DataBindingDefinition,
     DatedValue,
+    DependencyClassificationDefinition,
+    ExportFieldDefinition,
+    ExportRecordDefinition,
     ExtractionProfileDefinition,
+    FormulaDefinition,
     FormulaExpression,
     LegalReference,
     ModeloDefinition,
@@ -484,7 +488,7 @@ class RegistryValidator:
         *,
         prefix: str,
         revision: ModeloRevision,
-        formulas: Mapping[str, object],
+        formulas: Mapping[str, FormulaDefinition],
         bindings: set[str],
         export_field_ids: set[str],
     ) -> None:
@@ -755,14 +759,14 @@ class RegistryValidator:
         failures: list[str],
         *,
         prefix: str,
-        classification: object,
+        classification: DependencyClassificationDefinition,
         construct_by_id: Mapping[str, object],
         relation_by_id: Mapping[str, RelationDefinition],
     ) -> None:
-        owner = f"dependency classification {classification.id}"  # type: ignore[attr-defined]
-        failures.extend(self._missing_refs(prefix, owner, classification.legal_refs, self._legal, "legal"))  # type: ignore[attr-defined]
-        failures.extend(self._missing_refs(prefix, owner, classification.source_refs, self._sources, "source"))  # type: ignore[attr-defined]
-        for construct_id in classification.target_constructs:  # type: ignore[attr-defined]
+        owner = f"dependency classification {classification.id}"
+        failures.extend(self._missing_refs(prefix, owner, classification.legal_refs, self._legal, "legal"))
+        failures.extend(self._missing_refs(prefix, owner, classification.source_refs, self._sources, "source"))
+        for construct_id in classification.target_constructs:
             construct = construct_by_id.get(construct_id)
             if construct is None:
                 failures.append(
@@ -773,23 +777,23 @@ class RegistryValidator:
                 failures.append(
                     f"{prefix}: {owner} targets construct {construct_id!r} but the construct does not list it"
                 )
-        for relation_id in classification.relation_refs:  # type: ignore[attr-defined]
+        for relation_id in classification.relation_refs:
             relation = relation_by_id.get(relation_id)
             if relation is None:
                 failures.append(f"{prefix}: {owner} references unknown relation {relation_id!r}")
                 continue
-            if relation.source_modelo != classification.source_modelo:  # type: ignore[attr-defined]
+            if relation.source_modelo != classification.source_modelo:
                 failures.append(
-                    f"{prefix}: {owner} source_modelo {classification.source_modelo!r} does not match "  # type: ignore[attr-defined]
+                    f"{prefix}: {owner} source_modelo {classification.source_modelo!r} does not match "
                     f"relation {relation_id!r} source_modelo {relation.source_modelo!r}"
                 )
-            missing_legal_refs = sorted(set(relation.legal_refs).difference(classification.legal_refs))  # type: ignore[attr-defined]
+            missing_legal_refs = sorted(set(relation.legal_refs).difference(classification.legal_refs))
             if missing_legal_refs:
                 failures.append(
                     f"{prefix}: {owner} relation {relation_id!r} "
                     f"does not include relation legal refs {missing_legal_refs!r}"
                 )
-            missing_source_refs = sorted(set(relation.source_refs).difference(classification.source_refs))  # type: ignore[attr-defined]
+            missing_source_refs = sorted(set(relation.source_refs).difference(classification.source_refs))
             if missing_source_refs:
                 failures.append(
                     f"{prefix}: {owner} relation {relation_id!r} "
@@ -903,21 +907,21 @@ class RegistryValidator:
         *,
         prefix: str,
         revision: ModeloRevision,
-        record: object,
+        record: ExportRecordDefinition,
         casillas: set[str],
         bindings: set[str],
         casilla_by_id: Mapping[str, object],
     ) -> None:
-        if record.binding_record is not None:  # type: ignore[attr-defined]
+        if record.binding_record is not None:
             matching_bindings = [
                 binding
                 for binding in revision.bindings
-                if binding.selector.get("record") == record.binding_record  # type: ignore[attr-defined]
+                if binding.selector.get("record") == record.binding_record
             ]
             if not matching_bindings:
                 failures.append(
-                    f"{prefix}: export record {record.id!r} derives fields from unknown binding record "  # type: ignore[attr-defined]
-                    f"{record.binding_record!r}"  # type: ignore[attr-defined]
+                    f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
+                    f"{record.binding_record!r}"
                 )
             for binding in matching_bindings:
                 # Row-producer bindings (aggregation.op == "rows") source their
@@ -930,26 +934,26 @@ class RegistryValidator:
                 )
                 if missing_selector_keys:
                     failures.append(
-                        f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "  # type: ignore[attr-defined]
+                        f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
                         f"{missing_selector_keys!r}"
                     )
         if (
-            record.repeat == "binding_rows"  # type: ignore[attr-defined]
-            and not any(field.kind == "binding" for field in record.fields)  # type: ignore[attr-defined]
-            and record.binding_record is None  # type: ignore[attr-defined]
+            record.repeat == "binding_rows"
+            and not any(field.kind == "binding" for field in record.fields)
+            and record.binding_record is None
         ):
             failures.append(
-                f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"  # type: ignore[attr-defined]
+                f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"
             )
         if (
-            record.requires_positive_casilla is not None  # type: ignore[attr-defined]
-            and record.requires_positive_casilla not in casillas  # type: ignore[attr-defined]
+            record.requires_positive_casilla is not None
+            and record.requires_positive_casilla not in casillas
         ):
             failures.append(
-                f"{prefix}: export record {record.id!r} requires unknown positive casilla "  # type: ignore[attr-defined]
-                f"{record.requires_positive_casilla!r}"  # type: ignore[attr-defined]
+                f"{prefix}: export record {record.id!r} requires unknown positive casilla "
+                f"{record.requires_positive_casilla!r}"
             )
-        for field in record.fields:  # type: ignore[attr-defined]
+        for field in record.fields:
             self._validate_export_field(
                 failures,
                 prefix=prefix,
@@ -964,24 +968,24 @@ class RegistryValidator:
         failures: list[str],
         *,
         prefix: str,
-        field: object,
+        field: ExportFieldDefinition,
         casillas: set[str],
         bindings: set[str],
         casilla_by_id: Mapping[str, object],
     ) -> None:
-        owner = f"export field {field.id}"  # type: ignore[attr-defined]
-        failures.extend(self._missing_refs(prefix, owner, field.legal_refs, self._legal, "legal"))  # type: ignore[attr-defined]
-        failures.extend(self._missing_refs(prefix, owner, field.source_refs, self._sources, "source"))  # type: ignore[attr-defined]
-        if field.casilla is not None and field.casilla not in casillas:  # type: ignore[attr-defined]
-            failures.append(f"{prefix}: {owner!r} references unknown casilla {field.casilla!r}")  # type: ignore[attr-defined]
+        owner = f"export field {field.id}"
+        failures.extend(self._missing_refs(prefix, owner, field.legal_refs, self._legal, "legal"))
+        failures.extend(self._missing_refs(prefix, owner, field.source_refs, self._sources, "source"))
+        if field.casilla is not None and field.casilla not in casillas:
+            failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}")
         if (
-            field.casilla is not None  # type: ignore[attr-defined]
-            and field.casilla in casilla_by_id  # type: ignore[attr-defined]
+            field.casilla is not None
+            and field.casilla in casilla_by_id
             and field.id not in casilla_by_id[field.casilla].export_refs  # type: ignore[attr-defined]
         ):
-            failures.append(f"{prefix}: {owner!r} is not declared by casilla {field.casilla!r}")  # type: ignore[attr-defined]
-        if field.binding is not None and field.binding not in bindings:  # type: ignore[attr-defined]
-            failures.append(f"{prefix}: {owner!r} references unknown binding {field.binding!r}")  # type: ignore[attr-defined]
+            failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}")
+        if field.binding is not None and field.binding not in bindings:
+            failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
 
     def _validate_extraction_profile_section(
         self,
@@ -1047,16 +1051,20 @@ class RegistryValidator:
             failures.extend(self._missing_refs(prefix, owner, workbook.legal_refs, self._legal, "legal"))
             failures.extend(self._missing_refs(prefix, owner, workbook.source_refs, self._sources, "source"))
             if workbook.workbook_source not in self._sources:
-                failures.append(f"{prefix}: {owner} references unknown source {workbook.workbook_source!r}")
+                failures.append(
+                    f"{prefix}: workbook parity {workbook.id!r} references unknown source {workbook.workbook_source!r}"
+                )
                 continue
             source = self._sources[workbook.workbook_source]
             if workbook.formula_coverage == "formula_form" and source.evidence_tier != "executable_parity_evidence":
                 failures.append(
-                    f"{prefix}: {owner} formula workbook requires executable parity evidence source"
+                    f"{prefix}: workbook parity {workbook.id!r} formula workbook requires "
+                    "executable parity evidence source"
                 )
             if workbook.formula_coverage != "formula_form" and source.evidence_tier == "executable_parity_evidence":
                 failures.append(
-                    f"{prefix}: {owner} non-formula workbook must not use executable parity evidence source"
+                    f"{prefix}: workbook parity {workbook.id!r} non-formula workbook must not use "
+                    "executable parity evidence source"
                 )
 
     def _validate_verification_expectation_section(
