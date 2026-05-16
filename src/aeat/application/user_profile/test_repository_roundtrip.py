@@ -137,3 +137,90 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_user_profile_active_with_removed_at_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: ACTIVE + removed_at must surface on load.
+
+    :class:`UserProfileRecord` enforces a lifecycle invariant: ACTIVE
+    profiles must NOT carry ``removed_at``; TOMBSTONED profiles MUST.
+    A silent drift across the encrypted boundary that materialised
+    ``removed_at`` on an ACTIVE record would corrupt the lifecycle
+    state machine (the record would appear "soft-deleted" while
+    still being reachable through the active-profile path).
+
+    Persists an ACTIVE record, reaches into ``SecureObjectRow`` via
+    ``session_scope``, surgically stamps ``removed_at`` into the
+    encrypted JSON envelope (without flipping ``status`` to
+    TOMBSTONED), and asserts the load path catches the drift via
+    the model_validator's lifecycle check.
+
+    If this test passes silently with the rogue removed_at, the
+    user-profile lifecycle boundary is tautological and the state
+    machine is not actually enforced post-persistence.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._repository import USER_PROFILE_VALUE_NAMESPACE
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "user-profile-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        objects = SecureObjectRepository(engine=engine)
+        bucket_id = "profile-bucket-A"
+        lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
+        record = _populated_record()
+        lifecycle.save(record)
+
+        with session_scope(engine) as session:
+            # Fetch all rows then filter by namespace in Python; the
+            # value namespace carries exactly one row in this fixture.
+            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+            value_rows = [r for r in all_rows if r.namespace == USER_PROFILE_VALUE_NAMESPACE]
+            assert len(value_rows) == 1, (
+                f"expected one value-namespace row, found {len(value_rows)} "
+                f"(total rows in db: {len(all_rows)}; namespaces: "
+                f"{sorted({r.namespace for r in all_rows})})"
+            )
+            row = value_rows[0]
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            payload = envelope["payload"]
+            assert payload["status"] == "active", (
+                "fixture must persist ACTIVE status for this proof "
+                "test to be meaningful"
+            )
+            # Stamp removed_at while keeping ACTIVE status. The
+            # lifecycle invariant must trip on load.
+            payload["removed_at"] = "2024-12-15T10:00:00+00:00"
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).load(
+                record.profile_id
+            )
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: stamping removed_at on an "
+            "ACTIVE record did NOT surface on load. The user-profile "
+            "lifecycle boundary is tautological and the state machine "
+            "is not actually enforced post-persistence."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
