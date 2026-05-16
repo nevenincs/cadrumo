@@ -98,6 +98,7 @@ class BucketEventType(StrEnum):
     # ledger usage-ratio mutations
     LEDGER_RATIOS_SET = "ledger.ratios.set"
     LEDGER_RATIOS_UNSET = "ledger.ratios.unset"
+    LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING = "ledger.ratios.census_override_warning"
 
     # operator authentication + workspace bootstrap
     AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"
