@@ -14,10 +14,26 @@ from ._census_errors import (
     CensusNotAvailableError,
     CensusSyncError,
 )
+from ._census_sync import (
+    CENSUS_SOURCE_TAG,
+    CensusApplyResult,
+    CensusComparisonStatus,
+    CensusFactSource,
+    CensusFieldComparison,
+    CensusProfileComparison,
+    CensusSyncService,
+)
 
 __all__ = [
+    "CENSUS_SOURCE_TAG",
     "CensusApplyConflictError",
+    "CensusApplyResult",
+    "CensusComparisonStatus",
+    "CensusFactSource",
+    "CensusFieldComparison",
     "CensusFieldValidationError",
     "CensusNotAvailableError",
+    "CensusProfileComparison",
     "CensusSyncError",
+    "CensusSyncService",
 ]
