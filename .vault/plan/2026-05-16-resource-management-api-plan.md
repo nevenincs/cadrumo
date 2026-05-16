@@ -87,11 +87,11 @@ Migrate the 25-30 production consumer modules from their existing load_* / _DEFA
 - [ ] `P07.S28` - Migrate the diagnostics version and repair surfaces to resources(); `src/aeat/application/diagnostics.py`.
 - [ ] `P07.S29` - Migrate the topics application package init to resources(); `src/aeat/application/topics/__init__.py`.
 - [ ] `P07.S30` - Migrate the filing runtime schema provider to resources(); `src/aeat/application/filing/runtime.py`.
-- [ ] `P07.S31` - Migrate the filing application package init to resources(); `src/aeat/application/filing/__init__.py`.
+- [x] `P07.S31` - Migrate the filing application package init to resources(); `src/aeat/application/filing/__init__.py`.
 - [ ] `P07.S32` - Migrate the verification declaracion verifier to resources(); `src/aeat/application/verification/_verify.py`.
 - [ ] `P07.S33` - Migrate the live filed data capture to resources(); `src/aeat/application/live/__init__.py`.
 - [ ] `P07.S34` - Migrate the modelo work-unit actions to resources(); `src/aeat/application/modelo/_actions.py`.
-- [ ] `P07.S35` - Migrate the renta ledger aggregation to resources(); `src/aeat/application/aggregation/_renta_ledger.py`.
+- [x] `P07.S35` - Migrate the renta ledger aggregation to resources(); `src/aeat/application/aggregation/_renta_ledger.py`.
 - [ ] `P07.S36` - Migrate the default_registry_authority singleton as a thin shim that delegates to resources().modelos to resources(); `src/aeat/domain/calculations/registry/_authority.py`.
 - [ ] `P07.S37` - Migrate the calculate_registry_snapshot lazy bundled_path import to resources(); `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `P07.S38` - Migrate the run_registry_calculation_scenario wrapper to resources(); `src/aeat/domain/calculations/registry/_scenarios.py`.
