@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -161,124 +162,189 @@ def aggregate_iva_ledger_observations(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
-        transaction_id = transaction.transaction_id
-        operation_date = transaction.raw.value_date or transaction.raw.booked_date
-        if not resolved_period.contains(operation_date):
-            issues.append(
-                IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
-                    reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-                    detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period.raw}",
-                )
-            )
+        outcome = _classify_iva_transaction(transaction, resolved_period=resolved_period)
+        if outcome.gate_issue is not None:
+            issues.append(outcome.gate_issue)
             continue
-        if transaction.raw.currency != "EUR":
-            issues.append(
-                IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
-                    reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-                    detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
-                )
-            )
-            continue
-        flow_direction = _flow_direction_for(transaction.direction)
-        if flow_direction is None:
-            issues.append(
-                IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
-                    reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
-                    detail=f"transaction direction {transaction.direction.value!r} is not an IVA settlement flow",
-                )
-            )
-            continue
-        proportionality = _business_proportionality(transaction)
-        if proportionality is None:
-            reason = (
-                IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-                if transaction.business_classification is BusinessClassification.PERSONAL
-                else IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
-            )
-            issues.append(
-                IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
-                    reason=reason,
-                    detail=(
-                        f"business classification {transaction.business_classification.value!r} "
-                        "cannot feed IVA aggregation"
-                    ),
-                )
-            )
-            continue
-        missing_reason = _missing_tax_fact_reason(transaction)
-        if missing_reason is not None:
-            issues.append(
-                IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
-                    reason=missing_reason,
-                    detail=_missing_tax_fact_detail(missing_reason),
-                )
-            )
-            continue
-        assert transaction.taxable_base is not None
-        assert transaction.iva_amount is not None
-        assert transaction.iva_rate is not None
-        rate_kind = _iva_rate_kind_for(transaction.iva_rate, on_date=operation_date)
-        if rate_kind is None:
-            issues.append(
-                IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
-                    reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
-                    detail=f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate",
-                )
-            )
-            continue
-        category = _RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind]
-        base_amount = transaction.taxable_base * proportionality
-        iva_amount = transaction.iva_amount * proportionality
-        prorrata_reference = _prorrata_reference_for(
-            transaction.prorrata_reference,
-            transaction_id=transaction.transaction_id,
-        )
-        linked_prorrata_id: str | None = None
-        if isinstance(prorrata_reference, IvaLedgerAggregationIssue):
-            issues.append(prorrata_reference)
-        elif prorrata_reference is not None:
-            if flow_direction is not IvaFlowDirection.SOPORTADO:
-                issues.append(
-                    IvaLedgerAggregationIssue(
-                        transaction_id=transaction_id,
-                        reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
-                        detail="prorrata_reference may only be attached to supported input VAT rows",
-                    )
-                )
-            else:
-                prorrata_references.append(
-                    ProrrataLedgerReference(
-                        transaction_id=transaction.transaction_id,
-                        transaction_date=operation_date,
-                        reference=prorrata_reference,
-                        base_amount=base_amount,
-                        input_vat_amount=iva_amount,
-                    )
-                )
-                linked_prorrata_id = transaction.transaction_id
-        observations.append(
-            IvaLedgerObservation(
-                ledger_id=transaction.transaction_id,
-                transaction_date=operation_date,
-                category=category,
-                rate_kind=rate_kind,
-                flow_direction=flow_direction,
-                base_amount=base_amount,
-                iva_amount=iva_amount,
-                prorrata_reference_id=linked_prorrata_id,
-            )
-        )
+        if outcome.prorrata_issue is not None:
+            issues.append(outcome.prorrata_issue)
+        if outcome.prorrata_reference is not None:
+            prorrata_references.append(outcome.prorrata_reference)
+        if outcome.observation is not None:
+            observations.append(outcome.observation)
     return IvaLedgerAggregation(
         period=resolved_period,
         observations=tuple(observations),
         prorrata_references=tuple(prorrata_references),
         issues=tuple(issues),
+    )
+
+
+@dataclass(frozen=True)
+class _IvaTransactionOutcome:
+    """Per-transaction outcome carrying the typed sinks the orchestrator drains.
+
+    A transaction either fails a pre-observation gate (``gate_issue``
+    populated, nothing else) or it survives all pre-gates and produces
+    an ``observation``. The observation path may additionally emit a
+    ``prorrata_reference`` AND/OR a ``prorrata_issue`` — they are
+    independent sinks: an invalid prorrata-reference attaches to the
+    issue list, a valid one attaches to the prorrata-references list,
+    and either way the observation itself is recorded.
+    """
+
+    gate_issue: IvaLedgerAggregationIssue | None = None
+    observation: IvaLedgerObservation | None = None
+    prorrata_reference: ProrrataLedgerReference | None = None
+    prorrata_issue: IvaLedgerAggregationIssue | None = None
+
+
+def _classify_iva_transaction(
+    transaction: Transaction,
+    *,
+    resolved_period: Period,
+) -> _IvaTransactionOutcome:
+    """Filter + classify one ledger transaction against the IVA aggregation pipeline.
+
+    Returns an :class:`_IvaTransactionOutcome` carrying the typed
+    sinks the orchestrator drains. Each pre-observation gate projects
+    to ``gate_issue`` with a typed
+    :class:`IvaLedgerAggregationIssueReason`. The observation-eligible
+    path constructs the observation and (when present) the prorrata
+    reference; an invalid prorrata reference is reported as a
+    ``prorrata_issue`` alongside the observation.
+    """
+    transaction_id = transaction.transaction_id
+    operation_date = transaction.raw.value_date or transaction.raw.booked_date
+    if not resolved_period.contains(operation_date):
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+                detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period.raw}",
+            )
+        )
+    if transaction.raw.currency != "EUR":
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+                detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
+            )
+        )
+    flow_direction = _flow_direction_for(transaction.direction)
+    if flow_direction is None:
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
+                detail=f"transaction direction {transaction.direction.value!r} is not an IVA settlement flow",
+            )
+        )
+    proportionality = _business_proportionality(transaction)
+    if proportionality is None:
+        reason = (
+            IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
+            if transaction.business_classification is BusinessClassification.PERSONAL
+            else IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+        )
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=reason,
+                detail=(
+                    f"business classification {transaction.business_classification.value!r} "
+                    "cannot feed IVA aggregation"
+                ),
+            )
+        )
+    missing_reason = _missing_tax_fact_reason(transaction)
+    if missing_reason is not None:
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=missing_reason,
+                detail=_missing_tax_fact_detail(missing_reason),
+            )
+        )
+    assert transaction.taxable_base is not None
+    assert transaction.iva_amount is not None
+    assert transaction.iva_rate is not None
+    rate_kind = _iva_rate_kind_for(transaction.iva_rate, on_date=operation_date)
+    if rate_kind is None:
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
+                detail=f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate",
+            )
+        )
+    base_amount = transaction.taxable_base * proportionality
+    iva_amount = transaction.iva_amount * proportionality
+    prorrata_reference, prorrata_issue, linked_prorrata_id = _resolve_iva_prorrata_attachment(
+        transaction,
+        flow_direction=flow_direction,
+        operation_date=operation_date,
+        base_amount=base_amount,
+        iva_amount=iva_amount,
+    )
+    observation = IvaLedgerObservation(
+        ledger_id=transaction.transaction_id,
+        transaction_date=operation_date,
+        category=_RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind],
+        rate_kind=rate_kind,
+        flow_direction=flow_direction,
+        base_amount=base_amount,
+        iva_amount=iva_amount,
+        prorrata_reference_id=linked_prorrata_id,
+    )
+    return _IvaTransactionOutcome(
+        observation=observation,
+        prorrata_reference=prorrata_reference,
+        prorrata_issue=prorrata_issue,
+    )
+
+
+def _resolve_iva_prorrata_attachment(
+    transaction: Transaction,
+    *,
+    flow_direction: IvaFlowDirection,
+    operation_date: date,
+    base_amount: Decimal,
+    iva_amount: Decimal,
+) -> tuple[ProrrataLedgerReference | None, IvaLedgerAggregationIssue | None, str | None]:
+    """Resolve the (prorrata-reference, prorrata-issue, linked-id) triple.
+
+    Returns ``(None, None, None)`` when the transaction carries no
+    prorrata_reference. Returns ``(None, issue, None)`` when the
+    reference fails parsing OR the row is not a supported-input VAT
+    row (prorrata only attaches to SOPORTADO flows). Returns
+    ``(reference, None, transaction_id)`` for a valid attachment.
+    """
+    raw_reference = _prorrata_reference_for(
+        transaction.prorrata_reference,
+        transaction_id=transaction.transaction_id,
+    )
+    if isinstance(raw_reference, IvaLedgerAggregationIssue):
+        return None, raw_reference, None
+    if raw_reference is None:
+        return None, None, None
+    if flow_direction is not IvaFlowDirection.SOPORTADO:
+        return None, IvaLedgerAggregationIssue(
+            transaction_id=transaction.transaction_id,
+            reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
+            detail="prorrata_reference may only be attached to supported input VAT rows",
+        ), None
+    return (
+        ProrrataLedgerReference(
+            transaction_id=transaction.transaction_id,
+            transaction_date=operation_date,
+            reference=raw_reference,
+            base_amount=base_amount,
+            input_vat_amount=iva_amount,
+        ),
+        None,
+        transaction.transaction_id,
     )
 
 
