@@ -178,6 +178,54 @@ class CensusSyncService:
             census_facts=facts,
         )
 
+    async def refresh_census_from_sede(
+        self,
+        *,
+        profile_id: str,
+    ) -> CensusSnapshot:
+        """Drive the live G313 Playwright fetch and persist the snapshot.
+
+        Acquires (or refreshes) an authenticated :class:`AeatSession`,
+        navigates to the documented G313 launcher, parses the response
+        into a :class:`CensusFactSet`, projects it into the dotted
+        snapshot mapping, and captures via :meth:`refresh_census`.
+
+        Raises:
+            :exc:`CensusNotAvailableError`: when AEAT publishes no
+                census for the operator's NIF (empty CensusFactSet).
+            Any auth-layer or sede-layer error: propagated for the CLI
+                handler to surface.
+        """
+
+        from ...adapters.outbound.aeat.sede._census_live import (
+            G313_LAUNCHER_URL,
+            census_fact_set_to_mapping,
+            fetch_g313_census,
+        )
+        from ...core.access_gate import AeatAccessGate
+        from ...core.config import load_settings
+        from ..auth import ensure_authenticated_aeat_session
+
+        settings = load_settings()
+        AeatAccessGate(settings).require_live_read()
+        result = await ensure_authenticated_aeat_session(
+            settings,
+            operation="live-census-read",
+        )
+        fact_set = await fetch_g313_census(result.session, settings=settings)
+        facts = census_fact_set_to_mapping(fact_set)
+        if not facts:
+            raise CensusNotAvailableError(
+                f"sede G313 returned no parseable census for profile {profile_id!r}; "
+                "confirm your certificate / cl@ve is registered against this NIF",
+            )
+        return self._snapshots.capture(
+            profile_id=profile_id,
+            captured_at=datetime.now(UTC),
+            source_url=G313_LAUNCHER_URL,
+            census_facts=facts,
+        )
+
     def show_census(
         self,
         *,
