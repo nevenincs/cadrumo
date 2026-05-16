@@ -81,6 +81,12 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
         discarded_at=now,
         discarded_by="cli/aeat",
         discard_reason="superseded by amended revision for roundtrip test fixture",
+        # Census-stale marker pair — defaults to (None, None). Without
+        # non-default fixture values, a save-drops-field regression on
+        # either side would still pass strict equality. Stamp at
+        # created_at so the validator's not-before invariant holds.
+        census_stamped_stale_at=now,
+        census_stale_reason="census apply snapshot abc123 superseded prior facts",
     )
 
 
@@ -127,6 +133,11 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
         assert loaded_unit.discarded_by == "cli/aeat"
         assert loaded_unit.discard_reason is not None
         assert "superseded" in loaded_unit.discard_reason
+        # Census-stale marker pair survives — protects against the
+        # save-drops / load-re-defaults regression on either field.
+        assert loaded_unit.census_stamped_stale_at == work_unit.census_stamped_stale_at
+        assert loaded_unit.census_stale_reason is not None
+        assert "snapshot abc123" in loaded_unit.census_stale_reason
     finally:
         engine.dispose()
         override_master_key_provider(None)
