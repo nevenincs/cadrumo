@@ -166,11 +166,33 @@ def test_withholding_selector_accepts_well_shaped_selector() -> None:
     binding = _binding(
         source="withholding",
         selector={
-            "fact": "retencion_practicada_sum",
+            "fact": "retencion_sum",
             "claves": ("A", "G"),
         },
     )
     assert validate_binding_selector_shape(binding) == []
+
+
+def test_withholding_selector_rejects_unknown_fact() -> None:
+    """An unknown fact value fails the typed-Literal contract.
+
+    Audit selector-drift F2: the fact field was previously a bare
+    ``str`` so bogus values passed the snapshot-build gate and were
+    only rejected at handler-call time. With the Literal in place,
+    the gate catches them now.
+    """
+
+    binding = _binding(
+        source="withholding",
+        selector={
+            "fact": "bogus_fact_value",
+            "claves": ("A",),
+        },
+        binding_id="bad-withholding-fact",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-withholding-fact" in failures[0]
 
 
 def test_invoice_selector_accepts_well_shaped_selector() -> None:
@@ -179,7 +201,7 @@ def test_invoice_selector_accepts_well_shaped_selector() -> None:
     binding = _binding(
         source="invoice",
         selector={
-            "fact": "base_amount_sum",
+            "fact": "base_sum",
             "grouping": "operator_clave",
         },
     )
