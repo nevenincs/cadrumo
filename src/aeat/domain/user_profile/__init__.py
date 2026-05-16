@@ -16,7 +16,7 @@ from ._errors import (
     ProfileSnapshotNotFoundError,
     UserProfileSchemaLoadError,
 )
-from ._loader import DEFAULT_USER_PROFILE_SCHEMA_PATH, load_user_profile_schema
+from ._loader import  load_user_profile_schema
 from ._registry_contract import (
     UserProfileRegistryContractIssue,
     UserProfileRegistryContractReport,
@@ -44,7 +44,7 @@ from ._values import (
 )
 
 __all__ = [
-    "DEFAULT_USER_PROFILE_SCHEMA_PATH",
+    "",
     "ProfileAlreadyExistsError",
     "ProfileFactValue",
     "ProfileFieldDefinition",

@@ -17,7 +17,6 @@ from collections.abc import Mapping
 from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
 from ...domain.deadlines._models import IVARegime
 from ...domain.user_profile import (
-    DEFAULT_USER_PROFILE_SCHEMA_PATH,
     ProfileSchemaDefinition,
     UserProfileFact,
     UserProfileRecord,
@@ -31,7 +30,7 @@ _DEFAULT_SCHEMA: ProfileSchemaDefinition | None = None
 def _default_schema() -> ProfileSchemaDefinition:
     global _DEFAULT_SCHEMA
     if _DEFAULT_SCHEMA is None:
-        _DEFAULT_SCHEMA = load_user_profile_schema(DEFAULT_USER_PROFILE_SCHEMA_PATH)
+        _DEFAULT_SCHEMA = load_user_profile_schema()
     return _DEFAULT_SCHEMA
 
 
