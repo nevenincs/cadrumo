@@ -24,6 +24,8 @@ from ...domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
+from ..workflow._bucket_pointer import BucketPointer
+from ..workflow._bucket_pointer_io import write_pointer
 from ..workflow._models import ProfileBucketPointer, WorkflowEvent, WorkflowState
 from ..workflow._utils import utc_now
 from . import (
@@ -68,6 +70,25 @@ def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str,
     return state.model_copy(update={"bucket_events": (*state.bucket_events, event), "updated_at": utc_now()})
 
 
+def _write_active_profile_pointer(bucket_id: str) -> None:
+    """Atomically materialise the active-profile pointer file on disk.
+
+    The pointer file is the canonical default for the active-profile
+    precedence chain. Writing happens here so a successful register /
+    select call leaves the on-disk state self-consistent: the next
+    process invocation resolves the active profile from the pointer
+    before any encrypted state row needs to load.
+    """
+
+    from ...core.config import load_settings
+
+    settings = load_settings()
+    write_pointer(
+        settings.aeat_local_storage_root,
+        BucketPointer(bucket_id=bucket_id, schema_version=1),
+    )
+
+
 def register_active_profile(
     state: WorkflowState,
     *,
@@ -102,6 +123,7 @@ def register_active_profile(
             updated = _append_workflow_event(
                 updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id
             )
+    _write_active_profile_pointer(profile_id)
     return updated
 
 
@@ -124,6 +146,7 @@ def select_profile(
     profiles = dict(state.profiles)
     profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
     updated = state.model_copy(update={"active_profile": profile_id, "profiles": profiles, "updated_at": utc_now()})
+    _write_active_profile_pointer(profile_id)
     return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
 
 

@@ -194,29 +194,68 @@ class WorkflowState(BaseModel):
         )
 
     def active_profile_record(self) -> UserProfileRecord | None:
-        """Return the active :class:`UserProfileRecord` from its secure bucket."""
-        if self.active_profile is None:
-            return None
-        pointer = self.profiles.get(self.active_profile)
-        if pointer is None:
+        """Return the active :class:`UserProfileRecord` from its secure bucket.
+
+        The active bucket id resolves via the precedence chain in
+        :func:`resolve_active_bucket_id` (env var > pointer file > state
+        fallback). The bucket id and profile name are 1:1 by orchestration
+        convention, so the resolved id is the lifecycle-service read key.
+        """
+
+        bucket_id = resolve_active_bucket_id(self)
+        if bucket_id is None:
             return None
         from ...domain.user_profile import ProfileNotFoundError
         from ..user_profile._orchestration import build_lifecycle_service
 
-        service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+        service = build_lifecycle_service(bucket_id=bucket_id)
         try:
-            return service.read(self.active_profile)
+            return service.read(bucket_id)
         except ProfileNotFoundError:
             return None
 
     def active_profile_bucket_id(self) -> str | None:
-        """Return the active profile's secure bucket id."""
-        if self.active_profile is None:
-            return None
-        pointer = self.profiles.get(self.active_profile)
-        if pointer is None:
-            return None
+        """Return the active profile's secure bucket id via the precedence chain."""
+
+        return resolve_active_bucket_id(self)
+
+
+def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
+    """Resolve the active bucket id via the operator-facing precedence chain.
+
+    Precedence, highest wins:
+
+    1. ``AEAT_ACTIVE_PROFILE`` environment variable (per-shell override
+       useful for CI and headless invocations).
+    2. ``<aeat-root>/active-profile`` plaintext pointer file written by
+       ``profile create`` / ``profile switch``. This is the canonical
+       default for interactive sessions and resolves the chicken-and-egg
+       defect where an encrypted state row could not be read without
+       first knowing which bucket to unlock.
+    3. ``state.active_profile`` fallback, retained only during the
+       cutover. The field is removed in the same plan as this resolver
+       and rung three disappears with it.
+
+    The CLI ``--profile`` flag, when supplied per-invocation, exports
+    ``AEAT_ACTIVE_PROFILE`` for the duration of the process so rung one
+    handles it without a fourth precedence rung.
+    """
+
+    import os
+
+    env = os.environ.get("AEAT_ACTIVE_PROFILE", "").strip()
+    if env:
+        return env
+    from ...core.config import load_settings
+    from ._bucket_pointer_io import read_pointer
+
+    settings = load_settings()
+    pointer = read_pointer(settings.aeat_local_storage_root)
+    if pointer is not None:
         return pointer.bucket_id
+    if state is not None and state.active_profile is not None:
+        return state.active_profile
+    return None
 
 
 def active_bucket_id_or_raise(state: WorkflowState) -> str:
@@ -226,7 +265,7 @@ def active_bucket_id_or_raise(state: WorkflowState) -> str:
     application services refuse to operate when no profile is selected.
     """
 
-    bucket_id = state.active_profile_bucket_id()
+    bucket_id = resolve_active_bucket_id(state)
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
