@@ -216,13 +216,17 @@ cli:
       aggregate_help: cli.app.modelo.aggregate_help
       app_help: Inspeccionar el catàleg de models tributaris AEAT al registre
       audit:
-        bundle_id_help: cli.app.modelo.audit.bundle_id_help
-        check_help: cli.app.modelo.audit.check_help
-        export_help: cli.app.modelo.audit.export_help
-        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
-        group_help: cli.app.modelo.audit.group_help
-        output_help: cli.app.modelo.audit.output_help
-        replay_help: cli.app.modelo.audit.replay_help
+        bundle_id_help: Identificador del paquet d'evidència (SHA-256 complet o prefix
+          inequívoc).
+        check_help: Reverificar un paquet d'evidència recalculant els digests dels registres.
+        export_help: Generar un fitxer ZIP determinista del paquet d'evidència
+          (manifest.json s'escriu l'últim).
+        force_incomplete_help: Permetre l'exportació quan la verificació indiqui que el
+          paquet és incomplet.
+        group_help: Verbs d'auditoria del paquet d'evidència (show/check/export/replay).
+        output_help: Ruta de sortida per al ZIP del paquet.
+        replay_help: Reproduir la verificació del cas d'evidència per al lliurament
+          forense; mai contacta amb AEAT ni realitza tramesses.
         show_help: Mostrar el manifest i els registres referenciats d'un paquet d'evidència
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
