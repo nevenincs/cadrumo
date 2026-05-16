@@ -16,13 +16,16 @@ read-only bundled data.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
+import atexit
+from contextlib import ExitStack, contextmanager
 from importlib.resources import as_file, files
 from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Iterator
 
 _PACKAGE_DATA: Traversable = files("aeat").joinpath("_data")
+_RESOURCE_STACK: ExitStack = ExitStack()
+atexit.register(_RESOURCE_STACK.close)
 
 
 def packaged_data(*parts: str) -> Traversable:
@@ -43,6 +46,28 @@ def packaged_data(*parts: str) -> Traversable:
     for part in parts:
         node = node.joinpath(part)
     return node
+
+
+def bundled_path(*parts: str) -> Path:
+    """Return a process-lifetime :class:`pathlib.Path` for a bundled subtree.
+
+    Suitable for module-level Settings field defaults that need a real
+    on-disk path at import time. The underlying ``as_file`` context is
+    entered into a module-level :class:`contextlib.ExitStack` that is
+    closed at interpreter exit. Under the supported install modes
+    (editable hatchling, built wheel) the materialisation is a no-op:
+    ``importlib.resources.files("aeat")`` resolves to a real on-disk
+    directory and ``as_file`` returns the path unchanged.
+
+    Args:
+        *parts: Path segments joined under the bundled data root.
+
+    Returns:
+        A :class:`pathlib.Path` whose lifetime spans the running
+        process. Callers MUST treat the path as read-only.
+    """
+
+    return _RESOURCE_STACK.enter_context(as_file(packaged_data(*parts)))
 
 
 @contextmanager

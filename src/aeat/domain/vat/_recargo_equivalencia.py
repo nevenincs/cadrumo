@@ -35,7 +35,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ._schema import VATRateKind
 from .errors import VatCatalogueError, VatValidationError
 
@@ -88,7 +88,7 @@ def _load_rates() -> LivaArt161RecargoRates:
     # module's import time.
     from ..calculations.registry._loader import load_legal_parameters_only
 
-    parameters = load_legal_parameters_only(PROJECT_ROOT / "registry" / "aeat")
+    parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
     try:
         general_raw = parameters[_GENERAL_PARAM_ID].value
         reducido_raw = parameters[_REDUCIDO_PARAM_ID].value
@@ -96,7 +96,8 @@ def _load_rates() -> LivaArt161RecargoRates:
         tabaco_raw = parameters[_TABACO_PARAM_ID].value
     except KeyError as exc:
         raise VatCatalogueError(
-            f"registry/aeat/legal/iva-recargo-equivalencia.toml is missing LIVA art. 161 parameter {exc.args[0]!r}"
+            "the IVA recargo-equivalencia legal-parameter catalogue is missing "
+            f"LIVA art. 161 parameter {exc.args[0]!r}"
         ) from exc
 
     try:
