@@ -2077,7 +2077,10 @@ def modelo_history(
     "reconcile",
     help=tr(
         "cli.app.modelo.reconcile.help",
-        default="Reconcile a modelo work unit against external evidence (justificante PDF). Local-only; never contacts AEAT.",
+        default=(
+            "Reconcile a modelo work unit against external evidence (justificante PDF). "
+            "Local-only; never contacts AEAT."
+        ),
     ),
 )
 def modelo_reconcile_verb(
@@ -2171,6 +2174,134 @@ def modelo_reconcile_verb(
         lines.append(
             f"diff\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}",
         )
+    _emit(ctx, payload, lines)
+
+
+@app.command(
+    "export",
+    help=tr(
+        "cli.app.modelo.export.help",
+        default=(
+            "Export a verified-complete or filed modelo revision to a local "
+            "AEAT-compatible fichero-BOE file. Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def modelo_export_verb(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.export.work_unit_id_help",
+                default="Work unit id (SHA-256 or unambiguous prefix).",
+            ),
+        ),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            help=tr(
+                "cli.app.modelo.export.output_help",
+                default="Path to write the fichero-BOE artefact to.",
+            ),
+        ),
+    ],
+    revision: Annotated[
+        str | None,
+        typer.Option(
+            "--revision",
+            help=tr(
+                "cli.app.modelo.export.revision_help",
+                default="Calculation revision id to export; defaults to the work unit's most recent verified-complete or filed revision.",
+            ),
+        ),
+    ] = None,
+    actor: Annotated[
+        str | None,
+        typer.Option(
+            "--by",
+            help=tr(
+                "cli.app.modelo.export.actor_help",
+                default="Operator label recorded into the MODELO_EXPORTED event.",
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Export a verified-complete or filed modelo revision to disk."""
+
+    from ...application.modelo._export import (
+        ModeloExportCommand,
+        ModeloExportCrossBucketRefusedError,
+        ModeloExportNoActiveBucketError,
+        export_modelo_revision,
+    )
+    from ...application.workflow._persistence import workflow_state_repository
+
+    workflow_state = workflow_state_repository().load()
+    workflow_profile = _profile_to_autonomo(workflow_state)
+
+    target_revision_id = revision
+    if target_revision_id is None:
+        from ...domain.modelos._calculation_revision import CalculationRevisionState
+
+        revisions = list_calculation_revisions(work_unit_id=work_unit_id)
+        exportable = [
+            rev
+            for rev in revisions
+            if rev.state
+            in {
+                CalculationRevisionState.VERIFIED_COMPLETE,
+                CalculationRevisionState.FILED,
+                CalculationRevisionState.FILED_SUPERSEDED,
+            }
+        ]
+        if not exportable:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.export.errors.no_exportable_revision",
+                    default=(
+                        "Work unit has no verified-complete or filed calculation "
+                        "revision to export. Run `aeat app modelo verify` first."
+                    ),
+                ),
+            )
+        target_revision_id = max(exportable, key=lambda rev: rev.created_at).calculation_revision_id
+
+    try:
+        result = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=target_revision_id,
+                output_path=output,
+                actor=actor or _resolve_default_actor(),
+            ),
+            profile=workflow_profile,
+        )
+    except (
+        CalculationRevisionNotFoundError,
+        CalculationRevisionStateError,
+        WorkUnitNotFoundError,
+        ModeloExportCrossBucketRefusedError,
+        ModeloExportNoActiveBucketError,
+    ) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = result.model_dump(mode="json")
+    lines = [
+        "operation\tmodelo.export",
+        f"work_unit_id\t{result.work_unit_id}",
+        f"calculation_revision_id\t{result.calculation_revision_id}",
+        f"bucket\t{result.bucket_id}",
+        f"modelo\t{result.modelo}",
+        f"filing_year\t{result.filing_year}",
+        f"period\t{result.period}",
+        f"output_path\t{result.output_path}",
+        f"byte_size\t{result.byte_size}",
+        f"file_sha256\t{result.file_sha256}",
+        f"format\t{result.format}",
+        f"bucket_event_id\t{result.bucket_event_id}",
+    ]
     _emit(ctx, payload, lines)
 
 
