@@ -137,7 +137,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
         in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}
     )
     assert derived_from_registry == ELIGIBLE_USAGE_RATIO_CATEGORIES
-    assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 12
+    assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 15
 
 
 def test_consumer_fallback_pattern_documentation() -> None:
