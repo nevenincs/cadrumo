@@ -3,8 +3,38 @@ from __future__ import annotations
 import typer
 
 from ...application.review import ReviewError, ReviewQueueReport, ReviewState, project_review_item, project_review_queue
+from ...application.review._operator import ReviewQueueRow
 from ._common import _bad, _emit
 from ._i18n import tr
+from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
+
+
+def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
+    """Project the application-side ``ReviewQueueRow`` onto the typed CLI payload.
+
+    Keeps the CLI JSON contract pinned to the registered
+    :class:`ReviewQueueRowPayload` shape; downstream JSON consumers
+    rely on the registry rather than the application-side record.
+    """
+
+    return ReviewQueueRowPayload(
+        item_id=row.item_id,
+        kind=row.kind,
+        source_kind=row.source_kind,
+        affected_object_id=row.affected_object_id,
+        bucket_id=row.bucket_id,
+        modelo=row.modelo,
+        period=row.period,
+        severity=row.severity.value,
+        state=row.state.value,
+        blocking=row.blocking,
+        reason=row.reason,
+        current_owner_surface=row.current_owner_surface,
+        canonical_next_command=row.canonical_next_command,
+        since=row.since.isoformat(),
+        summary=row.summary,
+        legal_refs=tuple(row.legal_refs),
+    )
 
 app = typer.Typer(
     name="review",
@@ -30,9 +60,12 @@ def review_queue(
         raise _bad(tr("cli.review.errors.invalid_state", state=state)) from exc
     except ReviewError as exc:
         raise _bad(str(exc)) from exc
+    typed_result = ReviewQueueResult(
+        rows=tuple(_row_to_payload(row) for row in report.rows),
+    )
     _emit(
         ctx,
-        report.model_dump(mode="json"),
+        typed_result.model_dump(mode="json"),
         _queue_lines(report),
     )
 
@@ -48,9 +81,10 @@ def review_show(
         row = project_review_item(item_id)
     except ReviewError as exc:
         raise _bad(str(exc)) from exc
+    typed_result = ReviewViewResult(row=_row_to_payload(row))
     _emit(
         ctx,
-        row.model_dump(mode="json"),
+        typed_result.model_dump(mode="json"),
         [
             f"{tr('cli.review.labels.id')}\t{row.item_id}",
             f"{tr('cli.review.labels.kind')}\t{row.kind}",
