@@ -127,7 +127,7 @@ class ValidatedRegistryAuthority:
 @lru_cache(maxsize=16)
 def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority:
     modelos, catalogues = load_registry_tree(root)
-    return ValidatedRegistryAuthority(
+    authority = ValidatedRegistryAuthority(
         root=root,
         source_root=source_root,
         modelos=modelos,
@@ -138,6 +138,8 @@ def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority
         _validated_modelos=set(),
         _snapshots={},
     )
+    authority.validate_registry()
+    return authority
 
 
 @cache
