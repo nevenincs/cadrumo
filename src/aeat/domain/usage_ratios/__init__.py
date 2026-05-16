@@ -13,7 +13,12 @@ supported API.
 
 from __future__ import annotations
 
-from ._errors import UsageRatioError, UsageRatioPersistenceError, UsageRatioValidationError
+from ._errors import (
+    CensusRatioMismatchError,
+    UsageRatioError,
+    UsageRatioPersistenceError,
+    UsageRatioValidationError,
+)
 from ._model import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
@@ -24,12 +29,14 @@ from ._model import (
 from ._service import (
     derive_home_office_ratios_from_census,
     load_usage_ratios,
+    load_usage_ratios_with_census_guard,
     save_usage_ratios,
     usage_ratios_object_key,
 )
 
 __all__ = [
     "ELIGIBLE_USAGE_RATIO_CATEGORIES",
+    "CensusRatioMismatchError",
     "UsageRatioError",
     "UsageRatioPersistenceError",
     "UsageRatioProfile",
@@ -37,6 +44,7 @@ __all__ = [
     "UsageRatioValidationError",
     "derive_home_office_ratios_from_census",
     "load_usage_ratios",
+    "load_usage_ratios_with_census_guard",
     "resolve_user_ratio",
     "save_usage_ratios",
     "usage_ratios_object_key",
