@@ -41,6 +41,7 @@ from ._models import (
     WorkflowStage,
     WorkflowState,
     WorkflowStep,
+    WorkflowStepDetails,
     compute_run_id,
 )
 from ._protocols import (

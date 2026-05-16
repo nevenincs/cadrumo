@@ -316,6 +316,47 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     assert roundtripped.subject_tax_id == "12345678Z"
 
 
+def test_workflow_step_details_typed_envelope_roundtrip() -> None:
+    """``WorkflowStep.details`` boxes its dict payload into a typed envelope.
+
+    The field used to be ``dict[str, str] | None``. It is now an
+    Annotated ``WorkflowStepDetails | Mapping[str, str] | None`` with a
+    BeforeValidator that coerces bare dicts into the typed model. After
+    construction the storage type is always ``WorkflowStepDetails``,
+    so the JSON round-trip must yield a ``WorkflowStepDetails`` (not a
+    bare dict) on the return path.
+    """
+
+    from datetime import timedelta
+
+    from ....application.workflow._models import (
+        WorkflowStage,
+        WorkflowStep,
+        WorkflowStepDetails,
+    )
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    original = WorkflowStep(
+        stage=WorkflowStage.RUNNING_PREFLIGHT,
+        started_at=now,
+        ended_at=now + timedelta(seconds=2),
+        success=True,
+        summary="health check passed",
+        details={"draft_id": "f" * 64, "casilla_count": "42"},
+    )
+
+    assert isinstance(original.details, WorkflowStepDetails), (
+        f"details should be coerced into WorkflowStepDetails, got {type(original.details).__name__}"
+    )
+    assert original.details.get("draft_id") == "f" * 64
+    assert original.details.get("casilla_count") == "42"
+
+    roundtripped = WorkflowStep.model_validate_json(original.model_dump_json())
+    assert isinstance(roundtripped.details, WorkflowStepDetails)
+    assert roundtripped == original
+    assert roundtripped.details.get("draft_id") == "f" * 64
+
+
 def test_calculation_revision_carries_typed_observations() -> None:
     """``CalculationRevision`` must persist the typed observation envelope.
 
