@@ -210,7 +210,7 @@ class WorkUnit(BaseModel):
         """
         derived = derive_work_unit_id(
             bucket_id=self.bucket_id,
-            modelo=str(self.modelo),
+            modelo=self.modelo,
             filing_year=self.filing_year,
             period=self.period,
             revision_id=self.revision_id,

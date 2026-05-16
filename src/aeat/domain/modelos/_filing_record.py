@@ -216,7 +216,7 @@ class FilingRecordCatalogue(BaseModel):
         for record in self.records.values():
             if record.status is not FilingRecordStatus.CURRENT:
                 continue
-            current_key = (record.bucket_id, str(record.modelo), record.filing_year, record.period)
+            current_key = (record.bucket_id, record.modelo, record.filing_year, record.period)
             if current_key in currents:
                 raise ModeloValidationError(
                     f"more than one current filing record for {current_key!r}: "
@@ -249,7 +249,7 @@ class FilingRecordCatalogue(BaseModel):
                 continue
             if (
                 record.bucket_id == bucket_id
-                and str(record.modelo) == modelo
+                and record.modelo == modelo
                 and record.filing_year == filing_year
                 and record.period == period
             ):
@@ -270,7 +270,7 @@ class FilingRecordCatalogue(BaseModel):
             record
             for record in self.records.values()
             if record.bucket_id == bucket_id
-            and str(record.modelo) == modelo
+            and record.modelo == modelo
             and record.filing_year == filing_year
             and record.period == period
         )
