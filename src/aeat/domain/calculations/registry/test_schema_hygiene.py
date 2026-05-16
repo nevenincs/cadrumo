@@ -196,31 +196,44 @@ def test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_out
         # Split into scenario blocks: each `_scenario` factory or RegistryCalculationScenario(...)
         scenario_blocks = re.split(r"(?=def \w+_scenario\b|RegistryCalculationScenario\()", text)
         for block in scenario_blocks:
-            if "RegistryCalculationScenario(" not in block and "expected_outputs" not in block:
-                continue
-            # Extract inputs section and expected_outputs section
-            inputs_match = re.search(r"inputs\s*=\s*\{([^}]*)\}", block)
-            expected_match = re.search(r"expected_outputs\s*=\s*\(([^)]*?(?:\([^)]*\)[^)]*?)*)\)", block)
-            if not (inputs_match or expected_match):
-                continue
-            inputs_text = inputs_match.group(1) if inputs_match else ""
-            expected_text = expected_match.group(1) if expected_match else ""
-            # Detect zero-only patterns
-            input_decimals = re.findall(r'Decimal\("([^"]+)"\)', inputs_text)
-            output_values = re.findall(r'value\s*=\s*Decimal\("([^"]+)"\)', expected_text)
-            input_only_zero = bool(input_decimals) and all(d in ("0", "0.0", "0.00") for d in input_decimals)
-            output_only_zero = bool(output_values) and all(v in ("0", "0.0", "0.00") for v in output_values)
-            # A scenario is vacuous if BOTH all inputs are zero AND all expected outputs are zero
-            if input_only_zero and output_only_zero:
-                # Try to extract scenario id for the offence message
-                id_match = re.search(r'id="([^"]+)"', block) or re.search(r"id\s*=\s*\"([^\"]+)\"", block)
-                scenario_id = id_match.group(1) if id_match else "(anonymous)"
-                offences.append(
-                    f"{path.relative_to(PROJECT_ROOT).as_posix()} scenario "
-                    f"{scenario_id!r} has all-zero inputs AND all-zero expected outputs "
-                    f"(vacuous: 0 = 0 + 0 - 0 + ... never fails)"
-                )
+            offence = _vacuous_scenario_offence(block, path)
+            if offence is not None:
+                offences.append(offence)
     assert not offences, "vacuous Renta synthetic scenarios:\n  " + "\n  ".join(offences)
+
+
+_ZERO_DECIMAL_LITERALS: frozenset[str] = frozenset({"0", "0.0", "0.00"})
+
+
+def _vacuous_scenario_offence(block: str, path: Path) -> str | None:
+    """Return a vacuous-scenario offence string, or None when the block is fine.
+
+    A scenario block is vacuous when every Decimal input literal AND
+    every expected-output Decimal literal is the canonical zero
+    representation: ``0 = 0 + 0 - 0 + ...`` never fails the gate's
+    arithmetic.
+    """
+    if "RegistryCalculationScenario(" not in block and "expected_outputs" not in block:
+        return None
+    inputs_match = re.search(r"inputs\s*=\s*\{([^}]*)\}", block)
+    expected_match = re.search(r"expected_outputs\s*=\s*\(([^)]*?(?:\([^)]*\)[^)]*?)*)\)", block)
+    if not (inputs_match or expected_match):
+        return None
+    inputs_text = inputs_match.group(1) if inputs_match else ""
+    expected_text = expected_match.group(1) if expected_match else ""
+    input_decimals = re.findall(r'Decimal\("([^"]+)"\)', inputs_text)
+    output_values = re.findall(r'value\s*=\s*Decimal\("([^"]+)"\)', expected_text)
+    input_only_zero = bool(input_decimals) and all(d in _ZERO_DECIMAL_LITERALS for d in input_decimals)
+    output_only_zero = bool(output_values) and all(v in _ZERO_DECIMAL_LITERALS for v in output_values)
+    if not (input_only_zero and output_only_zero):
+        return None
+    id_match = re.search(r'id="([^"]+)"', block) or re.search(r"id\s*=\s*\"([^\"]+)\"", block)
+    scenario_id = id_match.group(1) if id_match else "(anonymous)"
+    return (
+        f"{path.relative_to(PROJECT_ROOT).as_posix()} scenario "
+        f"{scenario_id!r} has all-zero inputs AND all-zero expected outputs "
+        f"(vacuous: 0 = 0 + 0 - 0 + ... never fails)"
+    )
 
 
 def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
