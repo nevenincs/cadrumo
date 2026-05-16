@@ -129,3 +129,81 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: corrupting the opening-layer balance must surface.
+
+    :class:`InventoryLedger` carries a model_validator that enforces
+    the sum of ``opening_layers`` (quantity * unit_cost) value-
+    balances with ``opening_stock``. The persistence boundary
+    serialises both components; if the wire shape silently strips a
+    layer or skews a unit_cost, the rehydrated ledger's invariant
+    must trip.
+
+    Persists a populated ledger, reaches into SecureObjectRow via
+    ``session_scope``, surgically halves the persisted
+    ``opening_stock`` (breaking the value-balance), and asserts the
+    load path catches the drift via the model_validator.
+
+    If this test ever passes silently with a corrupted
+    opening_stock, the inventory ledger boundary is tautological and
+    every ledger roundtrip in the suite is suspect.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...persistence.storage.sql._orm import SecureObjectRow
+    from ...persistence.storage.sql.session import session_scope
+    from .inventory import _INVENTORY_NAMESPACE, _LEDGER_OBJECT_KEY
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "inventory-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+        repo = InventoryLedgerRepository()
+        ledger = _populated_ledger()
+        repo.save(InventoryLedgerDocument(ledgers=(ledger,)))
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _INVENTORY_NAMESPACE,
+                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+            )
+            row = session.execute(stmt).scalar_one()
+            document = _json.loads(row.payload.decode("utf-8"))
+            ledger_dict = document["ledgers"][0]
+            assert ledger_dict.get("opening_stock"), (
+                "fixture must serialise opening_stock onto the ledger "
+                "for this proof test to be meaningful"
+            )
+            # Halve the opening_stock so the layer-balance check fails
+            # (sum of layers no longer matches the declared aggregate).
+            ledger_dict["opening_stock"] = "750.00"
+            row.payload = _json.dumps(document).encode("utf-8")
+
+        regression_caught = False
+        try:
+            repo.load()
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: corrupting opening_stock to "
+            "break the layer-balance check did NOT surface on load. "
+            "The inventory ledger boundary is tautological and every "
+            "ledger roundtrip in the suite is suspect."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
