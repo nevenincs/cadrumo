@@ -670,11 +670,11 @@ cli:
       purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
         azonosítója
     check:
-      bucket_id_help: cli.ledger.check.bucket_id_help
-      help: Vizsgálja az aktív bucket főkönyvi tranzakcióit és anomáliákat jelent
-        (jelenleg ugyanazokkal a felkészültség-ellenőrzésekkel, mint a `preflight`,
-        alapértelmezetten az aktuális periódusra aggregálva). Csak helyi; soha nem
-        kapcsolódik az AEAT-hoz.
+      bucket_id_help: A vizsgálandó bucket azonosítója (alapértelmezésben az aktív
+        profil bucketje).
+      help: Vizsgálja a megadott bucket (alapértelmezésben az aktív profil bucketje)
+        főkönyvi tranzakcióit és anomáliákat jelent minden olyan periódusra aggregálva,
+        amelyet egy tranzakció érint. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
     classify:
       actor_help: A bucket eseményen rögzített kezelő neve
       category_help: Kiadási vagy bevételi kategória azonosítója

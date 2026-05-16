@@ -90,11 +90,15 @@ def test_check_help_advertises_local_only(cli_runner: CliRunner) -> None:
     ), result.output
 
 
-def test_check_rejects_malformed_period(cli_runner: CliRunner) -> None:
-    """An explicit but malformed --period is rejected before the
-    application service is reached."""
+def test_check_accepts_explicit_bucket_id(cli_runner: CliRunner) -> None:
+    """`--bucket-id` overrides the active profile bucket lookup so the
+    verb can probe foreign buckets without switching profile. With no
+    transactions in the supplied bucket the report is still ready."""
 
     result = cli_runner.invoke(
-        app, ["app", "ledger", "check", "--period", "not-a-period"],
+        app, ["app", "ledger", "check", "--bucket-id", "some-other-bucket"],
     )
-    assert result.exit_code != 0, result.output
+    assert result.exit_code == 0, result.output
+    assert "bucket\tsome-other-bucket" in result.output
+    assert "checked\t0" in result.output
+    assert "ready\ttrue" in result.output
