@@ -24,6 +24,7 @@ from ....core.logging import default_log_file_path
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 from .._i18n import tr
+from ._payloads import ProfileFactSetResult, ProfileFactUnsetResult
 
 _wizard_init_command = build_wizard_command(SETUP_FLOW)
 
@@ -367,8 +368,8 @@ def config_set(
     updated = repository.update(lambda current: set_active_field(current, fact))
     record = updated.active_profile_record()
     stored_value = fact_value(record, canonical_key) or ""
-    payload = {"key": canonical_key, "value": stored_value}
-    _emit(ctx, payload, (f"{canonical_key}\t{stored_value}",))
+    payload = ProfileFactSetResult(key=canonical_key, value=stored_value)
+    _emit(ctx, payload.model_dump(mode="json"), (f"{canonical_key}\t{stored_value}",))
 
 
 @profile_app.command("unset", help=tr("cli.config.unset.help"))
@@ -389,7 +390,8 @@ def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     fact = UserProfileFact(path=key, value=None)
     repository.update(lambda current: set_active_field(current, fact))
-    _emit(ctx, {"key": key, "value": ""}, (f"{key}\t<unset>",))
+    payload = ProfileFactUnsetResult(key=key)
+    _emit(ctx, payload.model_dump(mode="json"), (f"{key}\t<unset>",))
 
 
 @profile_app.command(
