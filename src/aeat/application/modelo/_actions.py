@@ -843,17 +843,47 @@ def calculate_modelo_revision(
         )
     )
     casilla_values = {key: value for key, value in engine_result.values.items()}
+    # Emit a typed CasillaObservation for every casilla in the engine's
+    # ``values`` mapping (input + bound + computed). The engine's
+    # ``entries`` tuple covers only computed casillas, so building the
+    # observation envelope purely from ``entries`` would drop the
+    # ``legal_refs`` / ``source_refs`` grounding for every input and
+    # bound casilla — the regulatory grounding chain that the audit
+    # surface depends on. Index the entries by target so computed
+    # casillas keep their full formula provenance; non-computed
+    # casillas pull their grounding from the registry casilla
+    # definition.
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    entries_by_target = {entry.target: entry for entry in engine_result.entries}
     typed_observations: tuple[CasillaObservation, ...] = tuple(
         CasillaObservation(
-            casilla_id=entry.target,
-            value=entry.value,
-            formula_id=entry.formula_id,
-            operand_refs=entry.operand_refs,
-            operand_values=entry.operand_values,
-            legal_refs=entry.legal_refs,
-            source_refs=entry.source_refs,
+            casilla_id=casilla_id,
+            value=value,
+            formula_id=entry.formula_id if (entry := entries_by_target.get(casilla_id)) else None,
+            operand_refs=entry.operand_refs if (entry := entries_by_target.get(casilla_id)) else (),
+            operand_values=(
+                entry.operand_values if (entry := entries_by_target.get(casilla_id)) else ()
+            ),
+            legal_refs=(
+                entry.legal_refs
+                if (entry := entries_by_target.get(casilla_id))
+                else (
+                    casillas_by_id[casilla_id].legal_refs
+                    if casilla_id in casillas_by_id
+                    else ()
+                )
+            ),
+            source_refs=(
+                entry.source_refs
+                if (entry := entries_by_target.get(casilla_id))
+                else (
+                    casillas_by_id[casilla_id].source_refs
+                    if casilla_id in casillas_by_id
+                    else ()
+                )
+            ),
         )
-        for entry in engine_result.entries
+        for casilla_id, value in casilla_values.items()
     )
 
     revision_id = derive_calculation_revision_id(
