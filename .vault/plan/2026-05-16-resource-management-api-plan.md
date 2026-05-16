@@ -88,11 +88,11 @@ Migrate the 25-30 production consumer modules from their existing load_* / _DEFA
 - [ ] `P07.S29` - Migrate the topics application package init to resources(); `src/aeat/application/topics/__init__.py`.
 - [ ] `P07.S30` - Migrate the filing runtime schema provider to resources(); `src/aeat/application/filing/runtime.py`.
 - [x] `P07.S31` - Migrate the filing application package init to resources(); `src/aeat/application/filing/__init__.py`.
-- [ ] `P07.S32` - Migrate the verification declaracion verifier to resources(); `src/aeat/application/verification/_verify.py`.
-- [ ] `P07.S33` - Migrate the live filed data capture to resources(); `src/aeat/application/live/__init__.py`.
-- [ ] `P07.S34` - Migrate the modelo work-unit actions to resources(); `src/aeat/application/modelo/_actions.py`.
+- [x] `P07.S32` - Migrate the verification declaracion verifier to resources(); `src/aeat/application/verification/_verify.py`.
+- [x] `P07.S33` - Migrate the live filed data capture to resources(); `src/aeat/application/live/__init__.py`.
+- [x] `P07.S34` - Migrate the modelo work-unit actions to resources(); `src/aeat/application/modelo/_actions.py`.
 - [x] `P07.S35` - Migrate the renta ledger aggregation to resources(); `src/aeat/application/aggregation/_renta_ledger.py`.
-- [ ] `P07.S36` - Migrate the default_registry_authority singleton as a thin shim that delegates to resources().modelos to resources(); `src/aeat/domain/calculations/registry/_authority.py`.
+- [x] `P07.S36` - Migrate the default_registry_authority singleton as a thin shim that delegates to resources().modelos to resources(); `src/aeat/domain/calculations/registry/_authority.py`.
 - [ ] `P07.S37` - Migrate the calculate_registry_snapshot lazy bundled_path import to resources(); `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `P07.S38` - Migrate the run_registry_calculation_scenario wrapper to resources(); `src/aeat/domain/calculations/registry/_scenarios.py`.
 - [ ] `P07.S39` - Migrate the manuals loader public surface to delegate to resources().manuals to resources(); `src/aeat/domain/manuals/_loader.py`.
@@ -117,7 +117,7 @@ Migrate the 25-30 production consumer modules from their existing load_* / _DEFA
 - [ ] `P07.S58` - Migrate the live-app CLI surface to resources(); `src/aeat/entrypoints/cli/_app_live.py`.
 - [ ] `P07.S59` - Migrate the CLI common helpers to resources(); `src/aeat/entrypoints/cli/_common.py`.
 - [ ] `P07.S60` - Migrate the modelo CLI command surface to resources(); `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P07.S61` - Migrate the google calc CLI sync command to resources(); `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `P07.S61` - Migrate the google calc CLI sync command to resources(); `src/aeat/entrypoints/cli/_config/_google.py`.
 
 ### Phase `P08` - test consumer migration
 
@@ -166,5 +166,5 @@ Delete the 11 production module-level _DEFAULT_*_ROOT constants. Delete the 20+ 
 Run ruff + ty + pytest. Add a structural test asserting the registry is the only resource-access surface (greps for bundled_path and _DEFAULT_*_ROOT outside core/resources/). Update RELEASING.md or other operator-facing surfaces only if the migration changed them.
 
 - [ ] `P10.S91` - Run the project quality gate ruff, ty, pytest with the unit marker, and the structural audits declared in the justfile; `justfile`.
-- [ ] `P10.S92` - Add a structural test asserting resources() is the only resource-access surface in the project by grepping for bundled_path and _DEFAULT_*_ROOT outside core/resources/; `src/aeat/core/resources/test_single_surface_invariant.py`.
+- [x] `P10.S92` - Add a structural test asserting resources() is the only resource-access surface in the project by grepping for bundled_path and _DEFAULT_*_ROOT outside core/resources/; `src/aeat/core/resources/test_single_surface_invariant.py`.
 - [ ] `P10.S93` - Update operator-facing release documentation only if the migration changed the operator surface; `RELEASING.md`.
