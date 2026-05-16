@@ -194,24 +194,17 @@ class XlsxProvider(FinancialProvider):
             best_header_index = 0
             best_score = -1
             for worksheet in workbook.worksheets:
-                sample_rows = [
-                    [coerce_cell_text(cell) for cell in row]
-                    for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)
-                ]
-                for index, row in enumerate(sample_rows):
-                    if not any(cell.strip() for cell in row):
-                        continue
-                    lookup = _header_lookup(row)
-                    for layout in CSV_LAYOUTS:
-                        score = _layout_score(lookup, layout)
-                        if score > best_score:
-                            best_worksheet = worksheet
-                            best_sheet_name = worksheet.title
-                            best_layout = layout
-                            best_headers = row
-                            best_lookup = lookup
-                            best_header_index = index
-                            best_score = score
+                candidate = _best_layout_match_for_worksheet(worksheet)
+                if candidate is None or candidate[0] <= best_score:
+                    continue
+                score, index, row, lookup, layout = candidate
+                best_worksheet = worksheet
+                best_sheet_name = worksheet.title
+                best_layout = layout
+                best_headers = row
+                best_lookup = lookup
+                best_header_index = index
+                best_score = score
             best_rows = [list(row) for row in best_worksheet.iter_rows(values_only=True)] if best_worksheet else []
             self._last_sheet_name = best_sheet_name
             self._last_header_index = best_header_index + 1
@@ -233,6 +226,27 @@ class XlsxProvider(FinancialProvider):
                     exc_info=True,
                 )
             raise
+
+
+def _best_layout_match_for_worksheet(
+    worksheet: Worksheet,
+) -> tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None:
+    """Return the best (score, header_index, row, lookup, layout) the worksheet matches, or ``None``."""
+
+    sample_rows = [
+        [coerce_cell_text(cell) for cell in row]
+        for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)
+    ]
+    best: tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None = None
+    for index, row in enumerate(sample_rows):
+        if not any(cell.strip() for cell in row):
+            continue
+        lookup = _header_lookup(row)
+        for layout in CSV_LAYOUTS:
+            score = _layout_score(lookup, layout)
+            if best is None or score > best[0]:
+                best = (score, index, row, lookup, layout)
+    return best
 
 
 def _row_to_mapping(headers: Sequence[str], row: Sequence[object]) -> dict[str, str]:

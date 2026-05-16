@@ -1833,6 +1833,38 @@ def _merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]
     return tuple(merged)
 
 
+def _required_patched(
+    patch: ManualLedgerTransactionPatch,
+    patch_fields: set[str],
+    field: str,
+    fallback: object,
+) -> object:
+    """Return ``patch.<field>`` when in patch_fields and non-null; otherwise the fallback.
+
+    Raises ``TransactionValidationError`` when the field is set on the
+    patch but explicitly nulled — the patch contract forbids resetting a
+    required value to None.
+    """
+    if field not in patch_fields:
+        return fallback
+    value = getattr(patch, field)
+    if value is None:
+        raise TransactionValidationError(f"manual ledger patch {field} must not be null")
+    return value
+
+
+def _optional_patched(
+    patch: ManualLedgerTransactionPatch,
+    patch_fields: set[str],
+    field: str,
+    fallback: object,
+) -> object:
+    """Return ``patch.<field>`` when in patch_fields (None allowed); otherwise the fallback."""
+    if field not in patch_fields:
+        return fallback
+    return getattr(patch, field)
+
+
 def _command_from_patch(
     *,
     bucket_id: str,
@@ -1843,46 +1875,22 @@ def _command_from_patch(
 ) -> ManualLedgerTransactionCommand:
     raw = current.raw
     patch_fields = patch.model_fields_set
-    booked_date = raw.booked_date
-    if "booked_date" in patch_fields:
-        if patch.booked_date is None:
-            raise TransactionValidationError("manual ledger patch booked_date must not be null")
-        booked_date = patch.booked_date
-    amount = raw.amount
-    if "amount" in patch_fields:
-        if patch.amount is None:
-            raise TransactionValidationError("manual ledger patch amount must not be null")
-        amount = patch.amount
-    currency = raw.currency
-    if "currency" in patch_fields:
-        if patch.currency is None:
-            raise TransactionValidationError("manual ledger patch currency must not be null")
-        currency = patch.currency
-    direction = current.direction
-    if "direction" in patch_fields:
-        if patch.direction is None:
-            raise TransactionValidationError("manual ledger patch direction must not be null")
-        direction = patch.direction
-    description = raw.description
-    if "description" in patch_fields:
-        if patch.description is None:
-            raise TransactionValidationError("manual ledger patch description must not be null")
-        description = patch.description
-    business_classification = current.business_classification
-    if "business_classification" in patch_fields:
-        if patch.business_classification is None:
-            raise TransactionValidationError("manual ledger patch business_classification must not be null")
-        business_classification = patch.business_classification
-    business_pct = patch.business_pct if "business_pct" in patch_fields else current.business_pct
-    category_id = patch.category_id if "category_id" in patch_fields else current.category_id
-    taxable_base = patch.taxable_base if "taxable_base" in patch_fields else current.taxable_base
-    iva_rate = patch.iva_rate if "iva_rate" in patch_fields else current.iva_rate
-    iva_amount = patch.iva_amount if "iva_amount" in patch_fields else current.iva_amount
-    irpf_category = patch.irpf_category if "irpf_category" in patch_fields else current.irpf_category
-    usage_ratio_id = patch.usage_ratio_id if "usage_ratio_id" in patch_fields else current.usage_ratio_id
-    prorrata_reference = (
-        patch.prorrata_reference if "prorrata_reference" in patch_fields else current.prorrata_reference
+    booked_date = _required_patched(patch, patch_fields, "booked_date", raw.booked_date)
+    amount = _required_patched(patch, patch_fields, "amount", raw.amount)
+    currency = _required_patched(patch, patch_fields, "currency", raw.currency)
+    direction = _required_patched(patch, patch_fields, "direction", current.direction)
+    description = _required_patched(patch, patch_fields, "description", raw.description)
+    business_classification = _required_patched(
+        patch, patch_fields, "business_classification", current.business_classification
     )
+    business_pct = _optional_patched(patch, patch_fields, "business_pct", current.business_pct)
+    category_id = _optional_patched(patch, patch_fields, "category_id", current.category_id)
+    taxable_base = _optional_patched(patch, patch_fields, "taxable_base", current.taxable_base)
+    iva_rate = _optional_patched(patch, patch_fields, "iva_rate", current.iva_rate)
+    iva_amount = _optional_patched(patch, patch_fields, "iva_amount", current.iva_amount)
+    irpf_category = _optional_patched(patch, patch_fields, "irpf_category", current.irpf_category)
+    usage_ratio_id = _optional_patched(patch, patch_fields, "usage_ratio_id", current.usage_ratio_id)
+    prorrata_reference = _optional_patched(patch, patch_fields, "prorrata_reference", current.prorrata_reference)
     if "business_classification" in patch_fields and business_classification is not BusinessClassification.MIXED:
         business_pct = None
         usage_ratio_id = None
@@ -1896,16 +1904,8 @@ def _command_from_patch(
         iva_amount = None
         irpf_category = None
         prorrata_reference = None
-    notes = current.notes
-    if "notes" in patch_fields:
-        if patch.notes is None:
-            raise TransactionValidationError("manual ledger patch notes must not be null")
-        notes = patch.notes
-    attachment_ids = current.attachment_ids
-    if "attachment_ids" in patch_fields:
-        if patch.attachment_ids is None:
-            raise TransactionValidationError("manual ledger patch attachment_ids must not be null")
-        attachment_ids = patch.attachment_ids
+    notes = _required_patched(patch, patch_fields, "notes", current.notes)
+    attachment_ids = _required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
         booked_date=booked_date,

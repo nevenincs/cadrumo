@@ -78,7 +78,7 @@ def test_diagnostic_is_frozen() -> None:
         message=_message(),
     )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        diag.severity = LedgerImportDiagnosticSeverity.ERROR
+        setattr(diag, "severity", LedgerImportDiagnosticSeverity.ERROR)  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_diagnostic_rejects_unknown_kind() -> None:

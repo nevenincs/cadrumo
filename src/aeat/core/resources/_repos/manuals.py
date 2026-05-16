@@ -1,0 +1,82 @@
+"""ManualRepository: composite-keyed Manual catalogue.
+
+The composite key is ``(manual_id, year, part)`` modelled as a
+frozen Pydantic record. The Repository wraps the existing
+loader chain in :mod:`aeat.domain.manuals`; the Settings env-
+override for ``AEAT_MANUALS_ROOT`` is preserved verbatim by
+passing the operator-resolved root through the constructor.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from pydantic import ConfigDict
+
+from .._keys import TypedResourceKey
+from .._repository import Repository
+
+_FROZEN_STRICT = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class ManualKey(TypedResourceKey):
+    """Composite key (manual_id, year, part) for a Manual record."""
+
+    model_config = _FROZEN_STRICT
+
+    manual_id: str
+    year: int
+    part: str = "single"
+
+
+class ManualRepository(Repository[object, ManualKey]):
+    """Composite-key repository for the bundled Manual catalogue.
+
+    Wraps :func:`aeat.domain.manuals.load_manual` and stays in
+    lockstep with the env-override seam on
+    ``Settings.aeat_manuals_root``.
+    """
+
+    def __init__(self, root: Path | None = None) -> None:
+        super().__init__()
+        self._root = root
+
+    def _settings(self) -> object | None:
+        if self._root is None:
+            return None
+        from ....core.config import Settings
+
+        return Settings(aeat_manuals_root=self._root)
+
+    def _load(self, key: ManualKey) -> object:
+        from ....domain.manuals import ManualId, ManualPart, load_manual
+
+        manual_id = ManualId(key.manual_id)
+        try:
+            part = ManualPart(key.part)
+        except ValueError:
+            part = ManualPart.SINGLE
+        return load_manual(
+            manual_id=manual_id,
+            year=key.year,
+            part=part,
+            settings=self._settings(),  # type: ignore[arg-type]
+        )
+
+    def catalogue(self) -> object:
+        """Return the project-wide :class:`ManualCatalogue` aggregate."""
+        from ....domain.manuals import load_catalogue
+
+        return load_catalogue(settings=self._settings())  # type: ignore[arg-type]
+
+    def find_rules(self, *args: object, **kwargs: object) -> object:
+        """Delegate to :func:`aeat.domain.manuals.find_rules` for rule queries."""
+        from ....domain.manuals import find_rules
+
+        return find_rules(*args, settings=self._settings(), **kwargs)  # type: ignore[arg-type]
+
+    def iter_sections(self, *args: object, **kwargs: object) -> object:
+        """Delegate to :func:`aeat.domain.manuals.iter_sections` for section iteration."""
+        from ....domain.manuals import iter_sections
+
+        return iter_sections(*args, settings=self._settings(), **kwargs)  # type: ignore[arg-type]

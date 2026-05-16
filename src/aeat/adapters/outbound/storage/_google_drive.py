@@ -384,6 +384,12 @@ class GoogleDriveProvider:
         existing = self._find_file(namespace_folder_id, hmac_clean)
 
         media_body = _build_media_body(payload)
+        # ``dict[str, Any]`` here is the irreducible Google Drive API
+        # boundary shape: ``service.files().create(body=body)`` and
+        # ``service.files().update(body=body)`` accept arbitrary
+        # heterogeneous Drive metadata. Narrowing to ``object`` breaks
+        # the call under the google-api-python-client stubs; this is
+        # a third-party-API boundary where ``Any`` is correct.
         body: dict[str, Any] = {
             "name": target_name,
             "parents": [namespace_folder_id] if existing is None else None,

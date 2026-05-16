@@ -54,52 +54,64 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
     ``message_key`` parameters and module-level ALL_CAPS sentinels."""
 
     findings: set[str] = set()
-    # FunctionDef defaults for kw-only translated_message / message_key.
     for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        kw_defaults = list(zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False))
-        for arg, default in kw_defaults:
-            if default is None or arg.arg not in {"translated_message", "message_key"}:
-                continue
-            if (
-                isinstance(default, ast.Constant)
-                and isinstance(default.value, str)
-                and _is_dotted_literal(default.value)
-            ):
-                findings.add(default.value)
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        callee = node.func
-        name: str | None = None
-        if isinstance(callee, ast.Name):
-            name = callee.id
-        elif isinstance(callee, ast.Attribute):
-            name = callee.attr
-        if name is None:
-            continue
-        # Direct tr("dotted.key") / t("dotted.key") calls.
-        if name in {"tr", "t"} and node.args:
-            first = node.args[0]
-            if isinstance(first, ast.Constant) and isinstance(first.value, str) and _is_dotted_literal(first.value):
-                findings.add(first.value)
-            continue
-        if not (name.endswith("Error") or name.endswith("Exception")):
-            continue
-        # Positional first argument as literal dotted string.
-        if node.args:
-            first = node.args[0]
-            if isinstance(first, ast.Constant) and isinstance(first.value, str) and _is_dotted_literal(first.value):
-                findings.add(first.value)
-        # ``message_key=`` / ``translated_message=`` keyword.
-        for kw in node.keywords:
-            if kw.arg not in {"message_key", "translated_message"}:
-                continue
-            value = kw.value
-            if isinstance(value, ast.Constant) and isinstance(value.value, str) and _is_dotted_literal(value.value):
-                findings.add(value.value)
+        if isinstance(node, ast.FunctionDef):
+            _collect_kwonly_default_keys(node, findings)
+        elif isinstance(node, ast.Call):
+            _collect_call_site_keys(node, findings)
     return findings
+
+
+def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> None:
+    """Pick up dotted-literal defaults for ``translated_message`` / ``message_key`` kwonly args."""
+
+    for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False):
+        if default is None or arg.arg not in {"translated_message", "message_key"}:
+            continue
+        if _is_dotted_literal_constant(default):
+            findings.add(default.value)  # type: ignore[attr-defined]
+
+
+def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
+    """Pick up ``tr(...)`` / ``t(...)`` direct calls and ``*Error``/``*Exception``
+    constructor positional / keyword translation keys."""
+
+    name = _callee_name(node.func)
+    if name is None:
+        return
+    if name in {"tr", "t"}:
+        _add_first_dotted_arg(node, findings)
+        return
+    if not (name.endswith("Error") or name.endswith("Exception")):
+        return
+    _add_first_dotted_arg(node, findings)
+    for kw in node.keywords:
+        if kw.arg in {"message_key", "translated_message"} and _is_dotted_literal_constant(kw.value):
+            findings.add(kw.value.value)  # type: ignore[attr-defined]
+
+
+def _callee_name(callee: ast.expr) -> str | None:
+    if isinstance(callee, ast.Name):
+        return callee.id
+    if isinstance(callee, ast.Attribute):
+        return callee.attr
+    return None
+
+
+def _is_dotted_literal_constant(node: ast.expr | None) -> bool:
+    return (
+        isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and _is_dotted_literal(node.value)
+    )
+
+
+def _add_first_dotted_arg(node: ast.Call, findings: set[str]) -> None:
+    if not node.args:
+        return
+    first = node.args[0]
+    if _is_dotted_literal_constant(first):
+        findings.add(first.value)  # type: ignore[attr-defined]
 
 
 _KEY_PREFIX_RE = re.compile(r"^\w+(?:\.\w+)*\.$", re.UNICODE)

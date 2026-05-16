@@ -15,6 +15,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -336,7 +337,7 @@ class TestRateLimitRetryAfter:
 def _evidence(**overrides: object) -> SiteHealthEvidence:
     from ._site_health import _URL_ADAPTER
 
-    base: dict[str, object] = {
+    base: dict[str, Any] = {
         "url": _URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/"),
         "http_status": 200,
         "html_fragment": "<html></html>",
@@ -399,10 +400,11 @@ class TestSiteHealthModels:
 
     def test_status_rejects_zero_retry_after(self) -> None:
         ev = _evidence()
+        invalid_retry: int = 0
         with pytest.raises(ValidationError, match=r"retry_after_seconds|greater than"):
             SiteHealthStatus(
                 state=SiteHealthState.RATE_LIMITED,
                 evidence=ev,
                 observed_at=datetime.now(tz=UTC),
-                retry_after_seconds=0,
+                retry_after_seconds=invalid_retry,
             )

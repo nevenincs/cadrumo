@@ -125,5 +125,6 @@ def test_idle_evaluation_record_is_strict_pydantic() -> None:
     with pytest.raises(ValueError):
         IdleEvaluation.model_validate({"expired": False, "remaining_seconds": 42, "extra": "nope"})
     # Strict: negative remaining_seconds rejected
+    invalid_remaining: int = -1
     with pytest.raises(ValueError):
-        IdleEvaluation(expired=True, remaining_seconds=-1)
+        IdleEvaluation(expired=True, remaining_seconds=invalid_remaining)

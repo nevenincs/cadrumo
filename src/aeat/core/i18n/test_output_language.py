@@ -43,6 +43,7 @@ def _seed_profile_language(language: str) -> None:
 def test_output_language_reads_active_profile_without_emitting_bucket_events(
     isolated_language_state: None,
 ) -> None:
+    del isolated_language_state
     from aeat.application.workflow._persistence import workflow_state_repository
 
     _seed_profile_language("ca")
@@ -58,6 +59,7 @@ def test_environment_output_language_override_wins_over_profile(
     isolated_language_state: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    del isolated_language_state
     _seed_profile_language("ca")
 
     monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
@@ -69,6 +71,7 @@ def test_environment_output_language_override_is_canonical(
     isolated_language_state: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    del isolated_language_state
     _seed_profile_language("ca")
 
     monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "es")
@@ -77,12 +80,14 @@ def test_environment_output_language_override_is_canonical(
 
 
 def test_clean_install_defaults_to_spanish(isolated_language_state: None) -> None:
+    del isolated_language_state
     assert output_language() == "es"
 
 
 def test_unsupported_profile_output_language_falls_back_to_settings_default(
     isolated_language_state: None,
 ) -> None:
+    del isolated_language_state
     _seed_profile_language("zz")
 
     assert output_language() == "es"

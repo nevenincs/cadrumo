@@ -21,6 +21,7 @@ the caller to surface a typed CLI error.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import Final
 
@@ -93,11 +94,11 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
             op=op,
             hint="cross-revision relations are the only outstanding leaf gap",
         )
-    # `lookup_bracket` and `lookup_bracket_by_ccaa` must inspect their
-    # operand leaves directly (parameter / binding / dispatch_table
-    # leaves are NOT translated to A1 references — they resolve into
-    # bracket-range expansions instead). Handle them before the
-    # general recursive arg translation.
+    # ``lookup_bracket`` / ``lookup_bracket_by_ccaa`` /
+    # ``lookup_parameter_by_entity_type`` inspect their operand leaves
+    # directly (parameter / binding / dispatch_table leaves are NOT
+    # translated to A1 references — they resolve into bracket-range
+    # expansions instead).
     if op == "lookup_bracket":
         return _translate_lookup_bracket(expression, layout=layout)
     if op == "lookup_bracket_by_ccaa":
@@ -105,65 +106,80 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
     if op == "lookup_parameter_by_entity_type":
         return _translate_lookup_parameter_by_entity_type(expression, layout=layout)
     args = [_translate(arg, layout=layout) for arg in expression.args]
-    if op in {"add", "sum"}:
+    builder = _ARG_OP_BUILDERS.get(op)
+    if builder is None:
+        raise TranslationError(f"internal: op {op!r} fell through dispatch", op=op)
+    return builder(op, args)
+
+
+def _build_variadic_join(joiner: str, identity: str) -> Callable[[str, list[str]], str]:
+    """Build ``({a}{joiner}{b}{joiner}…)`` with an identity for the empty case."""
+
+    def builder(_op: str, args: list[str]) -> str:
         if not args:
-            return "0"
-        return f"({'+'.join(args)})"
-    if op == "subtract":
-        _expect_arg_count(op, args, 2)
-        return f"({args[0]}-{args[1]})"
-    if op == "multiply":
+            return identity
+        return f"({joiner.join(args)})"
+
+    return builder
+
+
+def _build_required_variadic_join(joiner: str) -> Callable[[str, list[str]], str]:
+    """Like :func:`_build_variadic_join` but requires at least one arg."""
+
+    def builder(op: str, args: list[str]) -> str:
         if not args:
-            return "1"
-        return f"({'*'.join(args)})"
-    if op == "divide":
-        _expect_arg_count(op, args, 2)
-        return f"IFERROR(({args[0]})/({args[1]}),0)"
-    if op == "percent":
-        _expect_arg_count(op, args, 2)
-        return f"(({args[0]})*({args[1]})/100)"
-    if op == "min":
+            raise TranslationError(f"{op} requires at least one arg", op=op)
+        return f"({joiner.join(args)})"
+
+    return builder
+
+
+def _build_call(name: str) -> Callable[[str, list[str]], str]:
+    """``MIN(a,b,…)`` / ``MAX(a,b,…)`` style call with one-or-more args."""
+
+    def builder(op: str, args: list[str]) -> str:
         if not args:
-            raise TranslationError("min requires at least one arg", op=op)
-        return f"MIN({','.join(args)})"
-    if op == "max":
-        if not args:
-            raise TranslationError("max requires at least one arg", op=op)
-        return f"MAX({','.join(args)})"
-    if op == "clamp":
-        _expect_arg_count(op, args, 3)
-        return f"MAX({args[1]},MIN({args[0]},{args[2]}))"
-    if op == "negate":
-        _expect_arg_count(op, args, 1)
-        return f"(-({args[0]}))"
-    if op in {"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"}:
-        _expect_arg_count(op, args, 1)
-        return f"({args[0]})"
-    if op == "previous_period_sum":
-        if not args:
-            raise TranslationError("previous_period_sum requires at least one arg", op=op)
-        return f"({'+'.join(args)})"
-    if op == "if_then_else":
-        _expect_arg_count(op, args, 3)
-        # Local runtime: args[1] if args[0] != 0 else args[2].
-        # Sheets equivalent: IF(<>0, then, else).
-        return f"IF(({args[0]})<>0,{args[1]},{args[2]})"
-    if op == "less_than":
-        _expect_arg_count(op, args, 2)
-        return f"IF({args[0]}<{args[1]},1,0)"
-    if op == "less_equal":
-        _expect_arg_count(op, args, 2)
-        return f"IF({args[0]}<={args[1]},1,0)"
-    if op == "greater_than":
-        _expect_arg_count(op, args, 2)
-        return f"IF({args[0]}>{args[1]},1,0)"
-    if op == "greater_equal":
-        _expect_arg_count(op, args, 2)
-        return f"IF({args[0]}>={args[1]},1,0)"
-    if op == "equal":
-        _expect_arg_count(op, args, 2)
-        return f"IF({args[0]}={args[1]},1,0)"
-    raise TranslationError(f"internal: op {op!r} fell through dispatch", op=op)
+            raise TranslationError(f"{op} requires at least one arg", op=op)
+        return f"{name}({','.join(args)})"
+
+    return builder
+
+
+def _build_fixed_arity(arity: int, template: str) -> Callable[[str, list[str]], str]:
+    """Format ``template`` with exactly ``arity`` positional args."""
+
+    def builder(op: str, args: list[str]) -> str:
+        _expect_arg_count(op, args, arity)
+        return template.format(*args)
+
+    return builder
+
+
+_ARG_OP_BUILDERS: Mapping[str, Callable[[str, list[str]], str]] = {
+    "add": _build_variadic_join("+", "0"),
+    "sum": _build_variadic_join("+", "0"),
+    "subtract": _build_fixed_arity(2, "({0}-{1})"),
+    "multiply": _build_variadic_join("*", "1"),
+    "divide": _build_fixed_arity(2, "IFERROR(({0})/({1}),0)"),
+    "percent": _build_fixed_arity(2, "(({0})*({1})/100)"),
+    "min": _build_call("MIN"),
+    "max": _build_call("MAX"),
+    "clamp": _build_fixed_arity(3, "MAX({1},MIN({0},{2}))"),
+    "negate": _build_fixed_arity(1, "(-({0}))"),
+    "copy": _build_fixed_arity(1, "({0})"),
+    "lookup_parameter": _build_fixed_arity(1, "({0})"),
+    "previous_period_value": _build_fixed_arity(1, "({0})"),
+    "cross_model_sum": _build_fixed_arity(1, "({0})"),
+    "previous_period_sum": _build_required_variadic_join("+"),
+    # Local runtime: args[1] if args[0] != 0 else args[2].
+    # Sheets equivalent: IF(<>0, then, else).
+    "if_then_else": _build_fixed_arity(3, "IF(({0})<>0,{1},{2})"),
+    "less_than": _build_fixed_arity(2, "IF({0}<{1},1,0)"),
+    "less_equal": _build_fixed_arity(2, "IF({0}<={1},1,0)"),
+    "greater_than": _build_fixed_arity(2, "IF({0}>{1},1,0)"),
+    "greater_equal": _build_fixed_arity(2, "IF({0}>={1},1,0)"),
+    "equal": _build_fixed_arity(2, "IF({0}={1},1,0)"),
+}
 
 
 def _translate_leaf(expression: FormulaExpression, *, layout: SheetLayout) -> str:

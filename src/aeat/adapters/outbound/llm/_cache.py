@@ -6,7 +6,7 @@ import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from collections.abc import Mapping
 
 from pydantic import ValidationError
 
@@ -145,7 +145,13 @@ class LLMCache:
         )
         if not isinstance(redacted, dict):
             raise LLMCacheError("redacted LLM cache entry must be a JSON object")
-        payload = self._payload_for_entry(cast(dict[str, Any], redacted))
+        # ``redact_structured`` returns ``object``; the isinstance
+        # narrow above promotes the value to a dict with JSON-shape
+        # contents. Re-key as ``str`` so the typed boundary holds
+        # without an Any leak; ``_payload_for_entry`` treats the
+        # mapping opaquely (only ever serialises to JSON).
+        redacted_entry: Mapping[str, object] = {str(k): v for k, v in redacted.items()}
+        payload = self._payload_for_entry(redacted_entry)
         try:
             SecureObjectRepository().save(
                 namespace=_CACHE_NAMESPACE,
@@ -261,14 +267,14 @@ class LLMCache:
 
         return self.root_dir.resolve().as_posix()
 
-    def _payload_for_entry(self, entry: dict[str, Any]) -> bytes:
+    def _payload_for_entry(self, entry: Mapping[str, object]) -> bytes:
         """Wrap a redacted entry with its logical partition before encryption."""
 
         payload = {
             "logical_root": self._logical_root(),
             "entry": entry,
         }
-        return json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
+        return json.dumps(payload, indent=2, sort_keys=True, default=str).encode("utf-8")
 
     def _entry_from_payload(self, payload: bytes) -> CachedEntry:
         """Decode a secure-object payload into a cached entry."""

@@ -288,7 +288,16 @@ class _PreviousFilingSelector(BaseModel):
     filing_year_delta: int = 0
     period: str | None = Field(default=None, min_length=1, max_length=8)
     source_periods: tuple[str, ...] = ()
-    source_casillas: tuple[str, ...] = Field(min_length=1)
+    # Two-shape source spec: ``source_casillas`` (plural) carries a
+    # tuple of casillas on the source filing for aggregation; the
+    # singular ``source_output`` covers the direct-value-copy shape
+    # (one casilla on the source filing, often paired with the
+    # optional ``relation`` cross-reference id). The
+    # ``_validate_source_spec`` model-validator below requires exactly
+    # one of the two to be populated.
+    source_casillas: tuple[str, ...] = ()
+    source_output: str | None = Field(default=None, min_length=1)
+    relation: str | None = Field(default=None, min_length=1)
 
     @field_validator("source_periods")
     @classmethod
@@ -322,7 +331,25 @@ class _PreviousFilingSelector(BaseModel):
         if self.period is not None and self.source_periods:
             raise RegistryValidationError("previous-filing selector must use period or source_periods, not both")
         if self.period is None and not self.source_periods:
-            raise RegistryValidationError("previous-filing selector must declare period or source_periods")
+            # Direct-value-copy bindings (singular source_output)
+            # frequently omit the period anchor because the relation
+            # carries the period contract; only enforce period on the
+            # plural source_casillas shape.
+            if self.source_casillas:
+                raise RegistryValidationError("previous-filing selector must declare period or source_periods")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_source_spec(self) -> _PreviousFilingSelector:
+        if bool(self.source_casillas) == bool(self.source_output):
+            raise RegistryValidationError(
+                "previous-filing selector must declare exactly one of source_casillas (aggregation) "
+                "or source_output (direct value copy)"
+            )
+        if self.relation is not None and self.source_output is None:
+            raise RegistryValidationError(
+                "previous-filing selector relation requires source_output"
+            )
         return self
 
 
@@ -2341,4 +2368,147 @@ def resolve_refund_binding_row_values(
                     f"binding {binding.id!r} row_field {selector.row_field!r} not produced for refund rows"
                 )
             resolved[(binding.id, row_index)] = value
+    return resolved
+
+
+_ManualInputDataType = Literal["boolean", "integer", "text", "decimal"]
+
+
+class _ManualInputSelector(BaseModel):
+    """Strict validator for the selector mapping of a manual_input binding.
+
+    Two shapes are accepted, gated by ``_validate_manual_input_shape``:
+
+    * **Casilla shape** ``{casilla, data_type, true_value?, false_value?}``:
+      The operator types the value directly into a registry casilla; the
+      ``data_type`` declares how the typed enum / boolean maps to the
+      on-wire payload string. Used for boolean casillas like M100/0168
+      (estimacion-directa modality flag).
+    * **Record-field shape** ``{record, field, offset, length, data_type}``:
+      The operator types a value that lands in a fichero-BOE record field
+      at a specific byte offset / length. Used by M131 and other modelos
+      whose bindings inject operator-typed metadata into fixed-width
+      records.
+
+    The two shapes are exclusive at the validator level.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    # casilla shape
+    casilla: str | None = Field(default=None, min_length=1, max_length=64)
+    true_value: str | None = Field(default=None, min_length=1, max_length=64)
+    false_value: str | None = Field(default=None, min_length=1, max_length=64)
+    # record-field shape
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+    field: str | None = Field(default=None, min_length=1, max_length=128)
+    offset: int | None = Field(default=None, ge=1)
+    length: int | None = Field(default=None, ge=1)
+    # both shapes
+    data_type: _ManualInputDataType
+
+    @model_validator(mode="after")
+    def _validate_manual_input_shape(self) -> _ManualInputSelector:
+        casilla_shape_keys = {"casilla"}
+        record_shape_keys = {"record", "field", "offset", "length"}
+        has_casilla = self.casilla is not None
+        has_record_shape = any(
+            getattr(self, key) is not None for key in record_shape_keys
+        )
+        if has_casilla and has_record_shape:
+            raise RegistryValidationError(
+                "manual_input selector must declare either the casilla shape or "
+                "the record-field shape, not both"
+            )
+        if not has_casilla and not has_record_shape:
+            raise RegistryValidationError(
+                "manual_input selector must declare a casilla or a record-field shape"
+            )
+        if has_record_shape:
+            missing = [key for key in record_shape_keys if getattr(self, key) is None]
+            if missing:
+                raise RegistryValidationError(
+                    f"manual_input record-field selector is missing required keys: {sorted(missing)!r}"
+                )
+        # Boolean casilla shape always pairs the data_type with explicit
+        # true_value / false_value strings so the on-wire encoding is
+        # deterministic.
+        if has_casilla and self.data_type == "boolean":
+            if self.true_value is None or self.false_value is None:
+                raise RegistryValidationError(
+                    "manual_input boolean-casilla selector must declare true_value and false_value"
+                )
+        return self
+
+
+def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelector:
+    try:
+        return _ManualInputSelector.model_validate(_selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed manual_input selector"
+        ) from exc
+
+
+# ---------------------------------------------------------------------------
+# Discriminated-selector registry
+#
+# Each entry pairs a ``DataBindingDefinition.source`` literal with the strict
+# pydantic model that the binding's selector must validate against. Sources
+# absent from this map are intentionally free-form for now: their selector
+# shape varies across legacy registries or is consumed by ad-hoc validators
+# elsewhere. As new typed selectors land, they should be registered here so
+# the snapshot-build gate validates them automatically.
+# ---------------------------------------------------------------------------
+
+
+_BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
+    "previous_filing": _PreviousFilingSelector,
+    "invoice": _InvoiceSelector,
+    # Counterpart-aggregation family: every source whose selector shape
+    # mirrors the invoice family (fact + claves + rectification_scope +
+    # optional row_field / grouping / record) is validated against
+    # ``_InvoiceSelector``. The ``_validated_counterpart_selector``
+    # helper adds counterpart-specific fact / op invariants on top
+    # of the shared schema at handler-call time.
+    "ledger_transaction": _InvoiceSelector,
+    "purchase_invoice_evidence": _InvoiceSelector,
+    "payable_invoice": _InvoiceSelector,
+    "collectible_invoice": _InvoiceSelector,
+    "ledger_oss_aggregation": _OssIossLedgerSelector,
+    "ledger_iva_aggregation": _IvaLedgerSelector,
+    "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
+    "withholding": _WithholdingSelector,
+    "related_party_operation": _RelatedPartySelector,
+    "foreign_asset": _ForeignAssetSelector,
+    "atribucion_member": _AtributionSelector,
+    "refund_operation": _RefundSelector,
+    "manual_input": _ManualInputSelector,
+}
+
+
+def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
+    """Validate ``binding.selector`` against the source's typed selector model.
+
+    Sources registered in :data:`_BINDING_SELECTOR_REGISTRY` get their
+    selector mapping piped through the strict pydantic model that owns
+    the per-source key set. Failures are returned as a list of
+    diagnostic strings rather than raised so the snapshot-build gate
+    can accumulate every failure across a revision in one pass.
+
+    Sources NOT in the registry are intentionally free-form today;
+    those bindings short-circuit with an empty failure list.
+    """
+
+    selector_model = _BINDING_SELECTOR_REGISTRY.get(binding.source)
+    if selector_model is None:
+        return []
+    try:
+        selector_model.model_validate(binding.selector)
+    except ValueError as exc:
+        return [
+            f"binding {binding.id!r} (source={binding.source!r}) "
+            f"selector violates {selector_model.__name__}: {exc}"
+        ]
+    return []
     return resolved

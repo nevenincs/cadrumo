@@ -27,8 +27,8 @@ from ....application.storage.calc_sheets import (
     RelationValues,
     build_export_plan,
 )
-from ....application.storage.calc_sheets._records import OperatorInput
 from ....application.storage.calc_sheets._engine import _registry_sha
+from ....application.storage.calc_sheets._records import OperatorInput
 from ....core.resources import bundled_path
 from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.calculations.registry._snapshot import build_snapshot

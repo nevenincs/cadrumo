@@ -57,7 +57,7 @@ class TestRecordFieldSpec:
     def test_frozen_rejects_mutation(self) -> None:
         spec = record_field(offset=1, length=9, field_id="FIELD_TEXT", kind=FieldKind.ALPHANUMERIC)
         with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-            spec.length = 10
+            setattr(spec, "length", 10)  # noqa: B010 — exercise frozen-model __setattr__
 
     def test_offset_must_be_positive(self) -> None:
         with pytest.raises(ValidationError, match=r"offset|greater than"):

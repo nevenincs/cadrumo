@@ -87,7 +87,7 @@ def test_frozen_attribute_reassignment_rejected() -> None:
     """``frozen=True`` blocks attribute rebinding on the profile."""
     profile = UsageRatioProfile()
     with pytest.raises(ValidationError, match=r"frozen"):
-        profile.ratios = {SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.5")}
+        setattr(profile, "ratios", {SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.5")})  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_ratios_mapping_item_assignment_rejected() -> None:

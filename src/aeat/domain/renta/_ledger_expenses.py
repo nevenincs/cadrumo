@@ -20,19 +20,18 @@ from ..categories import (
     StatutoryCapPeriod,
     family_for,
 )
+from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 from .errors import RentaValidationError
 
 LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"
 
-RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, str] = {
-    SpendingCategory.CUOTAS_AUTONOMOS_SS: "0186",
-    SpendingCategory.ARRENDAMIENTO_LOCAL: "0192",
-    SpendingCategory.ASESORIA_CONTABLE: "0199",
-    SpendingCategory.ASESORIA_FISCAL: "0199",
-    SpendingCategory.ASESORIA_JURIDICA: "0199",
-    SpendingCategory.GASTOS_BANCARIOS: "0203",
-    SpendingCategory.GASTOS_FINANCIEROS: "0203",
-}
+# Re-export the canonical first-slice routing table. The single source
+# of truth lives in ``_first_slice_routing.py`` so the validator path
+# (this module) and any future snapshot-time integrity gate consult
+# the same Mapping without risk of divergence.
+RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, str] = (
+    FIRST_SLICE_EXPENSE_CASILLAS
+)
 
 
 class RentaExpenseDirection(StrEnum):

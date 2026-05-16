@@ -146,7 +146,14 @@ class SecureObjectRepository:
 
     def __init__(self, *, engine: Engine | None = None) -> None:
         self._engine = engine or get_engine()
-        inspect(_orm.SecureObjectRow).local_table.create(self._engine, checkfirst=True)
+        # `inspect(mapped_class).local_table` is a `Table` at runtime, but the
+        # SQLAlchemy stubs widen its declared type to `FromClause` (which lacks
+        # `.create`). Cast through `Table` so pyrefly resolves the method.
+        from sqlalchemy import Table as _Table
+
+        local_table = inspect(_orm.SecureObjectRow).local_table
+        assert isinstance(local_table, _Table)
+        local_table.create(self._engine, checkfirst=True)
 
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""

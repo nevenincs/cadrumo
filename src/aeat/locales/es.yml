@@ -229,16 +229,16 @@ cli:
       audit:
         bundle_id_help: Identificador del paquete de evidencia (SHA-256 completo o
           prefijo inequívoco).
-        check_help: Reverificar un paquete de evidencia recalculando los digests de los
-          registros.
+        check_help: Reverificar un paquete de evidencia recalculando los digests de
+          los registros.
         export_help: Generar un archivo ZIP determinista del paquete de evidencia
           (manifest.json se escribe el último).
-        force_incomplete_help: Permitir la exportación cuando la verificación señale el
-          paquete como incompleto.
+        force_incomplete_help: Permitir la exportación cuando la verificación señale
+          el paquete como incompleto.
         group_help: Verbos de auditoría del paquete de evidencia (show/check/export/replay).
         output_help: Ruta de salida para el ZIP del paquete.
-        replay_help: Reproducir la verificación del caso de evidencia para entrega forense;
-          nunca contacta con AEAT ni realiza envíos.
+        replay_help: Reproducir la verificación del caso de evidencia para entrega
+          forense; nunca contacta con AEAT ni realiza envíos.
         show_help: Mostrar el manifiesto y los registros referenciados de un paquete
           de evidencia
       bindings:
@@ -275,6 +275,19 @@ cli:
         period_help: Token de periodo para resolver la revision del modelo; para Modelo
           036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y
           2026-01
+      export:
+        actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
+        errors:
+          no_exportable_revision: La unidad de trabajo no tiene ninguna revisión de
+            cálculo verificada o presentada para exportar. Ejecuta `aeat app modelo
+            verify` primero.
+        help: Exporta una revisión de modelo verificada o presentada a un fichero
+          local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
+        output_help: Ruta donde escribir el artefacto fichero-BOE.
+        revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
+          la revisión verificada o presentada más reciente de la unidad de trabajo.
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
+          inequívoco).
       filing_record:
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
         bucket_id_help: Filtrar por bucket
@@ -294,6 +307,8 @@ cli:
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
+        explain_help: Incluir legal_refs y source_refs que sustentan cada fórmula
+          en la salida de texto. El payload JSON los lleva siempre.
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
           ejemplos periodicos incluyen 2026Q1 y 2026-01
@@ -304,6 +319,18 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
+      reconcile:
+        errors:
+          exclusive_source: --from-justificante y --from-declaration son mutuamente
+            excluyentes.
+          missing_source: Indica --from-justificante RUTA o --from-declaration RUTA.
+        from_declaration_help: Ruta al PDF de la declaración presentada para reconciliar
+          (reservado; parser pendiente).
+        from_justificante_help: Ruta al PDF del justificante AEAT para reconciliar.
+        help: Reconciliar una unidad de trabajo de modelo con evidencia externa (PDF
+          de justificante). Local; nunca contacta con AEAT.
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
+          inequívoco).
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
@@ -669,6 +696,11 @@ cli:
       id_help: Id del movimiento del libro al que adjuntar evidencia
       purchase_invoice_evidence_help: Id de justificante de factura de compra que
         soporta el movimiento
+    check:
+      bucket_id_help: Id del bucket a examinar (por defecto el bucket del perfil activo).
+      help: Examina los movimientos del libro del bucket direccionado (por defecto el
+        bucket del perfil activo) e informa de filas con anomalías agregadas a través
+        de cada período que los movimientos toquen. Local; nunca contacta con AEAT.
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       category_help: Id de categoría de gasto o ingreso
@@ -747,6 +779,20 @@ cli:
       valid: Válido
       warnings: Avisos
       'yes': Sí
+    link:
+      actor_help: Etiqueta del operador registrada en los eventos del bucket.
+      errors:
+        cross_bucket_invoice: La factura pertenece a un bucket distinto del perfil
+          activo.
+        invoice_not_found: cli.ledger.link.errors.invoice_not_found
+        missing_target: Indica al menos uno de --invoice-id o --evidence-id.
+      evidence_id_help: Id del registro de evidencia de factura de compra a adjuntar
+        al movimiento.
+      help: Vincula un movimiento contable con una factura y/o con un registro de
+        evidencia de factura de compra en una única llamada canónica. Rechaza vínculos
+        entre buckets. Local; nunca contacta con AEAT.
+      id_help: Id del movimiento contable (SHA-256 o prefijo inequívoco).
+      invoice_id_help: Id de la factura a vincular bidireccionalmente con el movimiento.
     list:
       header: MOVIMIENTOS DEL LIBRO CONTABLE
       help: Listar movimientos del libro en el bucket del perfil activo
@@ -758,6 +804,11 @@ cli:
       help: cli.ledger.merge.help
       reason_help: cli.ledger.merge.reason_help
       yes_help: cli.ledger.merge.yes_help
+    preflight:
+      help: Informa de los datos contables que faltan (categoría, base imponible,
+        importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
+        del bucket activo en un período dado. Local; nunca contacta con AEAT.
+      period_help: Período canónico (p. ej. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro

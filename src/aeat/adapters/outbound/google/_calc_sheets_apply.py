@@ -133,6 +133,13 @@ def _find_folder(
     parent_id: str,
     name: str,
 ) -> dict[str, Any] | None:
+    # ``dict[str, Any]`` is the irreducible Google Drive API boundary
+    # shape: every response from drive.files().list() / .get() returns
+    # heterogeneous typed metadata (id, name, mimeType, appProperties,
+    # etc.) that the google-api-python-client stubs surface as ``Any``.
+    # Narrowing breaks downstream lookups by string key. Same rationale
+    # as the body-side ``Any`` documented on google_drive.py and on
+    # browser/session.py.
     safe_name = name.replace("'", "\\'")
     query = f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{_FOLDER_MIME}' and trashed = false"
     response = _execute(

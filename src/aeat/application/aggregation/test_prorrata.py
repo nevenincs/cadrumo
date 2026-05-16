@@ -167,7 +167,7 @@ def test_aggregation_inputs_are_correctly_carried_into_the_result() -> None:
     assert aggregation.year == 2025
     # The aggregation is immutable.
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        aggregation.year = 2024
+        setattr(aggregation, "year", 2024)  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_aggregate_rejects_year_outside_supported_range() -> None:
@@ -277,7 +277,7 @@ def test_vat_operation_rejects_negative_base_amount() -> None:
 def test_vat_operation_is_frozen_and_forbids_extras() -> None:
     op = _op("op", year=2025, base_amount="100.00", kind=VatOperationKind.GRANTS_DEDUCTION)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        op.base_amount = Decimal("0")
+        setattr(op, "base_amount", Decimal("0"))  # noqa: B010 — exercise frozen-model __setattr__
     with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         extra: dict[str, object] = {"unexpected": True}
         VatOperation.model_validate(
@@ -307,4 +307,4 @@ def test_prorrata_aggregation_is_immutable() -> None:
     aggregation = aggregate_prorrata_inputs((), year=2025)
     assert isinstance(aggregation, ProrrataAggregation)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        aggregation.operation_count_excluded = 99
+        setattr(aggregation, "operation_count_excluded", 99)  # noqa: B010 — exercise frozen-model __setattr__

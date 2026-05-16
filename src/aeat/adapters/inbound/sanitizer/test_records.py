@@ -459,8 +459,9 @@ class TestScrubbedSurfaceShape:
         assert record.count == 0
 
     def test_rejects_negative_count(self) -> None:
+        negative: int = -1
         with pytest.raises(ValidationError, match=r"greater than or equal to 0"):
-            ScrubbedSurface(surface="attachments", count=-1)
+            ScrubbedSurface(surface="attachments", count=negative)
 
 
 class TestSanitizationWarningShape:

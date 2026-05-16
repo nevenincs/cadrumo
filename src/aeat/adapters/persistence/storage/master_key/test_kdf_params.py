@@ -45,12 +45,13 @@ def test_rejects_memory_cost_zero() -> None:
 
 
 def test_rejects_time_cost_zero() -> None:
+    invalid_time_cost: int = 0
     with pytest.raises(ValidationError):
         KdfParams(
             algorithm="argon2id",
             version=19,
             memory_cost=19 * 1024,
-            time_cost=0,
+            time_cost=invalid_time_cost,
             parallelism=1,
             salt=secrets.token_bytes(16),
             output_length=32,

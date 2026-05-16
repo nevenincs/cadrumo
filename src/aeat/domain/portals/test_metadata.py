@@ -174,4 +174,4 @@ def test_metadata_is_frozen() -> None:
     """Instances reject post-construction attribute mutation."""
     metadata = PortalMetadata.model_validate(_base_kwargs())
     with pytest.raises(ValidationError, match=r"frozen"):
-        metadata.active = False
+        setattr(metadata, "active", False)  # noqa: B010 — exercise frozen-model __setattr__

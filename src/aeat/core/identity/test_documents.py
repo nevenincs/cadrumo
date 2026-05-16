@@ -138,7 +138,7 @@ class TestRejection:
         non_string: object = 12345
         assert not isinstance(non_string, str)
         with pytest.raises(IdentityError, match=r"validate_identity expects str"):
-            validate_identity(non_string)  # ty: ignore[invalid-argument-type]
+            validate_identity(non_string)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # pyrefly: ignore[bad-argument-type]  # reason: deliberate non-string to exercise runtime guard
 
     def test_arbitrary_garbage_rejected(self) -> None:
         # "not-an-identity-doc" upper-cases to "NOTANIDENTITYDOC"; leading

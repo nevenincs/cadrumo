@@ -62,9 +62,10 @@ class TestEnvelopeShape:
             )
 
     def test_zero_version_rejected(self) -> None:
+        invalid_version: int = 0
         with pytest.raises(ValidationError):
             Envelope[_DemoPayloadV1](
-                schema_version=0,
+                schema_version=invalid_version,
                 written_at=_now_utc(),
                 classification=SensitivityClass.OPERATIONAL,
                 payload=_DemoPayloadV1(name="x", count=1),

@@ -28,7 +28,7 @@ def test_records_are_frozen() -> None:
     """Frozen records must reject mutation."""
     record = ModeloRecord(identifier="MODELO_130", name="Pagos fraccionados")
     with pytest.raises(ValidationError):
-        record.identifier = "MODELO_303"
+        setattr(record, "identifier", "MODELO_303")  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_portal_record_requires_enum_auth_method() -> None:

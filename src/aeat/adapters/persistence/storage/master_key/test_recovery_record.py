@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import secrets
 from datetime import UTC, datetime, timedelta, timezone
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -19,7 +20,7 @@ def _b64(n: int) -> str:
 
 
 def _record(**overrides: object) -> RecoveryRecord:
-    defaults: dict[str, object] = {
+    defaults: dict[str, Any] = {
         "wrapped_dek_b64": _b64(32),
         "nonce_b64": _b64(12),
         "tag_b64": _b64(16),

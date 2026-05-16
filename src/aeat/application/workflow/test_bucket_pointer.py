@@ -34,8 +34,9 @@ def test_rejects_empty_bucket_id() -> None:
 
 
 def test_rejects_non_positive_schema_version() -> None:
+    invalid_version: int = 0
     with pytest.raises(ValidationError):
-        BucketPointer(bucket_id="bucket-001", schema_version=0)
+        BucketPointer(bucket_id="bucket-001", schema_version=invalid_version)
 
 
 def test_rejects_unknown_keys() -> None:

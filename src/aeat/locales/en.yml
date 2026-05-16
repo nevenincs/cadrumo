@@ -255,6 +255,17 @@ cli:
         period_help: Period token used to resolve the modelo revision; for Modelo
           036 use alta, modificacion, or baja; periodic examples include 2026Q1 and
           2026-01
+      export:
+        actor_help: Operator label recorded into the MODELO_EXPORTED event.
+        errors:
+          no_exportable_revision: Work unit has no verified-complete or filed calculation
+            revision to export. Run `aeat app modelo verify` first.
+        help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
+          fichero-BOE file. Local-only; never contacts AEAT.
+        output_help: Path to write the fichero-BOE artefact to.
+        revision_help: Calculation revision id to export; defaults to the work unit's
+          most recent verified-complete or filed revision.
+        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       filing_record:
         app_help: Inspect internal filing records
         bucket_id_help: Filter by bucket
@@ -272,6 +283,8 @@ cli:
         view_help: Show one filing record by id
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        explain_help: Include the legal_refs and source_refs that ground each formula
+          in the text output. The JSON payload always carries them.
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
@@ -282,6 +295,17 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
+      reconcile:
+        errors:
+          exclusive_source: --from-justificante and --from-declaration are mutually
+            exclusive.
+          missing_source: Supply --from-justificante PATH or --from-declaration PATH.
+        from_declaration_help: Path to the filed declaration PDF to reconcile against
+          (reserved; parser pending).
+        from_justificante_help: Path to the AEAT justificante PDF to reconcile against.
+        help: Reconcile a modelo work unit against external evidence (justificante
+          PDF). Local-only; never contacts AEAT.
+        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
@@ -635,6 +659,11 @@ cli:
       id_help: Ledger transaction id to attach evidence to
       purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
         transaction
+    check:
+      bucket_id_help: Bucket id to probe (defaults to the active profile bucket).
+      help: Probe ledger transactions in the addressed bucket (defaults to the active
+        profile bucket) and report anomaly rows aggregated across every period a
+        transaction touches. Local-only; never contacts AEAT.
     classify:
       actor_help: Operator name recorded on the bucket event
       category_help: Spending or income category id
@@ -717,6 +746,19 @@ cli:
       valid: Valid
       warnings: Warnings
       'yes': 'Yes'
+    link:
+      actor_help: Operator label recorded on bucket events.
+      errors:
+        cross_bucket_invoice: Invoice belongs to a different bucket than the active
+          profile.
+        invoice_not_found: cli.ledger.link.errors.invoice_not_found
+        missing_target: Supply at least one of --invoice-id or --evidence-id.
+      evidence_id_help: Purchase-invoice evidence record id to attach to the transaction.
+      help: Bind a ledger transaction to an invoice and/or a purchase-invoice evidence
+        record in a single canonical call. Refuses cross-bucket links. Local-only;
+        never contacts AEAT.
+      id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
+      invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       header: ACCOUNTING LEDGER TRANSACTIONS
       help: List ledger transactions in the active profile bucket
@@ -730,6 +772,11 @@ cli:
       reason_help: Reason recorded in the bucket-event payload and lifecycle history
       yes_help: Confirm the merge (archives every child and the parent, persists a
         fresh content-addressed merged transaction)
+    preflight:
+      help: Report missing ledger facts (category, taxable base, IVA amount/rate,
+        currency, proportionality reference) for the active bucket's transactions
+        in a given period. Local-only; never contacts AEAT.
+      period_help: Canonical period (e.g. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
