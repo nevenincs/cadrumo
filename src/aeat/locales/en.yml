@@ -216,13 +216,16 @@ cli:
         purchase_invoice_evidence, payable_invoice, and collectible_invoice.
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       audit:
-        bundle_id_help: cli.app.modelo.audit.bundle_id_help
-        check_help: cli.app.modelo.audit.check_help
-        export_help: cli.app.modelo.audit.export_help
-        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
-        group_help: cli.app.modelo.audit.group_help
-        output_help: cli.app.modelo.audit.output_help
-        replay_help: cli.app.modelo.audit.replay_help
+        bundle_id_help: Evidence bundle id (full SHA-256 or unambiguous prefix).
+        check_help: Re-verify an evidence bundle by recomputing record digests.
+        export_help: Write a deterministic ZIP archive of the evidence bundle (manifest.json
+          emitted last).
+        force_incomplete_help: Allow export when verification reports the bundle as
+          incomplete.
+        group_help: Evidence bundle audit verbs (show/check/export/replay).
+        output_help: Output path for the bundle ZIP archive.
+        replay_help: Re-run the evidence-case verification for forensic audit handoff;
+          never contacts AEAT and never performs submission.
         show_help: Render an evidence bundle's manifest and referenced records
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form

@@ -197,6 +197,45 @@ def test_audit_workflow_end_to_end_show_check_export_replay(
     assert check_state == replay_state
 
 
+def test_audit_help_text_uses_accepted_vocabulary(cli_runner: CliRunner) -> None:
+    """Each audit verb's help text must use the operator vocabulary
+    ratified by the apex CLI ADR §10A — bundle / manifest / evidence /
+    replay / verification (or their Spanish equivalents in the default
+    locale: paquete / manifiesto / evidencia / reproducir / verificar) —
+    and must never imply live AEAT submission or remote contact."""
+
+    forbidden_en = ("submit ", "submission", "send to aeat", "upload to aeat", "live filing", "telematic")
+    forbidden_es = ("enviar a aeat", "subir a aeat", "presentar telemáticamente")
+
+    accepted_per_verb = {
+        "show": (("evidence", "evidencia"), ("bundle", "paquete"), ("manifest", "manifiesto", "manifest")),
+        "check": (("verify", "verificar", "reverificar"), ("bundle", "paquete")),
+        "export": (("bundle", "paquete"), ("manifest", "manifiesto")),
+        "replay": (("bundle", "paquete"), ("aeat",)),
+    }
+
+    for verb, required_groups in accepted_per_verb.items():
+        result = cli_runner.invoke(app, ["app", "modelo", "audit", verb, "--help"])
+        assert result.exit_code == 0, (verb, result.output)
+        lower = result.output.lower()
+        for group in required_groups:
+            assert any(term in lower for term in group), (verb, group, result.output)
+        for bad in forbidden_en + forbidden_es:
+            assert bad not in lower, (verb, bad, result.output)
+
+
+def test_audit_replay_help_disclaims_aeat_contact(cli_runner: CliRunner) -> None:
+    """The evidence-bundle ADR mandates replay never contacts AEAT.
+    The help text must say so explicitly so operators do not assume
+    replay re-submits or re-verifies against AEAT-side state. Locks
+    the disclaimer phrasing in the default (Spanish) locale."""
+
+    result = cli_runner.invoke(app, ["app", "modelo", "audit", "replay", "--help"])
+    assert result.exit_code == 0, result.output
+    lower = result.output.lower()
+    assert "nunca" in lower and "aeat" in lower, result.output
+
+
 def test_audit_verbs_refuse_without_active_profile(cli_runner: CliRunner) -> None:
     """All four audit verbs route through `_audit_bucket_id`, which raises
     when no active profile bucket exists. Each verb must surface that

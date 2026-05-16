@@ -213,13 +213,17 @@ cli:
       aggregate_help: cli.app.modelo.aggregate_help
       app_help: AEAT adóbevallás-modellek (modelos) regisztrációs katalógusának áttekintése
       audit:
-        bundle_id_help: cli.app.modelo.audit.bundle_id_help
-        check_help: cli.app.modelo.audit.check_help
-        export_help: cli.app.modelo.audit.export_help
-        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
-        group_help: cli.app.modelo.audit.group_help
-        output_help: cli.app.modelo.audit.output_help
-        replay_help: cli.app.modelo.audit.replay_help
+        bundle_id_help: A bizonyítékcsomag azonosítója (teljes SHA-256 vagy egyértelmű
+          előtag).
+        check_help: Egy bizonyítékcsomag újraellenőrzése a rekord-digestek újraszámításával.
+        export_help: A bizonyítékcsomag determinisztikus ZIP-archívumának kiírása
+          (manifest.json kerül utoljára).
+        force_incomplete_help: Az exportálás engedélyezése akkor is, ha az ellenőrzés
+          a csomagot hiányosnak jelenti.
+        group_help: Bizonyítékcsomag-audit parancsok (show/check/export/replay).
+        output_help: A csomag ZIP-archívumának kimeneti útvonala.
+        replay_help: A bizonyítékügy ellenőrzésének újrafuttatása forenzikus átadáshoz;
+          soha nem kapcsolódik az AEAT-hoz és nem küld beadványt.
         show_help: Egy bizonyítékcsomag manifesztjének és a hivatkozott rekordoknak
           a megjelenítése
       bindings:
