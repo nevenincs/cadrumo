@@ -71,6 +71,10 @@ from ....application.storage.calc_sheets import (
     build_export_plan,
 )
 from ....core.config import PROJECT_ROOT, load_settings
+from ....domain.calculations.registry._errors import (
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.calculations.registry._snapshot import build_snapshot
 from .._common import _emit
@@ -650,13 +654,28 @@ def _load_snapshot(modelo: str, period: str, year: int):
                 available=available,
             ),
         )
-    return build_snapshot(
-        chosen,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=year,
-        period=period,
-    )
+    try:
+        return build_snapshot(
+            chosen,
+            catalogues,
+            source_root=PROJECT_ROOT,
+            filing_year=year,
+            period=period,
+        )
+    except (RegistrySnapshotError, RegistryValidationError) as exc:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.google.sync.calc.export.snapshot_failure",
+                modelo=modelo,
+                period=period,
+                year=year,
+                detail=str(exc),
+                default=(
+                    "Cannot build registry snapshot for modelo "
+                    f"{modelo} ({period} {year}): {exc}"
+                ),
+            ),
+        ) from exc
 
 
 @calc_app.command("export", help=tr("cli.config.google.sync.calc.export_help"))

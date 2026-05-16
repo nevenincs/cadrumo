@@ -233,7 +233,7 @@ def _canonical_work_unit_period(work_unit: WorkUnit) -> str:
 class _RevisionInputsProvider:
     def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
         self._revision = revision
-        self._modelo = str(work_unit.modelo)
+        self._modelo = work_unit.modelo
         self._period = _canonical_work_unit_period(work_unit)
 
     def load_inputs(
@@ -260,7 +260,7 @@ class _RevisionDraftBuilder:
         self._schema_provider = build_runtime_schema_provider(
             filing_year=work_unit.filing_year,
             period=work_unit.period,
-            modelos=(str(work_unit.modelo),),
+            modelos=(work_unit.modelo,),
         )
 
     def build(
@@ -658,7 +658,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
     catalogue = fr_repo.load()
     current = catalogue.current_for(
         bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
@@ -874,7 +874,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     catalogue = fr_repo.load()
     current = catalogue.current_for(
         bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
@@ -884,7 +884,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     # history_for returns both records in filed_at order.
     history = catalogue.history_for(
         bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
@@ -1070,7 +1070,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
     required = _registry_required_manual_casillas_for(
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
@@ -1385,7 +1385,7 @@ def test_calculate_emits_modelo_calculation_created_event(repos) -> None:
     assert event.actor == "operator-A"
     assert event.occurred_at == _T1
     assert event.payload["work_unit_id"] == work_unit.work_unit_id
-    assert event.payload["modelo"] == str(work_unit.modelo)
+    assert event.payload["modelo"] == work_unit.modelo
     assert event.payload["filing_year"] == str(work_unit.filing_year)
     assert event.payload["period"] == work_unit.period
     assert event.payload["borrador_snapshot_id"] == ""
@@ -1529,7 +1529,7 @@ def test_file_emits_modelo_filed_event(repos) -> None:
     event = filed_events[0]
     assert event.object_id == filing.filing_record_id
     assert event.payload["calculation_revision_id"] == revision.calculation_revision_id
-    assert event.payload["modelo"] == str(work_unit.modelo)
+    assert event.payload["modelo"] == work_unit.modelo
     # No prior filing was superseded — payload carries empty string.
     assert event.payload["supersedes_filing_record_id"] == ""
 

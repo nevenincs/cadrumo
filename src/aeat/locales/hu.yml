@@ -319,6 +319,8 @@ cli:
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
         period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
           vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
+        relation_help: Előző időszak relációs érték KEY=VALUE szintaxissal. A KEY egy
+          registry relációazonosító; a VALUE decimális. Ismételhető.
         reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb
           500 karakter)
         rename_help: Munkaegység megjelenítési nevének módosítása
@@ -438,6 +440,8 @@ cli:
               átvitele stb.)
             root_folder_required: Nincs Drive gyökérmappa konfigurálva; futtassa először
               az `aeat config google folder set <id>` parancsot
+            snapshot_failure: 'A regiszter snapshot nem épülhet fel a modelo {modelo}
+              ({period} {year}) esetén: {detail}'
             unknown_modelo: 'Ismeretlen modelo {modelo!r}; elérhető modelók: {available}'
             year_help: Bevallási év (pl. 2025)
           export_help: Exportálja a regiszter számítási felületét egy modelo+időszakhoz

@@ -292,7 +292,7 @@ class _RevisionInputsProvider:
 
     def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
         self._revision = revision
-        self._modelo = str(work_unit.modelo)
+        self._modelo = work_unit.modelo
         self._period = _workflow_period_for_work_unit(work_unit)
 
     def load_inputs(
@@ -321,7 +321,7 @@ class _RevisionDraftBuilder:
         self._schema_provider = build_runtime_schema_provider(
             filing_year=work_unit.filing_year,
             period=work_unit.period,
-            modelos=(str(work_unit.modelo),),
+            modelos=(work_unit.modelo,),
         )
 
     def build(
@@ -418,7 +418,7 @@ def _run_revision_workflow_gate(
     result = asyncio.run(
         engine.run_for_period(
             profile,
-            str(work_unit.modelo),
+            work_unit.modelo,
             _workflow_period_for_work_unit(work_unit),
             today=today,
             resumed_from=resumed_from,
@@ -776,7 +776,7 @@ def calculate_modelo_revision(
         ) from exc
     try:
         snapshot = authority.snapshot(
-            str(work_unit.modelo),
+            work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period,
         )
@@ -796,7 +796,7 @@ def calculate_modelo_revision(
     lower_precedence_binding_values = dict(backend_binding_values or {})
     borrador_result = _resolve_borrador_bindings_for_calculation(
         bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         borrador_snapshot_id=borrador_snapshot_id,
@@ -892,7 +892,7 @@ def calculate_modelo_revision(
         object_id=revision_id,
         payload={
             "work_unit_id": work_unit_id,
-            "modelo": str(work_unit.modelo),
+            "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period,
             "input_casilla_count": str(len(inputs_snapshot)),
@@ -941,7 +941,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     try:
         authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
         snapshot = authority.snapshot(
-            str(work_unit.modelo),
+            work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period,
         )
@@ -958,7 +958,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
 
     ledger_bindings = resolve_modelo_ledger_binding_values_from_repositories(
         bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         revision=snapshot.revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
@@ -1398,7 +1398,7 @@ def verify_modelo_revision(
     missing_required: list[str] = []
 
     registry_lookup = _required_input_casillas_for_revision(
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
@@ -1519,7 +1519,7 @@ def verify_modelo_revision(
         payload={
             "calculation_revision_id": calculation_revision_id,
             "work_unit_id": target.work_unit_id,
-            "modelo": str(work_unit.modelo),
+            "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period,
             "completeness_status": completeness.value,
@@ -1626,7 +1626,7 @@ def file_modelo_revision(
     filing_catalogue = fr_repo.load()
     prior_current = filing_catalogue.current_for(
         bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
@@ -1715,7 +1715,7 @@ def file_modelo_revision(
             payload={
                 "superseded_by_filing_record_id": new_filing_id,
                 "calculation_revision_id": prior_current.calculation_revision_id,
-                "modelo": str(work_unit.modelo),
+                "modelo": work_unit.modelo,
                 "filing_year": str(work_unit.filing_year),
                 "period": work_unit.period,
             },
@@ -1732,7 +1732,7 @@ def file_modelo_revision(
         payload={
             "calculation_revision_id": calculation_revision_id,
             "work_unit_id": target.work_unit_id,
-            "modelo": str(work_unit.modelo),
+            "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period,
             "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),
@@ -2168,7 +2168,7 @@ def import_external_filing_evidence(
     filing_catalogue = fr_repo.load()
     prior_current = filing_catalogue.current_for(
         bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
@@ -2243,7 +2243,7 @@ def import_external_filing_evidence(
         payload={
             "work_unit_id": work_unit_id,
             "calculation_revision_id": revision_id,
-            "modelo": str(work_unit.modelo),
+            "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period,
             "evidence_kind": evidence_kind.value,
