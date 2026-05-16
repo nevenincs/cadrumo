@@ -198,8 +198,16 @@ def deserialise(
                 elif spec.pad_char == "0":
                     text = text.rstrip("0") if spec.justification.value == "left" else text.lstrip("0")
                     # Edge case: a field whose canonical value IS all zeros
-                    # (e.g., "0000") would be stripped to empty string.
-                    # Normalize to "0" for downstream consistency.
+                    # (e.g., "0000") normalises to ``"0"`` here. Semantic
+                    # contract on NUMERIC fields: an all-zero field is
+                    # canonically the value "zero" (the unsignaled-absent
+                    # case raises at the serialiser side when the field
+                    # is required). The original byte-level width is
+                    # recoverable from the field's ``spec.length`` if a
+                    # downstream consumer needs the padded form. This
+                    # mirrors ``_decode_currency`` which also collapses
+                    # all-zero CURRENCY fields to ``Decimal("0.00")``.
+                    # Export-import audit F3.
                     if text == "":
                         text = "0"
                 field_values[spec.field_id] = text
