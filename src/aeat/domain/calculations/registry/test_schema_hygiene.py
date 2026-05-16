@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
 
@@ -65,7 +65,7 @@ _FORBIDDEN_TEST_SCHEMA_CONSTRUCTORS = (
 
 
 def _all_modelos():
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return modelos
 
 
@@ -237,7 +237,7 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
     incrementally while preventing back-sliding.
     """
 
-    replay_dir = PROJECT_ROOT / "corpus" / "parity_replays" / "renta_web_open"
+    replay_dir = bundled_path("corpus", "parity_replays", "renta_web_open")
     captured = {p.stem for p in replay_dir.glob("*.json")} if replay_dir.exists() else set()
     capture_replay_test = PROJECT_ROOT / "src/aeat/adapters/outbound/aeat/sede/test_renta_web_open_capture_replay.py"
     declared: set[str] = set()
@@ -299,7 +299,7 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     persisted for capture-work scheduling.
     """
 
-    replay_dir = PROJECT_ROOT / "corpus" / "parity_replays" / "renta_web_open"
+    replay_dir = bundled_path("corpus", "parity_replays", "renta_web_open")
     captured_targets: set[str] = set()
     if replay_dir.exists():
         import json as _json
@@ -317,7 +317,7 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
                 section = document.get(key) or {}
                 if isinstance(section, dict):
                     captured_targets.update(k for k in section if isinstance(k, str) and k.isdigit())
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     formula_targets: set[str] = set()
     for modelo in modelos:
         if modelo.id != "100":
@@ -361,7 +361,7 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
         "tax-residence-ccaa": "CCAA",
         "estimacion-directa-es-normal": "EstimacionDirectaModalidad",
     }
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     offences: list[str] = []
     for modelo in modelos:
         if modelo.id != "100":

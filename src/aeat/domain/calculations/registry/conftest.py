@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._authority import ValidatedRegistryAuthority
 from ._schema import RegistrySnapshot
@@ -12,7 +12,7 @@ from ._schema import RegistrySnapshot
 
 @pytest.fixture(scope="session")
 def registry_authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
 
 
 @pytest.fixture

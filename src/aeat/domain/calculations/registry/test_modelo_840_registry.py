@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import (
     RegistryValidator,
@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_modelo_840():
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "840")
     return modelo, catalogues
 
@@ -37,7 +37,7 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 
 def test_committed_modelo_840_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_840()
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     assert set(modelo.revisions) == {"2003-y-siguientes"}
 
 
@@ -50,7 +50,7 @@ def test_committed_modelo_840_resolves_revision_by_filing_year(filing_year: int)
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=filing_year,
         period="0A",
     )

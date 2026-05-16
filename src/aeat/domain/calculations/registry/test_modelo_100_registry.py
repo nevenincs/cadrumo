@@ -11,7 +11,7 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.profile import PROFILE_KEYS, TaxResidenceProfile
 from aeat.domain.profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @cache
 def _loaded_registry() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return {modelo.id: modelo for modelo in modelos}, catalogues
 
 
@@ -50,7 +50,7 @@ def _modelo_100_snapshot(filing_year: int = 2025) -> RegistrySnapshot:
     return build_snapshot(
         modelos_by_id["100"],
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=filing_year,
         period="0A",
     )
@@ -59,7 +59,7 @@ def _modelo_100_snapshot(filing_year: int = 2025) -> RegistrySnapshot:
 def test_modelo_100_revisions_match_record_design_manifest() -> None:
     modelos_by_id, catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
-    manifest_path = PROJECT_ROOT / "corpus" / "aeat_official" / "disenos_registro" / "modelo_100" / "manifest.json"
+    manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     years_with_complete_layout = set[str]()
@@ -97,7 +97,7 @@ def test_modelo_100_dependency_relations_resolve_against_registered_modelos() ->
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     assert revision.relations
 
     for relation in revision.relations:
@@ -631,7 +631,7 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
     parsed = parse_export_payload(
         resolved.layout,
         payload,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         sources=snapshot.sources,
     )
 
@@ -677,7 +677,7 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
     parsed = parse_export_payload(
         resolved.layout,
         payload,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         sources=snapshot.sources,
     )
 
@@ -736,7 +736,7 @@ def test_validator_rejects_construct_member_outside_revision() -> None:
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="references unknown relation"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_validator_rejects_construct_dependency_classification_outside_revision() -> None:
@@ -755,7 +755,7 @@ def test_validator_rejects_construct_dependency_classification_outside_revision(
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="references unknown dependency classification"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_validator_rejects_dependency_classification_source_drift() -> None:
@@ -769,7 +769,7 @@ def test_validator_rejects_dependency_classification_source_drift() -> None:
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="does not match relation"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_validator_rejects_unclassified_relation_source() -> None:
@@ -786,7 +786,7 @@ def test_validator_rejects_unclassified_relation_source() -> None:
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="relation source modelo '130' has no dependency classification"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_validator_rejects_partial_dependency_classification_relation_coverage() -> None:
@@ -806,7 +806,7 @@ def test_validator_rejects_partial_dependency_classification_relation_coverage()
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="does not cover relation refs"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_schema_rejects_direct_dependency_classification_without_relation_refs() -> None:
@@ -830,7 +830,7 @@ def test_validator_rejects_duplicate_dependency_classification_source() -> None:
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="duplicate dependency classification source modelo '130'"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_validator_rejects_dependency_classification_target_construct_drift() -> None:
@@ -854,7 +854,7 @@ def test_validator_rejects_dependency_classification_target_construct_drift() ->
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="but the construct does not list it"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_modelo_100_renta_web_open_cross_reference_is_read_only_simulator_evidence() -> None:

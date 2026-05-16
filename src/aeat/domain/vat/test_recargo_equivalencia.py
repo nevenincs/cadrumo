@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.vat import (
     LIVA_ART_161_RECARGO,
     LivaArt161RecargoRates,
@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_recargo_toml() -> dict[str, dict[str, dict[str, str]]]:
-    path = PROJECT_ROOT / "registry" / "aeat" / "legal" / "iva-recargo-equivalencia.toml"
+    path = bundled_path("registry", "aeat", "legal", "iva-recargo-equivalencia.toml")
     with path.open("rb") as handle:
         return tomllib.load(handle)
 
@@ -64,7 +64,7 @@ def test_recargo_legal_section_carries_required_text_from_boe() -> None:
 
 
 def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
-    excerpt = Path("corpus/normatives/html/ley-37-1992-art-161.html")
+    excerpt = bundled_path("corpus", "normatives", "html", "ley-37-1992-art-161.html")
     assert excerpt.exists()
     body = excerpt.read_text(encoding="utf-8")
     assert "Tipos del recargo" in body or "Tipos" in body

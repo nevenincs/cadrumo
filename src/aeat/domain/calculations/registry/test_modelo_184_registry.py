@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_modelo_184() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(m for m in modelos if m.id == "184")
     return modelo, catalogues
 
@@ -27,7 +27,7 @@ def test_modelo_184_registry_validator_accepts_committed_definition() -> None:
     assert modelo.id == "184"
     assert modelo.revisions, "184 must declare at least one revision"
     assert any(rev.casillas for rev in modelo.revisions.values()), "184 must declare casillas"
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 def test_modelo_184_modelo_metadata_matches_hap_2250_2015() -> None:
@@ -59,7 +59,7 @@ def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
         snapshot = build_snapshot(
             modelo,
             catalogues,
-            source_root=PROJECT_ROOT,
+            source_root=bundled_path(),
             filing_year=filing_year,
             period="0A",
         )
@@ -68,7 +68,7 @@ def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
 
 def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
     modelo, catalogues = _load_modelo_184()
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
 
     assert "orden-hap-2250-2015:art-1" in snapshot.legal
     assert "orden-hap-2250-2015:art-4" in snapshot.legal

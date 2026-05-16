@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.vat import (
     InvoiceDirection,
     IvaFlowDirection,
@@ -100,7 +100,7 @@ def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(
 
 def test_iva_flow_legal_articles_present_in_registry_toml() -> None:
     """The three LIVA articles backing the flow taxonomy must be in the registry."""
-    path = PROJECT_ROOT / "registry" / "aeat" / "legal" / "iva-flow.toml"
+    path = bundled_path("registry", "aeat", "legal", "iva-flow.toml")
     with path.open("rb") as handle:
         data = tomllib.load(handle)
     legal = data.get("legal", {})
@@ -113,7 +113,7 @@ def test_iva_flow_legal_articles_carry_required_text_quotes() -> None:
     """The three LIVA articles must declare required_text quotes that match
     the BOE-cited content (so the registry validator's text gate fires
     on drift)."""
-    path = PROJECT_ROOT / "registry" / "aeat" / "legal" / "iva-flow.toml"
+    path = bundled_path("registry", "aeat", "legal", "iva-flow.toml")
     with path.open("rb") as handle:
         data = tomllib.load(handle)
     legal = data["legal"]
@@ -135,7 +135,7 @@ def test_iva_flow_load_registry_recognises_three_articles() -> None:
     the catalogue."""
     from aeat.domain.calculations.registry import load_registry_tree
 
-    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     assert "ley-37-1992:art-84" in catalogues.legal
     assert "ley-37-1992:art-88" in catalogues.legal
     assert "ley-37-1992:art-92" in catalogues.legal
@@ -264,7 +264,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
         IvaFlowDirection,
     )
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     m303 = next(m for m in modelos if m.id == "303")
     revision = m303.revisions["2009-y-siguientes"]
 

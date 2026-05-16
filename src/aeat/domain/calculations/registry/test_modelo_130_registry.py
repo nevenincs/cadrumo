@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import (
     RegistryValidationError,
@@ -18,7 +18,7 @@ from . import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _REQUIRED_SURFACES = {
     "approval",
     "calculation",
@@ -50,7 +50,7 @@ def _snapshot_130(modelo_130_registry):
     return build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="1T",
     )
@@ -61,7 +61,7 @@ def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registr
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="1T",
     )

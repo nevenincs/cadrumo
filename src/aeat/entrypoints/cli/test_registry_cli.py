@@ -29,14 +29,14 @@ from aeat.application.registry import (
     verify_filed_state,
 )
 from aeat.core.access_gate import AeatLiveReadNotEnabledError
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
 from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
-_WORKBOOK_ROOT = PROJECT_ROOT / "corpus" / "aeat_official" / "disenos_registro"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
+_WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 
 
 def _registry_modelos() -> tuple[str, ...]:
@@ -356,7 +356,7 @@ def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(
         observation_path=primary_path,
         source_observation_paths=(source_path,),
         registry_root=_REGISTRY_ROOT,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         master_key_provider=provider,
     )
 
@@ -383,7 +383,7 @@ def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: P
         observation_path=primary_path,
         source_observation_paths=(source_path,),
         registry_root=_REGISTRY_ROOT,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         required_casillas=("19",),
         master_key_provider=provider,
     )
@@ -518,7 +518,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
                 period="0A",
                 output_root=output_root,
                 registry_root=_REGISTRY_ROOT,
-                source_root=PROJECT_ROOT,
+                source_root=bundled_path(),
             )
         )
 
@@ -528,7 +528,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
 def _modelo_130_filed_state_observations() -> tuple[FiledDeclarationObservation, FiledDeclarationObservation]:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(item for item in modelos if item.id == "130")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="1T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="1T")
     calculation = calculate_registry_snapshot(
         snapshot,
         inputs=_modelo_130_inputs(),

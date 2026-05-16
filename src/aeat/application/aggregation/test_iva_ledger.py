@@ -458,7 +458,7 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
         TransactionCatalogue.from_transactions((incoming, outgoing)),
         period="2026Q2",
     )
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     revision = next(item for item in modelos if item.id == "303").revisions["2009-y-siguientes"]
 
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, projection.observations)

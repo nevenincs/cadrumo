@@ -7,13 +7,13 @@ from html import unescape
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _load_modelo_200():
@@ -25,12 +25,12 @@ def _load_modelo_200():
 def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> None:
     modelo, catalogues = _load_modelo_200()
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2024,
         period="0A",
     )
@@ -58,7 +58,7 @@ def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2024,
         period="0A",
     )
@@ -80,7 +80,7 @@ def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2024,
         period="0A",
     )

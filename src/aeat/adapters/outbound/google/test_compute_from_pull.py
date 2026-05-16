@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 from ....domain.calculations.registry._loader import load_registry_tree
 from ...outbound.storage._errors import StorageConflictError
 from ._calc_sheets_pull import (
@@ -39,12 +39,12 @@ def _modelo_130_snapshot():
 
     from ....domain.calculations.registry._snapshot import build_snapshot
 
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(m for m in modelos if m.id == "130")
     return build_snapshot(
         modelo=modelo,
         catalogues=catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="1T",
         on=date(2025, 4, 1),

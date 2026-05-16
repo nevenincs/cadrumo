@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import RegistryValidator, build_snapshot, load_registry_tree
 
@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_modelo_202():
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "202")
     return modelo, catalogues
 
@@ -20,7 +20,7 @@ def _load_modelo_202():
 def test_committed_modelo_202_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_202()
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
     assert set(modelo.revisions) == {"2019-2022", "2023-2024", "2025-y-siguientes"}
 
@@ -30,7 +30,7 @@ def test_committed_modelo_202_static_cross_reference_and_construct_are_declared(
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="2P",
     )

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._scenarios import (
@@ -19,7 +19,7 @@ from ._scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payments() -> None:
@@ -27,7 +27,7 @@ def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payment
         run_registry_calculation_scenario(
             scenario,
             registry_root=_REGISTRY_ROOT,
-            source_root=PROJECT_ROOT,
+            source_root=bundled_path(),
         )
         for scenario in (
             _normal_direct_estimation_payments_scenario(),
@@ -89,7 +89,7 @@ def test_registry_scenario_reports_trace_contract_mismatches() -> None:
     report = run_registry_calculation_scenario(
         scenario,
         registry_root=_REGISTRY_ROOT,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
     )
 
     assert report.status == "mismatch"
@@ -106,7 +106,7 @@ def test_registry_scenario_requires_declared_revision_to_match_snapshot() -> Non
         run_registry_calculation_scenario(
             scenario,
             registry_root=_REGISTRY_ROOT,
-            source_root=PROJECT_ROOT,
+            source_root=bundled_path(),
         )
 
 

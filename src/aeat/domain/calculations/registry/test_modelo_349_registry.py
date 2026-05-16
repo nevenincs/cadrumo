@@ -8,7 +8,7 @@ from typing import cast
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import (
     InvoiceObservation,
@@ -47,7 +47,7 @@ _OFFICIAL_FIELD_POSITIONS: dict[str, tuple[int, int]] = {
 
 
 def _load_modelo_349():
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "349")
     return modelo, catalogues
 
@@ -55,7 +55,7 @@ def _load_modelo_349():
 def test_committed_modelo_349_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_349()
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
     assert set(modelo.revisions) == {"2020-y-siguientes"}
 
@@ -81,7 +81,7 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=filing_year,
         period=period,
     )
@@ -94,7 +94,7 @@ def test_committed_modelo_349_is_informative_static_documentation_only() -> None
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="01",
     )
@@ -484,7 +484,7 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="1T",
     )

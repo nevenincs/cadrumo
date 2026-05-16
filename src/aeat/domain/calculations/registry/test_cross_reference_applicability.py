@@ -141,7 +141,7 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
 
     from . import load_registry_tree
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "349")
     binding = next(
         decision
@@ -171,7 +171,7 @@ def _load_binding(modelo_id: str, revision_id: str, cross_reference_id: str) -> 
 
     from . import load_registry_tree
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == modelo_id)
     return next(
         decision
@@ -219,7 +219,7 @@ def test_oss_369_filing_schedules_select_only_when_oss_enrolled() -> None:
 
     from . import applicable_filing_schedules, load_registry_tree
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo_369 = next(modelo for modelo in modelos if modelo.id == "369")
 
     for revision in modelo_369.revisions.values():
@@ -303,7 +303,7 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     )
     from . import ModeloDefinition, ModeloRevision, load_registry_tree
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo_349 = next(modelo for modelo in modelos if modelo.id == "349")
     revision = modelo_349.revisions["2020-y-siguientes"]
     binding = next(
@@ -357,7 +357,7 @@ def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> 
 
     from . import load_registry_tree
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "349")
     revision = modelo.revisions["2020-y-siguientes"]
     binding = next(

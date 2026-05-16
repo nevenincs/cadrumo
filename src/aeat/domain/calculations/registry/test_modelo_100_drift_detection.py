@@ -21,7 +21,7 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
 from ._runtime_graph import expression_binding_refs, expression_parameter_refs
@@ -61,7 +61,7 @@ _SUPPORTED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024",
 
 
 def _modelo_100():
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return next(m for m in modelos if m.id == "100"), catalogues
 
 

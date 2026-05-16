@@ -204,7 +204,7 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     )
     from aeat.domain.invoices import invoice_line_to_iva_observation
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     m303 = next(m for m in modelos if m.id == "303")
     revision = m303.revisions["2009-y-siguientes"]
 

@@ -4,18 +4,18 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.config import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._authority import ValidatedRegistryAuthority
 from ._queries import RegistryQueryService, parse_modelo_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _service() -> RegistryQueryService:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
     return RegistryQueryService(authority)
 
 

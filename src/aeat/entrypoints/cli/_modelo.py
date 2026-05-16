@@ -1818,7 +1818,7 @@ audit_app = typer.Typer(
     name="audit",
     help=tr(
         "cli.app.modelo.audit.group_help",
-        default="Evidence bundle audit verbs (view/check/export/replay).",
+        default="Evidence bundle audit verbs (show/check/export/replay).",
     ),
     no_args_is_help=True,
 )

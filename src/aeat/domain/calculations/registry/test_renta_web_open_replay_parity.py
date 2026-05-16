@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from ._renta_web_open_oracle import (
@@ -33,7 +33,7 @@ from ._schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REPLAY_DIR = PROJECT_ROOT / "corpus" / "parity_replays" / "renta_web_open"
+_REPLAY_DIR = bundled_path("corpus", "parity_replays", "renta_web_open")
 
 
 def _discovered_payloads() -> list[Path]:

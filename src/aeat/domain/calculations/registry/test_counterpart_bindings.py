@@ -15,7 +15,7 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
 from ._bindings import (
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @lru_cache(maxsize=1)
 def _modelo_349_revision() -> ModeloRevision:
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "349")
     return modelo.revisions["2020-y-siguientes"]
 
@@ -43,7 +43,7 @@ def _binding(binding_id: str) -> DataBindingDefinition:
 
 @lru_cache(maxsize=1)
 def _other_source_binding() -> DataBindingDefinition:
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "130")
     revision = modelo.revisions["2019-y-siguientes"]
     return next(item for item in revision.bindings if item.source != "ledger_transaction")

@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_modelo_309() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(m for m in modelos if m.id == "309")
     return modelo, catalogues
 
@@ -24,7 +24,7 @@ def test_modelo_309_validator_accepts_committed_definition() -> None:
     assert modelo.id == "309"
     assert modelo.revisions, "309 must declare at least one revision"
     assert any(rev.casillas for rev in modelo.revisions.values()), "309 must declare casillas"
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:
@@ -45,7 +45,7 @@ def test_modelo_309_revision_uses_ad_hoc_period_selector() -> None:
 
 def test_modelo_309_snapshot_builds_for_ad_hoc_period() -> None:
     modelo, catalogues = _load_modelo_309()
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="AD-HOC")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
     assert snapshot.revision.id == "2004-y-siguientes"
     assert "orden-hac-3625-2003:apartado-1" in snapshot.legal
     assert "orden-hac-3625-2003:apartado-3" in snapshot.legal
