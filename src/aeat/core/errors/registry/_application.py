@@ -554,6 +554,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._reconcile.ReconciliationCrossBucketRefusedError",
+        ErrorCode(
+            code="REFUSED_RECONCILIATION_CROSS_BUCKET",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.reconciliation_cross_bucket",
+            default_suggestion="aeat config profile use",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.overview._errors.OverviewError",
         ErrorCode(
             code="FAIL_OVERVIEW",

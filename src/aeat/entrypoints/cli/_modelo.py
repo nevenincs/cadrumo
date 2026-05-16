@@ -2073,4 +2073,105 @@ def modelo_history(
     _emit(ctx, payload, lines)
 
 
+@app.command(
+    "reconcile",
+    help=tr(
+        "cli.app.modelo.reconcile.help",
+        default="Reconcile a modelo work unit against external evidence (justificante PDF). Local-only; never contacts AEAT.",
+    ),
+)
+def modelo_reconcile_verb(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.reconcile.work_unit_id_help",
+                default="Work unit id (SHA-256 or unambiguous prefix).",
+            ),
+        ),
+    ],
+    from_justificante: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-justificante",
+            help=tr(
+                "cli.app.modelo.reconcile.from_justificante_help",
+                default="Path to the AEAT justificante PDF to reconcile against.",
+            ),
+        ),
+    ] = None,
+    from_declaration: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-declaration",
+            help=tr(
+                "cli.app.modelo.reconcile.from_declaration_help",
+                default="Path to the filed declaration PDF to reconcile against.",
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Reconcile a modelo work unit against an external evidence source.
+
+    Exactly one of ``--from-justificante`` or ``--from-declaration`` must be
+    supplied. The CLI enforces the exclusivity here; the application
+    service performs the reconciliation, emits the bucket event, and
+    returns the verdict. The verb is local-only per the app-modelo-shape
+    ADR amendment.
+    """
+
+    from ...application.modelo._reconcile import (
+        ModeloReconciliationCommand,
+        ModeloReconciliationSourceKind,
+        modelo_reconcile,
+    )
+
+    if from_justificante is None and from_declaration is None:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.reconcile.errors.missing_source",
+                default="Supply --from-justificante PATH or --from-declaration PATH.",
+            ),
+        )
+    if from_justificante is not None and from_declaration is not None:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.reconcile.errors.exclusive_source",
+                default="--from-justificante and --from-declaration are mutually exclusive.",
+            ),
+        )
+
+    source_kind = (
+        ModeloReconciliationSourceKind.JUSTIFICANTE
+        if from_justificante is not None
+        else ModeloReconciliationSourceKind.DECLARATION
+    )
+    source_path = from_justificante if from_justificante is not None else from_declaration
+    assert source_path is not None  # exhaustive by the exclusivity check above
+
+    report = modelo_reconcile(
+        ModeloReconciliationCommand(
+            work_unit_id=work_unit_id,
+            source_kind=source_kind,
+            source_path=source_path,
+        ),
+    )
+
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"work_unit_id\t{report.work_unit_id}",
+        f"bucket\t{report.bucket_id}",
+        f"source_kind\t{report.source_kind.value}",
+        f"source_path\t{report.source_path}",
+        f"verdict\t{report.verdict.value}",
+        f"diffs\t{len(report.diffs)}",
+    ]
+    for diff in report.diffs:
+        lines.append(
+            f"diff\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}",
+        )
+    _emit(ctx, payload, lines)
+
+
 __all__ = ["app"]
