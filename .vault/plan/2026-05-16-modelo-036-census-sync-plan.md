@@ -136,12 +136,12 @@ Land the comprehensive census-field delta with primary-source legal grounding fo
 - [ ] `P01.S01` - add fiscal-address cadastral reference and habitual-vivienda flag with TR Ley Catastro Art. 50 grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
 - [ ] `P01.S02` - add census section with activity_start_date and activity_end_date and RGAT grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
 - [ ] `P01.S03` - add census.establecimiento_type enum with Art. 28 and Art. 30 LIRPF grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
-- [ ] `P01.S04` - add census.elected_withholding_pct enum with Art. 95 LIRPF and Art. 101 RIRPF grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
-- [ ] `P01.S05` - add vivienda_office section with total_m2 and office_m2 and Art. 22 RIRPF cap grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [ ] `P01.S04` - add census.elected_withholding_pct enum with LIRPF Art. 101.5 and RIRPF Art. 95.1 and Art. 95.2 grounding (BOE-A-2007-6820); `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [ ] `P01.S05` - add vivienda_office section with total_m2 and office_m2 and LIRPF Art. 30.2 rule 5 grounding (Ley 6/2017 BOE-A-2017-12544); `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
 - [ ] `P01.S06` - wire activities.iae_epigraph into model_selectors so the field reaches AutonomoProfile; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
 - [ ] `P01.S07` - add schema parser validation that every census field declares a legal_refs entry; `src/aeat/application/user_profile/_schema_loader.py`.
 - [ ] `P01.S08` - extend autonomo_profile_from_mapping to surface the new census fields on AutonomoProfile; `src/aeat/domain/deadlines/_profiles.py`.
-- [ ] `P01.S09` - clamp HOME_OFFICE usage_ratios.business_ratio to the legally-derived office_m2 over total_m2 ceiling; `src/aeat/domain/usage_ratios/_service.py`.
+- [ ] `P01.S09` - apply the LIRPF Art. 30.2 rule 5 statutory 0.30 suministros multiplier in the renta deductibility engine separate from raw afectacion ratio for ownership costs; `src/aeat/domain/renta/_ledger_expenses.py`.
 - [ ] `P01.S10` - schema-shape boundary tests for every new field; `src/aeat/application/user_profile/test_schema_census_fields.py`.
 
 ### Phase `P02` - CensusSnapshot domain model and snapshot service
