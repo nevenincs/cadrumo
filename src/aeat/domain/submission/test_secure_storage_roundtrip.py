@@ -123,3 +123,79 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_submission_dropped_justificante_csv_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: deleting ``justificante_csv`` on ACKNOWLEDGED must surface.
+
+    The :class:`SubmittedFiling` model_validator enforces that an
+    ACKNOWLEDGED submission carries both ``justificante_csv`` AND
+    ``justificante_pdf_path``. Surgically delete the CSV from the
+    persisted JSON envelope; the load path must reject the rehydrated
+    record via either a ValidationError or strict inequality.
+
+    Submission records are historical filing evidence at
+    ``SensitivityClass.AUDIT``. A silent grounding drop on this
+    boundary would invalidate the operator's filed-with-AEAT trail.
+    If this test passes silently with the CSV stripped, every
+    submission roundtrip in the suite is tautological.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._repository import _SUBMISSION_NAMESPACE
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "submission-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+
+        original = _populated_filing()
+        repo = SubmissionRepository()
+        repo.save(original)
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _SUBMISSION_NAMESPACE,
+                SecureObjectRow.object_key == original.submission_id,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            payload = envelope["payload"]
+            assert payload.get("justificante_csv"), (
+                "fixture must serialise justificante_csv onto the "
+                "ACKNOWLEDGED record for this proof test to be meaningful"
+            )
+            payload["justificante_csv"] = None
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            mutated = repo.load(original.submission_id)
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        else:
+            if mutated != original:
+                regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: deleting justificante_csv "
+            "from an ACKNOWLEDGED submission did NOT surface on load. "
+            "The submission boundary is tautological and every "
+            "submission roundtrip in the suite is suspect."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
