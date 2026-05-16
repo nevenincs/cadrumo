@@ -21,6 +21,11 @@ from typing import get_type_hints
 import pytest
 
 from ...filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
+from ...modelos._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from ._bindings import (
     CasillaObservation,
     RegistryFilingObservation,
@@ -240,3 +245,48 @@ def test_filing_draft_full_roundtrip() -> None:
         v for v in roundtripped.values if v.kind is FilingValueKind.COMPUTED
     )
     assert computed.formula_trace == ("iva.devengado", "iva.deducible")
+
+
+def test_calculation_revision_carries_typed_observations() -> None:
+    """``CalculationRevision`` must persist the typed observation envelope.
+
+    The engine emits provenance-rich entries; the persistence boundary
+    historically kept only the flat ``casilla_values`` mapping and
+    dropped operand_refs / operand_values / legal_refs / source_refs.
+    A round-trip test asserts the typed envelope survives JSON
+    serialization without value loss.
+    """
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    observation = CasillaObservation(
+        casilla_id="iva.resultado-regimen-general",
+        value=Decimal("12345.67"),
+        formula_id="iva.formula.resultado",
+        operand_refs=("iva.devengado", "iva.deducible"),
+        operand_values=(Decimal("20000.00"), Decimal("7654.33")),
+        legal_refs=("LIVA.art-94",),
+        source_refs=("AEAT.IVA.2025",),
+    )
+    work_unit_id = "b" * 64
+    casilla_values = {"iva.resultado-regimen-general": Decimal("12345.67")}
+    revision = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=work_unit_id,
+            inputs_snapshot={},
+            binding_overrides={},
+            casilla_values=casilla_values,
+        ),
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.DRAFT,
+        casilla_values=casilla_values,
+        observations=(observation,),
+        created_at=now,
+        updated_at=now,
+    )
+
+    roundtripped = CalculationRevision.model_validate_json(revision.model_dump_json())
+
+    assert roundtripped == revision
+    assert roundtripped.observations == (observation,)
+    assert roundtripped.observations[0].operand_refs == observation.operand_refs
+    assert roundtripped.observations[0].operand_values == observation.operand_values
