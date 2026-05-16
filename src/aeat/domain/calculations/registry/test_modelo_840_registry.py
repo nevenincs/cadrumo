@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
 
 from . import (

@@ -24,7 +24,7 @@ without spinning up a real browser.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from pydantic import AnyUrl
 
@@ -77,9 +77,24 @@ class VerifyBrowserContextLike(Protocol):
 
 @runtime_checkable
 class VerifyBrowserSessionLike(Protocol):
-    """Subset of :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` consumed by :func:`verify_csv`."""
+    """Subset of :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` consumed by :func:`verify_csv`.
 
-    async def create_context(self) -> VerifyBrowserContextLike: ...
+    The ``create_context`` signature mirrors
+    :meth:`aeat.adapters.outbound.aeat.browser.session.DefaultBrowserSession.create_context`
+    so static checkers see no unsafe overlap between this protocol and
+    the concrete browser sessions. ``verify_csv`` itself calls
+    ``create_context()`` with no arguments; production and test
+    sessions accept the same optional kwargs as the central
+    BrowserSession so the protocol stays structurally honest.
+    """
+
+    async def create_context(
+        self,
+        *,
+        provisioner: Any = ...,
+        storage_state_path: Any = ...,
+        storage_state: Any = ...,
+    ) -> VerifyBrowserContextLike: ...
     async def close(self) -> None: ...
 
 

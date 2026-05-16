@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import tomllib
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError

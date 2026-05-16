@@ -154,6 +154,49 @@ def test_audit_replay_reports_verification_state_without_mutation(cli_runner: Cl
     assert first_state == second_state
 
 
+def test_audit_workflow_end_to_end_show_check_export_replay(
+    cli_runner: CliRunner, tmp_path: Path
+) -> None:
+    """Drive the full ratified audit workflow over a single bundle:
+    show → check → export → replay. The four verbs share a state-free
+    contract — each reads from the persisted bundle catalogue, so the
+    sequence is order-independent and the verification state observed
+    by `check` matches the one observed by `replay`."""
+
+    bundle_id = _seed_bundle()
+    output = tmp_path / "bundle-e2e.zip"
+
+    show = cli_runner.invoke(app, ["app", "modelo", "audit", "show", bundle_id])
+    assert show.exit_code == 0, show.output
+
+    check = cli_runner.invoke(app, ["app", "modelo", "audit", "check", bundle_id])
+    assert check.exit_code == 0, check.output
+
+    export = cli_runner.invoke(
+        app,
+        [
+            "app", "modelo", "audit", "export", bundle_id,
+            "--output", str(output),
+            "--force-incomplete",
+        ],
+    )
+    assert export.exit_code == 0, export.output
+    assert output.exists()
+    with zipfile.ZipFile(output) as archive:
+        assert "manifest.json" in archive.namelist()
+
+    replay = cli_runner.invoke(app, ["app", "modelo", "audit", "replay", bundle_id])
+    assert replay.exit_code == 0, replay.output
+
+    check_state = next(
+        line for line in check.output.splitlines() if line.startswith("verification_state\t")
+    )
+    replay_state = next(
+        line for line in replay.output.splitlines() if line.startswith("verification_state\t")
+    )
+    assert check_state == replay_state
+
+
 def test_audit_verbs_refuse_without_active_profile(cli_runner: CliRunner) -> None:
     """All four audit verbs route through `_audit_bucket_id`, which raises
     when no active profile bucket exists. Each verb must surface that

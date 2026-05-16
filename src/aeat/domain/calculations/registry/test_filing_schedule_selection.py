@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.deadlines import AutonomoProfile, FilingEnrollment, IVARegime
 
 from . import (

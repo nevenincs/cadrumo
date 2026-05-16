@@ -29,6 +29,7 @@ from aeat.application.registry import (
     verify_filed_state,
 )
 from aeat.core.access_gate import AeatLiveReadNotEnabledError
+from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
 from aeat.tests.cli_runner import invoke_cached_cli
