@@ -698,9 +698,10 @@ cli:
         soporta el movimiento
     check:
       bucket_id_help: Id del bucket a examinar (por defecto el bucket del perfil activo).
-      help: Examina los movimientos del libro del bucket direccionado (por defecto el
-        bucket del perfil activo) e informa de filas con anomalías agregadas a través
-        de cada período que los movimientos toquen. Local; nunca contacta con AEAT.
+      help: Examina los movimientos del libro del bucket direccionado (por defecto
+        el bucket del perfil activo) e informa de filas con anomalías agregadas a
+        través de cada período que los movimientos toquen. Local; nunca contacta con
+        AEAT.
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       category_help: Id de categoría de gasto o ingreso
@@ -880,6 +881,14 @@ cli:
       claves de regimen en el perfil. Sin esta opcion, el calendario se rechaza si
       hay advertencias.
     app_help: Revisar el estado actual del espacio de trabajo fiscal
+    calendar:
+      allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
+        incompletos.
+      from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
+      help: Genera el calendario de plazos para el perfil activo en la ventana de fechas
+        indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca contacta
+        con AEAT.
+      to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_help: Mostrar calendario de obligaciones para un rango de fechas
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
       ''aeat config profile set <clave> <valor>'' o usa --allow-incomplete para ver

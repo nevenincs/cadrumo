@@ -290,8 +290,8 @@ cli:
         view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
-        explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula a la
-          sortida de text. El payload JSON els porta sempre.
+        explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula
+          a la sortida de text. El payload JSON els porta sempre.
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
           exemples periodics inclouen 2026Q1 i 2026-01
@@ -866,6 +866,14 @@ cli:
       claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha
       advertencies.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
+    calendar:
+      allow_incomplete_help: Generar el calendari encara que les dades del perfil
+        siguin incompletes.
+      from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
+      help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
+        indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta amb
+        AEAT.
+      to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
     calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
       ''aeat config profile set <clau> <valor>'' o useu --allow-incomplete per veure

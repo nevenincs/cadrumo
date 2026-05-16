@@ -285,8 +285,8 @@ cli:
         view_help: Egy filing record megjelenítése azonosító alapján
       formulas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
-        explain_help: A szövegkimenetbe is belekerülnek a képletet alátámasztó
-          legal_refs és source_refs hivatkozások. A JSON payload mindig tartalmazza őket.
+        explain_help: A szövegkimenetbe is belekerülnek a képletet alátámasztó legal_refs
+          és source_refs hivatkozások. A JSON payload mindig tartalmazza őket.
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
           periodikus peldak: 2026Q1 es 2026-01'
@@ -859,6 +859,13 @@ cli:
       profil nem deklarálja a regim kulcsokat. E nélkül a naptár elutasításra kerül,
       ha figyelmeztetések vannak.
     app_help: Az aktuális adózási munkaterület áttekintése
+    calendar:
+      allow_incomplete_help: A naptár generálása akkor is, ha a profil adatai hiányosak.
+      from_help: A naptárablak kezdő dátuma, inkluzív (ISO YYYY-MM-DD).
+      help: A határidőnaptár generálása az aktív profilra a megadott dátumablakban.
+        Alkalmazza az ünnepnapokat és a munkanapi eltolásokat. Csak helyi; soha nem
+        kapcsolódik az AEAT-hoz.
+      to_help: A naptárablak záró dátuma, inkluzív (ISO YYYY-MM-DD).
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
     calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
       Futtasd: ''aeat config profile set <kulcs> <érték>'' vagy add meg --allow-incomplete

@@ -123,3 +123,90 @@ def overview_status(
         return
     report = build_overview_status_report(state=current)
     _emit(ctx, report, render_cli_overview_status_lines(report))
+
+
+@app.command(
+    "calendar",
+    help=tr(
+        "cli.overview.calendar.help",
+        default=(
+            "Render the deadline calendar for the active profile across the supplied "
+            "date window. Applies festivos and business-day shifts. Local-only; never "
+            "contacts AEAT."
+        ),
+    ),
+)
+def overview_calendar(
+    ctx: typer.Context,
+    from_date: str = typer.Option(
+        ...,
+        "--from",
+        help=tr(
+            "cli.overview.calendar.from_help",
+            default="Inclusive start date for the calendar window (ISO YYYY-MM-DD).",
+        ),
+    ),
+    to_date: str = typer.Option(
+        ...,
+        "--to",
+        help=tr(
+            "cli.overview.calendar.to_help",
+            default="Inclusive end date for the calendar window (ISO YYYY-MM-DD).",
+        ),
+    ),
+    allow_incomplete: bool = typer.Option(
+        False,
+        "--allow-incomplete",
+        help=tr(
+            "cli.overview.calendar.allow_incomplete_help",
+            default="Render the calendar even when profile data is incomplete.",
+        ),
+    ),
+) -> None:
+    """Render the deadline calendar over the supplied window."""
+
+    from ...application.user_profile._projections import record_to_values
+
+    current = _state()
+    rng = OverviewCalendarRange(
+        from_date=_parse_iso_date(from_date, label="--from"),
+        to_date=_parse_iso_date(to_date, label="--to"),
+    )
+    record = current.active_profile_record()
+    raw_values = record_to_values(record) if record is not None else None
+    cal: OverviewCalendar = build_overview_calendar(
+        _profile_to_autonomo(current),
+        rng,
+        today=_date.today(),
+        raw_values=raw_values,
+    )
+    if cal.warnings and not allow_incomplete:
+        warning_summary = ", ".join(warning.code for warning in cal.warnings)
+        raise _bad(
+            tr(
+                "cli.overview.calendar_refused_incomplete",
+                keys=warning_summary,
+            ),
+        )
+    payload = cal.model_dump(mode="json")
+    lines: list[str] = [
+        f"from\t{rng.from_date.isoformat()}",
+        f"to\t{rng.to_date.isoformat()}",
+        f"entries\t{len(cal.entries)}",
+    ]
+    for entry in cal.entries:
+        lines.append(
+            f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}"
+            f"\topens={entry.opens_on.isoformat()}"
+            f"\tcloses={entry.closes_on.isoformat()}"
+            f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
+            f"\tshift={entry.shift_reason}"
+        )
+    for warning in cal.warnings:
+        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+    if cal.completeness.computable_modelos:
+        lines.append(
+            f"computable\t{len(cal.completeness.computable_modelos)}"
+            f"\tdefaulted\t{len(cal.completeness.defaulted_modelos)}"
+        )
+    _emit(ctx, payload, lines)
