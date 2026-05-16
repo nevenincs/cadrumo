@@ -235,11 +235,16 @@ async def capture_source_filed_data(
 ) -> SourceFiledDataCaptureReport:
     """Capture filed observations required by a target filing's registry dependencies."""
 
+    from ...core.resources import resources
+
     session, settings = await _active_verified_session()
-    authority = ValidatedRegistryAuthority.load(
-        registry_root or bundled_path("registry", "aeat"),
-        source_root=source_root or bundled_path(),
-    )
+    if registry_root is None and source_root is None:
+        authority = resources().modelos.authority
+    else:
+        authority = ValidatedRegistryAuthority.load(
+            registry_root or bundled_path("registry", "aeat"),
+            source_root=source_root or bundled_path(),
+        )
     snapshot = authority.snapshot(
         modelo,
         filing_year=year,

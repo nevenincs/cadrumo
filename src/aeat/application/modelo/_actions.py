@@ -770,7 +770,7 @@ def calculate_modelo_revision(
     try:
         from ...core.resources import bundled_path
 
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
+        authority = _authority_via_resources()
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
             f"registry root {_registry_root()} is missing; cannot calculate"
@@ -983,7 +983,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
+        authority = _authority_via_resources()
         snapshot = authority.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
@@ -1194,6 +1194,12 @@ def _registry_root() -> Path:
     return bundled_path("registry", "aeat")
 
 
+def _authority_via_resources() -> object:
+    """Return the registry authority via the central resource registry."""
+    from ...core.resources import resources
+    return resources().modelos.authority
+
+
 def _reject_incomplete_amendment_casillas(
     *,
     modelo: str,
@@ -1246,7 +1252,7 @@ def _reject_unknown_override_casillas(
     )
 
     try:
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
+        authority = _authority_via_resources()
     except FileNotFoundError as exc:
         raise AmendmentOverrideCasillaError(
             f"registry root {_registry_root()} is missing; cannot validate amendment overrides"
@@ -1288,7 +1294,7 @@ def _reject_unknown_import_casillas(
     )
 
     try:
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
+        authority = _authority_via_resources()
     except FileNotFoundError as exc:
         raise ExternalFilingImportError(
             f"registry root {_registry_root()} is missing; cannot validate imported casilla ids"
@@ -1341,7 +1347,7 @@ def _required_input_casillas_for_revision(
     )
 
     try:
-        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=bundled_path())
+        authority = _authority_via_resources()
     except FileNotFoundError:
         return None
 
