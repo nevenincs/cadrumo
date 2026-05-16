@@ -26,6 +26,7 @@ from ._proportionality import (
     ProportionalityRule,
     StatutoryCapPeriod,
     StatutoryCapVariant,
+    effective_usage_ratio,
     parse_http_url,
 )
 from ._registry import (
@@ -53,6 +54,7 @@ __all__ = [
     "StatutoryCapVariant",
     "VatCategory",
     "categories_for_family",
+    "effective_usage_ratio",
     "family_for",
     "load_category_profiles_from_manual",
     "parse_http_url",

@@ -142,3 +142,79 @@ def test_statutory_cap_rejects_mixed_cap_modes() -> None:
             citations=(_citation(),),
             notes=tr("Modos incompatibles."),
         )
+
+
+def test_statutory_multiplier_rejected_on_non_usage_ratio_kind() -> None:
+    """statutory_multiplier is only valid for usage-ratio kinds; a
+    full-deductible rule with a multiplier declared must refuse load.
+    Backs the W85 ADR amendment legal-grounding contract."""
+
+    with pytest.raises(
+        ValidationError, match=r"statutory_multiplier is only valid for usage_ratio rules",
+    ):
+        ProportionalityRule(
+            kind=ProportionalityKind.FULL_DEDUCTIBLE,
+            statutory_multiplier=Decimal("0.30"),
+            citations=(_citation(),),
+            notes=tr("Multiplicador estatutario incompatible."),
+        )
+
+
+def test_statutory_multiplier_accepts_home_area_suministros_legal_factor() -> None:
+    """The LIRPF Art. 30.2 rule 5 0.30 suministros factor lands as a
+    statutory_multiplier on a USAGE_RATIO_HOME_AREA rule."""
+
+    rule = ProportionalityRule(
+        kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+        default_ratio=Decimal("0.30"),
+        statutory_multiplier=Decimal("0.30"),
+        citations=(_citation(),),
+        notes=tr("Suministros 0.30 multiplier per LIRPF Art. 30.2 rule 5"),
+    )
+
+    assert rule.statutory_multiplier == Decimal("0.30")
+    assert rule.default_ratio == Decimal("0.30")
+
+
+def test_effective_usage_ratio_applies_multiplier_to_chosen_ratio() -> None:
+    """effective_usage_ratio = chosen_ratio * statutory_multiplier;
+    rule.None multiplier means no factor (effective = chosen)."""
+
+    from . import effective_usage_ratio
+
+    suministros = ProportionalityRule(
+        kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+        statutory_multiplier=Decimal("0.30"),
+        citations=(_citation(),),
+        notes=tr("Suministros multiplier"),
+    )
+    ownership = ProportionalityRule(
+        kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+        citations=(_citation(),),
+        notes=tr("Ownership raw ratio"),
+    )
+
+    # 20% office area, suministros: 20% * 30% = 6% deductible.
+    assert effective_usage_ratio(suministros, Decimal("0.20")) == Decimal("0.0600")
+    # 20% office area, ownership: 20% deductible (raw ratio, no factor).
+    assert effective_usage_ratio(ownership, Decimal("0.20")) == Decimal("0.20")
+
+
+def test_effective_usage_ratio_refuses_non_usage_ratio_rules() -> None:
+    """The helper refuses to evaluate against rules of non-usage-ratio
+    kinds (caller is responsible for routing rules to the right
+    evaluator)."""
+
+    from . import effective_usage_ratio
+    from ._errors import CategoryValidationError
+
+    rule = ProportionalityRule(
+        kind=ProportionalityKind.FULL_DEDUCTIBLE,
+        citations=(_citation(),),
+        notes=tr("Sin proporcionalidad."),
+    )
+    with pytest.raises(
+        CategoryValidationError,
+        match=r"effective_usage_ratio is only valid for usage_ratio rules",
+    ):
+        effective_usage_ratio(rule, Decimal("0.50"))
