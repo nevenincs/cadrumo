@@ -113,6 +113,23 @@ called once concrete `InvoiceReviewRecord` and `LedgerReviewRecord`
 imports are available, unblocking the entire ratios test suite that
 the parallel type-normalization pass had briefly broken.
 
+### Conditional emissions resolved 2026-05-16
+
+The config-init-shape ADR ratifies two conditional events:
+`config.env.updated` ("only if env-file persistence survives") and
+`setup.state.migrated` ("only for backend-only migration from
+legacy setup state"). A code audit on 2026-05-16 found:
+
+- `aeat.core.env_io.write_env_var` and `write_env_vars` exist but
+  have zero production callers; only tests exercise them. There is
+  no `aeat config env` CLI surface and no application service that
+  writes to env files. The `config.env.updated` emission is
+  therefore a no-op in the shipped surface; the enum slot remains
+  for a future reintroduction.
+- The legacy setup state migration runs once internally during
+  init when a legacy envelope is encountered. The
+  `setup.state.migrated` emission is added at the migration site.
+
 ### Outstanding work — to be executed in this worktree
 
 This worktree owns the remaining implementation work. No waves are
