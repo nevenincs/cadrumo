@@ -29,6 +29,43 @@ related:
 
 # `corpus-registry-packaging` adr: Bundle corpus and registry trees as in-wheel package resources | (**status:** `accepted`)
 
+## Correction (2026-05-16)
+
+The first revision of this ADR specified hatchling
+`[tool.hatch.build.targets.wheel.force-include]` as the shipping
+mechanism and asserted that editable installs would honour the
+mapping. Empirical verification against the editable install in
+this worktree contradicted that claim:
+`importlib.resources.files("aeat").joinpath("_data")` resolved to
+`src/aeat/_data` on disk and reported `is_dir() == False`. The
+force-include table affects the built wheel's archive layout but
+does not materialise files into the editable source tree.
+
+The decision now mandates a physical relocation of the on-disk
+trees under `src/aeat/_data/corpus/` and `src/aeat/_data/registry/`.
+No force-include block is introduced; the existing
+`packages = ["src/aeat"]` directive packages the relocated trees
+automatically. The `Traversable` boundary, the Settings env-override
+seam, the consumer migration buckets, and the test guards all
+remain unchanged in their public contract; only the on-disk path
+shifts.
+
+Discovery sweeps surfaced several consumer surfaces that the first
+revision did not enumerate: a `Path(__file__).resolve().parents[5]`
+walk in `src/aeat/domain/auth/apoderamientos/_catalogue.py`, five
+module-level CWD-relative `Path("registry/aeat")` defaults under
+`src/aeat/entrypoints/cli/` and `src/aeat/application/`, four
+error-message strings that embed registry paths as user-facing
+documentation, nine f-string compositions that compose paths
+against the trees in tests, and eleven glob sites in loaders that
+iterate `*.toml` or `*.json` inside the trees. The plan associated
+with this ADR records each of these as its own Step.
+
+The ratification of in-wheel bundling, the boundary placement at
+`src/aeat/core/resources.py`, the preservation of Settings
+env-override semantics, and the two real-behaviour test guards
+remain unchanged.
+
 ## Problem Statement
 
 The repository persists Spanish-tax reference data across two
@@ -74,17 +111,15 @@ helper module abstracts resource access today. The packaging refactor
 needs one canonical accessor so call sites stop choosing between the
 file-system walk and ad-hoc `__file__` parent chains.
 
-The corpus and registry trees can be shipped inside the wheel without
-relocating them on disk. Hatchling's
-`[tool.hatch.build.targets.wheel.force-include]` table maps any source
-path on disk to a relative distribution path inside the wheel. The
-trees stay at `corpus/` and `registry/` in the repository checkout;
-the wheel sees them at `aeat/_data/corpus/...` and
-`aeat/_data/registry/...`. Editable installs honour the same mapping,
-so a developer running `uv sync` continues to read the in-tree
-sources through the same `importlib.resources` API. Hatchling 1.19
-raises an error if a force-included source path does not exist, which
-guards against silent partial bundles when paths drift.
+The corpus and registry trees move on disk to
+`src/aeat/_data/corpus/` and `src/aeat/_data/registry/`. The existing
+`packages = ["src/aeat"]` hatchling directive ships every file under
+that subtree as part of the `aeat` distribution without any
+additional include or force-include declaration. Editable installs
+and built wheels both resolve
+`importlib.resources.files("aeat").joinpath("_data", ...)` to the
+relocated tree byte-for-byte; the two surfaces converge on a single
+resolution path.
 
 Three Settings fields (`aeat_manuals_root`, `aeat_normatives_root`,
 `aeat_vat_catalogue_root`) currently expose env-override knobs for
@@ -143,75 +178,68 @@ wrapping `importlib.resources.as_file`. The module is the only
 production surface that knows about `aeat/_data`; every other consumer
 calls `packaged_data(...)`.
 
-Hatchling configuration in `pyproject.toml` adopts the force-include
-table:
+The on-disk trees relocate via `git mv` to
+`src/aeat/_data/corpus/` and `src/aeat/_data/registry/`. The
+existing `packages = ["src/aeat"]` directive packages the relocated
+trees automatically; no force-include block is introduced. The two
+narrow `include` entries that currently ship the BIP-39 wordlist
+and the external-constants TOML stay where they are (those files
+live under `src/aeat/` and are not affected by this ADR). The
+`.gitignore` block that allow-lists tracked Renta `source.pdf`
+files migrates to the new prefix so the seven currently-tracked
+PDFs remain tracked.
 
-```toml
-[tool.hatch.build.targets.wheel.force-include]
-"corpus" = "aeat/_data/corpus"
-"registry" = "aeat/_data/registry"
-```
+Consumer migration runs in five buckets:
 
-The two narrow `include` entries that currently ship the BIP-39
-wordlist and the external-constants TOML stay where they are (those
-files live under `src/aeat/` and are not affected by this ADR). The
-`packages = ["src/aeat"]` line stays; the new bundled trees ride
-alongside it under the wheel-internal `aeat/_data/` prefix.
+The first bucket is the foundation: the `git mv` of `corpus/` and
+`registry/` into `src/aeat/_data/`, the `.gitignore` rewrite that
+preserves the PDF allow-list under the new prefix, the
+`env/.env.example` update that points the three operator-visible
+env-var defaults at the new layout, and the in-process leaf-presence
+test that confirms the boundary resolves correctly post-move. This
+bucket lands as a single self-contained slice with no other code
+changes so the rename diff stays clean.
 
-Consumer migration runs in four concentric buckets:
+The second bucket is the locator itself: `src/aeat/core/resources.py`
+plus its unit tests. The locator file already exists on the branch;
+the unit tests under `src/aeat/core/test_resources.py` land in this
+bucket. The `PROJECT_ROOT` constant in `src/aeat/core/config.py`
+loses its `corpus`/`registry` join responsibility; the constant may
+stay for `var/` outputs but the corpus/registry resolution paths
+leave it.
 
-The first bucket is the boundary itself: `src/aeat/core/resources.py`
-plus tests, plus the hatch configuration change, plus the
-`PROJECT_ROOT` constant in `src/aeat/core/config.py` losing its
-`corpus`/`registry` join responsibility. The constant may stay for
-`var/` outputs but the corpus/registry resolution paths leave it.
-
-The second bucket is the three Settings fields:
+The third bucket is the three Settings fields:
 `aeat_manuals_root`, `aeat_normatives_root`, and
 `aeat_vat_catalogue_root`. Their defaults switch from the
 `PROJECT_ROOT` join to a resource-locator resolution that returns a
 `Path` materialised through `as_file` at startup. Env-override
-semantics are preserved verbatim — operators with an external corpus
-mirror keep working. Domain loaders that read the field
-(`src/aeat/domain/manuals/_loader.py`,
-`src/aeat/domain/normatives/_loader.py`,
-`src/aeat/application/registry/_corpus.py`) need no signature change.
+semantics are preserved verbatim. Domain loaders that read the field
+need no signature change.
 
-The third bucket is every hard-coded `PROJECT_ROOT / "registry" / "aeat"`
-and `PROJECT_ROOT / "corpus" / ...` call site under `src/aeat/`. The
-production surface spans `src/aeat/application/diagnostics.py`,
-`src/aeat/application/filing/runtime.py`,
-`src/aeat/application/filing/__init__.py`,
-`src/aeat/application/modelo/_actions.py`,
-`src/aeat/application/verification/_verify.py`,
-`src/aeat/application/topics/__init__.py`,
-`src/aeat/adapters/inbound/declaracion/_parser.py`,
-`src/aeat/adapters/outbound/aeat/sede/_declarations.py`,
-`src/aeat/domain/vat/_rates.py`,
-`src/aeat/domain/vat/_catalogue.py`,
-`src/aeat/domain/vat/_recargo_equivalencia.py`,
-`src/aeat/domain/rental/_imputacion_parameters.py`,
-`src/aeat/domain/deadlines/_recargo.py`,
-`src/aeat/domain/deadlines/_festivos.py`,
-`src/aeat/domain/deadlines/_engine.py`,
-`src/aeat/domain/categories/_registry.py`,
-`src/aeat/domain/user_profile/_loader.py`,
-`src/aeat/entrypoints/cli/_modelo.py`,
-`src/aeat/entrypoints/cli/_common.py`,
-`src/aeat/entrypoints/cli/_app_live.py`,
-`src/aeat/entrypoints/cli/_config/_google.py`, and
-`src/aeat/entrypoints/cli/registry.py`. Each call site replaces the
-`PROJECT_ROOT` join with a `packaged_data(...)` call returning the
-appropriate subtree. Signatures that already accept an optional
-`registry_root: Path | None = None` keep that parameter as an explicit
-override; the default value moves to `packaged_data("registry", "aeat")`.
+The fourth bucket is every other production resolution path beyond
+the Settings-mediated three. It spans the ~25 `PROJECT_ROOT / "registry" / "aeat"`
+and `PROJECT_ROOT / "corpus" / ...` joins enumerated in the plan,
+the lone `Path(__file__).resolve().parents[5]` walk in
+`src/aeat/domain/auth/apoderamientos/_catalogue.py`, the seven
+CWD-relative `Path("registry/aeat")` typer-argument defaults under
+`src/aeat/entrypoints/cli/registry.py`, the additional CWD-relative
+defaults at module level in `src/aeat/entrypoints/cli/_app_live.py`,
+`src/aeat/application/registry/__init__.py`, and
+`src/aeat/application/live/__init__.py`, plus the four error
+messages that embed registry paths verbatim and the eleven glob
+sites in loaders that iterate `*.toml` or `*.json` patterns. Each
+site replaces the source-tree-dependent join with a
+`packaged_data(...)` call; signatures that already accept an
+optional `registry_root: Path | None = None` keep that parameter as
+an explicit override.
 
-The fourth bucket is the test surface. Approximately 90 test modules
+The fifth bucket is the test surface. Approximately 90 test modules
 share the same `PROJECT_ROOT / "registry" / "aeat"` pattern and
-migrate to the same locator. The migration preserves real-behaviour
+migrate to the same locator. The nine f-string composition sites
+that embed corpus and registry path fragments in test fixtures
+migrate alongside. The migration preserves real-behaviour
 semantics — no test gains a mock, fake, or skip as part of this
-change. The CLI default in `src/aeat/entrypoints/cli/registry.py` for
-`corpus/aeat_official/disenos_registro` migrates similarly.
+change.
 
 Two real-behaviour test guards land alongside the migration:
 
@@ -235,13 +263,13 @@ The second guard is a built-wheel manifest assertion under
 `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`. The test
 shells out to `uv build --wheel` into a `tmp_path`, opens the
 resulting wheel as a zip archive, enumerates every git-tracked path
-under `corpus/` and `registry/` via `git ls-files`, and asserts that
-every tracked path appears in the archive at the expected
-`aeat/_data/<relative-path>` prefix. The test runs as part of the
-default unit gate. It fails loudly when someone edits
-`pyproject.toml`, moves a file, or drops a path without updating the
-hatch configuration. It uses no mocks, fakes, or skips; the
-subprocess and zip inspection are real.
+under `src/aeat/_data/corpus/` and `src/aeat/_data/registry/` via
+`git ls-files`, and asserts that every tracked path appears in the
+archive at the expected `aeat/_data/<relative-path>` prefix. The
+test runs as part of the default unit gate. It fails loudly when
+someone edits `pyproject.toml`, moves a file, or drops a path
+without updating the hatch configuration. It uses no mocks, fakes,
+or skips; the subprocess and zip inspection are real.
 
 The third small change is to `src/aeat/core/external_constants.py`:
 its `Path(__file__).resolve().parent` walk migrates to
@@ -251,15 +279,23 @@ hatch `include` entry for that file remains.
 
 ## Rationale
 
-Force-include keeps the on-disk layout stable while making the wheel
-self-sufficient. The repository's curators continue to author corpus
-and registry content at the top-level paths they have always used.
-Reviewers and editors do not relearn the layout. Git history for
-those trees is untouched (no mass-rename), which keeps blame and PR
-review tractable. The wheel is the only place the
-`aeat/_data/...` prefix appears, and the resource locator is the only
-place that prefix is written down in code. The hidden coupling
-between the runtime and the checkout location dies.
+The physical relocation collapses the editable-install and
+built-wheel resolution paths into one. Both surfaces resolve
+`importlib.resources.files("aeat").joinpath("_data", ...)` to the
+same on-disk subtree byte-for-byte; the locator does not branch on
+install mode. The wheel is self-sufficient without any
+force-include declaration because the relocated trees ride along
+inside `src/aeat/` and are packaged by the existing `packages` line.
+The hidden coupling between the runtime and the source-checkout
+location dies; the curators take a one-time path-anchor update in
+return for an installable artefact.
+
+A force-include-only strategy was prototyped, demonstrated working
+under the built-wheel surface, and rejected after empirical
+verification that editable installs (the developer default) do not
+honour the mapping. Persisting that strategy would have required a
+hybrid locator that branched on install mode, which the project's
+no-shims rule forbids.
 
 A single `Traversable`-returning boundary is the smallest possible
 surface that satisfies every consumer. It avoids parallel APIs for
@@ -304,11 +340,23 @@ the developer workflow. `uv sync` continues to install in-place;
 to the in-tree sources under hatchling's editable-install behaviour.
 
 Every `PROJECT_ROOT / "registry"` or `PROJECT_ROOT / "corpus"` call
-site changes. The diff is wide (~120 source and test files) but
-mechanical once the locator lands. The migration has no behavioural
-test changes — every test continues to read the same files; only
-the resolution path differs. Tests that already accept an injectable
+site changes, alongside the additional consumer sites identified in
+the Correction preamble. The diff is wide (~140 source and test
+files counting the discovered surfaces) but mechanical once the
+locator lands. The migration has no behavioural test changes —
+every test continues to read the same files; only the resolution
+path differs. Tests that already accept an injectable
 `registry_root: Path | None` keep their injection seam.
+
+The on-disk layout changes for curators. Authors of corpus content
+now anchor at `src/aeat/_data/corpus/` rather than the top-level
+`corpus/`; the same applies to `src/aeat/_data/registry/`. The
+`.gitignore` allow-list rules for the seven tracked Renta
+`source.pdf` files relocate to the new prefix in the same commit
+that performs the rename, so no PDF drops from tracking. Curator
+documentation under `README.md` and `ROADMAP.md` carries path
+mentions that drift after the move; updating them is scoped to a
+follow-up documentation PR rather than this feature.
 
 The `PROJECT_ROOT` constant in `src/aeat/core/config.py` retains its
 `var/` output role but loses every `corpus`/`registry` join. A

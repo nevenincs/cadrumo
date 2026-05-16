@@ -21,45 +21,14 @@ related:
 
 # `corpus-registry-packaging` plan
 
-Migrate the runtime resolution of the on-disk corpus and registry
-trees off the project-root walk in the config module onto a single
-packaged-resource boundary, and update the wheel build target so the
-trees ship inside the installed distribution at `aeat/_data/corpus/`
-and `aeat/_data/registry/`. The migration lands the boundary first,
-then the Settings-mediated consumers, then the production hard-codes,
-then the test surface, then the release-engineering documentation
-update.
-
-## Proposed Changes
-
-The accepted ADR ratifies bundling both top-level data trees inside
-the wheel via hatchling force-include, exposed through a new boundary
-at `src/aeat/core/resources.py` that returns a `Traversable` rooted at
-`importlib.resources.files("aeat").joinpath("_data", ...)`. The
-Settings env-override seam for the three corpus subtrees is
-preserved; only their defaults switch from the broken project-root
-walk to a resource-locator resolution. Hard-coded
-`PROJECT_ROOT / "registry" / "aeat"` and
-`PROJECT_ROOT / "corpus" / "..."` joins move to the locator directly.
-Test modules follow the same migration with no new mocks, fakes, or
-skips. Two real-behaviour test guards lock the contract: an
-in-process leaf-presence assertion and a built-wheel manifest
-assertion that drives `uv build --wheel` end-to-end.
-
-All identifier-affecting structure under the Steps section is owned
-by the `vault plan` CLI; nothing in the Phase or Step rows is
-hand-written.
-
-## Steps
-
 ### Phase `P01` - resource-locator boundary and wheel-build wiring
 
 Land the single resource-access boundary, the hatch force-include configuration that ships corpus and registry inside the wheel, the in-process and built-wheel test guards, and the external-constants idiom consolidation.
 
 - [ ] `P01.S01` - Implement packaged_data and as_path resource locator; `src/aeat/core/resources.py`.
 - [ ] `P01.S02` - Add real-behaviour Traversable leaf-presence assertions across every bundled subtree; `src/aeat/core/test_resources.py`.
-- [ ] `P01.S03` - Add hatch wheel force-include entries for corpus and registry while keeping the existing narrow include entries; `pyproject.toml`.
-- [ ] `P01.S04` - Add built-wheel manifest guard that drives uv build --wheel and asserts every git-tracked corpus and registry path appears at the aeat/_data prefix; `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`.
+- [ ] `P01.S03` - Confirm hatch packages directive covers the relocated src/aeat/_data subtree without adding a force-include block; `pyproject.toml`.
+- [ ] `P01.S04` - Add built-wheel manifest guard that drives uv build --wheel and asserts every git-tracked src/aeat/_data path appears in the wheel archive under the aeat/_data prefix; `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`.
 - [ ] `P01.S05` - Migrate the external-constants loader from Path(__file__).parent to resources.files(__package__) to consolidate on the single resource-access idiom; `src/aeat/core/external_constants.py`.
 
 ### Phase `P02` - settings-mediated corpus consumers
@@ -99,6 +68,15 @@ Migrate every PROJECT_ROOT / corpus / ... and PROJECT_ROOT / registry / aeat joi
 - [ ] `P03.S31` - Migrate the google calc CLI registry-root resolution to packaged_data; `src/aeat/entrypoints/cli/_config/_google.py`.
 - [ ] `P03.S32` - Migrate the registry CLI typer default for the official disenos-registro corpus path to packaged_data; `src/aeat/entrypoints/cli/registry.py`.
 - [ ] `P03.S33` - Drop the remaining PROJECT_ROOT corpus and registry joins from the config module while preserving the PROJECT_ROOT constant for var outputs; `src/aeat/core/config.py`.
+- [ ] `P03.S55` - Replace the Path(__file__).resolve().parents[5] walk with the packaged_data locator for the apoderamientos scopes resolution; `src/aeat/domain/auth/apoderamientos/_catalogue.py`.
+- [ ] `P03.S56` - Replace the seven module-level CWD-relative Path(registry/aeat) typer-argument defaults with packaged_data resolution; `src/aeat/entrypoints/cli/registry.py`.
+- [ ] `P03.S57` - Replace the module-level CWD-relative Path(registry/aeat) default with packaged_data resolution; `src/aeat/entrypoints/cli/_app_live.py`.
+- [ ] `P03.S58` - Replace the module-level CWD-relative Path(registry/aeat) default with packaged_data resolution; `src/aeat/application/registry/__init__.py`.
+- [ ] `P03.S59` - Replace the module-level CWD-relative Path(registry/aeat) default with packaged_data resolution; `src/aeat/application/live/__init__.py`.
+- [ ] `P03.S60` - Update the four production error-message strings that embed the old registry/aeat path prefix; `src/aeat/domain/`.
+- [ ] `P03.S61` - Migrate the eleven glob sites in registry and corpus loaders so they iterate Traversable.iterdir or use packaged_data with as_path materialisation; `src/aeat/domain/calculations/registry/_loader.py`.
+- [ ] `P03.S64` - Migrate the cached default_registry_authority singleton to packaged_data; `sequence this Step first within P03 because the singleton propagates through several production callers; `src/aeat/domain/calculations/registry/_authority.py`.
+- [ ] `P03.S65` - Switch the source_root parameter of ValidatedRegistryAuthority.load and default_registry_authority to the packaged_data root so corpus_ref and raw_evidence_locator strings inside registry TOMLs resolve relative to the bundled prefix; `src/aeat/domain/calculations/registry/_authority.py`.
 
 ### Phase `P04` - test surface migration and release documentation
 
@@ -121,68 +99,15 @@ Migrate every test module that joins PROJECT_ROOT against corpus or registry to 
 - [ ] `P04.S48` - Migrate the CLI entrypoint test suite registry-root and corpus workbook-root resolution to packaged_data; `src/aeat/entrypoints/cli/`.
 - [ ] `P04.S49` - Run the project quality gate of ruff, ty, pytest, and structural audits across the touched surface; `justfile`.
 - [ ] `P04.S50` - Document the PyPI 100 MB per-file cap acknowledgement and the three release-time options (file-size grant request, future PDF extras split, private-index publication); `RELEASING.md`.
+- [ ] `P04.S62` - Migrate the nine f-string path-composition sites in tests that embed corpus and registry fragments to packaged_data composition; `src/aeat/domain/`.
+- [ ] `P04.S63` - Migrate the justificante parser tests that glob corpus/aeat_official PDFs to packaged_data composition; `src/aeat/adapters/inbound/justificante/`.
+- [ ] `P04.S66` - Audit the four locale YAML files for CLI help strings that quote the old corpus or registry path prefix and update any operator-visible mentions; `src/aeat/locales/`.
 
-## Parallelization
+### Phase `P05` - physical relocation and operator-config update
 
-P01 must land first as a single coherent slice; nothing downstream
-can resolve packaged data until the boundary, the hatch
-configuration, and the in-process leaf-presence guard are in place.
-Within P01, S01 strictly precedes S02 (the test imports the
-locator). S03 may land alongside S01 because hatch configuration is
-independent of the runtime locator. S04 strictly follows S03
-because the built-wheel guard requires the force-include rules to
-be in place. S05 is independent of the rest of P01 and may land in
-parallel.
+Move corpus and registry under src/aeat/_data via git mv, rewrite the gitignore allow-list so the tracked Renta PDFs remain tracked under the new prefix, and refresh env/.env.example so the three operator-visible env-var defaults reflect the new layout. This phase EXECUTES BEFORE P01 despite its higher identifier; identifier order is append-only per the plan-hardening contract, but the Parallelization section below states the canonical execution order.
 
-P02 strictly follows P01 because Settings defaults call into the
-locator. Within P02, S06 must precede S07 (the invariant tests read
-the new defaults). S08, S09, and S10 are confirmation checks that
-run after S06 lands and may execute in parallel.
-
-P03 strictly follows P02. Within P03 every step is independent at
-the file level and may be parallelised freely once the locator is
-available; conflicts arise only when two steps touch the same file,
-which the per-file scoping prevents. P03.S33 (the final config
-module cleanup) must land last in P03 because it removes any
-remaining join the prior steps still relied on indirectly.
-
-P04 strictly follows P03. The test-area steps S34 through S48 are
-file-scoped to disjoint directories and may run in parallel. S49
-strictly follows S48 because the quality gate is the verification
-of the prior work. S50 is documentation-only and may run alongside
-S49.
-
-## Verification
-
-The plan is complete when every Step is closed and the following
-real-behaviour checks pass:
-
-The in-process resource-locator leaf-presence test in
-`src/aeat/core/test_resources.py` passes against the installed
-package surface, covering at least one representative leaf in each
-top-level subtree under `aeat/_data/`.
-
-The built-wheel manifest assertion in
-`src/aeat/tests/test_wheel_bundles_corpus_and_registry.py` passes:
-`uv build --wheel` produces a wheel that contains every file
-reported by `git ls-files corpus registry`, mapped to the
-`aeat/_data/` prefix.
-
-No occurrence of `PROJECT_ROOT / "corpus"` or
-`PROJECT_ROOT / "registry"` remains anywhere under `src/aeat/`,
-verified by repository-wide search.
-
-The Settings env-override seam still wins over the resource-locator
-default for `aeat_manuals_root`, `aeat_normatives_root`, and
-`aeat_vat_catalogue_root`, verified by the existing override-based
-tests under `src/aeat/domain/manuals/`,
-`src/aeat/domain/normatives/`, and
-`src/aeat/application/registry/`.
-
-The project quality gate completes clean: ruff, ty, pytest with the
-unit marker, and the structural audits declared in the justfile all
-pass.
-
-The release documentation surface acknowledges the PyPI 100 MB
-per-file cap and the three release-time options without committing
-the project to any one of them.
+- [ ] `P05.S51` - Relocate the corpus tree under src/aeat/_data via git mv preserving every tracked file; `corpus/ -> src/aeat/_data/corpus/`.
+- [ ] `P05.S52` - Relocate the registry tree under src/aeat/_data via git mv preserving every tracked file; `registry/ -> src/aeat/_data/registry/`.
+- [ ] `P05.S53` - Rewrite the gitignore allow-list and HTML-intermediate rules so the seven tracked Renta source.pdf files and the source.html directory rule reference the new src/aeat/_data prefix; `.gitignore`.
+- [ ] `P05.S54` - Update the three corpus-related env var defaults so the documented operator-override paths reflect the new src/aeat/_data prefix; `env/.env.example`.
