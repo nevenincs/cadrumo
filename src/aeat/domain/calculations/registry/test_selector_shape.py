@@ -71,6 +71,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         "foreign_asset",
         "atribucion_member",
         "refund_operation",
+        "manual_input",
     }
     assert set(_BINDING_SELECTOR_REGISTRY) == expected
 
@@ -193,7 +194,7 @@ def test_free_form_source_returns_no_diagnostics() -> None:
     """
 
     binding = _binding(
-        source="manual_input",
+        source="ledger",
         selector={"label": "operator-supplied", "value_kind": "decimal"},
     )
     assert validate_binding_selector_shape(binding) == []
@@ -227,6 +228,78 @@ def test_counterpart_sources_validate_against_invoice_selector() -> None:
         assert validate_binding_selector_shape(binding) == [], (
             f"well-shaped {source} selector should pass the gate"
         )
+
+
+def test_manual_input_accepts_boolean_casilla_shape() -> None:
+    """The casilla-shape manual_input selector (boolean toggles) validates.
+
+    Used by Modelo 100 estimacion-directa modality flags etc.
+    """
+
+    binding = _binding(
+        source="manual_input",
+        selector={
+            "casilla": "0168",
+            "data_type": "boolean",
+            "true_value": "N",
+            "false_value": "S",
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_manual_input_accepts_record_field_shape() -> None:
+    """The record-field-shape manual_input selector (M131 etc) validates."""
+
+    binding = _binding(
+        source="manual_input",
+        selector={
+            "record": "DPA",
+            "field": "ano-inicio-actividad",
+            "offset": 25,
+            "length": 4,
+            "data_type": "integer",
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_manual_input_rejects_both_shapes_together() -> None:
+    """Declaring casilla AND record-field in the same selector fails."""
+
+    binding = _binding(
+        source="manual_input",
+        selector={
+            "casilla": "0168",
+            "record": "DPA",
+            "field": "x",
+            "offset": 1,
+            "length": 1,
+            "data_type": "integer",
+        },
+        binding_id="bad-mixed",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-mixed" in failures[0]
+
+
+def test_manual_input_boolean_casilla_requires_value_strings() -> None:
+    """A boolean casilla must declare both true_value and false_value."""
+
+    binding = _binding(
+        source="manual_input",
+        selector={
+            "casilla": "0168",
+            "data_type": "boolean",
+            "true_value": "N",
+            # missing false_value
+        },
+        binding_id="bad-boolean",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-boolean" in failures[0]
 
 
 def test_collectible_invoice_rejects_lowercase_clave() -> None:
