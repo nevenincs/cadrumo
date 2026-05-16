@@ -19,7 +19,17 @@ _ONE = Decimal("1")
 
 
 class RegistryCalculationEntry(BaseModel):
-    """One trace row emitted by the registry formula runtime."""
+    """One trace row emitted by the registry formula runtime.
+
+    Carries the per-formula provenance (``formula_id``, ``op``,
+    ``operand_refs``, ``operand_values``, ``legal_refs``,
+    ``source_refs``) for a single formula-computed casilla. Entries
+    cover ONLY the casillas that were computed by a registry formula
+    — input casillas and bound casillas are absent from the entries
+    tuple. Callers that need provenance for non-computed casillas
+    must look them up against
+    :attr:`RegistrySnapshot.revision.casillas` directly.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -34,7 +44,26 @@ class RegistryCalculationEntry(BaseModel):
 
 
 class RegistryCalculationResult(BaseModel):
-    """Calculated outputs and trace entries for one registry snapshot."""
+    """Calculated outputs and trace entries for one registry snapshot.
+
+    Coverage asymmetry (calc-engine grounding audit F6):
+
+    * :attr:`values` covers every casilla on the revision — inputs,
+      bound, and formula-computed — with the final Decimal value the
+      engine resolved for each. Iterate this when assembling a
+      complete casilla map (e.g. for filing draft construction).
+    * :attr:`entries` covers ONLY the formula-computed casillas. Each
+      entry carries the formula's legal_refs / source_refs / operand
+      lineage. ``len(entries) <= len(values)`` always; equality holds
+      only when every casilla on the revision is formula-computed
+      (rare in practice).
+
+    Consumers that assume ``len(entries) == len(values)`` will silently
+    drop provenance on input and bound casillas — see
+    :func:`aeat.application.modelo._actions.calculate_modelo_revision`
+    for the canonical pattern that pulls input / bound provenance from
+    the registry casilla definitions instead.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
