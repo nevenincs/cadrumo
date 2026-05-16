@@ -264,20 +264,47 @@ together.
 
 Recommended next steps in order of leverage:
 
-1. Open a small follow-up issue to retire the
-   `default_registry_authority()` shim once callers consolidate.
-2. Open a small follow-up to retire the three domain-layer
-   `_DEFAULT_*_ROOT` constants (categories, deadlines, vat
-   catalogue) by threading their Repositories through to all
-   callers.
-3. Track ruff's PEP-562 awareness as it lands so the four
+1. Track ruff's PEP-562 awareness as it lands so the four
    `# noqa: F822` markers can be dropped.
-4. Investigate the 252 pre-existing test failures via a
+2. Investigate the 248 pre-existing test failures via a
    separate triage feature; many appear to be 2026Q1-period
    data drift in the calculation registry rather than packaging
    defects.
-5. When the next read-only resource kind lands, follow the
+3. When the next read-only resource kind lands, follow the
    Repository pattern: declare a `Repository[T, K]` subclass,
    wire it into `ResourceRegistry`, expose it via
    `_repos/__init__.py`, and let the existing structural guard
    keep it honest.
+
+## Addendum (2026-05-16) — strict no-compat enforcement landed
+
+The first two recommendations above are CLOSED. Branch
+`chore/eliminate-shims` landed the strict no-compat pass:
+
+- `default_registry_authority()` deleted; all callers route through
+  `resources().modelos.authority` (or `ValidatedRegistryAuthority.load`
+  for explicit-override paths) — see commit `02f3409f`.
+- `_DEFAULT_*_ROOT` constants deleted from `cli/registry.py`,
+  `cli/_app_live.py`, `domain/categories/_registry.py`,
+  `domain/deadlines/_engine.py`, `domain/vat/_rates.py`,
+  `domain/vat/_catalogue.py`, `domain/vat/_recargo_equivalencia.py`,
+  `domain/rental/_imputacion_parameters.py`,
+  `domain/user_profile/_loader.py`. All typer.Option defaults switched
+  to `Path | None = None` with body-resolution via `bundled_path(...)`
+  / `resources()`. Commit `dda33572`.
+- Module-level `CATEGORY_PROFILES_2025` and
+  `CATEGORY_PROFILE_REGISTRY_BY_YEAR` eager loads deleted; six call
+  sites migrated to `resolve_category_profiles(2025)`.
+- PEP-562 `__getattr__` lazy module shims deleted from
+  `domain/vat/_recargo_equivalencia.py` and
+  `domain/rental/_imputacion_parameters.py`; both expose ordinary
+  `load_*()` accessor functions.
+- Structural-guard allow-list at
+  `src/aeat/core/resources/test_single_surface_invariant.py` is now
+  `frozenset()`. The companion ratchet test enforces that no
+  production module outside `src/aeat/core/resources/` may declare
+  a `_DEFAULT_*_ROOT = bundled_path(...)` constant.
+- Residual CLI test `test_registry_verify_cli_validates_sources_and_catalogues`
+  root-caused (stale `PROJECT_ROOT` source-root after the
+  corpus-registry-packaging physical move) and fixed in commit
+  `d2742b03` to use `bundled_path()`.
