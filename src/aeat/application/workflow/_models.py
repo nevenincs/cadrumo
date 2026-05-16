@@ -402,7 +402,14 @@ class WorkflowStep(BaseModel):
     success: bool | None = None
     summary: str
     details: Annotated[
-        WorkflowStepDetails | Mapping[str, str] | None,
+        # The Mapping branch is intentionally typed ``str -> object`` rather
+        # than ``str -> str`` because :class:`WorkflowStepDetails` carries
+        # ``extra="allow"`` and stores diagnostic values heterogeneously
+        # (engine call sites stringify by convention but the storage shape
+        # is not constrained). The BeforeValidator coerces a Mapping to a
+        # WorkflowStepDetails so downstream readers always see the typed
+        # record. Workflow + CLI surface audit F6.
+        WorkflowStepDetails | Mapping[str, object] | None,
         BeforeValidator(_coerce_workflow_step_details),
     ] = None
     site_health_alert: SiteHealthAlert | None = None
