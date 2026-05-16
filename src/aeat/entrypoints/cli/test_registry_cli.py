@@ -122,7 +122,7 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
             "--registry-root",
             str(_REGISTRY_ROOT),
             "--source-root",
-            str(PROJECT_ROOT),
+            str(bundled_path()),
         ],
     )
 
