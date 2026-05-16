@@ -133,6 +133,64 @@ def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None
     return lines
 
 
+async def _try_expand_secondary_toolbar(page: Page, assert_click_target_safe: object) -> None:
+    """Click "Mostrar opciones" to reveal the secondary toolbar row.
+
+    The button is the secondary-toolbar expander; failing to find or
+    click it is non-fatal — the subsequent Buscar locator will simply
+    soft-fail when the row stays hidden.
+    """
+
+    try:
+        mostrar_btn = page.locator("button[title='Mostrar opciones']").first
+        await mostrar_btn.wait_for(state="visible", timeout=10_000)
+        await assert_click_target_safe(  # type: ignore[misc]
+            mostrar_btn,
+            stage="explore:mostrar-opciones-safety",
+            description="Mostrar opciones (toolbar expander)",
+            timeout_ms=10_000,
+        )
+        await mostrar_btn.click(timeout=10_000)
+        await page.wait_for_timeout(1_500)
+    except Exception as exc:
+        _log.debug("explore DOM Mostrar opciones unreachable", exc_info=True)
+        print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")
+
+
+async def _try_open_and_snapshot_dialog(
+    page: Page,
+    *,
+    locator: object,
+    stage: str,
+    description: str,
+    timeout_ms: int,
+    wait_after_click_ms: int,
+    assert_click_target_safe: object,
+) -> str:
+    """Wait, safety-gate, click ``locator`` and snapshot the resulting ZK layer.
+
+    Soft-fails: when the dialog cannot be opened, returns a
+    "(unreachable: …)" snapshot string instead of raising. The DOM
+    capture still proceeds.
+    """
+
+    try:
+        await locator.wait_for(state="visible", timeout=timeout_ms)  # type: ignore[attr-defined]
+        await assert_click_target_safe(  # type: ignore[misc]
+            locator,
+            stage=f"explore:{stage}-safety",
+            description=description,
+            timeout_ms=timeout_ms,
+        )
+        await locator.click(timeout=timeout_ms)  # type: ignore[attr-defined]
+        await page.wait_for_timeout(wait_after_click_ms)
+        return await _snapshot_zk_layer(page, stage)
+    except Exception as exc:
+        _log.debug("explore DOM %s unreachable", stage, exc_info=True)
+        print(f"explore: {stage} unreachable: {type(exc).__name__}: {exc}")
+        return f"=== ZK layer snapshot: {stage} ===\n(unreachable: {type(exc).__name__}: {exc})"
+
+
 async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
     from ._renta_web_open import (
         _click_expected,
@@ -190,43 +248,16 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
         # Buscar casilla lives on the secondary toolbar row that's hidden by
         # default — "Mostrar opciones" expands it. Click that first so the
         # subsequent Buscar locator resolves to a visible element.
-        try:
-            mostrar_btn = page.locator("button[title='Mostrar opciones']").first
-            await mostrar_btn.wait_for(state="visible", timeout=10_000)
-            await assert_click_target_safe(
-                mostrar_btn,
-                stage="explore:mostrar-opciones-safety",
-                description="Mostrar opciones (toolbar expander)",
-                timeout_ms=10_000,
-            )
-            await mostrar_btn.click(timeout=10_000)
-            await page.wait_for_timeout(1_500)
-        except Exception as exc:
-            _log.debug("explore DOM Mostrar opciones unreachable", exc_info=True)
-            print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")
-
-        buscar_btn = page.locator("button").filter(has_text="Buscar casilla").first
-        try:
-            await buscar_btn.wait_for(state="visible", timeout=15_000)
-            # Safety: the button label "Buscar casilla" doesn't trip the
-            # forbidden-tokens denylist (no presentar/firmar/pagar/etc).
-            await assert_click_target_safe(
-                buscar_btn,
-                stage="explore:buscar-casilla-safety",
-                description="Buscar casilla",
-                timeout_ms=15_000,
-            )
-            await buscar_btn.click(timeout=15_000)
-            # Allow dialog to render.
-            await page.wait_for_timeout(2_000)
-            buscar_dialog_snapshot = await _snapshot_zk_layer(page, "buscar-casilla")
-        except Exception as exc:
-            # Soft-fail — DOM will still capture without dialog.
-            _log.debug("explore DOM buscar casilla unreachable", exc_info=True)
-            print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")
-            buscar_dialog_snapshot = (
-                f"=== ZK layer snapshot: buscar-casilla ===\n(unreachable: {type(exc).__name__}: {exc})"
-            )
+        await _try_expand_secondary_toolbar(page, assert_click_target_safe)
+        buscar_dialog_snapshot = await _try_open_and_snapshot_dialog(
+            page,
+            locator=page.locator("button").filter(has_text="Buscar casilla").first,
+            stage="buscar-casilla",
+            description="Buscar casilla",
+            timeout_ms=15_000,
+            wait_after_click_ms=2_000,
+            assert_click_target_safe=assert_click_target_safe,
+        )
 
         # Note: dialogs cannot be dismissed via the textual "Cancelar"
         # button because the safety guard intentionally denies "cancelar"
@@ -244,24 +275,15 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
         # the navigation primitive the driver will use to reach individual
         # casillas section-by-section. Capture the dialog structure so the
         # next driver iteration can wire selector overrides.
-        apartados_btn = page.locator("button[title='Apartados declaración']").first
-        try:
-            await apartados_btn.wait_for(state="visible", timeout=15_000)
-            await assert_click_target_safe(
-                apartados_btn,
-                stage="explore:apartados-safety",
-                description="Apartados declaración",
-                timeout_ms=15_000,
-            )
-            await apartados_btn.click(timeout=15_000)
-            await page.wait_for_timeout(2_500)
-            apartados_dialog_snapshot = await _snapshot_zk_layer(page, "apartados")
-        except Exception as exc:
-            _log.debug("explore DOM apartados unreachable", exc_info=True)
-            print(f"explore: apartados unreachable: {type(exc).__name__}: {exc}")
-            apartados_dialog_snapshot = (
-                f"=== ZK layer snapshot: apartados ===\n(unreachable: {type(exc).__name__}: {exc})"
-            )
+        apartados_dialog_snapshot = await _try_open_and_snapshot_dialog(
+            page,
+            locator=page.locator("button[title='Apartados declaración']").first,
+            stage="apartados",
+            description="Apartados declaración",
+            timeout_ms=15_000,
+            wait_after_click_ms=2_500,
+            assert_click_target_safe=assert_click_target_safe,
+        )
 
         # Capture full HTML + a button/link inventory.
         html_content = await page.content()
