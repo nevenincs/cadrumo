@@ -35,7 +35,7 @@ Land the comprehensive census-field delta with primary-source legal grounding fo
 - [x] `P01.S05` - add vivienda_office section with total_m2 and office_m2 and LIRPF Art. 30.2 rule 5 grounding (Ley 6/2017 BOE-A-2017-12544); `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
 - [x] `P01.S06` - wire activities.iae_epigraph into model_selectors so the field reaches AutonomoProfile; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
 - [x] `P01.S07` - add schema parser validation that every census field declares a legal_refs entry; `src/aeat/application/user_profile/_schema_loader.py`.
-- [ ] `P01.S08` - extend autonomo_profile_from_mapping to surface the new census fields on AutonomoProfile; `src/aeat/domain/deadlines/_profiles.py`.
+- [x] `P01.S08` - extend autonomo_profile_from_mapping to surface the new census fields on AutonomoProfile; `src/aeat/domain/deadlines/_profiles.py`.
 - [x] `P01.S09` - add statutory_multiplier field to ProportionalityKind metadata so the legal arithmetic attaches to the Kind rather than per-category; `src/aeat/domain/categories/_proportionality.py`.
 - [x] `P01.S10` - split HOME_OFFICE category family into SUMINISTROS subkind (statutory_multiplier 0.30 LIRPF Art. 30.2 rule 5) and OWNERSHIP subkind (multiplier 1.0 raw afectacion); `src/aeat/domain/categories/_spending_category.py`.
 - [x] `P01.S11` - move SUMINISTROS_HOME_OFFICE_LUZ AGUA GAS INTERNET to USAGE_RATIO_HOME_AREA_SUMINISTROS kind; `src/aeat/domain/categories/_spending_category.py`.
