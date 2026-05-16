@@ -29,8 +29,7 @@ from ._proportionality import (
     parse_http_url,
 )
 from ._registry import (
-    CATEGORY_PROFILE_REGISTRY_BY_YEAR,
-    CATEGORY_PROFILES_2025,
+    load_category_profile_registry,
     resolve_category_profiles,
 )
 from ._spending_category import (
@@ -43,8 +42,6 @@ from ._spending_category import (
 
 __all__ = [
     "CATEGORY_FAMILY_MEMBERS",
-    "CATEGORY_PROFILES_2025",
-    "CATEGORY_PROFILE_REGISTRY_BY_YEAR",
     "CategoryCitation",
     "CategoryCitationSource",
     "CategoryProfile",
@@ -59,5 +56,6 @@ __all__ = [
     "family_for",
     "load_category_profiles_from_manual",
     "parse_http_url",
+    "load_category_profile_registry",
     "resolve_category_profiles",
 ]

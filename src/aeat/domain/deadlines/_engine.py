@@ -33,8 +33,6 @@ from ._recargo import build_recovery_for_overdue
 _logger = get_logger(__name__)
 
 _DEFAULT_DUE_SOON_DAYS = 14
-_DEFAULT_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_DEFAULT_SOURCE_ROOT = bundled_path()
 
 
 def _classify(closes_on: date, today: date, due_soon_days: int) -> ObligationStatus:
@@ -91,8 +89,14 @@ class DeadlineEngine:
         if due_soon_days < 0:
             raise DeadlineValidationError(f"due_soon_days must be >= 0, got {due_soon_days}")
         self.due_soon_days = due_soon_days
-        self._source_root = source_root or _DEFAULT_SOURCE_ROOT
-        root = registry_root or _DEFAULT_REGISTRY_ROOT
+        if registry_root is None and source_root is None:
+            from ...core.resources import resources
+
+            self._registry = resources().modelos.authority
+            self._source_root = bundled_path()
+            return
+        self._source_root = source_root if source_root is not None else bundled_path()
+        root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
         try:
             self._registry = ValidatedRegistryAuthority.load(root, source_root=self._source_root)
         except RegistryError as exc:
