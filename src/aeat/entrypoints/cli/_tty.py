@@ -5,19 +5,25 @@ emit ANSI colour, render a rich progress widget, or refuse a request
 that requires interactive stdin. Resolution merges three signals — the
 active CLI flag context (via :func:`aeat.entrypoints.cli._context`),
 explicit per-call overrides, and the operator's environment
-(``NO_COLOR``, ``AEAT_FORCE_COLOR``) — so call sites never need to
-re-implement the precedence rules.
+(``NO_COLOR``, ``AEAT_FORCE_COLOR``, surfaced through
+:class:`Settings`) — so call sites never need to re-implement the
+precedence rules.
+
+Environment variables flow through :class:`aeat.core.config.Settings`
+rather than direct ``os.environ`` reads: ``NO_COLOR`` populates
+:attr:`Settings.no_color`, and ``AEAT_FORCE_COLOR`` populates
+:attr:`Settings.aeat_force_color`. Pydantic-settings handles the
+``.env`` + ``os.environ`` merge order; this module never reaches
+into the process environment directly.
 """
 
 from __future__ import annotations
 
-import os
 import sys
 
+from ...core.config import Settings
 from ...core.errors import AeatError
 from ._context import current_cli_flag
-
-_TRUTHY_ENV_VALUES = frozenset({"1", "true", "yes", "on"})
 
 
 class NonTtyRefusedError(AeatError):
@@ -56,13 +62,6 @@ def _isatty(stream: object) -> bool:
         return False
 
 
-def _env_truthy(name: str) -> bool:
-    """Return :data:`True` when an environment variable is set to a truthy value."""
-
-    value = os.getenv(name, "")
-    return value.strip().lower() in _TRUTHY_ENV_VALUES
-
-
 def is_stdout_tty() -> bool:
     """Return whether stdout is attached to an interactive terminal."""
 
@@ -99,10 +98,11 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
         :data:`True` when colour output is appropriate.
     """
 
+    settings = Settings()
     resolved_no_color = current_cli_flag("no_color") or bool(no_color)
-    if resolved_no_color or bool(os.getenv("NO_COLOR", "").strip()):
+    if resolved_no_color or settings.no_color:
         return False
-    if _env_truthy("AEAT_FORCE_COLOR"):
+    if settings.aeat_force_color:
         return True
     return is_stdout_tty()
 
