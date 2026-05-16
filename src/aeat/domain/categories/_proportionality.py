@@ -140,6 +140,17 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             must be ``None``.
         default_ratio: Optional default usage ratio; only valid for
             usage-ratio kinds.
+        statutory_multiplier: Optional statutory factor applied on
+            top of the operator-chosen usage ratio. Only valid for
+            usage-ratio kinds. The canonical example is the LIRPF
+            Art. 30.2 rule 5 (Ley 6/2017, BOE-A-2017-12544) 0.30
+            multiplier applied to suministros (utility) costs of
+            the habitual vivienda when the operator deducts under
+            estimacion directa: ``effective_deductible_pct =
+            operator_chosen_ratio * statutory_multiplier``. When
+            ``None`` no statutory factor is applied (equivalent to
+            ``Decimal("1")``); the operator's chosen ratio is the
+            effective deductible percentage.
         statutory_cap_eur_per_day: Daily statutory cap; only valid
             for :attr:`ProportionalityKind.STATUTORY_CAP`.
         statutory_cap_eur: Generic statutory cap amount; only valid
@@ -158,6 +169,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     kind: ProportionalityKind
     fixed_pct: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
     default_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    statutory_multiplier: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
     statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_period: StatutoryCapPeriod | None = None
@@ -179,6 +191,10 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         }
         if not is_usage_ratio and self.default_ratio is not None:
             raise CategoryValidationError("default_ratio is only valid for usage_ratio rules")
+        if not is_usage_ratio and self.statutory_multiplier is not None:
+            raise CategoryValidationError(
+                "statutory_multiplier is only valid for usage_ratio rules",
+            )
         has_daily_cap = self.statutory_cap_eur_per_day is not None
         has_generic_cap = self.statutory_cap_eur is not None or self.statutory_cap_period is not None
         has_variant_caps = bool(self.statutory_cap_variants)
@@ -205,3 +221,36 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         if has_variant_caps:
             raise CategoryValidationError("statutory_cap_variants are only valid for statutory_cap rules")
         return self
+
+
+def effective_usage_ratio(rule: ProportionalityRule, chosen_ratio: Decimal) -> Decimal:
+    """Return the legally-effective deductible percentage for ``chosen_ratio``.
+
+    Applies the rule's ``statutory_multiplier`` on top of the operator-
+    chosen usage ratio. Only meaningful for usage-ratio kinds; raises
+    when called on a non-usage-ratio rule (the caller is responsible
+    for routing rules to the right evaluator).
+
+    Args:
+        rule: A :class:`ProportionalityRule` of a usage-ratio kind.
+        chosen_ratio: The operator's stored usage ratio (typically
+            derived from census ``office_m2 / total_m2`` for HOME_AREA
+            kinds, or a personal-use proportion for PERSONAL kinds).
+
+    Returns:
+        ``chosen_ratio * (rule.statutory_multiplier or Decimal("1"))``.
+
+    Raises:
+        :exc:`CategoryValidationError`: When ``rule.kind`` is not a
+            usage-ratio kind.
+    """
+
+    if rule.kind not in {
+        ProportionalityKind.USAGE_RATIO_HOME_AREA,
+        ProportionalityKind.USAGE_RATIO_PERSONAL,
+    }:
+        raise CategoryValidationError(
+            f"effective_usage_ratio is only valid for usage_ratio rules; got {rule.kind}",
+        )
+    multiplier = rule.statutory_multiplier if rule.statutory_multiplier is not None else Decimal("1")
+    return chosen_ratio * multiplier
