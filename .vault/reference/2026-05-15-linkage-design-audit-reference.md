@@ -685,38 +685,64 @@ becomes the operational tracker once an ADR commits to a subset.
 
 ## Post-execution closure update
 
-This appendix records the final coverage state after the four-wave
-execution closed 98 of the 102 inventory rows (96%). Numerators below
-update the `Coverage summary` table earlier in this document; the
-denominators are unchanged. Class-level numerators count the
-inventory rows in the taxonomy class whose underlying defect has
-been structurally remediated (not just spot-fixed).
+This appendix updates the coverage table earlier in this document
+with the verdict of a scripted re-audit (`scratch/reaudit_inventory.py`)
+that re-walked a 35-row sample against current code. The earlier
+"98 / 102 closed (96%)" claim was extrapolated from inventory
+edits rather than verified; the re-audit found that ~31% of the
+claimed-fixed rows in the sample are not actually fixed. The
+numerators below reflect the **verified** structural delivery only.
+Class-level numerators count inventory rows in the taxonomy class
+whose underlying defect has been structurally remediated and
+confirmed by the re-audit. Rows the re-audit script did not visit
+are excluded from these numerators.
 
-| Class | Inventory rows closed | Mechanical surface coverage | Closure mechanism |
-|-------|-----------------------|-----------------------------|--------------------|
-| T-01 | 11 / 11 | 25 / ~25 cross-boundary subset | `CasillaObservation` typed envelope + `RegistryFilingObservation.observations`; backward-compat coercion validator; `no-mapping-str-decimal-on-registry.yml` semgrep guard |
-| T-02 | 6 / 6 | 3 / 3 selector fields | `BindingSelector` discriminated `Union` over eight per-source models |
-| T-03 | 14 / 15 | 21 / 21 ID types; 51 / 51 extra-forbid | `_check_all_id_references(snapshot)` plus tightened `model_config` defaults; one extra-forbid gap deferred |
-| T-04 | 13 / 16 | ~22 / ~30 estimated name-pattern pairs | Canonical envelope migrations; remaining three rows tracked as wontfix-document |
-| T-05 | 4 / 4 | 4 / 4 | `ModeloDefinition.capabilities` flagset migration removed all four hard-coded application gates |
-| T-06 | 1 / 1 | 1 / 1 | `import-linter` contracts wired (`no-renta-in-registry`, `core-not-outer`); two pre-existing contracts left documented as architectural debt |
-| T-07 | 11 / 11 | 25 / 25 emit sites | `SchemaEnvelope` adoption (`_modelo_payloads.py` — 15 typed payload classes); `reference: list[LegalRef]` surfaced via `--explain` |
-| T-08 | 6 / 6 | 3 / 3 | All previously unused JSON-contract symbols are now wired to CLI emit sites |
-| T-09 | 9 / 9 | 21 / 21 | Single `_check_all_id_references` validator wired into `build_snapshot`; every typed-ID reference field walked |
-| T-10 | 4 / 4 | 3 / 3 application-level gates | `capabilities = ["borrador", "renta_ledger_default"]` migrated all three application gates |
-| T-11 | 22 / 28 | ~140 / 268 raw surface | Suppression-inventory drove targeted ty:ignore removal; remaining 76 internal suppressions tracked in the linkage-health dashboard |
-| T-12 | 7 / 8 | 7 / 8 | `row_field_casillas` declarations on per-modelo TOMLs; `form_number` bridge on `CasillaDefinition`; one row deferred to corpus-registry packaging plan |
+| Class | Verified closures (re-audit sample) | Notes |
+|-------|--------------------------------------|-------|
+| T-01 | partial — `CasillaObservation` typed envelope verified on `RegistryFilingObservation` (`R002`). Selector typing across `DataBindingDefinition` / `RelationDefinition` / `period_alignment` (`R007`, `R008`, `R009`) regressed: fields are still bare `Mapping[str, ...]`. The semgrep regression rule exists; the structural rewrite did not land. |
+| T-02 | regressed — discriminated `BindingSelector` `Union` does not exist in `_schema.py`. Selector fields remain bare `Mapping[str, ...]`. |
+| T-03 | partial — `AlgorithmBindingDefinition` targets typed (`R012` verified); `_check_all_id_references` exists and is tested (`R021` partial) but **not wired into `build_snapshot`** — runs only in tests, never at runtime. |
+| T-04 | partial — typed-envelope migrations on observation models verified; selector unions absent (see T-02). |
+| T-05 | partial — `_MODELO_100` gate removed and replaced with capability lookup (`R034` verified); `_renta_ledger.modelo` default removed (`R035` verified); but `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` constant in `_ledger_expenses.py` is still present (`R025` regressed). |
+| T-06 | partial — registry→renta import inverted (`R028` verified); two of the four `import-linter` contracts are kept (`no-renta-in-registry`, `core-not-outer`); the `layered` and `domain-not-application` contracts remain broken. |
+| T-07 | partial — `SchemaEnvelope` adopted at 20+ `register_schema` sites in CLI (`R043` verified); no raw-dict `_emit` sites remain in `_modelo.py` (`R044` verified); but `formulas` command body does not surface `legal_refs` / `--explain` (`R046` partial). |
+| T-08 | verified — `_modelo_payloads.py` declares 15+ typed payload classes wired to CLI emit sites. |
+| T-09 | **not delivered as a runtime gate** — the validator function is defined in `_validate.py` and tested, but is **not invoked by `build_snapshot`**. Production builds do not run the gate; only the dedicated tests do. |
+| T-10 | partial — `_borrador_binding` migrated to capability lookup (`R034` verified); the renta ledger default migrated (`R035` verified). |
+| T-11 | not re-verified — the suppression-inventory dashboard still reports 175 total ty:ignores (76 internal); no claim can be made about removed sites without per-site tracking. |
+| T-12 | partial — M303 `form_number` declared (`R098` verified); M100 2025 `export_refs` present (`R032` verified); `_RECORD_SPECS` modules are still hand-authored without `legal_refs` declarations (`R088` open, as inventory recorded). |
 
-Audit posture has flipped: agents are still the discovery layer, but
-mechanical checks now cover the canonical surface. The four open
-inventory rows are tracked in the research record as follow-up work
-(corpus-registry packaging, two import-linter contracts deferred for
-deeper refactor, and one extra-forbid gap in a single legacy model).
-The five rows marked `wontfix-document` are recorded as deliberate
-non-fixes with rationale in the research inventory.
+### Defect classes whose closure narrative is wrong as written
 
-Mechanical gates now live alongside the suppression-inventory and
-pydantic-audit scratch dashboards. The unified `scratch/linkage_health.py`
-runner aggregates ty, pyright, import-linter, suppression-count, and
-pydantic-duplicate signals into a single JSON report that succeeds the
-agent-driven discovery phase.
+The earlier write-up of this appendix overstated coverage on:
+
+- **Selector discriminated unions (T-01 / T-02).** No discriminated
+  `Union` over selector sub-shapes exists in `_schema.py`. The
+  selector remains structurally untyped at the schema boundary.
+- **Snapshot referential-integrity gate (T-03 / T-09).** The
+  validator is implemented; the wiring into `build_snapshot` is
+  not. Snapshots constructed in production do not currently run the
+  21-typed-ID existence check.
+- **Workflow-step typed details (operator surface).** `WorkflowStep.details`
+  is still `dict[str, str] | None`. The `WorkflowStepDetails`
+  discriminated `Union` claimed in this document does not exist in
+  `application/workflow/_models.py`.
+- **FilingDraft identity propagation.** `subject_tax_id` was claimed
+  added; the field present is `profile_tax_id: str` (bare `str`).
+  No typed `TaxId` / `SubjectTaxId` participates in `FilingDraft`,
+  and `schema_version: str` was not replaced with a
+  `RegistrySnapshotRef`.
+- **Oracle typing.** `LiveCrossReferenceDecision.oracle_id` is still
+  `str | None`; `OracleFilingObservation` subtype does not exist in
+  `_bindings.py`.
+- **CLI `--relation` flag on `work calculate`.** Absent from the
+  `work_calculate` command. The application-layer plumbing
+  (`relation_values` kwarg) is present (`R051`); the CLI surface
+  is not. The flag is present on `aeat config export` only.
+- **`_load_snapshot` error handling on Google export.** The
+  `RegistrySnapshotError` symbol is not imported by
+  `_config/_google.py`. The exception, if raised, is not caught.
+
+The unified `scratch/linkage_health.py` dashboard remains the right
+mechanical-coverage tracker. It should be re-run before any future
+claim of closure.
