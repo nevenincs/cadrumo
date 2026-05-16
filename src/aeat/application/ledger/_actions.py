@@ -1833,36 +1833,41 @@ def _merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]
     return tuple(merged)
 
 
-def _required_patched(
+def _required_patched[T](
     patch: ManualLedgerTransactionPatch,
     patch_fields: set[str],
     field: str,
-    fallback: object,
-) -> object:
+    fallback: T,
+) -> T:
     """Return ``patch.<field>`` when in patch_fields and non-null; otherwise the fallback.
 
     Raises ``TransactionValidationError`` when the field is set on the
     patch but explicitly nulled — the patch contract forbids resetting a
-    required value to None.
+    required value to None. Generic in ``T`` so the caller's field type
+    flows through to the assignment site (type checkers see the concrete
+    type at the use point, not ``object``).
     """
     if field not in patch_fields:
         return fallback
     value = getattr(patch, field)
     if value is None:
         raise TransactionValidationError(f"manual ledger patch {field} must not be null")
-    return value
+    return value  # type: ignore[no-any-return]  # bounded by caller's T via fallback
 
 
-def _optional_patched(
+def _optional_patched[T](
     patch: ManualLedgerTransactionPatch,
     patch_fields: set[str],
     field: str,
-    fallback: object,
-) -> object:
-    """Return ``patch.<field>`` when in patch_fields (None allowed); otherwise the fallback."""
+    fallback: T,
+) -> T:
+    """Return ``patch.<field>`` when in patch_fields (None allowed); otherwise the fallback.
+
+    Generic in ``T`` for the same reason as :func:`_required_patched`.
+    """
     if field not in patch_fields:
         return fallback
-    return getattr(patch, field)
+    return getattr(patch, field)  # type: ignore[no-any-return]  # bounded by caller's T via fallback
 
 
 def _command_from_patch(
