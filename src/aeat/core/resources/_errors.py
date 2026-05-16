@@ -1,0 +1,34 @@
+"""Typed error hierarchy for the resource-management API.
+
+Three top-level error classes give consumers a uniform catch
+surface across all twelve Repositories without breaking the
+existing per-domain error classes. Each per-domain error
+(``RegistryLoadError``, ``ManualParseError``, etc.) becomes a
+subclass of the appropriate top-level error in subsequent
+phases of the migration.
+"""
+
+from __future__ import annotations
+
+from ..errors import AeatError
+
+
+class ResourceLoadError(AeatError):
+    """Base class for every failure to load a bundled resource."""
+
+
+class ResourceNotFoundError(ResourceLoadError):
+    """A resource key does not resolve to any bundled file.
+
+    Raised when the underlying bundled-data path does not exist
+    or when a queried identifier has no record in the loaded
+    catalogue.
+    """
+
+
+class ResourceValidationError(ResourceLoadError):
+    """A bundled file exists but fails strict pydantic validation."""
+
+
+class ResourceBackendError(ResourceLoadError):
+    """An IO or backend-level failure while reading the bundled data."""

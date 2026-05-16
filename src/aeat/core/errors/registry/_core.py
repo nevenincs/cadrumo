@@ -256,4 +256,48 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.core.resources._errors.ResourceLoadError",
+        ErrorCode(
+            code="ERROR_RESOURCES_LOAD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_resources_load",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.resources._errors.ResourceNotFoundError",
+        ErrorCode(
+            code="ERROR_RESOURCES_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_resources_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.resources._errors.ResourceValidationError",
+        ErrorCode(
+            code="ERROR_RESOURCES_VALIDATION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_resources_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.resources._errors.ResourceBackendError",
+        ErrorCode(
+            code="ERROR_RESOURCES_BACKEND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_resources_backend",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
