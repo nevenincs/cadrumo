@@ -28,6 +28,7 @@ from ._schema import (
     ModeloRevision,
     PeriodSelector,
     RegistryCatalogues,
+    RelationDefinition,
     SourceCitation,
     SourceReference,
 )
@@ -1059,56 +1060,91 @@ class RegistryValidator:
             for revision in modelo.revisions.values():
                 prefix = f"modelo {modelo.id} revision {revision.id}"
                 for relation in revision.relations:
-                    relation_scope = f"{prefix}: relation {relation.id!r}"
-                    source_modelo = modelos_by_id.get(relation.source_modelo)
-                    if source_modelo is None:
-                        failures.append(f"{relation_scope} references unknown source modelo {relation.source_modelo!r}")
-                        continue
-                    if not relation.source_periods:
-                        failures.append(f"{relation_scope} must declare source periods")
-                    if not relation.target_periods:
-                        failures.append(f"{relation_scope} must declare target periods")
-                    aggregation = relation.aggregation or {"op": "copy"}
-                    op = aggregation.get("op")
-                    if op not in {"copy", "sum"}:
-                        failures.append(f"{relation_scope} uses unsupported aggregation op {op!r}")
-                    source_revisions, selector_failures = RegistryValidator._select_relation_source_revisions(
-                        source_modelo,
-                        relation.source_revision_selector,
-                    )
-                    failures.extend(f"{relation_scope} {failure}" for failure in selector_failures)
-                    if not source_revisions:
-                        failures.append(
-                            f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
-                            f"matches no source revisions in modelo {source_modelo.id}"
-                        )
-                        continue
-                    for source_revision in source_revisions:
-                        source_scope = f"{relation_scope} source revision {source_revision.id!r}"
-                        source_values = RegistryValidator._revision_output_ids(source_revision)
-                        if relation.source_output not in source_values:
-                            failures.append(f"{source_scope} has no source output {relation.source_output!r}")
-                        unknown_source_periods = sorted(
-                            set(relation.source_periods).difference(source_revision.period_selector.periods)
-                        )
-                        if unknown_source_periods:
-                            failures.append(
-                                f"{source_scope} does not support source periods {unknown_source_periods!r}"
-                            )
                     failures.extend(
-                        RegistryValidator._validate_source_year_coverage(
-                            relation_scope,
-                            target_selector=revision.period_selector,
-                            source_revisions=source_revisions,
-                            source_periods=relation.source_periods,
-                            filing_year_delta=RegistryValidator._relation_filing_year_delta(
-                                relation.source_revision_selector
-                            ),
-                            fixed_source_year=RegistryValidator._relation_fixed_source_year(
-                                relation.source_revision_selector
-                            ),
+                        RegistryValidator._validate_single_relation(
+                            relation,
+                            revision=revision,
+                            relation_scope=f"{prefix}: relation {relation.id!r}",
+                            modelos_by_id=modelos_by_id,
                         )
                     )
+        return failures
+
+    @staticmethod
+    def _validate_single_relation(
+        relation: RelationDefinition,
+        *,
+        revision: ModeloRevision,
+        relation_scope: str,
+        modelos_by_id: Mapping[str, ModeloDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
+        source_modelo = modelos_by_id.get(relation.source_modelo)
+        if source_modelo is None:
+            failures.append(f"{relation_scope} references unknown source modelo {relation.source_modelo!r}")
+            return failures
+        if not relation.source_periods:
+            failures.append(f"{relation_scope} must declare source periods")
+        if not relation.target_periods:
+            failures.append(f"{relation_scope} must declare target periods")
+        aggregation = relation.aggregation or {"op": "copy"}
+        op = aggregation.get("op")
+        if op not in {"copy", "sum"}:
+            failures.append(f"{relation_scope} uses unsupported aggregation op {op!r}")
+        source_revisions, selector_failures = RegistryValidator._select_relation_source_revisions(
+            source_modelo,
+            relation.source_revision_selector,
+        )
+        failures.extend(f"{relation_scope} {failure}" for failure in selector_failures)
+        if not source_revisions:
+            failures.append(
+                f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
+                f"matches no source revisions in modelo {source_modelo.id}"
+            )
+            return failures
+        for source_revision in source_revisions:
+            failures.extend(
+                RegistryValidator._validate_relation_source_revision(
+                    relation,
+                    source_revision=source_revision,
+                    relation_scope=relation_scope,
+                )
+            )
+        failures.extend(
+            RegistryValidator._validate_source_year_coverage(
+                relation_scope,
+                target_selector=revision.period_selector,
+                source_revisions=source_revisions,
+                source_periods=relation.source_periods,
+                filing_year_delta=RegistryValidator._relation_filing_year_delta(
+                    relation.source_revision_selector
+                ),
+                fixed_source_year=RegistryValidator._relation_fixed_source_year(
+                    relation.source_revision_selector
+                ),
+            )
+        )
+        return failures
+
+    @staticmethod
+    def _validate_relation_source_revision(
+        relation: RelationDefinition,
+        *,
+        source_revision: ModeloRevision,
+        relation_scope: str,
+    ) -> list[str]:
+        failures: list[str] = []
+        source_scope = f"{relation_scope} source revision {source_revision.id!r}"
+        source_values = RegistryValidator._revision_output_ids(source_revision)
+        if relation.source_output not in source_values:
+            failures.append(f"{source_scope} has no source output {relation.source_output!r}")
+        unknown_source_periods = sorted(
+            set(relation.source_periods).difference(source_revision.period_selector.periods)
+        )
+        if unknown_source_periods:
+            failures.append(
+                f"{source_scope} does not support source periods {unknown_source_periods!r}"
+            )
         return failures
 
     @staticmethod
@@ -1123,46 +1159,62 @@ class RegistryValidator:
                 for binding in revision.bindings:
                     if binding.source != "previous_filing":
                         continue
-                    binding_scope = f"{prefix}: binding {binding.id!r}"
-                    source_modelo_id = binding.selector.get("source_modelo")
-                    if not isinstance(source_modelo_id, str):
-                        failures.append(f"{binding_scope} must declare string selector source_modelo")
-                        continue
-                    source_modelo = modelos_by_id.get(source_modelo_id)
-                    if source_modelo is None:
-                        failures.append(f"{binding_scope} references unknown source modelo {source_modelo_id!r}")
-                        continue
-
-                    source_periods = RegistryValidator._binding_source_periods(binding)
-                    matching_revisions = tuple(
-                        source_revision
-                        for source_revision in source_modelo.revisions.values()
-                        if not source_periods
-                        or set(source_periods).issubset(set(source_revision.period_selector.periods))
-                    )
-                    if not matching_revisions:
-                        failures.append(
-                            f"{binding_scope} matches no source revisions in modelo {source_modelo.id} "
-                            f"for periods {source_periods!r}"
-                        )
-                        continue
-
-                    source_outputs = RegistryValidator._binding_source_outputs(binding)
-                    if not source_outputs:
-                        continue
-
-                    revision_outputs = set().union(
-                        *(
-                            RegistryValidator._revision_output_ids(source_revision)
-                            for source_revision in matching_revisions
+                    failures.extend(
+                        RegistryValidator._validate_previous_filing_binding(
+                            binding,
+                            binding_scope=f"{prefix}: binding {binding.id!r}",
+                            modelos_by_id=modelos_by_id,
                         )
                     )
-                    for source_output in source_outputs:
-                        if source_output not in revision_outputs:
-                            failures.append(
-                                f"{binding_scope} source output {source_output!r} is not defined by any "
-                                f"period-compatible {source_modelo.id} revision"
-                            )
+        return failures
+
+    @staticmethod
+    def _validate_previous_filing_binding(
+        binding: DataBindingDefinition,
+        *,
+        binding_scope: str,
+        modelos_by_id: Mapping[str, ModeloDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
+        source_modelo_id = binding.selector.get("source_modelo")
+        if not isinstance(source_modelo_id, str):
+            failures.append(f"{binding_scope} must declare string selector source_modelo")
+            return failures
+        source_modelo = modelos_by_id.get(source_modelo_id)
+        if source_modelo is None:
+            failures.append(f"{binding_scope} references unknown source modelo {source_modelo_id!r}")
+            return failures
+
+        source_periods = RegistryValidator._binding_source_periods(binding)
+        matching_revisions = tuple(
+            source_revision
+            for source_revision in source_modelo.revisions.values()
+            if not source_periods
+            or set(source_periods).issubset(set(source_revision.period_selector.periods))
+        )
+        if not matching_revisions:
+            failures.append(
+                f"{binding_scope} matches no source revisions in modelo {source_modelo.id} "
+                f"for periods {source_periods!r}"
+            )
+            return failures
+
+        source_outputs = RegistryValidator._binding_source_outputs(binding)
+        if not source_outputs:
+            return failures
+
+        revision_outputs = set().union(
+            *(
+                RegistryValidator._revision_output_ids(source_revision)
+                for source_revision in matching_revisions
+            )
+        )
+        for source_output in source_outputs:
+            if source_output not in revision_outputs:
+                failures.append(
+                    f"{binding_scope} source output {source_output!r} is not defined by any "
+                    f"period-compatible {source_modelo.id} revision"
+                )
         return failures
 
     @staticmethod
@@ -1393,10 +1445,36 @@ class RegistryValidator:
         *,
         modelo_id: str,
     ) -> list[str]:
-        failures: list[str] = []
         surfaces = {link.surface for link in revision.application_links}
         communication_surfaces = surfaces.intersection(_COMMUNICATION_SURFACES)
         modelo_requires_communication = modelo_id == "145"
+        failures = RegistryValidator._application_link_surface_failures(
+            scope,
+            revision,
+            surfaces=surfaces,
+            communication_surfaces=communication_surfaces,
+            modelo_requires_communication=modelo_requires_communication,
+        )
+        if communication_surfaces or modelo_requires_communication:
+            failures.extend(
+                RegistryValidator._application_link_communication_failures(
+                    scope,
+                    revision,
+                    surfaces=surfaces,
+                )
+            )
+        return failures
+
+    @staticmethod
+    def _application_link_surface_failures(
+        scope: str,
+        revision: ModeloRevision,
+        *,
+        surfaces: set[str],
+        communication_surfaces: set[str],
+        modelo_requires_communication: bool,
+    ) -> list[str]:
+        failures: list[str] = []
         if revision.formulas and "calculation" not in surfaces:
             failures.append(f"{scope}: formulas require a calculation application link")
         if revision.extraction_profiles and "extractor" not in surfaces:
@@ -1418,15 +1496,24 @@ class RegistryValidator:
             failures.append(f"{scope}: deadline windows require a deadline application link")
         if modelo_requires_communication and not communication_surfaces:
             failures.append(f"{scope}: Modelo 145 requires a communication application link")
-        if communication_surfaces or modelo_requires_communication:
-            if "filing" in surfaces:
-                failures.append(f"{scope}: communication application links must not be combined with filing")
-            if "deadline" in surfaces or revision.deadline_windows:
-                failures.append(f"{scope}: communication application links must not declare deadline surfaces")
-            if "portal" in surfaces or revision.live_cross_references:
-                failures.append(f"{scope}: communication application links must not declare live or portal surfaces")
-            if revision.filing_schedules:
-                failures.append(f"{scope}: communication application links must not declare filing schedules")
+        return failures
+
+    @staticmethod
+    def _application_link_communication_failures(
+        scope: str,
+        revision: ModeloRevision,
+        *,
+        surfaces: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
+        if "filing" in surfaces:
+            failures.append(f"{scope}: communication application links must not be combined with filing")
+        if "deadline" in surfaces or revision.deadline_windows:
+            failures.append(f"{scope}: communication application links must not declare deadline surfaces")
+        if "portal" in surfaces or revision.live_cross_references:
+            failures.append(f"{scope}: communication application links must not declare live or portal surfaces")
+        if revision.filing_schedules:
+            failures.append(f"{scope}: communication application links must not declare filing schedules")
         return failures
 
     @staticmethod
@@ -1963,6 +2050,23 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
                 _chk_opt(f"{efp}.binding", field.binding, binding_ids)
                 _chk_tuple(f"{efp}.legal_refs", field.legal_refs, legal_ids)
                 _chk_tuple(f"{efp}.source_refs", field.source_refs, source_ids)
+
+    # Cross-domain referential integrity: when the snapshot describes
+    # modelo 100, every casilla mentioned in the renta first-slice
+    # routing table MUST be a real casilla on the revision. A divergence
+    # between the BOE-prescribed routing in
+    # :mod:`aeat.domain.renta._first_slice_routing` and the modelo-100
+    # registry casilla set is a snapshot-build error, not a silent
+    # runtime KeyError when the renta validator runs.
+    if snapshot.modelo.id == "100":
+        from ...renta._first_slice_routing import first_slice_target_casillas
+
+        missing_first_slice = first_slice_target_casillas() - casilla_ids
+        if missing_first_slice:
+            failures.append(
+                f"{prefix}: renta first-slice routing targets casillas "
+                f"{sorted(missing_first_slice)!r} that are absent from the modelo-100 revision"
+            )
 
     if failures:
         raise RegistryValidationError(
