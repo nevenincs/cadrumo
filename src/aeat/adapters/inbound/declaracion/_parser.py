@@ -17,6 +17,7 @@ from ....domain.calculations.registry import (
     RegistrySnapshotError,
     ValidatedRegistryAuthority,
 )
+from ....domain.calculations.registry._schema import RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
 from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ..pdf._utils import sha256_file
@@ -180,12 +181,19 @@ def _parse_declaracion_pages(
         profile.id,
     )
 
+    snapshot_ref = RegistrySnapshotRef(
+        modelo=snapshot.modelo.id,
+        revision_id=snapshot.revision.id,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
     return DeclaracionObservation(
         modelo=template.modelo,
         period=period,
         ejercicio=str(template.año),
         tax_id=tax_id,
         template_revision=template,
+        registry_snapshot_ref=snapshot_ref,
         values=values,
         warnings=(),
         source_pdf_path=source_path,
