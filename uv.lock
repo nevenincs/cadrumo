@@ -67,6 +67,7 @@ workbook-windows = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "complexipy" },
     { name = "furo" },
     { name = "google-api-python-client-stubs" },
     { name = "import-linter" },
@@ -82,6 +83,7 @@ dev = [
     { name = "pytest-playwright" },
     { name = "pytest-rerunfailures" },
     { name = "pytest-xdist" },
+    { name = "radon" },
     { name = "reportlab" },
     { name = "ruff" },
     { name = "semgrep" },
@@ -139,6 +141,7 @@ provides-extras = ["workbook-windows"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "complexipy", specifier = ">=3.3.0" },
     { name = "furo", specifier = ">=2024.8" },
     { name = "google-api-python-client-stubs", specifier = ">=1.36" },
     { name = "import-linter", specifier = ">=2.0" },
@@ -154,6 +157,7 @@ dev = [
     { name = "pytest-playwright", specifier = ">=0.6.0" },
     { name = "pytest-rerunfailures", specifier = ">=15.0" },
     { name = "pytest-xdist", specifier = ">=3.6.0" },
+    { name = "radon", specifier = ">=6.0.1" },
     { name = "reportlab", specifier = ">=4.4.10" },
     { name = "ruff", specifier = ">=0.15.12" },
     { name = "semgrep", specifier = ">=1.85.0" },
@@ -479,6 +483,27 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697, upload-time = "2022-10-25T02:36:22.414Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335, upload-time = "2022-10-25T02:36:20.889Z" },
+]
+
+[[package]]
+name = "complexipy"
+version = "3.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0e/b8/14850e2953379ea70c7f960558e35081024b063c7097cf9f6b918d3f46c2/complexipy-3.3.0.tar.gz", hash = "sha256:decdde0bc51ba768e84bfdd0b706370f092d18df311fa5fd35732b364bf689bd", size = 282127, upload-time = "2025-07-17T04:53:28.728Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/16/ec/0db403a97a1b232373a7e2039530f3c365d0d107578820986cd3a9952aaa/complexipy-3.3.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:d5ce610b528f9ade5bf346ed6dd8c56d426706d9c70d51fb0e21fd3763bb3243", size = 2060691, upload-time = "2025-07-17T04:52:10.889Z" },
+    { url = "https://files.pythonhosted.org/packages/38/29/6042f5d945b9153cb2f198851aa49224abd70f53de9084b98c306ffbd451/complexipy-3.3.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:c834c54c127629b1bb53c60654704a7719e2c230b1c511c3f7cd3d075f8be02d", size = 1982836, upload-time = "2025-07-17T04:52:12.384Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/65/63e7e1cd9fefb531f6138e7caa9663a424ad25866d4009c7cf0dd764ac16/complexipy-3.3.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:eb5ee61f620aa0d4b05b512e1c89f9098138c6df77ca269cc0ca715ef8c5d37d", size = 2159005, upload-time = "2025-07-17T04:52:13.905Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/27/b4aa7a13eef901999a1bcd64e560f7437f917571871f2276b6ceb0efb125/complexipy-3.3.0-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:c975184a9d89b5b1e544d766809ac7ad0e3737f147bdbe67ce0257a7d9c67518", size = 2110559, upload-time = "2025-07-17T04:52:16.242Z" },
+    { url = "https://files.pythonhosted.org/packages/dc/ea/e1100dc199b4f8718c891920ac91716c5d1fbda54c6da15df1bc4eeba9d7/complexipy-3.3.0-cp313-cp313-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8d743b4b1fc0bdfea00368731dd45fa4c875980bb6ab182fa550bcf9177b4a49", size = 2282842, upload-time = "2025-07-17T04:52:18.186Z" },
+    { url = "https://files.pythonhosted.org/packages/da/2e/253b576323e1fa7469da29008b3e76a02f362039aa32f2ad5418191ea936/complexipy-3.3.0-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:0626d609650f0ca01b4119a6678ebac39f7daa632b2acffc8f57f46ad0afd9d6", size = 2510516, upload-time = "2025-07-17T04:52:19.861Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/95/5c68838d5ea56ddec057c56a8161a858833f9a4f4b3940a65fada40eaeb3/complexipy-3.3.0-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:d6b57d1a9dec47428b003d0b4beae126876605be34dddf4191b6bd2c429942ce", size = 2316617, upload-time = "2025-07-17T04:52:21.629Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/cd/3e8a864fd66ada5678fabc0e4df9c2738a13733d7c82ea57352bd14cead0/complexipy-3.3.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eb9d4ed752b2b5e417535d51ac371201d61413874c397216016c0273cc613a62", size = 2233576, upload-time = "2025-07-17T04:52:23.22Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/26/d8ef62cb686081c609d4521e41f35143231a8d04f52896cc735e83ffe8c3/complexipy-3.3.0-cp313-cp313-win32.whl", hash = "sha256:c8d13b8f1a7d664e18885c3561ee6bc0516b1e29c205049181c48e524d139f26", size = 1737549, upload-time = "2025-07-17T04:52:24.833Z" },
+    { url = "https://files.pythonhosted.org/packages/da/16/cce480bd94c8bc520719a4c1369e47b561489edfadd3b8644c4154220ac0/complexipy-3.3.0-cp313-cp313-win_amd64.whl", hash = "sha256:4e8dbded4ab778bad513b22c11f481857d4cd13a0d1390709cf30c0884e6cdbb", size = 1878698, upload-time = "2025-07-17T04:52:27.271Z" },
 ]
 
 [[package]]
@@ -1477,6 +1502,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/00/62/791b31e69ae182791ec67f04850f2f062716bbd205483d63a215f3e062d3/mako-1.3.12.tar.gz", hash = "sha256:9f778e93289bd410bb35daadeb4fc66d95a746f0b75777b942088b7fd7af550a", size = 400219, upload-time = "2026-04-28T19:01:08.512Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bc/b1/a0ec7a5a9db730a08daef1fdfb8090435b82465abbf758a596f0ea88727e/mako-1.3.12-py3-none-any.whl", hash = "sha256:8f61569480282dbf557145ce441e4ba888be453c30989f879f0d652e39f53ea9", size = 78521, upload-time = "2026-04-28T19:01:10.393Z" },
+]
+
+[[package]]
+name = "mando"
+version = "0.7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/35/24/cd70d5ae6d35962be752feccb7dca80b5e0c2d450e995b16abd6275f3296/mando-0.7.1.tar.gz", hash = "sha256:18baa999b4b613faefb00eac4efadcf14f510b59b924b66e08289aa1de8c3500", size = 37868, upload-time = "2022-02-24T08:12:27.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d2/f0/834e479e47e499b6478e807fb57b31cc2db696c4db30557bb6f5aea4a90b/mando-0.7.1-py2.py3-none-any.whl", hash = "sha256:26ef1d70928b6057ee3ca12583d73c63e05c49de8972d620c278a7b206581a8a", size = 28149, upload-time = "2022-02-24T08:12:25.24Z" },
 ]
 
 [[package]]
@@ -2745,6 +2782,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f6/45/eafb0bba0f9988f6a2520f9ca2df2c82ddfa8d67c95d6625452e97b204a5/questionary-2.1.1.tar.gz", hash = "sha256:3d7e980292bb0107abaa79c68dd3eee3c561b83a0f89ae482860b181c8bd412d", size = 25845, upload-time = "2025-08-28T19:00:20.851Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3c/26/1062c7ec1b053db9e499b4d2d5bc231743201b74051c973dadeac80a8f43/questionary-2.1.1-py3-none-any.whl", hash = "sha256:a51af13f345f1cdea62347589fbb6df3b290306ab8930713bfae4d475a7d4a59", size = 36753, upload-time = "2025-08-28T19:00:19.56Z" },
+]
+
+[[package]]
+name = "radon"
+version = "6.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama" },
+    { name = "mando" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b1/6d/98e61600febf6bd929cf04154537c39dc577ce414bafbfc24a286c4fa76d/radon-6.0.1.tar.gz", hash = "sha256:d1ac0053943a893878940fedc8b19ace70386fc9c9bf0a09229a44125ebf45b5", size = 1874992, upload-time = "2023-03-26T06:24:38.868Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/93/f7/d00d9b4a0313a6be3a3e0818e6375e15da6d7076f4ae47d1324e7ca986a1/radon-6.0.1-py2.py3-none-any.whl", hash = "sha256:632cc032364a6f8bb1010a2f6a12d0f14bc7e5ede76585ef29dc0cecf4cd8859", size = 52784, upload-time = "2023-03-26T06:24:33.949Z" },
 ]
 
 [[package]]
