@@ -167,7 +167,7 @@ def _load_revision_for_export(
 def export_modelo_revision(
     command: ModeloExportCommand,
     *,
-    profile: AutonomoProfile,
+    workflow_profile: AutonomoProfile,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -226,7 +226,7 @@ def export_modelo_revision(
         draft = build_draft(
             modelo=str(work_unit.modelo),
             period=work_unit.period,
-            profile=filing_profile_from_autonomo(profile),
+            profile=filing_profile_from_autonomo(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
         )
@@ -243,14 +243,18 @@ def export_modelo_revision(
             f"{command.calculation_revision_id!r}: {exc}",
         ) from exc
 
-    from ..filing._export import export_draft
-
-    headers = {
-        "tax_id": str(profile.tax_id) if hasattr(profile, "tax_id") else "",
-    }
+    # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
+    # path, append the MODELO_EXPORTED event, and only rename into the
+    # operator-visible output path after the event commits. A crash
+    # between the file write and the event persistence leaves only the
+    # .tmp file, which carries no provenance and is safe to discard.
+    headers = {"tax_id": str(workflow_profile.tax_id)}
+    tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
-        receipt = export_draft(approved, output_path=command.output_path, headers=headers)
+        receipt = export_draft(approved, output_path=tmp_output, headers=headers)
     except (FilingExportError, FilingExportValidationError) as exc:
+        if tmp_output.exists():
+            tmp_output.unlink()
         raise ModeloExportError(
             f"could not export calculation_revision_id={command.calculation_revision_id!r} "
             f"to {command.output_path!s}: {exc}",
@@ -259,7 +263,7 @@ def export_modelo_revision(
     event_payload = {
         "calculation_revision_id": command.calculation_revision_id,
         "work_unit_id": work_unit.work_unit_id,
-        "output_path": str(receipt.output_path),
+        "output_path": str(command.output_path),
         "byte_size": str(receipt.byte_size),
         "file_sha256": receipt.file_sha256,
         "format": receipt.format.value,
@@ -290,7 +294,13 @@ def export_modelo_revision(
             payload=event_payload,
         ),
     )
-    SecureObjectRepository().save_many((bv_repo.to_secure_object_write(next_catalogue),))
+    try:
+        SecureObjectRepository().save_many((bv_repo.to_secure_object_write(next_catalogue),))
+    except Exception:
+        if tmp_output.exists():
+            tmp_output.unlink()
+        raise
+    tmp_output.replace(command.output_path)
 
     return ModeloExportResult(
         calculation_revision_id=command.calculation_revision_id,
@@ -299,7 +309,7 @@ def export_modelo_revision(
         modelo=str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period,
-        output_path=receipt.output_path,
+        output_path=command.output_path,
         byte_size=receipt.byte_size,
         file_sha256=receipt.file_sha256,
         format=receipt.format.value,

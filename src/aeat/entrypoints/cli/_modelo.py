@@ -2214,7 +2214,10 @@ def modelo_export_verb(
             "--revision",
             help=tr(
                 "cli.app.modelo.export.revision_help",
-                default="Calculation revision id to export; defaults to the work unit's most recent verified-complete or filed revision.",
+                default=(
+                    "Calculation revision id to export; defaults to the work unit's "
+                    "most recent verified-complete or filed revision."
+                ),
             ),
         ),
     ] = None,
@@ -2247,16 +2250,15 @@ def modelo_export_verb(
         from ...domain.modelos._calculation_revision import CalculationRevisionState
 
         revisions = list_calculation_revisions(work_unit_id=work_unit_id)
-        exportable = [
-            rev
-            for rev in revisions
-            if rev.state
-            in {
-                CalculationRevisionState.VERIFIED_COMPLETE,
-                CalculationRevisionState.FILED,
-                CalculationRevisionState.FILED_SUPERSEDED,
-            }
-        ]
+        # FILED is the canonical current answer; VERIFIED_COMPLETE
+        # covers pre-file export. FILED_SUPERSEDED is intentionally
+        # excluded from default-pick because exporting a superseded
+        # revision risks the operator submitting an obsolete fichero;
+        # operators that genuinely want a superseded revision must
+        # pass --revision explicitly.
+        filed = [r for r in revisions if r.state is CalculationRevisionState.FILED]
+        verified = [r for r in revisions if r.state is CalculationRevisionState.VERIFIED_COMPLETE]
+        exportable = filed or verified
         if not exportable:
             raise typer.BadParameter(
                 tr(
@@ -2276,7 +2278,7 @@ def modelo_export_verb(
                 output_path=output,
                 actor=actor or _resolve_default_actor(),
             ),
-            profile=workflow_profile,
+            workflow_profile=workflow_profile,
         )
     except (
         CalculationRevisionNotFoundError,
