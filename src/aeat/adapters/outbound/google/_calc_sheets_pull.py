@@ -104,12 +104,24 @@ class BindingEdit(BaseModel):
 
 
 class RelationEdit(BaseModel):
-    """One pre-resolved cross-revision relation value mirrored in Tarifas."""
+    """One pre-resolved cross-revision relation value mirrored in Tarifas.
+
+    The provenance / source_filing_year / source_periods / resolved_at
+    fields are recovered from the workbook's developer metadata
+    (``aeat_relation:<relation>`` keys written by the apply adapter).
+    They are absent for relations that were edited manually in the
+    workbook without an apply round-trip; in that case the relation
+    is treated as ``provenance="operator_manual"`` by convention.
+    """
 
     model_config = _STRICT_FROZEN
 
     relation: RelationId
     value: Decimal | None = None
+    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = None
+    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_periods: tuple[str, ...] = ()
+    resolved_at: datetime | None = None
 
 
 class RowSetCellEdit(BaseModel):
@@ -411,7 +423,9 @@ def pull_operator_edits(
         value_ranges, cursor, operator_input_ids, casilla_by_id
     )
     binding_edits, cursor, binding_cells_read = _decode_binding_edits(value_ranges, cursor, binding_ids)
-    relation_edits, cursor, relation_cells_read = _decode_relation_edits(value_ranges, cursor, relation_ids)
+    relation_edits, cursor, relation_cells_read = _decode_relation_edits(
+        value_ranges, cursor, relation_ids, metadata_pairs
+    )
 
     # Read row-set detail rows from the Detalle tab. Each row-set
     # reserves first_data_row + 50 rows by N columns; we issue one
@@ -539,8 +553,17 @@ def _decode_relation_edits(
     value_ranges: list[Any],
     cursor: int,
     relation_ids: list[RelationId],
+    metadata_pairs: Mapping[str, str],
 ) -> tuple[tuple[RelationEdit, ...], int, int]:
-    """Map the per-relation slice of the batchGet response into typed RelationEdits."""
+    """Map the per-relation slice of the batchGet response into typed RelationEdits.
+
+    Per-relation provenance metadata is recovered from the workbook's
+    developer metadata via the ``aeat_relation:<relation>`` key written
+    by the apply adapter. Recovering it on pull preserves the audit
+    trail (provenance tier, source filing year, source periods,
+    resolved-at instant) that would otherwise be silently dropped on
+    every round trip.
+    """
     cells_read = 0
     edits: list[RelationEdit] = []
     for relation_id in relation_ids:
@@ -549,8 +572,64 @@ def _decode_relation_edits(
         coerced = _coerce_decimal(raw)
         if coerced is not None:
             cells_read += 1
-        edits.append(RelationEdit(relation=relation_id, value=coerced))
+        provenance, source_filing_year, source_periods, resolved_at = _parse_relation_metadata(
+            metadata_pairs.get(f"aeat_relation:{relation_id}", "")
+        )
+        edits.append(
+            RelationEdit(
+                relation=relation_id,
+                value=coerced,
+                provenance=provenance,
+                source_filing_year=source_filing_year,
+                source_periods=source_periods,
+                resolved_at=resolved_at,
+            )
+        )
     return tuple(edits), cursor, cells_read
+
+
+def _parse_relation_metadata(
+    raw: str,
+) -> tuple[
+    Literal["local_filing", "aeat_live", "operator_manual"] | None,
+    int | None,
+    tuple[str, ...],
+    datetime | None,
+]:
+    """Parse the ``"k=v; k=v"`` shape written by the apply adapter."""
+
+    if not raw:
+        return None, None, (), None
+    parts = [piece.strip() for piece in raw.split(";") if "=" in piece]
+    fields: dict[str, str] = {}
+    for part in parts:
+        key, _, value = part.partition("=")
+        fields[key.strip()] = value.strip()
+    raw_provenance = fields.get("provenance", "")
+    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = (
+        raw_provenance  # type: ignore[assignment]
+        if raw_provenance in ("local_filing", "aeat_live", "operator_manual")
+        else None
+    )
+    source_filing_year: int | None = None
+    raw_year = fields.get("source_filing_year", "")
+    if raw_year:
+        try:
+            source_filing_year = int(raw_year)
+        except ValueError:
+            source_filing_year = None
+    source_periods: tuple[str, ...] = ()
+    raw_periods = fields.get("source_periods", "")
+    if raw_periods:
+        source_periods = tuple(piece for piece in raw_periods.split("+") if piece)
+    resolved_at: datetime | None = None
+    raw_resolved = fields.get("resolved_at", "")
+    if raw_resolved:
+        try:
+            resolved_at = datetime.fromisoformat(raw_resolved)
+        except ValueError:
+            resolved_at = None
+    return provenance, source_filing_year, source_periods, resolved_at
 
 
 def _read_row_set_edits(
