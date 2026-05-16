@@ -22,6 +22,7 @@ Public surface:
 
 from __future__ import annotations
 
+from ._constants import BucketId
 from ._errors import (
     BucketBrowseError,
     BucketDeleteRefusedError,
@@ -56,6 +57,7 @@ __all__ = [
     "BucketEventType",
     "BucketEventValidationError",
     "BucketExportError",
+    "BucketId",
     "BucketImportError",
     "BucketMaintenanceError",
     "BucketRenameError",

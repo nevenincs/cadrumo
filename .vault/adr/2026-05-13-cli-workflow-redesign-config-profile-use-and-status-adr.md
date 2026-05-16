@@ -27,7 +27,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `accepted`)
+# `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
 
 ## Problem Statement
 
