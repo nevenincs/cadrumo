@@ -79,8 +79,7 @@ def jsonable_output_payload(payload: object) -> object:
     schema MUST use ``ModelClass.model_validate_json(raw_bytes)``
     rather than ``ModelClass.model_validate(json.loads(raw))``: pydantic
     coerces list -> tuple when it owns the JSON parse, but not when
-    handed a pre-parsed dict. Audit workflow F5 documents this
-    distinction; the roundtrip tests in
+    handed a pre-parsed dict. The roundtrip tests in
     ``aeat.core.test_json_envelope_roundtrip`` pin the correct usage.
     """
 

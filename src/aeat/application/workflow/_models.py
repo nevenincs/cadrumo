@@ -166,7 +166,7 @@ class WorkflowState(BaseModel):
         ``model_validate_json``) and re-projects any dict entries to
         the typed record class, so downstream consumers can always
         ``isinstance(value, InvoiceReviewRecord)`` rather than pattern-
-        matching on raw-dict-or-record. Audit workflow F1.
+        matching on raw-dict-or-record.
         """
         from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
 
@@ -408,7 +408,7 @@ class WorkflowStep(BaseModel):
         # (engine call sites stringify by convention but the storage shape
         # is not constrained). The BeforeValidator coerces a Mapping to a
         # WorkflowStepDetails so downstream readers always see the typed
-        # record. Workflow + CLI surface audit F6.
+        # record.
         WorkflowStepDetails | Mapping[str, object] | None,
         BeforeValidator(_coerce_workflow_step_details),
     ] = None

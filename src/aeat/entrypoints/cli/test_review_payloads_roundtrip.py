@@ -1,6 +1,6 @@
 """Strict roundtrip across the ``aeat review`` CLI JSON envelope.
 
-Audit workflow F3 — ``review queue`` and ``review view`` used to emit
+``review queue`` and ``review view`` used to emit
 ``model_dump(mode="json")`` on application-side records that were not
 ``@register_schema``-decorated. The JSON-contract test suite could
 therefore not enumerate the surface; tooling parsing the JSON had no

@@ -107,7 +107,7 @@ class DeclaracionObservation(BaseModel):
     :meth:`ValidatedRegistryAuthority.snapshot` call. ``None`` for
     legacy observations parsed before this field existed; new
     observations carry the ref to detect silent AEAT template drift
-    on subsequent registry releases (export-import audit F6).
+    on subsequent registry releases.
     """
     values: tuple[ExtractedCasilla, ...]
     warnings: tuple[ExtractionWarning, ...] = ()

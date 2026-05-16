@@ -251,8 +251,7 @@ def _decode_text_field(spec: RecordFieldSpec, raw: bytes, encoding: FicheroBoeEn
     semantic for the unsignaled-zero case. The original byte-level
     width is recoverable from ``spec.length`` if a downstream consumer
     needs the padded form. This mirrors :func:`_decode_currency` which
-    also collapses all-zero CURRENCY fields to ``Decimal("0.00")``
-    (export-import audit F3).
+    also collapses all-zero CURRENCY fields to ``Decimal("0.00")``.
     """
     text = raw.decode(encoding)
     if spec.pad_char == " ":
