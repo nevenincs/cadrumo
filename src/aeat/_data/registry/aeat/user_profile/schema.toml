@@ -193,6 +193,74 @@ description = "Public-administration budget threshold used by filing cadence."
 model_selectors = ["enrollment.public_administration_budget_gt_6000000"]
 schedule_predicates = ["enrollment.public_administration_budget_gt_6000000"]
 
+[[sections.fields]]
+key = "activity_start_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "AEAT census alta date for the economic activity. Drives obligation start year and pago-fraccionado eligibility."
+model_selectors = ["census.activity_start_date"]
+legal_refs = ["RGAT Art. 9 (BOE-A-2007-15984)", "RGAT Art. 11 (BOE-A-2007-15984)"]
+
+[[sections.fields]]
+key = "activity_end_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "AEAT census baja date for the economic activity. Caps obligation calendar after baja."
+model_selectors = ["census.activity_end_date"]
+legal_refs = ["RGAT Art. 9 (BOE-A-2007-15984)", "RGAT Art. 11 (BOE-A-2007-15984)"]
+
+[[sections.fields]]
+key = "establecimiento_type"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Form of business establishment declared on the 036 census. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa."
+enum_values = ["propio", "arrendado", "cedido_gratuitamente"]
+model_selectors = ["census.establecimiento_type"]
+legal_refs = ["LIRPF Art. 28 (BOE-A-2006-20764)", "LIRPF Art. 29 (BOE-A-2006-20764)", "LIRPF Art. 30 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "elected_withholding_pct"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Elected IRPF withholding rate on professional invoices, declared on the 036 census. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos."
+enum_values = ["15", "7", "1"]
+model_selectors = ["census.elected_withholding_pct"]
+legal_refs = ["LIRPF Art. 101.5 (BOE-A-2006-20764)", "RIRPF Art. 95.1 (BOE-A-2007-6820)", "RIRPF Art. 95.2 (BOE-A-2007-6820)", "Orden HAC/1425/2025 (BOE-A-2025-25272)"]
+
+[[sections]]
+key = "vivienda_office"
+title = "Vivienda habitual office afectacion"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "total_m2"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Total square meters of the operator's habitual residence. Numerator base for the office-afectacion ratio under LIRPF Art. 30.2 rule 5."
+model_selectors = ["vivienda_office.total_m2"]
+legal_refs = ["LIRPF Art. 30.2 rule 5 (Ley 6/2017 BOE-A-2017-12544)"]
+
+[[sections.fields]]
+key = "office_m2"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Square meters of the habitual residence dedicated to the economic activity. Numerator of the office-afectacion ratio (office_m2 / total_m2) applied directly to ownership costs and multiplied by 0.30 for suministros per LIRPF Art. 30.2 rule 5."
+model_selectors = ["vivienda_office.office_m2"]
+legal_refs = ["LIRPF Art. 30.2 rule 5 (Ley 6/2017 BOE-A-2017-12544)"]
+
 [[sections]]
 key = "activities"
 title = "Business activities"
