@@ -496,7 +496,9 @@ class TestProbePersistedSession:
 
         asyncio.run(seed())
 
-        storage_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-clave-movil-storage.json"
+        from aeat.application.workflow._models import require_active_bucket_id
+
+        storage_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
         assert _session_store.exists(storage_path)
         assert not storage_path.exists()
         assert not storage_path.with_suffix(".meta.json").exists()

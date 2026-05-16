@@ -225,8 +225,11 @@ def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
 
     Precedence, highest wins:
 
-    1. ``AEAT_ACTIVE_PROFILE`` environment variable (per-shell override
-       useful for CI and headless invocations).
+    1. ``Settings.aeat_active_profile`` — surfaced from the
+       ``AEAT_ACTIVE_PROFILE`` environment variable (or an active
+       :func:`aeat.core.config.override_settings` block in tests).
+       Per-shell override useful for CI, headless invocations, and the
+       CLI ``--profile`` flag.
     2. ``<aeat-root>/active-profile`` plaintext pointer file written by
        ``profile create`` / ``profile switch``. This is the canonical
        default for interactive sessions and resolves the chicken-and-egg
@@ -236,24 +239,26 @@ def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
        cutover. The field is removed in the same plan as this resolver
        and rung three disappears with it.
 
-    The CLI ``--profile`` flag, when supplied per-invocation, exports
-    ``AEAT_ACTIVE_PROFILE`` for the duration of the process so rung one
-    handles it without a fourth precedence rung.
+    The CLI ``--profile`` flag, when supplied per-invocation, runs the
+    process under an :func:`aeat.core.config.override_settings` block
+    that sets ``aeat_active_profile`` so rung one handles it without a
+    fourth precedence rung.
     """
 
-    import os
-
-    env = os.environ.get("AEAT_ACTIVE_PROFILE", "").strip()
-    if env:
-        return env
     from ...core.config import load_settings
     from ._bucket_pointer_io import read_pointer
 
     settings = load_settings()
+    override = (settings.aeat_active_profile or "").strip()
+    if override:
+        return override
     pointer = read_pointer(settings.aeat_local_storage_root)
     if pointer is not None:
         return pointer.bucket_id
     if state is not None and state.active_profile is not None:
+        pointer = state.profiles.get(state.active_profile)
+        if pointer is not None:
+            return pointer.bucket_id
         return state.active_profile
     return None
 
@@ -266,6 +271,33 @@ def active_bucket_id_or_raise(state: WorkflowState) -> str:
     """
 
     bucket_id = resolve_active_bucket_id(state)
+    if bucket_id is None:
+        from ._errors import NoActiveProfileError
+
+        raise NoActiveProfileError("no active profile bucket")
+    return bucket_id
+
+
+def require_active_bucket_id() -> str:
+    """Resolve the active bucket id via the precedence chain or raise.
+
+    Companion to :func:`active_bucket_id_or_raise` for call sites that
+    do not hold a :class:`WorkflowState` reference. The auth session-
+    path helpers, the Cl@ve Móvil persistence path, the SEDE
+    declarations-register profile name, and the
+    AuthAcquisitionLockRecord construction all sit on auth flows that
+    are operator-initiated and require a profile to be selected; a
+    missing profile is a genuine refusal, not a degraded read. Reads
+    env var > pointer file; raises :class:`NoActiveProfileError` if
+    neither rung resolves.
+
+    Diagnostic surfaces (browser-connectivity probe, status flows)
+    MUST NOT call this helper — they call
+    :func:`resolve_active_bucket_id` and supply their own fallback
+    label so a missing profile remains diagnosable.
+    """
+
+    bucket_id = resolve_active_bucket_id(state=None)
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 

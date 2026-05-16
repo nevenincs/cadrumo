@@ -100,9 +100,11 @@ def storage_state_paths(
 ) -> StorageStatePaths:
     """Return the logical storage-state identifier for ``kind``."""
 
+    from ..workflow._models import require_active_bucket_id
+
     resolved = kind or AuthProviderKind.CERTIFICATE
     stem = _STEM_BY_KIND[resolved]
-    storage_state = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-{stem}.json"
+    storage_state = settings.aeat_token_dir / f"{require_active_bucket_id()}-{stem}.json"
     return StorageStatePaths(storage_state=storage_state)
 
 
