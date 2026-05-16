@@ -1,0 +1,132 @@
+"""Strict roundtrip across the encrypted VerificationReportCatalogue boundary.
+
+``VerificationReportCatalogueRepository`` persists :class:`VerificationReportCatalogue`
+through :class:`SecureObjectRepository`. Flagged as untested in the
+persistence-boundary identity audit
+(`.vault/audit/2026-05-16-persistence-boundary-identity-swarm-audit.md`).
+
+Anti-tautology discipline (`.vaultspec/rules/rules/aeat-roundtrip-discipline.md`):
+every defaultable field on the report carries a non-default value
+so a save-drops-X / load-re-defaults-X regression would surface as
+strict inequality.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+
+from ...adapters.persistence.storage import (
+    EphemeralMasterKeyProvider,
+    override_master_key_provider,
+)
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
+from ...core.config import Settings
+from ._verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
+    VerificationReportCatalogue,
+    derive_verification_report_id,
+)
+from ._verification_repository import VerificationReportCatalogueRepository
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+
+def _populated_report() -> VerificationReport:
+    """Build a VerificationReport with every defaultable field non-default."""
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    revision_id = "a" * 64
+    verified_by = "cli/aeat"
+    return VerificationReport(
+        verification_report_id=derive_verification_report_id(
+            calculation_revision_id=revision_id,
+            run_at=now,
+            verified_by=verified_by,
+        ),
+        calculation_revision_id=revision_id,
+        # Non-default: BLOCKED rather than the easier COMPLETE state
+        # so the tuple-of-findings field is naturally exercised.
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                casilla_id="iva.devengado",
+                message="iva.devengado is required but unresolved",
+                next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
+            ),
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.UNRESOLVED_BINDING,
+                severity=ModeloVerificationFindingSeverity.WARNING,
+                casilla_id=None,
+                expectation_id="ivaSourceRequired",
+                message="prior-period source not yet pulled",
+            ),
+        ),
+        resolved_casillas=("iva.deducible", "iva.resultado"),
+        missing_required_casillas=("iva.devengado",),
+        run_at=now,
+        verified_by=verified_by,
+        # Non-default lifecycle bit: granted_verified_complete defaults
+        # to False naturally on BLOCKED reports, but we still pin the
+        # explicit witness on the loaded side.
+        granted_verified_complete=False,
+    )
+
+
+def test_verification_report_catalogue_survives_encrypted_storage(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A populated VerificationReportCatalogue roundtrips strictly."""
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "verification-roundtrip.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+
+        report = _populated_report()
+        catalogue = VerificationReportCatalogue(
+            reports={report.verification_report_id: report},
+        )
+        repo = VerificationReportCatalogueRepository()
+        repo.save(catalogue)
+        loaded = repo.load()
+
+        assert loaded == catalogue
+        loaded_report = loaded.reports[report.verification_report_id]
+        # Per-field witnesses: enum identity, tuple-of-finding
+        # preservation including each finding's nested enum kind +
+        # severity + optional fields.
+        assert loaded_report.completeness_status is VerificationCompletenessStatus.BLOCKED
+        assert len(loaded_report.findings) == 2
+        f0 = loaded_report.findings[0]
+        assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+        assert f0.severity is ModeloVerificationFindingSeverity.BLOCKING
+        assert f0.casilla_id == "iva.devengado"
+        assert f0.next_action is not None
+        f1 = loaded_report.findings[1]
+        assert f1.kind is ModeloVerificationFindingKind.UNRESOLVED_BINDING
+        assert f1.severity is ModeloVerificationFindingSeverity.WARNING
+        assert f1.expectation_id == "ivaSourceRequired"
+        # Resolved + missing casillas tuples preserve order and content.
+        assert loaded_report.resolved_casillas == ("iva.deducible", "iva.resultado")
+        assert loaded_report.missing_required_casillas == ("iva.devengado",)
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
