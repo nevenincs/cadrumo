@@ -865,9 +865,6 @@ cli:
         / overdue kohorszokat. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
       horizon_help: Előrenéző ablak (napokban), amelyet a `due_soon` kohorsz figyelembe
         vesz.
-    allow_incomplete_help: Engedélyezi a naptárt alapértelmezett értékekkel, ha a
-      profil nem deklarálja a regim kulcsokat. E nélkül a naptár elutasításra kerül,
-      ha figyelmeztetések vannak.
     app_help: Az aktuális adózási munkaterület áttekintése
     backlog:
       allow_incomplete_help: A backlog generálása akkor is, ha a profil adatai hiányosak.
@@ -884,21 +881,17 @@ cli:
         Alkalmazza az ünnepnapokat és a munkanapi eltolásokat. Csak helyi; soha nem
         kapcsolódik az AEAT-hoz.
       to_help: A naptárablak záró dátuma, inkluzív (ISO YYYY-MM-DD).
-    calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
     calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
       Futtasd: ''aeat config profile set <kulcs> <érték>'' vagy add meg --allow-incomplete
       a naptár alapértelmezett értékekkel történő számításához.'
-    calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
     explain:
-      help: Lebontja egy modelo alkalmazhatóságát az aktív profilra. Megmutatja a bináris
-        indikátort, a regisztrációs alapú indoklást és a profil tényeit, amelyektől
+      help: Lebontja egy modelo alkalmazhatóságát az aktív profilra. Megmutatja a
+        bináris indikátort, a regisztrációs alapú indoklást és a profil tényeit, amelyektől
         a döntés függ. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
       modelo_help: AEAT modelo azonosító (pl. 303, 130, 100).
-      year_help: Az alkalmazhatóság értékeléséhez használt adóév; alapértelmezetten az
-        aktuális év.
-    from_help: Naptár kezdő dátuma (YYYY-MM-DD)
-    header: "Modell\tIdőszak\tÁllapot\tNyit\tZár"
+      year_help: Az alkalmazhatóság értékeléséhez használt adóév; alapértelmezetten
+        az aktuális év.
     period: Időszak
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
     status:
@@ -927,7 +920,6 @@ cli:
       transactions_empty: Meg nincs importalt banki tranzakcio.
       transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
-    to_help: Naptár záró dátuma (YYYY-MM-DD)
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
     app_help: Adózási modellek nyilvántartásának kezelése

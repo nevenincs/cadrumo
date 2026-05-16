@@ -873,9 +873,6 @@ cli:
         referència. Indica un únic `next_due` més les cohorts due-today / due-soon
         / overdue. Local; mai contacta amb AEAT.
       horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
-    allow_incomplete_help: Permet el calendari amb valors per defecte quan falten
-      claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha
-      advertencies.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     backlog:
       allow_incomplete_help: Generar el backlog encara que les dades del perfil siguin
@@ -894,20 +891,16 @@ cli:
         indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
         amb AEAT.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
-    calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
     calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
       ''aeat config profile set <clau> <valor>'' o useu --allow-incomplete per veure
       el calendari calculat amb valors per defecte.'
-    calendar_requires_dates: Useu --from i --to quan consulteu el calendari
     drafts: Esborranys
     explain:
-      help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra l'indicador
-        binari, el text registral de justificació i les dades del perfil de les quals
-        depèn la decisió. Local; mai contacta amb AEAT.
+      help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
+        l'indicador binari, el text registral de justificació i les dades del perfil
+        de les quals depèn la decisió. Local; mai contacta amb AEAT.
       modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
-    from_help: Data inicial del calendari (AAAA-MM-DD)
-    header: "Model\tPeríode\tEstat\tObre\tTanca"
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
     status:
@@ -937,7 +930,6 @@ cli:
       transactions_empty: Encara no s'han importat moviments bancaris.
       transactions_present: '%{count} moviment(s) bancaris estan disponibles al llibre.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
-    to_help: Data final del calendari (AAAA-MM-DD)
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
     app_help: Gestió del registre de models fiscals
