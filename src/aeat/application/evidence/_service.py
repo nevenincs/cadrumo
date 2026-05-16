@@ -140,7 +140,7 @@ class EvidenceBundleService:
         *,
         bucket_id: str,
         bundle_id: str,
-        record_payloads: Mapping[tuple[str, str], bytes],
+        record_payloads: Mapping[tuple[str, str], bytes] | None = None,
     ) -> EvidenceBundleVerificationReport:
         """Re-verify a bundle by recomputing record digests from supplied payloads.
 
@@ -149,7 +149,16 @@ class EvidenceBundleService:
         registered digest. The report enumerates which checks passed and
         the overall verification state. Missing records degrade
         completeness; mismatched digests fail verification.
+
+        When ``record_payloads`` is ``None`` (the CLI default until the
+        per-object-type loader registry lands), every record reports as
+        unreachable and the bundle is classified as INCOMPLETE — the
+        operator-honest baseline. Callers that already hold payloads in
+        memory (test fixtures, end-to-end driver code) pass them
+        explicitly.
         """
+        if record_payloads is None:
+            record_payloads = {}
         bundle = self.show(bucket_id=bucket_id, bundle_id=bundle_id)
         findings: list[EvidenceBundleCheckResult] = []
 
@@ -234,8 +243,8 @@ class EvidenceBundleService:
         *,
         bucket_id: str,
         bundle_id: str,
-        record_payloads: Mapping[tuple[str, str], bytes],
         output_path: Path,
+        record_payloads: Mapping[tuple[str, str], bytes] | None = None,
         force_incomplete: bool = False,
     ) -> Path:
         """Write a ZIP with each record file then manifest.json last.
@@ -245,6 +254,8 @@ class EvidenceBundleService:
         is True. Incomplete bundles require ``force_incomplete=True``;
         failed-verification bundles always refuse.
         """
+        if record_payloads is None:
+            record_payloads = {}
         bundle = self.show(bucket_id=bucket_id, bundle_id=bundle_id)
         report = self.check(
             bucket_id=bucket_id,
@@ -282,7 +293,7 @@ class EvidenceBundleService:
         *,
         bucket_id: str,
         bundle_id: str,
-        record_payloads: Mapping[tuple[str, str], bytes],
+        record_payloads: Mapping[tuple[str, str], bytes] | None = None,
     ) -> EvidenceBundleVerificationReport:
         """Evidence-case replay: re-verify the bundle against supplied payloads.
 

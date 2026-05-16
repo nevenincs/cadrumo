@@ -1862,7 +1862,7 @@ def audit_show(
         f"bucket\t{bucket_id}",
         f"bundle_id\t{bundle.bundle_id}",
         f"work_unit_id\t{bundle.work_unit_id}",
-        f"manifest_hash\t{bundle.manifest_hash}",
+        f"manifest_version\t{bundle.manifest_version}",
         f"verification_state\t{bundle.verification_state.value}",
         f"records\t{len(bundle.records)}",
     ]
@@ -1890,9 +1890,8 @@ def audit_check(
         f"bucket\t{bucket_id}",
         f"bundle_id\t{report.bundle_id}",
         f"verification_state\t{report.verification_state.value}",
-        f"manifest_hash_matches\t{report.manifest_hash_matches}",
-        f"records_verified\t{report.records_verified}",
-        f"records_failed\t{report.records_failed}",
+        f"completeness_ratio\t{report.completeness_ratio}",
+        f"findings\t{len(report.findings)}",
     ]
     _emit(ctx, payload, lines)
 
@@ -1929,17 +1928,25 @@ def audit_export(
     ] = False,
 ) -> None:
     bucket_id = _audit_bucket_id()
-    bundle = _evidence_bundle_service().export(
+    service = _evidence_bundle_service()
+    output_path = service.export(
         bucket_id=bucket_id,
         bundle_id=bundle_id,
         output_path=output,
         force_incomplete=force_incomplete,
     )
-    payload = bundle.model_dump(mode="json")
+    bundle = service.show(bucket_id=bucket_id, bundle_id=bundle_id)
+    payload: dict[str, object] = {
+        "bucket_id": bucket_id,
+        "bundle_id": bundle.bundle_id,
+        "output": str(output_path),
+        "verification_state": bundle.verification_state.value,
+        "records": len(bundle.records),
+    }
     lines = [
         f"bucket\t{bucket_id}",
         f"bundle_id\t{bundle.bundle_id}",
-        f"output\t{output}",
+        f"output\t{output_path}",
         f"verification_state\t{bundle.verification_state.value}",
     ]
     _emit(ctx, payload, lines)
@@ -1966,7 +1973,8 @@ def audit_replay(
         f"bucket\t{bucket_id}",
         f"bundle_id\t{report.bundle_id}",
         f"verification_state\t{report.verification_state.value}",
-        f"records_replayed\t{report.records_verified}",
+        f"completeness_ratio\t{report.completeness_ratio}",
+        f"findings\t{len(report.findings)}",
     ]
     _emit(ctx, payload, lines)
 
