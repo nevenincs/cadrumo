@@ -18,7 +18,6 @@ from datetime import date
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.user_profile import (
-    DEFAULT_USER_PROFILE_SCHEMA_PATH,
     ProfileNotFoundError,
     ProfileSchemaDefinition,
     UserProfileFact,
@@ -45,7 +44,7 @@ def _shared_schema() -> ProfileSchemaDefinition:
 
     global _SHARED_SCHEMA
     if _SHARED_SCHEMA is None:
-        _SHARED_SCHEMA = load_user_profile_schema(DEFAULT_USER_PROFILE_SCHEMA_PATH)
+        _SHARED_SCHEMA = load_user_profile_schema()
     return _SHARED_SCHEMA
 
 

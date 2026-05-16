@@ -16,13 +16,15 @@ from ...core.resources import bundled_path
 from ._schema import EUMemberState, VATRate, VATRateKind
 from .errors import VatCatalogueError, VatRateOverlapError, VatValidationError
 
-_DEFAULT_RATE_REGISTRY = bundled_path("registry", "aeat", "vat", "rates.toml")
+def load_vat_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tuple[VATRate, ...]]:
+    """Load VAT rates from the committed registry file.
 
+    Resolves the bundled rates path on every call so the
+    `bundled_path` boundary stays the single resolution surface.
+    """
 
-def load_vat_rate_table(path: Path = _DEFAULT_RATE_REGISTRY) -> Mapping[EUMemberState, tuple[VATRate, ...]]:
-    """Load VAT rates from the committed registry file."""
-
-    resolved = path.resolve()
+    target = path if path is not None else bundled_path("registry", "aeat", "vat", "rates.toml")
+    resolved = target.resolve()
     stat = resolved.stat()
     return _load_vat_rate_table_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
