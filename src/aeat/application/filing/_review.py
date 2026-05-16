@@ -19,7 +19,7 @@ from functools import lru_cache
 
 from ...core.logging import get_logger
 from ...domain._identifiers import canonical_decimal_string
-from ...domain.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
+from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
 from ...domain.filing import (
     CasillaSchemaProvider,
     FilingApprovalBasis,
@@ -95,14 +95,14 @@ def compute_current_approval_basis(
             transaction catalogue. When ``None``, the catalogue is
             loaded from the encrypted SecureObjectRepository.
         category_profiles: Optional override of the active category
-            profile map. Defaults to ``CATEGORY_PROFILES_2025``.
+            profile map. Defaults to the bundled 2025 registry.
 
     Returns:
         A freshly computed :class:`FilingApprovalBasis`.
     """
 
     catalogue = transaction_catalogue or _load_transaction_catalogue(bucket_id)
-    profiles = category_profiles or CATEGORY_PROFILES_2025
+    profiles = category_profiles or resolve_category_profiles(2025)
     return FilingApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
         draft_review_fingerprint=_draft_review_fingerprint(draft),

@@ -18,9 +18,9 @@ from types import MappingProxyType
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ..categories import (
-    CATEGORY_PROFILES_2025,
     ProportionalityKind,
     SpendingCategory,
+    resolve_category_profiles,
 )
 from ._errors import UsageRatioValidationError
 
@@ -42,7 +42,7 @@ def _eligible_categories() -> frozenset[SpendingCategory]:
     """Return the categories whose proportionality kind accepts a user ratio."""
     return frozenset(
         category
-        for category, profile in CATEGORY_PROFILES_2025.items()
+        for category, profile in resolve_category_profiles(2025).items()
         if profile.proportionality.kind in _USER_RATIO_KINDS
     )
 

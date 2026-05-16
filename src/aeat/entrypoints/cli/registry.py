@@ -21,8 +21,6 @@ from ._common import _emit
 from ._i18n import tr
 from ._registry_corpus import citations_app, manuals_app
 
-_DEFAULT_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_DEFAULT_WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 
 app = typer.Typer(
     name="registry",
@@ -57,23 +55,31 @@ def _join(values: tuple[object, ...] | list[object] | set[object]) -> str:
     return ",".join(str(value) for value in values)
 
 
+def _resolve_registry_root(value: Path | None) -> Path:
+    return value if value is not None else bundled_path("registry", "aeat")
+
+
+def _resolve_workbook_root(value: Path | None) -> Path:
+    return value if value is not None else bundled_path("corpus", "aeat_official", "disenos_registro")
+
+
 @app.command("inspect", help=tr("cli.registry.inspect_help"))
 def inspect_registry_cmd(
     ctx: typer.Context,
     registry_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--registry-root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = _DEFAULT_REGISTRY_ROOT,
+    ] = None,
 ) -> None:
     """Load the read-only registry tree and report inventory counts."""
 
+    registry_root = _resolve_registry_root(registry_root)
     report = inspect_registry_tree(registry_root)
     _emit(
         ctx,
@@ -100,16 +106,15 @@ def inspect_registry_cmd(
 def verify_registry_cmd(
     ctx: typer.Context,
     registry_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--registry-root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = _DEFAULT_REGISTRY_ROOT,
+    ] = None,
     source_root: Annotated[
         Path,
         typer.Option(
@@ -124,6 +129,7 @@ def verify_registry_cmd(
 ) -> None:
     """Validate every registry modelo against shared legal/source catalogues."""
 
+    registry_root = _resolve_registry_root(registry_root)
     report = verify_registry_tree(registry_root, source_root=source_root)
     _emit(
         ctx,
@@ -151,16 +157,15 @@ def verify_registry_cmd(
 def audit_oracles_cmd(
     ctx: typer.Context,
     registry_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--registry-root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = _DEFAULT_REGISTRY_ROOT,
+    ] = None,
     environment: Annotated[
         str,
         typer.Option(
@@ -178,6 +183,7 @@ def audit_oracles_cmd(
     exist so CI / pre-deploy pipelines can gate on a clean audit.
     """
 
+    registry_root = _resolve_registry_root(registry_root)
     report = audit_registry_oracles(registry_root, environment=environment)
     lines = [
         _metric_line("environment", report.environment),
@@ -227,16 +233,15 @@ def verify_filed_state_cmd(
         ),
     ] = None,
     registry_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--registry-root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = _DEFAULT_REGISTRY_ROOT,
+    ] = None,
     source_root: Annotated[
         Path,
         typer.Option(
@@ -258,7 +263,7 @@ def verify_filed_state_cmd(
     report = verify_filed_state(
         observation_path=observation_path,
         source_observation_paths=tuple(source_observation_paths or ()),
-        registry_root=registry_root,
+        registry_root=_resolve_registry_root(registry_root),
         source_root=source_root,
         required_casillas=tuple(required_casillas or ()),
     )
@@ -286,16 +291,15 @@ def verify_filed_state_cmd(
 def verify_workbooks_cmd(
     ctx: typer.Context,
     root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.registry.workbooks_root_help"),
         ),
-    ] = _DEFAULT_WORKBOOK_ROOT,
+    ] = None,
     limit: Annotated[
         int | None,
         typer.Option("--limit", min=1, help=tr("cli.registry.workbooks_limit_help")),
@@ -329,7 +333,7 @@ def verify_workbooks_cmd(
     """Run the read-only workbook parity backend verification."""
 
     report = verify_registry_workbooks(
-        root=root,
+        root=_resolve_workbook_root(root),
         limit=limit,
         per_file_timeout_seconds=per_file_timeout_seconds,
         resume_from=resume_from,
@@ -367,16 +371,15 @@ def run_parity_cmd(
         ),
     ],
     registry_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--registry-root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = _DEFAULT_REGISTRY_ROOT,
+    ] = None,
     source_root: Annotated[
         Path,
         typer.Option(
@@ -413,7 +416,7 @@ def run_parity_cmd(
 
     tape, target = run_registry_parity(
         scenario_path=scenario_path,
-        registry_root=registry_root,
+        registry_root=_resolve_registry_root(registry_root),
         source_root=source_root,
         store_root=store_root,
         output=output,
@@ -446,16 +449,15 @@ def replay_parity_cmd(
         ),
     ],
     registry_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--registry-root",
-            exists=True,
             file_okay=False,
             dir_okay=True,
             readable=True,
             help=tr("cli.registry.inspect_registry_root_help"),
         ),
-    ] = _DEFAULT_REGISTRY_ROOT,
+    ] = None,
     source_root: Annotated[
         Path,
         typer.Option(
@@ -472,7 +474,7 @@ def replay_parity_cmd(
 
     report = replay_registry_parity(
         tape_path=tape_path,
-        registry_root=registry_root,
+        registry_root=_resolve_registry_root(registry_root),
         source_root=source_root,
     )
     _emit(
