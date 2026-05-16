@@ -1,11 +1,12 @@
 """Real-behavior tests for the 036 census snapshot service.
 
-Anti-tautology: the fixture populates ``census_facts`` with both
-``Decimal`` and ``str`` values (vivienda_office m2 are decimals;
-the rest are short string literals or ISO date strings) so the
-encrypted-store round-trip witnesses the ``_CensusFactValue = Decimal
-| str`` union, the same drift pattern the borrador roundtrip test
-covers.
+Anti-tautology: ``census_facts`` is a ``Mapping[str, str]`` — the
+narrowing to ``str``-only avoids the ``Decimal | str`` coercion trap
+that silently turned enum literals like ``"15"`` into ``Decimal("15")``
+on JSON round-trip. Roundtrip tests pin that numeric-looking strings
+stay strings; SUPERSEDED / DISCARDED metadata triples are roundtripped
+from fixture-built (not service-built) snapshots so the validator
+invariants are proven to survive the secure-store boundary.
 """
 
 from __future__ import annotations
@@ -361,3 +362,135 @@ def test_namespace_constant_matches_documented_value() -> None:
     ADR amendment and must not silently drift."""
 
     assert CENSUS_SNAPSHOT_NAMESPACE == "aeat.application.live.census_snapshot"
+
+
+def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
+    isolated_secure_store: None,
+) -> None:
+    """A SUPERSEDED snapshot built directly (not via the service) must
+    round-trip preserving ``superseded_by_snapshot_id``. The service-
+    path tests above never exercise the field on a load — they read it
+    after a save the service itself performs in the same memory image."""
+
+    bucket_id = "operator-bucket"
+    repo = CensusSnapshotRepository(bucket_id=bucket_id)
+    captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
+    facts = _populated_facts()
+    snapshot_id = derive_census_snapshot_id(
+        profile_id="operator",
+        captured_at=captured_at,
+        source_url="https://example/G313",
+        census_facts=facts,
+    )
+    successor_id = "f" * 64
+    original = CensusSnapshot(
+        snapshot_id=snapshot_id,
+        bucket_id=bucket_id,
+        profile_id="operator",
+        captured_at=captured_at,
+        source_url="https://example/G313",
+        state=CensusSnapshotState.SUPERSEDED,
+        census_facts=facts,
+        superseded_by_snapshot_id=successor_id,
+    )
+    repo.save(original)
+    loaded = repo.load(original.snapshot_id)
+
+    assert loaded.state is CensusSnapshotState.SUPERSEDED
+    assert loaded.superseded_by_snapshot_id == successor_id
+
+
+def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
+    isolated_secure_store: None,
+) -> None:
+    """A DISCARDED snapshot built directly must round-trip all three
+    discard-audit fields (``discarded_at``, ``discarded_by``,
+    ``discard_reason``). A save that drops any of them would leave them
+    at their default — the model_validator would raise on load."""
+
+    bucket_id = "operator-bucket"
+    repo = CensusSnapshotRepository(bucket_id=bucket_id)
+    captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
+    discarded_at = datetime(2026, 5, 17, 14, 0, 0, tzinfo=UTC)
+    facts = _populated_facts()
+    snapshot_id = derive_census_snapshot_id(
+        profile_id="operator",
+        captured_at=captured_at,
+        source_url="https://example/G313",
+        census_facts=facts,
+    )
+    original = CensusSnapshot(
+        snapshot_id=snapshot_id,
+        bucket_id=bucket_id,
+        profile_id="operator",
+        captured_at=captured_at,
+        source_url="https://example/G313",
+        state=CensusSnapshotState.DISCARDED,
+        census_facts=facts,
+        discarded_at=discarded_at,
+        discarded_by="operator",
+        discard_reason="malformed elected_withholding_pct from sede",
+    )
+    repo.save(original)
+    loaded = repo.load(original.snapshot_id)
+
+    assert loaded.state is CensusSnapshotState.DISCARDED
+    assert loaded.discarded_at == discarded_at
+    assert loaded.discarded_by == "operator"
+    assert "malformed" in loaded.discard_reason
+
+
+def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
+    isolated_secure_store: None,
+) -> None:
+    """Anti-tautology proof: if a snapshot's ``superseded_by_snapshot_id``
+    is corrupted on disk (set to None while ``state`` remains
+    SUPERSEDED), the load path MUST refuse via the model_validator
+    instead of silently re-defaulting. If this test ever passes with
+    the on-disk mutation in place, every other roundtrip in this
+    module is tautological."""
+
+    from pydantic import ValidationError
+
+    from aeat.adapters.persistence.storage import (
+        Envelope,
+        SensitivityClass,
+    )
+
+    bucket_id = "operator-bucket"
+    repo = CensusSnapshotRepository(bucket_id=bucket_id)
+    captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
+    facts = _populated_facts()
+    snapshot_id = derive_census_snapshot_id(
+        profile_id="operator",
+        captured_at=captured_at,
+        source_url="https://example/G313",
+        census_facts=facts,
+    )
+    successor_id = "f" * 64
+    original = CensusSnapshot(
+        snapshot_id=snapshot_id,
+        bucket_id=bucket_id,
+        profile_id="operator",
+        captured_at=captured_at,
+        source_url="https://example/G313",
+        state=CensusSnapshotState.SUPERSEDED,
+        census_facts=facts,
+        superseded_by_snapshot_id=successor_id,
+    )
+    repo.save(original)
+
+    # Round-trip through the same Envelope shape that the repository
+    # uses, then drop ``superseded_by_snapshot_id`` — re-validating
+    # must raise because the SUPERSEDED state requires a successor.
+    envelope = Envelope[CensusSnapshot](
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=original,
+    )
+    raw = envelope.model_dump(mode="json")
+    raw["payload"]["superseded_by_snapshot_id"] = None
+
+    with pytest.raises(ValidationError, match="superseded"):
+        Envelope[CensusSnapshot].model_validate(raw)
