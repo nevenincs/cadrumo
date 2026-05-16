@@ -1,69 +1,30 @@
 ---
 tags:
-  - "#plan"
-  - "#profile-lifecycle-cli"
-date: "2026-05-16"
+  - '#plan'
+  - '#profile-lifecycle-cli'
+date: '2026-05-16'
 tier: L2
 related:
-  - "[[2026-05-16-profile-lifecycle-cli-adr]]"
-  - "[[2026-05-16-profile-lifecycle-cli-research]]"
-  - "[[2026-05-14-profile-bucket-lifecycle-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
-  - "[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]"
-  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
+  - '[[2026-05-16-profile-lifecycle-cli-adr]]'
+  - '[[2026-05-16-profile-lifecycle-cli-research]]'
+  - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
+  - '[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
+  - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
+  - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `profile-lifecycle-cli` plan
-
-Reality-grounded replan after a six-agent codebase audit. The May-14
-profile-bucket lifecycle ADR's architectural primitives are already
-shipped under `src/aeat/adapters/persistence/storage/`:
-`BucketSession`, per-bucket directory layout, per-bucket lockfile,
-manifest with KDF params, keystore separation, plaintext pointer
-file IO. None of these need creating. Two parallel chains coexist:
-the new infrastructure is built but not yet wired into the live
-crypto / active-profile resolution path, and the operator CLI
-surface still exposes the cryptic verbs (`init`, `use`, `duplicate`,
-`remove`, `view`, `status`, `validate`, `preflight`) the
-2026-05-16 ADR retires.
-
-This plan is therefore a **cutover** plus a **CLI surface
-rename + four missing verbs**, not a build. P01 closed in commit
-`5fe2e2ca` (typed `ProfileName` / `BucketId` aliases). Subsequent
-phases wire the shipped foundation into the live path, retire
-zombie state, rename / merge / extend the CLI verbs, drift-fix the
-persistence boundary, and close the gate.
-
-## Proposed Changes
-
-P02 cuts the active-profile resolution path over to the shipped
-pointer-file infrastructure (renaming `active-bucket` →
-`active-profile` along the way), removes the zombie
-`Settings.aeat_default_profile_name`, removes
-`WorkflowState.active_profile` and updates every consumer, and
-deletes the `"default"` literal in the wizard now that the
-foundation supports name-required creation. P03 rewires the live
-crypto decrypt path to consume `BucketSession`-held key material
-and removes the ClassVar caches in `_master_key.py`. P04 closes
-the five still-live persistence-boundary findings (the manifest
-write-order finding is already resolved). P05 renames the CLI
-verbs to plain English and merges overlapping ones; the
-operator-facing names land alongside the deletions of their
-predecessors. P06 adds the four genuinely missing operator verbs
-(`rename`, `edit`, `export`, `import`, `logout`) plus the three
-absent typed errors, and replaces `duplicate` with
-`create --copy-from`. P07 removes the Google adapter's `--profile`
-overrides and regenerates the four locale catalogues. P08 retires
-the dev-shaped `repair list NAMESPACE` to `aeat.diagnostics` and
-runs the full gate.
-
-The single-cut mandate holds: every Step that deletes a shipped
-verb lands its replacement in the same commit. No shims, no
-aliases, no parallel modules. Originals get augmented; duplicates
-do not exist.
-
-## Steps
 
 ### Phase `P01` - typed identity primitives (DONE)
 
@@ -97,7 +58,7 @@ constant, removes the zombie settings field, and deletes
 `WorkflowState.active_profile` with every consumer updated in the
 same commit window.
 
-- [ ] `P02.S12` - rename the pointer filename constant from `active-bucket` to `active-profile`; `src/aeat/application/workflow/_bucket_pointer_io.py`.
+- [x] `P02.S12` - rename the pointer filename constant from `active-bucket` to `active-profile`; `src/aeat/application/workflow/_bucket_pointer_io.py`.
 - [ ] `P02.S13` - extend `active_bucket_id_or_raise` to consult `--profile` flag, `AEAT_ACTIVE_PROFILE` env var, then pointer file via `read_pointer`, before falling back to `WorkflowState`; `src/aeat/application/workflow/_models.py`.
 - [ ] `P02.S14` - update every caller of `active_profile_bucket_id` / `active_profile_record` to flow through the new precedence chain; `src/aeat/entrypoints/cli/_common.py`.
 - [ ] `P02.S15` - update `register_active_profile` and `select_profile` to write the pointer file via `write_pointer`; `src/aeat/application/user_profile/_orchestration.py`.
@@ -160,8 +121,8 @@ the Typer registration changes.
 - [ ] `P05.S41` - rename `aeat config profile use` to `switch`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S42` - rename `aeat config profile remove` to `delete`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S43` - merge `view` and `status` into one `show` verb that defaults to the active profile and emits a readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P05.S44` - delete `validate` and `preflight` verbs; their schema-validation surface folds into `show`'s readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P05.S45` - delete `get` / `set` / `unset` verbs from the operator CLI; they re-home under `python -m aeat.diagnostics`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P05.S44` - delete `validate` and `preflight` verbs; `their schema-validation surface folds into `show`'s readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P05.S45` - delete `get` / `set` / `unset` verbs from the operator CLI; `they re-home under `python -m aeat.diagnostics`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S46` - rewrite the top-level `_config_help` summary to advertise every operator profile verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
 
 ### Phase `P06` - add the genuinely missing operator verbs
@@ -187,11 +148,15 @@ it. `duplicate` collapses into `create --copy-from`.
 
 ### Phase `P07` - google adapter cleanup and locale regeneration
 
+TODO: Phase intent paragraph required by the convention ADR.
+
 - [ ] `P07.S59` - remove the `profile_override` parameter from `resolve_active_profile`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
 - [ ] `P07.S60` - remove the `--profile` flag from every `aeat config google` verb; `src/aeat/entrypoints/cli/_config/_google.py`.
 - [ ] `P07.S61` - run the locale scaffold + audit across es/en/ca/hu for every renamed string; `src/aeat/locales`.
 
 ### Phase `P08` - diagnostics entrypoint and full gate
+
+TODO: Phase intent paragraph required by the convention ADR.
 
 - [ ] `P08.S62` - delete the `aeat config repair list NAMESPACE` operator verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P08.S63` - add `python -m aeat.diagnostics` module entrypoint with `profile get / set / unset / activity` and `secure-objects list` subcommands; `src/aeat/diagnostics/__main__.py`.
@@ -201,50 +166,3 @@ it. `duplicate` collapses into `create --copy-from`.
 - [ ] `P08.S67` - run `mypy` and resolve every diagnostic; `src/aeat`.
 - [ ] `P08.S68` - run the vault audit and confirm no new errors; `.vault`.
 - [ ] `P08.S69` - run a manual operator smoke against a fresh root and capture the transcript; `.vault/exec/2026-05-16-profile-lifecycle-cli`.
-
-## Parallelization
-
-The phases land sequentially: P02 (pointer cutover) before P03
-(crypto cutover) because the precedence chain reads come into the
-crypto-path code; P03 before P05 (CLI rename) because the new
-verbs invoke the cutover-completed services; P05 / P06 may
-interleave per-commit. P04 drift fixes are independent of the
-cutover and may overlap; treat as serial for simplicity. P07 and
-P08 must close last.
-
-Within each phase the single-cut mandate holds: every Step that
-deletes a shipped name lands its replacement in the same commit
-window. Specific collocations: P02.S12 + S13 + S14 + S15 (pointer
-rename + chain + caller updates + write site) ship together;
-P02.S16 + S17 (zombie field + active_profile field delete) ship
-together; P03.S22 + S23 + S24 + S25 + S26 (ClassVar removals +
-atexit swap + decrypt-path rewire test) ship together; P05.S34
-through S40 (CLI rename block) may ship as one or two commits.
-
-## Verification
-
-Plan completion criteria:
-
-- Every Step closed.
-- `uv run pytest` exits zero.
-- `uv run ruff check` exits zero.
-- `uv run mypy src/aeat` exits zero.
-- `python -m aeat.locales audit` exits zero.
-- `uv run --no-sync vaultspec-core vault check all` introduces no
-  new errors beyond those present at plan start.
-- The manual operator smoke transcript shows the full flow against
-  a fresh root: create first profile, create second with
-  `--copy-from`, switch, logout, switch back, edit, rename,
-  export, import, delete.
-- `vault plan check` exits zero against this plan.
-- No `aeat config init` verb survives. No `aeat config profile
-  use / view / status / validate / preflight / remove / duplicate
-  / get / set / unset` verb survives.
-- No `WorkflowState.active_profile` field, no
-  `Settings.aeat_default_profile_name`, no `"default"` literal in
-  the wizard, no `ClassVar` cache in `KeyringMasterKeyProvider` or
-  `FileFallbackMasterKeyProvider`, no `dict[str, object]` union
-  arm on `WorkflowState.invoice_reviews` or `ledger_reviews`, no
-  private `_objects` reach in `_iter_profiles`.
-- The May-12 and May-13 ADRs carry `superseded by
-  [[2026-05-16-profile-lifecycle-cli-adr]]` in their status lines.

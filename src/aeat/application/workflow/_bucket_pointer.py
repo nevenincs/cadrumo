@@ -1,9 +1,12 @@
-"""Strict pydantic v2 record for the active-bucket pointer file.
+"""Strict pydantic v2 record for the active-profile pointer file.
 
-The pointer file lives at ``<aeat-root>/active-bucket`` and carries the
-canonical default for the active-bucket precedence chain
+The pointer file lives at ``<aeat-root>/active-profile`` and carries the
+canonical default for the active-profile precedence chain
 (flag > env > pointer). This record is the typed wrapper around the
-pointer file's plaintext content.
+pointer file's plaintext content. The storage-layer term ``bucket`` is
+preserved on the record's `bucket_id` field because the bucket is the
+encrypted storage slice the operator profile sits on; the file's
+operator-visible name is `active-profile` to match the verb noun.
 
 The on-disk representation is single-document TOML keyed by
 ``bucket_id`` and ``schema_version``. An atomic write-then-rename
