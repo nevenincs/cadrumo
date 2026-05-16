@@ -2605,6 +2605,15 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     handler would accept it — a stricter-than-runtime drift the
     audit caught.
 
+    Counterpart-source bindings (``ledger_transaction``,
+    ``purchase_invoice_evidence``, ``payable_invoice``,
+    ``collectible_invoice``) additionally run the fact/op cross-check
+    invariants that the handler-call-time ``_validated_counterpart_selector``
+    enforces — so a snapshot whose binding declared
+    ``fact = "operator_count"`` paired with ``aggregation.op = "sum"``
+    (a real cross-shape error) is caught at registry-build time
+    rather than only when the resolver is invoked.
+
     Sources NOT in the registry are intentionally free-form today;
     those bindings short-circuit with an empty failure list.
     """
@@ -2619,5 +2628,17 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
             f"binding {binding.id!r} (source={binding.source!r}) "
             f"selector violates {selector_model.__name__}: {exc}"
         ]
+    # Counterpart-source bindings get the additional fact/op
+    # invariants that ``_validated_counterpart_selector`` runs at
+    # handler-call time, lifted up here so registry-build catches
+    # them too. Audit selector-drift F3.
+    if binding.source in COUNTERPART_BINDING_SOURCE_KINDS:
+        try:
+            _validated_counterpart_selector(binding)
+        except RegistryValidationError as exc:
+            return [
+                f"binding {binding.id!r} (source={binding.source!r}) "
+                f"counterpart invariants violated: {exc}"
+            ]
     return []
     return resolved

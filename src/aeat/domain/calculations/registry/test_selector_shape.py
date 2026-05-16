@@ -409,6 +409,36 @@ def test_profile_selector_required_when_pair_must_match() -> None:
     assert "bad-required-when" in failures[0]
 
 
+def test_counterpart_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
+    """Counterpart fact/op cross-invariants fire at the snapshot-build gate.
+
+    A counterpart-source binding that declares ``fact = "operator_count"``
+    must pair it with ``aggregation.op = "count_distinct"`` (per the
+    handler-call-time invariant in ``_validated_counterpart_selector``).
+    A binding that pairs operator_count with op="sum" is structurally
+    malformed; without this lifted invariant the snapshot-build gate
+    would pass it and the resolver would only raise at handler-call
+    time. Audit selector-drift F3.
+    """
+
+    binding = DataBindingDefinition(
+        id="bad-counterpart-fact-op",
+        source="collectible_invoice",
+        selector={
+            "fact": "operator_count",
+            "claves": ("E", "M"),
+            "rectification_scope": "exclude_rectifications",
+        },
+        aggregation={"op": "sum"},  # mismatched op — should be "count_distinct"
+        legal_refs=("lirpf.art-99",),
+        source_refs=("aeat.test",),
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-counterpart-fact-op" in failures[0]
+    assert "counterpart invariants" in failures[0]
+
+
 def test_collectible_invoice_rejects_lowercase_clave() -> None:
     """Counterpart selectors inherit the uppercase-clave validator.
 
