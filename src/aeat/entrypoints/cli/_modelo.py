@@ -941,6 +941,23 @@ def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, object]
         "work_unit_id": rev.work_unit_id,
         "state": rev.state.value,
         "casilla_values": {k: str(v) for k, v in rev.casilla_values.items()},
+        # Typed CasillaObservation envelope carrying full per-casilla
+        # provenance (formula_id, operand_refs, operand_values,
+        # legal_refs, source_refs). Without this projection the CLI
+        # JSON would strip every regulatory grounding signal — the
+        # exact failure the calc-engine grounding audit flagged.
+        "observations": [
+            {
+                "casilla_id": obs.casilla_id,
+                "value": str(obs.value),
+                "formula_id": obs.formula_id,
+                "operand_refs": list(obs.operand_refs),
+                "operand_values": [str(v) for v in obs.operand_values],
+                "legal_refs": list(obs.legal_refs),
+                "source_refs": list(obs.source_refs),
+            }
+            for obs in rev.observations
+        ],
         "binding_overrides": dict(rev.binding_overrides),
         "inputs_snapshot": dict(rev.inputs_snapshot),
         "created_at": rev.created_at.isoformat(),
