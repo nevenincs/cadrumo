@@ -29,4 +29,5 @@ class ModeloCode(str):
         source_type: type[Any],
         handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
+        del source_type, handler
         return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())

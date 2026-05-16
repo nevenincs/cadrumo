@@ -99,7 +99,7 @@ def test_bundle_is_frozen(tmp_path: Path) -> None:
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     with pytest.raises(ValueError, match=r"frozen|Instance is frozen"):
-        bundle.path = tmp_path / "y.p12"
+        setattr(bundle, "path", tmp_path / "y.p12")  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_bundle_password_does_not_leak_in_repr_or_dump(tmp_path: Path) -> None:

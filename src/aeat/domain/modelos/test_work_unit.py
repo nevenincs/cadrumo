@@ -216,7 +216,7 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
             }
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        unit.name = "renamed"
+        setattr(unit, "name", "renamed")  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_work_unit_rejects_id_that_does_not_match_derivation() -> None:

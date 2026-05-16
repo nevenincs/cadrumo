@@ -139,69 +139,19 @@ def _rewrite_page(
             rebuilt.append(instruction)
             continue
 
-        operands = instruction.operands
         operator = instruction.operator
-
         if operator not in _TEXT_OPERATORS:
             rebuilt.append(instruction)
             continue
 
-        new_operands: list[PikepdfObject | int | float] | None = None
-        if operator in (_TJ, _QUOTE):
-            first_operand = operands[0]
-            if isinstance(first_operand, String):
-                new_operand, hits = _rewrite_string_operand(
-                    first_operand,
-                    triples,
-                    page_index=page_index,
-                    instruction_index=instruction_index,
-                )
-                if hits:
-                    new_operands = [new_operand, *list(operands)[1:]]
-                    edits.extend(hits)
-        elif operator == _DOUBLEQUOTE:
-            # `aw Tw ac Tc string "`  → operands = [aw, ac, string]
-            target_index = 2
-            target_operand = operands[target_index]
-            if isinstance(target_operand, String):
-                new_operand, hits = _rewrite_string_operand(
-                    target_operand,
-                    triples,
-                    page_index=page_index,
-                    instruction_index=instruction_index,
-                )
-                if hits:
-                    operand_list: list[PikepdfObject | int | float] = list(operands)
-                    operand_list[target_index] = new_operand
-                    new_operands = operand_list
-                    edits.extend(hits)
-        elif operator == _TJ_ARRAY:
-            # operands[0] is an Array of String + numeric kerning entries.
-            array = operands[0]
-            new_array_elements: list[PikepdfObject] = []
-            local_hits: list[Replacement] = []
-            array_mutated = False
-            for element_index in range(len(array)):
-                element = array[element_index]
-                if not isinstance(element, String):
-                    new_array_elements.append(element)
-                    continue
-                new_operand, hits = _rewrite_string_operand(
-                    element,
-                    triples,
-                    page_index=page_index,
-                    instruction_index=instruction_index,
-                )
-                if hits:
-                    new_array_elements.append(new_operand)
-                    local_hits.extend(hits)
-                    array_mutated = True
-                else:
-                    new_array_elements.append(element)
-            if array_mutated:
-                new_operands = [pikepdf.Array(new_array_elements)]
-                edits.extend(local_hits)
-
+        new_operands = _rewrite_text_show_operands(
+            instruction.operands,
+            operator=operator,
+            triples=triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+            edits=edits,
+        )
         if new_operands is None:
             rebuilt.append(instruction)
         else:
@@ -216,6 +166,110 @@ def _rewrite_page(
         new_bytes = unparse_content_stream(rebuilt)
         page.Contents = pdf.make_stream(new_bytes)
     return edits
+
+
+def _rewrite_text_show_operands(
+    operands: object,
+    *,
+    operator: object,
+    triples: tuple[tuple[str, str, str], ...],
+    page_index: int,
+    instruction_index: int,
+    edits: list[Replacement],
+) -> list[PikepdfObject | int | float] | None:
+    """Rewrite text-show operands for one instruction. Returns ``None`` when
+    nothing changed, otherwise the full new operand list."""
+
+    if operator in (_TJ, _QUOTE):
+        return _rewrite_single_string_at(
+            operands,
+            target_index=0,
+            triples=triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+            edits=edits,
+        )
+    if operator == _DOUBLEQUOTE:
+        # `aw Tw ac Tc string "`  → operands = [aw, ac, string]
+        return _rewrite_single_string_at(
+            operands,
+            target_index=2,
+            triples=triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+            edits=edits,
+        )
+    if operator == _TJ_ARRAY:
+        return _rewrite_array_string_elements(
+            operands,
+            triples=triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+            edits=edits,
+        )
+    return None
+
+
+def _rewrite_single_string_at(
+    operands: object,
+    *,
+    target_index: int,
+    triples: tuple[tuple[str, str, str], ...],
+    page_index: int,
+    instruction_index: int,
+    edits: list[Replacement],
+) -> list[PikepdfObject | int | float] | None:
+    target_operand = operands[target_index]  # type: ignore[index]
+    if not isinstance(target_operand, String):
+        return None
+    new_operand, hits = _rewrite_string_operand(
+        target_operand,
+        triples,
+        page_index=page_index,
+        instruction_index=instruction_index,
+    )
+    if not hits:
+        return None
+    operand_list: list[PikepdfObject | int | float] = list(operands)  # type: ignore[arg-type]
+    operand_list[target_index] = new_operand
+    edits.extend(hits)
+    return operand_list
+
+
+def _rewrite_array_string_elements(
+    operands: object,
+    *,
+    triples: tuple[tuple[str, str, str], ...],
+    page_index: int,
+    instruction_index: int,
+    edits: list[Replacement],
+) -> list[PikepdfObject | int | float] | None:
+    # operands[0] is an Array of String + numeric kerning entries.
+    array = operands[0]  # type: ignore[index]
+    new_array_elements: list[PikepdfObject] = []
+    local_hits: list[Replacement] = []
+    array_mutated = False
+    for element_index in range(len(array)):
+        element = array[element_index]
+        if not isinstance(element, String):
+            new_array_elements.append(element)
+            continue
+        new_operand, hits = _rewrite_string_operand(
+            element,
+            triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+        )
+        if hits:
+            new_array_elements.append(new_operand)
+            local_hits.extend(hits)
+            array_mutated = True
+        else:
+            new_array_elements.append(element)
+    if not array_mutated:
+        return None
+    edits.extend(local_hits)
+    return [pikepdf.Array(new_array_elements)]
 
 
 def _rewrite_string_operand(

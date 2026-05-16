@@ -54,6 +54,13 @@ from ...domain.deadlines._festivos import DeadlineValidationError
 from ...domain.filing import FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
+from ._errors import (
+    OverviewAgendaError,
+    OverviewBacklogError,
+    OverviewCalendarError,
+    OverviewError,
+    OverviewExplainError,
+)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for overview records."""
@@ -511,14 +518,6 @@ def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...
         lines.append(f"integrity-warning\tunreadable_rows={report.unreadable_rows}")
     return tuple(lines)
 
-
-from ._errors import (
-    OverviewAgendaError,
-    OverviewBacklogError,
-    OverviewCalendarError,
-    OverviewError,
-    OverviewExplainError,
-)
 
 __all__ = [
     "CalendarCompleteness",

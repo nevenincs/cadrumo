@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import secrets
 from datetime import UTC, datetime, timezone
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -30,7 +31,7 @@ def _now() -> datetime:
 
 
 def _manifest(**overrides: object) -> BucketManifest:
-    defaults: dict[str, object] = {
+    defaults: dict[str, Any] = {
         "bucket_id": "bucket-001",
         "label": "Primary",
         "created_at": _now(),

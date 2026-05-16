@@ -319,7 +319,7 @@ def test_catalogue_get_returns_event_by_id_or_none() -> None:
 def test_catalogue_is_frozen_and_extra_forbid() -> None:
     catalogue = BucketEventHistoryCatalogue()
     with pytest.raises(ValidationError, match="frozen"):
-        catalogue.events = MappingProxyType({})
+        setattr(catalogue, "events", MappingProxyType({}))  # noqa: B010 — exercise frozen-model __setattr__
 
     event = _build_event(
         bucket_id=_BUCKET_A,

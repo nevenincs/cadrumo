@@ -104,7 +104,7 @@ def test_oauth_client_rejects_non_https_auth_uri() -> None:
 def test_oauth_client_is_frozen() -> None:
     client = OAuthClient(**_valid_client_kwargs())
     with pytest.raises(ValidationError, match="frozen"):
-        client.client_id = "other.apps.googleusercontent.com"
+        setattr(client, "client_id", "other.apps.googleusercontent.com")  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_oauth_client_rejects_extra_fields() -> None:
@@ -128,7 +128,7 @@ def test_oauth_token_minimum_shape() -> None:
 def test_oauth_token_is_frozen() -> None:
     token = OAuthToken(refresh_token="1//deadbeef", token_uri="https://oauth2.googleapis.com/token")
     with pytest.raises(ValidationError, match="frozen"):
-        token.refresh_token = "1//rotated"
+        setattr(token, "refresh_token", "1//rotated")  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_oauth_token_rejects_empty_refresh() -> None:
@@ -176,11 +176,12 @@ def test_drive_app_properties_round_trip() -> None:
 
 
 def test_drive_app_properties_rejects_revision_below_one() -> None:
+    invalid_revision: int = 0
     with pytest.raises(ValidationError, match="greater than or equal to 1"):
         DriveAppProperties(
             namespace="ledger_transaction",
             object_key_hmac="abc",
-            revision=0,
+            revision=invalid_revision,
             source_hash="sha256-x",
             written_at=datetime(2026, 5, 14, tzinfo=UTC),
         )

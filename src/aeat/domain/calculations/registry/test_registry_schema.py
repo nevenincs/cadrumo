@@ -543,7 +543,9 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="unknown binding"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, bound_revision))
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+            _with_revision(modelo, bound_revision)
+        )
 
 
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:
