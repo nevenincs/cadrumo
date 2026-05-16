@@ -2386,6 +2386,16 @@ def resolve_refund_binding_row_values(
 _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "previous_filing": _PreviousFilingSelector,
     "invoice": _InvoiceSelector,
+    # Counterpart-aggregation family: every source whose selector shape
+    # mirrors the invoice family (fact + claves + rectification_scope +
+    # optional row_field / grouping / record) is validated against
+    # ``_InvoiceSelector``. The ``_validated_counterpart_selector``
+    # helper adds counterpart-specific fact / op invariants on top
+    # of the shared schema at handler-call time.
+    "ledger_transaction": _InvoiceSelector,
+    "purchase_invoice_evidence": _InvoiceSelector,
+    "payable_invoice": _InvoiceSelector,
+    "collectible_invoice": _InvoiceSelector,
     "ledger_oss_aggregation": _OssIossLedgerSelector,
     "ledger_iva_aggregation": _IvaLedgerSelector,
     "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,

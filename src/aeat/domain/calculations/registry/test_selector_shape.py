@@ -58,6 +58,11 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
     expected = {
         "previous_filing",
         "invoice",
+        # counterpart-aggregation family shares _InvoiceSelector
+        "ledger_transaction",
+        "purchase_invoice_evidence",
+        "payable_invoice",
+        "collectible_invoice",
         "ledger_oss_aggregation",
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
@@ -192,6 +197,57 @@ def test_free_form_source_returns_no_diagnostics() -> None:
         selector={"label": "operator-supplied", "value_kind": "decimal"},
     )
     assert validate_binding_selector_shape(binding) == []
+
+
+def test_counterpart_sources_validate_against_invoice_selector() -> None:
+    """The four counterpart-aggregation sources share ``_InvoiceSelector``.
+
+    ``ledger_transaction``, ``purchase_invoice_evidence``,
+    ``payable_invoice``, and ``collectible_invoice`` all share the
+    invoice-family selector shape (fact + claves + rectification_scope).
+    Each must validate under the discriminator gate so a malformed
+    selector under any of them fails at snapshot build.
+    """
+
+    for source in (
+        "ledger_transaction",
+        "purchase_invoice_evidence",
+        "payable_invoice",
+        "collectible_invoice",
+    ):
+        binding = _binding(
+            source=source,
+            selector={
+                "fact": "base_sum",
+                "claves": ("E", "M"),
+                "rectification_scope": "exclude_rectifications",
+            },
+            binding_id=f"test-{source}",
+        )
+        assert validate_binding_selector_shape(binding) == [], (
+            f"well-shaped {source} selector should pass the gate"
+        )
+
+
+def test_collectible_invoice_rejects_lowercase_clave() -> None:
+    """Counterpart selectors inherit the uppercase-clave validator.
+
+    The shared ``_InvoiceSelector`` enforces that claves are uppercase
+    AEAT codes. A binding using a lowercase clave under any
+    counterpart source must surface the violation through the gate.
+    """
+
+    binding = _binding(
+        source="collectible_invoice",
+        selector={
+            "fact": "base_sum",
+            "claves": ("e",),  # lowercase: invalid
+        },
+        binding_id="bad-collectible",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-collectible" in failures[0]
 
 
 def test_invoice_selector_rejects_misshapen_selector() -> None:
