@@ -82,6 +82,72 @@ def _duplicates(values: Iterable[str]) -> set[str]:
     return dupes
 
 
+_RECORD_ID_KINDS: tuple[tuple[str, str], ...] = (
+    ("casilla", "casillas"),
+    ("formula", "formulas"),
+    ("binding", "bindings"),
+    ("relation", "relations"),
+    ("parameter", "parameters"),
+    ("algorithm provider", "algorithm_providers"),
+    ("algorithm binding", "algorithm_bindings"),
+    ("export layout", "export_layouts"),
+    ("extraction profile", "extraction_profiles"),
+    ("cross-reference", "live_cross_references"),
+    ("workbook parity reference", "workbook_parity_refs"),
+    ("verification expectation", "verification_expectations"),
+    ("application link", "application_links"),
+    ("deadline window", "deadline_windows"),
+    ("filing schedule", "filing_schedules"),
+    ("support removal decision", "support_removal_decisions"),
+    ("construct", "constructs"),
+    ("dependency classification", "dependency_classifications"),
+)
+"""Maps the human-readable record kind name to the ``ModeloRevision`` attribute.
+
+Used to fold the 18 per-kind ``[record.id for record in revision.<kind>]``
+comprehensions in :meth:`RegistryValidator._validate_revision` into a
+single iteration over a typed table. The (kind, attribute) tuple shape
+is what every downstream consumer needs: the human-readable label
+appears in failure messages, the attribute is what we read.
+"""
+
+
+def _collect_record_id_lists(revision: ModeloRevision) -> dict[str, list[str]]:
+    """Return ``{kind: [record.id, ...]}`` for every record kind on the revision."""
+    return {kind: [record.id for record in getattr(revision, attr)] for kind, attr in _RECORD_ID_KINDS}
+
+
+def _emit_per_kind_duplicate_failures(
+    failures: list[str],
+    prefix: str,
+    ids_by_kind: Mapping[str, list[str]],
+) -> None:
+    """Append a "duplicate <kind> id <id>" failure for every duplicate id, per kind."""
+    for kind, ids in ids_by_kind.items():
+        for duplicate in sorted(_duplicates(ids)):
+            failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
+
+
+# Primary-id deduplication checks the union of every typed-record kind
+# EXCEPT ``provider`` (algorithm providers share a namespace with
+# algorithm-binding ``provider`` references; collisions there are not
+# duplicate-id offences).
+_PRIMARY_ID_KINDS: frozenset[str] = frozenset(kind for kind, _ in _RECORD_ID_KINDS) - {"algorithm provider"}
+
+
+def _emit_combined_primary_id_failures(
+    failures: list[str],
+    prefix: str,
+    ids_by_kind: Mapping[str, list[str]],
+) -> None:
+    """Cross-kind id uniqueness: no two record kinds may share an id."""
+    primary_ids: list[str] = []
+    for kind in _PRIMARY_ID_KINDS:
+        primary_ids.extend(ids_by_kind[kind])
+    for duplicate in sorted(_duplicates(primary_ids)):
+        failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
+
+
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     """Layout-binding predicate, delegated to the typed manual_input shape.
 
@@ -272,70 +338,22 @@ class RegistryValidator:
         failures.extend(self._missing_refs(prefix, "revision", revision.legal_refs, self._legal, "legal"))
         failures.extend(self._missing_refs(prefix, "revision", revision.source_refs, self._sources, "source"))
 
-        casilla_ids = [casilla.id for casilla in revision.casillas]
-        formula_ids = [formula.id for formula in revision.formulas]
-        binding_ids = [binding.id for binding in revision.bindings]
-        relation_ids = [relation.id for relation in revision.relations]
-        parameter_ids = [parameter.id for parameter in revision.parameters]
-        provider_ids = [provider.id for provider in revision.algorithm_providers]
-        algorithm_binding_ids = [binding.id for binding in revision.algorithm_bindings]
-        export_layout_ids = [layout.id for layout in revision.export_layouts]
-        extraction_profile_ids = [profile.id for profile in revision.extraction_profiles]
-        cross_reference_ids = [cross_reference.id for cross_reference in revision.live_cross_references]
-        workbook_parity_ids = [workbook.id for workbook in revision.workbook_parity_refs]
-        verification_expectation_ids = [expectation.id for expectation in revision.verification_expectations]
-        application_link_ids = [link.id for link in revision.application_links]
-        deadline_window_ids = [window.id for window in revision.deadline_windows]
-        filing_schedule_ids = [schedule.id for schedule in revision.filing_schedules]
-        support_removal_decision_ids = [decision.id for decision in revision.support_removal_decisions]
-        construct_ids = [construct.id for construct in revision.constructs]
-        dependency_classification_ids = [classification.id for classification in revision.dependency_classifications]
-        if not workbook_parity_ids:
+        ids_by_kind = _collect_record_id_lists(revision)
+        if not ids_by_kind["workbook parity reference"]:
             failures.append(f"{prefix}: revision must declare official workbook parity coverage")
-        for kind, ids in (
-            ("casilla", casilla_ids),
-            ("formula", formula_ids),
-            ("binding", binding_ids),
-            ("relation", relation_ids),
-            ("parameter", parameter_ids),
-            ("algorithm provider", provider_ids),
-            ("algorithm binding", algorithm_binding_ids),
-            ("export layout", export_layout_ids),
-            ("extraction profile", extraction_profile_ids),
-            ("cross-reference", cross_reference_ids),
-            ("workbook parity reference", workbook_parity_ids),
-            ("verification expectation", verification_expectation_ids),
-            ("application link", application_link_ids),
-            ("deadline window", deadline_window_ids),
-            ("filing schedule", filing_schedule_ids),
-            ("support removal decision", support_removal_decision_ids),
-            ("construct", construct_ids),
-            ("dependency classification", dependency_classification_ids),
-        ):
-            for duplicate in sorted(_duplicates(ids)):
-                failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
-
-        primary_ids = (
-            casilla_ids
-            + formula_ids
-            + binding_ids
-            + relation_ids
-            + parameter_ids
-            + algorithm_binding_ids
-            + export_layout_ids
-            + extraction_profile_ids
-            + cross_reference_ids
-            + workbook_parity_ids
-            + verification_expectation_ids
-            + application_link_ids
-            + deadline_window_ids
-            + filing_schedule_ids
-            + support_removal_decision_ids
-            + construct_ids
-            + dependency_classification_ids
-        )
-        for duplicate in sorted(_duplicates(primary_ids)):
-            failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
+        _emit_per_kind_duplicate_failures(failures, prefix, ids_by_kind)
+        _emit_combined_primary_id_failures(failures, prefix, ids_by_kind)
+        # The ``_validate_support_removal_decisions`` call below still
+        # consumes the per-kind lists as kwargs; expose them as local
+        # aliases so the existing signature shape stays unchanged.
+        export_layout_ids = ids_by_kind["export layout"]
+        extraction_profile_ids = ids_by_kind["extraction profile"]
+        cross_reference_ids = ids_by_kind["cross-reference"]
+        workbook_parity_ids = ids_by_kind["workbook parity reference"]
+        verification_expectation_ids = ids_by_kind["verification expectation"]
+        application_link_ids = ids_by_kind["application link"]
+        deadline_window_ids = ids_by_kind["deadline window"]
+        filing_schedule_ids = ids_by_kind["filing schedule"]
 
         casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
         formula_by_id = {formula.id: formula for formula in revision.formulas}
