@@ -38,16 +38,15 @@ class ModeloReconciliationSourceKind(StrEnum):
 class ModeloReconciliationVerdict(StrEnum):
     """Closed verdict catalogue for :class:`ModeloReconciliationReport`.
 
-    Drawn from the 2026-05-15 amendment to the app-modelo-shape ADR:
-    ``matches`` / ``mismatches`` / ``evidence_invalid``, plus
-    ``not_yet_found`` for the case where no matching external record
-    is present yet.
+    Drawn verbatim from the 2026-05-15 amendment to the
+    app-modelo-shape ADR: ``matches`` / ``mismatches`` /
+    ``evidence_invalid``. Any expansion needs an ADR amendment first
+    per the no-design-only-shells rule.
     """
 
     MATCHES = "matches"
     MISMATCHES = "mismatches"
     EVIDENCE_INVALID = "evidence_invalid"
-    NOT_YET_FOUND = "not_yet_found"
 
 
 class ModeloReconciliationDiff(BaseModel):
@@ -122,6 +121,18 @@ class WorkUnitNotFoundError(AeatError):
     """Raised when ``modelo_reconcile`` cannot find the addressed work unit."""
 
 
+class ReconciliationCrossBucketRefusedError(AeatError):
+    """Raised when the addressed work unit belongs to a different bucket
+    than the active profile bucket.
+
+    The bucket-event-history ADR scopes every event to a bucket id.
+    Allowing the service to emit into a non-active bucket would let any
+    caller write into other operators' history. The check is enforced
+    at the application service so neither the CLI nor any future caller
+    can bypass it.
+    """
+
+
 def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:
     """Reconcile a modelo work unit against external evidence.
 
@@ -162,12 +173,25 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     )
     from ...domain.justificante import JustificanteParseError
     from ...domain.modelos._repository import WorkUnitCatalogueRepository
+    from ..workflow._persistence import workflow_state_repository
+
+    active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
+    if active_bucket_id is None:
+        raise WorkUnitNotFoundError(
+            "no active profile bucket; run `aeat config init` before reconciling a work unit",
+        )
 
     catalogue = WorkUnitCatalogueRepository().load()
     work_unit = catalogue.work_units.get(command.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
             f"work unit {command.work_unit_id!r} not found in the active bucket catalogue",
+        )
+    if work_unit.bucket_id != active_bucket_id:
+        raise ReconciliationCrossBucketRefusedError(
+            f"work unit {command.work_unit_id!r} belongs to bucket "
+            f"{work_unit.bucket_id!r} but the active profile bucket is "
+            f"{active_bucket_id!r}; switch profile before reconciling",
         )
 
     try:
@@ -259,6 +283,7 @@ __all__ = [
     "ModeloReconciliationReport",
     "ModeloReconciliationSourceKind",
     "ModeloReconciliationVerdict",
+    "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclarationSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
     "WorkUnitNotFoundError",

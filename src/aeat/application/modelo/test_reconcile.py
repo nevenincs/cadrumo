@@ -23,6 +23,7 @@ from ._reconcile import (
     ModeloReconciliationCommand,
     ModeloReconciliationSourceKind,
     ModeloReconciliationVerdict,
+    ReconciliationCrossBucketRefusedError,
     ReconciliationDeclarationSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
     WorkUnitNotFoundError,
@@ -169,6 +170,46 @@ def test_modelo_reconcile_refuses_unknown_work_unit() -> None:
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id="0" * 64,
+                source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+                source_path=MODELO_130_FIXTURE,
+            ),
+        )
+
+
+def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None:
+    """A work unit whose bucket_id differs from the active profile bucket
+    is refused. Bucket events must scope to the active bucket; allowing
+    the service to emit into a foreign bucket would let any caller
+    pollute another operator's history. Locks the safety gate from
+    the bucket-event-history ADR §implementation."""
+
+    foreign_bucket_id = "other-bucket-7" * 4
+    revision_id = "r" + "1" * 63
+    foreign_unit_id = derive_work_unit_id(
+        bucket_id=foreign_bucket_id,
+        modelo="130",
+        filing_year=2026,
+        period="Q1",
+        revision_id=revision_id,
+    )
+    foreign_unit = WorkUnit(
+        work_unit_id=foreign_unit_id,
+        bucket_id=foreign_bucket_id,
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period="Q1",
+        revision_id=revision_id,
+        name="foreign-130",
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    repo = WorkUnitCatalogueRepository()
+    repo.save(upsert_work_unit(repo.load(), foreign_unit))
+
+    with pytest.raises(ReconciliationCrossBucketRefusedError, match=r"active profile bucket"):
+        modelo_reconcile(
+            ModeloReconciliationCommand(
+                work_unit_id=foreign_unit_id,
                 source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
                 source_path=MODELO_130_FIXTURE,
             ),
