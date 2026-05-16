@@ -203,6 +203,64 @@ def test_alphanumeric_zero_padded_field_round_trips() -> None:
     assert parsed.field_values["REF"] == "ABC123"
 
 
+def test_currency_blank_input_rejected_at_decode() -> None:
+    """A blank CURRENCY field is rejected with ExportFormatError.
+
+    Audit export/import F1 — the previous implementation silently
+    decoded blank bytes to ``Decimal("0.00")``, indistinguishable
+    from a legitimate zero. Wire-format error must surface as a
+    typed parse refusal so operators don't silently consume
+    blank-as-zero data.
+    """
+
+    from ._deserialise import deserialise
+    from .._errors import ExportFormatError
+
+    specs = (
+        record_field(
+            offset=1,
+            length=12,
+            field_id="AMOUNT",
+            casilla_id="01",
+            kind=FieldKind.CURRENCY,
+        ),
+    )
+    validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
+
+    # 12 spaces — a wire shape that earlier silently decoded to 0.00.
+    blank_payload = b" " * 12 + b"\r\n"
+    with pytest.raises(ExportFormatError, match=r"CURRENCY field is blank"):
+        deserialise(blank_payload, specs=specs, encoding="iso-8859-1", total_length=12)
+
+
+def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
+    """A blank INLINE_SIGN CURRENCY magnitude is rejected.
+
+    Same audit finding as the unsigned case: ``N           `` (sign
+    marker + blank magnitude) must fail rather than silently decode
+    to a negative-zero.
+    """
+
+    from ._deserialise import deserialise
+    from .._errors import ExportFormatError
+
+    specs = (
+        record_field(
+            offset=1,
+            length=12,
+            field_id="AMOUNT",
+            casilla_id="01",
+            kind=FieldKind.CURRENCY,
+            signed_mode=SignedMode.INLINE_SIGN,
+        ),
+    )
+    validate_record_specs(specs, total_length=12)
+    # Sign byte 'N' + 11 blank magnitude bytes
+    blank_payload = b"N" + b" " * 11 + b"\r\n"
+    with pytest.raises(ExportFormatError, match=r"magnitude is blank"):
+        deserialise(blank_payload, specs=specs, encoding="iso-8859-1", total_length=12)
+
+
 def test_cp1252_encoded_field_round_trips_non_ascii() -> None:
     """CP1252-encoded ALPHANUMERIC field carries a Spanish-language byte intact.
 
