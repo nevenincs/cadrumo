@@ -299,27 +299,39 @@ def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         except (SyntaxError, OSError):
             continue
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            func = node.func
-            if isinstance(func, ast.Name):
-                func_name = func.id
-            elif isinstance(func, ast.Attribute):
-                func_name = func.attr
-            else:
-                continue
-            if func_name != "read_parameter":
-                continue
-            if len(node.args) < 3:
-                continue
-            modelo_arg = node.args[0]
-            if not (isinstance(modelo_arg, ast.Constant) and modelo_arg.value == modelo_id):
-                continue
-            param_arg = node.args[2]
-            for resolved in _expand_parameter_id_node(param_arg):
-                refs.add(resolved)
+        for param_arg in _iter_read_parameter_arg_nodes(tree, modelo_id=modelo_id):
+            refs.update(_expand_parameter_id_node(param_arg))
     return frozenset(refs)
+
+
+def _iter_read_parameter_arg_nodes(tree: ast.AST, *, modelo_id: str) -> tuple[ast.expr, ...]:
+    """Yield the parameter-id AST node from every ``read_parameter(modelo_id, ...)`` call.
+
+    A call qualifies when (a) its callee resolves to the name
+    ``read_parameter`` (direct call or attribute access), (b) it has
+    at least three positional arguments, and (c) its first positional
+    is a constant matching the requested ``modelo_id``. Callers that
+    fail any of these gates are dropped before parameter-id expansion.
+    """
+    matches: list[ast.expr] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and _read_parameter_matches(node, modelo_id=modelo_id):
+            matches.append(node.args[2])
+    return tuple(matches)
+
+
+def _read_parameter_matches(node: ast.Call, *, modelo_id: str) -> bool:
+    func = node.func
+    if isinstance(func, ast.Name):
+        func_name = func.id
+    elif isinstance(func, ast.Attribute):
+        func_name = func.attr
+    else:
+        return False
+    if func_name != "read_parameter" or len(node.args) < 3:
+        return False
+    modelo_arg = node.args[0]
+    return isinstance(modelo_arg, ast.Constant) and modelo_arg.value == modelo_id
 
 
 def _expand_parameter_id_node(node: ast.expr) -> tuple[str, ...]:
@@ -337,44 +349,67 @@ def _expand_parameter_id_node(node: ast.expr) -> tuple[str, ...]:
         return (node.value,)
     if not isinstance(node, ast.JoinedStr):
         return ()
+    static_segments, placeholder_names = _split_joined_str(node)
+    if not placeholder_names:
+        return ("".join(s for s in static_segments if s != _SEG_GAP),)
+    placeholder_value_sets = tuple(
+        _FSTRING_PLACEHOLDER_VALUES.get(name, ()) for name in placeholder_names
+    )
+    if any(not values for values in placeholder_value_sets):
+        return ()
+    from itertools import product as _product
+
+    return tuple(
+        _render_segments(static_segments, combo) for combo in _product(*placeholder_value_sets)
+    )
+
+
+# Sentinel markers used to flatten JoinedStr values into a single segment
+# stream. _SEG_GAP marks "a constant string slot ended here" so the
+# renderer can skip it; _SEG_HOLE marks "consume the next placeholder
+# value here." Real f-strings cannot contain raw NUL or SOH bytes.
+_SEG_GAP = "\x00"
+_SEG_HOLE = "\x01"
+_UNKNOWN_PLACEHOLDER = "__unknown__"
+
+
+def _split_joined_str(node: ast.JoinedStr) -> tuple[list[str], list[str]]:
+    """Flatten a JoinedStr into (segments, placeholder-names).
+
+    Each ``ast.Constant`` value contributes its literal text followed by
+    a gap sentinel; each ``ast.FormattedValue`` contributes a hole
+    sentinel and pushes its placeholder name. Unsupported formatted
+    expressions (non-Name) push ``__unknown__`` so the caller can
+    decide to drop the candidate.
+    """
     static_segments: list[str] = []
     placeholder_names: list[str] = []
     for value in node.values:
         if isinstance(value, ast.Constant) and isinstance(value.value, str):
             static_segments.append(value.value)
-            static_segments.append("\x00")  # sentinel: no placeholder here
-        elif isinstance(value, ast.FormattedValue):
+            static_segments.append(_SEG_GAP)
+            continue
+        if isinstance(value, ast.FormattedValue):
             inner = value.value
-            if isinstance(inner, ast.Name):
-                placeholder_names.append(inner.id)
-            else:
-                placeholder_names.append("__unknown__")
-            static_segments.append("\x01")  # sentinel: placeholder here
+            placeholder_names.append(inner.id if isinstance(inner, ast.Name) else _UNKNOWN_PLACEHOLDER)
         else:
-            placeholder_names.append("__unknown__")
-            static_segments.append("\x01")
-    if not placeholder_names:
-        return ("".join(s for s in static_segments if s != "\x00"),)
-    placeholder_value_sets: list[tuple[str, ...]] = [
-        _FSTRING_PLACEHOLDER_VALUES.get(name, ()) for name in placeholder_names
-    ]
-    if any(not values for values in placeholder_value_sets):
-        return ()
-    results: list[str] = []
-    from itertools import product as _product
+            placeholder_names.append(_UNKNOWN_PLACEHOLDER)
+        static_segments.append(_SEG_HOLE)
+    return static_segments, placeholder_names
 
-    for combo in _product(*placeholder_value_sets):
-        rendered: list[str] = []
-        combo_iter = iter(combo)
-        for segment in static_segments:
-            if segment == "\x00":
-                continue
-            if segment == "\x01":
-                rendered.append(next(combo_iter))
-            else:
-                rendered.append(segment)
-        results.append("".join(rendered))
-    return tuple(results)
+
+def _render_segments(static_segments: list[str], combo: tuple[str, ...]) -> str:
+    """Render a flattened segment stream against one placeholder-value combo."""
+    combo_iter = iter(combo)
+    rendered: list[str] = []
+    for segment in static_segments:
+        if segment == _SEG_GAP:
+            continue
+        if segment == _SEG_HOLE:
+            rendered.append(next(combo_iter))
+        else:
+            rendered.append(segment)
+    return "".join(rendered)
 
 
 #: Static substitution table for f-string placeholder names that the
