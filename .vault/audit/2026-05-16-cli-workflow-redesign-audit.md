@@ -126,9 +126,19 @@ legacy setup state"). A code audit on 2026-05-16 found:
   writes to env files. The `config.env.updated` emission is
   therefore a no-op in the shipped surface; the enum slot remains
   for a future reintroduction.
-- The legacy setup state migration runs once internally during
-  init when a legacy envelope is encountered. The
-  `setup.state.migrated` emission is added at the migration site.
+- No production setup-state migration site exists. The
+  `build_wizard_command(SETUP_FLOW)` flow that backs
+  `aeat config init` writes directly into the secure workflow state
+  via the envelope-versioned `WorkflowStateRepository`; it does not
+  read or migrate a legacy `AutonomoProfile` envelope or `.env`
+  file. `WorkflowStateRepository.load()` performs an envelope
+  version check (`max_supported_version=_STATE_VERSION`) but no
+  legacy-format upgrade. The `setup.state.migrated` emission is
+  therefore a no-op in the shipped surface; the enum slot remains
+  for a future reintroduction if a legacy-format upgrade is added.
+  Adding emission-only scaffolding without a migration site would
+  violate the project's source-hygiene rule against design-only
+  shells.
 
 ### Outstanding work — to be executed in this worktree
 
