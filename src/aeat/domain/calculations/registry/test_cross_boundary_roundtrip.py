@@ -317,6 +317,52 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     assert roundtripped.subject_tax_id == "12345678Z"
 
 
+def test_workbook_parity_reference_output_cells_roundtrip() -> None:
+    """``WorkbookParityReference`` output_cells survive JSON round-trip strictly.
+
+    The output_cells Mapping is keyed by casilla id and valued by
+    a ``WorkbookCellRefStr`` (e.g. ``"Calculos!B12"``). The cell-ref
+    validator runs on construction and on reload; a regression in
+    either side would surface as a pydantic ValidationError on the
+    return path or as a strict equality failure if a sheet-name
+    suffix were stripped silently.
+    """
+
+    from ._schema import WorkbookParityReference
+
+    original = WorkbookParityReference(
+        id="m130-1t-parity",
+        workbook_source="boe.modelo.130.workbook",
+        fixture_id="m130-1t-2025-fixture",
+        formula_coverage="formula_form",
+        runner_required=True,
+        output_cells={
+            "01": "Calculos!B12",
+            "03": "Calculos!D14",
+            "07": "'Modelo 130'!F22",
+        },
+        tolerance=Decimal("0.01"),
+        legal_refs=("lirpf.art-99",),
+        source_refs=("boe.modelo.130.workbook",),
+    )
+
+    roundtripped = WorkbookParityReference.model_validate_json(
+        original.model_dump_json(),
+    )
+
+    assert roundtripped == original
+    # Per-casilla witness: the sheet-name-quoted cell ref must survive
+    # without the quoting being stripped. A regression in
+    # _validate_workbook_cell_ref_str's parse-then-emit cycle would
+    # show up here as a missing quote pair or a sheet-name swap.
+    assert dict(roundtripped.output_cells) == {
+        "01": "Calculos!B12",
+        "03": "Calculos!D14",
+        "07": "'Modelo 130'!F22",
+    }
+    assert roundtripped.tolerance == Decimal("0.01")
+
+
 def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
     """``OracleFilingObservation`` marks oracle-originated values as a distinct subtype.
 
