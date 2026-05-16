@@ -64,6 +64,27 @@ def _validate_workbook_cell_ref_str(value: object) -> object:
 WorkbookCellRefStr = Annotated[str, BeforeValidator(_validate_workbook_cell_ref_str)]
 
 
+BindingSelectorValue = str | int | DecimalValue | bool | tuple[str, ...]
+"""Closed union of the value shapes a binding-selector entry can hold.
+
+The selector field on :class:`DataBindingDefinition` and related
+selector fields on relation definitions store this union. Per-source
+typed selector models (declared in :mod:`_bindings`) consume the
+raw mapping and re-validate against a strict frozen schema for the
+binding's declared ``source``; the snapshot-time
+``_validate_binding_selector_shapes`` gate runs that check on every
+binding once at snapshot build.
+"""
+
+BindingSelectorMap = Mapping[str, BindingSelectorValue]
+"""Mapping shape for an as-stored binding selector.
+
+Named alias rather than an inline ``Mapping[str, ...]`` so consumer
+code can express the type intent and discover the per-source typed
+companion models declared in :mod:`_bindings` via the alias name.
+"""
+
+
 def _coerce_sensitivity_class(value: object) -> object:
     if isinstance(value, SensitivityClass):
         return value
@@ -900,7 +921,7 @@ class DataBindingDefinition(RegistryModel):
         "atribucion_member",
         "refund_operation",
     ]
-    selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
+    selector: BindingSelectorMap
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     typed_enum: str | None = None
     legal_refs: LegalRefs
