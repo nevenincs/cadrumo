@@ -859,8 +859,6 @@ cli:
         a single `next_due` plus due-today / due-soon / overdue cohorts. Local-only;
         never contacts AEAT.
       horizon_help: Forward window (days) the `due_soon` cohort honours.
-    allow_incomplete_help: Allow the calendar to be computed under defaults when regime
-      keys are unset. Without this flag the calendar is refused when warnings exist.
     app_help: Review the active tax workspace
     backlog:
       allow_incomplete_help: Render the backlog even when profile data is incomplete.
@@ -876,21 +874,17 @@ cli:
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
-    calendar_help: Show the obligations calendar for a date range
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
       config profile set <key> <value>'' or pass --allow-incomplete to see the calendar
       computed under defaults.'
-    calendar_requires_dates: Use --from and --to when showing the calendar
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
-        the binary applicable flag, the registry-backed rationale text, and the
-        profile facts the decision depends on. Local-only; never contacts AEAT.
+        the binary applicable flag, the registry-backed rationale text, and the profile
+        facts the decision depends on. Local-only; never contacts AEAT.
       modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
-    from_help: Calendar start date (YYYY-MM-DD)
-    header: "Model\tPeriod\tState\tOpens\tCloses"
     period: Period
     period_help: Tax period to review (for example, 2026-Q1)
     status:
@@ -919,7 +913,6 @@ cli:
       transactions_empty: No bank transactions have been imported yet.
       transactions_present: '%{count} bank transaction(s) are available in the ledger.'
     status_help: Show profile, ledger, and modelo readiness
-    to_help: Calendar end date (YYYY-MM-DD)
     verbose_help: Show details and next action when available
   registry:
     app_help: Tax models registry management
