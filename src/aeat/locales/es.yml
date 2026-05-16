@@ -275,6 +275,19 @@ cli:
         period_help: Token de periodo para resolver la revision del modelo; para Modelo
           036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y
           2026-01
+      export:
+        actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
+        errors:
+          no_exportable_revision: La unidad de trabajo no tiene ninguna revisión de
+            cálculo verificada o presentada para exportar. Ejecuta `aeat app modelo
+            verify` primero.
+        help: Exporta una revisión de modelo verificada o presentada a un fichero
+          local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
+        output_help: Ruta donde escribir el artefacto fichero-BOE.
+        revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
+          la revisión verificada o presentada más reciente de la unidad de trabajo.
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
+          inequívoco).
       filing_record:
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
         bucket_id_help: Filtrar por bucket
@@ -304,19 +317,6 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
-      export:
-        actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
-        errors:
-          no_exportable_revision: La unidad de trabajo no tiene ninguna revisión de
-            cálculo verificada o presentada para exportar. Ejecuta `aeat app modelo
-            verify` primero.
-        help: Exporta una revisión de modelo verificada o presentada a un fichero local
-          compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
-        output_help: Ruta donde escribir el artefacto fichero-BOE.
-        revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
-          la revisión verificada o presentada más reciente de la unidad de trabajo.
-        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
-          inequívoco).
       reconcile:
         errors:
           exclusive_source: --from-justificante y --from-declaration son mutuamente
@@ -783,6 +783,11 @@ cli:
       help: cli.ledger.merge.help
       reason_help: cli.ledger.merge.reason_help
       yes_help: cli.ledger.merge.yes_help
+    preflight:
+      help: Informa de los datos contables que faltan (categoría, base imponible, importe/tipo
+        de IVA, moneda, referencia de prorrata) para los movimientos del bucket activo en
+        un período dado. Local; nunca contacta con AEAT.
+      period_help: Período canónico (p. ej. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
