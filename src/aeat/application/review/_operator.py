@@ -37,6 +37,11 @@ class ReviewQueueRow(BaseModel):
     canonical_next_command: str = Field(min_length=1)
     since: datetime
     summary: str = Field(min_length=1)
+    # Regulatory grounding propagated from the underlying review item.
+    # For FindingReviewItem rows, this carries the FilingValidationFinding's
+    # references_rules tuple verbatim. Empty for non-finding rows (transactions,
+    # invoices) where no rule grounding is attached at the review surface.
+    references_rules: tuple[str, ...] = ()
 
 
 class ReviewQueueReport(BaseModel):
@@ -162,6 +167,9 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             summary=_render_summary(item.summary),
         )
     if isinstance(item, FindingReviewItem):
+        references_rules: tuple[str, ...] = (
+            item.source.references_rules if item.source is not None else ()
+        )
         return ReviewQueueRow(
             item_id=item.item_id,
             kind="modelo_finding",
@@ -178,6 +186,7 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             canonical_next_command=item.drill_command,
             since=item.since,
             summary=_render_summary(item.summary),
+            references_rules=references_rules,
         )
     raise ReviewError(f"unsupported review item type: {type(item).__name__}")
 
