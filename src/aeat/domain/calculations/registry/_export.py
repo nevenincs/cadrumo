@@ -276,23 +276,39 @@ def _index_fields_by_casilla(
 
 def _verify_record_offsets(layout: ExportLayoutDefinition) -> None:
     for record in layout.records:
-        ranges: list[tuple[int, int, str]] = []
-        for field in record.fields:
-            if field.offset is None and field.length is None:
-                continue
-            if field.offset is None or field.length is None:
-                raise RegistryValidationError(
-                    f"export field {field.id!r} must declare both offset and length for fixed-width layouts"
-                )
-            ranges.append((field.offset, field.offset + field.length, field.id))
-        sorted_ranges = sorted(ranges)
-        for index, current in enumerate(sorted_ranges):
-            for other in sorted_ranges[index + 1 :]:
-                if current[1] <= other[0]:
-                    break
-                raise RegistryValidationError(
-                    f"export record {record.id!r} fields {current[2]!r} and {other[2]!r} overlap"
-                )
+        ranges = _record_field_ranges(record)
+        _reject_overlapping_ranges(record.id, sorted(ranges))
+
+
+def _record_field_ranges(record: ExportRecordDefinition) -> list[tuple[int, int, str]]:
+    """Return ``(start, end, field_id)`` for every offset-bearing field in ``record``.
+
+    A field is offset-bearing when it declares both ``offset`` and
+    ``length``. Declaring exactly one of the two is rejected up front;
+    declaring neither marks the field as logical-only (e.g. an
+    envelope-segment header that does not occupy a fixed-width slot).
+    """
+    ranges: list[tuple[int, int, str]] = []
+    for field in record.fields:
+        if field.offset is None and field.length is None:
+            continue
+        if field.offset is None or field.length is None:
+            raise RegistryValidationError(
+                f"export field {field.id!r} must declare both offset and length for fixed-width layouts"
+            )
+        ranges.append((field.offset, field.offset + field.length, field.id))
+    return ranges
+
+
+def _reject_overlapping_ranges(record_id: str, sorted_ranges: list[tuple[int, int, str]]) -> None:
+    """Reject any pair of byte ranges that overlap. ``sorted_ranges`` must be sorted by start."""
+    for index, current in enumerate(sorted_ranges):
+        for other in sorted_ranges[index + 1 :]:
+            if current[1] <= other[0]:
+                break
+            raise RegistryValidationError(
+                f"export record {record_id!r} fields {current[2]!r} and {other[2]!r} overlap"
+            )
 
 
 __all__ = [
