@@ -21,8 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.resources import bundled_path
-from ...domain.calculations.registry._loader import load_registry_tree
+from ...core.resources import resources
 from ._row_set_assembly import _GROUPING_DISPATCH
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -36,9 +35,8 @@ _INVOICE_GROUPINGS: frozenset[str] = frozenset({"operator_clave", "operator_clav
 
 
 def _all_row_producer_groupings() -> set[str]:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     groupings: set[str] = set()
-    for modelo in modelos:
+    for modelo in resources().modelos.all():
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
                 if (binding.aggregation or {}).get("op") != "rows":

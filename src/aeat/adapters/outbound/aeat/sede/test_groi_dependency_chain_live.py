@@ -45,7 +45,7 @@ from __future__ import annotations
 import pytest
 
 from aeat.adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
-from aeat.core.resources import bundled_path
+from aeat.core.resources import resources
 from aeat.domain.calculations.registry import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
     GROI_ORACLE_ID,
@@ -53,7 +53,6 @@ from aeat.domain.calculations.registry import (
     LiveParityCatalogue,
     RemoteStateGuardPolicy,
     evaluate_cross_reference_applicability,
-    load_registry_tree,
     resolve_cross_reference_oracle,
 )
 from aeat.entrypoints.cli._live import requires_live_enabled
@@ -253,8 +252,7 @@ def test_dependency_chain_skips_groi_when_profile_says_not_intracomunitario() ->
     """
 
     requires_live_enabled()
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "349")
+    modelo = resources().modelos.get("349")
     binding = next(
         decision
         for decision in modelo.revisions["2020-y-siguientes"].live_cross_references

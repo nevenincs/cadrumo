@@ -73,13 +73,12 @@ from aeat.application.workflow import (
     WorkflowEngine,
 )
 from aeat.core.config import Settings
-from aeat.core.resources import bundled_path
+from aeat.core.resources import resources
 from aeat.domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
 )
-from aeat.domain.calculations.registry import ValidatedRegistryAuthority
 from aeat.domain.deadlines import AutonomoProfile, DeadlineEngine, IVARegime
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
@@ -120,14 +119,12 @@ def _registry_required_manual_casillas() -> tuple[str, ...]:
     will demand for modelo 180 / 2024 / period 0A. Reads the real
     registry — no duplication of revision data in the test."""
 
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-    snapshot = authority.snapshot(_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
+    snapshot = resources().modelos.authority.snapshot(_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
     return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == "manual")
 
 
 def _registry_required_manual_casillas_for(*, modelo: str, filing_year: int, period: str) -> tuple[str, ...]:
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-    snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
     return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == "manual")
 
 

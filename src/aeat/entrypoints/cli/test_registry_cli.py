@@ -30,8 +30,8 @@ from aeat.application.registry import (
 )
 from aeat.core.access_gate import AeatLiveReadNotEnabledError
 from aeat.core.paths import PROJECT_ROOT
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
+from aeat.core.resources import bundled_path, resources
+from aeat.domain.calculations.registry import calculate_registry_snapshot
 from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -41,15 +41,13 @@ _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 
 
 def _registry_modelos() -> tuple[str, ...]:
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return tuple(sorted(modelo.id for modelo in modelos))
+    return tuple(sorted(modelo.id for modelo in resources().modelos.all()))
 
 
 def _registry_application_surfaces() -> set[str]:
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
     return {
         link.surface
-        for modelo in modelos
+        for modelo in resources().modelos.all()
         for revision in modelo.revisions.values()
         for link in revision.application_links
     }
@@ -527,9 +525,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
 
 
 def _modelo_130_filed_state_observations() -> tuple[FiledDeclarationObservation, FiledDeclarationObservation]:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "130")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="1T")
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
     calculation = calculate_registry_snapshot(
         snapshot,
         inputs=_modelo_130_inputs(),

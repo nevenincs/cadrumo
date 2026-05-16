@@ -27,6 +27,7 @@ from ._bindings import (
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,
 )
+
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 

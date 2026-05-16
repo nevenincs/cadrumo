@@ -9,11 +9,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from aeat.core.resources import resources
+
 from ...core.config import override_settings
 from ...core.errors import build_error_envelope
 from ...domain.manuals import ManualId, ManualPart
 from ...domain.normatives import NormativeNotFoundError
-from ..topics import Topic, TopicCatalogue, load_topic_catalogue
+from ..topics import Topic, TopicCatalogue
 from . import (
     RegistryApplicationInputError,
     RegistryCitationShowCommand,
@@ -82,7 +84,7 @@ def test_citations_verification_report_consumes_topic_catalogue() -> None:
     report = verify_registry_citations()
 
     assert report.operation == "registry.citations.verify"
-    assert report.topic_count == len(load_topic_catalogue().topics)
+    assert report.topic_count == len(resources().topics.singleton.topics)
     assert {topic.slug for topic in report.topics} >= {"iva-regime", "casilla", "modelos"}
     assert report.issue_count == len(report.issues)
 
@@ -242,7 +244,7 @@ def test_manuals_list_report_discovers_real_corpus_parts_and_topics() -> None:
 
     assert report.operation == "registry.manuals.list"
     assert report.part_count == len(report.parts)
-    assert report.topic_count == len(load_topic_catalogue().topics)
+    assert report.topic_count == len(resources().topics.singleton.topics)
     assert report.part_count >= 1
     assert {part.manual_id for part in report.parts} >= {"iva", "renta"}
 

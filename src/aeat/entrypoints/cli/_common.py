@@ -17,10 +17,9 @@ from ...application.workflow import (
     workflow_state_repository,
 )
 from ...core.output_rendering import render_command_output
-from ...core.resources import bundled_path, resources
+from ...core.resources import resources
 from ...domain.calculations.registry import (
     ModeloRevision,
-    ValidatedRegistryAuthority,
     resolve_ledger_renta_expense_aggregation_binding_values,
 )
 from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping

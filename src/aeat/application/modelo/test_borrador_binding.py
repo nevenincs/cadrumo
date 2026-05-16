@@ -24,9 +24,9 @@ from aeat.application.modelo import (
 )
 from aeat.core.config import Settings
 from aeat.core.errors import ErrorCategory, get_registered_error_code
-from aeat.core.resources import bundled_path
+from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.domain.calculations.registry import RegistrySnapshot, ValidatedRegistryAuthority
+from aeat.domain.calculations.registry import RegistrySnapshot
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import derive_calculation_revision_id
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
@@ -80,8 +80,7 @@ def service_repositories(tmp_path):
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-    return authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _save_snapshot(

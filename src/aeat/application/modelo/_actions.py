@@ -751,7 +751,6 @@ def calculate_modelo_revision(
 
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
-        ValidatedRegistryAuthority,
     )
     from ...domain.calculations.registry._formula_runtime import (
         calculate_registry_snapshot,
@@ -768,7 +767,6 @@ def calculate_modelo_revision(
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
-        from ...core.resources import bundled_path
 
         authority = _authority_via_resources()
     except FileNotFoundError as exc:
@@ -970,8 +968,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
 ) -> CalculationRevision:
     """Calculate a modelo revision using bucket-local ledger aggregation."""
 
-    from ...core.resources import bundled_path
-    from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority
+    from ...domain.calculations.registry import RegistrySnapshotError
     from ..aggregation import resolve_modelo_ledger_binding_values_from_repositories
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
@@ -1245,10 +1242,8 @@ def _reject_unknown_override_casillas(
     if not overrides:
         return
 
-    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
-        ValidatedRegistryAuthority,
     )
 
     try:
@@ -1287,10 +1282,8 @@ def _reject_unknown_import_casillas(
     if not casilla_values:
         return
 
-    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
-        ValidatedRegistryAuthority,
     )
 
     try:
@@ -1340,10 +1333,8 @@ def _required_input_casillas_for_revision(
     bindings layer is responsible for them.
     """
 
-    from ...core.resources import bundled_path
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
-        ValidatedRegistryAuthority,
     )
 
     try:
