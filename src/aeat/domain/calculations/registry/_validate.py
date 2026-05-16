@@ -612,6 +612,18 @@ class RegistryValidator:
         prefix: str,
         revision: ModeloRevision,
     ) -> None:
+        # Run the discriminated-selector shape gate here so a
+        # standalone ``validate_registry`` call surfaces the same
+        # selector-shape errors as ``build_snapshot``. Without this,
+        # CI tools that validate the registry without building a
+        # snapshot silently skip the per-source shape gate (selector-
+        # binding-drift audit F4).
+        from ._bindings import validate_binding_selector_shape
+
+        for binding in revision.bindings:
+            failures.extend(
+                f"{prefix}: {fail}" for fail in validate_binding_selector_shape(binding)
+            )
         for binding in revision.bindings:
             failures.extend(
                 self._missing_refs(prefix, f"binding {binding.id}", binding.legal_refs, self._legal, "legal")
