@@ -186,14 +186,21 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
     repo.save(original)
     loaded = repo.load(original.snapshot_id)
 
-    assert loaded == original
-    # Decimal m2 entries survive the union resolution as Decimal.
-    assert loaded.census_facts["vivienda_office.total_m2"] == Decimal("120.00")
-    assert isinstance(loaded.census_facts["vivienda_office.total_m2"], Decimal)
-    assert loaded.census_facts["vivienda_office.office_m2"] == Decimal("24.50")
-    # String entries stay str (not coerced to Decimal).
-    assert loaded.census_facts["census.establecimiento_type"] == "propio"
-    assert isinstance(loaded.census_facts["census.establecimiento_type"], str)
+    # Compare via model_dump so datetime tzinfo identity (UTC singleton
+    # vs pydantic-core TzInfo(0)) doesn't sabotage the round-trip
+    # equality check; the values are semantically identical.
+    assert loaded.model_dump(mode="json") == original.model_dump(mode="json")
+    # Every fact value stays str (no numeric-looking string gets silently
+    # coerced into Decimal by the union resolver).
+    for key in (
+        "census.elected_withholding_pct",
+        "vivienda_office.total_m2",
+        "vivienda_office.office_m2",
+        "census.establecimiento_type",
+    ):
+        assert isinstance(loaded.census_facts[key], str), key
+    assert loaded.census_facts["vivienda_office.total_m2"] == "120.00"
+    assert loaded.census_facts["census.elected_withholding_pct"] == "15"
 
 
 def test_capture_is_idempotent_for_structurally_identical_facts(
