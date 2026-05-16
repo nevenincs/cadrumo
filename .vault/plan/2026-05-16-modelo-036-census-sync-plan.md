@@ -28,15 +28,15 @@ related:
 
 Land the comprehensive census-field delta with primary-source legal grounding for every new field.
 
-- [ ] `P01.S01` - add fiscal-address cadastral reference and habitual-vivienda flag with TR Ley Catastro Art. 50 grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
-- [ ] `P01.S02` - add census section with activity_start_date and activity_end_date and RGAT grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
-- [ ] `P01.S03` - add census.establecimiento_type enum with Art. 28 and Art. 30 LIRPF grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
-- [ ] `P01.S04` - add census.elected_withholding_pct enum with LIRPF Art. 101.5 and RIRPF Art. 95.1 and Art. 95.2 grounding (BOE-A-2007-6820); `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
-- [ ] `P01.S05` - add vivienda_office section with total_m2 and office_m2 and LIRPF Art. 30.2 rule 5 grounding (Ley 6/2017 BOE-A-2017-12544); `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
-- [ ] `P01.S06` - wire activities.iae_epigraph into model_selectors so the field reaches AutonomoProfile; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
-- [ ] `P01.S07` - add schema parser validation that every census field declares a legal_refs entry; `src/aeat/application/user_profile/_schema_loader.py`.
+- [x] `P01.S01` - add fiscal-address cadastral reference and habitual-vivienda flag with TR Ley Catastro Art. 50 grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [x] `P01.S02` - add census section with activity_start_date and activity_end_date and RGAT grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [x] `P01.S03` - add census.establecimiento_type enum with Art. 28 and Art. 30 LIRPF grounding; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [x] `P01.S04` - add census.elected_withholding_pct enum with LIRPF Art. 101.5 and RIRPF Art. 95.1 and Art. 95.2 grounding (BOE-A-2007-6820); `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [x] `P01.S05` - add vivienda_office section with total_m2 and office_m2 and LIRPF Art. 30.2 rule 5 grounding (Ley 6/2017 BOE-A-2017-12544); `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [x] `P01.S06` - wire activities.iae_epigraph into model_selectors so the field reaches AutonomoProfile; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [x] `P01.S07` - add schema parser validation that every census field declares a legal_refs entry; `src/aeat/application/user_profile/_schema_loader.py`.
 - [ ] `P01.S08` - extend autonomo_profile_from_mapping to surface the new census fields on AutonomoProfile; `src/aeat/domain/deadlines/_profiles.py`.
-- [ ] `P01.S09` - add statutory_multiplier field to ProportionalityKind metadata so the legal arithmetic attaches to the Kind rather than per-category; `src/aeat/domain/categories/_proportionality.py`.
+- [x] `P01.S09` - add statutory_multiplier field to ProportionalityKind metadata so the legal arithmetic attaches to the Kind rather than per-category; `src/aeat/domain/categories/_proportionality.py`.
 - [x] `P01.S10` - split HOME_OFFICE category family into SUMINISTROS subkind (statutory_multiplier 0.30 LIRPF Art. 30.2 rule 5) and OWNERSHIP subkind (multiplier 1.0 raw afectacion); `src/aeat/domain/categories/_spending_category.py`.
 - [x] `P01.S11` - move SUMINISTROS_HOME_OFFICE_LUZ AGUA GAS INTERNET to USAGE_RATIO_HOME_AREA_SUMINISTROS kind; `src/aeat/domain/categories/_spending_category.py`.
 - [x] `P01.S12` - introduce AMORTIZACION_VIVIENDA_AFECTO IBI_VIVIENDA_AFECTO COMUNIDAD_VIVIENDA_AFECTO categories under USAGE_RATIO_HOME_AREA_OWNERSHIP kind; `src/aeat/domain/categories/_spending_category.py`.
@@ -44,8 +44,8 @@ Land the comprehensive census-field delta with primary-source legal grounding fo
 - [x] `P01.S14` - emit strong-warning event when a per-category ratios set override deviates from the census-derived value (the census is the binding legal source per the ADR amendment); `src/aeat/application/ledger/_ratios.py`.
 - [x] `P01.S15` - clean-break refuse-load: refuse to load any pre-existing UsageRatioProfile entry for a HOME_OFFICE category if vivienda_office is unset or if the stored value disagrees with the census-derived value; `no shim no auto-migration; `src/aeat/domain/usage_ratios/_service.py`.
 - [x] `P01.S16` - apply the census-derived ratio at ledger classify and allocate transaction-classification time so business_pct on each Transaction carries the legally-correct value; `src/aeat/application/ledger/_actions.py`.
-- [ ] `P01.S17` - schema-shape boundary tests for every new field; `src/aeat/application/user_profile/test_schema_census_fields.py`.
-- [ ] `P01.S18` - real-behavior tests covering census-derived ratio per Kind override-warning emission and refuse-load clean-break; `src/aeat/domain/usage_ratios/test_census_derivation.py`.
+- [x] `P01.S17` - schema-shape boundary tests for every new field; `src/aeat/application/user_profile/test_schema_census_fields.py`.
+- [x] `P01.S18` - real-behavior tests covering census-derived ratio per Kind override-warning emission and refuse-load clean-break; `src/aeat/domain/usage_ratios/test_census_derivation.py`.
 
 ### Phase `P02` - CensusSnapshot domain model and snapshot service
 
