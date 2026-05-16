@@ -22,7 +22,7 @@ _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
 
 
-class DummyEvasion(EvasionStrategy):
+class _RecordingEvasion(EvasionStrategy):
     """A dummy evasion strategy that records when it was called."""
 
     def __init__(self) -> None:
@@ -186,7 +186,7 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     """Test creating a browser context with a concrete Playwright adapter."""
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
-    evasion = DummyEvasion()
+    evasion = _RecordingEvasion()
     playwright_adapter = RecordingPlaywright()
 
     session = BrowserSession(
@@ -214,7 +214,7 @@ async def test_browser_session_launch_failure_reports_failure_mode(tmp_path: Pat
         playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
 
     with pytest.raises(BrowserError, match="boom from launch") as excinfo:
@@ -239,7 +239,7 @@ async def test_browser_session_uses_existing_storage_state_file(tmp_path: Path) 
         playwright=cast(Playwright, RecordingPlaywright()),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
 
     context = cast(RecordingContext, await session.create_context())
@@ -257,7 +257,7 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
         playwright=cast(Playwright, RecordingPlaywright()),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
 
     context = cast(RecordingContext, await session.create_context(storage_state_path=override_path))
@@ -329,7 +329,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         playwright=cast(Playwright, RecordingPlaywright()),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
     context = await session.create_context(
         provisioner=CertificateContextProvisioner(
@@ -359,7 +359,7 @@ async def test_browser_session_close_is_idempotent(tmp_path: Path) -> None:
         playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
 
     context = await session.create_context()
@@ -382,7 +382,7 @@ async def test_browser_session_rejects_second_live_context_until_close(tmp_path:
         playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
 
     context = await session.create_context()
@@ -413,7 +413,7 @@ async def test_browser_session_closes_browser_when_new_context_fails(tmp_path: P
         playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
 
     with pytest.raises(BrowserError, match="boom from new_context") as excinfo:
@@ -460,7 +460,7 @@ async def test_browser_session_close_failure_surfaces_and_allows_retry(tmp_path:
         playwright=cast(Playwright, playwright_adapter),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
 
     context = await session.create_context()
@@ -496,7 +496,7 @@ async def test_browser_session_process_count_stays_flat_across_repeated_cycles(t
             playwright=cast(Playwright, playwright_adapter),
             settings=settings,
             profile=profile,
-            evasion_strategy=DummyEvasion(),
+            evasion_strategy=_RecordingEvasion(),
         )
         context = await session.create_context()
         await context.close()
@@ -552,7 +552,7 @@ async def test_browser_session_navigate_content_failure_reports_failure_mode(tmp
         playwright=cast(Playwright, RecordingPlaywright()),
         settings=settings,
         profile=profile,
-        evasion_strategy=DummyEvasion(),
+        evasion_strategy=_RecordingEvasion(),
     )
 
     with pytest.raises(BrowserError, match="boom from content") as excinfo:

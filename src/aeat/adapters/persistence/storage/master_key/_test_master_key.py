@@ -37,14 +37,15 @@ from ._master_key import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-class _FakeKeyringClient:
-    """Real :class:`KeyringClient` implementation for tests.
+class _InMemoryKeyringClient:
+    """In-process :class:`KeyringClient` backed by a dict.
 
-    Stores ``(service, username) -> password`` pairs in an in-memory
-    dict so the provider's full contract (get / set / round-trip) is
-    exercised against a real type rather than a patched third-party
-    module. Custom probe / get / set behaviours plug in through the
-    constructor so tests cover every failure mode the production
+    A real implementation of the KeyringClient protocol whose store
+    lives in process memory instead of the host's OS keychain. Used
+    so the keyring-provider contract (probe / get / set / round-trip)
+    can be exercised end-to-end without touching the developer's real
+    keychain. Constructor hooks let individual tests inject probe /
+    get / set behaviours that cover every failure mode the production
     provider must handle.
     """
 
@@ -288,7 +289,7 @@ class TestKeyringFailureSurfaces:
         from ._master_key import KEYRING_USERNAME
 
         service = f"aeat:test:{secrets.token_hex(8)}"
-        client = _FakeKeyringClient(seeded={(service, KEYRING_USERNAME): "not!base64!"})
+        client = _InMemoryKeyringClient(seeded={(service, KEYRING_USERNAME): "not!base64!"})
         provider = KeyringMasterKeyProvider(service=service, client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
@@ -298,7 +299,7 @@ class TestKeyringFailureSurfaces:
 
         service = f"aeat:test:{secrets.token_hex(8)}"
         too_short = base64.b64encode(b"short").decode("ascii")
-        client = _FakeKeyringClient(seeded={(service, KEYRING_USERNAME): too_short})
+        client = _InMemoryKeyringClient(seeded={(service, KEYRING_USERNAME): too_short})
         provider = KeyringMasterKeyProvider(service=service, client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
@@ -310,7 +311,7 @@ class TestKeyringFailureSurfaces:
             raise KeyringError("simulated backend failure")
 
         service = f"aeat:test:{secrets.token_hex(8)}"
-        client = _FakeKeyringClient(set_=_fail_set)
+        client = _InMemoryKeyringClient(set_=_fail_set)
         provider = KeyringMasterKeyProvider(service=service, client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
@@ -469,7 +470,7 @@ class TestSecurityHardening:
         def _refuse() -> None:
             raise KeyringUnavailableError("OS keychain backend is the no-op fail.Keyring")
 
-        client = _FakeKeyringClient(probe=_refuse)
+        client = _InMemoryKeyringClient(probe=_refuse)
         provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}", client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
@@ -477,7 +478,7 @@ class TestSecurityHardening:
     def test_keyring_cache_is_per_service(self) -> None:
         """Two providers bound to distinct services do NOT share cached keys."""
 
-        shared = _FakeKeyringClient()
+        shared = _InMemoryKeyringClient()
         service_a = f"aeat:test:{secrets.token_hex(8)}"
         service_b = f"aeat:test:{secrets.token_hex(8)}"
 
@@ -492,7 +493,7 @@ class TestSecurityHardening:
 
         # "Silent dropper": set_password swallows the value; get_password
         # afterwards returns None.
-        client = _FakeKeyringClient(
+        client = _InMemoryKeyringClient(
             get=lambda service, username: None,
             set_=lambda service, username, password: None,
         )
@@ -527,7 +528,7 @@ class TestFactory:
         def _refuse(*_args: object, **_kwargs: object) -> None:
             raise KeyringError("no backend in this test")
 
-        client = _FakeKeyringClient(get=_refuse, set_=_refuse)
+        client = _InMemoryKeyringClient(get=_refuse, set_=_refuse)
         settings = _settings_with_store(tmp_path, SecretStoreBackend.KEYRING)
         # The explicit ``keyring`` backend rejects the operation rather
         # than silently routing through file. The provider surfaces
@@ -552,7 +553,7 @@ class TestFactory:
         def _probe_fail() -> None:
             raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
 
-        client = _FakeKeyringClient(probe=_probe_fail)
+        client = _InMemoryKeyringClient(probe=_probe_fail)
         KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
@@ -581,7 +582,7 @@ class TestFactory:
         def _locked(*_args: object, **_kwargs: object) -> None:
             raise KeyringError("simulated locked keychain")
 
-        client = _FakeKeyringClient(get=_locked, set_=_locked)
+        client = _InMemoryKeyringClient(get=_locked, set_=_locked)
         KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         with pytest.raises(MasterKeyKeychainLockedError, match="auto-mode refuses"):
@@ -618,7 +619,7 @@ class TestFactory:
         seed_provider.get_master_key()
         FileFallbackMasterKeyProvider._reset_for_tests()
 
-        client = _FakeKeyringClient(get=_locked, set_=_locked)
+        client = _InMemoryKeyringClient(get=_locked, set_=_locked)
         KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(

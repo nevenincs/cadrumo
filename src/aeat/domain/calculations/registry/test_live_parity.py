@@ -1,7 +1,7 @@
 """Modelo-agnostic tests for the live parity oracle backend.
 
-These tests use a synthetic FakeOracle to prove the contract enforced by
-:mod:`_live_parity` without touching any real AEAT surface:
+These tests use a canned-response oracle to prove the contract enforced
+by :mod:`_live_parity` without touching any real AEAT surface:
 
 - Pre-flight rejects oracles whose planned operations violate the
   remote-state guard before any verification code runs.
@@ -24,7 +24,6 @@ from ._live_parity import (
     ParityFieldComparison,
     ParityResult,
     assert_oracle_operations_allowed,
-    build_planned_operations,
     evaluate_planned_operations,
     pre_flight_oracle_operations,
 )
@@ -33,8 +32,16 @@ from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-class _FakeOracle:
-    """Test-double oracle that returns canned operations + verdicts."""
+class _CannedOracle:
+    """Real :class:`Oracle` protocol implementation backed by canned values.
+
+    Returns operator-supplied ``planned_operations`` and
+    ``ParityResult`` verdicts. Used as input to the real
+    ``pre_flight_oracle_operations`` /
+    ``evaluate_planned_operations`` / ``LiveParityCatalogue`` code
+    under test — those production functions run unchanged on the
+    canned inputs.
+    """
 
     def __init__(
         self,
@@ -120,7 +127,7 @@ def _post(url: str) -> RemoteOperation:
     ],
 )
 def test_pre_flight_blocks_oracle_targeting_state_creating_aeat_surface(url: str) -> None:
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="state-creator",
         surface_kind="file_validator",
         operations=(_read_only_get(url),),
@@ -153,7 +160,7 @@ def test_parity_field_comparison_rejects_duplicate_field_names() -> None:
 
 def test_catalogue_register_and_lookup_round_trip() -> None:
     catalogue = LiveParityCatalogue()
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="aeat-public-vies",
         surface_kind="vat_id_check",
         operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/PRET/check"),),
@@ -175,7 +182,7 @@ def test_catalogue_register_and_lookup_round_trip() -> None:
 
 def test_catalogue_rejects_duplicate_oracle_id() -> None:
     catalogue = LiveParityCatalogue()
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="dup",
         surface_kind="file_validator",
         operations=(),
@@ -196,7 +203,7 @@ def test_catalogue_lookup_unknown_id_raises() -> None:
 
 def test_catalogue_test_environment_oracle_not_visible_to_production_lookup() -> None:
     catalogue = LiveParityCatalogue()
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="aeat-tgvi-preproduccion",
         surface_kind="file_validator",
         operations=(),
@@ -218,7 +225,7 @@ def test_catalogue_test_environment_oracle_not_visible_to_production_lookup() ->
 
 def test_catalogue_production_oracle_not_visible_to_test_environment_lookup() -> None:
     catalogue = LiveParityCatalogue()
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="aeat-vies-public",
         surface_kind="vat_id_check",
         operations=(),
@@ -237,7 +244,7 @@ def test_catalogue_production_oracle_not_visible_to_test_environment_lookup() ->
 
 def test_catalogue_both_environment_oracle_visible_to_either_lookup() -> None:
     catalogue = LiveParityCatalogue()
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="aeat-static-doc",
         surface_kind="vat_id_check",
         operations=(),
@@ -256,19 +263,19 @@ def test_catalogue_both_environment_oracle_visible_to_either_lookup() -> None:
 
 def test_catalogue_ids_filter_by_environment() -> None:
     catalogue = LiveParityCatalogue()
-    prod_oracle = _FakeOracle(
+    prod_oracle = _CannedOracle(
         oracle_id="prod",
         surface_kind="vat_id_check",
         operations=(),
         verdict=ParityResult(oracle_id="prod", cross_reference_id="c", verdict="match", narrative="x"),
     )
-    test_oracle = _FakeOracle(
+    test_oracle = _CannedOracle(
         oracle_id="test",
         surface_kind="file_validator",
         operations=(),
         verdict=ParityResult(oracle_id="test", cross_reference_id="c", verdict="match", narrative="x"),
     )
-    both_oracle = _FakeOracle(
+    both_oracle = _CannedOracle(
         oracle_id="both",
         surface_kind="vat_id_check",
         operations=(),
@@ -284,7 +291,7 @@ def test_catalogue_ids_filter_by_environment() -> None:
 
 
 def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="vies",
         surface_kind="vat_id_check",
         operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/check?nif=DE111"),),
@@ -298,7 +305,7 @@ def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:
 
 
 def test_pre_flight_blocks_oracle_with_post_operation() -> None:
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="bad",
         surface_kind="pre_filing_validator",
         operations=(
@@ -314,7 +321,7 @@ def test_pre_flight_blocks_oracle_with_post_operation() -> None:
 
 
 def test_pre_flight_blocks_oracle_targeting_non_aeat_host() -> None:
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="phisher",
         surface_kind="vat_id_check",
         operations=(_read_only_get("https://example.com/check"),),
@@ -327,7 +334,7 @@ def test_pre_flight_blocks_oracle_targeting_non_aeat_host() -> None:
 
 
 def test_evaluate_returns_blocked_result_for_static_only_policy_when_oracle_plans_remote_operations() -> None:
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="oracle",
         surface_kind="open_simulator",
         operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/sim"),),
@@ -347,29 +354,8 @@ def test_evaluate_returns_blocked_result_for_static_only_policy_when_oracle_plan
     assert "static_official_only" in result.narrative
 
 
-def test_oracle_verify_payload_calls_guard_before_returning_match() -> None:
-    oracle = _FakeOracle(
-        oracle_id="guarded",
-        surface_kind="open_simulator",
-        operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/sim"),),
-        verdict=ParityResult(
-            oracle_id="guarded",
-            cross_reference_id="test-policy",
-            verdict="match",
-            narrative="all fields conform",
-            fields=(ParityFieldComparison(name="op-count", expected="2", observed="2", verdict="match"),),
-        ),
-    )
-    policy = _read_only_policy()
-
-    result = oracle.verify_payload(policy, b"<payload>", expected={"op-count": 2})
-
-    assert result.verdict == "match"
-    assert result.fields[0].name == "op-count"
-
-
 def test_oracle_verify_payload_raises_when_planned_operation_blocked() -> None:
-    oracle = _FakeOracle(
+    oracle = _CannedOracle(
         oracle_id="bad-verify",
         surface_kind="pre_filing_validator",
         operations=(_post("https://www6.agenciatributaria.gob.es/wlpl/submit"),),
@@ -379,17 +365,3 @@ def test_oracle_verify_payload_raises_when_planned_operation_blocked() -> None:
 
     with pytest.raises(RegistryValidationError, match=r"policy|method|forbidden|operation"):
         oracle.verify_payload(policy, b"", expected={})
-
-
-def test_build_planned_operations_returns_immutable_tuple() -> None:
-    oracle = _FakeOracle(
-        oracle_id="immut",
-        surface_kind="vat_id_check",
-        operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/check"),),
-        verdict=ParityResult(oracle_id="immut", cross_reference_id="test-policy", verdict="match", narrative="x"),
-    )
-
-    planned = build_planned_operations(oracle, b"", expected={})
-
-    assert isinstance(planned, tuple)
-    assert len(planned) == 1

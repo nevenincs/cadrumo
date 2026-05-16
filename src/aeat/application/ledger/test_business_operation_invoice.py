@@ -265,20 +265,37 @@ class TestCollectibleInvoiceEventEmission:
 
 class TestPrefixCollisionRefusal:
     def test_ambiguous_prefix_refuses_with_full_id_set(
-        self, isolated_settings: Settings, secure_engine: Engine, monkeypatch: pytest.MonkeyPatch
+        self, isolated_settings: Settings, secure_engine: Engine
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_engine)
-        ids = iter(["abcdef1234567890fedcba0987654321", "abcdef1234567890ffffffffffffffff"])
 
-        class _StubUuid:
-            def __init__(self) -> None:
-                self.hex = next(ids)
+        # invoice_id is a 32-hex-char UUID4 hex. Sixteen possible first
+        # characters → seventeen records guarantee (pigeonhole) that
+        # at least two share the same first hex character. Look up by
+        # that shared character to drive the real ambiguous-prefix
+        # refusal path without patching uuid.uuid4.
+        minted: list[str] = []
+        for index in range(17):
+            result = svc.add(
+                bucket_id="bucket-001",
+                counterparty_nif=f"B{index:02d}",
+                invoice_number=f"N{index:02d}",
+                invoice_date="2025-03-15",
+            )
+            minted.append(result.record.invoice_id)
 
-        monkeypatch.setattr("aeat.application.ledger._business_operation_invoice.uuid.uuid4", _StubUuid)
-        svc.add(bucket_id="bucket-001", counterparty_nif="B1", invoice_number="N1", invoice_date="2025-03-15")
-        svc.add(bucket_id="bucket-001", counterparty_nif="B2", invoice_number="N2", invoice_date="2025-03-15")
+        first_chars: dict[str, str] = {}
+        shared_prefix: str | None = None
+        for invoice_id in minted:
+            head = invoice_id[0]
+            if head in first_chars:
+                shared_prefix = head
+                break
+            first_chars[head] = invoice_id
+        assert shared_prefix is not None, "pigeonhole guarantee violated"
+
         with pytest.raises(BusinessOperationInvoiceInputError, match="ambiguous"):
-            svc.view(bucket_id="bucket-001", invoice_id="abcdef12")
+            svc.view(bucket_id="bucket-001", invoice_id=shared_prefix)
 
 
 class TestBucketIsolation:
