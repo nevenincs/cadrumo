@@ -16,13 +16,14 @@ from __future__ import annotations
 
 import typer
 
+from ....domain.profile._constants import BucketId, ProfileName
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 from .._i18n import tr
 
 
-def _active_pointer():
-    from ....application.workflow._persistence import workflow_state_repository
+def _active_pointer() -> tuple[ProfileName, BucketId]:
+    from ....application.workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
     if state.active_profile is None:
@@ -101,17 +102,35 @@ def register(profile_app: typer.Typer) -> None:
         ),
     )
     def census_refresh(ctx: typer.Context) -> None:
-        del ctx
-        raise CliRefusedBoundaryError(
-            tr(
-                "cli.config.profile.census.refresh_unavailable",
-                default=(
-                    "Live AEAT census fetch is not wired in this build. "
-                    "Run 'aeat config profile census show' or 'compare' against an "
-                    "existing snapshot."
-                ),
-            ),
+        import asyncio
+
+        from ....application.profile import CensusNotAvailableError
+        from ....domain.buckets import BucketEventType
+
+        profile_id, bucket_id = _active_pointer()
+        service = _build_service(bucket_id)
+        try:
+            snapshot = asyncio.run(service.refresh_census_from_sede(profile_id=profile_id))
+        except CensusNotAvailableError as exc:
+            raise CliRefusedBoundaryError(str(exc)) from exc
+        _emit_census_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.CENSUS_REFRESHED,
+            profile_id=profile_id,
+            snapshot_id=snapshot.snapshot_id,
         )
+        payload = {
+            "snapshot_id": snapshot.snapshot_id,
+            "profile_id": snapshot.profile_id,
+            "captured_at": snapshot.captured_at.isoformat(),
+            "facts": dict(snapshot.census_facts),
+        }
+        lines = [
+            f"snapshot_id\t{snapshot.snapshot_id}",
+            f"captured_at\t{snapshot.captured_at.isoformat()}",
+            f"facts\t{len(snapshot.census_facts)}",
+        ]
+        _emit(ctx, payload, lines)
 
     @census_app.command(
         "show",

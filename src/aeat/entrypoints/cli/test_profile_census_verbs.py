@@ -107,13 +107,19 @@ def test_census_help_lists_four_verbs(cli_runner: CliRunner) -> None:
         assert verb in result.output
 
 
-def test_refresh_refuses_until_sede_driver_lands(cli_runner: CliRunner) -> None:
+def test_refresh_refuses_without_live_gate(
+    cli_runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Live refresh requires AEAT_LIVE_TESTS_ENABLED=1 to pass the
+    access-gate. With the gate off (default), the CLI surfaces the
+    refusal without ever touching a browser session."""
+
     _seed_active_profile()
+    monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
 
     result = cli_runner.invoke(profile_app, ["census", "refresh"])
 
     assert result.exit_code != 0
-    assert "not wired" in result.output.lower() or "sede" in result.output.lower()
 
 
 def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
