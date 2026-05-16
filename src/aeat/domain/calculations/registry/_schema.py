@@ -33,6 +33,7 @@ from ._ids import (
     RevisionId,
     SourceRefId,
     SupportRemovalDecisionId,
+    OracleId,
     VerificationExpectationId,
     WorkbookFixtureId,
     WorkbookParityRefId,
@@ -367,7 +368,7 @@ class LiveCrossReferenceDecision(RegistryModel):
     # Resolution against the catalogue happens at calculation time, not at
     # registry-load time, so the registry remains loadable when adapters
     # are imported lazily.
-    oracle_id: str | None = Field(default=None, min_length=1, max_length=128)
+    oracle_id: OracleId | None = None
     # Optional applicability gate: when non-empty the cross-reference is
     # only applicable to a taxpayer profile whose values satisfy these
     # predicates under the chosen mode. An empty tuple (the default) means
@@ -1020,7 +1021,7 @@ class RelationDefinition(RegistryModel):
     ]
     source_modelo: ModeloId
     source_revision_selector: Mapping[str, str | int]
-    source_output: CasillaId | str
+    source_output: CasillaId
     target_binding: BindingId
     period_alignment: Mapping[str, str | int]
     source_periods: tuple[str, ...] = ()

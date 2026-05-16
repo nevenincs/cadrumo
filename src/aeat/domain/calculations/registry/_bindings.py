@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...vat import (
     EUMemberState,
@@ -105,10 +105,16 @@ class RegistryFilingObservation(BaseModel):
     period: str = Field(min_length=1, max_length=8)
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
-    @computed_field  # type: ignore[prop-decorator]
     @property
     def casilla_values(self) -> Mapping[str, Decimal]:
-        """Read-only mapping view: casilla_id → Decimal derived from typed observations."""
+        """Read-only mapping view: casilla_id -> Decimal derived from typed observations.
+
+        Deliberately a plain ``@property`` and NOT a pydantic
+        ``computed_field``: the typed envelope (``observations``) is
+        canonical storage. Exposing this derived view in JSON would
+        round-trip self-incompatibly under ``extra='forbid'`` because
+        the loader would refuse the duplicate field on the way back in.
+        """
         return {obs.casilla_id: obs.value for obs in self.observations}
 
 
