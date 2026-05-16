@@ -16,15 +16,26 @@ from decimal import Decimal
 import pytest
 
 from ..categories import (
+    SpendingCategory,
     SpendingCategoryFamily,
     categories_for_family,
-    resolve_category_profiles,
 )
 from ._errors import UsageRatioValidationError
 from ._service import derive_home_office_ratios_from_census
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+# Hard-coded BOE constants — DO NOT derive from the registry.
+# LIRPF Art. 30.2 rule 5 (Ley 6/2017, BOE-A-2017-12544): suministros of
+# the habitual vivienda parcialmente afecta deduct at 30% of the raw
+# afectación ratio. Titularidad costs (amortización / IBI / comunidad)
+# deduct at the raw ratio — no statutory multiplier applies. Asserting
+# against these literals (rather than re-reading registry.statutory_multiplier)
+# is the only way the test catches a registry mis-edit.
+_SUMINISTROS_STATUTORY_FACTOR = Decimal("0.30")
+_OWNERSHIP_STATUTORY_FACTOR = Decimal("1")
 
 
 def test_derivation_covers_every_home_office_category() -> None:
@@ -36,15 +47,39 @@ def test_derivation_covers_every_home_office_category() -> None:
     assert set(profile.ratios) == expected
 
 
-def test_each_ratio_equals_raw_times_statutory_multiplier() -> None:
+def test_suministros_apply_lirpf_art_30_2_rule_5_30pct_multiplier() -> None:
+    """Each suministros category yields raw * 0.30 (LIRPF Art. 30.2 rule 5)."""
+
     raw = Decimal("0.25")
     profile = derive_home_office_ratios_from_census(raw, year=2025)
-    registry = resolve_category_profiles(2025)
 
-    for category, derived in profile.ratios.items():
-        rule = registry[category].proportionality
-        multiplier = rule.statutory_multiplier if rule.statutory_multiplier is not None else Decimal("1")
-        assert derived == raw * multiplier
+    expected = raw * _SUMINISTROS_STATUTORY_FACTOR
+    for category in categories_for_family(SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS):
+        assert profile.ratios[category] == expected, (
+            f"suministros {category.value} must apply the 30% LIRPF Art. 30.2 rule 5 multiplier"
+        )
+
+
+def test_ownership_categories_apply_raw_afectacion_with_no_multiplier() -> None:
+    """Titularidad costs deduct at the raw ratio (no statutory factor)."""
+
+    raw = Decimal("0.25")
+    profile = derive_home_office_ratios_from_census(raw, year=2025)
+
+    expected = raw * _OWNERSHIP_STATUTORY_FACTOR
+    for category in categories_for_family(SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP):
+        assert profile.ratios[category] == expected, (
+            f"ownership {category.value} must deduct at the raw afectación ratio, "
+            "without any statutory multiplier"
+        )
+
+
+def test_suministros_luz_concrete_value_at_20_percent_afectacion() -> None:
+    """Anti-tautology pin: 20% afectación, suministros_luz must be exactly 0.06."""
+
+    profile = derive_home_office_ratios_from_census(Decimal("0.20"), year=2025)
+
+    assert profile.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.060")
 
 
 def test_zero_ratio_is_accepted() -> None:
