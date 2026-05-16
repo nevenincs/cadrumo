@@ -239,6 +239,7 @@ def aggregate_iva_ledger_observations(
             transaction.prorrata_reference,
             transaction_id=transaction.transaction_id,
         )
+        linked_prorrata_id: str | None = None
         if isinstance(prorrata_reference, IvaLedgerAggregationIssue):
             issues.append(prorrata_reference)
         elif prorrata_reference is not None:
@@ -260,6 +261,7 @@ def aggregate_iva_ledger_observations(
                         input_vat_amount=iva_amount,
                     )
                 )
+                linked_prorrata_id = transaction.transaction_id
         observations.append(
             IvaLedgerObservation(
                 ledger_id=transaction.transaction_id,
@@ -269,6 +271,7 @@ def aggregate_iva_ledger_observations(
                 flow_direction=flow_direction,
                 base_amount=base_amount,
                 iva_amount=iva_amount,
+                prorrata_reference_id=linked_prorrata_id,
             )
         )
     return IvaLedgerAggregation(
