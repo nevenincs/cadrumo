@@ -226,6 +226,12 @@ def ledger_add(
     """Create one manual ledger transaction through the bucket-scoped backend."""
     current_state = _state()
     transaction_repository = _tx_repo(current_state)
+    resolved_business_pct = _resolve_business_pct_with_census(
+        bucket_id=transaction_repository.bucket_id,
+        active_profile=current_state.active_profile,
+        category_id=category_id,
+        operator_supplied=_parse_decimal(business_pct, label="business-pct"),
+    )
     command = ManualLedgerTransactionCommand(
         bucket_id=transaction_repository.bucket_id,
         booked_date=_parse_iso_date(booked_date, label="date"),
@@ -236,7 +242,7 @@ def ledger_add(
         counterparty=counterparty,
         description=description,
         business_classification=business_classification,
-        business_pct=_parse_decimal(business_pct, label="business-pct"),
+        business_pct=resolved_business_pct,
         category_id=category_id,
         taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
         iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
@@ -1414,6 +1420,44 @@ def _emit_ratios_event(
             ),
         )
     )
+
+
+def _resolve_business_pct_with_census(
+    *,
+    bucket_id: str,
+    active_profile: str | None,
+    category_id: str | None,
+    operator_supplied,
+):
+    """Stamp the census-derived business_pct when the operator omits one.
+
+    Operator-supplied values always win — the helper only fills the
+    gap when ``business_pct`` is not given AND the transaction targets
+    a HOME_OFFICE category that the census actually governs. Returns
+    the operator-supplied value unchanged on every other path, so non-
+    HOME_OFFICE transactions and explicit-override flows are not
+    perturbed.
+    """
+
+    from decimal import Decimal
+
+    from ...application.ledger._ratios import census_business_pct_for
+    from ...application.profile import CensusSyncService
+    from ...domain.categories import SpendingCategory
+
+    if operator_supplied is not None:
+        return operator_supplied
+    if category_id is None or active_profile is None:
+        return operator_supplied
+    try:
+        category_enum = SpendingCategory(category_id.strip())
+    except ValueError:
+        return operator_supplied
+    sync_service = CensusSyncService(bucket_id=bucket_id)
+    raw_afectacion: Decimal | None = sync_service.bound_raw_afectacion_ratio(profile_id=active_profile)
+    if raw_afectacion is None:
+        return operator_supplied
+    return census_business_pct_for(category_enum, raw_afectacion)
 
 
 def _emit_ratios_census_override_warning(
