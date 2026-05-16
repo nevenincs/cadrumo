@@ -255,6 +255,17 @@ cli:
         period_help: Period token used to resolve the modelo revision; for Modelo
           036 use alta, modificacion, or baja; periodic examples include 2026Q1 and
           2026-01
+      export:
+        actor_help: Operator label recorded into the MODELO_EXPORTED event.
+        errors:
+          no_exportable_revision: Work unit has no verified-complete or filed calculation
+            revision to export. Run `aeat app modelo verify` first.
+        help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
+          fichero-BOE file. Local-only; never contacts AEAT.
+        output_help: Path to write the fichero-BOE artefact to.
+        revision_help: Calculation revision id to export; defaults to the work unit's
+          most recent verified-complete or filed revision.
+        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       filing_record:
         app_help: Inspect internal filing records
         bucket_id_help: Filter by bucket
@@ -282,17 +293,6 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
-      export:
-        actor_help: Operator label recorded into the MODELO_EXPORTED event.
-        errors:
-          no_exportable_revision: Work unit has no verified-complete or filed calculation
-            revision to export. Run `aeat app modelo verify` first.
-        help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
-          fichero-BOE file. Local-only; never contacts AEAT.
-        output_help: Path to write the fichero-BOE artefact to.
-        revision_help: Calculation revision id to export; defaults to the work unit's
-          most recent verified-complete or filed revision.
-        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       reconcile:
         errors:
           exclusive_source: --from-justificante and --from-declaration are mutually
@@ -301,8 +301,8 @@ cli:
         from_declaration_help: Path to the filed declaration PDF to reconcile against
           (reserved; parser pending).
         from_justificante_help: Path to the AEAT justificante PDF to reconcile against.
-        help: Reconcile a modelo work unit against external evidence (justificante PDF).
-          Local-only; never contacts AEAT.
+        help: Reconcile a modelo work unit against external evidence (justificante
+          PDF). Local-only; never contacts AEAT.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
@@ -752,6 +752,11 @@ cli:
       reason_help: Reason recorded in the bucket-event payload and lifecycle history
       yes_help: Confirm the merge (archives every child and the parent, persists a
         fresh content-addressed merged transaction)
+    preflight:
+      help: Report missing ledger facts (category, taxable base, IVA amount/rate,
+        currency, proportionality reference) for the active bucket's transactions
+        in a given period. Local-only; never contacts AEAT.
+      period_help: Canonical period (e.g. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction

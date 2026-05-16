@@ -255,6 +255,18 @@ cli:
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         period_help: 'Idoszak token a modellrevizio feloldasahoz; Modelo 036 eseten
           alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
+      export:
+        actor_help: A MODELO_EXPORTED eseménybe rögzített operátor címke.
+        errors:
+          no_exportable_revision: A munkaegységnek nincs verifikált vagy benyújtott
+            kalkulációs revíziója az exportáláshoz. Először futtasd az `aeat app modelo
+            verify` parancsot.
+        help: Egy verifikált vagy benyújtott modelo revízió exportálása helyi AEAT-kompatibilis
+          fichero-BOE fájlba. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+        output_help: A fichero-BOE artefakt írási útvonala.
+        revision_help: Az exportálandó kalkulációs revízió azonosítója; alapértelmezés
+          szerint a munkaegység legutóbbi verifikált vagy benyújtott revíziója.
+        work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       filing_record:
         app_help: Belső bejelentési rekordok (filing records) vizsgálata
         bucket_id_help: Szűrés bucket szerint
@@ -283,26 +295,14 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: Modellkatalógus szűrése egyetlen adóévre
-      export:
-        actor_help: A MODELO_EXPORTED eseménybe rögzített operátor címke.
-        errors:
-          no_exportable_revision: A munkaegységnek nincs verifikált vagy benyújtott
-            kalkulációs revíziója az exportáláshoz. Először futtasd az `aeat app modelo
-            verify` parancsot.
-        help: Egy verifikált vagy benyújtott modelo revízió exportálása helyi AEAT-kompatibilis
-          fichero-BOE fájlba. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
-        output_help: A fichero-BOE artefakt írási útvonala.
-        revision_help: Az exportálandó kalkulációs revízió azonosítója; alapértelmezés
-          szerint a munkaegység legutóbbi verifikált vagy benyújtott revíziója.
-        work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       reconcile:
         errors:
           exclusive_source: A --from-justificante és --from-declaration kölcsönösen
             kizárják egymást.
           missing_source: Add meg a --from-justificante ÚTVONAL vagy --from-declaration
             ÚTVONAL kapcsolót.
-        from_declaration_help: A benyújtott deklaráció PDF útvonala (fenntartott; a
-          parser még nem érhető el).
+        from_declaration_help: A benyújtott deklaráció PDF útvonala (fenntartott;
+          a parser még nem érhető el).
         from_justificante_help: Az AEAT justificante PDF útvonala az egyeztetéshez.
         help: Egy modelo munkaegység egyeztetése külső bizonyítékkal (justificante
           PDF). Csak helyi; soha nem kapcsolódik az AEAT-hoz.
@@ -761,6 +761,11 @@ cli:
       help: cli.ledger.merge.help
       reason_help: cli.ledger.merge.reason_help
       yes_help: cli.ledger.merge.yes_help
+    preflight:
+      help: Jelenti az aktív bucket tranzakcióinál hiányzó főkönyvi adatokat (kategória,
+        adóalap, ÁFA összeg/kulcs, deviza, arányosítási hivatkozás) egy adott periódusra.
+        Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      period_help: Kanonikus periódus (pl. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: A bucket eseményen rögzített kezelő neve
       dry_run_help: Eltávolítási hatások jelentése a tranzakció törlése nélkül

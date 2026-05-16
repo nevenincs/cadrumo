@@ -687,6 +687,52 @@ _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
 )
 
 
+@app.command(
+    "preflight",
+    help=tr(
+        "cli.ledger.preflight.help",
+        default=(
+            "Report missing ledger facts (category, taxable base, IVA amount/rate, "
+            "currency, proportionality reference) for the active bucket's transactions "
+            "in a given period. Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def ledger_preflight(
+    ctx: typer.Context,
+    period: str = typer.Option(
+        ...,
+        "--period",
+        help=tr(
+            "cli.ledger.preflight.period_help",
+            default="Canonical period (e.g. 2026Q1, 2026-03, 2026).",
+        ),
+    ),
+) -> None:
+    """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
+
+    from ...application.ledger._preflight import preflight_ledger_tax_readiness
+
+    transaction_repository = _tx_repo(_state())
+    canonical = _canonical_period(period)
+    report = preflight_ledger_tax_readiness(
+        bucket_id=transaction_repository.bucket_id,
+        period=canonical,
+        transaction_repository=transaction_repository,
+    )
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"bucket\t{report.bucket_id}",
+        f"period\t{canonical}",
+        f"checked\t{report.checked_transaction_count}",
+        f"issues\t{len(report.issues)}",
+        f"ready\t{str(report.ready).lower()}",
+    ]
+    for issue in report.issues:
+        lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+    _emit(ctx, payload, lines)
+
+
 @app.command("history", help=tr("cli.ledger.history.help"))
 def ledger_history(
     ctx: typer.Context,
