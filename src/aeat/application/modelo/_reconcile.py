@@ -118,6 +118,141 @@ class ReconciliationDeclarationSourceUnsupportedError(AeatError):
     """
 
 
+class WorkUnitNotFoundError(AeatError):
+    """Raised when ``modelo_reconcile`` cannot find the addressed work unit."""
+
+
+def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:
+    """Reconcile a modelo work unit against external evidence.
+
+    Local-only: never contacts AEAT and never invokes ``require_live_read``.
+    Composes the existing low-level reconciler at
+    :mod:`aeat.application.filing.reconciliation._reconcile` with the
+    justificante parser at :mod:`aeat.adapters.inbound.justificante`.
+
+    Emits ``MODELO_RECONCILED`` into the bucket-event-history catalogue.
+    The verdict is included in the event payload so downstream
+    auditors can replay the reconciliation timeline without
+    re-parsing the evidence.
+
+    Per-casilla diff coverage is bounded by what the source can
+    expose. A justificante PDF carries only modelo, period,
+    ``ejercicio``, ``tax_id``, and totals; per-casilla diffs against
+    the full declaration require the modelo-specific declaration
+    parser that has not shipped yet.
+    """
+
+    if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
+        raise ReconciliationDeclarationSourceUnsupportedError(
+            "declaration-PDF reconcile source is not yet implemented; "
+            "use --from-justificante PATH until the declaration parser lands",
+        )
+
+    from datetime import UTC, datetime
+
+    from ...adapters.inbound.justificante import parse_justificante
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+    from ...domain.justificante import JustificanteParseError
+    from ...domain.modelos._repository import WorkUnitCatalogueRepository
+
+    catalogue = WorkUnitCatalogueRepository().load()
+    work_unit = catalogue.work_units.get(command.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            f"work unit {command.work_unit_id!r} not found in the active bucket catalogue",
+        )
+
+    try:
+        justificante = parse_justificante(command.source_path)
+    except JustificanteParseError as exc:
+        raise ReconciliationEvidenceInvalidError(
+            f"justificante at {command.source_path!s} could not be parsed: {exc}",
+        ) from exc
+
+    diffs: list[ModeloReconciliationDiff] = []
+    if str(work_unit.modelo) != justificante.modelo:
+        diffs.append(
+            ModeloReconciliationDiff(
+                field_name="modelo",
+                work_unit_value=str(work_unit.modelo),
+                evidence_value=justificante.modelo,
+                kind="modelo_mismatch",
+            ),
+        )
+    if justificante.ejercicio is not None and str(work_unit.filing_year) != justificante.ejercicio:
+        diffs.append(
+            ModeloReconciliationDiff(
+                field_name="ejercicio",
+                work_unit_value=str(work_unit.filing_year),
+                evidence_value=justificante.ejercicio,
+                kind="ejercicio_mismatch",
+            ),
+        )
+
+    verdict = (
+        ModeloReconciliationVerdict.MATCHES if not diffs else ModeloReconciliationVerdict.MISMATCHES
+    )
+    narrative = (
+        f"reconciled modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'} "
+        f"against work unit {command.work_unit_id}; verdict={verdict.value}; diffs={len(diffs)}"
+    )
+    reconciled_at = datetime.now(UTC)
+    report = ModeloReconciliationReport(
+        work_unit_id=command.work_unit_id,
+        bucket_id=work_unit.bucket_id,
+        source_kind=command.source_kind,
+        source_path=str(command.source_path),
+        verdict=verdict,
+        diffs=tuple(diffs),
+        reconciled_at=reconciled_at,
+        narrative=narrative,
+    )
+
+    event_payload = {
+        "work_unit_id": command.work_unit_id,
+        "source_kind": command.source_kind.value,
+        "source_path": str(command.source_path),
+        "verdict": verdict.value,
+        "diffs": str(len(diffs)),
+    }
+    actor = "operator"
+    event_id = derive_bucket_event_id(
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_RECONCILED,
+        occurred_at=reconciled_at,
+        actor=actor,
+        object_type=BucketEventObjectType.WORK_UNIT,
+        object_id=command.work_unit_id,
+        payload=event_payload,
+    )
+    catalogue_repo = BucketEventHistoryRepository()
+    next_catalogue = append_bucket_event(
+        catalogue_repo.load(),
+        BucketEvent(
+            event_id=event_id,
+            bucket_id=work_unit.bucket_id,
+            event_type=BucketEventType.MODELO_RECONCILED,
+            occurred_at=reconciled_at,
+            actor=actor,
+            object_type=BucketEventObjectType.WORK_UNIT,
+            object_id=command.work_unit_id,
+            payload_version=1,
+            payload=event_payload,
+        ),
+    )
+    SecureObjectRepository().save_many((catalogue_repo.to_secure_object_write(next_catalogue),))
+
+    return report
+
+
 __all__ = [
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
@@ -126,4 +261,6 @@ __all__ = [
     "ModeloReconciliationVerdict",
     "ReconciliationDeclarationSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
+    "WorkUnitNotFoundError",
+    "modelo_reconcile",
 ]
