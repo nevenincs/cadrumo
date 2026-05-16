@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from ...core.config import Settings
+from ...core.errors import AeatError
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import clear_auth_acquisition_lock
 from ._actions import update_auth
@@ -72,7 +73,7 @@ def list_operator_auth_providers() -> AuthProvidersReport:
     return AuthProvidersReport(providers=list_auth_providers())
 
 
-class AuthConfigureNoActiveBucketError(ValueError):
+class AuthConfigureNoActiveBucketError(AeatError):
     """Raised when ``configure_operator_auth`` runs before an active profile bucket exists.
 
     The bucket-event-history ADR requires every event to be scoped to a

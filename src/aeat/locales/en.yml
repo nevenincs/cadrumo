@@ -313,16 +313,22 @@ cli:
         history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
+        invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
+          plus . _ : - separators, max 128 chars)'
+        invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
+          plus . _ : - separators, max 64 chars)'
+        invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
+          (SHA-256 digest)
         list_help: List registered work units, optionally filtered by bucket
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
-        relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
-          relation id; the VALUE is a decimal. Repeat to supply multiple relations.
         notes_help: Optional notes attached to the filing record
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: Work-unit period token; for Modelo 036 use alta, modificacion,
           or baja; periodic examples include Q1, 4T, 0A, and 01
         reason_help: Optional free-text reason for the discard (up to 500 chars)
+        relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
+          relation id; the VALUE is a decimal. Repeat to supply multiple relations.
         rename_help: Update the display name of a work unit
         resume_help: cli.app.modelo.work.resume_help
         resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
@@ -335,12 +341,6 @@ cli:
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
-        invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
-          (SHA-256 digest)
-        invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric plus
-          . _ : - separators, max 64 chars)'
-        invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
-          plus . _ : - separators, max 128 chars)'
         year_help: Tax year of the work unit (e.g. 2026)
   common:
     errors:
@@ -382,6 +382,8 @@ cli:
       configure_help: Configure the active authentication provider
       file_help: Path to the credential file (certificate or key)
       help: Configure the active authentication provider
+      no_active_bucket: 'No active profile bucket. Run ''aeat config init'' before
+        configuring authentication.'
       provider_help: Authentication provider id (e.g. certificado-electronico)
       providers_help: List supported authentication providers
       reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
@@ -433,8 +435,8 @@ cli:
           export:
             modelo_help: Modelo id to export (e.g. 130, 303, 100)
             period_help: Filing period code (e.g. 1T, 2T, 0A)
-            prefill_relations_help: Prefill cross-revision relation values from the local
-              observation store before exporting (annual roll-ups, prior-quarter
+            prefill_relations_help: Prefill cross-revision relation values from the
+              local observation store before exporting (annual roll-ups, prior-quarter
               carry-forward etc.)
             root_folder_required: No Drive root folder id is configured; run `aeat
               config google folder set <id>` first
@@ -448,13 +450,13 @@ cli:
           pull:
             assemble_observations_help: After pulling, reassemble Detalle-tab row-set
               cells into typed observations (perceptors, foreign assets, related-party
-              operations, atribución members, refund operations) and emit them in the
-              payload alongside the raw row_set_edits
+              operations, atribución members, refund operations) and emit them in
+              the payload alongside the raw row_set_edits
             compute_help: After pulling, run the local Decimal runtime against the
               pulled inputs and emit the computed casilla values
-            compute_refused_stale: 'refusing to compute against a workbook whose
-              metadata stamps do not match the supplied snapshot
-              (metadata_match={metadata_match}); re-export, then re-pull'
+            compute_refused_stale: refusing to compute against a workbook whose metadata
+              stamps do not match the supplied snapshot (metadata_match={metadata_match});
+              re-export, then re-pull
             spreadsheet_id_help: Drive file id of the workbook to read operator edits
               from (must be app-owned and bound to the supplied snapshot)
           pull_help: Read operator-edited cells back from a calc-sheets workbook into
@@ -1016,8 +1018,8 @@ dotted:
 errors:
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
-    bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative base
-      {base}.
+    bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
+      base {base}.
     bracket_no_coverage: Bracket parameter {parameter_id} has no entry covering base
       {base}.
     bracket_no_window: Bracket parameter {parameter_id} has no bracket valid for {as_of}.
@@ -1071,6 +1073,42 @@ review:
     t_791512: review.adapters.t_791512
     t_870243: review.adapters.t_870243
     t_968325: review.adapters.t_968325
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Acquisition date
+      amount: Amount
+      asset_class_code: Asset class code
+      asset_identifier: Asset identifier
+      base_imponible: Tax base
+      base_imponible_assigned: Tax base assigned
+      clave: Clave
+      counterparty_legal_name: Counterparty legal name
+      counterparty_tax_id: Counterparty tax id
+      country_code: Country code
+      currency_code: Currency code
+      ingreso_a_cuenta: In-kind tax credit
+      member_legal_name: Member legal name
+      member_state_code: Member state
+      member_tax_id: Member tax id
+      operation_date: Operation date
+      operation_kind_code: Operation kind
+      party_legal_name: Party legal name
+      party_tax_id: Party tax id
+      perceptor_legal_name: Perceptor legal name
+      perceptor_tax_id: Perceptor tax id
+      percibido_dinerario: Cash income
+      percibido_especie: In-kind income
+      rectified_base_previous: Prior base (rectification)
+      rectified_period: Rectified period
+      rectified_year: Rectified year
+      refund_amount: Refund amount
+      retencion_practicada: Withholding applied
+      share_percentage: Share percentage
+      subclave: Subclave
+      supplier_tax_id: Supplier tax id
+      transfer_pricing_method_code: Transfer pricing method
+      valuation_amount: Valuation
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
@@ -1481,39 +1519,3 @@ wizard:
     main:
       title: Main test
     title: Test
-sheets:
-  detalle:
-    headers:
-      acquisition_date: Acquisition date
-      amount: Amount
-      asset_class_code: Asset class code
-      asset_identifier: Asset identifier
-      base_imponible: Tax base
-      base_imponible_assigned: Tax base assigned
-      clave: Clave
-      counterparty_legal_name: Counterparty legal name
-      counterparty_tax_id: Counterparty tax id
-      country_code: Country code
-      currency_code: Currency code
-      ingreso_a_cuenta: In-kind tax credit
-      member_legal_name: Member legal name
-      member_state_code: Member state
-      member_tax_id: Member tax id
-      operation_date: Operation date
-      operation_kind_code: Operation kind
-      party_legal_name: Party legal name
-      party_tax_id: Party tax id
-      perceptor_legal_name: Perceptor legal name
-      perceptor_tax_id: Perceptor tax id
-      percibido_dinerario: Cash income
-      percibido_especie: In-kind income
-      rectified_base_previous: Prior base (rectification)
-      rectified_period: Rectified period
-      rectified_year: Rectified year
-      refund_amount: Refund amount
-      retencion_practicada: Withholding applied
-      share_percentage: Share percentage
-      subclave: Subclave
-      supplier_tax_id: Supplier tax id
-      transfer_pricing_method_code: Transfer pricing method
-      valuation_amount: Valuation

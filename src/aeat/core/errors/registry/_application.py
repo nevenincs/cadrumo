@@ -70,6 +70,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.auth._operator.AuthConfigureNoActiveBucketError",
+        ErrorCode(
+            code="REFUSED_AUTH_CONFIGURE_NO_ACTIVE_BUCKET",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.auth_configure_no_active_bucket",
+            default_suggestion="aeat config init",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",

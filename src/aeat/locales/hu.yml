@@ -237,7 +237,8 @@ cli:
         year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
-        form_number_help: Cellák szűrése a BOE-nyomtatványon szereplő mezőszám alapján (pl. 46)
+        form_number_help: Cellák szűrése a BOE-nyomtatványon szereplő mezőszám alapján
+          (pl. 46)
         input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed,
           informational)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
@@ -311,6 +312,12 @@ cli:
         history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: A megszakított munkaegységeket is mutassa a listában
           (alapértelmezetten kihagyva)
+        invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
+          plusz . _ : - elválasztók, max. 128 karakter)'
+        invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
+          plusz . _ : - elválasztók, max. 64 karakter)'
+        invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
+          kell legyen (SHA-256 kivonat)
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
           szűrve
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
@@ -319,10 +326,10 @@ cli:
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
         period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
           vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
-        relation_help: Előző időszak relációs érték KEY=VALUE szintaxissal. A KEY egy
-          registry relációazonosító; a VALUE decimális. Ismételhető.
         reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb
           500 karakter)
+        relation_help: Előző időszak relációs érték KEY=VALUE szintaxissal. A KEY
+          egy registry relációazonosító; a VALUE decimális. Ismételhető.
         rename_help: Munkaegység megjelenítési nevének módosítása
         resume_help: cli.app.modelo.work.resume_help
         resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
@@ -335,12 +342,6 @@ cli:
         verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
-        invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
-          kell legyen (SHA-256 kivonat)
-        invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
-          plusz . _ : - elválasztók, max. 64 karakter)'
-        invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
-          plusz . _ : - elválasztók, max. 128 karakter)'
         year_help: A munkaegység adóéve (pl. 2026)
   common:
     errors:
@@ -382,6 +383,8 @@ cli:
       configure_help: Az aktív hitelesítési szolgáltató beállítása
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
       help: Az aktív hitelesítési szolgáltató beállítása
+      no_active_bucket: 'Nincs aktív profilbucket. Futtasd az ''aeat config init''
+        parancsot a hitelesítés beállítása előtt.'
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
       providers_help: Támogatott hitelesítési szolgáltatók listázása
       reserved_provider: 'Fenntartott, de nem implementált hitelesítési szolgáltató:
@@ -449,15 +452,14 @@ cli:
           help: Séma-táblázat számítási felület (exportálás és visszaolvasás)
           pull:
             assemble_observations_help: A behúzás után állítsa össze a Detalle fül
-              sor-cellaértékeit típusos megfigyelésekké (kedvezményezettek,
-              külföldi vagyon, kapcsolt felek közötti műveletek, atribución tagok,
-              visszatérítési műveletek) és bocsássa ki őket a payloadba a nyers
-              row_set_edits mellett
+              sor-cellaértékeit típusos megfigyelésekké (kedvezményezettek, külföldi
+              vagyon, kapcsolt felek közötti műveletek, atribución tagok, visszatérítési
+              műveletek) és bocsássa ki őket a payloadba a nyers row_set_edits mellett
             compute_help: A behúzás után futtassa a lokális Decimal futtatókörnyezetet
               a behúzott bemenetekre és bocsássa ki a számított cella értékeket
-            compute_refused_stale: 'megtagadva a számítás olyan munkafüzettel szemben
-              amelynek metaadat-pecsétjei nem egyeznek a megadott snapshottal
-              (metadata_match={metadata_match}); újraexportálni majd újra behúzni'
+            compute_refused_stale: megtagadva a számítás olyan munkafüzettel szemben
+              amelynek metaadat-pecsétjei nem egyeznek a megadott snapshottal (metadata_match={metadata_match});
+              újraexportálni majd újra behúzni
             spreadsheet_id_help: A Drive fájl azonosítója amelyből az operátor módosításait
               olvassuk (alkalmazás-tulajdonú kell legyen és a megadott snapshothoz
               kötött)
@@ -1076,6 +1078,42 @@ review:
     t_791512: review.adapters.t_791512
     t_870243: review.adapters.t_870243
     t_968325: review.adapters.t_968325
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Beszerzés dátuma
+      amount: Összeg
+      asset_class_code: Vagyontárgy típusa
+      asset_identifier: Vagyontárgy azonosítója
+      base_imponible: Adóalap
+      base_imponible_assigned: Hozzárendelt adóalap
+      clave: Kulcs
+      counterparty_legal_name: Partner cégneve
+      counterparty_tax_id: Partner adószáma
+      country_code: Ország kódja
+      currency_code: Pénznem kódja
+      ingreso_a_cuenta: Természetbeni adóelőleg
+      member_legal_name: Tag cégneve
+      member_state_code: Tagállam
+      member_tax_id: Tag adószáma
+      operation_date: Művelet dátuma
+      operation_kind_code: Művelet típusa
+      party_legal_name: Cégnév
+      party_tax_id: Adószám
+      perceptor_legal_name: Kedvezményezett neve
+      perceptor_tax_id: Kedvezményezett adószáma
+      percibido_dinerario: Készpénzes jövedelem
+      percibido_especie: Természetbeni jövedelem
+      rectified_base_previous: Korábbi adóalap (helyesbítés)
+      rectified_period: Helyesbített időszak
+      rectified_year: Helyesbített év
+      refund_amount: Visszatérítés összege
+      retencion_practicada: Levont forrásadó
+      share_percentage: Részesedés százaléka
+      subclave: Alkulcs
+      supplier_tax_id: Beszállító adószáma
+      transfer_pricing_method_code: Transzferár-módszer
+      valuation_amount: Értékelés
 topic:
   authentication:
     body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális
@@ -1489,39 +1527,3 @@ wizard:
     main:
       title: Main test
     title: Test
-sheets:
-  detalle:
-    headers:
-      acquisition_date: Beszerzés dátuma
-      amount: Összeg
-      asset_class_code: Vagyontárgy típusa
-      asset_identifier: Vagyontárgy azonosítója
-      base_imponible: Adóalap
-      base_imponible_assigned: Hozzárendelt adóalap
-      clave: Kulcs
-      counterparty_legal_name: Partner cégneve
-      counterparty_tax_id: Partner adószáma
-      country_code: Ország kódja
-      currency_code: Pénznem kódja
-      ingreso_a_cuenta: Természetbeni adóelőleg
-      member_legal_name: Tag cégneve
-      member_state_code: Tagállam
-      member_tax_id: Tag adószáma
-      operation_date: Művelet dátuma
-      operation_kind_code: Művelet típusa
-      party_legal_name: Cégnév
-      party_tax_id: Adószám
-      perceptor_legal_name: Kedvezményezett neve
-      perceptor_tax_id: Kedvezményezett adószáma
-      percibido_dinerario: Készpénzes jövedelem
-      percibido_especie: Természetbeni jövedelem
-      rectified_base_previous: Korábbi adóalap (helyesbítés)
-      rectified_period: Helyesbített időszak
-      rectified_year: Helyesbített év
-      refund_amount: Visszatérítés összege
-      retencion_practicada: Levont forrásadó
-      share_percentage: Részesedés százaléka
-      subclave: Alkulcs
-      supplier_tax_id: Beszállító adószáma
-      transfer_pricing_method_code: Transzferár-módszer
-      valuation_amount: Értékelés
