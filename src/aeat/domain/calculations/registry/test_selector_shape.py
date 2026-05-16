@@ -217,7 +217,7 @@ def test_invoice_row_field_party_legal_name_rejected_at_snapshot_build() -> None
     ``row_field = "party_legal_name"`` would therefore fail
     deterministically at runtime whenever its bucket has only
     legal-name-absent observations. The snapshot-build invariant must
-    reject this shape (selector-binding-drift audit F7).
+    reject this shape so the latent hazard cannot land via a TOML edit.
     """
 
     binding = _binding(

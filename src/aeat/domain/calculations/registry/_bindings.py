@@ -578,8 +578,7 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
 # non-None legal_name. A binding declaring row_field="party_legal_name"
 # therefore fails deterministically at runtime whenever its bucket has
 # only legal-name-absent observations. Reject it at snapshot-build so
-# the latent hazard cannot land via a TOML edit. Selector-binding-drift
-# audit F7.
+# the latent hazard cannot land via a TOML edit.
 _OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset({"party_legal_name"})
 
 
@@ -2515,7 +2514,7 @@ def is_layout_binding_selector(selector: Mapping[str, object]) -> bool:
     check via raw key inspection. Validate gate behaviour stays
     coupled to the typed model: if the manual_input record-shape key
     set is ever extended or renamed, the layout predicate follows
-    automatically (selector-binding-drift audit F5).
+    automatically.
     """
 
     if "data_type" not in selector:

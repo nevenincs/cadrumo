@@ -155,7 +155,7 @@ def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     record-field coordinates. The shape gate's source of truth lives
     on :class:`_ManualInputSelector`; this predicate delegates to its
     canonical record-shape key set rather than re-implementing the
-    check (selector-binding-drift audit F5).
+    check.
     """
 
     from ._bindings import is_layout_binding_selector
@@ -645,8 +645,7 @@ class RegistryValidator:
         # standalone ``validate_registry`` call surfaces the same
         # selector-shape errors as ``build_snapshot``. Without this,
         # CI tools that validate the registry without building a
-        # snapshot silently skip the per-source shape gate (selector-
-        # binding-drift audit F4).
+        # snapshot silently skip the per-source shape gate.
         from ._bindings import validate_binding_selector_shape
 
         for binding in revision.bindings:

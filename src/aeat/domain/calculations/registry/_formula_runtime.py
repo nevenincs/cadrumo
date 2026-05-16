@@ -47,7 +47,7 @@ class RegistryCalculationEntry(BaseModel):
 class RegistryCalculationResult(BaseModel):
     """Calculated outputs and trace entries for one registry snapshot.
 
-    Coverage asymmetry (calc-engine grounding audit F6):
+    Coverage asymmetry between ``values`` and ``entries``:
 
     * :attr:`values` covers every casilla on the revision — inputs,
       bound, and formula-computed — with the final Decimal value the

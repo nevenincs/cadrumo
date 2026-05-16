@@ -201,6 +201,30 @@ def _coerce_iso_date(value: Decimal | str | None, *, default: date) -> date:
     return default
 
 
+def _optional_text_kwarg(
+    fields: Mapping[str, Decimal | str],
+    key: str,
+) -> dict[str, str]:
+    """Pass a text kwarg only when the row supplies a non-empty value.
+
+    Forward the field to the typed observation only when the row
+    carries it. The observation model's declared default (if any)
+    handles truly-absent rows, and ``min_length`` invariants reject
+    explicit empties from the wire. Callers must NOT supply hardcoded
+    fallback strings like ``"ES"`` / ``"A"`` / ``"01"`` for
+    AEAT-required fields — fabricating a legal value at the assembler
+    boundary masks incomplete operator input.
+    """
+
+    raw = fields.get(key)
+    if raw is None:
+        return {}
+    text = _coerce_text(raw)
+    if not text:
+        return {}
+    return {key: text}
+
+
 def assemble_withholding_observations(
     cells: Iterable[_RowCellShape],
     revision: ModeloRevision,
@@ -394,10 +418,10 @@ def assemble_refund_observations(
             observations.append(
                 RefundOperationObservation(
                     source_id=f"detalle:per_refund_operation:row-{row_index}",
-                    member_state_code=_coerce_text(fields.get("member_state_code"), default="ES") or "ES",
-                    operation_kind_code=_coerce_text(fields.get("operation_kind_code"), default="01") or "01",
+                    **_optional_text_kwarg(fields, "member_state_code"),
+                    **_optional_text_kwarg(fields, "operation_kind_code"),
                     operation_date=_coerce_iso_date(fields.get("operation_date"), default=default_operation_date),
-                    supplier_tax_id=_coerce_text(fields.get("supplier_tax_id"), default="UNKNOWN") or "UNKNOWN",
+                    supplier_tax_id=_coerce_text(fields.get("supplier_tax_id")),
                     refund_amount=_coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
                 )
             )

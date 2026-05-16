@@ -42,8 +42,8 @@ def test_parser_extracts_registry_profile_targets_from_pdf(tmp_path: Path) -> No
     # The parser stamps the resolving registry snapshot's four-axis
     # coordinate onto the observation so downstream consumers can
     # detect AEAT template drift on subsequent registry releases
-    # (export-import audit F6). The ref is populated from the
-    # snapshot the parser actually resolved against.
+    # The ref is populated from the snapshot the parser actually
+    # resolved against.
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "130"
     assert filing.registry_snapshot_ref.filing_year == 2024

@@ -5,7 +5,7 @@ and is decorated with :func:`register_schema` so the JSON-contract
 test suite can enumerate every config-command surface. Without these
 typed payloads, ``config profile set`` and ``config profile unset``
 emit free-form dicts that downstream tooling cannot rely on for
-shape stability — workflow + CLI surface audit F4.
+shape stability.
 """
 
 from __future__ import annotations

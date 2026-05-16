@@ -5,7 +5,7 @@ and is decorated with :func:`register_schema` so the JSON-contract
 test suite can enumerate every review-command surface. Without these
 typed payloads, ``review queue`` and ``review view`` emit
 ``model_dump(mode="json")`` of free-form pydantic records, which
-gives downstream tooling no stability contract — audit workflow F3.
+gives downstream tooling no stability contract for the emitted JSON.
 """
 
 from __future__ import annotations
