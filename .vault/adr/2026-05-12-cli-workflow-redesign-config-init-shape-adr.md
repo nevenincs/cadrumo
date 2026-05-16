@@ -15,7 +15,7 @@ related:
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
      outside the YAML frontmatter above -->
 
-# `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `accepted`)
+# `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
 
 ## CLI Backend Boundary
 

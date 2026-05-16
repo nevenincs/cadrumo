@@ -21,6 +21,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from ._constants import BucketId as _BucketId
 from ._errors import BucketEventValidationError
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
@@ -28,10 +29,6 @@ _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 _EventId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
-_BucketId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
 _ActorLabel = Annotated[
     str,
