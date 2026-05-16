@@ -43,7 +43,7 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
-from ...core.config import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
@@ -1799,7 +1799,7 @@ def filing_record_import(
 
 
 def _service() -> RegistryQueryService:
-    authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     return RegistryQueryService(authority)
 
 

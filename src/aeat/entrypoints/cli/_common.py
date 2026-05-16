@@ -17,7 +17,7 @@ from ...application.workflow import (
     workflow_state_repository,
 )
 from ...core.output_rendering import render_command_output
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     ModeloRevision,
     ValidatedRegistryAuthority,
@@ -215,7 +215,7 @@ def _aggregate_renta_filing_inputs(
         invoice_repository=invoice_repository,
         profile_year=filing_year,
     )
-    authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     snapshot = authority.snapshot("100", filing_year=filing_year, period="0A")
     binding_values = resolve_ledger_renta_expense_aggregation_binding_values(
         snapshot.revision,

@@ -70,7 +70,8 @@ from ....application.storage.calc_sheets import (
     RelationValues,
     build_export_plan,
 )
-from ....core.config import PROJECT_ROOT, load_settings
+from ....core.config import load_settings
+from ....core.resources import bundled_path
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -643,7 +644,7 @@ def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
 
 
 def _load_snapshot(modelo: str, period: str, year: int):
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     chosen = next((candidate for candidate in modelos if candidate.id == modelo), None)
     if chosen is None:
         available = ", ".join(sorted(candidate.id for candidate in modelos))
@@ -658,7 +659,7 @@ def _load_snapshot(modelo: str, period: str, year: int):
         return build_snapshot(
             chosen,
             catalogues,
-            source_root=PROJECT_ROOT,
+            source_root=bundled_path(),
             filing_year=year,
             period=period,
         )
