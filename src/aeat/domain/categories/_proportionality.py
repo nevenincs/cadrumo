@@ -181,10 +181,23 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     def _validate_shape(self) -> ProportionalityRule:
         if not self.citations:
             raise CategoryValidationError("proportionality rules require at least one citation")
+        self._validate_fixed_percentage_invariants()
+        self._validate_usage_ratio_invariants()
+        if self.kind is ProportionalityKind.STATUTORY_CAP:
+            self._validate_statutory_cap_invariants()
+        else:
+            self._reject_statutory_cap_fields_outside_cap_kind()
+        return self
+
+    def _validate_fixed_percentage_invariants(self) -> None:
+        """``fixed_pct`` is required for FIXED_PERCENTAGE rules and forbidden elsewhere."""
         if self.kind is ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is None:
             raise CategoryValidationError("fixed_percentage rules require fixed_pct")
         if self.kind is not ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is not None:
             raise CategoryValidationError("fixed_pct is only valid for fixed_percentage rules")
+
+    def _validate_usage_ratio_invariants(self) -> None:
+        """``default_ratio`` and ``statutory_multiplier`` are only valid on usage-ratio rules."""
         is_usage_ratio = self.kind in {
             ProportionalityKind.USAGE_RATIO_HOME_AREA,
             ProportionalityKind.USAGE_RATIO_PERSONAL,
@@ -195,32 +208,35 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             raise CategoryValidationError(
                 "statutory_multiplier is only valid for usage_ratio rules",
             )
+
+    def _validate_statutory_cap_invariants(self) -> None:
+        """STATUTORY_CAP rules require exactly one cap mode and a coherent (eur, period) pair."""
         has_daily_cap = self.statutory_cap_eur_per_day is not None
         has_generic_cap = self.statutory_cap_eur is not None or self.statutory_cap_period is not None
         has_variant_caps = bool(self.statutory_cap_variants)
-        if self.kind is ProportionalityKind.STATUTORY_CAP:
-            if not has_daily_cap and not has_generic_cap and not has_variant_caps:
-                raise CategoryValidationError("statutory_cap rules require a cap amount")
-            mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps))
-            if mode_count > 1:
-                raise CategoryValidationError("statutory cap rules must use one cap mode")
-            if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
-                raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")
-            if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
-                raise CategoryValidationError("statutory_cap_eur requires statutory_cap_period")
-            variant_ids = [variant.id for variant in self.statutory_cap_variants]
-            if len(set(variant_ids)) != len(variant_ids):
-                raise CategoryValidationError("statutory cap variant ids must be unique")
-            return self
-        if has_daily_cap:
+        if not has_daily_cap and not has_generic_cap and not has_variant_caps:
+            raise CategoryValidationError("statutory_cap rules require a cap amount")
+        mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps))
+        if mode_count > 1:
+            raise CategoryValidationError("statutory cap rules must use one cap mode")
+        if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
+            raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")
+        if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
+            raise CategoryValidationError("statutory_cap_eur requires statutory_cap_period")
+        variant_ids = [variant.id for variant in self.statutory_cap_variants]
+        if len(set(variant_ids)) != len(variant_ids):
+            raise CategoryValidationError("statutory cap variant ids must be unique")
+
+    def _reject_statutory_cap_fields_outside_cap_kind(self) -> None:
+        """Every statutory-cap field is forbidden on non-STATUTORY_CAP kinds."""
+        if self.statutory_cap_eur_per_day is not None:
             raise CategoryValidationError("statutory_cap_eur_per_day is only valid for statutory_cap rules")
         if self.statutory_cap_eur is not None:
             raise CategoryValidationError("statutory_cap_eur is only valid for statutory_cap rules")
         if self.statutory_cap_period is not None:
             raise CategoryValidationError("statutory_cap_period is only valid for statutory_cap rules")
-        if has_variant_caps:
+        if self.statutory_cap_variants:
             raise CategoryValidationError("statutory_cap_variants are only valid for statutory_cap rules")
-        return self
 
 
 def effective_usage_ratio(rule: ProportionalityRule, chosen_ratio: Decimal) -> Decimal:
