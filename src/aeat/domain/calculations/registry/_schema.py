@@ -34,6 +34,7 @@ from ._ids import (
     SourceRefId,
     SupportRemovalDecisionId,
     VerificationExpectationId,
+    WorkbookFixtureId,
     WorkbookParityRefId,
 )
 
@@ -485,7 +486,7 @@ class LiveCrossReferenceDecision(RegistryModel):
 class WorkbookParityReference(RegistryModel):
     id: WorkbookParityRefId
     workbook_source: SourceRefId
-    fixture_id: str
+    fixture_id: WorkbookFixtureId
     formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
     runner_required: bool
     output_cells: Mapping[str, WorkbookCellRefStr] = Field(default_factory=dict)

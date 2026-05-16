@@ -1303,7 +1303,14 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
     return resolved
 
 
-COUNTERPART_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
+CounterpartSourceKind = Literal[
+    "invoice",
+    "ledger_transaction",
+    "purchase_invoice_evidence",
+    "payable_invoice",
+    "collectible_invoice",
+]
+COUNTERPART_BINDING_SOURCE_KINDS: frozenset[CounterpartSourceKind] = frozenset(
     {"invoice", "ledger_transaction", "purchase_invoice_evidence", "payable_invoice", "collectible_invoice"}
 )
 
@@ -1317,7 +1324,7 @@ class CounterpartAggregationObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    source_kind: str = Field(default="ledger_transaction", min_length=1, max_length=64)
+    source_kind: CounterpartSourceKind = Field(default="ledger_transaction")
     source_id: str = Field(min_length=1, max_length=128)
     party_tax_id: str = Field(min_length=1, max_length=64)
     country_code: str = Field(min_length=2, max_length=2)
