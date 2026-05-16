@@ -9,6 +9,7 @@ related:
   - '[[2026-05-16-resource-management-api-audit]]'
   - '[[2026-05-16-resource-management-api-plan]]'
   - '[[2026-05-16-resource-management-api-research]]'
+  - '[[2026-05-17-resource-management-api-audit]]'
 ---
 
 # `resource-management-api` feature index
@@ -24,6 +25,7 @@ Auto-generated index of all documents tagged with `#resource-management-api`.
 ### audit
 
 - `2026-05-16-resource-management-api-audit` - `resource-management-api` audit: exhaustive call-site inventory of the existing resource surface
+- `2026-05-17-resource-management-api-audit` - `resource-management-api` audit: post-execution code review
 
 ### plan
 
