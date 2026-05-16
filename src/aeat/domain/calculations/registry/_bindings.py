@@ -2371,6 +2371,85 @@ def resolve_refund_binding_row_values(
     return resolved
 
 
+_ManualInputDataType = Literal["boolean", "integer", "text", "decimal"]
+
+
+class _ManualInputSelector(BaseModel):
+    """Strict validator for the selector mapping of a manual_input binding.
+
+    Two shapes are accepted, gated by ``_validate_manual_input_shape``:
+
+    * **Casilla shape** ``{casilla, data_type, true_value?, false_value?}``:
+      The operator types the value directly into a registry casilla; the
+      ``data_type`` declares how the typed enum / boolean maps to the
+      on-wire payload string. Used for boolean casillas like M100/0168
+      (estimacion-directa modality flag).
+    * **Record-field shape** ``{record, field, offset, length, data_type}``:
+      The operator types a value that lands in a fichero-BOE record field
+      at a specific byte offset / length. Used by M131 and other modelos
+      whose bindings inject operator-typed metadata into fixed-width
+      records.
+
+    The two shapes are exclusive at the validator level.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    # casilla shape
+    casilla: str | None = Field(default=None, min_length=1, max_length=64)
+    true_value: str | None = Field(default=None, min_length=1, max_length=64)
+    false_value: str | None = Field(default=None, min_length=1, max_length=64)
+    # record-field shape
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+    field: str | None = Field(default=None, min_length=1, max_length=128)
+    offset: int | None = Field(default=None, ge=1)
+    length: int | None = Field(default=None, ge=1)
+    # both shapes
+    data_type: _ManualInputDataType
+
+    @model_validator(mode="after")
+    def _validate_manual_input_shape(self) -> _ManualInputSelector:
+        casilla_shape_keys = {"casilla"}
+        record_shape_keys = {"record", "field", "offset", "length"}
+        has_casilla = self.casilla is not None
+        has_record_shape = any(
+            getattr(self, key) is not None for key in record_shape_keys
+        )
+        if has_casilla and has_record_shape:
+            raise RegistryValidationError(
+                "manual_input selector must declare either the casilla shape or "
+                "the record-field shape, not both"
+            )
+        if not has_casilla and not has_record_shape:
+            raise RegistryValidationError(
+                "manual_input selector must declare a casilla or a record-field shape"
+            )
+        if has_record_shape:
+            missing = [key for key in record_shape_keys if getattr(self, key) is None]
+            if missing:
+                raise RegistryValidationError(
+                    f"manual_input record-field selector is missing required keys: {sorted(missing)!r}"
+                )
+        # Boolean casilla shape always pairs the data_type with explicit
+        # true_value / false_value strings so the on-wire encoding is
+        # deterministic.
+        if has_casilla and self.data_type == "boolean":
+            if self.true_value is None or self.false_value is None:
+                raise RegistryValidationError(
+                    "manual_input boolean-casilla selector must declare true_value and false_value"
+                )
+        return self
+
+
+def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelector:
+    try:
+        return _ManualInputSelector.model_validate(_selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed manual_input selector"
+        ) from exc
+
+
 # ---------------------------------------------------------------------------
 # Discriminated-selector registry
 #
@@ -2404,6 +2483,7 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "foreign_asset": _ForeignAssetSelector,
     "atribucion_member": _AtributionSelector,
     "refund_operation": _RefundSelector,
+    "manual_input": _ManualInputSelector,
 }
 
 
