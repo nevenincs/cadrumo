@@ -283,6 +283,8 @@ cli:
         view_help: Show one filing record by id
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        explain_help: Include the legal_refs and source_refs that ground each formula
+          in the text output. The JSON payload always carries them.
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
@@ -658,10 +660,10 @@ cli:
       purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
         transaction
     check:
-      help: Probe ledger transactions in the active bucket and report anomaly rows
-        (currently the same readiness checks as `preflight` aggregated over the
-        default current period). Local-only; never contacts AEAT.
-      period_help: Optional canonical period (defaults to all-period audit).
+      bucket_id_help: Bucket id to probe (defaults to the active profile bucket).
+      help: Probe ledger transactions in the addressed bucket (defaults to the active
+        profile bucket) and report anomaly rows aggregated across every period a
+        transaction touches. Local-only; never contacts AEAT.
     classify:
       actor_help: Operator name recorded on the bucket event
       category_help: Spending or income category id
@@ -747,7 +749,9 @@ cli:
     link:
       actor_help: Operator label recorded on bucket events.
       errors:
-        cross_bucket_invoice: Invoice belongs to a different bucket than the active profile.
+        cross_bucket_invoice: Invoice belongs to a different bucket than the active
+          profile.
+        invoice_not_found: cli.ledger.link.errors.invoice_not_found
         missing_target: Supply at least one of --invoice-id or --evidence-id.
       evidence_id_help: Purchase-invoice evidence record id to attach to the transaction.
       help: Bind a ledger transaction to an invoice and/or a purchase-invoice evidence

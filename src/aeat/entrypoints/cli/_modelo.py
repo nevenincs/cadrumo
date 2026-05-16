@@ -562,20 +562,42 @@ def formulas(
     modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.formulas.modelo_help"))],
     period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.formulas.period_help"))] = None,
     as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.formulas.as_of_help"))] = None,
+    explain: Annotated[
+        bool,
+        typer.Option(
+            "--explain",
+            help=tr(
+                "cli.app.modelo.formulas.explain_help",
+                default=(
+                    "Include the legal_refs and source_refs that ground each formula "
+                    "in the text output. The JSON payload always carries them."
+                ),
+            ),
+        ),
+    ] = False,
 ) -> None:
     report = _run_query(lambda: _service().formulas(modelo, period=period, as_of=_as_of(as_of)))
-    _emit(
-        ctx,
-        report,
-        [
+    if explain:
+        lines = [
+            "formula_id\ttarget\tinputs\tlegal_refs\tsource_refs",
+            *[
+                f"{row.formula_id}\t{row.target}\t"
+                f"{', '.join((*row.input_casillas, *row.input_bindings, *row.input_parameters))}\t"
+                f"{', '.join(row.legal_refs)}\t"
+                f"{', '.join(row.source_refs)}"
+                for row in report.rows
+            ],
+        ]
+    else:
+        lines = [
             "formula_id\ttarget\tinputs",
             *[
                 f"{row.formula_id}\t{row.target}\t"
                 f"{', '.join((*row.input_casillas, *row.input_bindings, *row.input_parameters))}"
                 for row in report.rows
             ],
-        ],
-    )
+        ]
+    _emit(ctx, report, lines)
 
 
 def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[dict[str, object], ...]:
