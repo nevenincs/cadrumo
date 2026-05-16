@@ -8,11 +8,11 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ._errors import UserProfileSchemaLoadError
 from ._schema import ProfileSchemaDefinition
 
-DEFAULT_USER_PROFILE_SCHEMA_PATH = PROJECT_ROOT / "registry" / "aeat" / "user_profile" / "schema.toml"
+DEFAULT_USER_PROFILE_SCHEMA_PATH = bundled_path("registry", "aeat", "user_profile", "schema.toml")
 
 
 def _read_toml(path: Path) -> dict[str, object]:

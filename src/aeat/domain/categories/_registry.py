@@ -12,7 +12,7 @@ from types import MappingProxyType
 from pydantic import ValidationError
 
 from ...core.i18n import Translatable as tr
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ._errors import CategoryValidationError
 from ._profile import CategoryProfile, VatCategory
 from ._proportionality import (
@@ -26,7 +26,7 @@ from ._proportionality import (
 )
 from ._spending_category import SpendingCategory
 
-_DEFAULT_PROFILE_ROOT = PROJECT_ROOT / "registry" / "aeat" / "categories" / "profiles"
+_DEFAULT_PROFILE_ROOT = bundled_path("registry", "aeat", "categories", "profiles")
 
 
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:

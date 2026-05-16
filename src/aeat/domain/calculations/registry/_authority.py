@@ -7,7 +7,7 @@ from datetime import date
 from functools import cache, lru_cache
 from pathlib import Path
 
-from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
@@ -144,6 +144,13 @@ def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority
 
 @cache
 def default_registry_authority() -> ValidatedRegistryAuthority:
-    """Return the process-wide registry authority anchored at PROJECT_ROOT."""
+    """Return the process-wide registry authority anchored at the bundled data root.
 
-    return ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    The ``source_root`` passed to :class:`ValidatedRegistryAuthority`
+    is the packaged-data root so the ``corpus_ref`` and
+    ``raw_evidence_locator`` strings inside registry TOMLs continue
+    to be interpreted as logical paths under the bundled corpus
+    (e.g. ``corpus/aeat_official/...``).
+    """
+
+    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())

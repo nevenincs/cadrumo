@@ -23,6 +23,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .errors import CoreValidationError
 from .paths import normalize_project_relative_path
+from .resources import bundled_path
 
 if TYPE_CHECKING:
     from .external_constants import ExternalConstants
@@ -461,7 +462,7 @@ class Settings(BaseSettings):
 
     # ── Manuals corpus (aeat.domain.manuals) ───────────────────────────────────────
     aeat_manuals_root: Path = Field(
-        default=PROJECT_ROOT / "corpus" / "manuals",
+        default_factory=lambda: bundled_path("corpus", "manuals"),
         description="Root directory for the structured AEAT Manual práctico corpus",
     )
     aeat_manuals_review_required: bool = Field(
@@ -474,13 +475,13 @@ class Settings(BaseSettings):
 
     # ── Normatives corpus (aeat.domain.normatives) ─────────────────────────────────
     aeat_normatives_root: Path = Field(
-        default=PROJECT_ROOT / "corpus" / "normatives",
+        default_factory=lambda: bundled_path("corpus", "normatives"),
         description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
     # ── VAT catalogue (aeat.domain.vat) ──────────────────────────────────
     aeat_vat_catalogue_root: Path = Field(
-        default=PROJECT_ROOT / "corpus" / "financial" / "vat",
+        default_factory=lambda: bundled_path("registry", "aeat", "vat"),
         description="Root directory for the hand-reviewed VAT taxonomy catalogue",
     )
 
