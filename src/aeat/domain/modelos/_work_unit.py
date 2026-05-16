@@ -55,6 +55,10 @@ _DiscardReason = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
+_StaleReason = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
+]
 _OptionalHex64 = Annotated[
     str | None,
     StringConstraints(
@@ -162,6 +166,16 @@ class WorkUnit(BaseModel):
         discard_reason: Operator-supplied free-text reason for
             the discard. ``None`` when no reason was given (or
             when the unit is not discarded).
+        census_stamped_stale_at: Timezone-aware UTC timestamp the
+            stale-cascade walker set when ``aeat config profile census
+            apply`` superseded the census facts the work unit depended
+            on. ``None`` while the unit is still census-current.
+            Set/unset together with ``census_stale_reason``.
+        census_stale_reason: Operator-readable text recording why the
+            unit was marked stale (typically the
+            superseding snapshot id). ``None`` while not stale; both
+            this and ``census_stamped_stale_at`` set together when
+            stale, both ``None`` otherwise.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -182,6 +196,8 @@ class WorkUnit(BaseModel):
     current_calculation_revision_id: _OptionalHex64 = None
     filed_calculation_revision_id: _OptionalHex64 = None
     current_filing_record_id: _OptionalHex64 = None
+    census_stamped_stale_at: datetime | None = None
+    census_stale_reason: _StaleReason | None = None
 
     @field_validator("modelo", mode="before")
     @classmethod
@@ -237,6 +253,17 @@ class WorkUnit(BaseModel):
                 raise ModeloValidationError(
                     f"discarded_at {self.discarded_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
                 )
+        stamped = self.census_stamped_stale_at is not None
+        reasoned = self.census_stale_reason is not None
+        if stamped != reasoned:
+            raise ModeloValidationError(
+                "census_stamped_stale_at and census_stale_reason must be set or unset together",
+            )
+        if stamped and self.census_stamped_stale_at is not None and self.census_stamped_stale_at < self.created_at:
+            raise ModeloValidationError(
+                f"census_stamped_stale_at {self.census_stamped_stale_at.isoformat()} "
+                f"precedes created_at {self.created_at.isoformat()}",
+            )
         return self
 
 
