@@ -565,6 +565,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._export.ModeloExportCrossBucketRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_export_cross_bucket",
+            default_suggestion="aeat config profile use",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._export.ModeloExportNoActiveBucketError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_NO_ACTIVE_BUCKET",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_export_no_active_bucket",
+            default_suggestion="aeat config init",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.overview._errors.OverviewError",
         ErrorCode(
             code="FAIL_OVERVIEW",
