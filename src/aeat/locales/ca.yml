@@ -677,6 +677,11 @@ cli:
       id_help: Id del moviment del llibre al qual adjuntar evidència
       purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
         el moviment
+    check:
+      help: Examina els moviments del llibre del bucket actiu i informa de files amb
+        anomalies (actualment les mateixes comprovacions de preparació que `preflight`
+        agregades sobre el període actual per defecte). Local; mai contacta amb AEAT.
+      period_help: Període canònic opcional (per defecte auditoria sobre tots els períodes).
     classify:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       category_help: Id de categoria de despesa o ingrés
@@ -759,6 +764,17 @@ cli:
       valid: Vàlid
       warnings: Avisos
       'yes': Sí
+    link:
+      actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
+      errors:
+        cross_bucket_invoice: La factura pertany a un bucket diferent del perfil actiu.
+        missing_target: Indica almenys un de --invoice-id o --evidence-id.
+      evidence_id_help: Id del registre d'evidència de factura de compra a adjuntar al moviment.
+      help: Vincula un moviment del llibre amb una factura i/o amb un registre d'evidència
+        de factura de compra en una única crida canònica. Rebutja vincles entre buckets.
+        Local; mai contacta amb AEAT.
+      id_help: Id del moviment del llibre (SHA-256 o prefix inequívoc).
+      invoice_id_help: Id de la factura a vincular bidireccionalment amb el moviment.
     list:
       header: MOVIMENTS DEL LLIBRE COMPTABLE
       help: Llistar moviments del llibre al bucket del perfil actiu
@@ -771,9 +787,9 @@ cli:
       reason_help: cli.ledger.merge.reason_help
       yes_help: cli.ledger.merge.yes_help
     preflight:
-      help: Informa de les dades comptables que falten (categoria, base imposable, import/tipus
-        d'IVA, moneda, referència de prorrata) per als moviments del bucket actiu en un
-        període donat. Local; mai contacta amb AEAT.
+      help: Informa de les dades comptables que falten (categoria, base imposable,
+        import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
+        bucket actiu en un període donat. Local; mai contacta amb AEAT.
       period_help: Període canònic (p. ex. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
