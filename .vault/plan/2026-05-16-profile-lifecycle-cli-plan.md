@@ -59,9 +59,9 @@ constant, removes the zombie settings field, and deletes
 same commit window.
 
 - [x] `P02.S12` - rename the pointer filename constant from `active-bucket` to `active-profile`; `src/aeat/application/workflow/_bucket_pointer_io.py`.
-- [ ] `P02.S13` - extend `active_bucket_id_or_raise` to consult `--profile` flag, `AEAT_ACTIVE_PROFILE` env var, then pointer file via `read_pointer`, before falling back to `WorkflowState`; `src/aeat/application/workflow/_models.py`.
-- [ ] `P02.S14` - update every caller of `active_profile_bucket_id` / `active_profile_record` to flow through the new precedence chain; `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `P02.S15` - update `register_active_profile` and `select_profile` to write the pointer file via `write_pointer`; `src/aeat/application/user_profile/_orchestration.py`.
+- [x] `P02.S13` - extend `active_bucket_id_or_raise` to consult `--profile` flag, `AEAT_ACTIVE_PROFILE` env var, then pointer file via `read_pointer`, before falling back to `WorkflowState`; `src/aeat/application/workflow/_models.py`.
+- [x] `P02.S14` - update every caller of `active_profile_bucket_id` / `active_profile_record` to flow through the new precedence chain; `src/aeat/entrypoints/cli/_common.py`.
+- [x] `P02.S15` - update `register_active_profile` and `select_profile` to write the pointer file via `write_pointer`; `src/aeat/application/user_profile/_orchestration.py`.
 - [ ] `P02.S16` - delete the zombie `aeat_default_profile_name` field; `src/aeat/core/config.py`.
 - [ ] `P02.S17` - delete `WorkflowState.active_profile` field and the `active_profile_record` / `active_profile_bucket_id` properties; `src/aeat/application/workflow/_models.py`.
 - [ ] `P02.S18` - delete the `"default"` literal fall-through in the wizard; `src/aeat/application/wizard/_commands.py`.
