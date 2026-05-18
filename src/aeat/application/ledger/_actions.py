@@ -2348,55 +2348,89 @@ def _verify_evidence_references(
     attachment_store: _AttachmentStoreProtocol | None,
 ) -> None:
     if command.purchase_invoice_evidence_id is not None:
-        invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
-        invoice = invoices.get(command.purchase_invoice_evidence_id)
-        if invoice is None:
-            raise TransactionValidationError(
-                "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record",
-                context={"purchase_invoice_evidence_id": command.purchase_invoice_evidence_id},
-            )
-        if invoice.bucket_id != command.bucket_id:
-            raise TransactionValidationError(
-                "purchase_invoice_evidence_id must belong to the manual ledger command bucket",
-                context={
-                    "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
-                    "command_bucket_id": command.bucket_id,
-                    "evidence_bucket_id": invoice.bucket_id or "",
-                },
-            )
-        if invoice.kind is not InvoiceKind.RECEIVED:
-            raise TransactionValidationError(
-                "purchase_invoice_evidence_id must reference a received purchase invoice evidence record",
-                context={
-                    "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
-                    "invoice_kind": invoice.kind.value,
-                },
-            )
+        _verify_purchase_invoice_evidence(command, invoice_repository=invoice_repository)
     if command.attachment_ids:
-        store = attachment_store or AttachmentStore()
-        for attachment_id in command.attachment_ids:
-            try:
-                attachment = store.load_manifest(attachment_id)
-                store.verify_blob(attachment_id)
-            except (AttachmentNotFoundError, AttachmentValidationError) as exc:
-                raise TransactionValidationError(
-                    "attachment_ids must reference existing secure attachment manifests and blobs",
-                    context={"attachment_id": attachment_id},
-                ) from exc
-            if attachment.bucket_id != command.bucket_id:
-                raise TransactionValidationError(
-                    "attachment_ids must belong to the manual ledger command bucket",
-                    context={
-                        "attachment_id": attachment_id,
-                        "command_bucket_id": command.bucket_id,
-                        "attachment_bucket_id": attachment.bucket_id or "",
-                    },
-                )
-            if attachment.linked_transaction_ids and transaction_id not in attachment.linked_transaction_ids:
-                raise TransactionValidationError(
-                    "attachment_id is linked to different ledger transactions",
-                    context={"attachment_id": attachment_id, "transaction_id": transaction_id},
-                )
+        _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
+
+
+def _verify_purchase_invoice_evidence(
+    command: ManualLedgerTransactionCommand,
+    *,
+    invoice_repository: InvoiceCatalogueRepository | None,
+) -> None:
+    """Verify the purchase-invoice evidence reference exists, matches the bucket, and is RECEIVED."""
+    invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
+    invoice = invoices.get(command.purchase_invoice_evidence_id)
+    if invoice is None:
+        raise TransactionValidationError(
+            "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record",
+            context={"purchase_invoice_evidence_id": command.purchase_invoice_evidence_id},
+        )
+    if invoice.bucket_id != command.bucket_id:
+        raise TransactionValidationError(
+            "purchase_invoice_evidence_id must belong to the manual ledger command bucket",
+            context={
+                "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
+                "command_bucket_id": command.bucket_id,
+                "evidence_bucket_id": invoice.bucket_id or "",
+            },
+        )
+    if invoice.kind is not InvoiceKind.RECEIVED:
+        raise TransactionValidationError(
+            "purchase_invoice_evidence_id must reference a received purchase invoice evidence record",
+            context={
+                "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
+                "invoice_kind": invoice.kind.value,
+            },
+        )
+
+
+def _verify_attachment_references(
+    command: ManualLedgerTransactionCommand,
+    *,
+    transaction_id: str,
+    attachment_store: _AttachmentStoreProtocol | None,
+) -> None:
+    """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
+    store = attachment_store or AttachmentStore()
+    for attachment_id in command.attachment_ids:
+        _verify_single_attachment(
+            attachment_id,
+            command=command,
+            transaction_id=transaction_id,
+            store=store,
+        )
+
+
+def _verify_single_attachment(
+    attachment_id: str,
+    *,
+    command: ManualLedgerTransactionCommand,
+    transaction_id: str,
+    store: _AttachmentStoreProtocol,
+) -> None:
+    try:
+        attachment = store.load_manifest(attachment_id)
+        store.verify_blob(attachment_id)
+    except (AttachmentNotFoundError, AttachmentValidationError) as exc:
+        raise TransactionValidationError(
+            "attachment_ids must reference existing secure attachment manifests and blobs",
+            context={"attachment_id": attachment_id},
+        ) from exc
+    if attachment.bucket_id != command.bucket_id:
+        raise TransactionValidationError(
+            "attachment_ids must belong to the manual ledger command bucket",
+            context={
+                "attachment_id": attachment_id,
+                "command_bucket_id": command.bucket_id,
+                "attachment_bucket_id": attachment.bucket_id or "",
+            },
+        )
+    if attachment.linked_transaction_ids and transaction_id not in attachment.linked_transaction_ids:
+        raise TransactionValidationError(
+            "attachment_id is linked to different ledger transactions",
+            context={"attachment_id": attachment_id, "transaction_id": transaction_id},
+        )
 
 
 def _verify_usage_ratio_reference(
