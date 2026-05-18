@@ -504,7 +504,7 @@ def _windows_stale_sync_check() -> DiagnosticCheck | None:
         return None
     if pyproject.stat().st_mtime <= venv_marker.stat().st_mtime:
         return DiagnosticCheck(
-            name="dev_environment.uv_sync",
+            name="runtime.dependency_sync",
             status="ok",
             summary="venv is in sync with pyproject.toml",
         )

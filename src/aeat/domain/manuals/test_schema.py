@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _llm_provenance() -> LLMProvenance:
     return LLMProvenance(
         provider="anthropic",
-        model="claude-opus-4-6",
+        model="test-model",
         prompt_id="manual_rule_extract_v1",
         cache_hit=False,
         extracted_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),

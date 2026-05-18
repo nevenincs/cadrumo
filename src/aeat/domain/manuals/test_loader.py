@@ -73,7 +73,7 @@ def _seed_iva(tmp_path: Path) -> Settings:
                 },
                 "extracted_by": {
                     "provider": "anthropic",
-                    "model": "claude-opus-4-6",
+                    "model": "test-model",
                     "prompt_id": "manual_rule_extract_v1",
                     "cache_hit": False,
                     "extracted_at": "2026-04-12T10:00:00Z",
