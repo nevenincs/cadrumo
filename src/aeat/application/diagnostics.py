@@ -509,7 +509,7 @@ def _windows_stale_sync_check() -> DiagnosticCheck | None:
             summary="venv is in sync with pyproject.toml",
         )
     return DiagnosticCheck(
-        name="dev_environment.uv_sync",
+        name="runtime.dependency_sync",
         status="warn",
         summary="pyproject.toml is newer than .venv; venv is stale",
         next_action="uv sync",
