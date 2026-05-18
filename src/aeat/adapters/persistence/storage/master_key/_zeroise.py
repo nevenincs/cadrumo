@@ -17,8 +17,7 @@ and overwrites them at lock so the steady-state in-memory copy is
 zeroed; the transient `bytes` view lifetimes are bounded by GC.
 
 A future native-extension wipe (`CRYPTO_cleanse`, `SecureZeroMemory`)
-would tighten this guarantee but is out of scope for the present
-phase.
+would tighten this guarantee but is out of scope for this module.
 """
 
 from __future__ import annotations

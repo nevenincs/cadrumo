@@ -82,7 +82,7 @@ class BucketEventType(StrEnum):
     PROFILE_EXPORTED = "profile.exported"
     PROFILE_IMPORTED = "profile.imported"
     PROFILE_ACTIVATED = "profile.activated"
-    # 036 census live-sync (W85.S2349 ADR amendment 2026-05-16)
+    # 036 census live-sync against the sede Mis Datos Censales endpoint
     CENSUS_REFRESHED = "profile.census.refreshed"
     CENSUS_APPLIED = "profile.census.applied"
     CENSUS_DEPENDENT_STAMPED_STALE = "modelo.census.dependent_stamped_stale"
