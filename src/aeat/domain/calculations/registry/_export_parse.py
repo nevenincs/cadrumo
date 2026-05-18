@@ -71,24 +71,54 @@ def parse_export_payload(
     parsed: list[ParsedExportFieldValue] = []
     records = tuple(sorted(layout.records, key=lambda item: item.order))
     for index, record in enumerate(records):
-        if record.repeat == "binding_rows":
-            next_record = records[index + 1] if index + 1 < len(records) else None
-            while cursor < len(payload) and not _matches_record_start(next_record, payload, cursor):
-                record_values, cursor = _read_record(layout.id, record, payload, cursor)
-                parsed.extend(record_values)
-            continue
-        if not _matches_record_start(record, payload, cursor):
-            if record.required:
-                record_values, cursor = _read_record(layout.id, record, payload, cursor)
-                parsed.extend(record_values)
-            continue
-        record_values, cursor = _read_record(layout.id, record, payload, cursor)
-        parsed.extend(record_values)
+        next_record = records[index + 1] if index + 1 < len(records) else None
+        cursor = _consume_record_block(
+            layout_id=layout.id,
+            record=record,
+            next_record=next_record,
+            payload=payload,
+            cursor=cursor,
+            parsed=parsed,
+        )
     trailing = payload[cursor:]
     if trailing and trailing.strip(b"\r\n"):
         raise RegistryValidationError(f"payload has {len(payload) - cursor} trailing byte(s) after export layout")
     casillas = tuple(value for value in parsed if value.casilla_id is not None)
     return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
+
+
+def _consume_record_block(
+    *,
+    layout_id: str,
+    record,  # type: ignore[no-untyped-def]
+    next_record,  # type: ignore[no-untyped-def]
+    payload: bytes,
+    cursor: int,
+    parsed: list[ParsedExportFieldValue],
+) -> int:
+    """Consume zero or more instances of ``record`` from ``payload`` at ``cursor``.
+
+    Three record shapes:
+
+    * ``repeat == "binding_rows"`` — read records repeatedly until
+      the payload exhausts or the next record's start marker is
+      reached.
+    * unmatched optional — skipped.
+    * unmatched required, or matched once — read exactly once.
+
+    Returns the updated cursor; appends ``ParsedExportFieldValue``s
+    into ``parsed`` in place to preserve allocation shape.
+    """
+    if record.repeat == "binding_rows":
+        while cursor < len(payload) and not _matches_record_start(next_record, payload, cursor):
+            record_values, cursor = _read_record(layout_id, record, payload, cursor)
+            parsed.extend(record_values)
+        return cursor
+    if not _matches_record_start(record, payload, cursor) and not record.required:
+        return cursor
+    record_values, cursor = _read_record(layout_id, record, payload, cursor)
+    parsed.extend(record_values)
+    return cursor
 
 
 def _parse_xml_dictionary_payload(
