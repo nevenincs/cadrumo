@@ -34,7 +34,6 @@ from threading import Lock
 from typing import TYPE_CHECKING
 
 from .....core.logging import get_logger
-from ..master_key._master_key import get_master_key_provider
 from ..secret_store._secret_store import SecretStore
 from ._blob_store import EncryptedBlobStore
 
@@ -68,15 +67,14 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
         from .....core.config import load_settings
 
         resolved = settings if settings is not None else load_settings()
-        provider = get_master_key_provider(settings_override=resolved)
-        blob_store = EncryptedBlobStore(
-            root_dir=Path(resolved.aeat_blob_store_dir),
-            master_key_provider=provider,
-        )
+        # Stores fall through to ``get_active_master_key()`` (the
+        # active :class:`BucketSession`) when ``master_key_provider`` is
+        # absent. The CLI root callback opens the session before any
+        # consumer reaches this factory.
+        blob_store = EncryptedBlobStore(root_dir=Path(resolved.aeat_blob_store_dir))
         _singleton_store = SecretStore(
             store_dir=Path(resolved.aeat_secret_store_dir),
             blob_store=blob_store,
-            master_key_provider=provider,
         )
         return _singleton_store
 
