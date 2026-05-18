@@ -10,7 +10,6 @@ from ._errors import (
     BucketBusyError,
     BucketError,
     BucketLockedError,
-    LegacyLayoutDetectedError,
     NoActiveBucketError,
     RecoveryUnavailableError,
     RecoveryVerificationError,
@@ -26,7 +25,6 @@ def test_every_class_inherits_from_aeat_error() -> None:
         BucketBusyError,
         BucketAlreadyPresentError,
         BucketLockedError,
-        LegacyLayoutDetectedError,
         RecoveryUnavailableError,
         RecoveryVerificationError,
     ):
@@ -40,7 +38,6 @@ def test_every_class_has_a_registered_code() -> None:
         BucketBusyError,
         BucketAlreadyPresentError,
         BucketLockedError,
-        LegacyLayoutDetectedError,
         RecoveryUnavailableError,
         RecoveryVerificationError,
     ):
@@ -51,11 +48,6 @@ def test_every_class_has_a_registered_code() -> None:
 def test_no_active_bucket_error_default_suggestion_references_list_buckets() -> None:
     code = get_registered_error_code(NoActiveBucketError)
     assert code.default_suggestion == "aeat config list-buckets"
-
-
-def test_legacy_layout_default_suggestion_references_config_init() -> None:
-    code = get_registered_error_code(LegacyLayoutDetectedError)
-    assert code.default_suggestion == "aeat config init"
 
 
 def test_bucket_locked_default_suggestion_references_unlock() -> None:
@@ -97,9 +89,8 @@ def test_each_registry_code_is_distinct() -> None:
             BucketBusyError,
             BucketAlreadyPresentError,
             BucketLockedError,
-            LegacyLayoutDetectedError,
             RecoveryUnavailableError,
             RecoveryVerificationError,
         )
     }
-    assert len(codes) == 8
+    assert len(codes) == 7
