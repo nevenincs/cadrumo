@@ -68,9 +68,13 @@ from ..errors import (
     MasterKeyMaterialMissingError,
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
+    PassphraseTooShortError,
     SecretStoreError,
     UnsecuredModeRefusedError,
 )
+
+NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
+"""NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length."""
 
 _log = get_logger(__name__)
 
@@ -526,6 +530,13 @@ class FileFallbackMasterKeyProvider:
             raise SecretStoreError(
                 "secret-store passphrase resolved to empty string; set "
                 f"{PASSPHRASE_ENV_VAR} or supply a non-empty value at the prompt.",
+            )
+        if len(value) < NIST_PASSPHRASE_MIN_LENGTH:
+            raise PassphraseTooShortError(
+                "secret-store passphrase is shorter than the NIST SP 800-63B "
+                f"§5.1.1.1 verifier minimum of {NIST_PASSPHRASE_MIN_LENGTH} "
+                "characters; supply a longer passphrase via "
+                f"{PASSPHRASE_ENV_VAR} or at the prompt.",
             )
         return value.encode("utf-8")
 

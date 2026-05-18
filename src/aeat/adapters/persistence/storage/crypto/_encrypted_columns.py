@@ -35,14 +35,13 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-import threading
 
 from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
 from ..errors import StorageValidationError
-from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
+from ..master_key._active_session import get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 
 _AAD_STRING = b"aeat.column.encrypted_string.v1"
@@ -80,44 +79,16 @@ _HASHED_LOOKUP_DIGEST_SIZE = 32
 """HMAC-SHA256 digest size in bytes."""
 
 
-_provider_lock = threading.Lock()
-_provider_override: MasterKeyProvider | None = None
-
-
-def override_master_key_provider(provider: MasterKeyProvider | None) -> None:
-    """Test helper: install (or clear) a process-wide provider override.
-
-    Args:
-        provider: The provider every column decorator should use, or
-            ``None`` to clear the override and revert to the standard
-            :func:`get_master_key_provider` resolution.
-    """
-    global _provider_override
-    with _provider_lock:
-        _provider_override = provider
-
-
 def _resolve_master_key() -> bytes:
-    """Resolve the master key honouring the test override when set."""
-    return _resolve_master_key_provider().get_master_key()
+    """Resolve the column-level encryption key from the active session.
 
-
-def _resolve_master_key_provider() -> MasterKeyProvider:
-    """Resolve the active :class:`MasterKeyProvider`, honouring the override.
-
-    Returns the provider installed via :func:`override_master_key_provider`
-    when set; otherwise falls back to the standard
-    :func:`get_master_key_provider` resolution. Encrypted-envelope
-    consumers (per-domain repositories) call this helper rather than
-    receiving the provider through their constructor so the same
-    test-override discipline that gates column-level decrypt also gates
-    envelope-level decrypt.
+    Delegates to :func:`get_active_master_key`, which reads the DEK
+    of the :class:`BucketSession` bound to the active-session
+    ``ContextVar``. Raises
+    :class:`NoActiveBucketSessionError` when no session block is
+    active on the calling thread or task.
     """
-    with _provider_lock:
-        override = _provider_override
-    if override is not None:
-        return override
-    return get_master_key_provider()
+    return get_active_master_key()
 
 
 class EncryptedString(TypeDecorator[str]):
