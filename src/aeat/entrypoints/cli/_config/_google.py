@@ -27,9 +27,17 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Callable
 
 import typer
 from pydantic import ValidationError
+
+if TYPE_CHECKING:
+    from ....adapters.outbound.google._calc_sheets_pull import PullResult, RowSetEdit
+    from ....domain.calculations.registry._formula_runtime import (
+        RegistryCalculationResult,
+    )
+    from ....domain.calculations.registry._schema import RegistrySnapshot
 
 from ....adapters.outbound.google import (
     GoogleAuthClientNotRegisteredError,
@@ -1065,8 +1073,8 @@ def google_sync_calc_pull(
 
 def _assemble_pull_observations(
     *,
-    populated_row_sets: list,  # type: ignore[type-arg]
-    snapshot,  # type: ignore[no-untyped-def]
+    populated_row_sets: list[RowSetEdit],
+    snapshot: RegistrySnapshot,
     enabled: bool,
 ) -> tuple[list[dict[str, object]], int]:
     """Per-grouping assemble-observations fan-out for the pull command.
@@ -1107,10 +1115,10 @@ def _assemble_pull_observations(
 
 def _compute_pull_casillas(
     *,
-    snapshot,  # type: ignore[no-untyped-def]
-    result,  # type: ignore[no-untyped-def]
+    snapshot: RegistrySnapshot,
+    result: PullResult,
     enabled: bool,
-    compute_from_pull,  # type: ignore[no-untyped-def]
+    compute_from_pull: Callable[[RegistrySnapshot, PullResult], RegistryCalculationResult],
 ) -> list[dict[str, str]]:
     """Compute casillas from the pulled edits, refusing stale workbook stamps.
 

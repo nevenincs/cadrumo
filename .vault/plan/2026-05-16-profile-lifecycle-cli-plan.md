@@ -68,11 +68,11 @@ same commit window.
 - [x] `P02.S19` - call `provision_bucket_directory` and `write_manifest` from `initialize_workspace` so profile creation provisions the per-bucket directory tree atomically; `src/aeat/application/setup/_service.py`.
 - [ ] `P02.S20` - thread per-bucket SQLite URL through `create_engine_from_settings` from the resolved `BucketPaths.db_dir`; `src/aeat/adapters/persistence/storage/sql/_engine.py`.
 - [ ] `P02.S21` - wire the local blob-store factory to read its root from `BucketPaths.blobs_dir`; `src/aeat/adapters/outbound/storage/_factory.py`.
-- [ ] `P02.S22` - add the startup guard that raises `LegacyLayoutDetectedError` when `<aeat-root>/var/` exists and `<aeat-root>/buckets/` does not; `src/aeat/application/_bootstrap.py`.
+- [x] `P02.S22` - add the startup guard that raises `LegacyLayoutDetectedError` when `<aeat-root>/var/` exists and `<aeat-root>/buckets/` does not; `src/aeat/application/_bootstrap.py`.
 - [x] `P02.S23` - precedence-chain test (flag wins over env, env wins over pointer, pointer wins over absence); `src/aeat/application/workflow/test_active_profile_resolution.py`.
 - [x] `P02.S24` - regression test asserting the pointer-file integration writes on profile create; `src/aeat/application/user_profile/test_orchestration_pointer.py`.
 - [x] `P02.S25` - regression test asserting `initialize_workspace` provisions the bucket directory tree and writes the manifest; `src/aeat/application/setup/test_service_provisions_bucket.py`.
-- [ ] `P02.S26` - legacy-layout refusal test (run startup against a synthesised legacy `var/` tree, assert `LegacyLayoutDetectedError`); `src/aeat/application/test_bootstrap_legacy_refusal.py`.
+- [x] `P02.S26` - legacy-layout refusal test (run startup against a synthesised legacy `var/` tree, assert `LegacyLayoutDetectedError`); `src/aeat/application/test_bootstrap_legacy_refusal.py`.
 
 ### Phase `P03` - rewire the live crypto path through `BucketSession`
 
