@@ -15,7 +15,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -67,49 +66,48 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
     """A populated InvoiceCatalogue saved through the repository loads back equal."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "invoice-catalogue-roundtrip.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        invoice_a = _populated_invoice(invoice_number="F-2025-001")
-        invoice_b = _populated_invoice(invoice_number="F-2025-002")
-        original = InvoiceCatalogue(
-            invoices={
-                invoice_a.invoice_id: invoice_a,
-                invoice_b.invoice_id: invoice_b,
-            },
+    with provider:
+        db_path = tmp_path / "invoice-catalogue-roundtrip.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        repo = InvoiceCatalogueRepository()
-        repo.save(original)
-        loaded = repo.load()
+            invoice_a = _populated_invoice(invoice_number="F-2025-001")
+            invoice_b = _populated_invoice(invoice_number="F-2025-002")
+            original = InvoiceCatalogue(
+                invoices={
+                    invoice_a.invoice_id: invoice_a,
+                    invoice_b.invoice_id: invoice_b,
+                },
+            )
 
-        assert loaded == original
-        # Per-field witnesses: line tuple, Decimal precision,
-        # enum identity, and the linked_transaction_ids tuple all
-        # survive the JSON + column-encryption cycle.
-        assert set(loaded.invoices) == {invoice_a.invoice_id, invoice_b.invoice_id}
-        loaded_a = loaded.invoices[invoice_a.invoice_id]
-        assert loaded_a.kind is InvoiceKind.ISSUED
-        assert loaded_a.payment_status is PaymentStatus.PENDING
-        assert loaded_a.base_total == Decimal("1000.00")
-        assert loaded_a.iva_total == Decimal("210.00")
-        assert loaded_a.grand_total == Decimal("1210.00")
-        assert loaded_a.linked_transaction_ids == ("a" * 64,)
-        assert len(loaded_a.lines) == 1
-        loaded_line = loaded_a.lines[0]
-        assert loaded_line.iva_rate is IvaRate.RATE_21
-        assert loaded_line.quantity == Decimal("10")
-        assert loaded_line.iva_amount == Decimal("210.00")
-        assert loaded_line.category_id == "consultoria"
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            repo = InvoiceCatalogueRepository()
+            repo.save(original)
+            loaded = repo.load()
+
+            assert loaded == original
+            # Per-field witnesses: line tuple, Decimal precision,
+            # enum identity, and the linked_transaction_ids tuple all
+            # survive the JSON + column-encryption cycle.
+            assert set(loaded.invoices) == {invoice_a.invoice_id, invoice_b.invoice_id}
+            loaded_a = loaded.invoices[invoice_a.invoice_id]
+            assert loaded_a.kind is InvoiceKind.ISSUED
+            assert loaded_a.payment_status is PaymentStatus.PENDING
+            assert loaded_a.base_total == Decimal("1000.00")
+            assert loaded_a.iva_total == Decimal("210.00")
+            assert loaded_a.grand_total == Decimal("1210.00")
+            assert loaded_a.linked_transaction_ids == ("a" * 64,)
+            assert len(loaded_a.lines) == 1
+            loaded_line = loaded_a.lines[0]
+            assert loaded_line.iva_rate is IvaRate.RATE_21
+            assert loaded_line.quantity == Decimal("10")
+            assert loaded_line.iva_amount == Decimal("210.00")
+            assert loaded_line.category_id == "consultoria"
+        finally:
+            engine.dispose()
 
 
 def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(
@@ -145,49 +143,48 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(
     from ._repository import _INVOICE_NAMESPACE
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "invoice-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-        invoice = _populated_invoice(invoice_number="F-2025-001")
-        catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
-        repo = InvoiceCatalogueRepository()
-        repo.save(catalogue)
-
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _INVOICE_NAMESPACE,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            invoices = envelope["payload"]["invoices"]
-            invoice_dict = invoices[invoice.invoice_id]
-            assert invoice_dict["invoice_number"] == "F-2025-001", (
-                "fixture must serialise the invoice_number for this "
-                "proof test to be meaningful"
-            )
-            # Mutate the identity-bearing invoice_number without
-            # recomputing invoice_id. The derive-id check must trip.
-            invoice_dict["invoice_number"] = "F-2025-999"
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        regression_caught = False
-        try:
-            repo.load()
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: mutating invoice_number "
-            "without recomputing invoice_id did NOT surface on load. "
-            "The invoice catalogue boundary is tautological and the "
-            "content-addressed identity is not actually enforced "
-            "post-persistence."
+    with provider:
+        db_path = tmp_path / "invoice-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            invoice = _populated_invoice(invoice_number="F-2025-001")
+            catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
+            repo = InvoiceCatalogueRepository()
+            repo.save(catalogue)
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _INVOICE_NAMESPACE,
+                )
+                row = session.execute(stmt).scalar_one()
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                invoices = envelope["payload"]["invoices"]
+                invoice_dict = invoices[invoice.invoice_id]
+                assert invoice_dict["invoice_number"] == "F-2025-001", (
+                    "fixture must serialise the invoice_number for this "
+                    "proof test to be meaningful"
+                )
+                # Mutate the identity-bearing invoice_number without
+                # recomputing invoice_id. The derive-id check must trip.
+                invoice_dict["invoice_number"] = "F-2025-999"
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            regression_caught = False
+            try:
+                repo.load()
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: mutating invoice_number "
+                "without recomputing invoice_id did NOT surface on load. "
+                "The invoice catalogue boundary is tautological and the "
+                "content-addressed identity is not actually enforced "
+                "post-persistence."
+            )
+        finally:
+            engine.dispose()

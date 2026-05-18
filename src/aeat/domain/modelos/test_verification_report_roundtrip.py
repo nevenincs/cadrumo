@@ -17,7 +17,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -87,46 +86,45 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     """A populated VerificationReportCatalogue roundtrips strictly."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "verification-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        report = _populated_report()
-        catalogue = VerificationReportCatalogue(
-            reports={report.verification_report_id: report},
+    with provider:
+        db_path = tmp_path / "verification-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        repo = VerificationReportCatalogueRepository()
-        repo.save(catalogue)
-        loaded = repo.load()
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        assert loaded == catalogue
-        loaded_report = loaded.reports[report.verification_report_id]
-        # Per-field witnesses: enum identity, tuple-of-finding
-        # preservation including each finding's nested enum kind +
-        # severity + optional fields.
-        assert loaded_report.completeness_status is VerificationCompletenessStatus.BLOCKED
-        assert len(loaded_report.findings) == 2
-        f0 = loaded_report.findings[0]
-        assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
-        assert f0.severity is ModeloVerificationFindingSeverity.BLOCKING
-        assert f0.casilla_id == "iva.devengado"
-        assert f0.next_action is not None
-        f1 = loaded_report.findings[1]
-        assert f1.kind is ModeloVerificationFindingKind.UNRESOLVED_BINDING
-        assert f1.severity is ModeloVerificationFindingSeverity.WARNING
-        assert f1.expectation_id == "ivaSourceRequired"
-        # Resolved + missing casillas tuples preserve order and content.
-        assert loaded_report.resolved_casillas == ("iva.deducible", "iva.resultado")
-        assert loaded_report.missing_required_casillas == ("iva.devengado",)
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            report = _populated_report()
+            catalogue = VerificationReportCatalogue(
+                reports={report.verification_report_id: report},
+            )
+            repo = VerificationReportCatalogueRepository()
+            repo.save(catalogue)
+            loaded = repo.load()
+
+            assert loaded == catalogue
+            loaded_report = loaded.reports[report.verification_report_id]
+            # Per-field witnesses: enum identity, tuple-of-finding
+            # preservation including each finding's nested enum kind +
+            # severity + optional fields.
+            assert loaded_report.completeness_status is VerificationCompletenessStatus.BLOCKED
+            assert len(loaded_report.findings) == 2
+            f0 = loaded_report.findings[0]
+            assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+            assert f0.severity is ModeloVerificationFindingSeverity.BLOCKING
+            assert f0.casilla_id == "iva.devengado"
+            assert f0.next_action is not None
+            f1 = loaded_report.findings[1]
+            assert f1.kind is ModeloVerificationFindingKind.UNRESOLVED_BINDING
+            assert f1.severity is ModeloVerificationFindingSeverity.WARNING
+            assert f1.expectation_id == "ivaSourceRequired"
+            # Resolved + missing casillas tuples preserve order and content.
+            assert loaded_report.resolved_casillas == ("iva.deducible", "iva.resultado")
+            assert loaded_report.missing_required_casillas == ("iva.devengado",)
+        finally:
+            engine.dispose()
 
 
 def test_verification_report_flipped_grant_invariant_surfaces_at_load(
@@ -163,51 +161,50 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
     from ._verification_repository import _VERIFICATION_NAMESPACE
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "verification-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-        report = _populated_report()
-        catalogue = VerificationReportCatalogue(
-            reports={report.verification_report_id: report},
+    with provider:
+        db_path = tmp_path / "verification-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        repo = VerificationReportCatalogueRepository()
-        repo.save(catalogue)
-
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _VERIFICATION_NAMESPACE,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            reports = envelope["payload"]["reports"]
-            report_dict = reports[report.verification_report_id]
-            assert report_dict.get("granted_verified_complete") is False, (
-                "fixture must serialise granted_verified_complete=False "
-                "on the BLOCKED report for this proof test to be meaningful"
-            )
-            # Flip the grant flag to True. The BLOCKED + blocking-finding
-            # combination must trip the granted ↔ completeness invariant.
-            report_dict["granted_verified_complete"] = True
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        regression_caught = False
+        Base.metadata.create_all(engine)
         try:
-            repo.load()
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: flipping "
-            "granted_verified_complete=True on a BLOCKED report with "
-            "blocking findings did NOT surface on load. The "
-            "verification report boundary is tautological and every "
-            "report roundtrip in the suite is suspect."
-        )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            SecureObjectRepository(engine=engine)
+            report = _populated_report()
+            catalogue = VerificationReportCatalogue(
+                reports={report.verification_report_id: report},
+            )
+            repo = VerificationReportCatalogueRepository()
+            repo.save(catalogue)
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _VERIFICATION_NAMESPACE,
+                )
+                row = session.execute(stmt).scalar_one()
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                reports = envelope["payload"]["reports"]
+                report_dict = reports[report.verification_report_id]
+                assert report_dict.get("granted_verified_complete") is False, (
+                    "fixture must serialise granted_verified_complete=False "
+                    "on the BLOCKED report for this proof test to be meaningful"
+                )
+                # Flip the grant flag to True. The BLOCKED + blocking-finding
+                # combination must trip the granted ↔ completeness invariant.
+                report_dict["granted_verified_complete"] = True
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            regression_caught = False
+            try:
+                repo.load()
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: flipping "
+                "granted_verified_complete=True on a BLOCKED report with "
+                "blocking findings did NOT surface on load. The "
+                "verification report boundary is tautological and every "
+                "report roundtrip in the suite is suspect."
+            )
+        finally:
+            engine.dispose()
