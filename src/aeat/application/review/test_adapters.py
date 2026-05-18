@@ -432,6 +432,7 @@ def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tm
 def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -> None:
     """`status=APPROVAL_STALE` must surface as a HIGH-severity finding row."""
     settings = _build_settings(tmp_path)
+    _seed_active_profile()
     _write_draft(settings, _draft(draft_id="d_stale", status=FilingDraftStatus.APPROVAL_STALE))
     items = drafts_pending(settings)
     assert len(items) == 1
@@ -445,12 +446,14 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
 
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
+    _seed_active_profile()
     _write_draft(settings, _draft(draft_id="d3", status=FilingDraftStatus.READY_TO_SUBMIT))
     assert drafts_pending(settings) == ()
 
 
 def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
+    _seed_active_profile()
     finding = FilingValidationFinding(
         casilla_id="03",
         severity=FilingFindingSeverity.ERROR,
