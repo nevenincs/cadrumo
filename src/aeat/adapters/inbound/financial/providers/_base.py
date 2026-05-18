@@ -300,33 +300,67 @@ def parse_amount_value(
     raw = coerce_cell_text(value)
     if not raw:
         raise FinancialValidationError("missing amount value")
+    sanitized, negative = _sanitise_amount_text(raw)
+    if not sanitized:
+        raise FinancialValidationError(f"unsupported amount value: {raw!r}")
+    decimal_sep = _resolve_decimal_separator(sanitized, override=decimal_separator)
+    normalized = _normalise_amount_digits(sanitized, decimal_sep=decimal_sep)
+    try:
+        amount = Decimal(normalized)
+    except InvalidOperation as exc:
+        raise FinancialValidationError(f"unsupported amount value: {raw!r}") from exc
+    return -amount if negative else amount
+
+
+def _sanitise_amount_text(raw: str) -> tuple[str, bool]:
+    """Strip whitespace and sign markers from ``raw``; return ``(digits-and-separators, negative_flag)``.
+
+    Three negativity conventions are recognised: leading minus
+    (``-123.45``), trailing minus (``123.45-``), and accounting
+    parentheses (``(123.45)``). After the sign markers are
+    removed, only digits and ``,`` / ``.`` survive \u2014 anything else
+    (currency symbols, stray operators) is dropped before
+    separator inference.
+    """
     sanitized = raw.replace(" ", "").replace("\u202f", "")
     negative = (
         sanitized.startswith("-") or sanitized.endswith("-") or (sanitized.startswith("(") and sanitized.endswith(")"))
     )
     sanitized = sanitized.strip("()-+")
     sanitized = "".join(char for char in sanitized if char.isdigit() or char in ",.")
-    if not sanitized:
-        raise FinancialValidationError(f"unsupported amount value: {raw!r}")
-    if decimal_separator is not None and decimal_separator not in {",", "."}:
-        raise FinancialValidationError(f"unsupported decimal separator: {decimal_separator!r}")
-    if decimal_separator is not None:
-        decimal_sep = decimal_separator
-    elif "," in sanitized and "." in sanitized:
-        decimal_sep = "," if sanitized.rfind(",") > sanitized.rfind(".") else "."
-    elif "," in sanitized:
-        decimal_sep = ","
-    else:
-        decimal_sep = "."
+    return sanitized, negative
+
+
+def _resolve_decimal_separator(
+    sanitized: str,
+    *,
+    override: Literal[",", "."] | None,
+) -> str:
+    """Resolve the decimal separator: explicit override, then inference from the sanitised text.
+
+    Inference uses the rightmost separator when both ``,`` and ``.``
+    appear (e.g. ``1.234,56`` -> comma is decimal); falls back to
+    whichever single separator is present, or ``.`` when neither is
+    present (a bare integer literal).
+    """
+    if override is not None:
+        if override not in {",", "."}:
+            raise FinancialValidationError(f"unsupported decimal separator: {override!r}")
+        return override
+    if "," in sanitized and "." in sanitized:
+        return "," if sanitized.rfind(",") > sanitized.rfind(".") else "."
+    if "," in sanitized:
+        return ","
+    return "."
+
+
+def _normalise_amount_digits(sanitized: str, *, decimal_sep: str) -> str:
+    """Drop the thousands separator and rewrite the decimal separator as ``.``."""
     thousands_sep = "." if decimal_sep == "," else ","
     normalized = sanitized.replace(thousands_sep, "")
     if decimal_sep != ".":
         normalized = normalized.replace(decimal_sep, ".")
-    try:
-        amount = Decimal(normalized)
-    except InvalidOperation as exc:
-        raise FinancialValidationError(f"unsupported amount value: {raw!r}") from exc
-    return -amount if negative else amount
+    return normalized
 
 
 def synthesize_transaction_id(
