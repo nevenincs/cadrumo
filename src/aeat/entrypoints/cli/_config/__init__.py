@@ -528,7 +528,7 @@ def _emit_profile_activated_event(*, profile_id: str, active_profile: str | None
     )
 
 
-@profile_app.command("view", help=tr("cli.config.profile.view_help"))
+@profile_app.command("show", help=tr("cli.config.profile.show_help"))
 def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
