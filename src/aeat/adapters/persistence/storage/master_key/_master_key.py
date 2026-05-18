@@ -408,61 +408,83 @@ class KeyringMasterKeyProvider:
             if cached is not None:
                 return bytes(cached)
             self._probe_backend()
-            try:
-                stored = self._client.get_password(self._service, self._username)
-            except KeyringError as exc:
-                # The probe above already excluded the no-op backends;
-                # reaching here means the BACKEND itself is usable but
-                # the keychain entry is currently inaccessible (macOS
-                # Keychain locked, Windows Hello prompt cancelled,
-                # Secret Service not unlocked). Distinct from
-                # KeyringUnavailableError so the operator-facing
-                # message can point at "unlock the keychain and retry"
-                # instead of "switch backend".
-                raise MasterKeyKeychainLockedError(
-                    f"OS keychain refused get_password: {exc}; "
-                    "unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
-                    "or set AEAT_SECRET_STORE_BACKEND=file to use the passphrase backend.",
-                ) from exc
-            except KeyringUnavailableError:
-                raise
-            except Exception as exc:  # pragma: no cover - defensive
-                raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
+            stored = self._read_stored_master_key(KeyringError)
             if stored is not None:
-                try:
-                    key = _b64decode(stored)
-                except (ValueError, binascii.Error) as exc:
-                    raise KeyringUnavailableError(
-                        "OS keychain returned a malformed master-key entry; clear it and re-run.",
-                    ) from exc
-                if len(key) != KEY_SIZE:
-                    raise KeyringUnavailableError(
-                        f"OS keychain master key has wrong size: {len(key)} (expected {KEY_SIZE}).",
-                    )
+                key = self._decode_stored_master_key(stored)
                 KeyringMasterKeyProvider._cache[cache_key] = bytearray(key)
                 return key
-            new_key = secrets.token_bytes(KEY_SIZE)
-            try:
-                self._client.set_password(self._service, self._username, _b64encode(new_key))
-            except KeyringError as exc:
-                raise KeyringUnavailableError(f"OS keychain refused set_password: {exc}") from exc
-            except KeyringUnavailableError:
-                raise
-            except Exception as exc:  # pragma: no cover - defensive
-                raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
-            # Read back to verify the backend actually persisted the value.
-            try:
-                roundtrip = self._client.get_password(self._service, self._username)
-            except KeyringError as exc:
-                raise KeyringUnavailableError(f"OS keychain refused round-trip read: {exc}") from exc
-            if roundtrip is None or _b64decode(roundtrip) != new_key:
-                raise KeyringUnavailableError(
-                    "OS keychain accepted set_password but the round-trip read disagreed; "
-                    "the backend may be a silent dropper.",
-                )
+            new_key = self._mint_and_verify_master_key(KeyringError)
             _log.info("master key minted in OS keychain (service=%s)", self._service)
             KeyringMasterKeyProvider._cache[cache_key] = bytearray(new_key)
             return new_key
+
+    def _read_stored_master_key(self, keyring_error_cls: type[Exception]) -> str | None:
+        """Fetch the encoded master-key string from the keychain, or ``None`` if absent.
+
+        The probe above already excluded the no-op backends; reaching
+        a ``KeyringError`` here means the backend is usable but the
+        keychain entry is currently inaccessible (macOS Keychain
+        locked, Windows Hello prompt cancelled, Secret Service not
+        unlocked). That maps to :class:`MasterKeyKeychainLockedError`
+        with operator-facing remediation guidance; any other
+        unexpected exception maps to
+        :class:`KeyringUnavailableError`.
+        """
+        try:
+            return self._client.get_password(self._service, self._username)
+        except keyring_error_cls as exc:
+            raise MasterKeyKeychainLockedError(
+                f"OS keychain refused get_password: {exc}; "
+                "unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
+                "or set AEAT_SECRET_STORE_BACKEND=file to use the passphrase backend.",
+            ) from exc
+        except KeyringUnavailableError:
+            raise
+        except Exception as exc:  # pragma: no cover - defensive
+            raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
+
+    @staticmethod
+    def _decode_stored_master_key(stored: str) -> bytes:
+        """Decode the base64-encoded master-key string and validate the byte length."""
+        try:
+            key = _b64decode(stored)
+        except (ValueError, binascii.Error) as exc:
+            raise KeyringUnavailableError(
+                "OS keychain returned a malformed master-key entry; clear it and re-run.",
+            ) from exc
+        if len(key) != KEY_SIZE:
+            raise KeyringUnavailableError(
+                f"OS keychain master key has wrong size: {len(key)} (expected {KEY_SIZE}).",
+            )
+        return key
+
+    def _mint_and_verify_master_key(self, keyring_error_cls: type[Exception]) -> bytes:
+        """Mint a fresh master key, persist it, and verify the backend actually retains it.
+
+        Some keyring backends silently drop ``set_password`` writes
+        (e.g. fail-closed fallback adapters); the round-trip read
+        below catches that class of failure before the dropped key
+        reaches a downstream encryption call.
+        """
+        new_key = secrets.token_bytes(KEY_SIZE)
+        try:
+            self._client.set_password(self._service, self._username, _b64encode(new_key))
+        except keyring_error_cls as exc:
+            raise KeyringUnavailableError(f"OS keychain refused set_password: {exc}") from exc
+        except KeyringUnavailableError:
+            raise
+        except Exception as exc:  # pragma: no cover - defensive
+            raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
+        try:
+            roundtrip = self._client.get_password(self._service, self._username)
+        except keyring_error_cls as exc:
+            raise KeyringUnavailableError(f"OS keychain refused round-trip read: {exc}") from exc
+        if roundtrip is None or _b64decode(roundtrip) != new_key:
+            raise KeyringUnavailableError(
+                "OS keychain accepted set_password but the round-trip read disagreed; "
+                "the backend may be a silent dropper.",
+            )
+        return new_key
 
     @classmethod
     def _reset_for_tests(cls) -> None:
