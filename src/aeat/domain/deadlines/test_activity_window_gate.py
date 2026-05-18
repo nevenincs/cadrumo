@@ -70,7 +70,7 @@ def test_window_straddling_baja_is_retained() -> None:
 def test_no_census_dates_means_no_filtering() -> None:
     """When the operator has not yet captured a census, both dates
     are None and the gate never fires — backwards-compatible with
-    every existing AutonomoProfile that pre-dates the W85 census fields."""
+    every existing AutonomoProfile that pre-dates the census schema fields."""
 
     assert _window_outside_activity_period(
         opens_on=date(2024, 4, 1),

@@ -717,8 +717,8 @@ def test_config_repair_report_includes_registry_integrity_check() -> None:
 def test_informative_modelo_with_formula_fails_validation() -> None:
     """An informative modelo that declares a formula raises RegistryValidationError.
 
-    Covers the registry-wide invariant added in S33: _validate_informative_class_invariant
-    walks every revision of an informative modelo and rejects formulas, relations, and
+    Covers the registry-wide _validate_informative_class_invariant: it walks every
+    revision of an informative modelo and rejects formulas, relations, and
     non-manual/non-informational casillas.
     """
     from . import RegistryValidator

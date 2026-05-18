@@ -147,7 +147,7 @@ def test_statutory_cap_rejects_mixed_cap_modes() -> None:
 def test_statutory_multiplier_rejected_on_non_usage_ratio_kind() -> None:
     """statutory_multiplier is only valid for usage-ratio kinds; a
     full-deductible rule with a multiplier declared must refuse load.
-    Backs the W85 ADR amendment legal-grounding contract."""
+    Backs the LIRPF legal-grounding contract for usage-ratio rules."""
 
     with pytest.raises(
         ValidationError, match=r"statutory_multiplier is only valid for usage_ratio rules",

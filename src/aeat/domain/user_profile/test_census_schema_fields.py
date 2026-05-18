@@ -1,8 +1,7 @@
 """Shape + legal-grounding tests for the census schema extension.
 
-Backs W85.S2349 census-sync wave. Every census-derived field that
-drives a downstream calculation MUST declare ``legal_refs`` pointing
-to a primary BOE source per the ADR amendment.
+Every census-derived field that drives a downstream calculation MUST
+declare ``legal_refs`` pointing to a primary BOE source.
 """
 
 from __future__ import annotations
@@ -41,9 +40,9 @@ def _field(schema: ProfileSchemaDefinition, path: tuple[str, str]):
 def test_every_census_derived_field_declares_legal_refs(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    """The W85 ADR amendment requires every census-derived field to
-    declare ``legal_refs`` pointing to a primary BOE source. The
-    validator added in this wave fails CI if a field drifts."""
+    """Every census-derived field must declare ``legal_refs`` pointing
+    to a primary BOE source. The schema-load validator fails CI if a
+    field drifts."""
 
     for section_key, field_key in CENSUS_DERIVED_FIELDS:
         field = _field(schema, (section_key, field_key))
@@ -96,7 +95,7 @@ def test_census_establecimiento_type_enum_covers_propio_arrendado_cedido(
 def test_iae_epigraph_is_wired_to_model_selectors(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    """Closes the dead-field bug surfaced by the W85 mapping: the
+    """Closes the dead-field bug on the census mapping: the
     activities.iae_epigraph field had no model_selectors so it never
     reached AutonomoProfile or the 036 binding layer."""
 

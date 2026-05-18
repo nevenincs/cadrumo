@@ -241,8 +241,8 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
 
     The payload sits at ``corpus/parity_replays/renta_web_open/{scenario_id}.json``
     and pins the AEAT open-simulator's output for the scenario's synthetic inputs.
-    Phase H6 of the Renta full-coverage plan mandates this grounding for every
-    Modelo 100 scenario; this gate enforces it.
+    Renta full-coverage mandates this grounding for every Modelo 100
+    scenario; this gate enforces it.
 
     The gate is dormant during initial scaffolding: when no payloads are
     captured yet, it records the inventory to a metrics file but does not
@@ -339,7 +339,7 @@ def _modelo_100_formula_targets(modelos) -> set[str]:  # type: ignore[no-untyped
 def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage() -> None:
     """Every Modelo 100 formula target should be exercised by at least one Renta WEB Open replay payload.
 
-    Phase H6 mandates per-formula oracle grounding. This gate enumerates Modelo 100
+    Per-formula oracle grounding is required. This gate enumerates Modelo 100
     formulas and counts how many target casillas appear in at least one replay
     payload's ``observed`` mapping (or ``expected`` mapping). The output is written
     to ``.vault/audit/renta-formula-oracle-coverage.txt`` for audit-trail

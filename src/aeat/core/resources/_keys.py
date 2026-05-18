@@ -2,10 +2,8 @@
 
 Each Repository declares its own ``Key`` model (or uses a
 trivial type for singletons / year-keyed resources). The
-top-level ``ResourceKey`` discriminated union grows as each
-Repository implementation lands in the migration. For the
-foundation phase the union is intentionally empty; subsequent
-phases append their typed key variants.
+top-level ``ResourceKey`` discriminated union enumerates the
+typed key variants for every Repository implementation.
 
 Cache keys are Pydantic v2 models with ``frozen=True`` so they
 are hashable for dict-backed Identity Maps. Singletons use
