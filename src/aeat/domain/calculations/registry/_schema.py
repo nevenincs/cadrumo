@@ -1219,6 +1219,71 @@ class ExportLayoutDefinition(RegistryModel):
                 )
         return self
 
+    @model_validator(mode="after")
+    def _validate_encoding_consistency(self) -> ExportLayoutDefinition:
+        """Enforce one encoding per fixed-width export layout.
+
+        AEAT publishes one wire encoding per modelo-year fichero-BOE
+        spec; mixing encodings across records inside a single layout
+        is a registry-author error that would produce a payload no
+        single decoder can faithfully re-parse. ``latin-1`` and
+        ``iso-8859-1`` are normalised to the same encoding before
+        comparison (Python codec aliases for the same charset).
+
+        Cross-domain encoding-lock: every record within one layout
+        must declare an encoding that normalises to the same value.
+        XML-dictionary layouts have no record-level encoding (the
+        records tuple is typically empty), so this check is a no-op
+        for them.
+        """
+
+        if self.format != "fixed_width":
+            return self
+        normalised: dict[str, str] = {}
+        for record in self.records:
+            normalised[record.id] = _normalise_fichero_boe_encoding(record.encoding)
+        unique_encodings = set(normalised.values())
+        if len(unique_encodings) > 1:
+            per_record = ", ".join(
+                f"{record_id}={encoding!r}" for record_id, encoding in sorted(normalised.items())
+            )
+            raise RegistryValidationError(
+                f"export layout {self.id!r} declares inconsistent encodings "
+                f"across its records: {per_record}. A single fichero-BOE "
+                f"layout must use one wire encoding so the published payload "
+                f"decodes uniformly."
+            )
+        return self
+
+
+_FICHERO_BOE_ENCODING_ALIASES: Mapping[str, str] = {
+    "latin-1": "iso-8859-1",
+    "latin_1": "iso-8859-1",
+    "iso-8859-1": "iso-8859-1",
+    "iso_8859_1": "iso-8859-1",
+    "cp1252": "cp1252",
+    "windows-1252": "cp1252",
+    "iso-8859-15": "iso-8859-15",
+    "iso_8859_15": "iso-8859-15",
+    "latin-9": "iso-8859-15",
+}
+"""Canonical-encoding map for fichero-BOE registry encoding declarations.
+
+AEAT treats Windows-1252 and ISO-8859-1 as equivalent for fichero-BOE
+purposes; Python codec aliases (``latin-1`` ↔ ``iso-8859-1``,
+``windows-1252`` ↔ ``cp1252``, ``latin-9`` ↔ ``iso-8859-15``) resolve
+to the same wire encoding. The encoding-consistency validator
+compares declared encodings through this map so a layout that mixes
+``latin-1`` and ``iso-8859-1`` is treated as consistent rather than
+flagged as a layout error.
+"""
+
+
+def _normalise_fichero_boe_encoding(declared: str) -> str:
+    """Return the canonical form of a fichero-BOE encoding declaration."""
+
+    return _FICHERO_BOE_ENCODING_ALIASES.get(declared.strip().lower(), declared.strip().lower())
+
 
 class ModeloRevision(RegistryModel):
     id: RevisionId
