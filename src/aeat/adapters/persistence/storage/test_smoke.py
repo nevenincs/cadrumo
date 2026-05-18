@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import errors, logging
-from . import MigrationError, RepositoryError, StorageError
+from . import RepositoryError, StorageError
 from . import __all__ as storage_all
 from . import __dict__ as storage_namespace
 from . import __doc__ as storage_doc
@@ -22,7 +22,6 @@ def test_smoke_storage() -> None:
     """Assert the subpackage is importable and its conventions hold."""
     assert storage_doc is not None
     assert issubclass(StorageError, errors.AeatError)
-    assert issubclass(MigrationError, StorageError)
     assert issubclass(RepositoryError, StorageError)
     # Sanity-check that the substrate's ``get_logger`` hands back a usable
     # logger; the per-name identity is a Python stdlib invariant and is
