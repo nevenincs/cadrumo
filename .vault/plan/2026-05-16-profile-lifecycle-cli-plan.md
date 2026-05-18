@@ -106,7 +106,7 @@ creation is a single atomic state-repository update. Five remain.
 - [x] `P04.S35` - remove the `dict[str, object]` union arm from `WorkflowState.ledger_reviews`; `src/aeat/application/workflow/_models.py`.
 - [x] `P04.S36` - add public `iter_records()` to the user-profile repository and replace the private `_objects` access in `_iter_profiles`; `src/aeat/application/user_profile/_repository.py`.
 - [x] `P04.S37` - replace the private access call site; `src/aeat/application/user_profile/_lifecycle.py`.
-- [ ] `P04.S38` - anti-tautology probe test (save profile, mutate encrypted payload, reload, assert `ValidationError` or strict inequality); `src/aeat/application/user_profile/test_repository_anti_tautology.py`.
+- [x] `P04.S38` - anti-tautology probe test (save profile, mutate encrypted payload, reload, assert `ValidationError` or strict inequality); `src/aeat/application/user_profile/test_repository_anti_tautology.py`.
 - [ ] `P04.S39` - extend the existing `WorkflowState` roundtrip to populate `invoice_reviews` and `ledger_reviews` with non-default values; `src/aeat/application/workflow/test_state_persistence_roundtrip.py`.
 
 ### Phase `P05` - rename existing CLI verbs to plain English (single-cut)
