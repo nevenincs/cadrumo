@@ -791,7 +791,45 @@ def query_ledger_review_rows(
     """Return review rows for bucket-local ledger transactions."""
 
     repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
-    rows = tuple(repository.load().values())
+    catalogue = repository.load()
+    rows = _filter_ledger_review_rows(
+        rows=tuple(catalogue.values()),
+        query=query,
+        catalogue=catalogue,
+        bucket_event_repository=bucket_event_repository,
+    )
+    sorted_rows = sorted(
+        rows,
+        key=lambda transaction: (
+            transaction.raw.value_date or transaction.raw.booked_date,
+            transaction.transaction_id,
+        ),
+    )
+    return LedgerReviewQueryResult(
+        bucket_id=query.bucket_id,
+        rows=tuple(
+            _ledger_review_row(transaction, include_transaction=query.transaction_id is not None)
+            for transaction in sorted_rows
+        ),
+        filters=_ledger_review_filter_labels(query),
+    )
+
+
+def _filter_ledger_review_rows(
+    *,
+    rows: tuple[Transaction, ...],
+    query: LedgerReviewQuery,
+    catalogue: Mapping[str, Transaction],
+    bucket_event_repository: BucketEventHistoryRepository | None,
+) -> tuple[Transaction, ...]:
+    """Apply the four LedgerReviewQuery filters (period / status / import-or-issue / transaction-id).
+
+    Filters compose left-to-right: each survivor of one filter
+    feeds the next. The ``transaction_id`` filter additionally
+    asserts the id exists in the catalogue so an operator typo
+    surfaces as :class:`TransactionNotFoundError` instead of
+    silently returning an empty result set.
+    """
     if query.period is not None:
         period = Period.model_validate(query.period)
         rows = tuple(
@@ -812,33 +850,26 @@ def query_ledger_review_rows(
         )
         rows = tuple(transaction for transaction in rows if transaction.transaction_id in matching_ids)
     if query.transaction_id is not None:
-        _require_transaction(repository.load(), query.transaction_id)
+        _require_transaction(catalogue, query.transaction_id)
         rows = tuple(transaction for transaction in rows if transaction.transaction_id == query.transaction_id)
-    sorted_rows = sorted(
-        rows,
-        key=lambda transaction: (
-            transaction.raw.value_date or transaction.raw.booked_date,
-            transaction.transaction_id,
-        ),
-    )
-    filters: list[str] = []
-    if query.period is not None:
-        filters.append(f"period={query.period}")
-    if query.status is not None:
-        filters.append(f"status={query.status}")
-    if query.issue is not None:
-        filters.append(f"issue={query.issue}")
-    if query.import_id is not None:
-        filters.append(f"import={query.import_id}")
-    if query.transaction_id is not None:
-        filters.append(f"id={query.transaction_id}")
-    return LedgerReviewQueryResult(
-        bucket_id=query.bucket_id,
-        rows=tuple(
-            _ledger_review_row(transaction, include_transaction=query.transaction_id is not None)
-            for transaction in sorted_rows
-        ),
-        filters=tuple(filters),
+    return rows
+
+
+_LEDGER_REVIEW_FILTER_FIELDS: tuple[tuple[str, str], ...] = (
+    ("period", "period"),
+    ("status", "status"),
+    ("issue", "issue"),
+    ("import_id", "import"),
+    ("transaction_id", "id"),
+)
+
+
+def _ledger_review_filter_labels(query: LedgerReviewQuery) -> tuple[str, ...]:
+    """Render the active filter labels for a LedgerReviewQuery result envelope."""
+    return tuple(
+        f"{label}={getattr(query, attr)}"
+        for attr, label in _LEDGER_REVIEW_FILTER_FIELDS
+        if getattr(query, attr) is not None
     )
 
 
