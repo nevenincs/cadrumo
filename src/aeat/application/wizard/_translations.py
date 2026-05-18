@@ -22,7 +22,7 @@ from pathlib import Path
 
 from ...core.i18n import tr
 from ._catalogue import WIZARD_FLOWS
-from ._models import WizardFlow
+from ._models import WizardFlow, WizardQuestion
 
 _LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")
 
@@ -45,7 +45,7 @@ def _walk_keys(flows: Iterable[WizardFlow]) -> tuple[str, ...]:
     return tuple(keys)
 
 
-def _question_translation_keys(question, *, flow_id: str) -> tuple[str, ...]:  # type: ignore[no-untyped-def]
+def _question_translation_keys(question: WizardQuestion, *, flow_id: str) -> tuple[str, ...]:
     """Return every translation key contributed by one wizard question.
 
     Covers the prompt, the optional help string, every choice's label

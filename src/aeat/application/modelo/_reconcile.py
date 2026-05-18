@@ -72,6 +72,7 @@ class ModeloReconciliationCommand(BaseModel):
     work_unit_id: str = Field(min_length=1, max_length=128)
     source_kind: ModeloReconciliationSourceKind
     source_path: Path
+    actor: str = Field(default="operator", min_length=1, max_length=64)
 
 
 class ModeloReconciliationReport(BaseModel):
@@ -246,7 +247,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         "verdict": verdict.value,
         "diffs": str(len(diffs)),
     }
-    actor = "operator"
+    actor = command.actor.strip()
     event_id = derive_bucket_event_id(
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_RECONCILED,

@@ -2173,6 +2173,14 @@ def modelo_reconcile_verb(
             ),
         ),
     ] = None,
+    actor: Annotated[
+        str,
+        typer.Option(
+            "--by",
+            help=tr("cli.app.modelo.work.actor_help"),
+            default_factory=_resolve_default_actor,
+        ),
+    ] = "",
 ) -> None:
     """Reconcile a modelo work unit against an external evidence source.
 
@@ -2217,6 +2225,7 @@ def modelo_reconcile_verb(
             work_unit_id=work_unit_id,
             source_kind=source_kind,
             source_path=source_path,
+            actor=actor or _resolve_default_actor(),
         ),
     )
     _render_reconciliation_report(ctx, report)
