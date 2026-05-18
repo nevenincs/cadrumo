@@ -344,12 +344,16 @@ def _load_registry_tree_cached(
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     del fingerprints
     resolved = Path(root)
-    legal_dir = resolved / "legal"
-    modelos_dir = resolved / "modelos"
+    catalogues = _load_shared_catalogue_files(resolved / "legal")
+    modelos = _load_all_modelo_definitions(resolved / "modelos")
+    return modelos, catalogues
+
+
+def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
+    """Load every ``legal/*.toml`` shared-catalogue file with duplicate-id rejection."""
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
     parameters: dict[str, LegalParameter] = {}
-    modelos: list[ModeloDefinition] = []
     for path in sorted(legal_dir.glob("*.toml")):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
@@ -363,6 +367,18 @@ def _load_registry_tree_cached(
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)
         parameters.update(catalogue.parameters)
+    return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+
+
+def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, ...]:
+    """Load every modelo (single-file + directory-mode) and reject layout collisions.
+
+    A modelo id present both as ``modelos/<id>.toml`` and as
+    ``modelos/<id>/manifest.toml`` is a configuration mistake — the
+    loader cannot tell which layout is authoritative, so it raises
+    instead of silently picking one.
+    """
+    modelos: list[ModeloDefinition] = []
     seen_modelo_ids: set[str] = set()
     for path in sorted(modelos_dir.glob("*.toml")):
         modelo = load_modelo_file(path)
@@ -372,16 +388,17 @@ def _load_registry_tree_cached(
         modelos.append(modelo)
     if modelos_dir.is_dir():
         for entry in sorted(modelos_dir.iterdir()):
-            if entry.is_dir() and (entry / "manifest.toml").is_file():
-                modelo = load_modelo_directory(entry)
-                if modelo.id in seen_modelo_ids:
-                    raise RegistryLoadError(
-                        f"{entry}: modelo {modelo.id!r} also declared as a single-file "
-                        f"modelos/{modelo.id}.toml; remove one of the two layouts"
-                    )
-                seen_modelo_ids.add(modelo.id)
-                modelos.append(modelo)
-    return tuple(modelos), RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+            if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
+                continue
+            modelo = load_modelo_directory(entry)
+            if modelo.id in seen_modelo_ids:
+                raise RegistryLoadError(
+                    f"{entry}: modelo {modelo.id!r} also declared as a single-file "
+                    f"modelos/{modelo.id}.toml; remove one of the two layouts"
+                )
+            seen_modelo_ids.add(modelo.id)
+            modelos.append(modelo)
+    return tuple(modelos)
 
 
 def _toml_fingerprint(path: Path) -> tuple[str, int, int]:

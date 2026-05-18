@@ -17,7 +17,9 @@ from tempfile import TemporaryDirectory
 from typing import Any, Literal
 
 from openpyxl import load_workbook
+from openpyxl.cell.cell import Cell
 from openpyxl.formula import Tokenizer
+from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core.config import Settings as _Settings
@@ -1202,7 +1204,7 @@ def _inspect_converted_xlsx(
 
 
 def _collect_sheet_formulas(
-    worksheet: object,
+    worksheet: Worksheet,
     *,
     formulas: list[WorkbookCellRef],
     references: list[WorkbookCellRef],
@@ -1210,30 +1212,30 @@ def _collect_sheet_formulas(
     started: float,
 ) -> None:
     """Walk every row in ``worksheet`` and append formula refs + a bounded set of references."""
-    for row in worksheet.iter_rows(values_only=False):  # type: ignore[attr-defined]
+    for row in worksheet.iter_rows(values_only=False):
         _raise_if_timed_out(started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
         for cell in row:
             _record_cell_if_formula(
                 cell,
-                sheet_title=worksheet.title,  # type: ignore[attr-defined]
+                sheet_title=worksheet.title,
                 formulas=formulas,
                 references=references,
             )
 
 
 def _record_cell_if_formula(
-    cell: object,
+    cell: Cell,
     *,
     sheet_title: str,
     formulas: list[WorkbookCellRef],
     references: list[WorkbookCellRef],
 ) -> None:
     """Append a formula record + (bounded) reference fan-out when ``cell`` carries an ``=…`` value."""
-    value = cell.value  # type: ignore[attr-defined]
+    value = cell.value
     if not (isinstance(value, str) and value.startswith("=")):
         return
     formulas.append(
-        WorkbookCellRef(sheet=sheet_title, coordinate=cell.coordinate, formula=value)  # type: ignore[attr-defined]
+        WorkbookCellRef(sheet=sheet_title, coordinate=cell.coordinate, formula=value)
     )
     remaining = _REFERENCE_HARVEST_LIMIT - len(references)
     if remaining > 0:
