@@ -595,6 +595,7 @@ cli:
       rename_help: cli.config.profile.rename_help
       rename_source_help: cli.config.profile.rename_source_help
       rename_target_help: cli.config.profile.rename_target_help
+      show_help: cli.config.profile.show_help
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
       switch_help: cli.config.profile.switch_help
       switch_name_help: cli.config.profile.switch_name_help

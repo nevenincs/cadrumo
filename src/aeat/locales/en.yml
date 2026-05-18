@@ -543,14 +543,16 @@ cli:
         snapshot_id_help: cli.config.profile.census.snapshot_id_help
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
-      delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete %{name} --yes' to confirm.
+      delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
+        %{name} --yes' to confirm.
       delete_yes_help: Explicitly confirm the delete operation
       duplicate_display_name_help: Display name for the new profile (defaults to the
         target id)
       duplicate_help: Copy a profile under a new id and display name
       duplicate_source_help: Source profile id to duplicate
       duplicate_target_help: Target profile id for the duplicate
-      edit_help: Re-run the wizard against an existing profile and update values in place
+      edit_help: Re-run the wizard against an existing profile and update values in
+        place
       export_help: Write a portable profile bundle to a JSON file
       export_name_help: Profile to export; defaults to the active profile
       export_out_help: Destination path for the JSON bundle
@@ -571,10 +573,12 @@ cli:
       remove_requires_yes: Removal is destructive. Re-run 'aeat config profile remove
         %{name} --yes' to confirm.
       remove_yes_help: Explicitly confirm the tombstone operation
-      rename_display_name_help: Operator-visible label; defaults to the existing display name
+      rename_display_name_help: Operator-visible label; defaults to the existing display
+        name
       rename_help: Rename a profile in place; the active-profile pointer follows automatically
       rename_source_help: Existing profile name
       rename_target_help: New profile name
+      show_help: Show the live values of a profile (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
       switch_help: Switch the active profile
       switch_name_help: Profile name to activate
