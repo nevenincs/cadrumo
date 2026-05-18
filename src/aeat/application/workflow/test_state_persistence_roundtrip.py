@@ -21,6 +21,7 @@ from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...core.config import Settings
 from ..auth._models import AuthState
+from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
 from ._models import (
     DeclarationPointer,
     ProfileBucketPointer,
@@ -65,8 +66,19 @@ def _populated_workflow_state() -> WorkflowState:
                 updated_at=now,
             ),
         },
-        invoice_reviews={},
-        ledger_reviews={},
+        invoice_reviews={
+            "invoice-2024-001": InvoiceReviewRecord(
+                invoice_id="invoice-2024-001",
+                fields={"note": "follow up VAT split"},
+                updated_at=now,
+            ),
+        },
+        ledger_reviews={
+            "transaction-2024-abc": LedgerReviewRecord(
+                transaction_id="transaction-2024-abc",
+                updated_at=now,
+            ),
+        },
         bucket_events=(
             WorkflowEvent(
                 action="profile.bucket.created",
@@ -133,6 +145,14 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
         assert len(loaded.bucket_events) == 1
         assert loaded.bucket_events[0].action == "profile.bucket.created"
         assert loaded.bucket_events[0].bucket_id == "b" * 32
+        assert set(loaded.invoice_reviews) == {"invoice-2024-001"}
+        loaded_invoice = loaded.invoice_reviews["invoice-2024-001"]
+        assert isinstance(loaded_invoice, InvoiceReviewRecord)
+        assert loaded_invoice.fields == {"note": "follow up VAT split"}
+        assert set(loaded.ledger_reviews) == {"transaction-2024-abc"}
+        loaded_ledger = loaded.ledger_reviews["transaction-2024-abc"]
+        assert isinstance(loaded_ledger, LedgerReviewRecord)
+        assert loaded_ledger.transaction_id == "transaction-2024-abc"
     finally:
         engine.dispose()
         override_master_key_provider(None)
