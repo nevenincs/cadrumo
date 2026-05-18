@@ -199,6 +199,25 @@ def _extract_pdf_text_cached(path: str, byte_count: int, modified_ns: int) -> st
         raise OSError(f"could not extract text from manual PDF {path}") from exc
 
 
+_SIMPLE_APPLICATION_LINK_RULES: tuple[tuple[str, str, str], ...] = (
+    # (revision_attribute, required_application_surface, failure_message)
+    # Each rule fires when the revision declares the listed records but
+    # the application-link bundle does not declare the matching surface.
+    # Rules that require composite conditions (casillas, modelo-145
+    # communication) stay inline in _application_link_surface_failures.
+    ("formulas", "calculation", "formulas require a calculation application link"),
+    ("extraction_profiles", "extractor", "extraction profiles require an extractor application link"),
+    ("export_layouts", "export", "export layouts require an export application link"),
+    (
+        "verification_expectations",
+        "verification",
+        "verification expectations require a verification application link",
+    ),
+    ("live_cross_references", "portal", "live/static cross-references require a portal application link"),
+    ("deadline_windows", "deadline", "deadline windows require a deadline application link"),
+)
+
+
 class RegistryValidator:
     """Validate legal/source closure and calculability for modelos."""
 
@@ -1677,14 +1696,9 @@ class RegistryValidator:
         modelo_requires_communication: bool,
     ) -> list[str]:
         failures: list[str] = []
-        if revision.formulas and "calculation" not in surfaces:
-            failures.append(f"{scope}: formulas require a calculation application link")
-        if revision.extraction_profiles and "extractor" not in surfaces:
-            failures.append(f"{scope}: extraction profiles require an extractor application link")
-        if revision.export_layouts and "export" not in surfaces:
-            failures.append(f"{scope}: export layouts require an export application link")
-        if revision.verification_expectations and "verification" not in surfaces:
-            failures.append(f"{scope}: verification expectations require a verification application link")
+        for revision_attribute, required_surface, message in _SIMPLE_APPLICATION_LINK_RULES:
+            if getattr(revision, revision_attribute) and required_surface not in surfaces:
+                failures.append(f"{scope}: {message}")
         casillas_have_lifecycle_link = "filing" in surfaces or (
             modelo_requires_communication and bool(communication_surfaces)
         )
@@ -1692,10 +1706,6 @@ class RegistryValidator:
             failures.append(f"{scope}: casillas require a filing or communication application link")
         if communication_surfaces and not modelo_requires_communication:
             failures.append(f"{scope}: communication application links are only valid for Modelo 145")
-        if revision.live_cross_references and "portal" not in surfaces:
-            failures.append(f"{scope}: live/static cross-references require a portal application link")
-        if revision.deadline_windows and "deadline" not in surfaces:
-            failures.append(f"{scope}: deadline windows require a deadline application link")
         if modelo_requires_communication and not communication_surfaces:
             failures.append(f"{scope}: Modelo 145 requires a communication application link")
         return failures
