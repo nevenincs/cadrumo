@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ._errors import RegistryLoadError
 from ._schema import (
@@ -221,7 +221,7 @@ def _load_catalogue_file_cached(path: str, byte_count: int, modified_ns: int) ->
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
 
 
-def _validate_catalogue_section[T](
+def _validate_catalogue_section[T: BaseModel](
     source_path: Path,
     *,
     raw: object,
@@ -246,7 +246,7 @@ def _validate_catalogue_section[T](
         if not isinstance(ref_id, str) or not isinstance(payload, dict):
             raise RegistryLoadError(f"{source_path}: malformed {kind} entry")
         try:
-            out[ref_id] = model.model_validate({"id": ref_id, **payload})  # type: ignore[attr-defined]
+            out[ref_id] = model.model_validate({"id": ref_id, **payload})
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid {kind} {ref_id!r}: {exc}") from exc
     return out
