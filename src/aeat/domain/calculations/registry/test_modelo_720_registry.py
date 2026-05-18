@@ -7,7 +7,6 @@ from typing import cast
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
 
 from . import (
