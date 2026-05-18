@@ -217,6 +217,27 @@ def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw(
     )
 
 
+def test_ratios_list_surfaces_census_mismatch_without_hiding_rows(
+    cli_runner: CliRunner,
+) -> None:
+    """list now routes through load_usage_ratios_with_census_guard. If
+    the persisted HOME_OFFICE override disagrees with the bound census,
+    a typed census_mismatch warning row is emitted alongside the regular
+    rows — operators see both the persisted value AND the divergence
+    against AEAT, never one without the other."""
+
+    _capture_census_with_vivienda_office(office_m2="20", total_m2="100")
+    set_result = cli_runner.invoke(ratios_app, ["set", "suministros_home_office_luz", "0.5"])
+    assert set_result.exit_code == 0, set_result.output
+
+    list_result = cli_runner.invoke(ratios_app, ["list"])
+
+    assert list_result.exit_code == 0, list_result.output
+    assert "suministros_home_office_luz\t0.5" in list_result.output
+    assert "census_mismatch" in list_result.output
+    assert "suministros_home_office_luz" in list_result.output
+
+
 def test_ratios_set_silent_for_non_home_office_category(cli_runner: CliRunner) -> None:
     """The override-warning event is HOME_OFFICE-scoped per the ADR:
     other categories don't carry the census-binding contract."""
