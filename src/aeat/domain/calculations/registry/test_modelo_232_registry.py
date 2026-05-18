@@ -259,47 +259,92 @@ def test_committed_modelo_232_construct_includes_deadline_and_schedule_members()
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
 
 
-def test_committed_modelo_232_envelope_export_layout_matches_official_workbook() -> None:
+_EXPECTED_ENVELOPE_FIELD_POSITIONS: dict[str, tuple[int, int, str]] = {
+    "envelope-open": (1, 2, "literal"),
+    "envelope-modelo": (3, 3, "literal"),
+    "envelope-discriminante": (6, 1, "literal"),
+    "envelope-year": (7, 4, "draft"),
+    "envelope-period": (11, 2, "literal"),
+    "envelope-marker": (13, 5, "literal"),
+    "envelope-aux-open": (18, 5, "literal"),
+    "envelope-reserved-1": (23, 70, "filler"),
+    "envelope-program-version": (93, 4, "header"),
+    "envelope-reserved-2": (97, 4, "filler"),
+    "envelope-presenter-nif": (101, 9, "header"),
+    "envelope-reserved-3": (110, 213, "filler"),
+    "envelope-aux-close": (323, 6, "literal"),
+}
+
+
+def test_committed_modelo_232_envelope_export_layout_declares_every_revision_with_fixed_width(
+) -> None:
+    """Every revision must publish at least one fixed-width export layout."""
     modelo, _ = _load_modelo_232()
-    expected_envelope_field_positions = {
-        "envelope-open": (1, 2, "literal"),
-        "envelope-modelo": (3, 3, "literal"),
-        "envelope-discriminante": (6, 1, "literal"),
-        "envelope-year": (7, 4, "draft"),
-        "envelope-period": (11, 2, "literal"),
-        "envelope-marker": (13, 5, "literal"),
-        "envelope-aux-open": (18, 5, "literal"),
-        "envelope-reserved-1": (23, 70, "filler"),
-        "envelope-program-version": (93, 4, "header"),
-        "envelope-reserved-2": (97, 4, "filler"),
-        "envelope-presenter-nif": (101, 9, "header"),
-        "envelope-reserved-3": (110, 213, "filler"),
-        "envelope-aux-close": (323, 6, "literal"),
-    }
     for revision in modelo.revisions.values():
         assert revision.export_layouts, revision.id
+        assert revision.export_layouts[0].format == "fixed_width", revision.id
+
+
+def test_committed_modelo_232_envelope_export_layout_carries_envelope_header_and_footer(
+) -> None:
+    """The official AEAT envelope wraps page records with a header + closing-tag footer."""
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
         layout = revision.export_layouts[0]
-        assert layout.format == "fixed_width"
         record_types = {record.record_type for record in layout.records}
-        # The official AEAT envelope wraps page records with a closing tag.
         assert {"envelope_header", "envelope_footer"} <= record_types, revision.id
-        header_record = next(record for record in layout.records if record.record_type == "envelope_header")
-        assert header_record.order == 0
-        for field in header_record.fields:
-            suffix = field.id.split("-envelope-", 1)[1]
-            key = f"envelope-{suffix}"
-            assert key in expected_envelope_field_positions, key
-            expected_offset, expected_length, expected_kind = expected_envelope_field_positions[key]
+
+
+def test_committed_modelo_232_envelope_header_record_orders_first() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        header_record = _envelope_header(revision)
+        assert header_record.order == 0, revision.id
+
+
+def test_committed_modelo_232_envelope_header_field_layout_matches_official_workbook() -> None:
+    """Every header field must match the official ``(offset, length, kind)`` triple."""
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        for field in _envelope_header(revision).fields:
+            key = f"envelope-{field.id.split('-envelope-', 1)[1]}"
+            assert key in _EXPECTED_ENVELOPE_FIELD_POSITIONS, (revision.id, key)
+            expected_offset, expected_length, expected_kind = _EXPECTED_ENVELOPE_FIELD_POSITIONS[key]
             assert field.offset == expected_offset, (revision.id, field.id, field.offset)
             assert field.length == expected_length, (revision.id, field.id, field.length)
             assert field.kind == expected_kind, (revision.id, field.id, field.kind)
-        footer_record = next(record for record in layout.records if record.record_type == "envelope_footer")
-        assert footer_record.order == 99
-        assert len(footer_record.fields) == 1
+
+
+def test_committed_modelo_232_envelope_footer_record_orders_last() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        assert _envelope_footer(revision).order == 99, revision.id
+
+
+def test_committed_modelo_232_envelope_footer_emits_single_closing_tag_field() -> None:
+    """Footer carries exactly one field; that field renders the modelo's XML close tag."""
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        footer_record = _envelope_footer(revision)
+        assert len(footer_record.fields) == 1, revision.id
         close_field = footer_record.fields[0]
-        assert close_field.kind == "computed"
-        assert close_field.computed_key == "envelope_closing_tag"
-        assert close_field.length == 18
+        assert close_field.kind == "computed", revision.id
+        assert close_field.computed_key == "envelope_closing_tag", revision.id
+        assert close_field.length == 18, revision.id
+
+
+def _envelope_header(revision):  # type: ignore[no-untyped-def]
+    """Return the ``envelope_header`` record from ``revision``'s first export layout."""
+    return next(
+        record for record in revision.export_layouts[0].records if record.record_type == "envelope_header"
+    )
+
+
+def _envelope_footer(revision):  # type: ignore[no-untyped-def]
+    """Return the ``envelope_footer`` record from ``revision``'s first export layout."""
+    return next(
+        record for record in revision.export_layouts[0].records if record.record_type == "envelope_footer"
+    )
 
 
 def test_committed_modelo_232_construct_includes_export_layout_and_export_link() -> None:
