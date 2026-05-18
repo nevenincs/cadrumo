@@ -283,11 +283,11 @@ legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apa
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
-id = "modelo-115-envelope-developer-tax-id"
+id = "modelo-115-envelope-presenter-tax-id"
 offset = 101
 length = 9
 kind = "header"
-header_key = "developer_tax_id"
+header_key = "presenter_tax_id"
 data_type = "text"
 required = false
 padding = "right_space"

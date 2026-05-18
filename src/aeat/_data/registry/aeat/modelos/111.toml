@@ -613,11 +613,11 @@ legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:a
 source_refs = ["aeat-dr-111-2019-v18"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
-id = "modelo-111-envelope-developer-nif"
+id = "modelo-111-envelope-presenter-nif"
 offset = 101
 length = 9
 kind = "header"
-header_key = "developer_nif"
+header_key = "presenter_nif"
 data_type = "text"
 required = false
 padding = "right_space"

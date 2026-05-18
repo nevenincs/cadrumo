@@ -90,7 +90,7 @@ def _modelo_130_export_headers() -> dict[str, str]:
         "surnames": "EXPORT TEST",
         "name": "ANA",
         "program_version": "A001",
-        "developer_nif": "A12345678",
+        "presenter_nif": "A12345678",
     }
 
 
@@ -233,7 +233,7 @@ def _modelo_111_export_headers() -> dict[str, str]:
         "surnames": "EXPORT TEST",
         "name": "ANA",
         "program_version": "A001",
-        "developer_nif": "A12345678",
+        "presenter_nif": "A12345678",
     }
 
 
@@ -261,7 +261,7 @@ def _modelo_115_export_headers() -> dict[str, str]:
         "legal_name": "EXPORT TEST",
         "first_name": "ANA",
         "program_version": "A001",
-        "developer_tax_id": "A12345678",
+        "presenter_tax_id": "A12345678",
     }
 
 
@@ -294,7 +294,7 @@ def _modelo_123_export_headers() -> dict[str, str]:
         "declaration_type": "I",
         "legal_name": "EXPORT TEST",
         "program_version": "A001",
-        "developer_tax_id": "A12345678",
+        "presenter_tax_id": "A12345678",
     }
 
 
@@ -326,7 +326,7 @@ def _modelo_123_2019_export_headers() -> dict[str, str]:
         "surnames": "EXPORT TEST",
         "name": "ANA",
         "program_version": "A001",
-        "developer_tax_id": "A12345678",
+        "presenter_tax_id": "A12345678",
     }
 
 

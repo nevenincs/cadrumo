@@ -880,6 +880,27 @@ def config_profile_import(
     )
 
 
+@profile_app.command(
+    "logout",
+    help=tr(
+        "cli.config.profile.logout_help",
+        default="Sign out of the active profile by clearing the pointer file.",
+    ),
+)
+def config_profile_logout(ctx: typer.Context) -> None:
+    """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
+
+    from ....application.user_profile._orchestration import _clear_active_profile_pointer
+
+    before = resolve_active_bucket_id()
+    _clear_active_profile_pointer()
+    _emit(
+        ctx,
+        {"logged_out_profile": before or "", "active_profile": None},
+        (f"logged_out_profile\t{before or '<none>'}",),
+    )
+
+
 @profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(ctx: typer.Context) -> None:
     """Show the readiness of the current configuration profile."""
