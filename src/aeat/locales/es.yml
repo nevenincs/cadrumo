@@ -595,6 +595,7 @@ cli:
       import_help: cli.config.profile.import_help
       import_missing_bundle: cli.config.profile.import_missing_bundle
       import_path_help: cli.config.profile.import_path_help
+      logout_help: cli.config.profile.logout_help
       no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
         first.
       preflight_help: Report whether the active profile is ready for one modelo /

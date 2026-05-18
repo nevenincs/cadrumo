@@ -272,7 +272,7 @@ def test_committed_modelo_232_envelope_export_layout_matches_official_workbook()
         "envelope-reserved-1": (23, 70, "filler"),
         "envelope-program-version": (93, 4, "header"),
         "envelope-reserved-2": (97, 4, "filler"),
-        "envelope-developer-nif": (101, 9, "header"),
+        "envelope-presenter-nif": (101, 9, "header"),
         "envelope-reserved-3": (110, 213, "filler"),
         "envelope-aux-close": (323, 6, "literal"),
     }

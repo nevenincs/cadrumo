@@ -560,6 +560,7 @@ cli:
       import_help: Register a portable profile bundle from a JSON file
       import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
+      logout_help: cli.config.profile.logout_help
       no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
         first.
       preflight_help: Report whether the active profile is ready for one modelo /
