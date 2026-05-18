@@ -352,10 +352,11 @@ def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
     profile_name = inspect.Parameter(
         name="profile_name",
         kind=inspect.Parameter.KEYWORD_ONLY,
-        default="default",
+        default=...,
         annotation=Annotated[
             str,
             typer.Option(
+                ...,
                 "--profile",
                 help=tr("cli.config.setup.profile_name_help"),
             ),
@@ -431,8 +432,13 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
     def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
         from ..workflow._persistence import workflow_state_repository
 
-        raw_profile_name = kwargs.pop("profile_name", "default")
-        profile_name = raw_profile_name if isinstance(raw_profile_name, str) else "default"
+        raw_profile_name = kwargs.pop("profile_name")
+        if not isinstance(raw_profile_name, str) or not raw_profile_name.strip():
+            raise WizardMissingFlagError(
+                "wizard requires --profile NAME (no implicit 'default' fallback)",
+                context={"flow_id": flow.id, "missing": ("profile_name",)},
+            )
+        profile_name = raw_profile_name.strip()
         quiet = bool(kwargs.pop("quiet", False))
         accept_defaults = bool(kwargs.pop("accept_defaults", False))
         canonical = _collect_flag_values(flow, kwargs)
