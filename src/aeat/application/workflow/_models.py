@@ -134,14 +134,11 @@ class WorkflowState(BaseModel):
 
     Attributes:
         auth: Local AEAT access readiness state.
-        profiles: Profile-bucket pointers keyed by profile name.
-        active_profile: Currently selected profile name, or ``None``.
-            Retained on the record during the lifecycle cutover; the
-            authoritative read path is :func:`resolve_active_bucket_id`
-            which consults Settings then the plaintext pointer file
-            before falling back to this field. Field deletion lands
-            once every reader (~30 production sites + tests) migrates
-            to the resolver.
+        profiles: Profile-bucket pointers keyed by profile name. The
+            active profile is no longer stored on the record; it
+            resolves at read time via
+            :func:`resolve_active_bucket_id` from the precedence
+            chain (Settings override > plaintext pointer file).
         declarations: Filing draft pointers keyed by :func:`declaration_key`.
         invoice_reviews: Invoice review annotations keyed by ``invoice_id``.
         ledger_reviews: Ledger transaction review annotations keyed by
@@ -153,51 +150,11 @@ class WorkflowState(BaseModel):
 
     auth: AuthState = Field(default_factory=AuthState)
     profiles: dict[str, ProfileBucketPointer] = Field(default_factory=dict)
-    active_profile: str | None = None
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
-    invoice_reviews: dict[str, InvoiceReviewRecord | dict[str, object]] = Field(default_factory=dict)
-    ledger_reviews: dict[str, LedgerReviewRecord | dict[str, object]] = Field(default_factory=dict)
+    invoice_reviews: dict[str, InvoiceReviewRecord] = Field(default_factory=dict)
+    ledger_reviews: dict[str, LedgerReviewRecord] = Field(default_factory=dict)
     bucket_events: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
-
-    @model_validator(mode="after")
-    def _coerce_review_records(self) -> WorkflowState:
-        """Coerce any raw-dict entries in review maps to typed records.
-
-        The field type accepts both
-        :class:`~aeat.application.review._models.InvoiceReviewRecord` /
-        :class:`~aeat.application.review._models.LedgerReviewRecord`
-        AND raw dicts so older persisted state remains loadable. This
-        validator runs after every construction (including
-        ``model_validate_json``) and re-projects any dict entries to
-        the typed record class, so downstream consumers can always
-        ``isinstance(value, InvoiceReviewRecord)`` rather than pattern-
-        matching on raw-dict-or-record.
-        """
-        from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
-
-        coerced_invoice: dict[str, InvoiceReviewRecord | dict[str, object]] = {}
-        for key, value in self.invoice_reviews.items():
-            if isinstance(value, dict):
-                coerced_invoice[key] = InvoiceReviewRecord.model_validate(value)
-            else:
-                coerced_invoice[key] = value
-        coerced_ledger: dict[str, LedgerReviewRecord | dict[str, object]] = {}
-        for key, value in self.ledger_reviews.items():
-            if isinstance(value, dict):
-                coerced_ledger[key] = LedgerReviewRecord.model_validate(value)
-            else:
-                coerced_ledger[key] = value
-        if (
-            coerced_invoice == dict(self.invoice_reviews)
-            and coerced_ledger == dict(self.ledger_reviews)
-        ):
-            return self
-        # ``model_copy`` on a frozen model preserves immutability while
-        # producing the coerced view.
-        return self.model_copy(
-            update={"invoice_reviews": coerced_invoice, "ledger_reviews": coerced_ledger},
-        )
 
     def active_profile_record(self) -> UserProfileRecord | None:
         """Return the active :class:`UserProfileRecord` from its secure bucket.
@@ -247,12 +204,13 @@ def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
     that sets ``aeat_active_profile`` so rung one handles it without a
     fourth precedence rung.
 
-    The ``state`` argument is consulted as the third rung only while
-    the field migration is in flight; once every reader of
-    :attr:`WorkflowState.active_profile` adopts the resolver, the
-    field deletes and rung three disappears with it.
+    The ``state`` argument is accepted for source compatibility with
+    callers that still thread workflow state through; the resolver
+    consults Settings and the pointer file only and never reads the
+    state record.
     """
 
+    del state  # legacy parameter; resolution flows through Settings + pointer file
     from ...core.config import load_settings
     from ._bucket_pointer_io import read_pointer
 
@@ -263,11 +221,6 @@ def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
     pointer = read_pointer(settings.aeat_local_storage_root)
     if pointer is not None:
         return pointer.bucket_id
-    if state is not None and state.active_profile is not None:
-        bucket_pointer = state.profiles.get(state.active_profile)
-        if bucket_pointer is not None:
-            return bucket_pointer.bucket_id
-        return state.active_profile
     return None
 
 

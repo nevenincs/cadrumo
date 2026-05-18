@@ -142,9 +142,12 @@ def _root(
     if ctx.invoked_subcommand is None:
         if _app_import_error is not None:
             _emit_startup_import_error(_app_import_error)
+        from ...application.workflow._models import resolve_active_bucket_id
+
         workflow_state = workflow_state_repository().load()
-        landing = build_root_landing_report(workflow_state.active_profile)
-        if workflow_state.active_profile is None:
+        active = resolve_active_bucket_id(workflow_state)
+        landing = build_root_landing_report(active)
+        if active is None:
             _emit(ctx, landing, render_cli_root_landing_lines(landing))
             raise typer.Exit()
         overview_report = build_overview_status_report(state=workflow_state)

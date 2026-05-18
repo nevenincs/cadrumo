@@ -415,11 +415,11 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-123-envelope-developer-tax-id"
+id = "modelo-123-envelope-presenter-tax-id"
 offset = 101
 length = 9
 kind = "header"
-header_key = "developer_tax_id"
+header_key = "presenter_tax_id"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -1470,11 +1470,11 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2019-2023-v13"]
 
 [[revisions."2019-2023".export_layouts.records.fields]]
-id = "modelo-123-2019-envelope-developer-tax-id"
+id = "modelo-123-2019-envelope-presenter-tax-id"
 offset = 101
 length = 9
 kind = "header"
-header_key = "developer_tax_id"
+header_key = "presenter_tax_id"
 data_type = "text"
 required = false
 padding = "right_space"

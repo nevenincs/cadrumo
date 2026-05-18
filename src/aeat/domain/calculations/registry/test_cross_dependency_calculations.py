@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -27,33 +27,60 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
             if not revision.relations:
                 continue
             relation_ids = {relation.id for relation in revision.relations}
-            for filing_year in _revision_edge_years(revision):
-                for period in revision.period_selector.periods:
-                    active_relation_ids = {
-                        relation.id
-                        for relation in revision.relations
-                        if not relation.target_periods or period in relation.target_periods
-                    }
-                    if active_relation_ids != relation_ids:
-                        continue
-                    requirements = relation_source_requirements(
-                        revision,
-                        filing_year=filing_year,
-                        period=period,
-                    )
-                    observations = _observations_from_requirements(
-                        requirements,
-                        lambda _requirement, period_index: Decimal(period_index + 1),
-                    )
+            for filing_year, period in _full_relation_filing_year_periods(
+                revision=revision, relation_ids=relation_ids
+            ):
+                _assert_relations_resolve_from_observations(
+                    revision=revision,
+                    filing_year=filing_year,
+                    period=period,
+                    relation_ids=relation_ids,
+                    scope=f"{modelo.id}/{revision.id}/{filing_year}/{period}",
+                )
 
-                    resolved = resolve_relation_values_from_observations(
-                        revision,
-                        observations,
-                        filing_year=filing_year,
-                        period=period,
-                    )
 
-                    assert set(resolved) == relation_ids, f"{modelo.id}/{revision.id}/{filing_year}/{period}"
+def _full_relation_filing_year_periods(
+    *,
+    revision,  # type: ignore[no-untyped-def]
+    relation_ids: set[str],
+) -> Iterator[tuple[int, str]]:
+    """Yield ``(filing_year, period)`` pairs where every relation is active.
+
+    A relation is "active" for a period when it either has no
+    target_periods declared (matches every period) or lists the
+    period explicitly. The gate only exercises tuples where the
+    active set equals the full relation set so partial-coverage
+    periods do not pollute the resolution check.
+    """
+    for filing_year in _revision_edge_years(revision):
+        for period in revision.period_selector.periods:
+            active_relation_ids = {
+                relation.id
+                for relation in revision.relations
+                if not relation.target_periods or period in relation.target_periods
+            }
+            if active_relation_ids == relation_ids:
+                yield filing_year, period
+
+
+def _assert_relations_resolve_from_observations(
+    *,
+    revision,  # type: ignore[no-untyped-def]
+    filing_year: int,
+    period: str,
+    relation_ids: set[str],
+    scope: str,
+) -> None:
+    """Drive the relation-source -> observation -> resolution roundtrip and assert closure."""
+    requirements = relation_source_requirements(revision, filing_year=filing_year, period=period)
+    observations = _observations_from_requirements(
+        requirements,
+        lambda _requirement, period_index: Decimal(period_index + 1),
+    )
+    resolved = resolve_relation_values_from_observations(
+        revision, observations, filing_year=filing_year, period=period
+    )
+    assert set(resolved) == relation_ids, scope
 
 
 @pytest.mark.parametrize(

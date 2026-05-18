@@ -279,7 +279,7 @@ def test_modelo_369_workbook_parity_refs_resolve_to_official_record_design() -> 
         assert ref.formula_coverage == "record_design_layout"
         assert ref.runner_required is False
         assert source.evidence_tier == "layout_authority"
-        assert (PROJECT_ROOT / source.corpus_path).is_file()
+        assert (bundled_path() / source.corpus_path).is_file()
 
 
 def test_modelo_369_official_record_design_workbook_is_parseable() -> None:
@@ -288,7 +288,7 @@ def test_modelo_369_official_record_design_workbook_is_parseable() -> None:
 
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        sheets = extract_record_design(PROJECT_ROOT / source.corpus_path)
+        sheets = extract_record_design(bundled_path() / source.corpus_path)
     by_name = {sheet.name: sheet for sheet in sheets}
 
     assert len(sheets) == 14

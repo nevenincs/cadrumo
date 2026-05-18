@@ -60,8 +60,17 @@ class TestValidate:
 
     def test_validate_reports_missing_required_overrides(self) -> None:
         categories = tuple(ELIGIBLE_USAGE_RATIO_CATEGORIES)
-        if len(categories) < 2:
-            pytest.skip("requires at least two eligible categories")
+        # The eligible-ratio catalogue currently lists >= 2 entries; a
+        # future drop below that threshold should fail this test loudly
+        # rather than silently skip — the no-skip rule. If the
+        # catalogue ever shrinks to one or zero entries the test must
+        # be rewritten, not gated.
+        assert len(categories) >= 2, (
+            f"ELIGIBLE_USAGE_RATIO_CATEGORIES has {len(categories)} entries; "
+            "this test needs at least two and the production catalogue "
+            "is expected to satisfy that. Update the test if the "
+            "catalogue is intentionally shrinking."
+        )
         present, absent = categories[0], categories[1]
         profile = UsageRatioProfile(ratios={present: Decimal("0.30")})
         report = validate_ratios_profile(
@@ -89,8 +98,16 @@ class TestValidate:
 
     def test_validate_clean_when_all_required_categories_have_overrides(self) -> None:
         categories = tuple(ELIGIBLE_USAGE_RATIO_CATEGORIES)
-        if not categories:
-            pytest.skip("requires at least one eligible category")
+        # See sibling test rationale: silently skipping on an empty
+        # eligible-ratio catalogue would mask a real catalogue
+        # regression. The production catalogue ships with >= 2
+        # entries today; assert that loudly.
+        assert categories, (
+            "ELIGIBLE_USAGE_RATIO_CATEGORIES is empty; this test "
+            "requires at least one eligible category and the production "
+            "catalogue is expected to satisfy that. Update the test if "
+            "the catalogue is intentionally being emptied."
+        )
         required = categories[:2] if len(categories) >= 2 else categories[:1]
         profile = UsageRatioProfile(ratios={c: Decimal("0.50") for c in required})
         report = validate_ratios_profile(

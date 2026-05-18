@@ -433,51 +433,61 @@ def _evaluate_if_then_else(expression: FormulaExpression, ctx: _EvalContext) -> 
     return _evaluate_with_ctx(selected_branch, ctx)
 
 
+_COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
+_UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"})
+
+
 def _evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
     """Dispatch an N-arg arithmetic / comparison op once every arg has been evaluated."""
-    if op in {"add", "sum"}:
+    if op in {"add", "sum", "previous_period_sum"}:
+        if op == "previous_period_sum":
+            _require_non_empty(op, args)
         return sum(args, _ZERO)
-    if op == "subtract":
-        _require_arg_count(op, args, 2)
-        return args[0] - args[1]
-    if op == "multiply":
-        result = _ONE
-        for arg in args:
-            result *= arg
-        return result
-    if op == "divide":
-        _require_arg_count(op, args, 2)
-        if args[1] == _ZERO:
-            raise RegistryValidationError(
-                "formula expression divides by zero",
-                translated_message="errors.calc.divide_by_zero",
-            )
-        return args[0] / args[1]
-    if op == "percent":
-        _require_arg_count(op, args, 2)
-        return args[0] * args[1] / Decimal("100")
-    if op in {"less_than", "less_equal", "greater_than", "greater_equal", "equal"}:
+    if op in _COMPARISON_OPS:
         _require_arg_count(op, args, 2)
         return _ONE if _compare(op, args[0], args[1]) else _ZERO
-    if op == "min":
-        _require_non_empty(op, args)
-        return min(args)
-    if op == "max":
-        _require_non_empty(op, args)
-        return max(args)
-    if op == "clamp":
-        _require_arg_count(op, args, 3)
-        return max(args[1], min(args[0], args[2]))
-    if op == "negate":
-        _require_arg_count(op, args, 1)
-        return -args[0]
-    if op in {"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"}:
+    if op in _UNARY_PASSTHROUGH_OPS:
         _require_arg_count(op, args, 1)
         return args[0]
-    if op == "previous_period_sum":
-        _require_non_empty(op, args)
-        return sum(args, _ZERO)
-    raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
+    return _dispatch_named_arithmetic_op(op, args)
+
+
+def _dispatch_named_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
+    """Dispatch the per-name arithmetic ops (subtract / multiply / divide / percent / min / max / clamp / negate)."""
+    match op:
+        case "subtract":
+            _require_arg_count(op, args, 2)
+            return args[0] - args[1]
+        case "multiply":
+            result = _ONE
+            for arg in args:
+                result *= arg
+            return result
+        case "divide":
+            _require_arg_count(op, args, 2)
+            if args[1] == _ZERO:
+                raise RegistryValidationError(
+                    "formula expression divides by zero",
+                    translated_message="errors.calc.divide_by_zero",
+                )
+            return args[0] / args[1]
+        case "percent":
+            _require_arg_count(op, args, 2)
+            return args[0] * args[1] / Decimal("100")
+        case "min":
+            _require_non_empty(op, args)
+            return min(args)
+        case "max":
+            _require_non_empty(op, args)
+            return max(args)
+        case "clamp":
+            _require_arg_count(op, args, 3)
+            return max(args[1], min(args[0], args[2]))
+        case "negate":
+            _require_arg_count(op, args, 1)
+            return -args[0]
+        case _:
+            raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
 
 
 def _evaluate_leaf(

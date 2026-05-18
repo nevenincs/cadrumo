@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from pathlib import Path
-from typing import NamedTuple, cast
+from typing import NamedTuple, get_args
 
 from pydantic import BaseModel, ConfigDict
 
@@ -241,13 +241,36 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
     )
 
 
+def _typed_oracle_environment(environment: str) -> OracleEnvironment:
+    """Validate ``environment`` against :data:`OracleEnvironment` literally.
+
+    Replaces the previous ``cast(OracleEnvironment, environment)``
+    pattern after an untyped string check. The match statement
+    returns each Literal arm verbatim so pyrefly narrows the return
+    type exactly — no cast, no type-ignore escape. A future
+    expansion of the Literal forces an explicit case here, surfacing
+    the contract change at the validator rather than letting the
+    cast silently widen.
+    """
+
+    match environment:
+        case "production":
+            return "production"
+        case "test_environment":
+            return "test_environment"
+        case "both":
+            return "both"
+        case _:
+            raise RegistryApplicationInputError(
+                f"environment must be one of {sorted(get_args(OracleEnvironment))!r}; "
+                f"got {environment!r}"
+            )
+
+
 def audit_registry_oracles(registry_root: Path, *, environment: str) -> RegistryOracleAuditReport:
     """Audit registered live-parity oracles against every registry cross-reference."""
 
-    if environment not in {"production", "test_environment", "both"}:
-        raise RegistryApplicationInputError(
-            f"environment must be 'production', 'test_environment', or 'both'; got {environment!r}"
-        )
+    typed_environment = _typed_oracle_environment(environment)
     modelos, _catalogues = load_registry_tree(registry_root)
     oracle_catalogue = LiveParityCatalogue()
     oracle_catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
@@ -255,7 +278,7 @@ def audit_registry_oracles(registry_root: Path, *, environment: str) -> Registry
     failures = audit_registry_oracle_bindings(
         modelos,
         oracle_catalogue,
-        environment=cast(OracleEnvironment, environment),
+        environment=typed_environment,
     )
     applicability_declarations = collect_applicability_declarations(modelos)
     orphan_oracle_ids = collect_orphan_oracle_ids(modelos, oracle_catalogue)

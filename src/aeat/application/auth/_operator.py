@@ -20,6 +20,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 if TYPE_CHECKING:
     from ..workflow._models import WorkflowState
+    from ..workflow._persistence import WorkflowStateRepository
 
 
 class AuthProviderReservedError(ValueError):
@@ -235,49 +236,107 @@ def clear_operator_auth(
         removed_sessions = delete_persisted_session(resolved_settings, kind=None if all_providers else provider_kind)
         session_event_count = len(removed_sessions)
 
-    cleared_locks = 0
-    if locks or all_providers:
-        lock_kinds = list(AuthProviderKind) if all_providers or provider_kind is None else [provider_kind]
-        for kind in lock_kinds:
-            status = clear_auth_acquisition_lock(resolved_settings, kind, reason="operator-clear")
-            if status.state.value != "absent":
-                cleared_locks += 1
+    cleared_locks = _clear_acquisition_locks(
+        resolved_settings,
+        provider_kind=provider_kind,
+        all_providers=all_providers,
+        locks_requested=locks,
+    )
 
     from ..workflow._persistence import workflow_state_repository
 
     repository = workflow_state_repository()
-    state = repository.load()
-    current_provider = state.auth.provider
+    current_provider = repository.load().auth.provider
     should_clear_workflow_state = provider_kind is None or all_providers or current_provider == provider_kind.value
-    if should_clear_workflow_state:
-        event_object = current_provider or (provider_kind.value if provider_kind is not None else "all")
-        repository.update(
-            lambda current: _append_bucket_events(
-                current.model_copy(update={"auth": AuthState()}),
-                (
-                    ("auth.provider.cleared", event_object),
-                    *(() if session_event_count == 0 else (("auth.session.cleared", event_object),)),
-                    *(() if cleared_locks == 0 else (("auth.lock.cleared", event_object),)),
-                ),
-            )
-        )
-    elif session_event_count or cleared_locks:
-        event_object = provider_kind.value if provider_kind is not None else "all"
-        repository.update(
-            lambda current: _append_bucket_events(
-                current,
-                (
-                    *(() if session_event_count == 0 else (("auth.session.cleared", event_object),)),
-                    *(() if cleared_locks == 0 else (("auth.lock.cleared", event_object),)),
-                ),
-            )
-        )
+    _apply_auth_clear_to_repository(
+        repository=repository,
+        provider_kind=provider_kind,
+        current_provider=current_provider,
+        should_clear_workflow_state=should_clear_workflow_state,
+        session_event_count=session_event_count,
+        cleared_locks=cleared_locks,
+    )
 
     return AuthClearResult(
         removed_sessions=len(removed_sessions),
         cleared_workflow_state=should_clear_workflow_state,
         cleared_locks=cleared_locks,
     )
+
+
+def _clear_acquisition_locks(
+    settings: Settings,
+    *,
+    provider_kind: AuthProviderKind | None,
+    all_providers: bool,
+    locks_requested: bool,
+) -> int:
+    """Clear acquisition locks for the targeted provider(s) and return the cleared count.
+
+    With ``locks_requested`` or ``all_providers`` set, the target lock
+    kinds are every provider (if ``all_providers`` or no specific
+    ``provider_kind`` was supplied) or the single requested kind. A
+    lock that was already absent does not count toward the cleared
+    total.
+    """
+    if not (locks_requested or all_providers):
+        return 0
+    lock_kinds = list(AuthProviderKind) if all_providers or provider_kind is None else [provider_kind]
+    cleared = 0
+    for kind in lock_kinds:
+        status = clear_auth_acquisition_lock(settings, kind, reason="operator-clear")
+        if status.state.value != "absent":
+            cleared += 1
+    return cleared
+
+
+def _apply_auth_clear_to_repository(
+    *,
+    repository: WorkflowStateRepository,
+    provider_kind: AuthProviderKind | None,
+    current_provider: str | None,
+    should_clear_workflow_state: bool,
+    session_event_count: int,
+    cleared_locks: int,
+) -> None:
+    """Apply the operator-clear transition to the workflow-state repository.
+
+    When ``should_clear_workflow_state`` is set, the auth state is
+    reset and a ``auth.provider.cleared`` event is appended; the
+    session-cleared and lock-cleared events are appended whenever
+    their counters are non-zero. When the workflow state is left
+    untouched, only the non-zero session / lock events are emitted —
+    and only if at least one was actually performed.
+    """
+    if should_clear_workflow_state:
+        event_object = current_provider or (provider_kind.value if provider_kind is not None else "all")
+        events = (
+            ("auth.provider.cleared", event_object),
+            *_optional_clear_events(event_object, session_event_count, cleared_locks),
+        )
+        repository.update(
+            lambda current: _append_bucket_events(current.model_copy(update={"auth": AuthState()}), events)
+        )
+        return
+    if not (session_event_count or cleared_locks):
+        return
+    event_object = provider_kind.value if provider_kind is not None else "all"
+    events = _optional_clear_events(event_object, session_event_count, cleared_locks)
+    repository.update(lambda current: _append_bucket_events(current, events))
+
+
+def _optional_clear_events(
+    event_object: str,
+    session_event_count: int,
+    cleared_locks: int,
+) -> tuple[tuple[str, str], ...]:
+    """Build the variable-length tail of clear events keyed on non-zero counters."""
+    events: list[tuple[str, str]] = []
+    if session_event_count:
+        events.append(("auth.session.cleared", event_object))
+    if cleared_locks:
+        events.append(("auth.lock.cleared", event_object))
+    return tuple(events)
 
 
 def _implemented_provider(provider: str) -> AuthProviderListing:

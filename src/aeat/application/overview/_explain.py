@@ -16,9 +16,19 @@ never contacts AEAT.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+
+_ProfileFactValue = str | bool | int
+"""Closed value type for the explain payload's ``profile_facts`` map.
+
+The deadline-engine-relevant fields surfaced through
+:func:`_extract_profile_facts` are all JSON-serialisable scalars:
+booleans (most applicability gates), strings (tax_id, enum values
+coerced via ``.value``), and integers (numeric thresholds). Widening
+this union is a contract change; keep it tight so the boundary
+remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
+"""
 
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.deadlines._errors import DeadlineValidationError, ScheduleComputationError
@@ -50,7 +60,7 @@ class OverviewExplain(BaseModel):
     year: int = Field(ge=1990, le=2200)
     applicable: bool
     rationale: str = Field(min_length=1)
-    profile_facts: dict[str, Any] = Field(default_factory=dict)
+    profile_facts: dict[str, _ProfileFactValue] = Field(default_factory=dict)
     generated_at: datetime
 
 
@@ -69,7 +79,7 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
 )
 
 
-def _extract_profile_facts(profile: AutonomoProfile) -> dict[str, Any]:
+def _extract_profile_facts(profile: AutonomoProfile) -> dict[str, _ProfileFactValue]:
     """Return the deadline-engine-consumed fields as a plain dict.
 
     The deadline engine's applicability conditions are written against
@@ -78,7 +88,7 @@ def _extract_profile_facts(profile: AutonomoProfile) -> dict[str, Any]:
     re-derive the engine's introspection.
     """
 
-    facts: dict[str, Any] = {}
+    facts: dict[str, _ProfileFactValue] = {}
     for field_name in _DEADLINE_RELEVANT_FIELDS:
         if not hasattr(profile, field_name):
             continue

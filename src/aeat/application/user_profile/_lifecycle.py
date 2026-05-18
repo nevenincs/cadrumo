@@ -41,6 +41,7 @@ from . import (
     ProfileValidationSeverity,
     RegisterProfileCommand,
     RemoveProfileCommand,
+    RenameProfileCommand,
 )
 from ._repository import UserProfileLifecycleRepository
 from ._validation import ProfileValidationService
@@ -184,6 +185,55 @@ class ProfileLifecycleService:
         )
         return ProfileLifecycleResult(profile=tombstoned, applied_at=tombstoned.updated_at)
 
+    def rename(self, command: RenameProfileCommand) -> ProfileLifecycleResult:
+        """Rename a live profile in place.
+
+        Reads the source record, saves it under the target id with the
+        optional new display name, and deletes the old secure-object
+        key in the same call. Refuses if the target id is already in
+        use or the source is tombstoned. Emits ``PROFILE_RENAMED``
+        with the source-id payload so the audit trail records the
+        rename rather than a delete-plus-create pair.
+
+        The orchestration layer is responsible for the parallel
+        rename of `WorkflowState.profiles` keys and the plaintext
+        active-profile pointer file if the renamed profile is active;
+        the service contract is record-only.
+        """
+
+        if command.source_profile_id == command.target_profile_id:
+            return ProfileLifecycleResult(
+                profile=self._repository.load(command.source_profile_id),
+                applied_at=utc_now(),
+            )
+        if self._repository.exists(command.target_profile_id):
+            raise ProfileAlreadyExistsError(
+                f"profile {command.target_profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
+            )
+        source = self._repository.load(command.source_profile_id)
+        if source.status is not UserProfileStatus.ACTIVE:
+            raise ProfileNotFoundError(
+                f"source profile {command.source_profile_id!r} is tombstoned; cannot rename",
+            )
+        now = utc_now()
+        target_display_name = command.target_display_name or source.display_name
+        target = source.model_copy(
+            update={
+                "profile_id": command.target_profile_id,
+                "display_name": target_display_name,
+                "updated_at": now,
+            }
+        )
+        self._repository.save(target)
+        self._repository.delete(command.source_profile_id)
+        self._emit_event(
+            event_type=BucketEventType.PROFILE_RENAMED,
+            object_id=target.profile_id,
+            occurred_at=now,
+            payload={"source_profile_id": source.profile_id},
+        )
+        return ProfileLifecycleResult(profile=target, applied_at=now)
+
     def duplicate(self, command: DuplicateProfileCommand) -> ProfileLifecycleResult:
         """Copy an existing live profile under a new id and display name."""
 
@@ -280,19 +330,15 @@ class ProfileLifecycleService:
         self._events.save(append_bucket_event(self._events.load(), event))
 
     def _iter_profiles(self) -> Iterable[UserProfileRecord]:
-        # Listing requires walking the secure-object backend by namespace.
-        # The repository's underlying SecureObjectRepository supports list_records.
-        objects = self._repository._objects
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ._repository import USER_PROFILE_VALUE_NAMESPACE
+        """Yield every live profile record by delegating to the repository.
 
-        for raw in objects.list_records(
-            USER_PROFILE_VALUE_NAMESPACE,
-            expected_class=SensitivityClass.IDENTITY,
-            max_supported_version=1,
-        ):
-            envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
-            yield envelope.payload
+        Walking the secure-object index lives on
+        :class:`UserProfileLifecycleRepository.iter_records` so the
+        service consumes a public surface instead of reaching for the
+        repository's private secure-object reference.
+        """
+
+        return self._repository.iter_records()
 
 
 __all__ = ["ProfileLifecycleService"]

@@ -64,16 +64,18 @@ def _state() -> WorkflowState:
 
 def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
     """Return (state, active_profile_name) or exit code 2 with a typed payload."""
+    from ...application.workflow._models import resolve_active_bucket_id
+
     current = _state()
-    if current.active_profile is None:
+    active = resolve_active_bucket_id(current)
+    if active is None:
         _emit(
             ctx,
             {"error": "no-active-profile", "next": "aeat config init --profile NAME"},
             ["error\tno-active-profile", "next\taeat config init --profile NAME"],
         )
         _exit(2)
-    assert current.active_profile is not None
-    return current, current.active_profile
+    return current, active
 
 
 def _description_for(entry: AuthProviderListing | ProfileKey) -> str:

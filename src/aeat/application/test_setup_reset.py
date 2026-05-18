@@ -143,7 +143,6 @@ def test_reset_profile_deletes_bucket_id_when_profile_key_differs(
     workflow_state_repository().save(
         WorkflowState.model_validate(
             {
-                "active_profile": "alias",
                 "profiles": {"alias": {"bucket_id": "actual-bucket"}},
             }
         )

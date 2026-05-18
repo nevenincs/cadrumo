@@ -20,6 +20,7 @@ from ....application.diagnostics import (
 from ....application.operator_surface import build_help_document, render_help_text
 from ....application.wizard._catalogue import SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command
+from ....application.workflow._models import resolve_active_bucket_id
 from ....core.logging import default_log_file_path
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
@@ -200,50 +201,6 @@ def repair_integrity(
     _emit(ctx, payload, lines)
 
 
-@repair_app.command(
-    "list",
-    help=tr(
-        "cli.config.repair.list_help",
-        default="List secure-object keys stored under one namespace.",
-    ),
-)
-def repair_list(
-    ctx: typer.Context,
-    namespace: str = typer.Argument(
-        ..., help=tr("cli.config.repair.list_namespace_help", default="Namespace to inventory.")
-    ),
-    include_all: bool = typer.Option(
-        False, "--all", help=tr("cli.config.repair.list_all_help", default="Return every key, including unreadable.")
-    ),
-    only_unreadable: bool = typer.Option(
-        False,
-        "--unreadable",
-        help=tr("cli.config.repair.list_unreadable_help", default="Restrict to undecryptable rows."),
-    ),
-) -> None:
-    """Wrap build_repair_list_report and render through _emit."""
-
-    from ....application.repair_integrity import build_repair_list_report
-
-    if include_all and only_unreadable:
-        raise CliRefusedBoundaryError(
-            tr(
-                "cli.config.repair.list_conflicting_flags",
-                default="--all and --unreadable cannot be combined; pass one or neither.",
-            )
-        )
-    report = build_repair_list_report(
-        namespace=namespace,
-        include_all=include_all,
-        only_unreadable=only_unreadable,
-    )
-    payload = report.model_dump(mode="json")
-    lines = [f"namespace\t{namespace}", f"count\t{len(report.rows)}"]
-    for row in report.rows:
-        lines.append(f"{row.namespace}\t{row.object_key_digest}")
-    _emit(ctx, payload, lines)
-
-
 @repair_app.command("connectivity", help=tr("cli.config.repair.connectivity_help"))
 def repair_connectivity(
     ctx: typer.Context,
@@ -287,13 +244,13 @@ def config_list(ctx: typer.Context) -> None:
     record = state.active_profile_record()
     values = record_to_path_values(record)
     payload = {
-        "active_profile": state.active_profile,
+        "active_profile": resolve_active_bucket_id(),
         "keys": [
             {"key": entry.key, "requirement": entry.requirement.value, "value": values.get(entry.key, "")}
             for entry in PROFILE_KEYS
         ],
     }
-    lines = [f"profile\t{state.active_profile or ''}"]
+    lines = [f"profile\t{resolve_active_bucket_id() or ''}"]
     for entry in PROFILE_KEYS:
         rendered_value = values.get(entry.key, "")
         lines.append(f"{entry.key}\t{entry.requirement.value}\t{rendered_value or '<unset>'}")
@@ -361,8 +318,7 @@ def config_set(
             raise CliRefusedBoundaryError(message) from exc
 
     repository = _profile_state()
-    state = repository.load()
-    if state.active_profile is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     fact = UserProfileFact(path=canonical_key, value=value)
     updated = repository.update(lambda current: set_active_field(current, fact))
@@ -385,8 +341,7 @@ def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli
     except KeyError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
     repository = _profile_state()
-    state = repository.load()
-    if state.active_profile is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     fact = UserProfileFact(path=key, value=None)
     repository.update(lambda current: set_active_field(current, fact))
@@ -404,16 +359,17 @@ def config_profile_validate(ctx: typer.Context) -> None:
     from ....domain.user_profile import ProfileNotFoundError
 
     state = _profile_state().load()
-    if state.active_profile is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(state.active_profile)
+    pointer = state.profiles.get(resolve_active_bucket_id() or "")
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(state.active_profile)
+        record = service.read(resolve_active_bucket_id() or "")
     except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=state.active_profile)) from exc
+        active = resolve_active_bucket_id() or ""
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=active)) from exc
     report = service._validator.validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     payload = report.model_dump(mode="json")
@@ -458,16 +414,17 @@ def config_profile_preflight(
     from ....domain.user_profile import ProfileNotFoundError
 
     state = _profile_state().load()
-    if state.active_profile is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(state.active_profile)
+    pointer = state.profiles.get(resolve_active_bucket_id() or "")
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(state.active_profile)
+        record = service.read(resolve_active_bucket_id() or "")
     except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=state.active_profile)) from exc
+        active = resolve_active_bucket_id() or ""
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=active)) from exc
     preflight = ProfilePreflightService(schema=_shared_schema())
     report = preflight.report(
         record=record,
@@ -491,10 +448,10 @@ def config_profile_preflight(
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("use", help=tr("cli.config.profile.use_help"))
-def config_profile_use(
+@profile_app.command("switch", help=tr("cli.config.profile.switch_help"))
+def config_profile_switch(
     ctx: typer.Context,
-    name: str = typer.Argument(..., help=tr("cli.config.profile.use_name_help")),
+    name: str = typer.Argument(..., help=tr("cli.config.profile.switch_name_help")),
 ) -> None:
     """Select an existing profile as the active profile."""
 
@@ -506,11 +463,12 @@ def config_profile_use(
         updated = repository.update(lambda current: select_profile(current, profile_id=name))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    _emit_profile_activated_event(profile_id=name, active_profile=updated.active_profile)
+    active = resolve_active_bucket_id(updated)
+    _emit_profile_activated_event(profile_id=name, active_profile=active)
     _emit(
         ctx,
-        {"active_profile": updated.active_profile},
-        (f"active_profile\t{updated.active_profile or ''}",),
+        {"active_profile": active},
+        (f"active_profile\t{active or ''}",),
     )
 
 
@@ -570,7 +528,7 @@ def _emit_profile_activated_event(*, profile_id: str, active_profile: str | None
     )
 
 
-@profile_app.command("view", help=tr("cli.config.profile.view_help"))
+@profile_app.command("show", help=tr("cli.config.profile.show_help"))
 def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
@@ -582,7 +540,7 @@ def config_profile_show(
     from ....domain.user_profile import ProfileNotFoundError
 
     state = _profile_state().load()
-    target = name or state.active_profile
+    target = name or resolve_active_bucket_id(state)
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     pointer = state.profiles.get(target)
@@ -609,20 +567,23 @@ def config_profile_show(
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("remove", help=tr("cli.config.profile.remove_help"))
-def config_profile_remove(
+@profile_app.command("delete", help=tr("cli.config.profile.delete_help"))
+def config_profile_delete(
     ctx: typer.Context,
-    name: str = typer.Argument(..., help=tr("cli.config.profile.remove_name_help")),
-    confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.remove_yes_help")),
+    name: str = typer.Argument(..., help=tr("cli.config.profile.delete_name_help")),
+    confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.delete_yes_help")),
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
 
     from ....application.user_profile import RemoveProfileCommand
-    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.user_profile._orchestration import (
+        _clear_active_profile_pointer,
+        build_lifecycle_service,
+    )
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.remove_requires_yes", name=name))
+        raise CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
     repository = _profile_state()
     state = repository.load()
     pointer = state.profiles.get(name)
@@ -633,10 +594,8 @@ def config_profile_remove(
         result = service.remove(RemoveProfileCommand(profile_id=name))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    if state.active_profile == name:
-        from ....application.workflow._utils import utc_now
-
-        repository.update(lambda current: current.model_copy(update={"active_profile": None, "updated_at": utc_now()}))
+    if resolve_active_bucket_id() == name:
+        _clear_active_profile_pointer()
     _emit(
         ctx,
         {"profile_id": result.profile.profile_id, "status": result.profile.status.value},
@@ -709,6 +668,239 @@ _config_init_callback = app.command(
 )(_wizard_init_command)
 
 
+# Re-runs the wizard against the same backend so an operator can update
+# an existing profile interactively. The wizard's persist_answers path
+# detects an existing pointer and calls `set_active_fields` rather than
+# `register_active_profile`; the same closure powers both "create" and
+# "edit" semantics with the chosen `--profile NAME` deciding which side
+# of the branch runs.
+_config_profile_edit_callback = profile_app.command(
+    "edit",
+    help=tr(
+        "cli.config.profile.edit_help",
+        default="Re-run the wizard against an existing profile; updates values in place.",
+    ),
+)(_wizard_init_command)
+
+
+@profile_app.command(
+    "rename",
+    help=tr(
+        "cli.config.profile.rename_help",
+        default="Rename a profile in place. The active-profile pointer follows automatically.",
+    ),
+)
+def config_profile_rename(
+    ctx: typer.Context,
+    source: str = typer.Argument(
+        ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
+    ),
+    target: str = typer.Argument(
+        ..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")
+    ),
+    display_name: str | None = typer.Option(
+        None,
+        "--display-name",
+        help=tr(
+            "cli.config.profile.rename_display_name_help",
+            default="Operator-visible label; defaults to the existing display name.",
+        ),
+    ),
+) -> None:
+    """Rename a profile by source NAME to target NEW NAME."""
+
+    from ....application.user_profile import RenameProfileCommand
+    from ....application.user_profile._orchestration import (
+        _write_active_profile_pointer,
+        build_lifecycle_service,
+    )
+    from ....application.workflow._models import ProfileBucketPointer
+    from ....application.workflow._utils import utc_now
+    from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
+
+    repository = _profile_state()
+    state = repository.load()
+    pointer = state.profiles.get(source)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
+    if target != source and target in state.profiles:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        result = service.rename(
+            RenameProfileCommand(
+                source_profile_id=source,
+                target_profile_id=target,
+                target_display_name=display_name,
+            )
+        )
+    except ProfileAlreadyExistsError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
+
+    was_active = resolve_active_bucket_id() == source
+
+    def _swap_pointer(current):
+        profiles = dict(current.profiles)
+        profiles.pop(source, None)
+        profiles[target] = ProfileBucketPointer(bucket_id=pointer.bucket_id)
+        return current.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
+
+    repository.update(_swap_pointer)
+    if was_active:
+        _write_active_profile_pointer(target)
+    _emit(
+        ctx,
+        {
+            "source_profile_id": source,
+            "target_profile_id": result.profile.profile_id,
+            "display_name": result.profile.display_name,
+        },
+        (
+            f"source_profile_id\t{source}",
+            f"target_profile_id\t{result.profile.profile_id}",
+            f"display_name\t{result.profile.display_name}",
+        ),
+    )
+
+
+@profile_app.command(
+    "export",
+    help=tr(
+        "cli.config.profile.export_help",
+        default="Write a portable profile bundle to PATH.",
+    ),
+)
+def config_profile_export(
+    ctx: typer.Context,
+    name: str | None = typer.Argument(
+        None,
+        help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
+    ),
+    out: Path = typer.Option(
+        ...,
+        "--to",
+        help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
+    ),
+) -> None:
+    """Serialize a profile bundle to a JSON file."""
+
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....domain.user_profile import ProfileNotFoundError
+
+    state = _profile_state().load()
+    target = name or resolve_active_bucket_id(state)
+    if target is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    pointer = state.profiles.get(target)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        bundle = service.export(target)
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target)) from exc
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
+    _emit(
+        ctx,
+        {"profile_id": target, "out": str(out), "schema_version": bundle.bundle_schema_version},
+        (
+            f"profile_id\t{target}",
+            f"out\t{out}",
+            f"schema_version\t{bundle.bundle_schema_version}",
+        ),
+    )
+
+
+@profile_app.command(
+    "import",
+    help=tr(
+        "cli.config.profile.import_help",
+        default="Register a portable profile bundle from PATH into the active bucket.",
+    ),
+)
+def config_profile_import(
+    ctx: typer.Context,
+    path: Path = typer.Argument(
+        ..., help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle.")
+    ),
+) -> None:
+    """Read a portable profile bundle from a JSON file and register it."""
+
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.workflow._models import ProfileBucketPointer
+    from ....application.workflow._utils import utc_now
+    from ....domain.user_profile import ProfileAlreadyExistsError, UserProfilePortableExport
+
+    if not path.is_file():
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.profile.import_missing_bundle",
+                default=f"bundle path not found: {path}",
+                path=str(path),
+            )
+        )
+    bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
+    target_id = bundle.profile.profile_id
+    repository = _profile_state()
+    state = repository.load()
+    if target_id in state.profiles:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id))
+    active_bucket = resolve_active_bucket_id(state)
+    if active_bucket is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    bucket_pointer = state.profiles.get(active_bucket)
+    bucket_id = bucket_pointer.bucket_id if bucket_pointer is not None else active_bucket
+    service = build_lifecycle_service(bucket_id=bucket_id)
+    try:
+        result = service.import_archive(bundle)
+    except ProfileAlreadyExistsError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id)) from exc
+
+    def _register(current):
+        profiles = dict(current.profiles)
+        profiles[target_id] = ProfileBucketPointer(bucket_id=bucket_id)
+        return current.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
+
+    repository.update(_register)
+    _emit(
+        ctx,
+        {
+            "profile_id": result.profile.profile_id,
+            "display_name": result.profile.display_name,
+            "schema_version": bundle.bundle_schema_version,
+        },
+        (
+            f"profile_id\t{result.profile.profile_id}",
+            f"display_name\t{result.profile.display_name}",
+            f"schema_version\t{bundle.bundle_schema_version}",
+        ),
+    )
+
+
+@profile_app.command(
+    "logout",
+    help=tr(
+        "cli.config.profile.logout_help",
+        default="Sign out of the active profile by clearing the pointer file.",
+    ),
+)
+def config_profile_logout(ctx: typer.Context) -> None:
+    """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
+
+    from ....application.user_profile._orchestration import _clear_active_profile_pointer
+
+    before = resolve_active_bucket_id()
+    _clear_active_profile_pointer()
+    _emit(
+        ctx,
+        {"logged_out_profile": before or "", "active_profile": None},
+        (f"logged_out_profile\t{before or '<none>'}",),
+    )
+
+
 @profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(ctx: typer.Context) -> None:
     """Show the readiness of the current configuration profile."""
@@ -725,7 +917,7 @@ def config_status(ctx: typer.Context) -> None:
     values = record_to_path_values(record)
     if not values.get("identity.tax_id") or not values.get("activities.description"):
         payload = {
-            "active_profile": state.active_profile,
+            "active_profile": resolve_active_bucket_id(),
             "tax_id_present": bool(values.get("identity.tax_id")),
             "activity_present": bool(values.get("activities.description")),
             "configured": False,
@@ -736,7 +928,7 @@ def config_status(ctx: typer.Context) -> None:
         projection = project_answers(SETUP_FLOW, values)
     except ValidationError:
         payload = {
-            "active_profile": state.active_profile,
+            "active_profile": resolve_active_bucket_id(),
             "tax_id_present": bool(values.get("identity.tax_id")),
             "activity_present": bool(values.get("activities.description")),
             "configured": False,
@@ -744,7 +936,7 @@ def config_status(ctx: typer.Context) -> None:
         _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
         return
     payload = {
-        "active_profile": state.active_profile,
+        "active_profile": resolve_active_bucket_id(),
         "tax_id_present": bool(values.get("identity.tax_id")),
         "activity_present": bool(values.get("activities.description")),
         "iva_regime": values.get("iva.regime", ""),
@@ -755,7 +947,7 @@ def config_status(ctx: typer.Context) -> None:
         ctx,
         payload,
         (
-            f"profile\t{state.active_profile or ''}",
+            f"profile\t{resolve_active_bucket_id() or ''}",
             f"identity.tax_id\t{values.get('identity.tax_id', '<unset>')}",
             f"activities.description\t{values.get('activities.description', '<unset>')}",
             f"iva.regime\t{values.get('iva.regime', '<unset>')}",
@@ -935,10 +1127,10 @@ def apoderado_status(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    if not state.active_profile:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[state.active_profile]
+    pointer = state.profiles[resolve_active_bucket_id() or ""]
     svc = ApoderadoService()
     result = svc.status(bucket_id=pointer.bucket_id)
 
@@ -974,10 +1166,10 @@ def apoderado_configure(
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    if not state.active_profile:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[state.active_profile]
+    pointer = state.profiles[resolve_active_bucket_id() or ""]
     svc = ApoderadoService()
     result = svc.configure(
         bucket_id=pointer.bucket_id,
@@ -1002,10 +1194,10 @@ def apoderado_clear(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    if not state.active_profile:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[state.active_profile]
+    pointer = state.profiles[resolve_active_bucket_id() or ""]
     svc = ApoderadoService()
     cleared = svc.clear(bucket_id=pointer.bucket_id)
 
@@ -1023,10 +1215,10 @@ def apoderado_check(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    if not state.active_profile:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[state.active_profile]
+    pointer = state.profiles[resolve_active_bucket_id() or ""]
     svc = ApoderadoService()
 
     try:

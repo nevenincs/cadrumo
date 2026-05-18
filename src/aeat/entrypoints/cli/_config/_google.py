@@ -27,9 +27,17 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Callable
 
 import typer
 from pydantic import ValidationError
+
+if TYPE_CHECKING:
+    from ....adapters.outbound.google._calc_sheets_pull import PullResult, RowSetEdit
+    from ....domain.calculations.registry._formula_runtime import (
+        RegistryCalculationResult,
+    )
+    from ....domain.calculations.registry._schema import RegistrySnapshot
 
 from ....adapters.outbound.google import (
     GoogleAuthClientNotRegisteredError,
@@ -149,12 +157,11 @@ def google_register(
         dir_okay=False,
         readable=True,
     ),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Register a Cloud Console Desktop OAuth client for the active profile."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
         client = _coerce_client_json(client_json)
         save_client(active, client)
     except GoogleAuthError as exc:
@@ -181,7 +188,6 @@ def google_register(
 @google_app.command("login", help=tr("cli.config.google.login_help"))
 def google_login(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
     refresh_only: bool = typer.Option(
         False,
         "--refresh-only",
@@ -191,7 +197,7 @@ def google_login(
     """Run the loopback IP + PKCE consent flow (or refresh an existing credential)."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
         client = load_client(active)
         if client is None:
             raise GoogleAuthClientNotRegisteredError(
@@ -253,12 +259,11 @@ def google_login(
 @google_app.command("status", help=tr("cli.config.google.status_help"))
 def google_status(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Report the current Google OAuth session state for the active profile."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -300,7 +305,6 @@ def google_status(
 @google_app.command("logout", help=tr("cli.config.google.logout_help"))
 def google_logout(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Clear the refresh token + metadata for the active profile.
 
@@ -310,7 +314,7 @@ def google_logout(
     """
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -346,12 +350,11 @@ folder_app = typer.Typer(
 def google_folder_set(
     ctx: typer.Context,
     folder_id: str = typer.Argument(..., help=tr("cli.config.google.folder.folder_id_help")),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Persist the Drive root folder id under the active profile."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -376,12 +379,11 @@ def google_folder_set(
 @folder_app.command("get", help=tr("cli.config.google.folder.get_help"))
 def google_folder_get(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Show the persisted Drive root folder id for the active profile."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -417,7 +419,6 @@ sync_app = typer.Typer(
 @sync_app.command("probe", help=tr("cli.config.google.sync.probe_help"))
 def google_sync_probe(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
     read_only: bool = typer.Option(
         False,
         "--read-only/--no-read-only",
@@ -433,7 +434,7 @@ def google_sync_probe(
     """
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -447,7 +448,7 @@ def google_sync_probe(
     drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
 
     try:
-        provider = get_storage_provider(profile_override=active, settings=drive_settings)
+        provider = get_storage_provider(settings=drive_settings)
         report = provider.probe(read_only=read_only)
     except (GoogleAuthError, StorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
@@ -516,7 +517,6 @@ def _label_for(namespace: str) -> str:
 @sync_app.command("push", help=tr("cli.config.google.sync.push_help"))
 def google_sync_push(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
     namespace_filter: str | None = typer.Option(
         None,
         "--namespace",
@@ -544,7 +544,7 @@ def google_sync_push(
     """
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -552,7 +552,7 @@ def google_sync_push(
     drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
 
     try:
-        provider = get_storage_provider(profile_override=active, settings=drive_settings)
+        provider = get_storage_provider(settings=drive_settings)
     except (GoogleAuthError, StorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -692,7 +692,6 @@ def google_sync_calc_export(
         "--prefill-relations/--no-prefill-relations",
         help=tr("cli.config.google.sync.calc.export.prefill_relations_help"),
     ),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a real
     Google Sheets workbook under the operator's `aeat-vault/`.
@@ -715,7 +714,7 @@ def google_sync_calc_export(
     from ....application.calculations import resolve_relations_from_local_store
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -805,7 +804,6 @@ def google_sync_calc_verify(
         dir_okay=False,
         readable=True,
     ),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Run a three-way parity check (AEAT oracle, local Decimal runtime, Sheets).
 
@@ -824,7 +822,7 @@ def google_sync_calc_verify(
     )
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -922,7 +920,6 @@ def google_sync_calc_pull(
         "--assemble-observations/--no-assemble-observations",
         help=tr("cli.config.google.sync.calc.pull.assemble_observations_help"),
     ),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records.
 
@@ -940,7 +937,7 @@ def google_sync_calc_pull(
     )
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -966,52 +963,18 @@ def google_sync_calc_pull(
     populated_row_sets = [rs for rs in result.row_set_edits if rs.cells]
     row_set_cells_total = sum(len(rs.cells) for rs in populated_row_sets)
 
-    assembled_groupings: list[dict[str, object]] = []
-    assembled_observation_count = 0
-    if assemble_observations:
-        from ....application.calculations import assemble_observations_for_grouping
+    assembled_groupings, assembled_observation_count = _assemble_pull_observations(
+        populated_row_sets=populated_row_sets,
+        snapshot=snapshot,
+        enabled=assemble_observations,
+    )
 
-        for row_set in populated_row_sets:
-            try:
-                source_kind, observations = assemble_observations_for_grouping(
-                    row_set.grouping,
-                    row_set.cells,
-                    snapshot.revision,
-                    filing_year=snapshot.filing_year,
-                )
-            except StorageError as exc:
-                raise CliRefusedBoundaryError(str(exc)) from exc
-            assembled_observation_count += len(observations)
-            assembled_groupings.append(
-                {
-                    "grouping": row_set.grouping,
-                    "source_kind": source_kind,
-                    "observation_count": len(observations),
-                    "observations": [obs.model_dump(mode="json") for obs in observations],
-                }
-            )
-
-    computed_casillas: list[dict[str, str]] = []
-    if compute:
-        if result.metadata_match != "matches":
-            raise CliRefusedBoundaryError(
-                tr(
-                    "cli.config.google.sync.calc.pull.compute_refused_stale",
-                    metadata_match=result.metadata_match,
-                ),
-            )
-        try:
-            calc = compute_from_pull(snapshot, result)
-        except StorageError as exc:
-            raise CliRefusedBoundaryError(str(exc)) from exc
-        for entry in calc.entries:
-            computed_casillas.append(
-                {
-                    "casilla_id": entry.target,
-                    "value": str(entry.value),
-                    "formula_id": entry.formula_id,
-                }
-            )
+    computed_casillas = _compute_pull_casillas(
+        snapshot=snapshot,
+        result=result,
+        enabled=compute,
+        compute_from_pull=compute_from_pull,
+    )
 
     payload: dict[str, object] = {
         "operation": "config.google.sync.calc.pull",
@@ -1106,6 +1069,86 @@ def google_sync_calc_pull(
     for entry in computed_casillas:
         lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
     _emit(ctx, payload, tuple(lines))
+
+
+def _assemble_pull_observations(
+    *,
+    populated_row_sets: list[RowSetEdit],
+    snapshot: RegistrySnapshot,
+    enabled: bool,
+) -> tuple[list[dict[str, object]], int]:
+    """Per-grouping assemble-observations fan-out for the pull command.
+
+    Returns ``(groupings, total_observation_count)``. When ``enabled``
+    is false (assemble-observations flag not passed), returns
+    ``([], 0)``. Storage errors raised by the application service are
+    re-wrapped as :class:`CliRefusedBoundaryError` so the CLI emits a
+    typed error envelope.
+    """
+    if not enabled:
+        return [], 0
+    from ....application.calculations import assemble_observations_for_grouping
+
+    groupings: list[dict[str, object]] = []
+    total = 0
+    for row_set in populated_row_sets:
+        try:
+            source_kind, observations = assemble_observations_for_grouping(
+                row_set.grouping,
+                row_set.cells,
+                snapshot.revision,
+                filing_year=snapshot.filing_year,
+            )
+        except StorageError as exc:
+            raise CliRefusedBoundaryError(str(exc)) from exc
+        total += len(observations)
+        groupings.append(
+            {
+                "grouping": row_set.grouping,
+                "source_kind": source_kind,
+                "observation_count": len(observations),
+                "observations": [obs.model_dump(mode="json") for obs in observations],
+            }
+        )
+    return groupings, total
+
+
+def _compute_pull_casillas(
+    *,
+    snapshot: RegistrySnapshot,
+    result: PullResult,
+    enabled: bool,
+    compute_from_pull: Callable[[RegistrySnapshot, PullResult], RegistryCalculationResult],
+) -> list[dict[str, str]]:
+    """Compute casillas from the pulled edits, refusing stale workbook stamps.
+
+    When ``enabled`` is false (compute flag not passed), returns an
+    empty list. A pull whose ``metadata_match`` is anything other
+    than ``"matches"`` raises :class:`CliRefusedBoundaryError` —
+    computing against a stale workbook would silently apply edits
+    against a different registry slice.
+    """
+    if not enabled:
+        return []
+    if result.metadata_match != "matches":
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.google.sync.calc.pull.compute_refused_stale",
+                metadata_match=result.metadata_match,
+            ),
+        )
+    try:
+        calc = compute_from_pull(snapshot, result)
+    except StorageError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+    return [
+        {
+            "casilla_id": entry.target,
+            "value": str(entry.value),
+            "formula_id": entry.formula_id,
+        }
+        for entry in calc.entries
+    ]
 
 
 sync_app.add_typer(calc_app, name="calc")

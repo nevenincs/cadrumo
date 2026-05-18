@@ -1,7 +1,6 @@
 """Registry-owned census modelo foundation map."""
 
 from __future__ import annotations
-from ....core.resources import resources
 
 from dataclasses import dataclass
 from enum import StrEnum
@@ -11,6 +10,7 @@ from typing import Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from ....core.logging import get_logger
+from ....core.resources import resources
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 
@@ -171,26 +171,34 @@ class CensusModeloFoundationResult(BaseModel):
     @model_validator(mode="after")
     def _validate_census_result(self) -> Self:
         if self.modelo == "036":
-            if self.role is not CensusModeloRole.ACTIVE_FOUNDATION:
-                raise RegistryValidationError("modelo 036 result must use active_foundation role")
-            if self.service_owner != CENSUS_MODELO_SERVICE_OWNER:
-                raise RegistryValidationError("modelo 036 result must be owned by the registry domain")
-            if self.event_kind is None:
-                raise RegistryValidationError("modelo 036 result requires event_kind")
-            if self.event_kinds != tuple(CensusModeloEventKind(kind) for kind in CENSUS_MODELO_EVENT_KINDS):
-                raise RegistryValidationError("modelo 036 result must expose the accepted event kinds")
-            if not self.active_work_unit_allowed or self.superseded_by is not None:
-                raise RegistryValidationError("modelo 036 result must allow active work units and not be superseded")
+            self._validate_active_036_shape()
             return self
         if self.modelo == "037":
-            if self.role is not CensusModeloRole.HISTORICAL_METADATA:
-                raise RegistryValidationError("modelo 037 result must use historical_metadata role")
-            if self.event_kind is not None or self.event_kinds:
-                raise RegistryValidationError("modelo 037 result must not expose active event kinds")
-            if self.active_work_unit_allowed or self.superseded_by != "036":
-                raise RegistryValidationError("modelo 037 result must be inactive and superseded by 036")
+            self._validate_historical_037_shape()
             return self
         raise RegistryValidationError(f"unknown census modelo code {self.modelo!r}; expected '036' or '037'")
+
+    def _validate_active_036_shape(self) -> None:
+        """Reject any 036 result that disagrees with the active-foundation contract."""
+        if self.role is not CensusModeloRole.ACTIVE_FOUNDATION:
+            raise RegistryValidationError("modelo 036 result must use active_foundation role")
+        if self.service_owner != CENSUS_MODELO_SERVICE_OWNER:
+            raise RegistryValidationError("modelo 036 result must be owned by the registry domain")
+        if self.event_kind is None:
+            raise RegistryValidationError("modelo 036 result requires event_kind")
+        if self.event_kinds != tuple(CensusModeloEventKind(kind) for kind in CENSUS_MODELO_EVENT_KINDS):
+            raise RegistryValidationError("modelo 036 result must expose the accepted event kinds")
+        if not self.active_work_unit_allowed or self.superseded_by is not None:
+            raise RegistryValidationError("modelo 036 result must allow active work units and not be superseded")
+
+    def _validate_historical_037_shape(self) -> None:
+        """Reject any 037 result that disagrees with the historical-metadata contract."""
+        if self.role is not CensusModeloRole.HISTORICAL_METADATA:
+            raise RegistryValidationError("modelo 037 result must use historical_metadata role")
+        if self.event_kind is not None or self.event_kinds:
+            raise RegistryValidationError("modelo 037 result must not expose active event kinds")
+        if self.active_work_unit_allowed or self.superseded_by != "036":
+            raise RegistryValidationError("modelo 037 result must be inactive and superseded by 036")
 
 
 def census_modelo_ownership_map() -> tuple[CensusModeloOwnership, ...]:

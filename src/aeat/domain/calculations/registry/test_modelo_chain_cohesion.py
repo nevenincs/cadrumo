@@ -125,35 +125,47 @@ def test_declared_canonical_chains_use_pago_or_summary_dependency_role() -> None
     """A declared chain's dependency_role must be one of the contract-shaped roles."""
 
     registry = _registry()
-    accepted_roles = {
-        # Annual-summary chains (e.g., 111→190, 115→180): periodic returns
+    failures: list[str] = []
+    for feeder_id, summary_id in _RELATION_BACKED_FEEDER_SUMMARY_CHAINS:
+        summary = registry.get(summary_id)
+        if summary is None:
+            continue
+        failures.extend(_chain_role_offences(summary=summary, feeder_id=feeder_id, summary_id=summary_id))
+    assert not failures, "\n".join(failures)
+
+
+_ACCEPTED_CHAIN_DEPENDENCY_ROLES = frozenset(
+    {
+        # Annual-summary chains (e.g., 111->190, 115->180): periodic returns
         # roll up into an informative annual summary.
         "periodic_to_annual_summary",
-        # IRPF/IS pago-fraccionado chains (e.g., 130→100, 202→200): the
+        # IRPF/IS pago-fraccionado chains (e.g., 130->100, 202->200): the
         # quarterly prepayment reconciles against the final annual settlement.
         "instalment_to_final_settlement",
         # Generic cross-modelo evidence (e.g., 100 picking up 111 retentions):
         # the source filing is consumed as factual data, not as a structural roll-up.
         "factual_evidence",
     }
-    failures: list[str] = []
-    for feeder_id, summary_id in _RELATION_BACKED_FEEDER_SUMMARY_CHAINS:
-        summary = registry.get(summary_id)
-        if summary is None:
-            continue
-        for revision in summary.revisions.values():
-            for relation in revision.relations:
-                if relation.source_modelo != feeder_id:
-                    continue
-                if relation.kind not in {"cross_model_output", "annual_summary"}:
-                    continue
-                if relation.dependency_role not in accepted_roles:
-                    failures.append(
-                        f"summary modelo {summary_id!r} revision {revision.id!r} "
-                        f"relation {relation.id!r} feeds from {feeder_id!r} but uses "
-                        f"dependency_role {relation.dependency_role!r}; expected one of {sorted(accepted_roles)!r}"
-                    )
-    assert not failures, "\n".join(failures)
+)
+
+
+def _chain_role_offences(*, summary, feeder_id: str, summary_id: str) -> tuple[str, ...]:  # type: ignore[no-untyped-def]
+    """Return any dependency_role offences for one (feeder -> summary) pair across all revisions."""
+    offences: list[str] = []
+    for revision in summary.revisions.values():
+        for relation in revision.relations:
+            if relation.source_modelo != feeder_id:
+                continue
+            if relation.kind not in _CROSS_MODEL_RELATION_KINDS:
+                continue
+            if relation.dependency_role not in _ACCEPTED_CHAIN_DEPENDENCY_ROLES:
+                offences.append(
+                    f"summary modelo {summary_id!r} revision {revision.id!r} "
+                    f"relation {relation.id!r} feeds from {feeder_id!r} but uses "
+                    f"dependency_role {relation.dependency_role!r}; expected one of "
+                    f"{sorted(_ACCEPTED_CHAIN_DEPENDENCY_ROLES)!r}"
+                )
+    return tuple(offences)
 
 
 def test_every_declared_relation_resolves_to_a_real_source_casilla() -> None:
@@ -168,23 +180,41 @@ def test_every_declared_relation_resolves_to_a_real_source_casilla() -> None:
     for modelo in registry.values():
         for revision in modelo.revisions.values():
             for relation in revision.relations:
-                if relation.kind not in {"cross_model_output", "annual_summary"}:
-                    continue
-                source_modelo = registry.get(relation.source_modelo)
-                if source_modelo is None:
-                    failures.append(
-                        f"modelo {modelo.id} relation {relation.id!r} cites unknown "
-                        f"source modelo {relation.source_modelo!r}"
-                    )
-                    continue
-                source_casilla_ids: set[str] = set()
-                for source_revision in source_modelo.revisions.values():
-                    source_casilla_ids.update(c.id for c in source_revision.casillas)
-                if relation.source_output not in source_casilla_ids:
-                    failures.append(
-                        f"modelo {modelo.id} relation {relation.id!r} expects "
-                        f"source casilla {relation.source_output!r} on modelo "
-                        f"{relation.source_modelo!r}, but no revision of that modelo "
-                        f"declares it"
-                    )
+                offence = _relation_source_offence(relation, modelo_id=modelo.id, registry=registry)
+                if offence is not None:
+                    failures.append(offence)
     assert not failures, "\n".join(failures)
+
+
+_CROSS_MODEL_RELATION_KINDS = frozenset({"cross_model_output", "annual_summary"})
+
+
+def _relation_source_offence(relation, *, modelo_id: str, registry) -> str | None:  # type: ignore[no-untyped-def]
+    """Return a chain-cohesion offence message for one relation, or ``None`` when it resolves.
+
+    Only ``cross_model_output`` and ``annual_summary`` relations
+    participate in this gate; other relation kinds are noise here
+    and short-circuit to ``None``. Two failure modes are reported:
+    a relation citing a non-existent source modelo, and a relation
+    whose declared ``source_output`` is not declared as a casilla
+    on any revision of the named source modelo.
+    """
+    if relation.kind not in _CROSS_MODEL_RELATION_KINDS:
+        return None
+    source_modelo = registry.get(relation.source_modelo)
+    if source_modelo is None:
+        return (
+            f"modelo {modelo_id} relation {relation.id!r} cites unknown "
+            f"source modelo {relation.source_modelo!r}"
+        )
+    source_casilla_ids = {
+        c.id for source_revision in source_modelo.revisions.values() for c in source_revision.casillas
+    }
+    if relation.source_output not in source_casilla_ids:
+        return (
+            f"modelo {modelo_id} relation {relation.id!r} expects "
+            f"source casilla {relation.source_output!r} on modelo "
+            f"{relation.source_modelo!r}, but no revision of that modelo "
+            f"declares it"
+        )
+    return None

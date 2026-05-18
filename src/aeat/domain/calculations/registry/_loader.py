@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ._errors import RegistryLoadError
 from ._schema import (
@@ -130,6 +130,16 @@ def _load_modelo_directory_cached(
 ) -> ModeloDefinition:
     del fingerprints
     resolved = Path(directory)
+    manifest_data = _load_modelo_manifest(resolved)
+    merged_revisions = _load_modelo_revisions(resolved)
+    if not merged_revisions:
+        raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
+    merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
+    return _build_modelo_definition_from_data(resolved, merged)
+
+
+def _load_modelo_manifest(resolved: Path) -> dict[str, object]:
+    """Load the directory-mode manifest.toml and reject inlined [revisions]."""
     manifest_path = resolved / "manifest.toml"
     manifest_data = _freeze_toml(_read_toml(manifest_path))
     if "revisions" in manifest_data:
@@ -137,29 +147,44 @@ def _load_modelo_directory_cached(
             f"{manifest_path}: directory-mode manifest must not declare [revisions]; "
             f"revision data lives in revisions/<id>.toml"
         )
-    merged_revisions: dict[str, object] = {}
+    return manifest_data
+
+
+def _load_modelo_revisions(resolved: Path) -> dict[str, object]:
+    """Read every ``revisions/*.toml`` and merge into one ``{revision_id: raw}`` map.
+
+    A missing ``revisions/`` directory returns an empty dict; the
+    caller raises if no revisions land. Each per-file ``[revisions.X]``
+    payload is added to the merged map under its id, rejecting
+    inline ``[modelo]`` declarations, local catalogues, and any
+    duplicate ``revision_id`` across files.
+    """
     revisions_dir = resolved / "revisions"
-    if revisions_dir.is_dir():
-        for path in sorted(revisions_dir.glob("*.toml")):
-            rev_data = _freeze_toml(_read_toml(path))
-            _reject_local_catalogues(path, rev_data)
-            if "modelo" in rev_data:
-                raise RegistryLoadError(f"{path}: revision file must not declare [modelo]; that lives in manifest.toml")
-            file_revisions = rev_data.get("revisions")
-            if not isinstance(file_revisions, dict) or not file_revisions:
-                raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
-            for revision_id, raw_revision in file_revisions.items():
-                if not isinstance(revision_id, str):
-                    raise RegistryLoadError(f"{path}: revision key must be a string")
-                if revision_id in merged_revisions:
-                    raise RegistryLoadError(
-                        f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
-                    )
-                merged_revisions[revision_id] = raw_revision
-    if not merged_revisions:
-        raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
-    merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
-    return _build_modelo_definition_from_data(resolved, merged)
+    if not revisions_dir.is_dir():
+        return {}
+    merged_revisions: dict[str, object] = {}
+    for path in sorted(revisions_dir.glob("*.toml")):
+        _merge_revision_file(path, merged_revisions)
+    return merged_revisions
+
+
+def _merge_revision_file(path: Path, merged_revisions: dict[str, object]) -> None:
+    """Validate one revisions/*.toml file and append its revisions into ``merged_revisions``."""
+    rev_data = _freeze_toml(_read_toml(path))
+    _reject_local_catalogues(path, rev_data)
+    if "modelo" in rev_data:
+        raise RegistryLoadError(f"{path}: revision file must not declare [modelo]; that lives in manifest.toml")
+    file_revisions = rev_data.get("revisions")
+    if not isinstance(file_revisions, dict) or not file_revisions:
+        raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
+    for revision_id, raw_revision in file_revisions.items():
+        if not isinstance(revision_id, str):
+            raise RegistryLoadError(f"{path}: revision key must be a string")
+        if revision_id in merged_revisions:
+            raise RegistryLoadError(
+                f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
+            )
+        merged_revisions[revision_id] = raw_revision
 
 
 def load_catalogue_file(path: Path) -> RegistryCatalogues:
@@ -196,7 +221,7 @@ def _load_catalogue_file_cached(path: str, byte_count: int, modified_ns: int) ->
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
 
 
-def _validate_catalogue_section[T](
+def _validate_catalogue_section[T: BaseModel](
     source_path: Path,
     *,
     raw: object,
@@ -221,7 +246,7 @@ def _validate_catalogue_section[T](
         if not isinstance(ref_id, str) or not isinstance(payload, dict):
             raise RegistryLoadError(f"{source_path}: malformed {kind} entry")
         try:
-            out[ref_id] = model.model_validate({"id": ref_id, **payload})  # type: ignore[attr-defined]
+            out[ref_id] = model.model_validate({"id": ref_id, **payload})
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid {kind} {ref_id!r}: {exc}") from exc
     return out
@@ -274,6 +299,19 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
     """
 
     resolved = root.resolve()
+    fingerprints = _collect_registry_tree_fingerprints(resolved)
+    return _load_registry_tree_cached(str(resolved), fingerprints)
+
+
+def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int, int], ...]:
+    """Walk ``resolved`` and return ``(path, size, mtime)`` fingerprints for the lru_cache key.
+
+    Covers every catalogue source the loader will subsequently
+    re-open: ``legal/*.toml``, single-file ``modelos/*.toml``, and
+    directory-mode ``modelos/<id>/manifest.toml`` plus its
+    ``revisions/*.toml`` siblings. The cache key invalidates the
+    moment any of those files changes shape on disk.
+    """
     legal_dir = resolved / "legal"
     modelos_dir = resolved / "modelos"
     fingerprints: list[tuple[str, int, int]] = []
@@ -283,13 +321,20 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
         fingerprints.append(_toml_fingerprint(path))
     if modelos_dir.is_dir():
         for entry in sorted(modelos_dir.iterdir()):
-            if entry.is_dir() and (entry / "manifest.toml").is_file():
-                fingerprints.append(_toml_fingerprint(entry / "manifest.toml"))
-                revisions_dir = entry / "revisions"
-                if revisions_dir.is_dir():
-                    for rev_path in sorted(revisions_dir.glob("*.toml")):
-                        fingerprints.append(_toml_fingerprint(rev_path))
-    return _load_registry_tree_cached(str(resolved), tuple(fingerprints))
+            fingerprints.extend(_modelo_directory_fingerprints(entry))
+    return tuple(fingerprints)
+
+
+def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], ...]:
+    """Return fingerprints for one directory-mode modelo entry, or ``()`` if not in that layout."""
+    if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
+        return ()
+    fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(entry / "manifest.toml")]
+    revisions_dir = entry / "revisions"
+    if revisions_dir.is_dir():
+        for rev_path in sorted(revisions_dir.glob("*.toml")):
+            fingerprints.append(_toml_fingerprint(rev_path))
+    return tuple(fingerprints)
 
 
 @lru_cache(maxsize=32)
@@ -299,12 +344,16 @@ def _load_registry_tree_cached(
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     del fingerprints
     resolved = Path(root)
-    legal_dir = resolved / "legal"
-    modelos_dir = resolved / "modelos"
+    catalogues = _load_shared_catalogue_files(resolved / "legal")
+    modelos = _load_all_modelo_definitions(resolved / "modelos")
+    return modelos, catalogues
+
+
+def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
+    """Load every ``legal/*.toml`` shared-catalogue file with duplicate-id rejection."""
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
     parameters: dict[str, LegalParameter] = {}
-    modelos: list[ModeloDefinition] = []
     for path in sorted(legal_dir.glob("*.toml")):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
@@ -318,6 +367,18 @@ def _load_registry_tree_cached(
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)
         parameters.update(catalogue.parameters)
+    return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+
+
+def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, ...]:
+    """Load every modelo (single-file + directory-mode) and reject layout collisions.
+
+    A modelo id present both as ``modelos/<id>.toml`` and as
+    ``modelos/<id>/manifest.toml`` is a configuration mistake — the
+    loader cannot tell which layout is authoritative, so it raises
+    instead of silently picking one.
+    """
+    modelos: list[ModeloDefinition] = []
     seen_modelo_ids: set[str] = set()
     for path in sorted(modelos_dir.glob("*.toml")):
         modelo = load_modelo_file(path)
@@ -327,16 +388,17 @@ def _load_registry_tree_cached(
         modelos.append(modelo)
     if modelos_dir.is_dir():
         for entry in sorted(modelos_dir.iterdir()):
-            if entry.is_dir() and (entry / "manifest.toml").is_file():
-                modelo = load_modelo_directory(entry)
-                if modelo.id in seen_modelo_ids:
-                    raise RegistryLoadError(
-                        f"{entry}: modelo {modelo.id!r} also declared as a single-file "
-                        f"modelos/{modelo.id}.toml; remove one of the two layouts"
-                    )
-                seen_modelo_ids.add(modelo.id)
-                modelos.append(modelo)
-    return tuple(modelos), RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+            if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
+                continue
+            modelo = load_modelo_directory(entry)
+            if modelo.id in seen_modelo_ids:
+                raise RegistryLoadError(
+                    f"{entry}: modelo {modelo.id!r} also declared as a single-file "
+                    f"modelos/{modelo.id}.toml; remove one of the two layouts"
+                )
+            seen_modelo_ids.add(modelo.id)
+            modelos.append(modelo)
+    return tuple(modelos)
 
 
 def _toml_fingerprint(path: Path) -> tuple[str, int, int]:

@@ -1,4 +1,4 @@
-"""CLI surface tests for `aeat config profile {use, show, remove, duplicate}`."""
+"""CLI surface tests for `aeat config profile {switch, show, delete, duplicate}`."""
 
 from __future__ import annotations
 
@@ -46,21 +46,21 @@ def _json_payload(result: Result) -> dict[str, object]:
     return json.loads(match.group(0))
 
 
-def test_config_profile_use_activates_existing_profile(cli_runner: CliRunner) -> None:
+def test_config_profile_switch_activates_existing_profile(cli_runner: CliRunner) -> None:
     _seed("operator")
     _seed("spouse")
-    result = cli_runner.invoke(profile_app, ["use", "operator"])
+    result = cli_runner.invoke(profile_app, ["switch", "operator"])
     assert result.exit_code == 0, result.output
     assert "active_profile\toperator" in result.output
 
 
-def test_config_profile_use_refuses_unknown_profile(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(profile_app, ["use", "ghost"])
+def test_config_profile_switch_refuses_unknown_profile(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(profile_app, ["switch", "ghost"])
     assert result.exit_code != 0
 
 
-def test_config_profile_use_emits_profile_activated_event(cli_runner: CliRunner) -> None:
-    """`config profile use` records a typed PROFILE_ACTIVATED event in the
+def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunner) -> None:
+    """`config profile switch` records a typed PROFILE_ACTIVATED event in the
     bucket-event-history catalogue so downstream auditors can replay
     the activation timeline. Distinct from PROFILE_SELECTED (which
     captures workflow-state-level selection).
@@ -69,7 +69,7 @@ def test_config_profile_use_emits_profile_activated_event(cli_runner: CliRunner)
     from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     _seed("operator")
-    result = cli_runner.invoke(profile_app, ["use", "operator"])
+    result = cli_runner.invoke(profile_app, ["switch", "operator"])
     assert result.exit_code == 0, result.output
 
     catalogue = BucketEventHistoryRepository().load()
@@ -86,7 +86,7 @@ def test_config_profile_use_emits_profile_activated_event(cli_runner: CliRunner)
 
 def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -> None:
     _seed("operator")
-    result = cli_runner.invoke(profile_app, ["view"])
+    result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code == 0, result.output
     assert "profile_id\toperator" in result.output
     assert "identity.tax_id\t00000000T" in result.output
@@ -95,7 +95,7 @@ def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -
 def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: CliRunner) -> None:
     _seed("operator")
     _seed("spouse")
-    result = cli_runner.invoke(profile_app, ["view", "spouse"])
+    result = cli_runner.invoke(profile_app, ["show", "spouse"])
     assert result.exit_code == 0, result.output
     assert "profile_id\tspouse" in result.output
     assert "identity.tax_id\t00000000T" in result.output
@@ -103,19 +103,21 @@ def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: 
     assert "tax_residence.ccaa\tmadrid" in result.output
 
 
-def test_config_profile_remove_requires_yes(cli_runner: CliRunner) -> None:
+def test_config_profile_delete_requires_yes(cli_runner: CliRunner) -> None:
     _seed("operator")
-    result = cli_runner.invoke(profile_app, ["remove", "operator"])
+    result = cli_runner.invoke(profile_app, ["delete", "operator"])
     assert result.exit_code != 0
 
 
-def test_config_profile_remove_tombstones_with_yes(cli_runner: CliRunner) -> None:
+def test_config_profile_delete_tombstones_with_yes(cli_runner: CliRunner) -> None:
     _seed("operator")
-    result = cli_runner.invoke(profile_app, ["remove", "operator", "--yes"])
+    result = cli_runner.invoke(profile_app, ["delete", "operator", "--yes"])
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
+    from aeat.application.workflow._models import resolve_active_bucket_id
+
     state = workflow_state_repository().load()
-    assert state.active_profile is None
+    assert resolve_active_bucket_id(state) is None
 
 
 def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> None:
@@ -147,13 +149,14 @@ def test_config_profile_validate_emits_validation_report(cli_runner: CliRunner) 
 
 
 def test_config_profile_validate_refuses_when_no_active_profile(cli_runner: CliRunner) -> None:
-    # Reset the workflow state's active pointer so there is no active profile.
-    from aeat.application.workflow._utils import utc_now
+    # Clear the active-profile precedence chain (env + pointer) so the
+    # resolver returns None and the validate verb refuses.
+    from aeat.application.user_profile._orchestration import _clear_active_profile_pointer
+    from aeat.core.config import override_settings
 
-    workflow_state_repository().update(
-        lambda current: current.model_copy(update={"active_profile": None, "updated_at": utc_now()})
-    )
-    result = cli_runner.invoke(profile_app, ["validate"])
+    _clear_active_profile_pointer()
+    with override_settings(aeat_active_profile=None):
+        result = cli_runner.invoke(profile_app, ["validate"])
     assert result.exit_code != 0
 
 

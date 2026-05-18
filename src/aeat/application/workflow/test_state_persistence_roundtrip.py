@@ -21,6 +21,7 @@ from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...core.config import Settings
 from ..auth._models import AuthState
+from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
 from ._models import (
     DeclarationPointer,
     ProfileBucketPointer,
@@ -39,9 +40,12 @@ def _populated_workflow_state() -> WorkflowState:
 
     * an AuthState with non-default values
     * two profile bucket pointers (the keyed mapping must round-trip)
-    * an active_profile selector
     * a declarations mapping with one DeclarationPointer
     * a tuple of WorkflowEvent entries (append-only audit log)
+
+    The active-profile selector lives in the precedence chain
+    (Settings override > plaintext pointer file) rather than on the
+    record itself, so it is intentionally absent from the fixture.
     """
 
     now = datetime.now(UTC).replace(microsecond=0)
@@ -51,7 +55,6 @@ def _populated_workflow_state() -> WorkflowState:
             "profile-a": ProfileBucketPointer(bucket_id="b" * 32),
             "profile-b": ProfileBucketPointer(bucket_id="c" * 32),
         },
-        active_profile="profile-a",
         declarations={
             "303:2025Q1": DeclarationPointer(
                 modelo="303",
@@ -63,8 +66,19 @@ def _populated_workflow_state() -> WorkflowState:
                 updated_at=now,
             ),
         },
-        invoice_reviews={},
-        ledger_reviews={},
+        invoice_reviews={
+            "invoice-2024-001": InvoiceReviewRecord(
+                invoice_id="invoice-2024-001",
+                fields={"note": "follow up VAT split"},
+                updated_at=now,
+            ),
+        },
+        ledger_reviews={
+            "transaction-2024-abc": LedgerReviewRecord(
+                transaction_id="transaction-2024-abc",
+                updated_at=now,
+            ),
+        },
         bucket_events=(
             WorkflowEvent(
                 action="profile.bucket.created",
@@ -93,7 +107,8 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
     Per-field witnesses pin the most fragile pieces:
 
     * the two-entry profiles mapping (key+value preservation),
-    * the active_profile selector,
+    * the profiles map keying (the active-profile selector lives in
+      the precedence chain, not on the record),
     * the declarations mapping with its nested DeclarationPointer,
     * the bucket_events tuple with a non-empty audit record.
     """
@@ -123,7 +138,6 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
         assert loaded.updated_at >= original.updated_at
         assert set(loaded.profiles) == {"profile-a", "profile-b"}
         assert loaded.profiles["profile-a"].bucket_id == "b" * 32
-        assert loaded.active_profile == "profile-a"
         assert "303:2025Q1" in loaded.declarations
         loaded_decl = loaded.declarations["303:2025Q1"]
         assert loaded_decl.draft_id == "d" * 64
@@ -131,6 +145,14 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
         assert len(loaded.bucket_events) == 1
         assert loaded.bucket_events[0].action == "profile.bucket.created"
         assert loaded.bucket_events[0].bucket_id == "b" * 32
+        assert set(loaded.invoice_reviews) == {"invoice-2024-001"}
+        loaded_invoice = loaded.invoice_reviews["invoice-2024-001"]
+        assert isinstance(loaded_invoice, InvoiceReviewRecord)
+        assert loaded_invoice.fields == {"note": "follow up VAT split"}
+        assert set(loaded.ledger_reviews) == {"transaction-2024-abc"}
+        loaded_ledger = loaded.ledger_reviews["transaction-2024-abc"]
+        assert isinstance(loaded_ledger, LedgerReviewRecord)
+        assert loaded_ledger.transaction_id == "transaction-2024-abc"
     finally:
         engine.dispose()
         override_master_key_provider(None)
@@ -159,7 +181,6 @@ def test_workflow_state_absent_load_returns_empty_state(tmp_path: Path) -> None:
 
         # Empty-default identity: no profiles, no declarations, empty event tuple.
         assert loaded.profiles == {}
-        assert loaded.active_profile is None
         assert loaded.declarations == {}
         assert loaded.bucket_events == ()
     finally:

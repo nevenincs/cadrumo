@@ -253,7 +253,7 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
 def test_registered_record_design_sources_are_discovered_and_parseable() -> None:
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     sources = {
-        source_id: PROJECT_ROOT / source.corpus_path
+        source_id: bundled_path() / source.corpus_path
         for source_id, source in catalogues.sources.items()
         if source.kind == "record_design"
     }

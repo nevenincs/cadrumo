@@ -46,6 +46,7 @@ from ...application.review import (
     FilterParseError,
     LedgerReviewFilterSpec,
 )
+from ...application.workflow._models import resolve_active_bucket_id
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -228,7 +229,7 @@ def ledger_add(
     transaction_repository = _tx_repo(current_state)
     resolved_business_pct = _resolve_business_pct_with_census(
         bucket_id=transaction_repository.bucket_id,
-        active_profile=current_state.active_profile,
+        active_profile=resolve_active_bucket_id(),
         category_id=category_id,
         operator_supplied=_parse_decimal(business_pct, label="business-pct"),
     )
@@ -253,7 +254,7 @@ def ledger_add(
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
         notes=notes,
-        actor=actor or current_state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger add",
         idempotency_key=idempotency_key,
     )
@@ -323,7 +324,7 @@ def ledger_update(
             irpf_category=irpf_category,
             notes=notes,
         ),
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger update",
         transaction_repository=transaction_repository,
     )
@@ -365,7 +366,7 @@ def ledger_classify(
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
             irpf_category=irpf_category,
         ),
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger classify",
         transaction_repository=transaction_repository,
     )
@@ -404,7 +405,7 @@ def ledger_allocate(
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,
         ),
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger allocate",
         transaction_repository=transaction_repository,
     )
@@ -436,7 +437,7 @@ def ledger_attach(
         transaction_id=resolved_id,
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger attach",
         transaction_repository=transaction_repository,
     )
@@ -460,7 +461,7 @@ def ledger_archive(
     result = archive_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         source_command="aeat app ledger archive",
         transaction_repository=transaction_repository,
@@ -485,7 +486,7 @@ def ledger_stash(
     result = stash_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         source_command="aeat app ledger stash",
         transaction_repository=transaction_repository,
@@ -511,7 +512,7 @@ def ledger_remove(
     report = remove_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         dry_run=dry_run,
         source_command="aeat app ledger remove",
@@ -545,7 +546,7 @@ def ledger_reset(
     transaction_repository = _tx_repo(state)
     report = reset_ledger_catalogue(
         bucket_id=transaction_repository.bucket_id,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         dry_run=dry_run,
         source_command="aeat app ledger reset",
@@ -603,7 +604,7 @@ def ledger_split(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
         children=children,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger split",
         reason=reason,
         transaction_repository=transaction_repository,
@@ -651,7 +652,7 @@ def ledger_merge(
     result = merge_transactions(
         bucket_id=transaction_repository.bucket_id,
         child_transaction_ids=resolved_ids,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger merge",
         reason=reason,
         transaction_repository=transaction_repository,
@@ -977,24 +978,12 @@ def ledger_history(
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    object_ids = [resolved_id]
-    if include_split_siblings:
-        catalogue = transaction_repository.load()
-        transaction = catalogue.get(resolved_id)
-        if transaction is not None and transaction.split_lineage is not None:
-            for sibling in transaction.split_lineage.sibling_transaction_ids:
-                if sibling not in object_ids:
-                    object_ids.append(sibling)
-    event_catalogue = BucketEventHistoryRepository().load()
-    matches: list = []
-    for object_id in object_ids:
-        for event in event_catalogue.for_object(
-            object_type=BucketEventObjectType.LEDGER_TRANSACTION,
-            object_id=object_id,
-        ):
-            if event.event_type in _LEDGER_HISTORY_EVENT_TYPES:
-                matches.append(event)
-    matches.sort(key=lambda event: event.occurred_at)
+    object_ids = _history_object_ids(
+        transaction_repository,
+        resolved_id=resolved_id,
+        include_split_siblings=include_split_siblings,
+    )
+    matches = _collect_ledger_history_events(object_ids)
     payload = {
         "bucket_id": transaction_repository.bucket_id,
         "transaction_id": resolved_id,
@@ -1006,9 +995,52 @@ def ledger_history(
         f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
         f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
     ]
-    for event in matches:
-        lines.append(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}")
+    lines.extend(
+        f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches
+    )
     _emit(ctx, payload, lines)
+
+
+def _history_object_ids(
+    transaction_repository: TransactionCatalogueRepository,
+    *,
+    resolved_id: str,
+    include_split_siblings: bool,
+) -> list[str]:
+    """Return ``[resolved_id, ...siblings]`` (de-duped, order-preserving) when the operator opts in.
+
+    Sibling expansion is the operator-facing escape hatch that lets
+    `aeat app ledger history --include-split-siblings` follow the
+    complete split-group chain from one supplied transaction id;
+    without the flag, only the supplied id's events are emitted.
+    """
+    object_ids = [resolved_id]
+    if not include_split_siblings:
+        return object_ids
+    transaction = transaction_repository.load().get(resolved_id)
+    if transaction is None or transaction.split_lineage is None:
+        return object_ids
+    for sibling in transaction.split_lineage.sibling_transaction_ids:
+        if sibling not in object_ids:
+            object_ids.append(sibling)
+    return object_ids
+
+
+def _collect_ledger_history_events(object_ids: list[str]) -> list:
+    """Return the chronological union of LEDGER-history events across ``object_ids``."""
+    event_catalogue = BucketEventHistoryRepository().load()
+    matches: list = []
+    for object_id in object_ids:
+        matches.extend(
+            event
+            for event in event_catalogue.for_object(
+                object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+                object_id=object_id,
+            )
+            if event.event_type in _LEDGER_HISTORY_EVENT_TYPES
+        )
+    matches.sort(key=lambda event: event.occurred_at)
+    return matches
 
 
 @app.command("export", help=tr("cli.ledger.export.help"))
@@ -1036,7 +1068,7 @@ def ledger_export(
             export_format=export_kind,
             include_inactive=include_inactive,
             output_path=output,
-            actor=actor or state.active_profile or "operator",
+            actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger export",
         ),
         transaction_repository=transaction_repository,
@@ -1201,7 +1233,7 @@ def ledger_import(
         current_state = _state()
         transaction_repository = _tx_repo(current_state)
         bucket_id = transaction_repository.bucket_id
-        actor = current_state.active_profile or "operator"
+        actor = resolve_active_bucket_id() or "operator"
     result = import_ledger_source(
         LedgerSourceImportCommand(
             bucket_id=bucket_id,
@@ -1349,7 +1381,7 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     silent because there is no profile to look up snapshots against.
     """
 
-    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._models import active_bucket_id_or_raise, resolve_active_bucket_id
     from ...application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
@@ -1357,7 +1389,7 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
         bucket_id = active_bucket_id_or_raise(state)
     except Exception as exc:  # NoActiveProfileError + downstream raises
         raise _bad(tr("cli.config.errors.no_active_profile")) from exc
-    return bucket_id, state.active_profile
+    return bucket_id, resolve_active_bucket_id()
 
 
 def _emit_ratios_event(
@@ -1439,7 +1471,6 @@ def _resolve_business_pct_with_census(
     perturbed.
     """
 
-    from decimal import Decimal
 
     from ...application.ledger._ratios import census_business_pct_for
     from ...application.profile import CensusSyncService
@@ -1540,13 +1571,40 @@ def _resolve_category(raw: str):
     ),
 )
 def ratios_list(ctx: typer.Context) -> None:
-    from ...domain.usage_ratios import load_usage_ratios
+    from ...application.profile import CensusSyncService
+    from ...domain.usage_ratios import (
+        CensusRatioMismatchError,
+        load_usage_ratios,
+        load_usage_ratios_with_census_guard,
+    )
 
-    bucket_id = _ratios_bucket_id()
-    profile = load_usage_ratios(bucket_id=bucket_id)
+    bucket_id, profile_id = _ratios_bucket_and_profile()
+    raw_afectacion = None
+    if profile_id is not None:
+        raw_afectacion = CensusSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(
+            profile_id=profile_id,
+        )
+    census_mismatch: str | None = None
+    try:
+        profile = load_usage_ratios_with_census_guard(
+            bucket_id=bucket_id,
+            raw_afectacion_ratio=raw_afectacion,
+        )
+    except CensusRatioMismatchError as exc:
+        # The operator should still see what's persisted; we surface the
+        # divergence as a typed warning row but never hide the rows.
+        census_mismatch = str(exc)
+        profile = load_usage_ratios(bucket_id=bucket_id)
     rows = [{"category": category.value, "ratio": str(ratio)} for category, ratio in profile.ratios.items()]
-    payload = {"bucket_id": bucket_id, "rows": rows, "count": len(rows)}
+    payload = {
+        "bucket_id": bucket_id,
+        "rows": rows,
+        "count": len(rows),
+        "census_mismatch": census_mismatch,
+    }
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    if census_mismatch is not None:
+        lines.append(f"census_mismatch\t{census_mismatch}")
     lines.extend(f"{row['category']}\t{row['ratio']}" for row in rows)
     _emit(ctx, payload, lines)
 

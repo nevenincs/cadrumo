@@ -11,8 +11,8 @@ namespaced secure-object key, and a closed ACTIVE / SUPERSEDED /
 DISCARDED state machine. Re-fetch auto-supersedes the prior ACTIVE
 snapshot for the same profile.
 
-The CLI-facing `CensusSyncService` (P04) is the only caller; the
-sede G313 adapter (P03) populates `census_facts` from the live
+The CLI-facing `CensusSyncService` is the only caller; the
+sede G313 adapter populates `census_facts` from the live
 Mis Datos Censales endpoint.
 """
 

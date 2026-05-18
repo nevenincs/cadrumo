@@ -79,42 +79,57 @@ def _extract_pytestmark_names(path: Path) -> tuple[set[str], str | None]:
         tree = ast.parse(source, filename=str(path))
     except SyntaxError as exc:  # pragma: no cover - defensive
         return set(), f"SyntaxError: {exc}"
-
-    assign_node: ast.Assign | None = None
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and len(node.targets) == 1:
-            target = node.targets[0]
-            if isinstance(target, ast.Name) and target.id == "pytestmark":
-                assign_node = node
-                break
-
+    assign_node = _find_pytestmark_assign(tree)
     if assign_node is None:
         return set(), "missing top-level `pytestmark = [...]` assignment"
-
     value = assign_node.value
     if not isinstance(value, ast.List | ast.Tuple):
         return set(), "`pytestmark` must be assigned a list or tuple literal"
-
     names: set[str] = set()
     for element in value.elts:
-        # Accept either `pytest.mark.<name>` (attribute chain, used for
-        # access + domain markers) or `pytest.mark.<name>(...)` (call
-        # expression, used for conditional markers like
-        # `pytest.mark.skipif(cond, reason=...)`). Names from the latter
-        # shape are recorded but do not participate in access/domain
-        # validation because those are always attribute-chained.
-        attr_chain = element.func if isinstance(element, ast.Call) else element
-        if not isinstance(attr_chain, ast.Attribute):
-            return set(), f"unexpected element type {type(element).__name__} in pytestmark"
-        mark_attr = attr_chain.value
-        if not isinstance(mark_attr, ast.Attribute) or mark_attr.attr != "mark":
-            return set(), "element is not a `pytest.mark.<name>` attribute chain"
-        mark_root = mark_attr.value
-        if not isinstance(mark_root, ast.Name) or mark_root.id != "pytest":
-            return set(), "element is not rooted at `pytest`"
-        names.add(attr_chain.attr)
-
+        marker_name, error = _marker_name_from_pytestmark_element(element)
+        if error is not None:
+            return set(), error
+        assert marker_name is not None  # narrowed by error=None branch
+        names.add(marker_name)
     return names, None
+
+
+def _find_pytestmark_assign(tree: ast.Module) -> ast.Assign | None:
+    """Return the module-level ``pytestmark = ...`` assignment node, or ``None``."""
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if isinstance(target, ast.Name) and target.id == "pytestmark":
+            return node
+    return None
+
+
+def _marker_name_from_pytestmark_element(element: ast.expr) -> tuple[str | None, str | None]:
+    """Resolve one ``pytestmark`` list/tuple element to its marker name.
+
+    Accepts either ``pytest.mark.<name>`` (attribute chain, used for
+    access + domain markers) or ``pytest.mark.<name>(...)`` (call
+    expression, used for conditional markers like
+    ``pytest.mark.skipif(cond, reason=...)``). Names from the latter
+    shape are recorded but do not participate in access/domain
+    validation because those are always attribute-chained.
+
+    Returns ``(name, None)`` on success and ``(None, error)`` on any
+    structural mismatch so the caller can short-circuit with the same
+    error envelope it was emitting inline.
+    """
+    attr_chain = element.func if isinstance(element, ast.Call) else element
+    if not isinstance(attr_chain, ast.Attribute):
+        return None, f"unexpected element type {type(element).__name__} in pytestmark"
+    mark_attr = attr_chain.value
+    if not isinstance(mark_attr, ast.Attribute) or mark_attr.attr != "mark":
+        return None, "element is not a `pytest.mark.<name>` attribute chain"
+    mark_root = mark_attr.value
+    if not isinstance(mark_root, ast.Name) or mark_root.id != "pytest":
+        return None, "element is not rooted at `pytest`"
+    return attr_chain.attr, None
 
 
 def _pytest_mark_name(node: ast.AST) -> str | None:

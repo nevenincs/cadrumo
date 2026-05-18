@@ -10,11 +10,15 @@ passing the operator-resolved root through the constructor.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import ConfigDict
 
 from .._keys import TypedResourceKey
 from .._repository import Repository
+
+if TYPE_CHECKING:
+    from ....core.config import Settings
 
 _FROZEN_STRICT = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -41,12 +45,12 @@ class ManualRepository(Repository[object, ManualKey]):
         super().__init__()
         self._root = root
 
-    def _settings(self) -> object | None:
+    def _settings(self) -> Settings | None:
         if self._root is None:
             return None
-        from ....core.config import Settings
+        from ....core.config import Settings as _Settings
 
-        return Settings(aeat_manuals_root=self._root)
+        return _Settings(aeat_manuals_root=self._root)
 
     def _load(self, key: ManualKey) -> object:
         from ....domain.manuals import ManualId, ManualPart, load_manual
@@ -60,23 +64,23 @@ class ManualRepository(Repository[object, ManualKey]):
             manual_id=manual_id,
             year=key.year,
             part=part,
-            settings=self._settings(),  # type: ignore[arg-type]
+            settings=self._settings(),
         )
 
     def catalogue(self) -> object:
         """Return the project-wide :class:`ManualCatalogue` aggregate."""
         from ....domain.manuals import load_catalogue
 
-        return load_catalogue(settings=self._settings())  # type: ignore[arg-type]
+        return load_catalogue(settings=self._settings())
 
     def find_rules(self, *args: object, **kwargs: object) -> object:
         """Delegate to :func:`aeat.domain.manuals.find_rules` for rule queries."""
         from ....domain.manuals import find_rules
 
-        return find_rules(*args, settings=self._settings(), **kwargs)  # type: ignore[arg-type]
+        return find_rules(*args, settings=self._settings(), **kwargs)
 
     def iter_sections(self, *args: object, **kwargs: object) -> object:
         """Delegate to :func:`aeat.domain.manuals.iter_sections` for section iteration."""
         from ....domain.manuals import iter_sections
 
-        return iter_sections(*args, settings=self._settings(), **kwargs)  # type: ignore[arg-type]
+        return iter_sections(*args, settings=self._settings(), **kwargs)

@@ -42,7 +42,7 @@ from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
 from ....domain.calculations.registry._ids import BindingId, CasillaId, RelationId
-from ....domain.calculations.registry._schema import RegistrySnapshot
+from ....domain.calculations.registry._schema import CasillaDefinition, RegistrySnapshot
 from ...outbound.storage._errors import (
     StorageConflictError,
     StorageNetworkError,
@@ -502,7 +502,7 @@ def _decode_operator_edits(
     value_ranges: list[Any],
     cursor: int,
     operator_input_ids: list[CasillaId],
-    casilla_by_id: Mapping[CasillaId, object],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> tuple[tuple[OperatorEdit, ...], int, int]:
     """Map the per-casilla slice of the batchGet response into typed OperatorEdits."""
     cells_read = 0
@@ -517,8 +517,8 @@ def _decode_operator_edits(
         edits.append(
             OperatorEdit(
                 casilla=casilla_id,
-                casilla_number=casilla.number,  # type: ignore[attr-defined]
-                label=casilla.label,  # type: ignore[attr-defined]
+                casilla_number=casilla.number,
+                label=casilla.label,
                 value=coerced,
             )
         )
@@ -606,11 +606,16 @@ def _parse_relation_metadata(
         key, _, value = part.partition("=")
         fields[key.strip()] = value.strip()
     raw_provenance = fields.get("provenance", "")
-    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = (
-        raw_provenance  # type: ignore[assignment]
-        if raw_provenance in ("local_filing", "aeat_live", "operator_manual")
-        else None
-    )
+    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None
+    match raw_provenance:
+        case "local_filing":
+            provenance = "local_filing"
+        case "aeat_live":
+            provenance = "aeat_live"
+        case "operator_manual":
+            provenance = "operator_manual"
+        case _:
+            provenance = None
     source_filing_year: int | None = None
     raw_year = fields.get("source_filing_year", "")
     if raw_year:

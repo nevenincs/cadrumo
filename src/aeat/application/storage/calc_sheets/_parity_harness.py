@@ -54,6 +54,7 @@ from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
 from ....domain.calculations.registry._ids import CasillaId
+from ....domain.calculations.registry._schema import CasillaDefinition
 from ....domain.calculations.registry._schema import RegistrySnapshot
 from ._engine import build_export_plan
 from ._layout import plan_layout
@@ -404,7 +405,7 @@ def _collect_parity_rows(
 
 
 def _build_casilla_parity_row(
-    casilla: object,
+    casilla: CasillaDefinition,
     *,
     local: Decimal | None,
     sheets_v: Decimal | None,
@@ -415,9 +416,9 @@ def _build_casilla_parity_row(
     local_vs_aeat = local == aeat_v if aeat_v is not None and local is not None else None
     sheets_vs_aeat = sheets_v == aeat_v if aeat_v is not None and sheets_v is not None else None
     return CasillaParity(
-        casilla_id=casilla.id,  # type: ignore[attr-defined]
-        casilla_number=casilla.number,  # type: ignore[attr-defined]
-        label=casilla.label,  # type: ignore[attr-defined]
+        casilla_id=casilla.id,
+        casilla_number=casilla.number,
+        label=casilla.label,
         local=local,
         sheets=sheets_v,
         aeat=aeat_v,

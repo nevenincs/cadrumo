@@ -13,7 +13,7 @@ output at module-load time.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 
 from ...core.i18n import Translatable as tr
 from ...domain.profile._keys import ProfileKey, ProfileKeyRequirement
@@ -37,25 +37,29 @@ def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
             catalogue declare the same ``profile_key``.
     """
 
-    by_id: dict[str, WizardQuestion] = {}
-    for flow in flows:
-        for section in flow.sections:
-            for question in section.questions:
-                by_id[question.id] = question
-
+    by_id = {question.id: question for question in _iter_catalogue_questions(flows)}
     keys: dict[str, ProfileKey] = {}
+    for question in _iter_catalogue_questions(flows):
+        if question.profile_key is None:
+            continue
+        _reject_duplicate_profile_key(question, keys)
+        keys[question.profile_key] = _compile_one(question, by_id)
+    return tuple(keys.values())
+
+
+def _iter_catalogue_questions(flows: Sequence[WizardFlow]) -> Iterator[WizardQuestion]:
+    """Flatten flow -> section -> question into a single question stream."""
     for flow in flows:
         for section in flow.sections:
-            for question in section.questions:
-                if question.profile_key is None:
-                    continue
-                if question.profile_key in keys:
-                    raise WizardCompileError(
-                        f"wizard compile duplicate profile_key {question.profile_key!r}",
-                        context={"profile_key": question.profile_key, "question_id": question.id},
-                    )
-                keys[question.profile_key] = _compile_one(question, by_id)
-    return tuple(keys.values())
+            yield from section.questions
+
+
+def _reject_duplicate_profile_key(question: WizardQuestion, keys: dict[str, ProfileKey]) -> None:
+    if question.profile_key in keys:
+        raise WizardCompileError(
+            f"wizard compile duplicate profile_key {question.profile_key!r}",
+            context={"profile_key": question.profile_key, "question_id": question.id},
+        )
 
 
 def _compile_one(

@@ -80,13 +80,16 @@ def _seed_active_profile() -> None:
 
 
 def _capture_snapshot() -> str:
+    from aeat.application.workflow._models import resolve_active_bucket_id
     from aeat.application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    bucket_id = state.profiles[state.active_profile].bucket_id
+    active = resolve_active_bucket_id(state)
+    assert active is not None, "active profile must be seeded before capture"
+    bucket_id = state.profiles[active].bucket_id
     service = CensusSnapshotService(bucket_id=bucket_id)
     snapshot = service.capture(
-        profile_id=state.active_profile,
+        profile_id=active,
         captured_at=datetime.now(UTC),
         source_url=_G313,
         census_facts={
@@ -183,6 +186,7 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
     CLI test never reached the catalogue before this assertion landed
     — the emission was implemented but not witnessed end-to-end."""
 
+    from aeat.application.workflow._models import resolve_active_bucket_id
     from aeat.application.workflow._persistence import workflow_state_repository
     from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 
@@ -194,11 +198,12 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
 
     catalogue = BucketEventHistoryRepository().load()
     state = workflow_state_repository().load()
+    active = resolve_active_bucket_id(state)
     matching = [
         event
         for event in catalogue.events.values()
         if event.event_type is BucketEventType.CENSUS_APPLIED
-        and event.object_id == state.active_profile
+        and event.object_id == active
     ]
     assert matching, (
         f"CENSUS_APPLIED must fire after apply; "
@@ -206,4 +211,58 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
     )
     payload = matching[-1].payload
     assert payload["snapshot_id"] == snapshot_id
-    assert payload["profile_id"] == state.active_profile
+    assert payload["profile_id"] == active
+
+
+def test_rejected_subverb_returns_nonzero(cli_runner: CliRunner) -> None:
+    """Typer must refuse an undeclared subverb (e.g. 'diff' is not in
+    {refresh, show, compare, apply}). Without this regression a typo
+    would silently invoke nothing instead of erroring."""
+
+    _seed_active_profile()
+
+    result = cli_runner.invoke(profile_app, ["census", "diff"])
+
+    assert result.exit_code != 0
+
+
+def test_compare_emits_json_payload_with_typed_rows() -> None:
+    """The --format json branch on the root aeat CLI must render
+    CensusProfileComparison through model_dump(mode='json') cleanly."""
+
+    import json
+
+    from aeat.tests.cli_runner import invoke_cached_cli
+
+    _seed_active_profile()
+    _capture_snapshot()
+
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "census", "compare"])
+    assert result.exit_code == 0, result.output
+
+    payload = json.loads(result.output)
+    assert payload["snapshot_id"]
+    statuses = {row["path"]: row["status"] for row in payload["rows"]}
+    assert statuses["census.establecimiento_type"] == "census_only"
+    assert statuses["vivienda_office.total_m2"] == "census_only"
+
+
+def test_apply_emits_json_payload_with_written_paths() -> None:
+    """The --format json branch on apply must serialize CensusApplyResult
+    through model_dump(mode='json'); written_paths is a tuple that
+    JSON renders as a list."""
+
+    import json
+
+    from aeat.tests.cli_runner import invoke_cached_cli
+
+    _seed_active_profile()
+    _capture_snapshot()
+
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "census", "apply"])
+    assert result.exit_code == 0, result.output
+
+    payload = json.loads(result.output)
+    assert payload["snapshot_id"]
+    assert "census.establecimiento_type" in payload["written_paths"]
+    assert "vivienda_office.office_m2" in payload["written_paths"]

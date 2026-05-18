@@ -757,9 +757,6 @@ def calculate_modelo_revision(
     explicitly to advance through the lifecycle.
     """
 
-    from ...domain.calculations.registry import (
-        RegistrySnapshotError,
-    )
     from ...domain.calculations.registry._formula_runtime import (
         calculate_registry_snapshot,
     )
@@ -768,31 +765,8 @@ def calculate_modelo_revision(
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     work_units = wu_repo.load()
-    work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if work_unit.state is WorkUnitState.DISCARDED:
-        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
-
-    try:
-
-        authority = _authority_via_resources()
-    except FileNotFoundError as exc:
-        raise CalculationRegistryUnavailableError(
-            f"registry root {_registry_root()} is missing; cannot calculate"
-        ) from exc
-    try:
-        snapshot = authority.snapshot(
-            work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-        )
-    except RegistrySnapshotError as exc:
-        raise CalculationRegistryUnavailableError(
-            f"registry snapshot for modelo={work_unit.modelo!r} "
-            f"year={work_unit.filing_year} period={work_unit.period!r} "
-            f"could not be resolved: {exc}"
-        ) from exc
+    work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
+    snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
 
     period_date = filing_period_date or period_end_date(
         filing_year=work_unit.filing_year,
@@ -848,49 +822,8 @@ def calculate_modelo_revision(
             + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
         )
     )
-    casilla_values = {key: value for key, value in engine_result.values.items()}
-    # Emit a typed CasillaObservation for every casilla in the engine's
-    # ``values`` mapping (input + bound + computed). The engine's
-    # ``entries`` tuple covers only computed casillas, so building the
-    # observation envelope purely from ``entries`` would drop the
-    # ``legal_refs`` / ``source_refs`` grounding for every input and
-    # bound casilla — the regulatory grounding chain that the audit
-    # surface depends on. Index the entries by target so computed
-    # casillas keep their full formula provenance; non-computed
-    # casillas pull their grounding from the registry casilla
-    # definition.
-    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    entries_by_target = {entry.target: entry for entry in engine_result.entries}
-    typed_observations: tuple[CasillaObservation, ...] = tuple(
-        CasillaObservation(
-            casilla_id=casilla_id,
-            value=value,
-            formula_id=entry.formula_id if (entry := entries_by_target.get(casilla_id)) else None,
-            operand_refs=entry.operand_refs if (entry := entries_by_target.get(casilla_id)) else (),
-            operand_values=(
-                entry.operand_values if (entry := entries_by_target.get(casilla_id)) else ()
-            ),
-            legal_refs=(
-                entry.legal_refs
-                if (entry := entries_by_target.get(casilla_id))
-                else (
-                    casillas_by_id[casilla_id].legal_refs
-                    if casilla_id in casillas_by_id
-                    else ()
-                )
-            ),
-            source_refs=(
-                entry.source_refs
-                if (entry := entries_by_target.get(casilla_id))
-                else (
-                    casillas_by_id[casilla_id].source_refs
-                    if casilla_id in casillas_by_id
-                    else ()
-                )
-            ),
-        )
-        for casilla_id, value in casilla_values.items()
-    )
+    casilla_values = dict(engine_result.values)
+    typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
 
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -1445,68 +1378,14 @@ def verify_modelo_revision(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
 
-    findings: list[ModeloVerificationFinding] = []
-    resolved_casillas: list[str] = []
-    missing_required: list[str] = []
-
-    registry_lookup = _required_input_casillas_for_revision(
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
+    findings, resolved_casillas, missing_required = _collect_revision_verification_findings(
+        work_unit=work_unit,
+        target=target,
     )
-    if registry_lookup is None:
-        findings.append(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    f"registry snapshot for modelo={work_unit.modelo!r} "
-                    f"year={work_unit.filing_year} period={work_unit.period!r} "
-                    f"could not be resolved"
-                ),
-                next_action="aeat app registry verify",
-            )
-        )
-    else:
-        required, _optional = registry_lookup
-        # Check operator-supplied inputs, not engine output. With the
-        # formula engine wired into calculate, every declared casilla
-        # appears in ``casilla_values`` (engine-defaulted to zero for
-        # missing inputs). ``inputs_snapshot`` carries only the inputs
-        # the operator actually supplied — that is the right basis for
-        # the "missing required" gate.
-        revision_keys = set(target.inputs_snapshot)
-        for casilla_id in required:
-            if casilla_id in revision_keys:
-                resolved_casillas.append(casilla_id)
-            else:
-                missing_required.append(casilla_id)
-                findings.append(
-                    ModeloVerificationFinding(
-                        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
-                        severity=ModeloVerificationFindingSeverity.BLOCKING,
-                        casilla_id=casilla_id,
-                        message=(
-                            f"required casilla {casilla_id!r} is not present in "
-                            f"the calculation revision's inputs_snapshot"
-                        ),
-                        next_action=(
-                            f"aeat app modelo work calculate {target.work_unit_id} --casilla {casilla_id}=VALUE"
-                        ),
-                    )
-                )
-
-    has_blocking = any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
-    if has_blocking:
-        completeness = (
-            VerificationCompletenessStatus.INCOMPLETE
-            if missing_required and not any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in findings)
-            else VerificationCompletenessStatus.BLOCKED
-        )
-        granted = False
-    else:
-        completeness = VerificationCompletenessStatus.COMPLETE
-        granted = True
+    completeness, granted = _classify_verification_outcome(
+        findings=findings,
+        missing_required=missing_required,
+    )
 
     now = clock or datetime.now(UTC)
     report_id = derive_verification_report_id(
@@ -1581,6 +1460,189 @@ def verify_modelo_revision(
     )
 
     return report
+
+
+def _collect_revision_verification_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+) -> tuple[list[ModeloVerificationFinding], list[str], list[str]]:
+    """Build the verification finding list for one calculation revision.
+
+    Returns ``(findings, resolved_casillas, missing_required)``. A
+    revision whose ``(modelo, year, period)`` triple does not resolve
+    against the registry yields a single BLOCKING_RULE finding and
+    empty resolved/missing lists — there is no per-casilla check to
+    perform without a registry snapshot.
+
+    With a snapshot present, the operator-supplied
+    ``inputs_snapshot`` keys are compared against the registry's
+    required-input casilla set. Each missing required casilla
+    produces a MISSING_REQUIRED_CASILLA finding plus an entry in the
+    missing-required list; each present required casilla lands in
+    the resolved-casillas list.
+    """
+    findings: list[ModeloVerificationFinding] = []
+    resolved_casillas: list[str] = []
+    missing_required: list[str] = []
+
+    registry_lookup = _required_input_casillas_for_revision(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    if registry_lookup is None:
+        findings.append(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message=(
+                    f"registry snapshot for modelo={work_unit.modelo!r} "
+                    f"year={work_unit.filing_year} period={work_unit.period!r} "
+                    f"could not be resolved"
+                ),
+                next_action="aeat app registry verify",
+            )
+        )
+        return findings, resolved_casillas, missing_required
+
+    required, _optional = registry_lookup
+    revision_keys = set(target.inputs_snapshot)
+    for casilla_id in required:
+        if casilla_id in revision_keys:
+            resolved_casillas.append(casilla_id)
+        else:
+            missing_required.append(casilla_id)
+            findings.append(_missing_required_casilla_finding(casilla_id, target.work_unit_id))
+    return findings, resolved_casillas, missing_required
+
+
+def _missing_required_casilla_finding(casilla_id: str, work_unit_id: str) -> ModeloVerificationFinding:
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=casilla_id,
+        message=(
+            f"required casilla {casilla_id!r} is not present in "
+            f"the calculation revision's inputs_snapshot"
+        ),
+        next_action=(f"aeat app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
+    )
+
+
+def _classify_verification_outcome(
+    *,
+    findings: list[ModeloVerificationFinding],
+    missing_required: list[str],
+) -> tuple[VerificationCompletenessStatus, bool]:
+    """Compute the completeness status + granted flag from finding shape.
+
+    With no BLOCKING finding, the report is COMPLETE and the
+    verified-complete transition is granted. With at least one
+    BLOCKING_RULE finding, the report is BLOCKED. With BLOCKING
+    findings that are exclusively MISSING_REQUIRED_CASILLA, the
+    report is INCOMPLETE so the operator sees that completing the
+    inputs unblocks the transition.
+    """
+    has_blocking = any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
+    if not has_blocking:
+        return VerificationCompletenessStatus.COMPLETE, True
+    has_blocking_rule = any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in findings)
+    if missing_required and not has_blocking_rule:
+        return VerificationCompletenessStatus.INCOMPLETE, False
+    return VerificationCompletenessStatus.BLOCKED, False
+
+
+def _load_work_unit_for_calculation(work_units, *, work_unit_id: str):  # type: ignore[no-untyped-def]
+    """Load a work unit by id, rejecting missing ids and DISCARDED state.
+
+    Returns the work unit. Raises :class:`WorkUnitNotFoundError`
+    when the id is absent and :class:`WorkUnitMutationRefusedError`
+    when the work unit is in DISCARDED state — a discarded work
+    unit cannot accept a new calculation revision.
+    """
+    work_unit = work_units.get(work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+    if work_unit.state is WorkUnitState.DISCARDED:
+        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
+    return work_unit
+
+
+def _resolve_registry_snapshot_for_work_unit(work_unit):  # type: ignore[no-untyped-def]
+    """Resolve the registry snapshot for ``(modelo, filing_year, period)``.
+
+    Both failure modes (registry root missing on disk, or the
+    authority refusing the (modelo, year, period) triple) re-raise
+    as :class:`CalculationRegistryUnavailableError` so the caller
+    sees one typed envelope regardless of which boundary refused.
+    """
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        authority = _authority_via_resources()
+    except FileNotFoundError as exc:
+        raise CalculationRegistryUnavailableError(
+            f"registry root {_registry_root()} is missing; cannot calculate"
+        ) from exc
+    try:
+        return authority.snapshot(
+            work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        )
+    except RegistrySnapshotError as exc:
+        raise CalculationRegistryUnavailableError(
+            f"registry snapshot for modelo={work_unit.modelo!r} "
+            f"year={work_unit.filing_year} period={work_unit.period!r} "
+            f"could not be resolved: {exc}"
+        ) from exc
+
+
+def _build_typed_observations(*, engine_result, snapshot) -> tuple[CasillaObservation, ...]:  # type: ignore[no-untyped-def]
+    """Build a typed CasillaObservation tuple for every casilla in the engine result.
+
+    Computed casillas carry their full formula provenance from the
+    engine entry; non-computed (input + bound) casillas pull their
+    legal_refs / source_refs from the registry casilla definition.
+    Building observations purely from ``engine_result.entries``
+    would drop grounding for every input and bound casilla — the
+    audit surface depends on the full chain.
+    """
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    entries_by_target = {entry.target: entry for entry in engine_result.entries}
+    return tuple(
+        _casilla_observation_for(
+            casilla_id=casilla_id,
+            value=value,
+            entry=entries_by_target.get(casilla_id),
+            registry_casilla=casillas_by_id.get(casilla_id),
+        )
+        for casilla_id, value in engine_result.values.items()
+    )
+
+
+def _casilla_observation_for(*, casilla_id: str, value: Decimal, entry, registry_casilla) -> CasillaObservation:  # type: ignore[no-untyped-def]
+    """Project one casilla into a :class:`CasillaObservation` with full provenance."""
+    if entry is not None:
+        return CasillaObservation(
+            casilla_id=casilla_id,
+            value=value,
+            formula_id=entry.formula_id,
+            operand_refs=entry.operand_refs,
+            operand_values=entry.operand_values,
+            legal_refs=entry.legal_refs,
+            source_refs=entry.source_refs,
+        )
+    return CasillaObservation(
+        casilla_id=casilla_id,
+        value=value,
+        formula_id=None,
+        operand_refs=(),
+        operand_values=(),
+        legal_refs=registry_casilla.legal_refs if registry_casilla is not None else (),
+        source_refs=registry_casilla.source_refs if registry_casilla is not None else (),
+    )
 
 
 def file_modelo_revision(

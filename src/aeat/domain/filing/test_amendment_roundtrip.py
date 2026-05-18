@@ -160,3 +160,81 @@ def test_filing_amendment_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_filing_amendment_emptied_delta_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: emptying the delta tuple must surface on load.
+
+    :class:`FilingAmendment` enforces ``delta: CasillaDelta =
+    Field(min_length=1)`` — an amendment with no corrections is a
+    semantically empty record that would silently invalidate the
+    audit-trail purpose of the amendment catalogue. A persisted
+    amendment whose delta tuple is emptied post-save MUST fail load
+    via the min_length=1 constraint.
+
+    Persists an amendment, reaches into ``SecureObjectRow`` via
+    ``session_scope``, surgically empties the delta tuple in the
+    encrypted JSON envelope, and asserts the load path catches the
+    drift.
+
+    If this test passes silently with an empty delta, the amendment
+    catalogue boundary is tautological and the audit-trail contract
+    is not actually enforced post-persistence.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._complementaria_repository import _AMENDMENT_NAMESPACE
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "amendment-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+        original = _populated_amendment()
+        repo = FilingAmendmentRepository()
+        repo.save(original)
+
+        with session_scope(engine) as session:
+            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+            amendment_rows = [r for r in all_rows if r.namespace == _AMENDMENT_NAMESPACE]
+            assert len(amendment_rows) == 1, (
+                f"expected one amendment row, found {len(amendment_rows)} "
+                f"(namespaces: {sorted({r.namespace for r in all_rows})})"
+            )
+            row = amendment_rows[0]
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            payload = envelope["payload"]
+            assert payload.get("delta"), (
+                "fixture must serialise a non-empty delta tuple for "
+                "this proof test to be meaningful"
+            )
+            payload["delta"] = []
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            repo.load(original.amendment_id)
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: emptying the delta tuple "
+            "did NOT surface on load. The amendment catalogue "
+            "boundary is tautological and the audit-trail contract "
+            "is not actually enforced post-persistence."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)

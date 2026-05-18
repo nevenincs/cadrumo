@@ -19,7 +19,7 @@ from ...domain.deadlines._models import (
 )
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile._projections import record_to_path_values
-from ..workflow._models import WorkflowState
+from ..workflow._models import WorkflowState, resolve_active_bucket_id
 from . import _compiler as _compiler  # side-effect: registers PROFILE_KEYS before _keys_validation
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardError
@@ -95,7 +95,7 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
     auth_provider = state.auth.provider or ""
     login_ready = state.auth.authenticated_at is not None
     return WizardStatusReport(
-        active_profile=state.active_profile,
+        active_profile=resolve_active_bucket_id(state),
         profile_ready=profile_ready,
         identity_ready=identity_ready,
         enrolment_ready=enrolment_ready,
@@ -161,7 +161,7 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
     except ValidationError as exc:
         raise WizardStatusError(
             "active profile fails wizard projection",
-            context={"active_profile": state.active_profile, "errors": exc.error_count()},
+            context={"active_profile": resolve_active_bucket_id(state), "errors": exc.error_count()},
         ) from exc
     if not isinstance(typed, SetupAnswers):
         raise WizardStatusError(
@@ -171,7 +171,7 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
     if not typed.tax_id:
         raise WizardStatusError(
             "active profile is missing tax.id",
-            context={"active_profile": state.active_profile},
+            context={"active_profile": resolve_active_bucket_id(state)},
         )
     return AutonomoProfile(
         tax_id=typed.tax_id,

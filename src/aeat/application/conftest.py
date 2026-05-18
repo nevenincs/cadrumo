@@ -7,25 +7,24 @@ every test under this package, so the active-profile pointer file that
 `_write_active_profile_pointer` lands inside the test sandbox and
 never bleeds into the project's real `var/storage/` directory.
 
-Isolation flows through :func:`aeat.core.config.override_settings`,
-the canonical injection mechanism — not raw `monkeypatch.setenv` —
-so the test code path mirrors what production code does when it
-needs to override settings (a context manager around a block).
+Isolation uses `monkeypatch.setenv` (not `override_settings`) on
+purpose: `BaseSettings` re-reads environment variables on every
+`Settings()` instantiation, so later nested fixtures that mutate
+other AEAT_* variables compose correctly. An `override_settings`
+context manager would snapshot the Settings at this fixture's
+setup time and mask any subsequent env changes from the per-test
+fixture chain.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from aeat.core.config import override_settings
-
 
 @pytest.fixture(autouse=True)
-def _isolated_aeat_root(tmp_path: Path) -> Iterator[None]:
-    """Redirect `Settings.aeat_local_storage_root` to the test's tmp_path."""
+def _isolated_aeat_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Point `Settings.aeat_local_storage_root` at the test's `tmp_path`."""
 
-    with override_settings(aeat_local_storage_root=tmp_path):
-        yield
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))

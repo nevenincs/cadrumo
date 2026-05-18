@@ -694,11 +694,11 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:ar
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
-id = "modelo-130-envelope-developer-nif"
+id = "modelo-130-envelope-presenter-nif"
 offset = 101
 length = 9
 kind = "header"
-header_key = "developer_nif"
+header_key = "presenter_nif"
 data_type = "text"
 required = false
 padding = "right_space"

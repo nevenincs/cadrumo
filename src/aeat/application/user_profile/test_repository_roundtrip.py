@@ -224,3 +224,96 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: a snapshot whose facts drift from canonical_hash must surface.
+
+    :class:`UserProfileSnapshot` carries a model_validator that
+    re-derives the canonical_hash from the persisted facts and
+    rejects any drift. The snapshot is the content-addressed
+    proof-of-facts contract; a silently-mutated fact tuple with a
+    stale hash would invalidate the audit trail for downstream
+    filings.
+
+    Persists a snapshot via the snapshots repository, reaches into
+    SecureObjectRow via session_scope, surgically mutates one fact's
+    value WITHOUT recomputing canonical_hash, and asserts the load
+    path catches the drift via the model_validator's derived-hash
+    check.
+
+    If this test passes silently with the tampered fact, the
+    canonical-hash guarantee is tautological — the persisted hash
+    no longer proves the persisted facts.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._repository import USER_PROFILE_SNAPSHOT_NAMESPACE
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "user-profile-snapshot-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        objects = SecureObjectRepository(engine=engine)
+        bucket_id = "profile-bucket-A"
+        lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
+        snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=objects)
+        record = _populated_record()
+        lifecycle.save(record)
+        snapshot = UserProfileSnapshot.from_profile(record)
+        snapshots.save(snapshot)
+
+        with session_scope(engine) as session:
+            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+            snapshot_rows = [
+                r for r in all_rows if r.namespace == USER_PROFILE_SNAPSHOT_NAMESPACE
+            ]
+            assert len(snapshot_rows) == 1
+            row = snapshot_rows[0]
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            payload = envelope["payload"]
+            assert payload["facts"], (
+                "fixture must serialise at least one fact onto the "
+                "snapshot for this proof test to be meaningful"
+            )
+            # Mutate the first fact's value while leaving canonical_hash
+            # untouched. The model_validator's derived-hash check
+            # must reject the rehydrated record.
+            first_fact = payload["facts"][0]
+            original_value = first_fact.get("value")
+            mutated_value = (
+                "tampered-string"
+                if isinstance(original_value, str) and original_value != "tampered-string"
+                else "drift-canary"
+            )
+            first_fact["value"] = mutated_value
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            snapshots.load(snapshot.snapshot_id)
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: mutating a fact without "
+            "recomputing canonical_hash did NOT surface on load. The "
+            "user-profile snapshot's content-addressing guarantee is "
+            "tautological — the persisted hash no longer proves the "
+            "persisted facts."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)

@@ -160,3 +160,40 @@ def test_reconcile_declaration_source_refused_until_parser_lands(
         ["app", "modelo", "reconcile", work_unit_id, "--from-declaration", str(fake_declaration)],
     )
     assert result.exit_code != 0, result.output
+
+
+def test_reconcile_by_flag_lands_in_modelo_reconciled_event(cli_runner: CliRunner) -> None:
+    """The --by override attaches to the MODELO_RECONCILED event's actor
+    field, replacing the default (the active profile display_name).
+    Without this thread-through the audit trail would falsely attribute
+    every reconciliation to the active profile even when a teammate
+    ran the command."""
+
+    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+
+    result = cli_runner.invoke(
+        app,
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            work_unit_id,
+            "--from-justificante",
+            str(MODELO_130_FIXTURE),
+            "--by",
+            "auditor@team",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    catalogue = BucketEventHistoryRepository().load()
+    matching = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.MODELO_RECONCILED
+        and event.object_id == work_unit_id
+    ]
+    assert matching, "MODELO_RECONCILED event must land on the catalogue"
+    assert matching[-1].actor == "auditor@team"

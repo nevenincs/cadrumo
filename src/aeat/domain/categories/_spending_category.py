@@ -70,6 +70,16 @@ class SpendingCategoryFamily(StrEnum):
     the membership table is :data:`CATEGORY_FAMILY_MEMBERS` and the
     invariant is enforced by
     :func:`aeat.domain.categories.test_spending_category.test_every_category_belongs_to_exactly_one_family`.
+
+    The home-office bucket is split into two distinct families per
+    LIRPF Art. 30.2 rule 5 (Ley 6/2017, BOE-A-2017-12544): the
+    :attr:`HOME_OFFICE_SUMINISTROS` family carries the utility costs
+    on which the statutory 0.30 multiplier applies on top of the
+    operator-chosen vivienda afectación ratio; the
+    :attr:`HOME_OFFICE_OWNERSHIP` family carries the
+    titularity-attached costs (amortización, IBI, comunidad) that
+    deduct at the raw vivienda afectación ratio with no statutory
+    multiplier.
     """
 
     SOCIAL_SECURITY = "social_security"

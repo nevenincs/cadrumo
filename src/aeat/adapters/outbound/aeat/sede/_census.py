@@ -8,8 +8,8 @@ HTML persistence path, and the
 wiring are separate concerns that compose with this module; nothing in
 here performs I/O.
 
-The fact-set follows the comprehensive census schema delta landed in
-P01:
+The fact-set covers every field on the G313 (Mis Datos Censales)
+projection:
 
 * fiscal address: cadastral reference + habitual-vivienda flag
 * census section: activity start / end dates, establecimiento type,

@@ -26,6 +26,7 @@ from ._models import (
     AutonomoProfile,
     FilingObligation,
     ObligationStatus,
+    Recovery,
     Schedule,
 )
 from ._recargo import build_recovery_for_overdue
@@ -55,6 +56,37 @@ def _classify(closes_on: date, today: date, due_soon_days: int) -> ObligationSta
     if 1 <= delta <= due_soon_days:
         return ObligationStatus.DUE_SOON
     return ObligationStatus.UPCOMING
+
+
+def _window_outside_activity_period(
+    *,
+    opens_on: date,
+    closes_on: date,
+    activity_start_date: date | None,
+    activity_end_date: date | None,
+) -> bool:
+    """Return True when an AEAT window falls entirely outside the
+    operator's census-declared activity period.
+
+    Two gates, both grounded in RGAT Arts. 9 / 11 (census activity
+    start / end dates published on G313):
+
+    * Pre-start: ``closes_on < activity_start_date`` — the entire
+      window precedes the alta. AEAT does not expect a filing for
+      activity that did not occur.
+    * Post-baja: ``opens_on > activity_end_date`` — the entire window
+      follows the baja. AEAT does not expect a forward-period filing
+      after the operator has declared baja.
+
+    Windows that straddle either date stay on the schedule — the
+    operator may still owe a return covering the active fraction.
+    """
+
+    if activity_start_date is not None and closes_on < activity_start_date:
+        return True
+    if activity_end_date is not None and opens_on > activity_end_date:
+        return True
+    return False
 
 
 class DeadlineEngine:
@@ -133,51 +165,15 @@ class DeadlineEngine:
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
         obligations: list[FilingObligation] = []
         for modelo, revision, window in self._deadline_windows(year):
-            registry_period = _window_registry_period(window)
-            if revision.filing_schedules and not applicable_filing_schedules(
-                revision,
-                profile,
-                period=registry_period,
-            ):
-                continue
-            condition_text = self._evaluate_conditions(
-                profile,
-                window.applicability_conditions,
-                mode=window.applicability_condition_mode,
+            obligation = self._obligation_for_window(
+                profile=profile,
+                modelo=modelo,
+                revision=revision,
+                window=window,
+                reference_today=reference_today,
             )
-            if condition_text is None:
-                continue
-            obligation_status = _classify(
-                window.closes_on,
-                reference_today,
-                self.due_soon_days,
-            )
-            recovery = None
-            if obligation_status is ObligationStatus.OVERDUE:
-                days_late = (reference_today - window.closes_on).days
-                if days_late >= 1:
-                    try:
-                        recovery = build_recovery_for_overdue(
-                            days_late=days_late,
-                            modelo=modelo,
-                            period=window.period,
-                        )
-                    except (FileNotFoundError, ValueError):
-                        recovery = None
-            obligations.append(
-                FilingObligation(
-                    modelo=modelo,
-                    period=window.period,
-                    opens_on=window.opens_on,
-                    closes_on=window.closes_on,
-                    payment_cutoff_on=window.payment_cutoff_on,
-                    status=obligation_status,
-                    applies_because=condition_text,
-                    boe_references=window.legal_refs,
-                    recovery=recovery,
-                )
-            )
-
+            if obligation is not None:
+                obligations.append(obligation)
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
         if not obligations and not self._has_deadline_windows(year):
             raise ScheduleComputationError(f"No registry deadline windows registered for year {year}")
@@ -190,6 +186,65 @@ class DeadlineEngine:
             year=year,
             obligations=tuple(obligations),
             generated_at=datetime.now(UTC),
+        )
+
+    def _obligation_for_window(
+        self,
+        *,
+        profile: AutonomoProfile,
+        modelo: str,
+        revision: ModeloRevision,
+        window: DeadlineWindowDefinition,
+        reference_today: date,
+    ) -> FilingObligation | None:
+        """Project one (modelo, revision, window) tuple into a :class:`FilingObligation`, or ``None``.
+
+        Returns ``None`` when the window does not apply to this
+        profile — either the revision has filing schedules and none
+        match for the window's registry period, the applicability
+        conditions do not resolve, or the window falls outside the
+        profile's activity period. Otherwise builds the obligation
+        with its classified status and, for OVERDUE obligations with
+        ≥1 day late, a registry-backed recovery payload (None when
+        the recovery registry has no entry for the modelo).
+        """
+        registry_period = _window_registry_period(window)
+        if revision.filing_schedules and not applicable_filing_schedules(
+            revision,
+            profile,
+            period=registry_period,
+        ):
+            return None
+        condition_text = self._evaluate_conditions(
+            profile,
+            window.applicability_conditions,
+            mode=window.applicability_condition_mode,
+        )
+        if condition_text is None:
+            return None
+        if _window_outside_activity_period(
+            opens_on=window.opens_on,
+            closes_on=window.closes_on,
+            activity_start_date=profile.activity_start_date,
+            activity_end_date=profile.activity_end_date,
+        ):
+            return None
+        obligation_status = _classify(window.closes_on, reference_today, self.due_soon_days)
+        return FilingObligation(
+            modelo=modelo,
+            period=window.period,
+            opens_on=window.opens_on,
+            closes_on=window.closes_on,
+            payment_cutoff_on=window.payment_cutoff_on,
+            status=obligation_status,
+            applies_because=condition_text,
+            boe_references=window.legal_refs,
+            recovery=_overdue_recovery_or_none(
+                obligation_status=obligation_status,
+                reference_today=reference_today,
+                window=window,
+                modelo=modelo,
+            ),
         )
 
     def explain(self, profile: AutonomoProfile, modelo: str, *, year: int | None = None) -> str:
@@ -261,6 +316,37 @@ class DeadlineEngine:
         if explanations is None:
             return None
         return " ".join(explanations)
+
+
+def _overdue_recovery_or_none(
+    *,
+    obligation_status: ObligationStatus,
+    reference_today: date,
+    window: DeadlineWindowDefinition,
+    modelo: str,
+) -> Recovery | None:
+    """Build a registry-backed recovery payload for ≥1-day-late OVERDUE obligations, or ``None``.
+
+    Same-day OVERDUE (``days_late == 0``) and non-OVERDUE statuses
+    yield ``None``. A recovery-registry lookup miss
+    (:class:`FileNotFoundError` or :class:`ValueError`) is treated as
+    "no recovery defined" rather than fatal so the obligation still
+    surfaces — the operator gets a status flag without speculative
+    surcharge math.
+    """
+    if obligation_status is not ObligationStatus.OVERDUE:
+        return None
+    days_late = (reference_today - window.closes_on).days
+    if days_late < 1:
+        return None
+    try:
+        return build_recovery_for_overdue(
+            days_late=days_late,
+            modelo=modelo,
+            period=window.period,
+        )
+    except (FileNotFoundError, ValueError):
+        return None
 
 
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:

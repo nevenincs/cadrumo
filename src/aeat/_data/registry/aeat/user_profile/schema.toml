@@ -496,12 +496,12 @@ description = "Program version header supplied by export context."
 export_headers = ["program_version"]
 
 [[sections.fields]]
-key = "developer_tax_id"
+key = "presenter_tax_id"
 type = "string"
 required = false
 sensitivity = "audit"
 description = "Developer NIF/CIF header supplied by export context."
-export_headers = ["developer_nif", "developer_tax_id"]
+export_headers = ["presenter_nif", "presenter_tax_id"]
 
 [[sections.fields]]
 key = "iban"

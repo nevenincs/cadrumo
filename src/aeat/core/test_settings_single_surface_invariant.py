@@ -92,17 +92,35 @@ def _collect_aeat_string_bindings(tree: ast.Module) -> dict[str, str]:
     """
     constants: dict[str, str] = {}
     for node in ast.walk(tree):
-        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
-            value = node.value.value
-            if isinstance(value, str) and _AEAT_KEY_PATTERN.fullmatch(value):
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        constants[target.id] = value
-        elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.value, ast.Constant):
-            value = node.value.value
-            if isinstance(value, str) and _AEAT_KEY_PATTERN.fullmatch(value) and isinstance(node.target, ast.Name):
-                constants[node.target.id] = value
+        for name, value in _aeat_string_binding_pairs(node):
+            constants[name] = value
     return constants
+
+
+def _aeat_string_binding_pairs(node: ast.AST) -> tuple[tuple[str, str], ...]:
+    """Yield every ``(name, AEAT_* literal)`` pair this AST node binds.
+
+    ``Assign`` nodes contribute one pair per ``ast.Name`` target;
+    ``AnnAssign`` nodes contribute zero or one. Any other node, any
+    non-constant RHS, any non-AEAT-prefixed literal, and any
+    non-string value short-circuit to the empty tuple — keeping the
+    scanner's whole-tree walk uniform regardless of which node shape
+    it encounters.
+    """
+    if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
+        value = node.value.value
+        if not (isinstance(value, str) and _AEAT_KEY_PATTERN.fullmatch(value)):
+            return ()
+        return tuple((target.id, value) for target in node.targets if isinstance(target, ast.Name))
+    if isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.value, ast.Constant):
+        value = node.value.value
+        if (
+            isinstance(value, str)
+            and _AEAT_KEY_PATTERN.fullmatch(value)
+            and isinstance(node.target, ast.Name)
+        ):
+            return ((node.target.id, value),)
+    return ()
 
 
 def _collect_environ_aliases(tree: ast.Module) -> set[str]:
@@ -119,15 +137,26 @@ def _collect_environ_aliases(tree: ast.Module) -> set[str]:
     """
     aliases: set[str] = {"environ"}  # any "environ" name is suspect; the AEAT_* key gate filters noise
     for node in ast.walk(tree):
-        if isinstance(node, ast.Assign) and _is_os_environ(node.value):
-            for target in node.targets:
-                if isinstance(target, ast.Name):
-                    aliases.add(target.id)
-        elif isinstance(node, ast.ImportFrom) and node.module == "os":
-            for alias in node.names:
-                if alias.name == "environ":
-                    aliases.add(alias.asname or "environ")
+        aliases.update(_environ_alias_names(node))
     return aliases
+
+
+def _environ_alias_names(node: ast.AST) -> tuple[str, ...]:
+    """Return every NAME ``node`` binds to ``os.environ`` (or rebinds via ``from os import environ``).
+
+    Two patterns yield aliases:
+      - ``ast.Assign`` whose RHS resolves to ``os.environ`` — each
+        ``ast.Name`` target on the LHS becomes an alias.
+      - ``ast.ImportFrom`` of module ``os`` where the ``environ``
+        name is imported (with or without an ``as`` rename).
+
+    Any other node contributes nothing.
+    """
+    if isinstance(node, ast.Assign) and _is_os_environ(node.value):
+        return tuple(target.id for target in node.targets if isinstance(target, ast.Name))
+    if isinstance(node, ast.ImportFrom) and node.module == "os":
+        return tuple(alias.asname or "environ" for alias in node.names if alias.name == "environ")
+    return ()
 
 
 def _is_string_with_aeat_format_template(node: ast.expr) -> bool:

@@ -253,11 +253,11 @@ legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art
 source_refs = ["aeat-dr-232-2018"]
 
 [[revisions."2018-y-siguientes".export_layouts.records.fields]]
-id = "modelo-232-2018-envelope-developer-nif"
+id = "modelo-232-2018-envelope-presenter-nif"
 offset = 101
 length = 9
 kind = "header"
-header_key = "developer_nif"
+header_key = "presenter_nif"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -3128,11 +3128,11 @@ legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art
 source_refs = ["aeat-dr-232-2016"]
 
 [[revisions."2016-2017".export_layouts.records.fields]]
-id = "modelo-232-2016-envelope-developer-nif"
+id = "modelo-232-2016-envelope-presenter-nif"
 offset = 101
 length = 9
 kind = "header"
-header_key = "developer_nif"
+header_key = "presenter_nif"
 data_type = "text"
 required = false
 padding = "right_space"

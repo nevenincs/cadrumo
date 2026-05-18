@@ -102,7 +102,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
             "declaration_type": "I",
             "legal_name": "EXPORT TEST",
             "program_version": "A001",
-            "developer_tax_id": "A12345678",
+            "presenter_tax_id": "A12345678",
         }
     else:
         inputs = {
@@ -118,7 +118,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
             "surnames": "EXPORT TEST",
             "name": "ANA",
             "program_version": "A001",
-            "developer_tax_id": "A12345678",
+            "presenter_tax_id": "A12345678",
         }
     draft = build_draft(
         modelo="123",

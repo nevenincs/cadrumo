@@ -496,8 +496,10 @@ def build_overview_status_report(
     invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
     drafts = tuple((draft_repository or FilingDraftRepository()).iter_drafts())
     unreadable_total = secure_object_unreadable_total() if unreadable_rows is None else unreadable_rows
+    from ..workflow._models import resolve_active_bucket_id
+
     return OverviewStatusReport(
-        active_profile=current.active_profile,
+        active_profile=resolve_active_bucket_id(current),
         transactions=len(transactions.transactions),
         invoices=len(invoices),
         drafts=len(drafts),

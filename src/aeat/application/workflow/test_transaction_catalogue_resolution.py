@@ -41,9 +41,18 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def _state(*, profile: str, bucket_id: str) -> WorkflowState:
+    """Build a WorkflowState whose active profile is set via the env override.
+
+    The active-profile precedence chain reads from
+    ``Settings.aeat_active_profile`` ahead of any state field; tests
+    that exercise the resolution path under multiple active profiles
+    set the override per-assertion rather than embedding the active
+    profile inside the state record.
+    """
+
+    del profile  # callers set the override via override_settings on each assertion
     return WorkflowState(
-        active_profile=profile,
-        profiles={profile: ProfileBucketPointer(bucket_id=bucket_id)},
+        profiles={bucket_id: ProfileBucketPointer(bucket_id=bucket_id)},
     )
 
 
@@ -72,16 +81,19 @@ def _transaction(provider_id: str) -> Transaction:
 def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    from aeat.core.config import override_settings
+
     first_state = _state(profile="alpha", bucket_id="bucket-alpha")
     second_state = _state(profile="beta", bucket_id="bucket-beta")
     first_transaction = _transaction("same-provider-row")
 
-    active_transaction_catalogue_repository(first_state, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((first_transaction,)),
-    )
-
-    first_catalogue = active_transaction_catalogue_repository(first_state, objects=secure_objects).load()
-    second_catalogue = active_transaction_catalogue_repository(second_state, objects=secure_objects).load()
+    with override_settings(aeat_active_profile="bucket-alpha"):
+        active_transaction_catalogue_repository(first_state, objects=secure_objects).save(
+            TransactionCatalogue.from_transactions((first_transaction,)),
+        )
+        first_catalogue = active_transaction_catalogue_repository(first_state, objects=secure_objects).load()
+    with override_settings(aeat_active_profile="bucket-beta"):
+        second_catalogue = active_transaction_catalogue_repository(second_state, objects=secure_objects).load()
 
     assert tuple(first_catalogue.transactions) == (first_transaction.transaction_id,)
     assert second_catalogue.transactions == {}

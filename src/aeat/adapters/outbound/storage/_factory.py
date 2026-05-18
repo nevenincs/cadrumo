@@ -99,10 +99,10 @@ def _required_scopes() -> tuple[str, ...]:
     return REQUIRED_SCOPES
 
 
-def _resolve_profile(profile_override: str | None) -> str:
+def _resolve_profile() -> str:
     from ..google._profile_binding import resolve_active_profile
 
-    return resolve_active_profile(profile_override)
+    return resolve_active_profile()
 
 
 def _resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
@@ -129,14 +129,11 @@ def _resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
 
 def get_storage_provider(
     *,
-    profile_override: str | None = None,
     settings: Settings | None = None,
 ) -> StorageProvider:
-    """Build a `StorageProvider` for the active (or overridden) AEAT profile.
+    """Build a `StorageProvider` for the active AEAT profile.
 
     Args:
-        profile_override: Optional `--profile` value. When non-empty
-            this wins over workflow state's active profile.
         settings: Optional pre-built `Settings`. Defaults to
             `load_settings()`.
 
@@ -153,7 +150,7 @@ def get_storage_provider(
 
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.aeat_storage_provider_kind)
-    profile = _resolve_profile(profile_override)
+    profile = _resolve_profile()
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
         root = settings_resolved.aeat_local_storage_root / profile

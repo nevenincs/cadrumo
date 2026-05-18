@@ -19,6 +19,8 @@ from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
+    CasillaDefinition,
+    ConstructDefinition,
     DataBindingDefinition,
     DatedValue,
     DependencyClassificationDefinition,
@@ -197,6 +199,25 @@ def _extract_pdf_text_cached(path: str, byte_count: int, modified_ns: int) -> st
         return "\n".join(pages)
     except Exception as exc:
         raise OSError(f"could not extract text from manual PDF {path}") from exc
+
+
+_SIMPLE_APPLICATION_LINK_RULES: tuple[tuple[str, str, str], ...] = (
+    # (revision_attribute, required_application_surface, failure_message)
+    # Each rule fires when the revision declares the listed records but
+    # the application-link bundle does not declare the matching surface.
+    # Rules that require composite conditions (casillas, modelo-145
+    # communication) stay inline in _application_link_surface_failures.
+    ("formulas", "calculation", "formulas require a calculation application link"),
+    ("extraction_profiles", "extractor", "extraction profiles require an extractor application link"),
+    ("export_layouts", "export", "export layouts require an export application link"),
+    (
+        "verification_expectations",
+        "verification",
+        "verification expectations require a verification application link",
+    ),
+    ("live_cross_references", "portal", "live/static cross-references require a portal application link"),
+    ("deadline_windows", "deadline", "deadline windows require a deadline application link"),
+)
 
 
 class RegistryValidator:
@@ -800,7 +821,7 @@ class RegistryValidator:
         *,
         prefix: str,
         classification: DependencyClassificationDefinition,
-        construct_by_id: Mapping[str, object],
+        construct_by_id: Mapping[str, ConstructDefinition],
         relation_by_id: Mapping[str, RelationDefinition],
     ) -> None:
         owner = f"dependency classification {classification.id}"
@@ -813,7 +834,7 @@ class RegistryValidator:
                     f"{prefix}: {owner} references unknown construct {construct_id!r}"
                 )
                 continue
-            if classification.id not in construct.dependency_classifications:  # type: ignore[attr-defined]
+            if classification.id not in construct.dependency_classifications:
                 failures.append(
                     f"{prefix}: {owner} targets construct {construct_id!r} but the construct does not list it"
                 )
@@ -923,7 +944,7 @@ class RegistryValidator:
         revision: ModeloRevision,
         casillas: set[str],
         bindings: set[str],
-        casilla_by_id: Mapping[str, object],
+        casilla_by_id: Mapping[str, CasillaDefinition],
     ) -> None:
         for layout in revision.export_layouts:
             owner = f"export {layout.id}"
@@ -950,33 +971,12 @@ class RegistryValidator:
         record: ExportRecordDefinition,
         casillas: set[str],
         bindings: set[str],
-        casilla_by_id: Mapping[str, object],
+        casilla_by_id: Mapping[str, CasillaDefinition],
     ) -> None:
         if record.binding_record is not None:
-            matching_bindings = [
-                binding
-                for binding in revision.bindings
-                if binding.selector.get("record") == record.binding_record
-            ]
-            if not matching_bindings:
-                failures.append(
-                    f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
-                    f"{record.binding_record!r}"
-                )
-            for binding in matching_bindings:
-                # Row-producer bindings (aggregation.op == "rows") source their
-                # byte coordinates from explicit export-field offsets, not from
-                # the binding selector itself.
-                if binding.aggregation is not None and binding.aggregation.get("op") == "rows":
-                    continue
-                missing_selector_keys = sorted(
-                    key for key in ("offset", "length", "data_type") if key not in binding.selector
-                )
-                if missing_selector_keys:
-                    failures.append(
-                        f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
-                        f"{missing_selector_keys!r}"
-                    )
+            self._validate_export_record_binding_link(
+                failures, prefix=prefix, revision=revision, record=record
+            )
         if (
             record.repeat == "binding_rows"
             and not any(field.kind == "binding" for field in record.fields)
@@ -985,10 +985,7 @@ class RegistryValidator:
             failures.append(
                 f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"
             )
-        if (
-            record.requires_positive_casilla is not None
-            and record.requires_positive_casilla not in casillas
-        ):
+        if record.requires_positive_casilla is not None and record.requires_positive_casilla not in casillas:
             failures.append(
                 f"{prefix}: export record {record.id!r} requires unknown positive casilla "
                 f"{record.requires_positive_casilla!r}"
@@ -1003,6 +1000,43 @@ class RegistryValidator:
                 casilla_by_id=casilla_by_id,
             )
 
+    def _validate_export_record_binding_link(
+        self,
+        failures: list[str],
+        *,
+        prefix: str,
+        revision: ModeloRevision,
+        record: ExportRecordDefinition,
+    ) -> None:
+        """Verify a binding-derived export record resolves to bindings with selector closure.
+
+        ``record.binding_record`` must match at least one revision
+        binding's ``selector["record"]``. Each matching binding must
+        then either be a row-producer (aggregation.op == "rows", in
+        which case byte coordinates come from explicit export field
+        offsets) or declare ``offset`` / ``length`` / ``data_type``
+        selectors directly.
+        """
+        matching_bindings = [
+            binding for binding in revision.bindings if binding.selector.get("record") == record.binding_record
+        ]
+        if not matching_bindings:
+            failures.append(
+                f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
+                f"{record.binding_record!r}"
+            )
+        for binding in matching_bindings:
+            if binding.aggregation is not None and binding.aggregation.get("op") == "rows":
+                continue
+            missing_selector_keys = sorted(
+                key for key in ("offset", "length", "data_type") if key not in binding.selector
+            )
+            if missing_selector_keys:
+                failures.append(
+                    f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
+                    f"{missing_selector_keys!r}"
+                )
+
     def _validate_export_field(
         self,
         failures: list[str],
@@ -1011,7 +1045,7 @@ class RegistryValidator:
         field: ExportFieldDefinition,
         casillas: set[str],
         bindings: set[str],
-        casilla_by_id: Mapping[str, object],
+        casilla_by_id: Mapping[str, CasillaDefinition],
     ) -> None:
         owner = f"export field {field.id}"
         failures.extend(self._missing_refs(prefix, owner, field.legal_refs, self._legal, "legal"))
@@ -1021,7 +1055,7 @@ class RegistryValidator:
         if (
             field.casilla is not None
             and field.casilla in casilla_by_id
-            and field.id not in casilla_by_id[field.casilla].export_refs  # type: ignore[attr-defined]
+            and field.id not in casilla_by_id[field.casilla].export_refs
         ):
             failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}")
         if field.binding is not None and field.binding not in bindings:
@@ -1677,14 +1711,9 @@ class RegistryValidator:
         modelo_requires_communication: bool,
     ) -> list[str]:
         failures: list[str] = []
-        if revision.formulas and "calculation" not in surfaces:
-            failures.append(f"{scope}: formulas require a calculation application link")
-        if revision.extraction_profiles and "extractor" not in surfaces:
-            failures.append(f"{scope}: extraction profiles require an extractor application link")
-        if revision.export_layouts and "export" not in surfaces:
-            failures.append(f"{scope}: export layouts require an export application link")
-        if revision.verification_expectations and "verification" not in surfaces:
-            failures.append(f"{scope}: verification expectations require a verification application link")
+        for revision_attribute, required_surface, message in _SIMPLE_APPLICATION_LINK_RULES:
+            if getattr(revision, revision_attribute) and required_surface not in surfaces:
+                failures.append(f"{scope}: {message}")
         casillas_have_lifecycle_link = "filing" in surfaces or (
             modelo_requires_communication and bool(communication_surfaces)
         )
@@ -1692,10 +1721,6 @@ class RegistryValidator:
             failures.append(f"{scope}: casillas require a filing or communication application link")
         if communication_surfaces and not modelo_requires_communication:
             failures.append(f"{scope}: communication application links are only valid for Modelo 145")
-        if revision.live_cross_references and "portal" not in surfaces:
-            failures.append(f"{scope}: live/static cross-references require a portal application link")
-        if revision.deadline_windows and "deadline" not in surfaces:
-            failures.append(f"{scope}: deadline windows require a deadline application link")
         if modelo_requires_communication and not communication_surfaces:
             failures.append(f"{scope}: Modelo 145 requires a communication application link")
         return failures
