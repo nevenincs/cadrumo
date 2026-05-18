@@ -25,6 +25,7 @@ page index, instruction index, and SHA-256 of the cleartext.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal
 
 import pikepdf
@@ -169,7 +170,7 @@ def _rewrite_page(
 
 
 def _rewrite_text_show_operands(
-    operands: object,
+    operands: Sequence[PikepdfObject | int | float],
     *,
     operator: object,
     triples: tuple[tuple[str, str, str], ...],
