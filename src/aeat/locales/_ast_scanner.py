@@ -25,6 +25,7 @@ from __future__ import annotations
 import ast
 import re
 from pathlib import Path
+from typing import TypeGuard
 
 from aeat.core.logging import get_logger
 
@@ -69,7 +70,7 @@ def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> N
         if default is None or arg.arg not in {"translated_message", "message_key"}:
             continue
         if _is_dotted_literal_constant(default):
-            findings.add(default.value)  # type: ignore[attr-defined]
+            findings.add(default.value)
 
 
 def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
@@ -87,7 +88,7 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
     _add_first_dotted_arg(node, findings)
     for kw in node.keywords:
         if kw.arg in {"message_key", "translated_message"} and _is_dotted_literal_constant(kw.value):
-            findings.add(kw.value.value)  # type: ignore[attr-defined]
+            findings.add(kw.value.value)
 
 
 def _callee_name(callee: ast.expr) -> str | None:
@@ -98,7 +99,17 @@ def _callee_name(callee: ast.expr) -> str | None:
     return None
 
 
-def _is_dotted_literal_constant(node: ast.expr | None) -> bool:
+def _is_dotted_literal_constant(node: ast.expr | None) -> TypeGuard[ast.Constant]:
+    """Return True when ``node`` is an ``ast.Constant`` carrying a dotted key.
+
+    Annotated as a :class:`TypeGuard` so callers gain static narrowing
+    to ``ast.Constant`` inside positive branches — that removes the
+    ``# type: ignore[attr-defined]`` escapes that previously wrapped
+    every ``node.value`` access. The runtime predicate is unchanged:
+    the node must be a Constant, its value must be a string, and the
+    string must match the dotted-literal shape.
+    """
+
     return (
         isinstance(node, ast.Constant)
         and isinstance(node.value, str)
@@ -111,7 +122,7 @@ def _add_first_dotted_arg(node: ast.Call, findings: set[str]) -> None:
         return
     first = node.args[0]
     if _is_dotted_literal_constant(first):
-        findings.add(first.value)  # type: ignore[attr-defined]
+        findings.add(first.value)
 
 
 _KEY_PREFIX_RE = re.compile(r"^\w+(?:\.\w+)*\.$", re.UNICODE)
