@@ -105,87 +105,12 @@ async def collect_renta_web_open_observation(
     browser_session = await default_browser_session_factory(settings or Settings())
     context = None
     try:
-        context = await browser_session.create_context(storage_state={})
-        from playwright.async_api import Page as _Page
-
-        _raw_page = await context.new_page()
-        if not isinstance(_raw_page, _Page):
-            raise TypeError(f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}")
-        page: _Page = _raw_page
-        # SAFETY-CRITICAL: install dialog auto-dismiss + URL navigation guard
-        # before any user interaction. The page-level safety net is the
-        # outermost defense layer; click-time `assert_click_target_safe`
-        # provides the inner ring.
-        await install_page_safety_net(page)
-        await _playwright_stage(
-            page.set_viewport_size(_DEFAULT_VIEWPORT),
-            stage="set-viewport",
-            description="Renta WEB Open viewport",
-            timeout_ms=live_payload.timeout_ms,
-        )
-        await browser_session.navigate(page, str(live_payload.app_url))
-        await _playwright_stage(
-            page.wait_for_load_state("networkidle", timeout=live_payload.timeout_ms),
-            stage="wait-app-networkidle",
-            description="Renta WEB Open network idle after app navigation",
-            timeout_ms=live_payload.timeout_ms,
-        )
-        new_declaration = page.locator(".z-window-modal button").filter(has_text="Nueva declaración")
-        await _click_expected(
-            new_declaration,
-            stage="start-open-simulator",
-            description="Nueva declaración modal button",
-            timeout_ms=live_payload.timeout_ms,
-        )
-        await _fill_identification_profile(page, live_payload.profile, timeout_ms=live_payload.timeout_ms)
-        await _click_expected(
-            page.get_by_role("button", name="Aceptar"),
-            stage="accept-identification",
-            description="Aceptar identification button",
-            timeout_ms=live_payload.timeout_ms,
-        )
-        await _expect_visible(
-            page.get_by_text("Resumen de declaraciones"),
-            stage="wait-summary",
-            description="Resumen de declaraciones heading",
-            timeout_ms=live_payload.timeout_ms,
-        )
-        # When the payload declares casilla_overrides, navigate into the
-        # editable form via the "Buscar casilla" dialog, fill each casilla
-        # input with the requested value, then return to the Resumen so the
-        # summary scrape below picks up the recomputed totals. Empty
-        # overrides → driver stays on the baseline identification path.
+        page, context = await _open_renta_web_open_session(browser_session, live_payload=live_payload)
+        await _drive_open_simulator_identification(page, live_payload=live_payload)
         if live_payload.casilla_overrides:
-            await _apply_casilla_overrides(
-                page,
-                live_payload.casilla_overrides,
-                timeout_ms=live_payload.timeout_ms,
-            )
+            await _apply_casilla_overrides(page, live_payload.casilla_overrides, timeout_ms=live_payload.timeout_ms)
             await _navigate_to_resumen(page, timeout_ms=live_payload.timeout_ms)
-        body_text = await _playwright_stage(
-            page.locator("body").inner_text(timeout=live_payload.timeout_ms),
-            stage="scrape-summary-text",
-            description="Renta WEB Open body text",
-            timeout_ms=live_payload.timeout_ms,
-        )
-        values: dict[str, str] = {}
-        for label in sorted(expected):
-            observed = extract_renta_web_open_summary_value(body_text, label)
-            if observed is not None:
-                values[label] = observed
-        # When the payload declares additional casillas to scrape (beyond the
-        # summary labels), navigate to each via the Buscar dialog and read
-        # the input value off the form page. The scraped value is recorded
-        # under the casilla number key so the audit gate's casilla-id-keyed
-        # coverage check resolves.
-        for casilla_number in sorted(live_payload.scrape_casillas):
-            scraped = await _scrape_casilla_form_value(
-                page,
-                casilla_number,
-                timeout_ms=live_payload.timeout_ms,
-            )
-            if scraped is not None:
-                values[casilla_number] = scraped
+        values = await _scrape_renta_web_open_values(page, live_payload=live_payload, expected=expected)
         return RentaWebOpenObservation(values=values, raw_evidence_locator=page.url)
     except (SedeError, SiteHealthError, BrowserError):
         raise
@@ -204,6 +129,95 @@ async def collect_renta_web_open_observation(
         if context is not None:
             await context.close()
         await browser_session.close()
+
+
+async def _open_renta_web_open_session(browser_session, *, live_payload):  # type: ignore[no-untyped-def]
+    """Create a Playwright context, install safety nets, and navigate to the open simulator app.
+
+    Returns ``(page, context)``. SAFETY-CRITICAL: installs the
+    dialog auto-dismiss + URL navigation guard before any user
+    interaction — the page-level safety net is the outermost
+    defense layer; click-time ``assert_click_target_safe`` is the
+    inner ring.
+    """
+    context = await browser_session.create_context(storage_state={})
+    from playwright.async_api import Page as _Page
+
+    _raw_page = await context.new_page()
+    if not isinstance(_raw_page, _Page):
+        raise TypeError(f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}")
+    page: _Page = _raw_page
+    await install_page_safety_net(page)
+    await _playwright_stage(
+        page.set_viewport_size(_DEFAULT_VIEWPORT),
+        stage="set-viewport",
+        description="Renta WEB Open viewport",
+        timeout_ms=live_payload.timeout_ms,
+    )
+    await browser_session.navigate(page, str(live_payload.app_url))
+    await _playwright_stage(
+        page.wait_for_load_state("networkidle", timeout=live_payload.timeout_ms),
+        stage="wait-app-networkidle",
+        description="Renta WEB Open network idle after app navigation",
+        timeout_ms=live_payload.timeout_ms,
+    )
+    return page, context
+
+
+async def _drive_open_simulator_identification(page, *, live_payload) -> None:  # type: ignore[no-untyped-def]
+    """Drive the "Nueva declaración" -> identification profile -> "Aceptar" -> summary wait flow."""
+    new_declaration = page.locator(".z-window-modal button").filter(has_text="Nueva declaración")
+    await _click_expected(
+        new_declaration,
+        stage="start-open-simulator",
+        description="Nueva declaración modal button",
+        timeout_ms=live_payload.timeout_ms,
+    )
+    await _fill_identification_profile(page, live_payload.profile, timeout_ms=live_payload.timeout_ms)
+    await _click_expected(
+        page.get_by_role("button", name="Aceptar"),
+        stage="accept-identification",
+        description="Aceptar identification button",
+        timeout_ms=live_payload.timeout_ms,
+    )
+    await _expect_visible(
+        page.get_by_text("Resumen de declaraciones"),
+        stage="wait-summary",
+        description="Resumen de declaraciones heading",
+        timeout_ms=live_payload.timeout_ms,
+    )
+
+
+async def _scrape_renta_web_open_values(  # type: ignore[no-untyped-def]
+    page,
+    *,
+    live_payload,
+    expected,
+) -> dict[str, str]:
+    """Scrape summary-label values + extra casilla form values into one dict.
+
+    The summary scrape reads the body text once and extracts each
+    expected label. The extra-casilla scrape navigates to each
+    requested casilla via the Buscar dialog and reads the input
+    value off the form page; values are recorded under the casilla
+    number so the audit gate's id-keyed coverage check resolves.
+    """
+    body_text = await _playwright_stage(
+        page.locator("body").inner_text(timeout=live_payload.timeout_ms),
+        stage="scrape-summary-text",
+        description="Renta WEB Open body text",
+        timeout_ms=live_payload.timeout_ms,
+    )
+    values: dict[str, str] = {}
+    for label in sorted(expected):
+        observed = extract_renta_web_open_summary_value(body_text, label)
+        if observed is not None:
+            values[label] = observed
+    for casilla_number in sorted(live_payload.scrape_casillas):
+        scraped = await _scrape_casilla_form_value(page, casilla_number, timeout_ms=live_payload.timeout_ms)
+        if scraped is not None:
+            values[casilla_number] = scraped
+    return values
 
 
 def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | None:
