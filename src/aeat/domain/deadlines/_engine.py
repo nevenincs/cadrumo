@@ -26,6 +26,7 @@ from ._models import (
     AutonomoProfile,
     FilingObligation,
     ObligationStatus,
+    Recovery,
     Schedule,
 )
 from ._recargo import build_recovery_for_overdue
@@ -323,7 +324,7 @@ def _overdue_recovery_or_none(
     reference_today: date,
     window: DeadlineWindowDefinition,
     modelo: str,
-):  # type: ignore[no-untyped-def]
+) -> Recovery | None:
     """Build a registry-backed recovery payload for ≥1-day-late OVERDUE obligations, or ``None``.
 
     Same-day OVERDUE (``days_late == 0``) and non-OVERDUE statuses
