@@ -65,15 +65,6 @@ class BucketLockedError(BucketError):
         self.bucket_id = bucket_id
 
 
-class LegacyLayoutDetectedError(BucketError):
-    """Raised when the legacy interleaved ``var/`` layout is detected.
-
-    The substrate refuses to operate against the legacy layout; the
-    operator must back up ``var/`` to cold storage and run
-    ``aeat config init`` from scratch.
-    """
-
-
 class RecoveryUnavailableError(BucketError):
     """Raised when the recovery wrap cannot be loaded for the active bucket.
 
@@ -101,7 +92,6 @@ __all__ = [
     "BucketBusyError",
     "BucketError",
     "BucketLockedError",
-    "LegacyLayoutDetectedError",
     "NoActiveBucketError",
     "RecoveryUnavailableError",
     "RecoveryVerificationError",

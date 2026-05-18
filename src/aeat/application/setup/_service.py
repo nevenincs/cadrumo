@@ -10,7 +10,6 @@ from ...adapters.persistence.storage.bucket._manifest import BucketManifest, Kdf
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, write_manifest
 from ...core.config import load_settings
 from ...domain.user_profile import UserProfileFact
-from .._bootstrap import assert_no_legacy_layout
 from ..auth import AuthProviderReservedError, configure_operator_auth
 from ..user_profile._orchestration import register_active_profile
 from ..workflow._persistence import workflow_state_repository
@@ -87,8 +86,6 @@ def _provision_bucket_directory_idempotent(*, bucket_id: str) -> None:
 
 def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorkspaceResult:
     """Initialize a new active workspace profile and bucket."""
-
-    assert_no_legacy_layout()
 
     facts: list[UserProfileFact] = [
         UserProfileFact(path="identity.tax_id", value=command.tax_id),
