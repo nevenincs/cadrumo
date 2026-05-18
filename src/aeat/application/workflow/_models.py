@@ -151,49 +151,10 @@ class WorkflowState(BaseModel):
     auth: AuthState = Field(default_factory=AuthState)
     profiles: dict[str, ProfileBucketPointer] = Field(default_factory=dict)
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
-    invoice_reviews: dict[str, InvoiceReviewRecord | dict[str, object]] = Field(default_factory=dict)
-    ledger_reviews: dict[str, LedgerReviewRecord | dict[str, object]] = Field(default_factory=dict)
+    invoice_reviews: dict[str, InvoiceReviewRecord] = Field(default_factory=dict)
+    ledger_reviews: dict[str, LedgerReviewRecord] = Field(default_factory=dict)
     bucket_events: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
-
-    @model_validator(mode="after")
-    def _coerce_review_records(self) -> WorkflowState:
-        """Coerce any raw-dict entries in review maps to typed records.
-
-        The field type accepts both
-        :class:`~aeat.application.review._models.InvoiceReviewRecord` /
-        :class:`~aeat.application.review._models.LedgerReviewRecord`
-        AND raw dicts so older persisted state remains loadable. This
-        validator runs after every construction (including
-        ``model_validate_json``) and re-projects any dict entries to
-        the typed record class, so downstream consumers can always
-        ``isinstance(value, InvoiceReviewRecord)`` rather than pattern-
-        matching on raw-dict-or-record.
-        """
-        from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
-
-        coerced_invoice: dict[str, InvoiceReviewRecord | dict[str, object]] = {}
-        for key, value in self.invoice_reviews.items():
-            if isinstance(value, dict):
-                coerced_invoice[key] = InvoiceReviewRecord.model_validate(value)
-            else:
-                coerced_invoice[key] = value
-        coerced_ledger: dict[str, LedgerReviewRecord | dict[str, object]] = {}
-        for key, value in self.ledger_reviews.items():
-            if isinstance(value, dict):
-                coerced_ledger[key] = LedgerReviewRecord.model_validate(value)
-            else:
-                coerced_ledger[key] = value
-        if (
-            coerced_invoice == dict(self.invoice_reviews)
-            and coerced_ledger == dict(self.ledger_reviews)
-        ):
-            return self
-        # ``model_copy`` on a frozen model preserves immutability while
-        # producing the coerced view.
-        return self.model_copy(
-            update={"invoice_reviews": coerced_invoice, "ledger_reviews": coerced_ledger},
-        )
 
     def active_profile_record(self) -> UserProfileRecord | None:
         """Return the active :class:`UserProfileRecord` from its secure bucket.

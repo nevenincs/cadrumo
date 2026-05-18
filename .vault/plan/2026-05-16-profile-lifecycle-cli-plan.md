@@ -102,8 +102,8 @@ The sixth finding (manifest / SQL row write-order atomicity) is
 already resolved - the manifest layer no longer exists; profile
 creation is a single atomic state-repository update. Five remain.
 
-- [ ] `P04.S34` - remove the `dict[str, object]` union arm from `WorkflowState.invoice_reviews`; `src/aeat/application/workflow/_models.py`.
-- [ ] `P04.S35` - remove the `dict[str, object]` union arm from `WorkflowState.ledger_reviews`; `src/aeat/application/workflow/_models.py`.
+- [x] `P04.S34` - remove the `dict[str, object]` union arm from `WorkflowState.invoice_reviews`; `src/aeat/application/workflow/_models.py`.
+- [x] `P04.S35` - remove the `dict[str, object]` union arm from `WorkflowState.ledger_reviews`; `src/aeat/application/workflow/_models.py`.
 - [ ] `P04.S36` - add public `iter_records()` to the user-profile repository and replace the private `_objects` access in `_iter_profiles`; `src/aeat/application/user_profile/_repository.py`.
 - [ ] `P04.S37` - replace the private access call site; `src/aeat/application/user_profile/_lifecycle.py`.
 - [ ] `P04.S38` - anti-tautology probe test (save profile, mutate encrypted payload, reload, assert `ValidationError` or strict inequality); `src/aeat/application/user_profile/test_repository_anti_tautology.py`.
