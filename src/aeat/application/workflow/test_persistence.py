@@ -70,7 +70,7 @@ class TestPersistenceRoundTrip:
     def test_save_load_round_trip(self, tmp_path: Path) -> None:
         original = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC))
         marker = save_run(original, runs_dir=tmp_path)
-        reloaded = load_run(original.run_id, runs_dir=tmp_path)
+        reloaded = load_run(original.run_id)
         assert reloaded == original
         assert marker.as_posix().endswith(original.run_id)
         raw = _database_bytes(tmp_path)
@@ -80,11 +80,11 @@ class TestPersistenceRoundTrip:
 
     def test_load_missing_raises(self, tmp_path: Path) -> None:
         with pytest.raises(WorkflowError, match=r"workflow"):
-            load_run("missing", runs_dir=tmp_path)
+            load_run("missing")
 
     def test_load_rejects_traversal_id(self, tmp_path: Path) -> None:
         with pytest.raises(WorkflowError, match="path separators"):
-            load_run("../escape", runs_dir=tmp_path)
+            load_run("../escape")
 
     def test_save_rejects_traversal_id(self, tmp_path: Path) -> None:
         escaped = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)).model_copy(
@@ -98,7 +98,7 @@ class TestPersistenceRoundTrip:
         late = _result("b" * 16, datetime(2026, 4, 12, tzinfo=UTC))
         save_run(early, runs_dir=tmp_path)
         save_run(late, runs_dir=tmp_path)
-        runs = list_runs(runs_dir=tmp_path)
+        runs = list_runs()
         assert [r.run_id for r in runs] == [late.run_id, early.run_id]
 
     def test_list_runs_since_filter(self, tmp_path: Path) -> None:
@@ -106,11 +106,8 @@ class TestPersistenceRoundTrip:
         late = _result("b" * 16, datetime(2026, 4, 12, tzinfo=UTC))
         save_run(early, runs_dir=tmp_path)
         save_run(late, runs_dir=tmp_path)
-        runs = list_runs(runs_dir=tmp_path, since=date(2026, 4, 11))
+        runs = list_runs(since=date(2026, 4, 11))
         assert [r.run_id for r in runs] == [late.run_id]
-
-    def test_list_runs_missing_dir(self, tmp_path: Path) -> None:
-        assert list_runs(runs_dir=tmp_path / "does-not-exist") == ()
 
     def test_save_run_does_not_create_envelope_files(
         self,

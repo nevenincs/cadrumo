@@ -46,11 +46,6 @@ class WorkflowStateRepository:
     def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
-    @classmethod
-    def from_settings(cls, settings: Settings | None = None) -> Self:
-        del settings
-        return cls()
-
     def load(self) -> WorkflowState:
         """Load state or return an empty payload when absent."""
 
@@ -192,10 +187,10 @@ class WorkflowStateRepository:
         return updated
 
 
-def workflow_state_repository(settings: Settings | None = None) -> WorkflowStateRepository:
+def workflow_state_repository() -> WorkflowStateRepository:
     """Return the repository bound to the configured run-state directory."""
 
-    return WorkflowStateRepository.from_settings(settings)
+    return WorkflowStateRepository()
 
 
 def reset_workflow_state(
@@ -254,10 +249,9 @@ def save_run(result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
     return marker_dir / run_id
 
 
-def load_run(run_id: str, *, runs_dir: Path | None = None) -> WorkflowResult:
+def load_run(run_id: str) -> WorkflowResult:
     """Load one persisted workflow result from the secure backend."""
 
-    del runs_dir
     safe_run_id = _validate_run_id(run_id)
     record = SecureObjectRepository().load(
         _RUN_NAMESPACE,
@@ -280,10 +274,9 @@ def load_run(run_id: str, *, runs_dir: Path | None = None) -> WorkflowResult:
     return envelope.payload
 
 
-def list_runs(*, runs_dir: Path | None = None, since: date | None = None) -> tuple[WorkflowResult, ...]:
+def list_runs(*, since: date | None = None) -> tuple[WorkflowResult, ...]:
     """List persisted workflow runs newest-first, optionally filtered by date."""
 
-    del runs_dir
     records = SecureObjectRepository().list_records(
         _RUN_NAMESPACE,
         expected_class=SensitivityClass.FINANCIAL,
