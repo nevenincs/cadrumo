@@ -114,8 +114,10 @@ def test_config_profile_remove_tombstones_with_yes(cli_runner: CliRunner) -> Non
     result = cli_runner.invoke(profile_app, ["remove", "operator", "--yes"])
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
+    from aeat.application.workflow._models import resolve_active_bucket_id
+
     state = workflow_state_repository().load()
-    assert state.active_profile is None
+    assert resolve_active_bucket_id(state) is None
 
 
 def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> None:
@@ -147,13 +149,14 @@ def test_config_profile_validate_emits_validation_report(cli_runner: CliRunner) 
 
 
 def test_config_profile_validate_refuses_when_no_active_profile(cli_runner: CliRunner) -> None:
-    # Reset the workflow state's active pointer so there is no active profile.
-    from aeat.application.workflow._utils import utc_now
+    # Clear the active-profile precedence chain (env + pointer) so the
+    # resolver returns None and the validate verb refuses.
+    from aeat.application.user_profile._orchestration import _clear_active_profile_pointer
+    from aeat.core.config import override_settings
 
-    workflow_state_repository().update(
-        lambda current: current.model_copy(update={"active_profile": None, "updated_at": utc_now()})
-    )
-    result = cli_runner.invoke(profile_app, ["validate"])
+    _clear_active_profile_pointer()
+    with override_settings(aeat_active_profile=None):
+        result = cli_runner.invoke(profile_app, ["validate"])
     assert result.exit_code != 0
 
 

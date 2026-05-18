@@ -15,7 +15,6 @@ def runner() -> CliRunner:
 def test_apoderado_status_fails_without_profile(runner: CliRunner) -> None:
     state_repo = WorkflowStateRepository()
     state = state_repo.load()
-    state = state.model_copy(update={"active_profile": None})
     state_repo.save(state)
 
     result = runner.invoke(app, ["auth", "apoderado", "status"])

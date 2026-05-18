@@ -131,7 +131,7 @@ def register_active_profile(
     service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
     profiles = dict(state.profiles)
     profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
-    updated = state.model_copy(update={"active_profile": profile_id, "profiles": profiles, "updated_at": utc_now()})
+    updated = state.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
     updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
     if facts:
@@ -162,7 +162,7 @@ def select_profile(
     service.read(profile_id)  # raises ProfileNotFoundError if missing
     profiles = dict(state.profiles)
     profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
-    updated = state.model_copy(update={"active_profile": profile_id, "profiles": profiles, "updated_at": utc_now()})
+    updated = state.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
     _write_active_profile_pointer(profile_id)
     return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
 
@@ -225,7 +225,7 @@ def remove_active_profile(
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.remove(RemoveProfileCommand(profile_id=profile_id))
     _clear_active_profile_pointer()
-    updated = state.model_copy(update={"active_profile": None, "updated_at": utc_now()})
+    updated = state.model_copy(update={"updated_at": utc_now()})
     return _append_workflow_event(updated, action="profile.tombstoned", bucket_id=profile_id, object_id=profile_id)
 
 

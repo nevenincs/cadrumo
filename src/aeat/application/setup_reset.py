@@ -105,7 +105,6 @@ def reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport:
         new_state = new_state.model_copy(
             update={
                 "profiles": {},
-                "active_profile": None,
                 "declarations": {},
                 "invoice_reviews": {},
                 "ledger_reviews": {},

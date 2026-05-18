@@ -115,7 +115,6 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         new_state = new_state.model_copy(
             update={
                 "profiles": {},
-                "active_profile": None,
                 "declarations": {},
                 "invoice_reviews": {},
                 "ledger_reviews": {},

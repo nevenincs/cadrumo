@@ -10,6 +10,7 @@ import pytest
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
+from ...application.workflow._models import resolve_active_bucket_id
 from ...core.config import Settings
 from ...core.resources import resources
 from ...domain.user_profile import (
@@ -75,7 +76,7 @@ def test_register_active_profile_threads_state_and_emits_events(secure_objects, 
         secure_objects=secure_objects,
         schema=schema,
     )
-    assert updated.active_profile == "default"
+    assert resolve_active_bucket_id(updated) == "default"
     assert "default" in updated.profiles
     actions = tuple(event.action for event in updated.bucket_events)
     assert actions == ("profile.created", "profile.selected", "profile.values.updated")
@@ -163,5 +164,7 @@ def test_remove_active_profile_tombstones_and_clears_pointer(secure_objects, sch
         schema=schema,
     )
     state = remove_active_profile(state, secure_objects=secure_objects, schema=schema)
-    assert state.active_profile is None
+    from aeat.application.workflow._models import resolve_active_bucket_id
+
+    assert resolve_active_bucket_id(state) is None
     assert state.bucket_events[-1].action == "profile.tombstoned"
