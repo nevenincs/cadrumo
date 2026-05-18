@@ -90,8 +90,8 @@ def parse_export_payload(
 def _consume_record_block(
     *,
     layout_id: str,
-    record,  # type: ignore[no-untyped-def]
-    next_record,  # type: ignore[no-untyped-def]
+    record: ExportRecordDefinition,
+    next_record: ExportRecordDefinition | None,
     payload: bytes,
     cursor: int,
     parsed: list[ParsedExportFieldValue],
