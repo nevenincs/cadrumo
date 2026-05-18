@@ -606,11 +606,16 @@ def _parse_relation_metadata(
         key, _, value = part.partition("=")
         fields[key.strip()] = value.strip()
     raw_provenance = fields.get("provenance", "")
-    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = (
-        raw_provenance  # type: ignore[assignment]
-        if raw_provenance in ("local_filing", "aeat_live", "operator_manual")
-        else None
-    )
+    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None
+    match raw_provenance:
+        case "local_filing":
+            provenance = "local_filing"
+        case "aeat_live":
+            provenance = "aeat_live"
+        case "operator_manual":
+            provenance = "operator_manual"
+        case _:
+            provenance = None
     source_filing_year: int | None = None
     raw_year = fields.get("source_filing_year", "")
     if raw_year:
