@@ -507,11 +507,12 @@ def config_profile_use(
         updated = repository.update(lambda current: select_profile(current, profile_id=name))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    _emit_profile_activated_event(profile_id=name, active_profile=updated.active_profile)
+    active = resolve_active_bucket_id(updated)
+    _emit_profile_activated_event(profile_id=name, active_profile=active)
     _emit(
         ctx,
-        {"active_profile": updated.active_profile},
-        (f"active_profile\t{updated.active_profile or ''}",),
+        {"active_profile": active},
+        (f"active_profile\t{active or ''}",),
     )
 
 

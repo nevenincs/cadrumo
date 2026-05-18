@@ -98,14 +98,16 @@ def _resolve_default_actor() -> str:
     """
 
     with suppress(Exception):
+        from ...application.workflow._models import resolve_active_bucket_id
         from ...application.workflow._persistence import workflow_state_repository
 
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         if record is not None and record.display_name:
             return record.display_name
-        if state.active_profile:
-            return state.active_profile
+        active = resolve_active_bucket_id(state)
+        if active:
+            return active
     return "operator"
 
 
