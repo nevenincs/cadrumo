@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 from collections.abc import Iterator
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from io import StringIO
@@ -199,7 +200,32 @@ def _persist_verified_revision_citing_transaction(engine: Engine, *, transaction
     )
 
 
-def test_create_manual_transaction_persists_in_bucket_catalogue_and_emits_event(secure_engine: Engine) -> None:
+@dataclass(frozen=True, slots=True)
+class _CreateManualOutcome:
+    """Bundle returned by _drive_create_manual_transaction so the focused tests share setup.
+
+    Captures every state slice the focused per-contract tests
+    inspect: the create result, the reloaded persisted transaction,
+    the loaded bucket events, and the purchase-invoice evidence id
+    threaded through the command.
+    """
+
+    result: object
+    persisted: object
+    events: tuple[object, ...]
+    purchase_invoice_evidence_id: str
+
+
+def _drive_create_manual_transaction(secure_engine: Engine) -> _CreateManualOutcome:
+    """Build + execute the canonical create_manual_transaction scenario.
+
+    Shared by every test_create_manual_transaction_* in this
+    section so each focused test runs against an identical state
+    bundle without duplicating the 25-line command/evidence
+    plumbing. Engine setup is paid per test (function-scoped
+    ``secure_engine`` fixture) — the trade-off favours diagnosability
+    over throughput.
+    """
     transaction_repository, event_repository = _repositories(secure_engine)
     invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
     purchase_evidence = _purchase_invoice()
@@ -223,7 +249,6 @@ def test_create_manual_transaction_persists_in_bucket_catalogue_and_emits_event(
         source_command="aeat app ledger add",
         idempotency_key="cash-2026-05-02-001",
     )
-
     result = create_manual_transaction(
         command,
         transaction_repository=transaction_repository,
@@ -231,36 +256,99 @@ def test_create_manual_transaction_persists_in_bucket_catalogue_and_emits_event(
         invoice_repository=invoice_repository,
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
-
     reloaded = transaction_repository.load()
-    assert result.ref.bucket_id == "bucket-a"
-    assert tuple(reloaded.transactions) == (result.ref.transaction_id,)
     persisted = reloaded.get(result.ref.transaction_id)
     assert persisted is not None
-    assert persisted.raw.provenance.source_format is SourceFormat.MANUAL
-    assert persisted.raw.provenance.provider_name == "manual-ledger"
-    assert persisted.raw.raw_fields["source_kind"] == "ledger_transaction"
-    assert persisted.raw.raw_fields["taxable_base"] == "100.00"
-    assert persisted.raw.raw_fields["purchase_invoice_evidence_id"] == purchase_evidence.invoice_id
-    assert persisted.taxable_base == Decimal("100.00")
-    assert persisted.iva_rate == Decimal("0.21")
-    assert persisted.iva_amount == Decimal("21.00")
-    assert persisted.purchase_invoice_evidence_id == purchase_evidence.invoice_id
-    assert persisted.created_by == "operator-A"
-    assert persisted.source_command == "aeat app ledger add"
-    assert persisted.created_event_id == result.bucket_event_ids[0]
-    assert persisted.evidence_provenance[0].evidence_id == purchase_evidence.invoice_id
-    assert persisted.evidence_provenance[0].evidence_kind == "purchase_invoice_evidence"
-    assert persisted.evidence_provenance[0].actor == "operator-A"
-    assert persisted.evidence_provenance[0].bucket_event_id == result.bucket_event_ids[0]
-    assert persisted.business_classification is BusinessClassification.BUSINESS
-    assert persisted.classified_by == "manual"
+    assert tuple(reloaded.transactions) == (result.ref.transaction_id,)
     events = event_repository.load().for_bucket("bucket-a")
-    assert [event.event_id for event in events] == list(result.bucket_event_ids)
-    assert events[0].event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
-    assert events[0].object_type is BucketEventObjectType.LEDGER_TRANSACTION
-    assert events[0].object_id == result.ref.transaction_id
-    assert events[0].payload["source_command"] == "aeat app ledger add"
+    return _CreateManualOutcome(
+        result=result,
+        persisted=persisted,
+        events=tuple(events),
+        purchase_invoice_evidence_id=purchase_evidence.invoice_id,
+    )
+
+
+def test_create_manual_transaction_returns_bucket_ref(secure_engine: Engine) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert outcome.result.ref.bucket_id == "bucket-a"
+
+
+_PROVENANCE_RAW_FIELD_EXPECTATIONS = (
+    ("source_kind", "ledger_transaction"),
+    ("taxable_base", "100.00"),
+)
+
+
+def test_create_manual_transaction_persists_source_provenance(secure_engine: Engine) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert outcome.persisted.raw.provenance.source_format is SourceFormat.MANUAL
+    assert outcome.persisted.raw.provenance.provider_name == "manual-ledger"
+
+
+@pytest.mark.parametrize(("field", "expected"), _PROVENANCE_RAW_FIELD_EXPECTATIONS)
+def test_create_manual_transaction_persists_raw_field(secure_engine: Engine, field: str, expected: str) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert outcome.persisted.raw.raw_fields[field] == expected
+
+
+def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fields(secure_engine: Engine) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert (
+        outcome.persisted.raw.raw_fields["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
+    )
+
+
+_TAXABLE_IVA_EXPECTATIONS = (
+    ("taxable_base", Decimal("100.00")),
+    ("iva_rate", Decimal("0.21")),
+    ("iva_amount", Decimal("21.00")),
+)
+
+
+@pytest.mark.parametrize(("attribute", "expected"), _TAXABLE_IVA_EXPECTATIONS)
+def test_create_manual_transaction_persists_taxable_iva(
+    secure_engine: Engine, attribute: str, expected: Decimal
+) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert getattr(outcome.persisted, attribute) == expected
+
+
+def test_create_manual_transaction_links_purchase_invoice_evidence(secure_engine: Engine) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert outcome.persisted.purchase_invoice_evidence_id == outcome.purchase_invoice_evidence_id
+
+
+def test_create_manual_transaction_records_audit_actor_and_command(secure_engine: Engine) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert outcome.persisted.created_by == "operator-A"
+    assert outcome.persisted.source_command == "aeat app ledger add"
+    assert outcome.persisted.created_event_id == outcome.result.bucket_event_ids[0]
+
+
+def test_create_manual_transaction_persists_evidence_provenance(secure_engine: Engine) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    provenance = outcome.persisted.evidence_provenance[0]
+    assert provenance.evidence_id == outcome.purchase_invoice_evidence_id
+    assert provenance.evidence_kind == "purchase_invoice_evidence"
+    assert provenance.actor == "operator-A"
+    assert provenance.bucket_event_id == outcome.result.bucket_event_ids[0]
+
+
+def test_create_manual_transaction_classifies_as_business(secure_engine: Engine) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert outcome.persisted.business_classification is BusinessClassification.BUSINESS
+    assert outcome.persisted.classified_by == "manual"
+
+
+def test_create_manual_transaction_emits_bucket_event_chain(secure_engine: Engine) -> None:
+    outcome = _drive_create_manual_transaction(secure_engine)
+    assert [event.event_id for event in outcome.events] == list(outcome.result.bucket_event_ids)
+    first = outcome.events[0]
+    assert first.event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
+    assert first.object_type is BucketEventObjectType.LEDGER_TRANSACTION
+    assert first.object_id == outcome.result.ref.transaction_id
+    assert first.payload["source_command"] == "aeat app ledger add"
 
 
 def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
