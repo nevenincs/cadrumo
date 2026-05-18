@@ -49,6 +49,7 @@ from ..errors import (
     SecretNotFoundError,
     StorageValidationError,
 )
+from ..master_key._active_session import get_active_master_key
 from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 
 _log = get_logger(__name__)
@@ -176,9 +177,10 @@ class SecretStore:
         return self._store_dir
 
     def _master_key(self) -> bytes:
-        """Return the active master key, falling back to the global provider."""
-        provider = self._master_key_provider or get_master_key_provider()
-        return provider.get_master_key()
+        """Return the active master key from injected provider or active session."""
+        if self._master_key_provider is not None:
+            return self._master_key_provider.get_master_key()
+        return get_active_master_key()
 
     def _digest(self, key: str) -> str:
         """Return the HMAC-SHA256 lookup digest for ``key`` as 64 hex chars."""

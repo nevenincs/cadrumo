@@ -39,7 +39,6 @@ process lifetime so subsequent provider calls do not re-prompt.
 
 from __future__ import annotations
 
-import atexit
 import base64
 import binascii
 import contextlib
@@ -48,8 +47,7 @@ import os
 import secrets
 from collections.abc import Callable
 from pathlib import Path
-from threading import Lock
-from typing import TYPE_CHECKING, ClassVar, Final, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Literal, Protocol, runtime_checkable
 
 from argon2.low_level import Type as _Argon2Type
 from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
@@ -357,9 +355,6 @@ class KeyringMasterKeyProvider:
     ``keyring`` module.
     """
 
-    _lock: ClassVar[Lock] = Lock()
-    _cache: ClassVar[dict[tuple[str, str], bytearray]] = {}
-
     def __init__(
         self,
         *,
@@ -396,27 +391,26 @@ class KeyringMasterKeyProvider:
         self._client.probe_backend()
 
     def get_master_key(self) -> bytes:
-        """Fetch (or mint and store) the master key via the OS keychain."""
+        """Fetch (or mint and store) the master key via the OS keychain.
+
+        Resolves on every call: process-global caching has retired in
+        favour of :class:`BucketSession` instance state. Production
+        consumers should activate a session via :func:`activate_session`
+        and read through :func:`get_active_master_key` rather than call
+        this method in a tight loop.
+        """
 
         try:
             from keyring.errors import KeyringError
         except ImportError as exc:  # pragma: no cover - keyring is a hard dep
             raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
-        cache_key = (self._service, self._username)
-        with KeyringMasterKeyProvider._lock:
-            cached = KeyringMasterKeyProvider._cache.get(cache_key)
-            if cached is not None:
-                return bytes(cached)
-            self._probe_backend()
-            stored = self._read_stored_master_key(KeyringError)
-            if stored is not None:
-                key = self._decode_stored_master_key(stored)
-                KeyringMasterKeyProvider._cache[cache_key] = bytearray(key)
-                return key
-            new_key = self._mint_and_verify_master_key(KeyringError)
-            _log.info("master key minted in OS keychain (service=%s)", self._service)
-            KeyringMasterKeyProvider._cache[cache_key] = bytearray(new_key)
-            return new_key
+        self._probe_backend()
+        stored = self._read_stored_master_key(KeyringError)
+        if stored is not None:
+            return self._decode_stored_master_key(stored)
+        new_key = self._mint_and_verify_master_key(KeyringError)
+        _log.info("master key minted in OS keychain (service=%s)", self._service)
+        return new_key
 
     def _read_stored_master_key(self, keyring_error_cls: type[Exception]) -> str | None:
         """Fetch the encoded master-key string from the keychain, or ``None`` if absent.
@@ -486,15 +480,6 @@ class KeyringMasterKeyProvider:
             )
         return new_key
 
-    @classmethod
-    def _reset_for_tests(cls) -> None:
-        """Clear the in-process cache so tests can verify fetch paths cleanly."""
-        with cls._lock:
-            for buf in cls._cache.values():
-                _zeroise(buf)
-            cls._cache.clear()
-
-
 class FileFallbackMasterKeyProvider:
     """Encrypted-file-backed master-key provider.
 
@@ -503,10 +488,6 @@ class FileFallbackMasterKeyProvider:
     :attr:`Settings.aeat_secret_store_dir`. The KEK is derived from a
     passphrase via Argon2id and wraps the master key with AES-256-GCM.
     """
-
-    _lock: ClassVar[Lock] = Lock()
-    _cached_passphrase: ClassVar[bytearray | None] = None
-    _cached_master_key: ClassVar[dict[Path, bytearray]] = {}
 
     def __init__(
         self,
@@ -540,29 +521,16 @@ class FileFallbackMasterKeyProvider:
         return self._store_dir / "master.key"
 
     def _resolve_passphrase(self) -> bytes:
-        with FileFallbackMasterKeyProvider._lock:
-            cached = FileFallbackMasterKeyProvider._cached_passphrase
-            if cached is not None:
-                return bytes(cached)
-            value = self._passphrase_callback()
-            if not value:
-                raise SecretStoreError(
-                    "secret-store passphrase resolved to empty string; set "
-                    f"{PASSPHRASE_ENV_VAR} or supply a non-empty value at the prompt.",
-                )
-            material = bytearray(value.encode("utf-8"))
-            FileFallbackMasterKeyProvider._cached_passphrase = material
-            return bytes(material)
+        value = self._passphrase_callback()
+        if not value:
+            raise SecretStoreError(
+                "secret-store passphrase resolved to empty string; set "
+                f"{PASSPHRASE_ENV_VAR} or supply a non-empty value at the prompt.",
+            )
+        return value.encode("utf-8")
 
     def get_master_key(self) -> bytes:
-        # Normalise the path so casing / relative-vs-absolute differences
-        # do not produce two cache entries for the same logical store.
         self._store_dir.mkdir(parents=True, exist_ok=True)
-        cache_key = self._store_dir.resolve()
-        with FileFallbackMasterKeyProvider._lock:
-            cached = FileFallbackMasterKeyProvider._cached_master_key.get(cache_key)
-            if cached is not None:
-                return bytes(cached)
         passphrase = self._resolve_passphrase()
         # Serialise the unwrap-or-mint decision under the on-disk lock
         # so two first-time callers cannot both decide to mint and then
@@ -598,8 +566,6 @@ class FileFallbackMasterKeyProvider:
                 )
             else:
                 key = self._mint_new(passphrase)
-        with FileFallbackMasterKeyProvider._lock:
-            FileFallbackMasterKeyProvider._cached_master_key[cache_key] = bytearray(key)
         return key
 
     def _unwrap_existing(self, passphrase: bytes) -> bytes:
@@ -715,11 +681,6 @@ class FileFallbackMasterKeyProvider:
             raise SecretStoreError(
                 f"recovered master key must be {KEY_SIZE} bytes; got {len(master_key)}",
             )
-        # Drop any stale cached state so the new artefacts are picked
-        # up by subsequent get_master_key() calls (and so the cached
-        # passphrase is freshly resolved against the operator's
-        # current shell environment).
-        FileFallbackMasterKeyProvider._reset_for_tests()
         passphrase = self._resolve_passphrase()
         salt = secrets.token_bytes(_SALT_SIZE)
         params = _KdfParameters(
@@ -760,8 +721,6 @@ class FileFallbackMasterKeyProvider:
                 params.model_dump_json().encode("utf-8"),
             )
             atomic_write_secure_bytes(self._salt_path, salt)
-        with FileFallbackMasterKeyProvider._lock:
-            FileFallbackMasterKeyProvider._cached_master_key[self._store_dir.resolve()] = bytearray(master_key)
         _log.info(
             "master key recovered and re-wrapped under new passphrase at %s",
             self._master_key_path,
@@ -809,31 +768,6 @@ class FileFallbackMasterKeyProvider:
             hash_len=KEY_SIZE,
             type=_Argon2Type.ID,
         )
-
-    @classmethod
-    def _reset_for_tests(cls) -> None:
-        """Clear caches so tests can verify mint vs unwrap paths cleanly."""
-        with cls._lock:
-            _zeroise(cls._cached_passphrase)
-            cls._cached_passphrase = None
-            for buf in cls._cached_master_key.values():
-                _zeroise(buf)
-            cls._cached_master_key.clear()
-
-
-def _purge_caches_at_exit() -> None:
-    """atexit hook: zeroise every cached key buffer at process shutdown.
-
-    A memory-disclosure bug elsewhere in the process (or a post-mortem
-    core dump) cannot surface key bytes that have been overwritten with
-    zeros.
-    """
-    KeyringMasterKeyProvider._reset_for_tests()
-    FileFallbackMasterKeyProvider._reset_for_tests()
-
-
-atexit.register(_purge_caches_at_exit)
-
 
 class EphemeralMasterKeyProvider:
     """In-memory master-key provider used exclusively by tests.
