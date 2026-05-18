@@ -137,24 +137,45 @@ def _contains_raw_translation_key(output: str) -> bool:
     return re.search(r"\b(?:cli|wizard)\.[a-zA-Z0-9_.-]+", output) is not None
 
 
+_TYPER_HELP_SURFACE_CALLABLES = frozenset({"Typer", "Option", "Argument", "command", "add_typer"})
+
+
 def test_typer_help_sources_are_direct_translations() -> None:
     failures: list[str] = []
     for module in Path("src/aeat").rglob("*.py"):
         if module.name.startswith(("test_", "_test_")):
             continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            name = _call_name(node)
-            if name not in {"Typer", "Option", "Argument", "command", "add_typer"}:
-                continue
-            for keyword in node.keywords:
-                if keyword.arg != "help":
-                    continue
-                if not _is_direct_tr_literal(keyword.value):
-                    failures.append(f"{module}:{node.lineno}: help={ast.unparse(keyword.value)}")
+        failures.extend(_typer_help_violations(tree, module=module))
     assert failures == []
+
+
+def _typer_help_violations(tree: ast.AST, *, module: Path) -> tuple[str, ...]:
+    """Return every help= value in ``tree`` that is not a direct ``tr("literal")`` call.
+
+    Walks every ``ast.Call`` whose callee resolves to a Typer
+    surface (Typer, Option, Argument, command, add_typer), filters
+    keyword args to ``help=``, and tests each value against the
+    direct-tr-literal predicate. Anything else — an f-string, a
+    variable, a ``tr(name)`` with a non-constant arg — becomes a
+    failure record so the test's diagnostic lists the offending
+    site by ``path:line: source``.
+    """
+    violations: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or _call_name(node) not in _TYPER_HELP_SURFACE_CALLABLES:
+            continue
+        violations.extend(_typer_help_keyword_violations(node, module=module))
+    return tuple(violations)
+
+
+def _typer_help_keyword_violations(node: ast.Call, *, module: Path) -> tuple[str, ...]:
+    """Return every ``help=`` keyword on one Typer call whose value is not a direct tr literal."""
+    return tuple(
+        f"{module}:{node.lineno}: help={ast.unparse(keyword.value)}"
+        for keyword in node.keywords
+        if keyword.arg == "help" and not _is_direct_tr_literal(keyword.value)
+    )
 
 
 def _call_name(node: ast.Call) -> str | None:
