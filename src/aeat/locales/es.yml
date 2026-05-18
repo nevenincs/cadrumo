@@ -333,9 +333,9 @@ cli:
           inequívoco).
       reconcile_from_justificante:
         help: Reconciliar una unidad de trabajo de modelo con un PDF de justificante.
-          Azúcar para operadores que piensan "reconciliar desde este justificante" en
-          lugar de "reconciliar, fuente = justificante". Comparte el mismo punto de
-          entrada del servicio modelo_reconcile con la forma basada en flags. Local;
+          Azúcar para operadores que piensan "reconciliar desde este justificante"
+          en lugar de "reconciliar, fuente = justificante". Comparte el mismo punto
+          de entrada del servicio modelo_reconcile con la forma basada en flags. Local;
           nunca contacta con AEAT.
         justificante_path_help: Ruta al PDF del justificante AEAT para reconciliar.
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
@@ -571,6 +571,13 @@ cli:
       help: Listar todas las claves de configuración y sus valores actuales
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
+      census:
+        apply_help: cli.config.profile.census.apply_help
+        compare_help: cli.config.profile.census.compare_help
+        help: cli.config.profile.census.help
+        refresh_help: cli.config.profile.census.refresh_help
+        show_help: cli.config.profile.census.show_help
+        snapshot_id_help: cli.config.profile.census.snapshot_id_help
       duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
         el id de destino)
       duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible
