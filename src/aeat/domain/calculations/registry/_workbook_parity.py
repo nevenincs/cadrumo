@@ -1171,6 +1171,10 @@ def _failed_conversion_report(
     )
 
 
+_REFERENCE_HARVEST_LIMIT = 500
+_INSPECT_CONVERTED_XLSX_TIMEOUT_S = 120
+
+
 def _inspect_converted_xlsx(
     path: Path,
     *,
@@ -1183,20 +1187,57 @@ def _inspect_converted_xlsx(
         formulas: list[WorkbookCellRef] = []
         references: list[WorkbookCellRef] = []
         for worksheet in workbook.worksheets:
-            _raise_if_timed_out(started, 120, original_relative)
+            _raise_if_timed_out(started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
             sheets.append(worksheet.title)
-            for row in worksheet.iter_rows(values_only=False):
-                _raise_if_timed_out(started, 120, original_relative)
-                for cell in row:
-                    value = cell.value
-                    if isinstance(value, str) and value.startswith("="):
-                        ref = WorkbookCellRef(sheet=worksheet.title, coordinate=cell.coordinate, formula=value)
-                        formulas.append(ref)
-                        if len(references) < 500:
-                            references.extend(_formula_references(worksheet.title, value, 500 - len(references)))
+            _collect_sheet_formulas(
+                worksheet,
+                formulas=formulas,
+                references=references,
+                original_relative=original_relative,
+                started=started,
+            )
         return tuple(sheets), tuple(formulas), tuple(references)
     finally:
         workbook.close()
+
+
+def _collect_sheet_formulas(
+    worksheet: object,
+    *,
+    formulas: list[WorkbookCellRef],
+    references: list[WorkbookCellRef],
+    original_relative: str,
+    started: float,
+) -> None:
+    """Walk every row in ``worksheet`` and append formula refs + a bounded set of references."""
+    for row in worksheet.iter_rows(values_only=False):  # type: ignore[attr-defined]
+        _raise_if_timed_out(started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
+        for cell in row:
+            _record_cell_if_formula(
+                cell,
+                sheet_title=worksheet.title,  # type: ignore[attr-defined]
+                formulas=formulas,
+                references=references,
+            )
+
+
+def _record_cell_if_formula(
+    cell: object,
+    *,
+    sheet_title: str,
+    formulas: list[WorkbookCellRef],
+    references: list[WorkbookCellRef],
+) -> None:
+    """Append a formula record + (bounded) reference fan-out when ``cell`` carries an ``=…`` value."""
+    value = cell.value  # type: ignore[attr-defined]
+    if not (isinstance(value, str) and value.startswith("=")):
+        return
+    formulas.append(
+        WorkbookCellRef(sheet=sheet_title, coordinate=cell.coordinate, formula=value)  # type: ignore[attr-defined]
+    )
+    remaining = _REFERENCE_HARVEST_LIMIT - len(references)
+    if remaining > 0:
+        references.extend(_formula_references(sheet_title, value, remaining))
 
 
 def _comparison_status(
