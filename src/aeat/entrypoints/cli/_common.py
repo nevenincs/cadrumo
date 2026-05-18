@@ -27,7 +27,7 @@ from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
 from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogue, TransactionCatalogueRepository
-from ._i18n import tr
+from ...core.i18n import tr
 
 # ---------------------------------------------------------------------
 # Transport helpers
@@ -88,7 +88,7 @@ def _label_for(listing: AuthProviderListing) -> str:
 
 def _translate(translatable: str) -> str:
     """Render a str in the operator's preferred locale (Spanish first)."""
-    from ._i18n import tr
+    from ...core.i18n import tr
 
     return tr(translatable)
 

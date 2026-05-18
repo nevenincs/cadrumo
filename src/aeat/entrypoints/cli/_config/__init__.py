@@ -24,7 +24,7 @@ from ....application.workflow._models import resolve_active_bucket_id
 from ....core.logging import default_log_file_path
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
-from .._i18n import tr
+from ....core.i18n import tr
 from ._payloads import ProfileFactSetResult, ProfileFactUnsetResult
 
 _wizard_init_command = build_wizard_command(SETUP_FLOW)

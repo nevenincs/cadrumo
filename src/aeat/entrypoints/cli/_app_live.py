@@ -10,7 +10,7 @@ import typer
 
 from ...application.live import FiledDataListingRow, capture_filed_data, capture_source_filed_data, list_filed_data
 from ._common import _emit
-from ._i18n import tr
+from ...core.i18n import tr
 
 _VerifyVerdict = Literal["valid", "invalid", "unknown"]
 

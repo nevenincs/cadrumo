@@ -42,7 +42,7 @@ from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from . import _config
 from ._common import _FORMAT_TEXT, _emit
 from ._errors import decorate_typer_app, write_stderr
-from ._i18n import tr
+from ...core.i18n import tr
 from ._log_levels import apply_to_root_logger, resolve_log_level
 from ._root_landing import render_cli_root_landing_lines
 
