@@ -1213,57 +1213,14 @@ def split_transaction(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repository.load()
-    parent = _require_transaction(catalogue, transaction_id)
-    if parent.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-        raise TransactionValidationError(
-            "only active ledger transactions can be split",
-            context={
-                "bucket_id": bucket_id,
-                "transaction_id": transaction_id,
-                "lifecycle_state": parent.lifecycle_state.value,
-            },
-        )
-    blockers = _blocking_modelo_references(
+    parent = _resolve_active_split_parent(catalogue, bucket_id=bucket_id, transaction_id=transaction_id)
+    _reject_split_with_finalized_modelo_blockers(
+        parent=parent,
         bucket_id=bucket_id,
-        transaction_ids=_transaction_modelo_source_ids(parent),
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    if blockers:
-        _raise_finalized_modelo_blocked(
-            operation="ledger split",
-            transaction_ids=_transaction_modelo_source_ids(parent),
-            blockers=blockers,
-        )
-
-    parent_amount = parent.raw.amount
-    child_sum = sum((child.amount for child in children), start=Decimal("0"))
-    if child_sum != parent_amount:
-        raise TransactionValidationError(
-            "ledger split child amounts must sum to the parent amount exactly",
-            context={
-                "parent_amount": str(parent_amount),
-                "child_sum": str(child_sum),
-                "child_amounts": tuple(str(child.amount) for child in children),
-            },
-        )
-    parent_negative = parent_amount < Decimal("0")
-    for index, child in enumerate(children):
-        if child.amount == Decimal("0"):
-            raise TransactionValidationError(
-                "ledger split child amount must not be zero",
-                context={"child_index": index},
-            )
-        child_negative = child.amount < Decimal("0")
-        if child_negative != parent_negative:
-            raise TransactionValidationError(
-                "ledger split child amounts must share the parent's sign",
-                context={
-                    "parent_amount": str(parent_amount),
-                    "child_index": index,
-                    "child_amount": str(child.amount),
-                },
-            )
+    _validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
 
     child_amounts = tuple(child.amount for child in children)
     child_narratives = tuple(child.description for child in children)
@@ -1367,6 +1324,107 @@ def split_transaction(
         child_transactions=final_children,
         bucket_event_id=event.event_id,
     )
+
+
+def _resolve_active_split_parent(
+    catalogue: TransactionCatalogue,
+    *,
+    bucket_id: str,
+    transaction_id: str,
+) -> Transaction:
+    """Load the split-parent transaction and assert it is currently ACTIVE.
+
+    Only ACTIVE transactions can be split — splitting a SPLIT or
+    ARCHIVED row would corrupt the lifecycle chain. The state
+    refusal carries the actual lifecycle state in its context so an
+    operator can diagnose why the split is blocked.
+    """
+    parent = _require_transaction(catalogue, transaction_id)
+    if parent.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can be split",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "lifecycle_state": parent.lifecycle_state.value,
+            },
+        )
+    return parent
+
+
+def _reject_split_with_finalized_modelo_blockers(
+    *,
+    parent: Transaction,
+    bucket_id: str,
+    work_unit_repository: WorkUnitCatalogueRepository | None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None,
+) -> None:
+    """Refuse the split if any finalized modelo calculation references the parent.
+
+    The blocking-references probe walks the work-unit + calculation
+    catalogues for any verified-complete or filed revision whose
+    source-transaction set contains the parent (or any synthetic
+    successor). A non-empty blocker list maps directly to the
+    operator-facing "transaction frozen by filed modelo" error.
+    """
+    transaction_ids = _transaction_modelo_source_ids(parent)
+    blockers = _blocking_modelo_references(
+        bucket_id=bucket_id,
+        transaction_ids=transaction_ids,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    if blockers:
+        _raise_finalized_modelo_blocked(
+            operation="ledger split",
+            transaction_ids=transaction_ids,
+            blockers=blockers,
+        )
+
+
+def _validate_split_child_amounts(
+    *,
+    parent_amount: Decimal,
+    children: tuple[SplitChildCommand, ...],
+) -> None:
+    """Verify split-child amounts sum to the parent exactly and share its sign.
+
+    Three contracts enforced in order:
+
+    * ``sum(child.amount) == parent_amount`` exactly — no rounding
+      slack; bank ledgers carry exact cents.
+    * Every child amount is non-zero; a zero-amount child is a
+      modelling error, not a legitimate split.
+    * Every child amount carries the same sign as the parent —
+      mixing positive and negative children would silently invert
+      direction for the inverted siblings.
+    """
+    child_sum = sum((child.amount for child in children), start=Decimal("0"))
+    if child_sum != parent_amount:
+        raise TransactionValidationError(
+            "ledger split child amounts must sum to the parent amount exactly",
+            context={
+                "parent_amount": str(parent_amount),
+                "child_sum": str(child_sum),
+                "child_amounts": tuple(str(child.amount) for child in children),
+            },
+        )
+    parent_negative = parent_amount < Decimal("0")
+    for index, child in enumerate(children):
+        if child.amount == Decimal("0"):
+            raise TransactionValidationError(
+                "ledger split child amount must not be zero",
+                context={"child_index": index},
+            )
+        if (child.amount < Decimal("0")) != parent_negative:
+            raise TransactionValidationError(
+                "ledger split child amounts must share the parent's sign",
+                context={
+                    "parent_amount": str(parent_amount),
+                    "child_index": index,
+                    "child_amount": str(child.amount),
+                },
+            )
 
 
 def _build_split_child_transaction(
