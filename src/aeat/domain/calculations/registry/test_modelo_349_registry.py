@@ -585,7 +585,7 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
     invoice_bindings = {
         b.id: b
         for b in revision.bindings
-        if b.source == "invoice" and b.aggregation is not None and b.aggregation.get("op") != "rows"
+        if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.get("op") != "rows"
     }
     assert set(invoice_bindings) == {
         "vat-349-declarante-numero-operadores",
@@ -696,7 +696,7 @@ def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
     construct = revision.constructs[0]
-    assert set(construct.bindings) == {b.id for b in revision.bindings if b.source == "invoice"}
+    assert set(construct.bindings) == {b.id for b in revision.bindings if b.source == "collectible_invoice"}
 
 
 def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bindings() -> None:
@@ -723,7 +723,7 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
     row_bindings = {
         b.id: b
         for b in revision.bindings
-        if b.source == "invoice" and b.aggregation is not None and b.aggregation.get("op") == "rows"
+        if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.get("op") == "rows"
     }
     expected_operador_row_bindings = {
         "vat-349-operador-row-codigo-pais",
