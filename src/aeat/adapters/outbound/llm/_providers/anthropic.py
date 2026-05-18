@@ -12,7 +12,6 @@ exceptions are mapped to :exc:`aeat.adapters.outbound.llm._errors.LLMProviderErr
 
 from __future__ import annotations
 
-from typing import cast
 
 from anthropic import (
     APIConnectionError,
@@ -88,7 +87,8 @@ class AnthropicAdapter(_ProviderAdapter):
                 timeout failures, and non-2xx API status codes.
         """
 
-        messages: tuple[MessageParam, ...] = (cast(MessageParam, {"role": "user", "content": request.prompt}),)
+        user_message: MessageParam = {"role": "user", "content": request.prompt}
+        messages: tuple[MessageParam, ...] = (user_message,)
         metadata: MetadataParam = {"user_id": request.request_id}
         response: Message | None = None
         try:
