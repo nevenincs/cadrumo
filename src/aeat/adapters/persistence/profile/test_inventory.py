@@ -17,7 +17,7 @@ import pytest
 
 from ....domain.profile.errors import InventoryLedgerError
 from ....domain.profile.inventory import InventoryLedger, MovementKind, MovementRecord, StockLayer, ValuationMethod
-from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ..storage import EphemeralMasterKeyProvider
 from ..storage.sql import dispose_engine
 from .inventory import load_inventory, record_movement, save_inventory
 
@@ -28,12 +28,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 def _ephemeral_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     dispose_engine()
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> MovementRecord:

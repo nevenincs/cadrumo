@@ -22,10 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ...persistence.storage import (
-    EphemeralMasterKeyProvider,
-    override_master_key_provider,
-)
+from ...persistence.storage import EphemeralMasterKeyProvider
 from ...persistence.storage.sql import SecureObjectRepository
 from ...persistence.storage.sql._orm import Base
 from ...persistence.storage.sql.engine import create_engine_from_settings
@@ -79,50 +76,49 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
     """AssetsLedgerDocument + AmortizationLedger roundtrip through encrypted SQL."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "assets-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        assets_repo = AssetsLedgerRepository()
-        amortization_repo = AmortizationLedgerRepository()
-
-        asset = _populated_asset()
-        original_doc = AssetsLedgerDocument(assets=(asset,))
-        assets_repo.save(original_doc)
-        loaded_doc = assets_repo.load()
-
-        assert loaded_doc == original_doc
-        loaded_asset = loaded_doc.assets[0]
-        # Per-field witnesses on the optional VAT / allocation axes.
-        assert loaded_asset.taxable_base == Decimal("10000.00")
-        assert loaded_asset.deductible_vat_ratio == Decimal("0.50")
-        assert loaded_asset.allocation_ratio == Decimal("0.75")
-        assert loaded_asset.useful_life_years == 4
-        assert loaded_asset.actividad_id == "iae.844"
-        assert loaded_asset.libertad_amortizacion.enabled is True
-        assert loaded_asset.libertad_amortizacion.amount_limit == Decimal("5000.00")
-
-        original_ledger = AmortizationLedger(
-            entries=(
-                AmortizationEntry(asset_id=asset.identifier, year=2024, amount=Decimal("2762.50")),
-                AmortizationEntry(asset_id=asset.identifier, year=2025, amount=Decimal("2762.50")),
-            ),
+    with provider:
+        db_path = tmp_path / "assets-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        amortization_repo.save(original_ledger)
-        loaded_ledger = amortization_repo.load()
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        assert loaded_ledger == original_ledger
-        assert len(loaded_ledger.entries) == 2
-        assert loaded_ledger.entries[0].amount == Decimal("2762.50")
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            assets_repo = AssetsLedgerRepository()
+            amortization_repo = AmortizationLedgerRepository()
+
+            asset = _populated_asset()
+            original_doc = AssetsLedgerDocument(assets=(asset,))
+            assets_repo.save(original_doc)
+            loaded_doc = assets_repo.load()
+
+            assert loaded_doc == original_doc
+            loaded_asset = loaded_doc.assets[0]
+            # Per-field witnesses on the optional VAT / allocation axes.
+            assert loaded_asset.taxable_base == Decimal("10000.00")
+            assert loaded_asset.deductible_vat_ratio == Decimal("0.50")
+            assert loaded_asset.allocation_ratio == Decimal("0.75")
+            assert loaded_asset.useful_life_years == 4
+            assert loaded_asset.actividad_id == "iae.844"
+            assert loaded_asset.libertad_amortizacion.enabled is True
+            assert loaded_asset.libertad_amortizacion.amount_limit == Decimal("5000.00")
+
+            original_ledger = AmortizationLedger(
+                entries=(
+                    AmortizationEntry(asset_id=asset.identifier, year=2024, amount=Decimal("2762.50")),
+                    AmortizationEntry(asset_id=asset.identifier, year=2025, amount=Decimal("2762.50")),
+                ),
+            )
+            amortization_repo.save(original_ledger)
+            loaded_ledger = amortization_repo.load()
+
+            assert loaded_ledger == original_ledger
+            assert len(loaded_ledger.entries) == 2
+            assert loaded_ledger.entries[0].amount == Decimal("2762.50")
+        finally:
+            engine.dispose()
 
 
 def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
@@ -156,48 +152,47 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "assets-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-        assets_repo = AssetsLedgerRepository()
-        asset = _populated_asset()
-        assets_repo.save(AssetsLedgerDocument(assets=(asset,)))
-
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ASSETS_NAMESPACE,
-                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
-            )
-            row = session.execute(stmt).scalar_one()
-            document = _json.loads(row.payload.decode("utf-8"))
-            asset_dict = document["assets"][0]
-            assert asset_dict.get("cost_basis"), (
-                "fixture must serialise cost_basis onto the asset "
-                "for this proof test to be meaningful"
-            )
-            # Halve the cost_basis so the VAT decomposition cross-
-            # check fails ("cost_basis must equal taxable_base plus
-            # non-deductible VAT").
-            asset_dict["cost_basis"] = "5525.00"
-            row.payload = _json.dumps(document).encode("utf-8")
-
-        regression_caught = False
-        try:
-            assets_repo.load()
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: corrupting cost_basis to "
-            "break the VAT-decomposition cross-check did NOT surface "
-            "on load. The assets ledger boundary is tautological and "
-            "every ledger roundtrip in the suite is suspect."
+    with provider:
+        db_path = tmp_path / "assets-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            assets_repo = AssetsLedgerRepository()
+            asset = _populated_asset()
+            assets_repo.save(AssetsLedgerDocument(assets=(asset,)))
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _ASSETS_NAMESPACE,
+                    SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+                )
+                row = session.execute(stmt).scalar_one()
+                document = _json.loads(row.payload.decode("utf-8"))
+                asset_dict = document["assets"][0]
+                assert asset_dict.get("cost_basis"), (
+                    "fixture must serialise cost_basis onto the asset "
+                    "for this proof test to be meaningful"
+                )
+                # Halve the cost_basis so the VAT decomposition cross-
+                # check fails ("cost_basis must equal taxable_base plus
+                # non-deductible VAT").
+                asset_dict["cost_basis"] = "5525.00"
+                row.payload = _json.dumps(document).encode("utf-8")
+
+            regression_caught = False
+            try:
+                assets_repo.load()
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: corrupting cost_basis to "
+                "break the VAT-decomposition cross-check did NOT surface "
+                "on load. The assets ledger boundary is tautological and "
+                "every ledger roundtrip in the suite is suspect."
+            )
+        finally:
+            engine.dispose()

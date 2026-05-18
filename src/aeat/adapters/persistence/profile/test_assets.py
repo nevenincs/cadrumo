@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.profile.assets import AmortizationEntry, AmortizationLedger, AssetClass, AssetRecord
-from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ..storage import EphemeralMasterKeyProvider
 from ..storage.sql import dispose_engine
 from .assets import load_amortization_ledger, load_assets, save_amortization_ledger, save_assets
 
@@ -27,12 +27,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 def _ephemeral_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     dispose_engine()
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _asset(identifier: str, asset_class: AssetClass, cost_basis: str = "10000.00") -> AssetRecord:
