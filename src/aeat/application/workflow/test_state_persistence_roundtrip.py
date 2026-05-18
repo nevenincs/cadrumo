@@ -39,9 +39,12 @@ def _populated_workflow_state() -> WorkflowState:
 
     * an AuthState with non-default values
     * two profile bucket pointers (the keyed mapping must round-trip)
-    * an active_profile selector
     * a declarations mapping with one DeclarationPointer
     * a tuple of WorkflowEvent entries (append-only audit log)
+
+    The active-profile selector lives in the precedence chain
+    (Settings override > plaintext pointer file) rather than on the
+    record itself, so it is intentionally absent from the fixture.
     """
 
     now = datetime.now(UTC).replace(microsecond=0)
