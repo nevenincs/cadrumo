@@ -212,7 +212,7 @@ def _rewrite_text_show_operands(
 
 
 def _rewrite_single_string_at(
-    operands: object,
+    operands: Sequence[PikepdfObject | int | float],
     *,
     target_index: int,
     triples: tuple[tuple[str, str, str], ...],
@@ -220,7 +220,7 @@ def _rewrite_single_string_at(
     instruction_index: int,
     edits: list[Replacement],
 ) -> list[PikepdfObject | int | float] | None:
-    target_operand = operands[target_index]  # type: ignore[index]
+    target_operand = operands[target_index]
     if not isinstance(target_operand, String):
         return None
     new_operand, hits = _rewrite_string_operand(
@@ -231,14 +231,14 @@ def _rewrite_single_string_at(
     )
     if not hits:
         return None
-    operand_list: list[PikepdfObject | int | float] = list(operands)  # type: ignore[arg-type]
+    operand_list: list[PikepdfObject | int | float] = list(operands)
     operand_list[target_index] = new_operand
     edits.extend(hits)
     return operand_list
 
 
 def _rewrite_array_string_elements(
-    operands: object,
+    operands: Sequence[PikepdfObject | int | float],
     *,
     triples: tuple[tuple[str, str, str], ...],
     page_index: int,
@@ -246,7 +246,7 @@ def _rewrite_array_string_elements(
     edits: list[Replacement],
 ) -> list[PikepdfObject | int | float] | None:
     # operands[0] is an Array of String + numeric kerning entries.
-    array = operands[0]  # type: ignore[index]
+    array = operands[0]
     new_array_elements: list[PikepdfObject] = []
     local_hits: list[Replacement] = []
     array_mutated = False
