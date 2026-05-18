@@ -64,7 +64,7 @@ def _skip_unless_drive_configured() -> None:
 def _provider_or_skip() -> StorageProvider:
     _skip_unless_drive_configured()
     try:
-        return get_storage_provider(profile_override=_live_profile())
+        return get_storage_provider()
     except Exception as exc:
         _log.debug("cannot build live storage provider", exc_info=True)
         pytest.skip(f"cannot build live storage provider: {exc}")
