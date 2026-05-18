@@ -1367,7 +1367,7 @@ def _ratios_bucket_id() -> str:
     from ...application.workflow._persistence import workflow_state_repository
 
     try:
-        return active_bucket_id_or_raise(workflow_state_repository().load())
+        return active_bucket_id_or_raise()
     except Exception as exc:  # NoActiveProfileError + downstream raises
         raise _bad(tr("cli.config.errors.no_active_profile")) from exc
 
@@ -1386,7 +1386,7 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
 
     state = workflow_state_repository().load()
     try:
-        bucket_id = active_bucket_id_or_raise(state)
+        bucket_id = active_bucket_id_or_raise()
     except Exception as exc:  # NoActiveProfileError + downstream raises
         raise _bad(tr("cli.config.errors.no_active_profile")) from exc
     return bucket_id, resolve_active_bucket_id()

@@ -117,7 +117,7 @@ def test_config_profile_delete_tombstones_with_yes(cli_runner: CliRunner) -> Non
     from aeat.application.workflow._models import resolve_active_bucket_id
 
     state = workflow_state_repository().load()
-    assert resolve_active_bucket_id(state) is None
+    assert resolve_active_bucket_id() is None
 
 
 def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> None:

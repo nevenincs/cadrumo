@@ -463,7 +463,7 @@ def config_profile_switch(
         updated = repository.update(lambda current: select_profile(current, profile_id=name))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    active = resolve_active_bucket_id(updated)
+    active = resolve_active_bucket_id()
     _emit_profile_activated_event(profile_id=name, active_profile=active)
     _emit(
         ctx,
@@ -540,7 +540,7 @@ def config_profile_show(
     from ....domain.user_profile import ProfileNotFoundError
 
     state = _profile_state().load()
-    target = name or resolve_active_bucket_id(state)
+    target = name or resolve_active_bucket_id()
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     pointer = state.profiles.get(target)
@@ -790,7 +790,7 @@ def config_profile_export(
     from ....domain.user_profile import ProfileNotFoundError
 
     state = _profile_state().load()
-    target = name or resolve_active_bucket_id(state)
+    target = name or resolve_active_bucket_id()
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     pointer = state.profiles.get(target)
@@ -848,7 +848,7 @@ def config_profile_import(
     state = repository.load()
     if target_id in state.profiles:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id))
-    active_bucket = resolve_active_bucket_id(state)
+    active_bucket = resolve_active_bucket_id()
     if active_bucket is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     bucket_pointer = state.profiles.get(active_bucket)

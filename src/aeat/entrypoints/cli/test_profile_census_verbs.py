@@ -84,7 +84,7 @@ def _capture_snapshot() -> str:
     from aeat.application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    active = resolve_active_bucket_id(state)
+    active = resolve_active_bucket_id()
     assert active is not None, "active profile must be seeded before capture"
     bucket_id = state.profiles[active].bucket_id
     service = CensusSnapshotService(bucket_id=bucket_id)
@@ -198,7 +198,7 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
 
     catalogue = BucketEventHistoryRepository().load()
     state = workflow_state_repository().load()
-    active = resolve_active_bucket_id(state)
+    active = resolve_active_bucket_id()
     matching = [
         event
         for event in catalogue.events.values()

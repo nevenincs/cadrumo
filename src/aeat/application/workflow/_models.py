@@ -165,7 +165,7 @@ class WorkflowState(BaseModel):
         convention, so the resolved id is the lifecycle-service read key.
         """
 
-        bucket_id = resolve_active_bucket_id(self)
+        bucket_id = resolve_active_bucket_id()
         if bucket_id is None:
             return None
         from ...domain.user_profile import ProfileNotFoundError
@@ -180,10 +180,10 @@ class WorkflowState(BaseModel):
     def active_profile_bucket_id(self) -> str | None:
         """Return the active profile's secure bucket id via the precedence chain."""
 
-        return resolve_active_bucket_id(self)
+        return resolve_active_bucket_id()
 
 
-def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
+def resolve_active_bucket_id() -> str | None:
     """Resolve the active bucket id via the operator-facing precedence chain.
 
     Precedence, highest wins:
@@ -203,14 +203,8 @@ def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
     process under an :func:`aeat.core.config.override_settings` block
     that sets ``aeat_active_profile`` so rung one handles it without a
     fourth precedence rung.
-
-    The ``state`` argument is accepted for source compatibility with
-    callers that still thread workflow state through; the resolver
-    consults Settings and the pointer file only and never reads the
-    state record.
     """
 
-    del state  # legacy parameter; resolution flows through Settings + pointer file
     from ...core.config import load_settings
     from ._bucket_pointer_io import read_pointer
 
@@ -224,14 +218,14 @@ def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
     return None
 
 
-def active_bucket_id_or_raise(state: WorkflowState) -> str:
+def active_bucket_id_or_raise() -> str:
     """Return the active profile's bucket id or raise :class:`NoActiveProfileError`.
 
     Bucket-scoped repositories use this helper at construction time so
     application services refuse to operate when no profile is selected.
     """
 
-    bucket_id = resolve_active_bucket_id(state)
+    bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
@@ -258,7 +252,7 @@ def require_active_bucket_id() -> str:
     label so a missing profile remains diagnosable.
     """
 
-    bucket_id = resolve_active_bucket_id(state=None)
+    bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
@@ -277,7 +271,7 @@ def active_transaction_catalogue_repository(
     from ._errors import NoActiveProfileError
 
     try:
-        bucket_id = active_bucket_id_or_raise(state)
+        bucket_id = active_bucket_id_or_raise()
     except NoActiveProfileError as exc:
         raise LedgerNoActiveBucketError(
             "no active profile bucket",
