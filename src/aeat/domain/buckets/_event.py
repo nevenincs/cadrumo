@@ -78,6 +78,7 @@ class BucketEventType(StrEnum):
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
     PROFILE_TOMBSTONED = "profile.tombstoned"
     PROFILE_DUPLICATED = "profile.duplicated"
+    PROFILE_RENAMED = "profile.renamed"
     PROFILE_EXPORTED = "profile.exported"
     PROFILE_IMPORTED = "profile.imported"
     PROFILE_ACTIVATED = "profile.activated"
