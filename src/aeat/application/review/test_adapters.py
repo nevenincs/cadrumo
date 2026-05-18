@@ -416,7 +416,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
     summary_key = items[0].summary
-    assert summary_key == "review.adapters.t_397611"
+    assert summary_key == "review.filing.draft_placeholder_summary"
 
 
 def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
@@ -439,7 +439,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     assert items[0].severity is ReviewSeverity.HIGH
     assert items[0].draft_id == "d_stale"
     summary_key = items[0].summary
-    assert summary_key == "review.adapters.t_787894"
+    assert summary_key == "review.filing.stale_approval_summary"
     assert items[0].drill_command.startswith("aeat app review show ")
 
 

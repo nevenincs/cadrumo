@@ -52,38 +52,6 @@ _SUMMARY_MAX = 80
 _LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
 
 
-def t(message: str) -> tr:
-    """Build a multilingual :class:`aeat.core.i18n.tr` message payload."""
-    return tr(message)
-
-
-_DIRECTION_LABELS: dict[TransactionDirection, tr] = {
-    TransactionDirection.INCOMING: tr("review.adapters.t_968325"),
-    TransactionDirection.OUTGOING: tr("review.adapters.t_629803"),
-    TransactionDirection.INTERNAL_TRANSFER: tr("review.adapters.t_135562"),
-}
-_CLASSIFICATION_LABELS: dict[BusinessClassification, tr] = {
-    BusinessClassification.BUSINESS: tr("review.adapters.t_142007"),
-    BusinessClassification.PERSONAL: tr("review.adapters.t_870243"),
-    BusinessClassification.MIXED: tr("review.adapters.t_619063"),
-    BusinessClassification.NOT_YET_PROCESSED: tr("review.adapters.t_754183"),
-    BusinessClassification.PROCESSED_UNCLASSIFIED: tr("review.adapters.t_791512"),
-    BusinessClassification.SKIPPED_BY_RULE: tr("review.adapters.t_607122"),
-    BusinessClassification.FAILED_VALIDATION: tr("review.adapters.t_352338"),
-}
-_INVOICE_REASON_LABELS: dict[str, tr] = {
-    "unmatched": tr("review.adapters.t_551826"),
-    "overdue": tr("review.adapters.t_167733"),
-    "payment-pending": tr("review.adapters.t_298389"),
-    "partially-paid": tr("review.adapters.t_352928"),
-}
-
-
-def _per_lang_summary(template: str, **fields: str | tr) -> tr:
-    """Return the abstract translation key."""
-    return tr(template)
-
-
 # ── transactions ──────────────────────────────────────────────────
 
 
@@ -187,15 +155,8 @@ def _to_transaction_item(
     description = raw.description.strip()
     if len(description) > _SUMMARY_MAX:
         description = description[: _SUMMARY_MAX - 1] + "…"
-    amount = format(raw.amount.normalize(), "f") if not raw.amount.is_zero() else "0"
-    summary = _per_lang_summary(
-        "review.adapters.t_170461",
-        state=_CLASSIFICATION_LABELS[transaction.business_classification],
-        direction=_DIRECTION_LABELS[transaction.direction],
-        amount=amount,
-        currency=raw.currency,
-        description=description,
-    )
+    del raw  # description + amount captured above; nothing else needed
+    summary = tr("review.transaction.summary")
     return TransactionReviewItem(
         item_id=transaction.transaction_id,
         modelo=None,
@@ -258,20 +219,8 @@ def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:
 
 
 def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str) -> InvoiceReviewItem:
-    grand_total = format(invoice.grand_total.normalize(), "f") if not invoice.grand_total.is_zero() else "0"
-    reason_label = _INVOICE_REASON_LABELS.get(
-        reason,
-        tr("review.adapters.t_189155"),
-    )
-    summary = _per_lang_summary(
-        "review.adapters.t_122028",
-        reason=reason_label,
-        kind=invoice.kind.value,
-        number=invoice.invoice_number,
-        total=grand_total,
-        currency=invoice.currency,
-        counterparty=invoice.counterparty_name,
-    )
+    del reason  # severity already encodes the disposition for the queue line
+    summary = tr("review.invoice.summary")
     since = datetime.combine(invoice.issued_at, time.min, tzinfo=UTC)
     return InvoiceReviewItem(
         item_id=invoice.invoice_id,
@@ -393,7 +342,7 @@ def _to_finding_item(
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
     _first_translation(finding.message) or finding.code
-    summary = tr("review.adapters.t_145612")
+    summary = tr("review.filing.finding_summary")
     severity = _classify_finding(finding.severity)
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
@@ -409,10 +358,7 @@ def _to_finding_item(
 
 
 def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
-    summary = _per_lang_summary(
-        "review.adapters.t_397611",
-        status=draft.status.value,
-    )
+    summary = tr("review.filing.draft_placeholder_summary")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:{draft.status.value}",
         modelo=draft.modelo,
@@ -428,7 +374,7 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
 
 def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
     """Emit a high-severity item for drafts whose stored approval is stale."""
-    summary = tr("review.adapters.t_787894")
+    summary = tr("review.filing.stale_approval_summary")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
         modelo=draft.modelo,
