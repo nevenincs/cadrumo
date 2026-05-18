@@ -11,6 +11,7 @@ consumes these records as its baseline.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -119,15 +120,23 @@ _DEFAULT_130_BINDING_VALUES = {
 }
 
 
-def test_import_persists_filing_with_external_evidence(repos) -> None:
-    """The happy path: importer supplies casilla values + evidence
-    reference. The action persists a FILED revision, a CURRENT
-    filing record with ``external_evidence`` populated, advances
-    work-unit pointers, and emits ``modelo.filing.imported``."""
+@dataclass(frozen=True, slots=True)
+class _ImportOutcome:
+    """Bundle returned by _drive_import_persists_filing.
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    Holds every state slice the focused tests inspect:
+    work_unit + the new filing record produced by
+    ``import_external_filing_evidence``.
+    """
+
+    work_unit: object
+    filing: object
+
+
+def _drive_import_persists_filing(repos) -> _ImportOutcome:  # type: ignore[no-untyped-def]
+    """Run the seed-work-unit + import-evidence scenario and bundle the observable state."""
+    wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
-
     filing = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
         casilla_values={"01": Decimal("1500"), "02": Decimal("300")},
@@ -140,39 +149,89 @@ def test_import_persists_filing_with_external_evidence(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
+    return _ImportOutcome(work_unit=work_unit, filing=filing)
 
-    assert filing.status is FilingRecordStatus.CURRENT
-    assert filing.aeat_accepted is True
-    assert filing.external_evidence is not None
-    assert filing.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
-    assert filing.external_evidence.reference_id == "JUST-2026-303-Q1-OPERATOR1"
-    assert filing.external_evidence.imported_at == _T1
-    assert filing.amends_filing_record_id is None
-    assert filing.filed_at == _T1
 
-    revision = get_calculation_revision(filing.calculation_revision_id, calculation_repository=cr_repo)
+def test_import_filing_is_current_and_accepted(repos) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    assert outcome.filing.status is FilingRecordStatus.CURRENT
+    assert outcome.filing.aeat_accepted is True
+
+
+def test_import_filing_carries_external_evidence_metadata(repos) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    evidence = outcome.filing.external_evidence
+    assert evidence is not None
+    assert evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
+    assert evidence.reference_id == "JUST-2026-303-Q1-OPERATOR1"
+    assert evidence.imported_at == _T1
+
+
+def test_import_filing_records_no_amendment_link(repos) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    assert outcome.filing.amends_filing_record_id is None
+    assert outcome.filing.filed_at == _T1
+
+
+_IMPORTED_REVISION_CASILLAS = (
+    ("01", Decimal("1500")),
+    ("02", Decimal("300")),
+)
+
+
+def test_import_persists_filed_calculation_revision(repos) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    _, cr_repo, _, _, _ = repos
+    revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
     assert revision.state is CalculationRevisionState.FILED
-    assert revision.casilla_values["01"] == Decimal("1500")
-    assert revision.casilla_values["02"] == Decimal("300")
     assert revision.amendment_kind is None  # import is not an amendment
 
-    refreshed_wu = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
-    assert refreshed_wu.filed_calculation_revision_id == filing.calculation_revision_id
-    assert refreshed_wu.current_filing_record_id == filing.filing_record_id
 
-    catalogue = bv_repo.load()
-    events = catalogue.for_bucket(
-        work_unit.bucket_id,
+@pytest.mark.parametrize(("casilla_id", "expected"), _IMPORTED_REVISION_CASILLAS)
+def test_import_persists_casilla_value(repos, casilla_id: str, expected: Decimal) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    _, cr_repo, _, _, _ = repos
+    revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
+    assert revision.casilla_values[casilla_id] == expected
+
+
+def test_import_work_unit_pointers_advance_to_new_filing(repos) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    wu_repo, _, _, _, _ = repos
+    refreshed_wu = get_work_unit(outcome.work_unit.work_unit_id, repository=wu_repo)
+    assert refreshed_wu.filed_calculation_revision_id == outcome.filing.calculation_revision_id
+    assert refreshed_wu.current_filing_record_id == outcome.filing.filing_record_id
+
+
+def test_import_emits_single_modelo_filing_imported_event(repos) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    _, _, _, _, bv_repo = repos
+    events = bv_repo.load().for_bucket(
+        outcome.work_unit.bucket_id,
         event_types=(BucketEventType.MODELO_FILING_IMPORTED,),
     )
     assert len(events) == 1
-    event = events[0]
-    assert event.object_type is BucketEventObjectType.FILING_RECORD
-    assert event.object_id == filing.filing_record_id
-    assert event.payload["evidence_kind"] == "aeat_justificante_pdf"
-    assert event.payload["evidence_reference_id"] == "JUST-2026-303-Q1-OPERATOR1"
-    assert event.payload["supersedes_filing_record_id"] == ""
-    assert event.payload["casilla_count"] == "2"
+    assert events[0].object_type is BucketEventObjectType.FILING_RECORD
+    assert events[0].object_id == outcome.filing.filing_record_id
+
+
+_IMPORTED_EVENT_PAYLOAD_EXPECTATIONS = (
+    ("evidence_kind", "aeat_justificante_pdf"),
+    ("evidence_reference_id", "JUST-2026-303-Q1-OPERATOR1"),
+    ("supersedes_filing_record_id", ""),
+    ("casilla_count", "2"),
+)
+
+
+@pytest.mark.parametrize(("payload_key", "expected"), _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS)
+def test_import_event_payload_records_field(repos, payload_key: str, expected: str) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    _, _, _, _, bv_repo = repos
+    events = bv_repo.load().for_bucket(
+        outcome.work_unit.bucket_id,
+        event_types=(BucketEventType.MODELO_FILING_IMPORTED,),
+    )
+    assert events[0].payload[payload_key] == expected
 
 
 def test_import_supersedes_prior_current_filing(repos) -> None:
