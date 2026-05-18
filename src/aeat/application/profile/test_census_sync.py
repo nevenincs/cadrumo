@@ -180,6 +180,77 @@ def test_apply_refuses_when_profile_does_not_exist(secure_store: SecureObjectRep
         service.apply_census_to_profile(profile_id="operator")
 
 
+def _facts_clean_ratio() -> dict[str, str]:
+    """Fixture with 100/20 m² so the derived suministros ratio is the
+    legally-clean 0.06 (=0.20 * 0.30) and ownership is exactly 0.20.
+    Avoids the truncation artefacts the 24.50/120.00 fixture produces."""
+
+    return {
+        "vivienda_office.total_m2": "100",
+        "vivienda_office.office_m2": "20",
+    }
+
+
+def test_apply_seeds_home_office_usage_ratios_from_census(
+    secure_store: SecureObjectRepository,
+) -> None:
+    """Closes the #495 orphan: apply now drives derive_home_office_ratios_from_census
+    via the snapshot's vivienda_office facts. Suministros entries land at
+    raw * 0.30 (LIRPF Art. 30.2 rule 5), ownership at raw afectación.
+
+    Fixture: 100 m² total, 20 m² office → raw = 0.20 → suministros = 0.060,
+    ownership = 0.20. Witnesses the actual numeric output, not the helper
+    signature."""
+
+    from decimal import Decimal
+
+    from aeat.domain.categories import SpendingCategory
+    from aeat.domain.usage_ratios import load_usage_ratios
+
+    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles.save(
+        UserProfileRecord(profile_id="operator", display_name="Operator"),
+    )
+    service = CensusSyncService(
+        bucket_id="b1",
+        snapshots=CensusSnapshotService(bucket_id="b1"),
+        profiles=profiles,
+    )
+    service.refresh_census(
+        profile_id="operator", source_url=_G313, fact_source=_facts_clean_ratio,
+    )
+
+    result = service.apply_census_to_profile(profile_id="operator")
+
+    assert "suministros_home_office_luz" in result.seeded_home_office_categories
+    assert "amortizacion_vivienda_afecto" in result.seeded_home_office_categories
+    ratios_profile = load_usage_ratios(bucket_id="b1")
+    assert ratios_profile.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.060")
+    assert ratios_profile.ratios[SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO] == Decimal("0.20")
+
+
+def test_apply_seeding_idempotent_on_repeat(secure_store: SecureObjectRepository) -> None:
+    """Second apply with the same census produces no fresh seeded entries —
+    the merge skips paths whose persisted value already matches the
+    derived value."""
+
+    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles.save(UserProfileRecord(profile_id="operator", display_name="Operator"))
+    service = CensusSyncService(
+        bucket_id="b1",
+        snapshots=CensusSnapshotService(bucket_id="b1"),
+        profiles=profiles,
+    )
+    service.refresh_census(
+        profile_id="operator", source_url=_G313, fact_source=_facts_clean_ratio,
+    )
+    service.apply_census_to_profile(profile_id="operator")
+
+    second = service.apply_census_to_profile(profile_id="operator")
+
+    assert second.seeded_home_office_categories == ()
+
+
 def test_apply_preserves_windowed_manual_facts(secure_store: SecureObjectRepository) -> None:
     """Persistence-audit follow-up: UserProfileFact carries valid_from /
     valid_to date windows that the prior census-apply roundtrip never

@@ -113,6 +113,7 @@ class CensusApplyResult(BaseModel):
     profile_id: str = Field(min_length=1)
     written_paths: tuple[str, ...] = Field(default_factory=tuple)
     unchanged_paths: tuple[str, ...] = Field(default_factory=tuple)
+    seeded_home_office_categories: tuple[str, ...] = Field(default_factory=tuple)
 
 
 CensusFactSource = Callable[[], Mapping[str, str]]
@@ -308,6 +309,7 @@ class CensusSyncService:
             },
         )
         self._profiles.save(updated)
+        seeded = self._seed_home_office_usage_ratios_from_snapshot(snapshot)
         written: list[str] = []
         unchanged: list[str] = []
         for path, value in sorted(snapshot.census_facts.items()):
@@ -320,7 +322,53 @@ class CensusSyncService:
             profile_id=profile_id.strip(),
             written_paths=tuple(written),
             unchanged_paths=tuple(unchanged),
+            seeded_home_office_categories=seeded,
         )
+
+    def _seed_home_office_usage_ratios_from_snapshot(
+        self, snapshot: CensusSnapshot,
+    ) -> tuple[str, ...]:
+        """Compute HOME_OFFICE per-category ratios from the snapshot's
+        vivienda_office facts and persist them into the usage-ratios
+        store. Returns the canonical category-id list that landed.
+
+        Idempotent: if office_m2 / total_m2 are absent or the derived
+        ratio matches what is already persisted, nothing is written and
+        the empty tuple is returned. Operator-set overrides on
+        non-HOME_OFFICE categories are preserved.
+        """
+
+        from ...domain.usage_ratios import (
+            UsageRatioProfile,
+            derive_home_office_ratios_from_census,
+            load_usage_ratios,
+            save_usage_ratios,
+        )
+
+        total_raw = snapshot.census_facts.get("vivienda_office.total_m2")
+        office_raw = snapshot.census_facts.get("vivienda_office.office_m2")
+        if total_raw is None or office_raw is None:
+            return ()
+        try:
+            total = Decimal(total_raw)
+            office = Decimal(office_raw)
+        except (InvalidOperation, ValueError):
+            return ()
+        if total <= Decimal("0") or office < Decimal("0") or office > total:
+            return ()
+        raw_ratio = office / total
+        derived = derive_home_office_ratios_from_census(raw_ratio, year=2025)
+        current = load_usage_ratios(bucket_id=self._bucket_id)
+        seeded: list[str] = []
+        merged_ratios = dict(current.ratios)
+        for category, value in derived.ratios.items():
+            if merged_ratios.get(category) != value:
+                merged_ratios[category] = value
+                seeded.append(category.value)
+        if not seeded:
+            return ()
+        save_usage_ratios(UsageRatioProfile(ratios=merged_ratios), bucket_id=self._bucket_id)
+        return tuple(sorted(seeded))
 
     def _load_profile_or_empty(self, profile_id: str) -> UserProfileRecord | None:
         if not self._profiles.exists(profile_id):
