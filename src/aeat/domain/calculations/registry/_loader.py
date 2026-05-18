@@ -299,6 +299,19 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
     """
 
     resolved = root.resolve()
+    fingerprints = _collect_registry_tree_fingerprints(resolved)
+    return _load_registry_tree_cached(str(resolved), fingerprints)
+
+
+def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int, int], ...]:
+    """Walk ``resolved`` and return ``(path, size, mtime)`` fingerprints for the lru_cache key.
+
+    Covers every catalogue source the loader will subsequently
+    re-open: ``legal/*.toml``, single-file ``modelos/*.toml``, and
+    directory-mode ``modelos/<id>/manifest.toml`` plus its
+    ``revisions/*.toml`` siblings. The cache key invalidates the
+    moment any of those files changes shape on disk.
+    """
     legal_dir = resolved / "legal"
     modelos_dir = resolved / "modelos"
     fingerprints: list[tuple[str, int, int]] = []
@@ -308,13 +321,20 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
         fingerprints.append(_toml_fingerprint(path))
     if modelos_dir.is_dir():
         for entry in sorted(modelos_dir.iterdir()):
-            if entry.is_dir() and (entry / "manifest.toml").is_file():
-                fingerprints.append(_toml_fingerprint(entry / "manifest.toml"))
-                revisions_dir = entry / "revisions"
-                if revisions_dir.is_dir():
-                    for rev_path in sorted(revisions_dir.glob("*.toml")):
-                        fingerprints.append(_toml_fingerprint(rev_path))
-    return _load_registry_tree_cached(str(resolved), tuple(fingerprints))
+            fingerprints.extend(_modelo_directory_fingerprints(entry))
+    return tuple(fingerprints)
+
+
+def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], ...]:
+    """Return fingerprints for one directory-mode modelo entry, or ``()`` if not in that layout."""
+    if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
+        return ()
+    fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(entry / "manifest.toml")]
+    revisions_dir = entry / "revisions"
+    if revisions_dir.is_dir():
+        for rev_path in sorted(revisions_dir.glob("*.toml")):
+            fingerprints.append(_toml_fingerprint(rev_path))
+    return tuple(fingerprints)
 
 
 @lru_cache(maxsize=32)
