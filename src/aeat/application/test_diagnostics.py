@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.adapters.persistence.storage.sql._orm import Base
@@ -157,67 +156,66 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
     namespace = "aeat.test.repair.rotation"
 
     # Seed three rows under the OLD master key.
-    override_master_key_provider(key_old)
-    engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine_old)
-    try:
-        repo_old = SecureObjectRepository(engine=engine_old)
-        for natural_key, payload in (
-            ("repair-row-1", b"old-1"),
-            ("repair-row-2", b"old-2"),
-            ("repair-row-3", b"old-3"),
-        ):
-            repo_old.save(
+    with key_old:
+        engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine_old)
+        try:
+            repo_old = SecureObjectRepository(engine=engine_old)
+            for natural_key, payload in (
+                ("repair-row-1", b"old-1"),
+                ("repair-row-2", b"old-2"),
+                ("repair-row-3", b"old-3"),
+            ):
+                repo_old.save(
+                    namespace=namespace,
+                    object_key=natural_key,
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=payload,
+                )
+        finally:
+            engine_old.dispose()
+
+    # Switch to the NEW master key and add one decryptable row.
+    with key_new:
+        engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine_new)
+        try:
+            SecureObjectRepository(engine=engine_new).save(
                 namespace=namespace,
-                object_key=natural_key,
+                object_key="repair-row-4",
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
                 written_at=datetime.now(UTC),
-                payload=payload,
+                payload=b"new-4",
             )
-    finally:
-        engine_old.dispose()
+        finally:
+            engine_new.dispose()
 
-    # Switch to the NEW master key and add one decryptable row.
-    override_master_key_provider(key_new)
-    engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine_new)
-    try:
-        SecureObjectRepository(engine=engine_new).save(
-            namespace=namespace,
-            object_key="repair-row-4",
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=1,
-            written_at=datetime.now(UTC),
-            payload=b"new-4",
-        )
-    finally:
-        engine_new.dispose()
-
-    # The default repair pipeline picks up the master key from the keyring;
-    # we want it to use the same NEW key we just wrote under, so keep the
-    # process-wide override in place but redirect the engine resolution to
-    # the same database file.
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-    try:
-        report = build_config_repair_report()
-        integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
-        assert integrity_check.status == "warn"
-        assert "unreadable row" in integrity_check.summary
-        assert integrity_check.next_action == "aeat config repair quarantine --yes"
-
-        ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
-        # Three rows sealed under the OLD ephemeral key should be unreadable
-        # under the unsecured backend; rows we wrote under the unsecured
-        # backend itself remain readable (set is at least 0 under the
-        # unsecured key, depending on whether the canary fires).
-        assert ns_report.unreadable >= 3
-        assert ns_report.unreadable + ns_report.readable == 4
-    finally:
-        override_master_key_provider(None)
+        # The default repair pipeline picks up the master key from the keyring;
+        # we want it to use the same NEW key we just wrote under, so keep the
+        # process-wide override in place but redirect the engine resolution to
+        # the same database file.
+        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+        monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
         dispose_engine()
+        try:
+            report = build_config_repair_report()
+            integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
+            assert integrity_check.status == "warn"
+            assert "unreadable row" in integrity_check.summary
+            assert integrity_check.next_action == "aeat config repair quarantine --yes"
+
+            ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
+            # Three rows sealed under the OLD ephemeral key should be unreadable
+            # under the unsecured backend; rows we wrote under the unsecured
+            # backend itself remain readable (set is at least 0 under the
+            # unsecured key, depending on whether the canary fires).
+            assert ns_report.unreadable >= 3
+            assert ns_report.unreadable + ns_report.readable == 4
+        finally:
+            dispose_engine()
 
 
 def test_secure_objects_integrity_check_reports_ok_on_clean_database(
@@ -255,37 +253,36 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
 
-    override_master_key_provider(key_old)
-    engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine_old)
-    try:
-        repo_old = SecureObjectRepository(engine=engine_old)
-        for namespace, key, payload in (
-            ("aeat.test.agg.alpha", "alpha-1", b"alpha-1"),
-            ("aeat.test.agg.alpha", "alpha-2", b"alpha-2"),
-            ("aeat.test.agg.beta", "beta-1", b"beta-1"),
-        ):
-            repo_old.save(
-                namespace=namespace,
-                object_key=key,
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime.now(UTC),
-                payload=payload,
-            )
-    finally:
-        engine_old.dispose()
+    with key_old:
+        engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine_old)
+        try:
+            repo_old = SecureObjectRepository(engine=engine_old)
+            for namespace, key, payload in (
+                ("aeat.test.agg.alpha", "alpha-1", b"alpha-1"),
+                ("aeat.test.agg.alpha", "alpha-2", b"alpha-2"),
+                ("aeat.test.agg.beta", "beta-1", b"beta-1"),
+            ):
+                repo_old.save(
+                    namespace=namespace,
+                    object_key=key,
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=payload,
+                )
+        finally:
+            engine_old.dispose()
 
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    override_master_key_provider(key_new)
-    dispose_engine()
-    try:
-        total = secure_object_unreadable_total()
-        assert total >= 3, f"expected at least three unreadable rows; got {total}"
-    finally:
-        override_master_key_provider(None)
+    with key_new:
         dispose_engine()
+        try:
+            total = secure_object_unreadable_total()
+            assert total >= 3, f"expected at least three unreadable rows; got {total}"
+        finally:
+            dispose_engine()
 
 
 def test_secure_object_unreadable_total_is_zero_on_clean_database(
@@ -380,52 +377,51 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
 
-    override_master_key_provider(key_old)
-    engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine_old)
-    try:
-        repo_old = SecureObjectRepository(engine=engine_old)
-        for namespace, key, payload in (
-            ("aeat.test.quar.alpha", "row-old-1", b"old-1"),
-            ("aeat.test.quar.beta", "row-old-2", b"old-2"),
-        ):
-            repo_old.save(
-                namespace=namespace,
-                object_key=key,
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime.now(UTC),
-                payload=payload,
-            )
-    finally:
-        engine_old.dispose()
+    with key_old:
+        engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine_old)
+        try:
+            repo_old = SecureObjectRepository(engine=engine_old)
+            for namespace, key, payload in (
+                ("aeat.test.quar.alpha", "row-old-1", b"old-1"),
+                ("aeat.test.quar.beta", "row-old-2", b"old-2"),
+            ):
+                repo_old.save(
+                    namespace=namespace,
+                    object_key=key,
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=payload,
+                )
+        finally:
+            engine_old.dispose()
 
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    override_master_key_provider(key_new)
-    dispose_engine()
-
-    engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    try:
-        SecureObjectRepository(engine=engine_new).save(
-            namespace="aeat.test.quar.alpha",
-            object_key="row-new-1",
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=1,
-            written_at=datetime.now(UTC),
-            payload=b"new-1",
-        )
-    finally:
-        engine_new.dispose()
-
-    dispose_engine()
-    try:
-        report = quarantine_unreadable_secure_objects()
-        assert report.unreadable_total == 2
-        assert report.readable_total == 1
-    finally:
-        override_master_key_provider(None)
+    with key_new:
         dispose_engine()
+
+        engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        try:
+            SecureObjectRepository(engine=engine_new).save(
+                namespace="aeat.test.quar.alpha",
+                object_key="row-new-1",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"new-1",
+            )
+        finally:
+            engine_new.dispose()
+
+        dispose_engine()
+        try:
+            report = quarantine_unreadable_secure_objects()
+            assert report.unreadable_total == 2
+            assert report.readable_total == 1
+        finally:
+            dispose_engine()
 
     # Inspect the database directly to prove the row distribution.
     with sqlite3.connect(db_path) as con:

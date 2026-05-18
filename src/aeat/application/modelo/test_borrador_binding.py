@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
@@ -44,39 +44,37 @@ _UNMARKED_BINDING = "renta-2025-ledger-expense-0186-deductible"
 @pytest.fixture
 def snapshot_repository(tmp_path):
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "modelo_100_borrador_binding.db"
-    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield Borrador100SnapshotRepository(
-            bucket_id=_BUCKET_ID,
-            objects=SecureObjectRepository(engine=engine),
-        )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        db_path = tmp_path / "modelo_100_borrador_binding.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            yield Borrador100SnapshotRepository(
+                bucket_id=_BUCKET_ID,
+                objects=SecureObjectRepository(engine=engine),
+            )
+        finally:
+            engine.dispose()
 
 
 @pytest.fixture
 def service_repositories(tmp_path):
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "modelo_100_borrador_service.db"
-    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    objects = SecureObjectRepository(engine=engine)
-    try:
-        yield (
-            WorkUnitCatalogueRepository(objects=objects),
-            CalculationRevisionCatalogueRepository(objects=objects),
-            BucketEventHistoryRepository(objects=objects),
-            Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=objects),
-            objects,
-        )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        db_path = tmp_path / "modelo_100_borrador_service.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        objects = SecureObjectRepository(engine=engine)
+        try:
+            yield (
+                WorkUnitCatalogueRepository(objects=objects),
+                CalculationRevisionCatalogueRepository(objects=objects),
+                BucketEventHistoryRepository(objects=objects),
+                Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=objects),
+                objects,
+            )
+        finally:
+            engine.dispose()
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:

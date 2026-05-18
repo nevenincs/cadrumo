@@ -22,7 +22,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -75,34 +74,33 @@ def test_borrador_100_snapshot_survives_encrypted_storage_roundtrip(
     """A populated borrador snapshot round-trips through the encrypted store."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "borrador-100-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
+    with provider:
+        db_path = tmp_path / "borrador-100-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        bucket_id = "renta-2024-bucket"
-        repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
-        original = _populated_snapshot(bucket_id=bucket_id)
-        repo.save(original)
-        loaded = repo.load(original.snapshot_id)
+            bucket_id = "renta-2024-bucket"
+            repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
+            original = _populated_snapshot(bucket_id=bucket_id)
+            repo.save(original)
+            loaded = repo.load(original.snapshot_id)
 
-        assert loaded == original
-        # Witness the Decimal entries survive the union resolution.
-        assert loaded.binding_values["casilla.0500"] == Decimal("42500.00")
-        assert isinstance(loaded.binding_values["casilla.0500"], Decimal)
-        assert loaded.binding_values["casilla.0501"] == Decimal("8750.50")
-        assert isinstance(loaded.binding_values["casilla.0501"], Decimal)
-        # And the str entries are still str (not coerced to Decimal).
-        assert loaded.binding_values["casilla.identity.declarant_label"] == "Gergely Wootsch"
-        assert isinstance(loaded.binding_values["casilla.identity.declarant_label"], str)
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            assert loaded == original
+            # Witness the Decimal entries survive the union resolution.
+            assert loaded.binding_values["casilla.0500"] == Decimal("42500.00")
+            assert isinstance(loaded.binding_values["casilla.0500"], Decimal)
+            assert loaded.binding_values["casilla.0501"] == Decimal("8750.50")
+            assert isinstance(loaded.binding_values["casilla.0501"], Decimal)
+            # And the str entries are still str (not coerced to Decimal).
+            assert loaded.binding_values["casilla.identity.declarant_label"] == "Gergely Wootsch"
+            assert isinstance(loaded.binding_values["casilla.identity.declarant_label"], str)
+        finally:
+            engine.dispose()
 
 
 def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
@@ -120,63 +118,62 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
     """
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "borrador-100-superseded-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        bucket_id = "renta-2024-bucket"
-        repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
-        # First save the successor so the supersession pointer references
-        # a real id; then build and save the superseded predecessor.
-        successor = _populated_snapshot(bucket_id=bucket_id)
-        repo.save(successor)
-
-        captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
-        binding_values = {
-            "casilla.0500": Decimal("39800.00"),
-            "casilla.identity.declarant_label": "Gergely Wootsch",
-        }
-        source_url = (
-            "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
+    with provider:
+        db_path = tmp_path / "borrador-100-superseded-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        snapshot_id = derive_borrador_100_snapshot_id(
-            filing_year=2024,
-            period="0A",
-            captured_at=captured_at,
-            source_url=source_url,
-            binding_values=binding_values,
-        )
-        original = Borrador100Snapshot(
-            snapshot_id=snapshot_id,
-            bucket_id=bucket_id,
-            modelo="100",
-            filing_year=2024,
-            period="0A",
-            captured_at=captured_at,
-            source_url=source_url,
-            state=Borrador100SnapshotState.SUPERSEDED,
-            binding_values=binding_values,
-            superseded_by_snapshot_id=successor.snapshot_id,
-        )
-        repo.save(original)
-        loaded = repo.load(original.snapshot_id)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        assert loaded == original
-        assert loaded.state is Borrador100SnapshotState.SUPERSEDED
-        # Per-field witness: the supersession pointer is the load-bearing
-        # field for this state; a silent drop would either trip the
-        # model_validator on reload or surface as inequality on this
-        # specific assertion.
-        assert loaded.superseded_by_snapshot_id == successor.snapshot_id
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            bucket_id = "renta-2024-bucket"
+            repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
+            # First save the successor so the supersession pointer references
+            # a real id; then build and save the superseded predecessor.
+            successor = _populated_snapshot(bucket_id=bucket_id)
+            repo.save(successor)
+
+            captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
+            binding_values = {
+                "casilla.0500": Decimal("39800.00"),
+                "casilla.identity.declarant_label": "Gergely Wootsch",
+            }
+            source_url = (
+                "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
+            )
+            snapshot_id = derive_borrador_100_snapshot_id(
+                filing_year=2024,
+                period="0A",
+                captured_at=captured_at,
+                source_url=source_url,
+                binding_values=binding_values,
+            )
+            original = Borrador100Snapshot(
+                snapshot_id=snapshot_id,
+                bucket_id=bucket_id,
+                modelo="100",
+                filing_year=2024,
+                period="0A",
+                captured_at=captured_at,
+                source_url=source_url,
+                state=Borrador100SnapshotState.SUPERSEDED,
+                binding_values=binding_values,
+                superseded_by_snapshot_id=successor.snapshot_id,
+            )
+            repo.save(original)
+            loaded = repo.load(original.snapshot_id)
+
+            assert loaded == original
+            assert loaded.state is Borrador100SnapshotState.SUPERSEDED
+            # Per-field witness: the supersession pointer is the load-bearing
+            # field for this state; a silent drop would either trip the
+            # model_validator on reload or surface as inequality on this
+            # specific assertion.
+            assert loaded.superseded_by_snapshot_id == successor.snapshot_id
+        finally:
+            engine.dispose()
 
 
 def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
@@ -202,97 +199,96 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
     from ...adapters.persistence.storage.sql.session import session_scope
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "borrador-100-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        bucket_id = "renta-2024-bucket"
-        repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
-
-        successor = _populated_snapshot(bucket_id=bucket_id)
-        repo.save(successor)
-
-        captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
-        binding_values = {
-            "casilla.0500": Decimal("39800.00"),
-            "casilla.identity.declarant_label": "Gergely Wootsch",
-        }
-        source_url = (
-            "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
+    with provider:
+        db_path = tmp_path / "borrador-100-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        snapshot_id = derive_borrador_100_snapshot_id(
-            filing_year=2024,
-            period="0A",
-            captured_at=captured_at,
-            source_url=source_url,
-            binding_values=binding_values,
-        )
-        original = Borrador100Snapshot(
-            snapshot_id=snapshot_id,
-            bucket_id=bucket_id,
-            modelo="100",
-            filing_year=2024,
-            period="0A",
-            captured_at=captured_at,
-            source_url=source_url,
-            state=Borrador100SnapshotState.SUPERSEDED,
-            binding_values=binding_values,
-            superseded_by_snapshot_id=successor.snapshot_id,
-        )
-        repo.save(original)
-
-        # Surgically delete ``superseded_by_snapshot_id`` from the
-        # persisted JSON envelope payload, then attempt to load. The
-        # column accessor handles encrypt/decrypt automatically.
-        from ._borrador_100 import (
-            BORRADOR_100_SNAPSHOT_NAMESPACE,
-            borrador_100_snapshot_object_key,
-        )
-
-        object_key = borrador_100_snapshot_object_key(bucket_id, original.snapshot_id)
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == BORRADOR_100_SNAPSHOT_NAMESPACE,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            decoded = _json.loads(row.payload.decode("utf-8"))
-            assert "superseded_by_snapshot_id" in decoded["payload"], (
-                "fixture must serialise superseded_by_snapshot_id into the "
-                "envelope payload for this test to be meaningful"
-            )
-            del decoded["payload"]["superseded_by_snapshot_id"]
-            row.payload = _json.dumps(decoded).encode("utf-8")
-
-        # With the field absent, the model_validator on
-        # Borrador100Snapshot must reject the rehydrated record (the
-        # SUPERSEDED state requires the pointer). Either a
-        # ValidationError fires, or the loaded record compares
-        # strictly unequal to the original (e.g. the field comes
-        # back as None on a partial-default path).
-        from pydantic import ValidationError
-
-        regression_caught = False
+        Base.metadata.create_all(engine)
         try:
-            mutated = repo.load(original.snapshot_id)
-        except (ValidationError, Exception):  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        else:
-            if mutated != original:
+            SecureObjectRepository(engine=engine)
+
+            bucket_id = "renta-2024-bucket"
+            repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
+
+            successor = _populated_snapshot(bucket_id=bucket_id)
+            repo.save(successor)
+
+            captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
+            binding_values = {
+                "casilla.0500": Decimal("39800.00"),
+                "casilla.identity.declarant_label": "Gergely Wootsch",
+            }
+            source_url = (
+                "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
+            )
+            snapshot_id = derive_borrador_100_snapshot_id(
+                filing_year=2024,
+                period="0A",
+                captured_at=captured_at,
+                source_url=source_url,
+                binding_values=binding_values,
+            )
+            original = Borrador100Snapshot(
+                snapshot_id=snapshot_id,
+                bucket_id=bucket_id,
+                modelo="100",
+                filing_year=2024,
+                period="0A",
+                captured_at=captured_at,
+                source_url=source_url,
+                state=Borrador100SnapshotState.SUPERSEDED,
+                binding_values=binding_values,
+                superseded_by_snapshot_id=successor.snapshot_id,
+            )
+            repo.save(original)
+
+            # Surgically delete ``superseded_by_snapshot_id`` from the
+            # persisted JSON envelope payload, then attempt to load. The
+            # column accessor handles encrypt/decrypt automatically.
+            from ._borrador_100 import (
+                BORRADOR_100_SNAPSHOT_NAMESPACE,
+                borrador_100_snapshot_object_key,
+            )
+
+            object_key = borrador_100_snapshot_object_key(bucket_id, original.snapshot_id)
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == BORRADOR_100_SNAPSHOT_NAMESPACE,
+                    SecureObjectRow.object_key == object_key,
+                )
+                row = session.execute(stmt).scalar_one()
+                decoded = _json.loads(row.payload.decode("utf-8"))
+                assert "superseded_by_snapshot_id" in decoded["payload"], (
+                    "fixture must serialise superseded_by_snapshot_id into the "
+                    "envelope payload for this test to be meaningful"
+                )
+                del decoded["payload"]["superseded_by_snapshot_id"]
+                row.payload = _json.dumps(decoded).encode("utf-8")
+
+            # With the field absent, the model_validator on
+            # Borrador100Snapshot must reject the rehydrated record (the
+            # SUPERSEDED state requires the pointer). Either a
+            # ValidationError fires, or the loaded record compares
+            # strictly unequal to the original (e.g. the field comes
+            # back as None on a partial-default path).
+            from pydantic import ValidationError
+
+            regression_caught = False
+            try:
+                mutated = repo.load(original.snapshot_id)
+            except (ValidationError, Exception):  # noqa: BLE001 - boundary may raise different types
                 regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: deleting superseded_by_snapshot_id "
-            "from the persisted envelope did NOT surface as either a "
-            "ValidationError or as inequality on the loaded record. The "
-            "boundary is tautological and every roundtrip in this suite "
-            "is suspect."
-        )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            else:
+                if mutated != original:
+                    regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: deleting superseded_by_snapshot_id "
+                "from the persisted envelope did NOT surface as either a "
+                "ValidationError or as inequality on the loaded record. The "
+                "boundary is tautological and every roundtrip in this suite "
+                "is suspect."
+            )
+        finally:
+            engine.dispose()

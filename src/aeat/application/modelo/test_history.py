@@ -9,7 +9,6 @@ import pytest
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
@@ -39,24 +38,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def repos(tmp_path: Path):
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "history.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        objects = SecureObjectRepository(engine=engine)
-        yield (
-            WorkUnitCatalogueRepository(objects=objects),
-            CalculationRevisionCatalogueRepository(objects=objects),
-            FilingRecordCatalogueRepository(objects=objects),
-            VerificationReportCatalogueRepository(objects=objects),
-            BucketEventHistoryRepository(objects=objects),
+    with provider:
+        db_path = tmp_path / "history.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            objects = SecureObjectRepository(engine=engine)
+            yield (
+                WorkUnitCatalogueRepository(objects=objects),
+                CalculationRevisionCatalogueRepository(objects=objects),
+                FilingRecordCatalogueRepository(objects=objects),
+                VerificationReportCatalogueRepository(objects=objects),
+                BucketEventHistoryRepository(objects=objects),
+            )
+        finally:
+            engine.dispose()
 
 
 def test_history_for_missing_work_unit_raises(repos) -> None:
