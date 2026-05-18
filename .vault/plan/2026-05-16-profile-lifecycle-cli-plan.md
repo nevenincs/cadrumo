@@ -142,9 +142,9 @@ it. `duplicate` collapses into `create --copy-from`.
 - [ ] `P06.S53` - add `export(profile_id) -> UserProfilePortableExport` plus archive sealer to the lifecycle service; `src/aeat/application/user_profile/_lifecycle.py`.
 - [ ] `P06.S54` - add `import_archive(path) -> ProfileId` plus archive validator to the lifecycle service; `src/aeat/application/user_profile/_lifecycle.py`.
 - [ ] `P06.S55` - add `aeat config profile export [NAME] --to FILE` and `aeat config profile import FILE` Typer verbs; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P06.S56` - add `aeat config profile logout` Typer verb that closes the active `BucketSession`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P06.S57` - replace `duplicate` Typer verb with `create --copy-from NAME` flag landing in the same commit as `duplicate` deletes; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P06.S58` - tests for rename / edit / export / import / logout / copy-from happy paths and refusals; `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`.
+- [x] `P06.S56` - add `aeat config profile logout` Typer verb that closes the active `BucketSession`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P06.S57` - replace `duplicate` Typer verb with `create --copy-from NAME` flag landing in the same commit as `duplicate` deletes; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P06.S58` - tests for rename / edit / export / import / logout / copy-from happy paths and refusals; `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`.
 
 ### Phase `P07` - google adapter cleanup and locale regeneration
 
