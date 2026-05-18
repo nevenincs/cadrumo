@@ -284,7 +284,7 @@ class CensusSyncService:
 
         Emits no events itself; the caller (CLI handler) is responsible
         for surfacing ``CENSUS_APPLIED`` on the bucket-event-history
-        catalogue so the stale-cascade walker (P05.S54) can react.
+        catalogue so the stale-cascade walker can react.
 
         Raises :exc:`CensusApplyConflictError` when the profile is
         absent — there is nothing to stamp facts onto.
