@@ -180,18 +180,32 @@ def _collect_category_path(anchor: object) -> tuple[str, ...]:
     current = getattr(anchor, "parent", None)
     while current is not None:
         if getattr(current, "name", None) == "li":
-            header_anchor = current.find("a", recursive=False)
-            if header_anchor is None:
-                # Some themes wrap the header in a span first.
-                first_anchor = current.find("a")
-                if first_anchor is not None and first_anchor is not anchor:
-                    header_anchor = first_anchor
-            if header_anchor is not None and header_anchor is not anchor:
-                text = header_anchor.get_text(" ", strip=True)
-                if text:
-                    labels.append(text)
+            label = _li_header_label(current, leaf=anchor)
+            if label is not None:
+                labels.append(label)
         current = getattr(current, "parent", None)
     return tuple(reversed(labels))
+
+
+def _li_header_label(li: object, *, leaf: object) -> str | None:
+    """Return the header-anchor text for a sede ``<li>`` node, or ``None``.
+
+    The header anchor is normally the first direct ``<a>`` child of the
+    ``<li>`` (``recursive=False``); when the theme wraps the header in a
+    ``<span>`` the first ``<a>`` is nested instead. In both cases the
+    header anchor is distinct from ``leaf`` — that's what tells the
+    walker the current ``<li>`` is an ancestor category rather than the
+    leaf row itself.
+    """
+    header_anchor = li.find("a", recursive=False)  # type: ignore[attr-defined]
+    if header_anchor is None:
+        first_anchor = li.find("a")  # type: ignore[attr-defined]
+        if first_anchor is not None and first_anchor is not leaf:
+            header_anchor = first_anchor
+    if header_anchor is None or header_anchor is leaf:
+        return None
+    text = header_anchor.get_text(" ", strip=True)
+    return text or None
 
 
 def _infer_modelo_from_category(category_path: tuple[str, ...]) -> str | None:
