@@ -388,20 +388,33 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     free-form strings at runtime.
     """
 
-    bridges_by_suffix = {
-        "tax-residence-ccaa": "CCAA",
-        "estimacion-directa-es-normal": "EstimacionDirectaModalidad",
-    }
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     offences: list[str] = []
+    for binding in _modelo_100_bindings(modelos):
+        offence = _typed_enum_offence(binding, expectations=_RENTA_TYPED_BINDING_BRIDGES)
+        if offence is not None:
+            offences.append(offence)
+    assert not offences, "Renta typed-binding gate violations:\n  " + "\n  ".join(offences)
+
+
+_RENTA_TYPED_BINDING_BRIDGES: tuple[tuple[str, str], ...] = (
+    ("tax-residence-ccaa", "CCAA"),
+    ("estimacion-directa-es-normal", "EstimacionDirectaModalidad"),
+)
+
+
+def _modelo_100_bindings(modelos):  # type: ignore[no-untyped-def]
+    """Yield every binding declared by any Modelo 100 revision."""
     for modelo in modelos:
         if modelo.id != "100":
             continue
         for revision in modelo.revisions.values():
-            for binding in revision.bindings:
-                for suffix, expected_enum in bridges_by_suffix.items():
-                    if binding.id.endswith(suffix) and binding.typed_enum != expected_enum:
-                        offences.append(
-                            f"binding {binding.id!r} expected typed_enum={expected_enum!r}, got {binding.typed_enum!r}"
-                        )
-    assert not offences, "Renta typed-binding gate violations:\n  " + "\n  ".join(offences)
+            yield from revision.bindings
+
+
+def _typed_enum_offence(binding, *, expectations: tuple[tuple[str, str], ...]) -> str | None:  # type: ignore[no-untyped-def]
+    """Return the typed_enum violation message for ``binding``, or ``None`` if it satisfies every bridge it matches."""
+    for suffix, expected_enum in expectations:
+        if binding.id.endswith(suffix) and binding.typed_enum != expected_enum:
+            return f"binding {binding.id!r} expected typed_enum={expected_enum!r}, got {binding.typed_enum!r}"
+    return None
