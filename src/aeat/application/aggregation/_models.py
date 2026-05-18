@@ -120,7 +120,7 @@ class Period(BaseModel):
             match = _PERIOD_RE.fullmatch(text)
             if match is None:
                 raise AggregationPeriodError(
-                    message=tr("aggregation.models.t_944805"),
+                    message=tr("aggregation.period.parse_error"),
                     context={"period": data},
                 )
             year = int(match.group("year"))
