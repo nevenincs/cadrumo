@@ -34,6 +34,7 @@ from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 
 from .....core.access_gate import AeatLiveReadNotEnabledError
+from .....core.config import CertificateBackend
 from .....core.logging import get_logger
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
 
@@ -103,20 +104,6 @@ class CertificateNifParseError(CertificateError):
 
 
 # ── Enums ───────────────────────────────────────────────────────────────────
-
-
-class CertificateBackend(StrEnum):
-    """Closed catalogue of supported certificate backends.
-
-    Attributes:
-        PLAYWRIGHT_CONTEXT: Primary. Supply the PKCS#12 to
-            ``browser.new_context(client_certificates=[...])``.
-        HTTPX_FALLBACK: Verify-only. Perform a direct mTLS handshake
-            via ``httpx`` for CI smoke tests.
-    """
-
-    PLAYWRIGHT_CONTEXT = "PLAYWRIGHT_CONTEXT"
-    HTTPX_FALLBACK = "HTTPX_FALLBACK"
 
 
 class CertificateHealthSeverity(StrEnum):

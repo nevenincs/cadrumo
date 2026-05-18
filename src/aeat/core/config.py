@@ -67,8 +67,15 @@ class LLMProviderSetting(StrEnum):
     LOCAL = "LOCAL"
 
 
-class CertificateBackendSetting(StrEnum):
-    """Settings-shape selector for the AEAT certificate-handshake backend."""
+class CertificateBackend(StrEnum):
+    """Closed catalogue of supported AEAT certificate-handshake backends.
+
+    Attributes:
+        PLAYWRIGHT_CONTEXT: Primary. Supply the PKCS#12 to
+            ``browser.new_context(client_certificates=[...])``.
+        HTTPX_FALLBACK: Verify-only. Perform a direct mTLS handshake
+            via ``httpx`` for CI smoke tests.
+    """
 
     PLAYWRIGHT_CONTEXT = "playwright_context"
     HTTPX_FALLBACK = "httpx_fallback"
@@ -566,8 +573,8 @@ class Settings(BaseSettings):
         default=None,
         description="Optional human-readable label for the certificate",
     )
-    aeat_certificate_backend: CertificateBackendSetting = Field(
-        default=CertificateBackendSetting.PLAYWRIGHT_CONTEXT,
+    aeat_certificate_backend: CertificateBackend = Field(
+        default=CertificateBackend.PLAYWRIGHT_CONTEXT,
         description="Which certificate backend to use: playwright_context or httpx_fallback",
     )
     aeat_certificate_verify_url: str = Field(
