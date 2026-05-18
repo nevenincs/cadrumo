@@ -63,8 +63,8 @@ def test_modelo_145_source_authority_files_match_catalogue_fingerprints() -> Non
 
 def test_modelo_145_aeat_sources_pin_non_filing_scope() -> None:
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    procedure = PROJECT_ROOT / catalogues.sources["aeat-modelo-145-procedure"].corpus_path
-    obligations = PROJECT_ROOT / catalogues.sources["aeat-modelo-145-obligaciones-retenedor"].corpus_path
+    procedure = bundled_path() / catalogues.sources["aeat-modelo-145-procedure"].corpus_path
+    obligations = bundled_path() / catalogues.sources["aeat-modelo-145-obligaciones-retenedor"].corpus_path
 
     procedure_text = procedure.read_text(encoding="utf-8", errors="replace")
     obligations_text = obligations.read_text(encoding="utf-8", errors="replace")
@@ -96,7 +96,7 @@ def test_modelo_145_record_design_source_matches_manifest() -> None:
 def test_modelo_145_record_design_extracts_official_model_marker() -> None:
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     source = catalogues.sources["aeat-dr-145-v20"]
-    sheets = extract_record_design_pdf(PROJECT_ROOT / source.corpus_path)
+    sheets = extract_record_design_pdf(bundled_path() / source.corpus_path)
 
     assert len(sheets) == 1
     sheet = sheets[0]

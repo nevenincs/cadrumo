@@ -66,7 +66,7 @@ def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
 
     window = snapshot.revision.deadline_windows[0]
     source = catalogues.sources["boe-modelo-200-2025-form"]
-    source_text = _normalized_text((PROJECT_ROOT / source.corpus_path).read_text(encoding="utf-8"))
+    source_text = _normalized_text((bundled_path() / source.corpus_path).read_text(encoding="utf-8"))
 
     assert "modelo 200 de declaracion del impuesto sobre sociedades" in source_text
     assert "25 dias naturales siguientes a los seis meses posteriores" in source_text

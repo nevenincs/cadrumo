@@ -243,7 +243,7 @@ def test_committed_modelo_349_workbook_parity_resolves_to_corpus_artefact() -> N
 
     source = catalogues.sources["aeat-dr-349-2020-current"]
     assert source.evidence_tier == "layout_authority"
-    artefact_path = PROJECT_ROOT / source.corpus_path
+    artefact_path = bundled_path() / source.corpus_path
     assert artefact_path.is_file(), artefact_path
 
 

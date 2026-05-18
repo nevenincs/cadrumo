@@ -540,7 +540,7 @@ def config_profile_show(
     from ....domain.user_profile import ProfileNotFoundError
 
     state = _profile_state().load()
-    target = name or state.active_profile
+    target = name or resolve_active_bucket_id(state)
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     pointer = state.profiles.get(target)
@@ -666,6 +666,88 @@ _config_init_callback = app.command(
     "init",
     help=tr("cli.config.init.help", default="Initialize a new active profile and config bucket."),
 )(_wizard_init_command)
+
+
+@profile_app.command(
+    "rename",
+    help=tr(
+        "cli.config.profile.rename_help",
+        default="Rename a profile in place. The active-profile pointer follows automatically.",
+    ),
+)
+def config_profile_rename(
+    ctx: typer.Context,
+    source: str = typer.Argument(
+        ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
+    ),
+    target: str = typer.Argument(
+        ..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")
+    ),
+    display_name: str | None = typer.Option(
+        None,
+        "--display-name",
+        help=tr(
+            "cli.config.profile.rename_display_name_help",
+            default="Operator-visible label; defaults to the existing display name.",
+        ),
+    ),
+) -> None:
+    """Rename a profile by source NAME to target NEW NAME."""
+
+    from ....application.user_profile import RenameProfileCommand
+    from ....application.user_profile._orchestration import (
+        _write_active_profile_pointer,
+        build_lifecycle_service,
+    )
+    from ....application.workflow._models import ProfileBucketPointer
+    from ....application.workflow._utils import utc_now
+    from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
+
+    repository = _profile_state()
+    state = repository.load()
+    pointer = state.profiles.get(source)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
+    if target != source and target in state.profiles:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        result = service.rename(
+            RenameProfileCommand(
+                source_profile_id=source,
+                target_profile_id=target,
+                target_display_name=display_name,
+            )
+        )
+    except ProfileAlreadyExistsError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
+
+    was_active = resolve_active_bucket_id() == source
+
+    def _swap_pointer(current):
+        profiles = dict(current.profiles)
+        profiles.pop(source, None)
+        profiles[target] = ProfileBucketPointer(bucket_id=pointer.bucket_id)
+        return current.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
+
+    repository.update(_swap_pointer)
+    if was_active:
+        _write_active_profile_pointer(target)
+    _emit(
+        ctx,
+        {
+            "source_profile_id": source,
+            "target_profile_id": result.profile.profile_id,
+            "display_name": result.profile.display_name,
+        },
+        (
+            f"source_profile_id\t{source}",
+            f"target_profile_id\t{result.profile.profile_id}",
+            f"display_name\t{result.profile.display_name}",
+        ),
+    )
 
 
 @profile_app.command("status", help=tr("cli.config.status.help"))

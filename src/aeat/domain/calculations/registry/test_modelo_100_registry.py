@@ -513,7 +513,7 @@ def test_modelo_100_dependency_classifications_cover_registered_relation_sources
 def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_only() -> None:
     _modelos_by_id, catalogues = _loaded_registry()
     source = catalogues.sources["aeat-modelo-100-procedure"]
-    source_text = (PROJECT_ROOT / source.corpus_path).read_text(encoding="utf-8")
+    source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
 
     assert "Consulta de declaraciones presentadas" in source_text
     assert "Datos fiscales" in source_text
@@ -867,7 +867,7 @@ def test_modelo_100_renta_web_open_cross_reference_is_read_only_simulator_eviden
     revision = modelos_by_id["100"].revisions["2025"]
     cross_reference = next(item for item in revision.live_cross_references if item.id == "modelo-100-renta-web-open")
     source = catalogues.sources[cross_reference.source_refs[0]]
-    source_text = (PROJECT_ROOT / source.corpus_path).read_text(encoding="utf-8")
+    source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
 
     assert cross_reference.surface == "open_simulator"
     assert cross_reference.synthetic_data_allowed is True
