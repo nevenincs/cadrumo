@@ -308,9 +308,9 @@ cli:
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       reconcile_from_justificante:
         help: Reconcile a modelo work unit against a justificante PDF. Sugar for operators
-          who think "reconcile from this justificante" rather than "reconcile, source =
-          justificante". Shares the modelo_reconcile application service entry point with
-          the flag-based form. Local-only; never contacts AEAT.
+          who think "reconcile from this justificante" rather than "reconcile, source
+          = justificante". Shares the modelo_reconcile application service entry point
+          with the flag-based form. Local-only; never contacts AEAT.
         justificante_path_help: Path to the AEAT justificante PDF to reconcile against.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
@@ -534,6 +534,13 @@ cli:
       help: List every configuration key with its current value
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
+      census:
+        apply_help: cli.config.profile.census.apply_help
+        compare_help: cli.config.profile.census.compare_help
+        help: cli.config.profile.census.help
+        refresh_help: cli.config.profile.census.refresh_help
+        show_help: cli.config.profile.census.show_help
+        snapshot_id_help: cli.config.profile.census.snapshot_id_help
       duplicate_display_name_help: Display name for the new profile (defaults to the
         target id)
       duplicate_help: Copy a profile under a new id and display name

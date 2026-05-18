@@ -542,6 +542,13 @@ cli:
       help: Az összes konfigurációs kulcs és aktuális értékének listázása
     profile:
       already_exists: A(z) %{name} profil már létezik. Válassz másik cél-azonosítót.
+      census:
+        apply_help: cli.config.profile.census.apply_help
+        compare_help: cli.config.profile.census.compare_help
+        help: cli.config.profile.census.help
+        refresh_help: cli.config.profile.census.refresh_help
+        show_help: cli.config.profile.census.show_help
+        snapshot_id_help: cli.config.profile.census.snapshot_id_help
       duplicate_display_name_help: Megjelenített név az új profilhoz (alapértelmezetten
         a cél-azonosító)
       duplicate_help: Profil másolása új azonosítóval és megjelenített névvel
