@@ -668,6 +668,21 @@ _config_init_callback = app.command(
 )(_wizard_init_command)
 
 
+# Re-runs the wizard against the same backend so an operator can update
+# an existing profile interactively. The wizard's persist_answers path
+# detects an existing pointer and calls `set_active_fields` rather than
+# `register_active_profile`; the same closure powers both "create" and
+# "edit" semantics with the chosen `--profile NAME` deciding which side
+# of the branch runs.
+_config_profile_edit_callback = profile_app.command(
+    "edit",
+    help=tr(
+        "cli.config.profile.edit_help",
+        default="Re-run the wizard against an existing profile; updates values in place.",
+    ),
+)(_wizard_init_command)
+
+
 @profile_app.command(
     "rename",
     help=tr(

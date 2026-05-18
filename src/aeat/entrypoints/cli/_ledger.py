@@ -978,24 +978,12 @@ def ledger_history(
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    object_ids = [resolved_id]
-    if include_split_siblings:
-        catalogue = transaction_repository.load()
-        transaction = catalogue.get(resolved_id)
-        if transaction is not None and transaction.split_lineage is not None:
-            for sibling in transaction.split_lineage.sibling_transaction_ids:
-                if sibling not in object_ids:
-                    object_ids.append(sibling)
-    event_catalogue = BucketEventHistoryRepository().load()
-    matches: list = []
-    for object_id in object_ids:
-        for event in event_catalogue.for_object(
-            object_type=BucketEventObjectType.LEDGER_TRANSACTION,
-            object_id=object_id,
-        ):
-            if event.event_type in _LEDGER_HISTORY_EVENT_TYPES:
-                matches.append(event)
-    matches.sort(key=lambda event: event.occurred_at)
+    object_ids = _history_object_ids(
+        transaction_repository,
+        resolved_id=resolved_id,
+        include_split_siblings=include_split_siblings,
+    )
+    matches = _collect_ledger_history_events(object_ids)
     payload = {
         "bucket_id": transaction_repository.bucket_id,
         "transaction_id": resolved_id,
@@ -1007,9 +995,52 @@ def ledger_history(
         f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
         f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
     ]
-    for event in matches:
-        lines.append(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}")
+    lines.extend(
+        f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches
+    )
     _emit(ctx, payload, lines)
+
+
+def _history_object_ids(
+    transaction_repository: TransactionCatalogueRepository,
+    *,
+    resolved_id: str,
+    include_split_siblings: bool,
+) -> list[str]:
+    """Return ``[resolved_id, ...siblings]`` (de-duped, order-preserving) when the operator opts in.
+
+    Sibling expansion is the operator-facing escape hatch that lets
+    `aeat app ledger history --include-split-siblings` follow the
+    complete split-group chain from one supplied transaction id;
+    without the flag, only the supplied id's events are emitted.
+    """
+    object_ids = [resolved_id]
+    if not include_split_siblings:
+        return object_ids
+    transaction = transaction_repository.load().get(resolved_id)
+    if transaction is None or transaction.split_lineage is None:
+        return object_ids
+    for sibling in transaction.split_lineage.sibling_transaction_ids:
+        if sibling not in object_ids:
+            object_ids.append(sibling)
+    return object_ids
+
+
+def _collect_ledger_history_events(object_ids: list[str]) -> list:
+    """Return the chronological union of LEDGER-history events across ``object_ids``."""
+    event_catalogue = BucketEventHistoryRepository().load()
+    matches: list = []
+    for object_id in object_ids:
+        matches.extend(
+            event
+            for event in event_catalogue.for_object(
+                object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+                object_id=object_id,
+            )
+            if event.event_type in _LEDGER_HISTORY_EVENT_TYPES
+        )
+    matches.sort(key=lambda event: event.occurred_at)
+    return matches
 
 
 @app.command("export", help=tr("cli.ledger.export.help"))

@@ -138,7 +138,7 @@ it. `duplicate` collapses into `create --copy-from`.
 - [x] `P06.S49` - add `ProfileLockedError` typed error and register it; `src/aeat/application/workflow/_errors.py`.
 - [x] `P06.S50` - add `rename(profile_id, new_name)` to the lifecycle service; `src/aeat/application/user_profile/_lifecycle.py`.
 - [x] `P06.S51` - add `aeat config profile rename NAME NEW` Typer verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P06.S52` - add `aeat config profile edit [NAME]` Typer verb that re-runs the wizard against an existing record; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P06.S52` - add `aeat config profile edit [NAME]` Typer verb that re-runs the wizard against an existing record; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P06.S53` - add `export(profile_id) -> UserProfilePortableExport` plus archive sealer to the lifecycle service; `src/aeat/application/user_profile/_lifecycle.py`.
 - [x] `P06.S54` - add `import_archive(path) -> ProfileId` plus archive validator to the lifecycle service; `src/aeat/application/user_profile/_lifecycle.py`.
 - [x] `P06.S55` - add `aeat config profile export [NAME] --to FILE` and `aeat config profile import FILE` Typer verbs; `src/aeat/entrypoints/cli/_config/__init__.py`.
