@@ -257,6 +257,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.workflow._errors.BootstrapAlreadyCompleteError",
+        ErrorCode(
+            code="REFUSED_BOOTSTRAP_ALREADY_COMPLETE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.bootstrap_already_complete",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.workflow._errors.ProfileNameCollisionError",
+        ErrorCode(
+            code="REFUSED_PROFILE_NAME_COLLISION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_name_collision",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.workflow._errors.ProfileLockedError",
+        ErrorCode(
+            code="REFUSED_PROFILE_LOCKED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_locked",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.workflow._errors.WorkflowAbortedError",
         ErrorCode(
             code="REFUSED_WORKFLOW_ABORTED",
