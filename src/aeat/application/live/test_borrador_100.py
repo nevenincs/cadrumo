@@ -13,7 +13,6 @@ from aeat.adapters.persistence.storage import (
     Envelope,
     EphemeralMasterKeyProvider,
     SensitivityClass,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
@@ -40,15 +39,14 @@ _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "borrador_100_live.db"
-    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        db_path = tmp_path / "borrador_100_live.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            yield SecureObjectRepository(engine=engine)
+        finally:
+            engine.dispose()
 
 
 def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
