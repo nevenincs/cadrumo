@@ -149,12 +149,11 @@ def google_register(
         dir_okay=False,
         readable=True,
     ),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Register a Cloud Console Desktop OAuth client for the active profile."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
         client = _coerce_client_json(client_json)
         save_client(active, client)
     except GoogleAuthError as exc:
@@ -181,7 +180,6 @@ def google_register(
 @google_app.command("login", help=tr("cli.config.google.login_help"))
 def google_login(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
     refresh_only: bool = typer.Option(
         False,
         "--refresh-only",
@@ -191,7 +189,7 @@ def google_login(
     """Run the loopback IP + PKCE consent flow (or refresh an existing credential)."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
         client = load_client(active)
         if client is None:
             raise GoogleAuthClientNotRegisteredError(
@@ -253,12 +251,11 @@ def google_login(
 @google_app.command("status", help=tr("cli.config.google.status_help"))
 def google_status(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Report the current Google OAuth session state for the active profile."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -300,7 +297,6 @@ def google_status(
 @google_app.command("logout", help=tr("cli.config.google.logout_help"))
 def google_logout(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Clear the refresh token + metadata for the active profile.
 
@@ -310,7 +306,7 @@ def google_logout(
     """
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -346,12 +342,11 @@ folder_app = typer.Typer(
 def google_folder_set(
     ctx: typer.Context,
     folder_id: str = typer.Argument(..., help=tr("cli.config.google.folder.folder_id_help")),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Persist the Drive root folder id under the active profile."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -376,12 +371,11 @@ def google_folder_set(
 @folder_app.command("get", help=tr("cli.config.google.folder.get_help"))
 def google_folder_get(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Show the persisted Drive root folder id for the active profile."""
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -417,7 +411,6 @@ sync_app = typer.Typer(
 @sync_app.command("probe", help=tr("cli.config.google.sync.probe_help"))
 def google_sync_probe(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
     read_only: bool = typer.Option(
         False,
         "--read-only/--no-read-only",
@@ -433,7 +426,7 @@ def google_sync_probe(
     """
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -447,7 +440,7 @@ def google_sync_probe(
     drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
 
     try:
-        provider = get_storage_provider(profile_override=active, settings=drive_settings)
+        provider = get_storage_provider(settings=drive_settings)
         report = provider.probe(read_only=read_only)
     except (GoogleAuthError, StorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
@@ -516,7 +509,6 @@ def _label_for(namespace: str) -> str:
 @sync_app.command("push", help=tr("cli.config.google.sync.push_help"))
 def google_sync_push(
     ctx: typer.Context,
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
     namespace_filter: str | None = typer.Option(
         None,
         "--namespace",
@@ -544,7 +536,7 @@ def google_sync_push(
     """
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -552,7 +544,7 @@ def google_sync_push(
     drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
 
     try:
-        provider = get_storage_provider(profile_override=active, settings=drive_settings)
+        provider = get_storage_provider(settings=drive_settings)
     except (GoogleAuthError, StorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -692,7 +684,6 @@ def google_sync_calc_export(
         "--prefill-relations/--no-prefill-relations",
         help=tr("cli.config.google.sync.calc.export.prefill_relations_help"),
     ),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a real
     Google Sheets workbook under the operator's `aeat-vault/`.
@@ -715,7 +706,7 @@ def google_sync_calc_export(
     from ....application.calculations import resolve_relations_from_local_store
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -805,7 +796,6 @@ def google_sync_calc_verify(
         dir_okay=False,
         readable=True,
     ),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Run a three-way parity check (AEAT oracle, local Decimal runtime, Sheets).
 
@@ -824,7 +814,7 @@ def google_sync_calc_verify(
     )
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
@@ -922,7 +912,6 @@ def google_sync_calc_pull(
         "--assemble-observations/--no-assemble-observations",
         help=tr("cli.config.google.sync.calc.pull.assemble_observations_help"),
     ),
-    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records.
 
@@ -940,7 +929,7 @@ def google_sync_calc_pull(
     )
 
     try:
-        active = resolve_active_profile(profile)
+        active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 

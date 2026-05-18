@@ -150,17 +150,17 @@ it. `duplicate` collapses into `create --copy-from`.
 
 TODO: Phase intent paragraph required by the convention ADR.
 
-- [ ] `P07.S59` - remove the `profile_override` parameter from `resolve_active_profile`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
-- [ ] `P07.S60` - remove the `--profile` flag from every `aeat config google` verb; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `P07.S59` - remove the `profile_override` parameter from `resolve_active_profile`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
+- [x] `P07.S60` - remove the `--profile` flag from every `aeat config google` verb; `src/aeat/entrypoints/cli/_config/_google.py`.
 - [ ] `P07.S61` - run the locale scaffold + audit across es/en/ca/hu for every renamed string; `src/aeat/locales`.
 
 ### Phase `P08` - diagnostics entrypoint and full gate
 
 TODO: Phase intent paragraph required by the convention ADR.
 
-- [ ] `P08.S62` - delete the `aeat config repair list NAMESPACE` operator verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P08.S63` - add `python -m aeat.diagnostics` module entrypoint with `profile get / set / unset / activity` and `secure-objects list` subcommands; `src/aeat/diagnostics/__main__.py`.
-- [ ] `P08.S64` - smoke tests for the diagnostics entrypoint; `src/aeat/diagnostics/test_diagnostics.py`.
+- [x] `P08.S62` - delete the `aeat config repair list NAMESPACE` operator verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P08.S63` - add `python -m aeat.diagnostics` module entrypoint with `profile get / set / unset / activity` and `secure-objects list` subcommands; `src/aeat/diagnostics/__main__.py`.
+- [x] `P08.S64` - smoke tests for the diagnostics entrypoint; `src/aeat/diagnostics/test_diagnostics.py`.
 - [ ] `P08.S65` - run the full pytest suite and resolve every failure; `src/aeat`.
 - [ ] `P08.S66` - run `ruff check` and resolve every diagnostic; `src/aeat`.
 - [ ] `P08.S67` - run `mypy` and resolve every diagnostic; `src/aeat`.
