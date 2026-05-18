@@ -49,6 +49,41 @@ class NoActiveProfileError(WorkflowError):
     """
 
 
+class BootstrapAlreadyCompleteError(WorkflowError):
+    """Raised when `aeat config init` is re-invoked after a profile already exists.
+
+    The bootstrap wizard is a one-shot first-run flow per the
+    2026-05-16 profile-lifecycle ADR. A second invocation must
+    refuse with this typed error so the operator is redirected to
+    the canonical second-or-later-profile creation path (the
+    upcoming `aeat config profile create NAME` verb) rather than
+    silently overwriting the existing default profile.
+    """
+
+
+class ProfileNameCollisionError(WorkflowError):
+    """Raised when an operator-typed profile NAME is already in use.
+
+    Fired by the lifecycle service's `create` and `rename` paths
+    when the requested NAME already names a live or tombstoned
+    profile. The error payload carries the colliding name so the
+    CLI can render it back to the operator without a second
+    repository round trip.
+    """
+
+
+class ProfileLockedError(WorkflowError):
+    """Raised when a profile-scoped operation requires an unlocked profile session.
+
+    The profile-bucket lifecycle ADR mandates explicit
+    unlock-on-switch semantics: a verb that needs the active
+    profile's plaintext payload must run inside an unlocked
+    `BucketSession`. Verbs that touch encrypted payloads on a
+    locked-default state refuse with this typed error so the
+    operator runs the unlock flow explicitly.
+    """
+
+
 class WorkflowAbortSignalError(WorkflowError):  # internal control-flow signal, not a public error type
     """Internal control-flow signal raised by stage methods to bail out.
 

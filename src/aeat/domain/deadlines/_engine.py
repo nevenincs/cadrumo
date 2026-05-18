@@ -57,6 +57,37 @@ def _classify(closes_on: date, today: date, due_soon_days: int) -> ObligationSta
     return ObligationStatus.UPCOMING
 
 
+def _window_outside_activity_period(
+    *,
+    opens_on: date,
+    closes_on: date,
+    activity_start_date: date | None,
+    activity_end_date: date | None,
+) -> bool:
+    """Return True when an AEAT window falls entirely outside the
+    operator's census-declared activity period.
+
+    Two gates, both grounded in RGAT Arts. 9 / 11 (census activity
+    start / end dates published on G313):
+
+    * Pre-start: ``closes_on < activity_start_date`` — the entire
+      window precedes the alta. AEAT does not expect a filing for
+      activity that did not occur.
+    * Post-baja: ``opens_on > activity_end_date`` — the entire window
+      follows the baja. AEAT does not expect a forward-period filing
+      after the operator has declared baja.
+
+    Windows that straddle either date stay on the schedule — the
+    operator may still owe a return covering the active fraction.
+    """
+
+    if activity_start_date is not None and closes_on < activity_start_date:
+        return True
+    if activity_end_date is not None and opens_on > activity_end_date:
+        return True
+    return False
+
+
 class DeadlineEngine:
     """Engine that computes typed filing schedules from registry data.
 
@@ -146,6 +177,13 @@ class DeadlineEngine:
                 mode=window.applicability_condition_mode,
             )
             if condition_text is None:
+                continue
+            if _window_outside_activity_period(
+                opens_on=window.opens_on,
+                closes_on=window.closes_on,
+                activity_start_date=profile.activity_start_date,
+                activity_end_date=profile.activity_end_date,
+            ):
                 continue
             obligation_status = _classify(
                 window.closes_on,
