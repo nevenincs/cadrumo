@@ -77,7 +77,7 @@ def test_committed_modelo_347_workbook_parity_refs_resolve_to_corpus() -> None:
             assert ref.runner_required is False
             source = catalogues.sources[ref.workbook_source]
             assert source.evidence_tier == "layout_authority"
-            assert (PROJECT_ROOT / source.corpus_path).is_file()
+            assert (bundled_path() / source.corpus_path).is_file()
 
 
 def test_committed_modelo_347_static_cross_reference_forbids_remote_writes() -> None:
