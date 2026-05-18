@@ -87,7 +87,7 @@ def persist_answers(
     canonical = serialise_answers(flow, answers)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
     pointer = state.profiles.get(profile_name)
-    if pointer is None or resolve_active_bucket_id(state) != profile_name:
+    if pointer is None or resolve_active_bucket_id() != profile_name:
         return register_active_profile(
             state,
             profile_id=profile_name,

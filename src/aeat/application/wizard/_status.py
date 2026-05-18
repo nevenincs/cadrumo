@@ -95,7 +95,7 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
     auth_provider = state.auth.provider or ""
     login_ready = state.auth.authenticated_at is not None
     return WizardStatusReport(
-        active_profile=resolve_active_bucket_id(state),
+        active_profile=resolve_active_bucket_id(),
         profile_ready=profile_ready,
         identity_ready=identity_ready,
         enrolment_ready=enrolment_ready,
@@ -161,7 +161,7 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
     except ValidationError as exc:
         raise WizardStatusError(
             "active profile fails wizard projection",
-            context={"active_profile": resolve_active_bucket_id(state), "errors": exc.error_count()},
+            context={"active_profile": resolve_active_bucket_id(), "errors": exc.error_count()},
         ) from exc
     if not isinstance(typed, SetupAnswers):
         raise WizardStatusError(
@@ -171,7 +171,7 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
     if not typed.tax_id:
         raise WizardStatusError(
             "active profile is missing tax.id",
-            context={"active_profile": resolve_active_bucket_id(state)},
+            context={"active_profile": resolve_active_bucket_id()},
         )
     return AutonomoProfile(
         tax_id=typed.tax_id,

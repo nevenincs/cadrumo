@@ -241,7 +241,7 @@ def _active_bucket_id() -> str:
     from ...application.workflow._persistence import workflow_state_repository
 
     try:
-        return active_bucket_id_or_raise(workflow_state_repository().load())
+        return active_bucket_id_or_raise()
     except Exception as exc:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 

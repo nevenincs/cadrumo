@@ -27,7 +27,7 @@ def _active_pointer() -> tuple[ProfileName, BucketId]:
     from ....application.workflow._models import resolve_active_bucket_id
 
     state = workflow_state_repository().load()
-    active = resolve_active_bucket_id(state)
+    active = resolve_active_bucket_id()
     if active is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     pointer = state.profiles.get(active)

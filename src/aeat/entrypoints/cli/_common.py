@@ -67,7 +67,7 @@ def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
     from ...application.workflow._models import resolve_active_bucket_id
 
     current = _state()
-    active = resolve_active_bucket_id(current)
+    active = resolve_active_bucket_id()
     if active is None:
         _emit(
             ctx,
@@ -148,7 +148,7 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
     """Return the active profile bucket id or raise the CLI 'bad' error."""
 
     try:
-        return active_bucket_id_or_raise(state)
+        return active_bucket_id_or_raise()
     except NoActiveProfileError as exc:
         raise _bad(tr("cli.common.errors.no_active_profile")) from exc
 

@@ -145,7 +145,7 @@ def _root(
         from ...application.workflow._models import resolve_active_bucket_id
 
         workflow_state = workflow_state_repository().load()
-        active = resolve_active_bucket_id(workflow_state)
+        active = resolve_active_bucket_id()
         landing = build_root_landing_report(active)
         if active is None:
             _emit(ctx, landing, render_cli_root_landing_lines(landing))
