@@ -51,7 +51,6 @@ def _populated_workflow_state() -> WorkflowState:
             "profile-a": ProfileBucketPointer(bucket_id="b" * 32),
             "profile-b": ProfileBucketPointer(bucket_id="c" * 32),
         },
-        active_profile="profile-a",
         declarations={
             "303:2025Q1": DeclarationPointer(
                 modelo="303",
@@ -93,7 +92,8 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
     Per-field witnesses pin the most fragile pieces:
 
     * the two-entry profiles mapping (key+value preservation),
-    * the active_profile selector,
+    * the profiles map keying (the active-profile selector lives in
+      the precedence chain, not on the record),
     * the declarations mapping with its nested DeclarationPointer,
     * the bucket_events tuple with a non-empty audit record.
     """
@@ -123,7 +123,6 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
         assert loaded.updated_at >= original.updated_at
         assert set(loaded.profiles) == {"profile-a", "profile-b"}
         assert loaded.profiles["profile-a"].bucket_id == "b" * 32
-        assert loaded.active_profile == "profile-a"
         assert "303:2025Q1" in loaded.declarations
         loaded_decl = loaded.declarations["303:2025Q1"]
         assert loaded_decl.draft_id == "d" * 64
@@ -159,7 +158,6 @@ def test_workflow_state_absent_load_returns_empty_state(tmp_path: Path) -> None:
 
         # Empty-default identity: no profiles, no declarations, empty event tuple.
         assert loaded.profiles == {}
-        assert loaded.active_profile is None
         assert loaded.declarations == {}
         assert loaded.bucket_events == ()
     finally:

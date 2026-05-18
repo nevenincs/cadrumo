@@ -80,7 +80,6 @@ def test_report_is_strict_frozen_pydantic_v2() -> None:
     with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         WizardStatusReport.model_validate(
             {
-                "active_profile": None,
                 "profile_ready": False,
                 "profile_present_keys": 0,
                 "profile_total_keys": 0,

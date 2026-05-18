@@ -9,6 +9,7 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.application.user_profile._testing import register_minimal_profile
+from aeat.application.workflow._models import resolve_active_bucket_id
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.entrypoints.cli._ledger import ratios_app
 
@@ -146,10 +147,10 @@ def _capture_census_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     from aeat.application.live._census import CensusSnapshotService
 
     state = workflow_state_repository().load()
-    bucket_id = state.profiles[state.active_profile].bucket_id
+    bucket_id = state.profiles[resolve_active_bucket_id(state) or ""].bucket_id
     service = CensusSnapshotService(bucket_id=bucket_id)
     service.capture(
-        profile_id=state.active_profile,
+        profile_id=resolve_active_bucket_id(state),
         captured_at=datetime.now(UTC),
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
         census_facts={

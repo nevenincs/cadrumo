@@ -67,7 +67,8 @@ def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
 
 def _seed_active_profile() -> None:
     from aeat.application.user_profile._testing import register_minimal_profile
-    from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.application.workflow._models import resolve_active_bucket_id
+from aeat.application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
     repo.update(
@@ -83,10 +84,10 @@ def _capture_snapshot() -> str:
     from aeat.application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    bucket_id = state.profiles[state.active_profile].bucket_id
+    bucket_id = state.profiles[resolve_active_bucket_id(state) or ""].bucket_id
     service = CensusSnapshotService(bucket_id=bucket_id)
     snapshot = service.capture(
-        profile_id=state.active_profile,
+        profile_id=resolve_active_bucket_id(state),
         captured_at=datetime.now(UTC),
         source_url=_G313,
         census_facts={
@@ -198,7 +199,7 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
         event
         for event in catalogue.events.values()
         if event.event_type is BucketEventType.CENSUS_APPLIED
-        and event.object_id == state.active_profile
+        and event.object_id == resolve_active_bucket_id(state)
     ]
     assert matching, (
         f"CENSUS_APPLIED must fire after apply; "
@@ -206,7 +207,7 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
     )
     payload = matching[-1].payload
     assert payload["snapshot_id"] == snapshot_id
-    assert payload["profile_id"] == state.active_profile
+    assert payload["profile_id"] == resolve_active_bucket_id(state)
 
 
 def test_rejected_subverb_returns_nonzero(cli_runner: CliRunner) -> None:
