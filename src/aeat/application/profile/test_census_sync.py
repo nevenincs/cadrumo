@@ -178,3 +178,49 @@ def test_apply_refuses_when_profile_does_not_exist(secure_store: SecureObjectRep
 
     with pytest.raises(CensusApplyConflictError):
         service.apply_census_to_profile(profile_id="operator")
+
+
+def test_apply_preserves_windowed_manual_facts(secure_store: SecureObjectRepository) -> None:
+    """Persistence-audit follow-up: UserProfileFact carries valid_from /
+    valid_to date windows that the prior census-apply roundtrip never
+    exercised. A save-path that silently dropped either window field on
+    non-census facts would have been invisible. This pins that operator-
+    entered facts with explicit effective-date windows survive the
+    apply path untouched."""
+
+    from datetime import date
+
+    valid_from = date(2024, 1, 1)
+    valid_to = date(2024, 12, 31)
+    profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
+    profiles.save(
+        UserProfileRecord(
+            profile_id="operator",
+            display_name="Operator",
+            facts=(
+                UserProfileFact(
+                    path="manual.window.fact",
+                    value="2024-fiscal",
+                    source="manual_cli",
+                    valid_from=valid_from,
+                    valid_to=valid_to,
+                ),
+            ),
+        ),
+    )
+    service = CensusSyncService(
+        bucket_id="b1",
+        snapshots=CensusSnapshotService(bucket_id="b1"),
+        profiles=profiles,
+    )
+    service.refresh_census(profile_id="operator", source_url=_G313, fact_source=_facts)
+
+    service.apply_census_to_profile(profile_id="operator")
+
+    reloaded = profiles.load("operator")
+    by_path = {fact.path: fact for fact in reloaded.facts}
+    preserved = by_path["manual.window.fact"]
+    assert preserved.valid_from == valid_from
+    assert preserved.valid_to == valid_to
+    assert preserved.value == "2024-fiscal"
+    assert preserved.source == "manual_cli"
