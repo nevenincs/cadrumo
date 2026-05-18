@@ -10,7 +10,7 @@ import typer
 
 from ...application.live import FiledDataListingRow, capture_filed_data, capture_source_filed_data, list_filed_data
 from ._common import _emit
-from ._i18n import tr
+from ...core.i18n import tr
 
 _VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -241,7 +241,7 @@ def _active_bucket_id() -> str:
     from ...application.workflow._persistence import workflow_state_repository
 
     try:
-        return active_bucket_id_or_raise(workflow_state_repository().load())
+        return active_bucket_id_or_raise()
     except Exception as exc:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 

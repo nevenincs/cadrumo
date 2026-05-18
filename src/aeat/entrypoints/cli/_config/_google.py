@@ -88,7 +88,7 @@ from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.calculations.registry._snapshot import build_snapshot
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
-from .._i18n import tr
+from ....core.i18n import tr
 
 google_app = typer.Typer(
     name="google",

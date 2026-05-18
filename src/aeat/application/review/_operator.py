@@ -201,7 +201,7 @@ def _active_bucket_id() -> str:
     from ..workflow._models import active_bucket_id_or_raise
     from ..workflow._persistence import workflow_state_repository
 
-    return active_bucket_id_or_raise(workflow_state_repository().load())
+    return active_bucket_id_or_raise()
 
 
 def _year_period(value: str) -> str:

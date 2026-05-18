@@ -589,17 +589,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.MigrationError",
-        ErrorCode(
-            code="FAIL_STORAGE_MIGRATION",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_storage_migration",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.adapters.persistence.storage.errors.NonceCollisionError",
         ErrorCode(
             code="INTEGRITY_STORAGE_NONCE_COLLISION",
@@ -1310,17 +1299,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.LOCKED,
             message_key="errors.locked.locked_storage_bucket_session",
             default_suggestion="aeat config unlock",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.persistence.storage.bucket._errors.LegacyLayoutDetectedError",
-        ErrorCode(
-            code="REFUSED_STORAGE_BUCKET_LEGACY_LAYOUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_storage_bucket_legacy_layout",
-            default_suggestion="aeat config init",
             retryable=False,
             runbook_id=None,
         ),

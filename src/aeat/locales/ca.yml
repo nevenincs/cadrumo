@@ -18,7 +18,6 @@ aggregation:
       period_type_ambiguous: El tipus de període és ambigu; especifiqueu trimestre
         o mes explícitament.
       quarter_required: El tipus de període trimestral requereix un valor de trimestre.
-    t_944805: Format de període no vàlid. Useu YYYY, YYYY-Qn o YYYY-MM.
   per_modelo:
     errors:
       unsupported_modelo: aggregation.per_modelo.errors.unsupported_modelo
@@ -26,6 +25,8 @@ aggregation:
       errors:
         invalid_accrued_on: aggregation.per_modelo.registry.errors.invalid_accrued_on
         unsupported_provider: aggregation.per_modelo.registry.errors.unsupported_provider
+  period:
+    parse_error: Format de període no reconegut
   renta_ledger:
     errors:
       annual_period_required: Es requereix un període anual per a l'agregació del
@@ -1184,24 +1185,14 @@ profile:
     tax:
       id: Tax identifier (NIF/NIE/CIF)
 review:
-  adapters:
-    t_135562: review.adapters.t_135562
-    t_142007: review.adapters.t_142007
-    t_145612: review.adapters.t_145612
-    t_167733: review.adapters.t_167733
-    t_189155: review.adapters.t_189155
-    t_298389: review.adapters.t_298389
-    t_352338: review.adapters.t_352338
-    t_352928: review.adapters.t_352928
-    t_551826: review.adapters.t_551826
-    t_607122: review.adapters.t_607122
-    t_619063: review.adapters.t_619063
-    t_629803: review.adapters.t_629803
-    t_754183: review.adapters.t_754183
-    t_787894: review.adapters.t_787894
-    t_791512: review.adapters.t_791512
-    t_870243: review.adapters.t_870243
-    t_968325: review.adapters.t_968325
+  filing:
+    draft_placeholder_summary: Esborrany pendent
+    finding_summary: Incidència detectada a l'esborrany
+    stale_approval_summary: L'aprovació de l'esborrany ha caducat
+  invoice:
+    summary: Justificant pendent de revisió
+  transaction:
+    summary: Transacció pendent de classificació
 sheets:
   detalle:
     headers:

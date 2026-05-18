@@ -52,7 +52,7 @@ from ...domain.modelos._filing_record import FilingRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date, _profile_to_autonomo
-from ._i18n import tr
+from ...core.i18n import tr
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 
@@ -105,7 +105,7 @@ def _resolve_default_actor() -> str:
         record = state.active_profile_record()
         if record is not None and record.display_name:
             return record.display_name
-        active = resolve_active_bucket_id(state)
+        active = resolve_active_bucket_id()
         if active:
             return active
     return "operator"
@@ -1876,7 +1876,7 @@ def _audit_bucket_id() -> str:
     from ...application.workflow._persistence import workflow_state_repository
 
     try:
-        return active_bucket_id_or_raise(workflow_state_repository().load())
+        return active_bucket_id_or_raise()
     except Exception as exc:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 

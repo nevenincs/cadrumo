@@ -76,7 +76,7 @@ def test_register_active_profile_threads_state_and_emits_events(secure_objects, 
         secure_objects=secure_objects,
         schema=schema,
     )
-    assert resolve_active_bucket_id(updated) == "default"
+    assert resolve_active_bucket_id() == "default"
     assert "default" in updated.profiles
     actions = tuple(event.action for event in updated.bucket_events)
     assert actions == ("profile.created", "profile.selected", "profile.values.updated")
@@ -166,5 +166,5 @@ def test_remove_active_profile_tombstones_and_clears_pointer(secure_objects, sch
     state = remove_active_profile(state, secure_objects=secure_objects, schema=schema)
     from aeat.application.workflow._models import resolve_active_bucket_id
 
-    assert resolve_active_bucket_id(state) is None
+    assert resolve_active_bucket_id() is None
     assert state.bucket_events[-1].action == "profile.tombstoned"

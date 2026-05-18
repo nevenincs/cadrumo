@@ -52,38 +52,6 @@ _SUMMARY_MAX = 80
 _LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
 
 
-def t(message: str) -> tr:
-    """Build a multilingual :class:`aeat.core.i18n.tr` message payload."""
-    return tr(message)
-
-
-_DIRECTION_LABELS: dict[TransactionDirection, tr] = {
-    TransactionDirection.INCOMING: tr("review.adapters.t_968325"),
-    TransactionDirection.OUTGOING: tr("review.adapters.t_629803"),
-    TransactionDirection.INTERNAL_TRANSFER: tr("review.adapters.t_135562"),
-}
-_CLASSIFICATION_LABELS: dict[BusinessClassification, tr] = {
-    BusinessClassification.BUSINESS: tr("review.adapters.t_142007"),
-    BusinessClassification.PERSONAL: tr("review.adapters.t_870243"),
-    BusinessClassification.MIXED: tr("review.adapters.t_619063"),
-    BusinessClassification.NOT_YET_PROCESSED: tr("review.adapters.t_754183"),
-    BusinessClassification.PROCESSED_UNCLASSIFIED: tr("review.adapters.t_791512"),
-    BusinessClassification.SKIPPED_BY_RULE: tr("review.adapters.t_607122"),
-    BusinessClassification.FAILED_VALIDATION: tr("review.adapters.t_352338"),
-}
-_INVOICE_REASON_LABELS: dict[str, tr] = {
-    "unmatched": tr("review.adapters.t_551826"),
-    "overdue": tr("review.adapters.t_167733"),
-    "payment-pending": tr("review.adapters.t_298389"),
-    "partially-paid": tr("review.adapters.t_352928"),
-}
-
-
-def _per_lang_summary(template: str, **fields: str | tr) -> tr:
-    """Return the abstract translation key."""
-    return tr(template)
-
-
 # ── transactions ──────────────────────────────────────────────────
 
 
@@ -187,15 +155,8 @@ def _to_transaction_item(
     description = raw.description.strip()
     if len(description) > _SUMMARY_MAX:
         description = description[: _SUMMARY_MAX - 1] + "…"
-    amount = format(raw.amount.normalize(), "f") if not raw.amount.is_zero() else "0"
-    summary = _per_lang_summary(
-        "review.adapters.t_170461",
-        state=_CLASSIFICATION_LABELS[transaction.business_classification],
-        direction=_DIRECTION_LABELS[transaction.direction],
-        amount=amount,
-        currency=raw.currency,
-        description=description,
-    )
+    del raw  # description + amount captured above; nothing else needed
+    summary = tr("review.transaction.summary")
     return TransactionReviewItem(
         item_id=transaction.transaction_id,
         modelo=None,
@@ -258,20 +219,8 @@ def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:
 
 
 def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str) -> InvoiceReviewItem:
-    grand_total = format(invoice.grand_total.normalize(), "f") if not invoice.grand_total.is_zero() else "0"
-    reason_label = _INVOICE_REASON_LABELS.get(
-        reason,
-        tr("review.adapters.t_189155"),
-    )
-    summary = _per_lang_summary(
-        "review.adapters.t_122028",
-        reason=reason_label,
-        kind=invoice.kind.value,
-        number=invoice.invoice_number,
-        total=grand_total,
-        currency=invoice.currency,
-        counterparty=invoice.counterparty_name,
-    )
+    del reason  # severity already encodes the disposition for the queue line
+    summary = tr("review.invoice.summary")
     since = datetime.combine(invoice.issued_at, time.min, tzinfo=UTC)
     return InvoiceReviewItem(
         item_id=invoice.invoice_id,
@@ -294,22 +243,21 @@ def drafts_pending(
 ) -> tuple[FindingReviewItem, ...]:
     """Return :class:`FindingReviewItem`s for findings + unready drafts.
 
-    Drafts whose ``profile_tax_id`` does not match the active profile's
-    tax id belong to a ``legacy-borrador`` cohort: they were created
-    under a different profile (commonly during scaffold runs before a
-    real profile init). Items emitted from the legacy cohort are
-    demoted to :attr:`ReviewSeverity.INFO` regardless of their finding
-    severity, so a fresh profile does not show legacy drafts as
-    ``critical``.
+    A draft whose ``profile_tax_id`` does not match the active
+    profile's tax id is not the active profile's data and is skipped.
+    Callers see only drafts owned by the active profile.
     """
     if drafts is None:
         drafts = _load_drafts(settings)
     active_tax_id = _resolve_active_tax_id(settings)
+    if active_tax_id is None:
+        return ()
     items: list[FindingReviewItem] = []
     seen: set[tuple[str, str, str]] = set()
     for path, draft in drafts:
+        if (draft.profile_tax_id or "") != active_tax_id:
+            continue
         path_str = str(path)
-        legacy = _is_legacy_borrador(draft, active_tax_id)
         if draft.findings:
             for finding in draft.findings:
                 dedup_key = (draft.draft_id, finding.code, finding.casilla_id or "-")
@@ -321,7 +269,6 @@ def drafts_pending(
                         draft=draft,
                         path_str=path_str,
                         finding=finding,
-                        legacy=legacy,
                     )
                 )
             continue
@@ -330,7 +277,6 @@ def drafts_pending(
                 _to_placeholder_item(
                     draft=draft,
                     path_str=path_str,
-                    legacy=legacy,
                 )
             )
         elif draft.status is FilingDraftStatus.APPROVAL_STALE:
@@ -359,19 +305,6 @@ def _resolve_active_tax_id(settings: Settings) -> str | None:
         _LOGGER.debug("review adapters could not resolve active workflow status", exc_info=True)
         return None
     return fact_value(record, "identity.tax_id") or None
-
-
-def _is_legacy_borrador(draft: FilingDraft, active_tax_id: str | None) -> bool:
-    """Return ``True`` for drafts that pre-existed the active profile.
-
-    A draft whose ``profile_tax_id`` does not match the active profile's
-    tax id is classified as legacy. When the active profile is unknown
-    (no profile yet) every draft is treated as legacy so a brand-new
-    install does not emit critical findings.
-    """
-    if active_tax_id is None:
-        return True
-    return (draft.profile_tax_id or "") != active_tax_id
 
 
 def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
@@ -406,12 +339,11 @@ def _to_finding_item(
     draft: FilingDraft,
     path_str: str,
     finding: FilingValidationFinding,
-    legacy: bool = False,
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
     _first_translation(finding.message) or finding.code
-    summary = tr("review.adapters.t_145612")
-    severity = ReviewSeverity.INFO if legacy else _classify_finding(finding.severity)
+    summary = tr("review.filing.finding_summary")
+    severity = _classify_finding(finding.severity)
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
         modelo=draft.modelo,
@@ -425,15 +357,12 @@ def _to_finding_item(
     )
 
 
-def _to_placeholder_item(*, draft: FilingDraft, path_str: str, legacy: bool = False) -> FindingReviewItem:
-    summary = _per_lang_summary(
-        "review.adapters.t_397611",
-        status=draft.status.value,
-    )
+def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
+    summary = tr("review.filing.draft_placeholder_summary")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:{draft.status.value}",
         modelo=draft.modelo,
-        severity=ReviewSeverity.INFO if legacy else ReviewSeverity.NORMAL,
+        severity=ReviewSeverity.NORMAL,
         summary=summary,
         drill_command=f"aeat app review show {draft.draft_id}:_status:{draft.status.value}",
         since=draft.updated_at,
@@ -445,7 +374,7 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str, legacy: bool = Fa
 
 def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
     """Emit a high-severity item for drafts whose stored approval is stale."""
-    summary = tr("review.adapters.t_787894")
+    summary = tr("review.filing.stale_approval_summary")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
         modelo=draft.modelo,

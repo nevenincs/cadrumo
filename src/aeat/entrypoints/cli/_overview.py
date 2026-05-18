@@ -19,7 +19,7 @@ from ._common import (
     _profile_to_autonomo,
     _state,
 )
-from ._i18n import tr
+from ...core.i18n import tr
 from ._overview_rendering import render_cli_overview_status_lines
 
 app = typer.Typer(

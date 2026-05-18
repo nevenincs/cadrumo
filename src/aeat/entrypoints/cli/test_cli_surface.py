@@ -584,15 +584,11 @@ def test_app_ledger_review_filter_rejects_unknown_key(
     assert result.exit_code != 0
 
 
-def test_legacy_ledger_ratio_aliases_are_not_registered(
+def test_set_ratio_is_not_a_ledger_verb(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    # `split` was the deleted single-row allocation knob (see
-    # 2026-05-14 ledger-transaction-lifecycle ADR); the new `split` verb
-    # is the true N-way row splitter and is intentionally registered.
-    # Only legacy ratio aliases must remain refused.
     for command in ("set-ratio",):
         result = _invoke(["app", "ledger", command, "--help"])
         assert result.exit_code != 0

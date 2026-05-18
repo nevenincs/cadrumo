@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ...application.overview import OverviewStatusReport
-from ._i18n import tr
+from ...core.i18n import tr
 
 
 def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:

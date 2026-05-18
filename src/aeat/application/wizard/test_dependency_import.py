@@ -24,7 +24,7 @@ def test_questionary_imports() -> None:
 
 
 def test_questionary_version_satisfies_floor() -> None:
-    """Installed ``questionary`` distribution must be at the ADR-pinned floor."""
+    """Installed ``questionary`` distribution must be at the supported floor."""
 
     installed = Version(version("questionary"))
     assert installed >= Version("2.1.1")

@@ -8,7 +8,7 @@ the unit-mode parity test
 (``test_renta_web_open_replay_payload_matches_registry_via_oracle``)
 picks it up automatically on subsequent runs.
 
-This is the capture half of Phase H6 (oracle linkage). Each scenario
+This is the capture half of the oracle-linkage gate. Each scenario
 declares the ``casilla_overrides`` it needs (e.g. ``{"0511": "2775.00"}``
 for the mínimo-aggregation case) and the ``scrape_casillas`` list of
 output casilla numbers the driver should record by navigating to each
@@ -293,7 +293,7 @@ def test_capture_chain_behaviour_scenario_replay_payload(
 
     Each captured payload anchors one ``_scenario_2025`` chain-behaviour
     case (declared in ``test_renta_chain_behaviour.py``) for replay-mode
-    parity, closing the Phase H6 oracle-linkage gate.
+    parity, closing the oracle-linkage gate.
     """
 
     requires_live_enabled()

@@ -91,9 +91,8 @@ def test_autonomic_formula_uses_lookup_bracket_by_ccaa_op(
     target_casilla: str,
 ) -> None:
     """The autonomic-scale formula must use the ``lookup_bracket_by_ccaa``
-    op (introduced in the autonomic-scale wave). A regression to
-    ``lookup_bracket`` (state-scale) or any other op would silently
-    revert the CCAA-dispatch behaviour."""
+    op. A regression to ``lookup_bracket`` (state-scale) or any other op
+    would silently revert the CCAA-dispatch behaviour."""
     revision = modelo_100.revisions[ejercicio]
     formula = next(item for item in revision.formulas if item.target == target_casilla)
 

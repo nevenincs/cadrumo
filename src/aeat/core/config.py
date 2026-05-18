@@ -326,10 +326,6 @@ class Settings(BaseSettings):
         default=f"sqlite:///{(PROJECT_ROOT / 'var' / 'aeat.db').as_posix()}",
         description="SQLAlchemy URL for the primary persistence backend (default: local SQLite)",
     )
-    aeat_storage_auto_migrate: bool = Field(
-        default=False,
-        description="If true, run `alembic upgrade head` automatically on engine creation (default: false)",
-    )
     aeat_storage_backup_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "backups",
         description="Directory where the storage layer writes database backups",

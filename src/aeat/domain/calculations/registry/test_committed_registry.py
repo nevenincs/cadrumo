@@ -14,6 +14,7 @@ from . import (
     resolve_export_layout,
     resolve_relation_values,
 )
+from ._authority import ValidatedRegistryAuthority
 from ._schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -252,93 +253,122 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-rel-115-retenciones-anual",)
 
 
-def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_records(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> None:
-    snapshot = registry_snapshot("180", 2026, "0A")
+_MODELO_180_DECLARANTE_FIELDS: dict[tuple[int, int], str] = {
+    (1, 1): "1",
+    (2, 4): "180",
+    (5, 8): "2026",
+    (9, 17): "B12345678",
+    (136, 144): "000000002",
+    (145, 160): " " + "100050".zfill(15),
+    (161, 175): "19010".zfill(15),
+}
+
+_MODELO_180_PERCEPTOR_FIELDS: dict[tuple[int, int], str] = {
+    (1, 1): "2",
+    (2, 4): "180",
+    (5, 8): "2026",
+    (9, 17): "B12345678",
+    (18, 26): "12345678Z",
+    (27, 35): "87654321X",
+    (36, 75): "ARRENDADOR EJEMPLO".ljust(40),
+    (76, 77): "28",
+    (78, 78): "1",
+    (79, 92): "N" + "2500".zfill(13),
+    (93, 96): "0000",
+    (97, 109): "475".zfill(13),
+    (110, 113): "2025",
+    (114, 114): "1",
+    (115, 134): "1234567VK4713C0001XY",
+    (135, 139): "CL".ljust(5),
+    (140, 189): "CALLE MAYOR".ljust(50),
+    (190, 192): "NUM",
+    (193, 197): "12".ljust(5),
+    (198, 200): "BIS",
+    (201, 203): "A".ljust(3),
+    (204, 206): "1".ljust(3),
+    (207, 209): "2".ljust(3),
+    (210, 212): "03".ljust(3),
+    (213, 215): "B".ljust(3),
+    (216, 255): "EDIFICIO CENTRAL".ljust(40),
+    (256, 285): "MADRID".ljust(30),
+    (286, 315): "MADRID".ljust(30),
+    (316, 320): "28079",
+    (321, 322): "28",
+    (323, 327): "28013",
+}
+
+_MODELO_180_EXPECTED_CASILLAS: tuple[tuple[str, object], ...] = (
+    ("decl.total-perceptores", Decimal("2")),
+    ("decl.base-total", Decimal("1000.50")),
+    ("decl.retenciones-total", Decimal("190.10")),
+    ("perc.nif", "12345678Z"),
+    ("perc.nif-representante-legal", "87654321X"),
+    ("perc.nombre", "ARRENDADOR EJEMPLO"),
+    ("perc.provincia", "28"),
+    ("perc.modalidad", "1"),
+    ("perc.base", Decimal("-25.00")),
+    ("perc.porcentaje-retencion", "0000"),
+    ("perc.retenciones", Decimal("4.75")),
+    ("perc.ejercicio-devengo", Decimal("2025")),
+    ("perc.situacion-inmueble", "1"),
+    ("perc.referencia-catastral", "1234567VK4713C0001XY"),
+    ("perc.inmueble-tipo-via", "CL"),
+    ("perc.inmueble-nombre-via", "CALLE MAYOR"),
+    ("perc.inmueble-tipo-numeracion", "NUM"),
+    ("perc.inmueble-numero-casa", "12"),
+    ("perc.inmueble-calificador-numero", "BIS"),
+    ("perc.inmueble-bloque", "A"),
+    ("perc.inmueble-portal", "1"),
+    ("perc.inmueble-escalera", "2"),
+    ("perc.inmueble-planta", "03"),
+    ("perc.inmueble-puerta", "B"),
+    ("perc.inmueble-complemento", "EDIFICIO CENTRAL"),
+    ("perc.inmueble-localidad", "MADRID"),
+    ("perc.inmueble-municipio", "MADRID"),
+    ("perc.inmueble-codigo-municipio", "28079"),
+    ("perc.inmueble-provincia", "28"),
+    ("perc.inmueble-codigo-postal", "28013"),
+)
+
+
+@pytest.fixture(scope="module")
+def _modelo_180_parsed_casillas(
+    registry_authority: ValidatedRegistryAuthority,
+) -> dict[str, object]:
+    """Parse the synthetic Modelo 180 declarante + perceptor record bundle once.
+
+    Module-scoped so the record-design parse runs a single time and
+    every parametrize case in
+    test_committed_modelo_180_record_design_parses asserts against
+    the same payload. Pulls the snapshot directly from the
+    session-scoped ``registry_authority`` instead of the per-test
+    ``registry_snapshot`` factory so the module scope is compatible.
+
+    The fixed-width field maps and the expected casilla values are
+    module-level constants so the test row table reads top-down.
+    """
+    snapshot = registry_authority.snapshot("180", filing_year=2026, period="0A")
     layout = resolve_export_layout(snapshot).layout
-    declarante = _fixed_width_record(
-        500,
-        {
-            (1, 1): "1",
-            (2, 4): "180",
-            (5, 8): "2026",
-            (9, 17): "B12345678",
-            (136, 144): "000000002",
-            (145, 160): " " + "100050".zfill(15),
-            (161, 175): "19010".zfill(15),
-        },
-    )
-    perceptor = _fixed_width_record(
-        500,
-        {
-            (1, 1): "2",
-            (2, 4): "180",
-            (5, 8): "2026",
-            (9, 17): "B12345678",
-            (18, 26): "12345678Z",
-            (27, 35): "87654321X",
-            (36, 75): "ARRENDADOR EJEMPLO".ljust(40),
-            (76, 77): "28",
-            (78, 78): "1",
-            (79, 92): "N" + "2500".zfill(13),
-            (93, 96): "0000",
-            (97, 109): "475".zfill(13),
-            (110, 113): "2025",
-            (114, 114): "1",
-            (115, 134): "1234567VK4713C0001XY",
-            (135, 139): "CL".ljust(5),
-            (140, 189): "CALLE MAYOR".ljust(50),
-            (190, 192): "NUM",
-            (193, 197): "12".ljust(5),
-            (198, 200): "BIS",
-            (201, 203): "A".ljust(3),
-            (204, 206): "1".ljust(3),
-            (207, 209): "2".ljust(3),
-            (210, 212): "03".ljust(3),
-            (213, 215): "B".ljust(3),
-            (216, 255): "EDIFICIO CENTRAL".ljust(40),
-            (256, 285): "MADRID".ljust(30),
-            (286, 315): "MADRID".ljust(30),
-            (316, 320): "28079",
-            (321, 322): "28",
-            (323, 327): "28013",
-        },
-    )
-
+    declarante = _fixed_width_record(500, _MODELO_180_DECLARANTE_FIELDS)
+    perceptor = _fixed_width_record(500, _MODELO_180_PERCEPTOR_FIELDS)
     parsed = parse_export_payload(layout, (declarante + perceptor).encode("latin-1"))
-    casillas = {field.casilla_id: field.value for field in parsed.casillas}
+    return {field.casilla_id: field.value for field in parsed.casillas}
 
-    assert casillas["decl.total-perceptores"] == Decimal("2")
-    assert casillas["decl.base-total"] == Decimal("1000.50")
-    assert casillas["decl.retenciones-total"] == Decimal("190.10")
-    assert casillas["perc.nif"] == "12345678Z"
-    assert casillas["perc.nif-representante-legal"] == "87654321X"
-    assert casillas["perc.nombre"] == "ARRENDADOR EJEMPLO"
-    assert casillas["perc.provincia"] == "28"
-    assert casillas["perc.modalidad"] == "1"
-    assert casillas["perc.base"] == Decimal("-25.00")
-    assert casillas["perc.porcentaje-retencion"] == "0000"
-    assert casillas["perc.retenciones"] == Decimal("4.75")
-    assert casillas["perc.ejercicio-devengo"] == Decimal("2025")
-    assert casillas["perc.situacion-inmueble"] == "1"
-    assert casillas["perc.referencia-catastral"] == "1234567VK4713C0001XY"
-    assert casillas["perc.inmueble-tipo-via"] == "CL"
-    assert casillas["perc.inmueble-nombre-via"] == "CALLE MAYOR"
-    assert casillas["perc.inmueble-tipo-numeracion"] == "NUM"
-    assert casillas["perc.inmueble-numero-casa"] == "12"
-    assert casillas["perc.inmueble-calificador-numero"] == "BIS"
-    assert casillas["perc.inmueble-bloque"] == "A"
-    assert casillas["perc.inmueble-portal"] == "1"
-    assert casillas["perc.inmueble-escalera"] == "2"
-    assert casillas["perc.inmueble-planta"] == "03"
-    assert casillas["perc.inmueble-puerta"] == "B"
-    assert casillas["perc.inmueble-complemento"] == "EDIFICIO CENTRAL"
-    assert casillas["perc.inmueble-localidad"] == "MADRID"
-    assert casillas["perc.inmueble-municipio"] == "MADRID"
-    assert casillas["perc.inmueble-codigo-municipio"] == "28079"
-    assert casillas["perc.inmueble-provincia"] == "28"
-    assert casillas["perc.inmueble-codigo-postal"] == "28013"
+
+@pytest.mark.parametrize(("casilla_id", "expected_value"), _MODELO_180_EXPECTED_CASILLAS)
+def test_committed_modelo_180_record_design_parses_casilla(
+    _modelo_180_parsed_casillas: dict[str, object],
+    casilla_id: str,
+    expected_value: object,
+) -> None:
+    """Modelo 180 fixed-width record-design parser yields the expected casilla value.
+
+    One parametrize case per registered casilla. Each case carries
+    a distinct test id (the casilla id), so a regression on a
+    single casilla surfaces by name rather than by line number in
+    a 30-assert chain.
+    """
+    assert _modelo_180_parsed_casillas[casilla_id] == expected_value
 
 
 def _fixed_width_record(length: int, fields: dict[tuple[int, int], str]) -> str:

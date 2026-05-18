@@ -140,7 +140,7 @@ def test_profile_check_no_active_profile_returns_warn_with_setup_next_action() -
 
 def test_profile_check_missing_required_keys_returns_warn_with_canonical_next_action() -> None:
     """When the profile exists but isn't ready, the diagnostic
-    row carries the ADR-canonical ``aeat config init`` literal so
+    row carries the canonical ``aeat config init`` literal so
     every operator surface points at the same recovery command.
     """
     report = _wizard_status(

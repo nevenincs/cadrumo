@@ -71,9 +71,9 @@ def test_ledger_verb_roster_matches_canonical_spine() -> None:
 
 
 def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
-    """The W72 trio is mounted directly under `aeat app ledger`, not
-    under a sub-noun-group. The 2026-05-15 amendment requires the
-    orthogonal-axis verbs to sit alongside the CRUD spine."""
+    """The link/check/preflight trio is mounted directly under
+    `aeat app ledger`, not under a sub-noun-group. The orthogonal-axis
+    verbs must sit alongside the CRUD spine."""
 
     top_level = frozenset(cmd.name for cmd in ledger_app.registered_commands)
     assert LINK_CHECK_PREFLIGHT.issubset(top_level), (

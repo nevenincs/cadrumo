@@ -499,7 +499,7 @@ def build_overview_status_report(
     from ..workflow._models import resolve_active_bucket_id
 
     return OverviewStatusReport(
-        active_profile=resolve_active_bucket_id(current),
+        active_profile=resolve_active_bucket_id(),
         transactions=len(transactions.transactions),
         invoices=len(invoices),
         drafts=len(drafts),

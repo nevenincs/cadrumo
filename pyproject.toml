@@ -18,7 +18,6 @@ classifiers = [
 ]
 
 dependencies = [
-  "alembic>=1.14.0",
   # LLM providers
   "anthropic>=0.74.1",
   # Argon2id KDF for the file-fallback master-key provider's

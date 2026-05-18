@@ -1,10 +1,9 @@
-"""Negative-shape regression tests for surfaces that must NOT exist.
+"""Root-grammar invariants for the CLI surface.
 
-The CLI's two-root contract (config / app) and its noun-group
-ordering encode a small number of "this verb has been retired or
-relocated" decisions. These tests assert the rejected surfaces
-remain rejected so a future drop or rename never quietly resurrects
-the wrong shape.
+The CLI exposes exactly two roots (`config` and `app`) with a fixed
+noun-group ordering. These tests assert that the rejected verbs and
+surfaces are not mounted, so the CLI grammar stays the intentional
+one.
 """
 
 from __future__ import annotations
@@ -35,9 +34,9 @@ def test_root_does_not_register_bare_reconcile_alias() -> None:
     assert result.exit_code != 0, result.output
 
 
-def test_app_does_not_register_retired_deadlines_subgroup() -> None:
-    """`aeat app deadlines` was retired in favour of the overview
-    verb tree. The retired surface must remain unmounted."""
+def test_app_does_not_register_deadlines_subgroup() -> None:
+    """`aeat app deadlines` is not a verb tree. Deadline data is
+    surfaced through the overview verb group."""
 
     result = invoke_cached_cli(["app", "deadlines", "--help"])
     assert result.exit_code != 0, result.output

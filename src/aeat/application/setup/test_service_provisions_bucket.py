@@ -1,7 +1,7 @@
 """Regression tests for the bucket-provisioning side of `initialize_workspace`.
 
-Pins the contract added in P02.S19: after a successful workspace
-init, the per-bucket directory tree (`<aeat-root>/buckets/<id>/`
+Pins the post-init bucket-provisioning contract: after a successful
+workspace init, the per-bucket directory tree (`<aeat-root>/buckets/<id>/`
 with `db/`, `blobs/`, `audit/` subdirectories) AND the
 `<bucket-dir>/manifest.toml` must exist on disk. The manifest
 carries the OWASP-baseline Argon2id KDF parameters under a fresh

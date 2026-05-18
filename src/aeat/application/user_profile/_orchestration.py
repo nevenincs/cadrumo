@@ -239,7 +239,7 @@ def read_active_profile(
 
     from ..workflow._models import resolve_active_bucket_id
 
-    bucket_id = resolve_active_bucket_id(state)
+    bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         return None
     service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
@@ -276,7 +276,7 @@ def _require_active(state: WorkflowState) -> str:
 
     from ..workflow._models import resolve_active_bucket_id
 
-    bucket_id = resolve_active_bucket_id(state)
+    bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         raise ProfileNotFoundError("no active profile selected")
     return bucket_id

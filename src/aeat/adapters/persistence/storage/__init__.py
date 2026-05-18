@@ -3,7 +3,7 @@
 Public API of the storage subpackage. Callers outside
 :mod:`aeat.adapters.persistence.storage` must import only from here; internal
 modules (``sql._orm``, ``sql.engine``, ``sql.session``, ``sql.repository``,
-``sql.migrations_api``, and the encryption substrate under ``crypto``,
+and the encryption substrate under ``crypto``,
 ``envelope``, ``master_key``, ``blob_store``, ``secret_store``) are
 implementation details.
 
@@ -17,13 +17,11 @@ The public surface is intentionally narrow:
 
 - Pydantic v2 record models — :class:`ModeloRecord`, :class:`PortalRecord`,
   :class:`CorpusArtifactRecord`, plus :class:`PortalAuthMethod`.
-- Errors — :class:`StorageError`, :class:`MigrationError`,
-  :class:`RepositoryError`.
+- Errors — :class:`StorageError`, :class:`RepositoryError`.
 - Engine and session helpers — :func:`get_engine`, :func:`dispose_engine`,
   :func:`session_scope`.
 - Typed repositories — :class:`ModeloRepository`, :class:`PortalRepository`,
   :class:`CorpusArtifactRepository`.
-- Schema upgrade helper — :func:`upgrade_to_head`.
 - Encryption substrate — :class:`Envelope`, :class:`EncryptedBlobStore`,
   :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
   helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
@@ -128,7 +126,6 @@ from .errors import (
     MasterKeyMaterialMissingError,
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
-    MigrationError,
     NonceCollisionError,
     PathContainmentError,
     PersistenceError,
@@ -165,7 +162,6 @@ from .master_key._recovery import (
 )
 from .secret_store._secret_store import SecretRecord, SecretStore
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
-from .sql.migrations_api import upgrade_to_head
 from .sql.records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository
 from .sql.session import get_sessionmaker, session_scope
@@ -216,7 +212,6 @@ __all__ = [
     "MasterKeyPassphraseMismatchError",
     "MasterKeyProvider",
     "MasterKeyUnavailableError",
-    "MigrationError",
     "ModeloRecord",
     "ModeloRepository",
     "NonceCollisionError",
@@ -294,7 +289,6 @@ __all__ = [
     "save_wrapped_master_key",
     "session_scope",
     "unwrap_master_key",
-    "upgrade_to_head",
     "verify_corpus_manifest",
     "wrap_master_key",
 ]

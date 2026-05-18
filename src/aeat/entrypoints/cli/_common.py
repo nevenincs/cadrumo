@@ -27,7 +27,7 @@ from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
 from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogue, TransactionCatalogueRepository
-from ._i18n import tr
+from ...core.i18n import tr
 
 # ---------------------------------------------------------------------
 # Transport helpers
@@ -67,7 +67,7 @@ def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
     from ...application.workflow._models import resolve_active_bucket_id
 
     current = _state()
-    active = resolve_active_bucket_id(current)
+    active = resolve_active_bucket_id()
     if active is None:
         _emit(
             ctx,
@@ -88,7 +88,7 @@ def _label_for(listing: AuthProviderListing) -> str:
 
 def _translate(translatable: str) -> str:
     """Render a str in the operator's preferred locale (Spanish first)."""
-    from ._i18n import tr
+    from ...core.i18n import tr
 
     return tr(translatable)
 
@@ -148,7 +148,7 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
     """Return the active profile bucket id or raise the CLI 'bad' error."""
 
     try:
-        return active_bucket_id_or_raise(state)
+        return active_bucket_id_or_raise()
     except NoActiveProfileError as exc:
         raise _bad(tr("cli.common.errors.no_active_profile")) from exc
 

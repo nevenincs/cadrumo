@@ -4,8 +4,8 @@ Exercises the Typer surface end-to-end against a real seeded
 WorkflowState + the encrypted backend. Refresh is asserted to refuse
 cleanly with the "sede driver not wired" message; show/compare/apply
 are exercised against a snapshot captured via the application service
-directly (the production refresh path lands when P03.S27 wires the
-sede G313 adapter).
+directly (the production refresh path lands when the sede G313
+adapter is wired through the live driver).
 """
 
 from __future__ import annotations
@@ -84,7 +84,7 @@ def _capture_snapshot() -> str:
     from aeat.application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    active = resolve_active_bucket_id(state)
+    active = resolve_active_bucket_id()
     assert active is not None, "active profile must be seeded before capture"
     bucket_id = state.profiles[active].bucket_id
     service = CensusSnapshotService(bucket_id=bucket_id)
@@ -181,10 +181,10 @@ def test_compare_matches_after_apply(cli_runner: CliRunner) -> None:
 
 
 def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
-    """Persistence-audit follow-up: apply MUST emit CENSUS_APPLIED so the
-    stale-cascade walker (P05.S54) has a typed event to react to. The
-    CLI test never reached the catalogue before this assertion landed
-    — the emission was implemented but not witnessed end-to-end."""
+    """Apply MUST emit CENSUS_APPLIED so the stale-cascade walker
+    has a typed event to react to. The CLI test never reached the
+    catalogue before this assertion landed — the emission was
+    implemented but not witnessed end-to-end."""
 
     from aeat.application.workflow._models import resolve_active_bucket_id
     from aeat.application.workflow._persistence import workflow_state_repository
@@ -198,7 +198,7 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
 
     catalogue = BucketEventHistoryRepository().load()
     state = workflow_state_repository().load()
-    active = resolve_active_bucket_id(state)
+    active = resolve_active_bucket_id()
     matching = [
         event
         for event in catalogue.events.values()

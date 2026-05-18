@@ -1,6 +1,6 @@
 """Integration: rental tier resolver consumes the LIRPF art. 23.2 a) rebaja threshold from the registry.
 
-Phase #50/#78: the prior-rent-rebaja threshold (5% per BOE Ley 12/2023) lives as a
+The prior-rent-rebaja threshold (5% per BOE Ley 12/2023) lives as a
 registry parameter under Modelo 100 / each ejercicio (id pattern
 ``renta-<year>-rental-prior-rent-rebaja-threshold``). The rental resolver's
 ``_resolve_prior_rent_rebaja_threshold(period_year)`` reads it via

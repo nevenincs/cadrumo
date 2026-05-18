@@ -18,7 +18,7 @@ from ...application.registry import (
 )
 from ...core.resources import bundled_path
 from ._common import _emit
-from ._i18n import tr
+from ...core.i18n import tr
 from ._registry_corpus import citations_app, manuals_app
 
 

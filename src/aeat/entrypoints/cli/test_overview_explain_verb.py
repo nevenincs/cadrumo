@@ -43,11 +43,11 @@ def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
         dispose_engine()
 
 
-def test_overview_verb_roster_locks_w81_five_verb_tree() -> None:
+def test_overview_verb_roster_locks_five_verb_tree() -> None:
     """Boundary regression: the overview noun-group must expose exactly
-    the five verbs the 2026-05-15 app-overview-shape ADR amendment
-    ratifies: status / calendar / agenda / backlog / explain. Adding
-    or removing one without an ADR amendment is a contract drift."""
+    the five canonical verbs: status / calendar / agenda / backlog /
+    explain. Adding or removing one without an ADR amendment is a
+    contract drift."""
 
     registered = frozenset(cmd.name for cmd in overview_app.registered_commands)
     missing = EXPECTED_OVERVIEW_VERBS - registered

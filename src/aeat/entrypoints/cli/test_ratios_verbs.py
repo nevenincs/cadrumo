@@ -147,10 +147,10 @@ def _capture_census_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     from aeat.application.live._census import CensusSnapshotService
 
     state = workflow_state_repository().load()
-    bucket_id = state.profiles[resolve_active_bucket_id(state) or ""].bucket_id
+    bucket_id = state.profiles[resolve_active_bucket_id() or ""].bucket_id
     service = CensusSnapshotService(bucket_id=bucket_id)
     service.capture(
-        profile_id=resolve_active_bucket_id(state),
+        profile_id=resolve_active_bucket_id(),
         captured_at=datetime.now(UTC),
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
         census_facts={
