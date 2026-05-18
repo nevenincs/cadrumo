@@ -23,7 +23,7 @@ import sys
 
 from ...core.config import Settings
 from ...core.errors import AeatError
-from ._context import current_cli_flag
+from ...core.click_context import current_cli_flag
 
 
 class NonTtyRefusedError(AeatError):

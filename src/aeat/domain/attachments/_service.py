@@ -1,4 +1,4 @@
-"""Service-layer helpers over :class:`AttachmentStore`.
+"""Service-layer helpers over :class:`AttachmentStoreProtocol`.
 
 Thin orchestration on top of the storage primitives in
 :mod:`aeat.domain.attachments._repository`: ingest a file from disk,
@@ -16,13 +16,13 @@ from pathlib import Path
 from ...core.logging import get_logger
 from ._enums import AttachmentKind, AttachmentSource
 from ._models import Attachment
-from ._repository import AttachmentStoreProtocol as AttachmentStore
+from ._repository import AttachmentStoreProtocol
 
 _logger = get_logger(__name__)
 
 
 def add_attachment(
-    store: AttachmentStore,
+    store: AttachmentStoreProtocol,
     *,
     path: Path,
     kind: AttachmentKind,
@@ -41,7 +41,7 @@ def add_attachment(
     files deduplicate naturally.
 
     Args:
-        store: Backing :class:`AttachmentStore` for blob storage and
+        store: Backing :class:`AttachmentStoreProtocol` for blob storage and
             manifest persistence.
         path: Local filesystem path to the bytes being ingested.
         kind: Logical
@@ -89,11 +89,11 @@ def add_attachment(
     return attachment
 
 
-def load_attachment(store: AttachmentStore, attachment_id: str) -> Attachment:
+def load_attachment(store: AttachmentStoreProtocol, attachment_id: str) -> Attachment:
     """Load one attachment manifest from the store.
 
     Args:
-        store: Backing :class:`AttachmentStore`.
+        store: Backing :class:`AttachmentStoreProtocol`.
         attachment_id: SHA-256 of the attachment bytes.
 
     Returns:
@@ -104,7 +104,7 @@ def load_attachment(store: AttachmentStore, attachment_id: str) -> Attachment:
 
 
 def list_attachments(
-    store: AttachmentStore,
+    store: AttachmentStoreProtocol,
     *,
     linked_to: str | None = None,
     kind: AttachmentKind | None = None,
@@ -112,7 +112,7 @@ def list_attachments(
     """List attachment manifests, optionally filtered by link or kind.
 
     Args:
-        store: Backing :class:`AttachmentStore`.
+        store: Backing :class:`AttachmentStoreProtocol`.
         linked_to: When provided, return only attachments whose
             ``linked_transaction_ids`` or ``linked_invoice_ids``
             tuple contains this id.

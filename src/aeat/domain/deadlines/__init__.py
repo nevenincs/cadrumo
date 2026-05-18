@@ -62,7 +62,7 @@ from ._models import (
     Schedule,
 )
 from ._profiles import autonomo_profile_from_mapping
-from ._protocols import ModeloIdentifier
+from .._identifiers import ModeloIdentifier
 from ._recargo import (
     build_recovery_for_overdue,
     load_recargo_bands,
