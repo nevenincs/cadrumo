@@ -39,18 +39,28 @@ def _walk_keys(flows: Iterable[WizardFlow]) -> tuple[str, ...]:
         for section in flow.sections:
             keys.append(str(section.title))
             for question in section.questions:
-                keys.append(str(question.prompt))
-                if question.help is not None:
-                    keys.append(str(question.help))
-                for choice in question.choices:
-                    keys.append(str(choice.label))
-                    if choice.description is not None:
-                        keys.append(str(choice.description))
-                # Each question contributes a wizard.<flow>.flags.<id>.help
-                # key consumed by build_wizard_command's Typer flag derivation.
-                keys.append(f"wizard.{flow.id}.flags.{question.id}.help")
+                keys.extend(_question_translation_keys(question, flow_id=flow.id))
         keys.append(f"cli.config.{flow.id}.help")
     keys.extend(_FIXED_RUNTIME_KEYS)
+    return tuple(keys)
+
+
+def _question_translation_keys(question, *, flow_id: str) -> tuple[str, ...]:  # type: ignore[no-untyped-def]
+    """Return every translation key contributed by one wizard question.
+
+    Covers the prompt, the optional help string, every choice's label
+    and optional description, and the derived
+    ``wizard.<flow>.flags.<id>.help`` key consumed by
+    ``build_wizard_command`` for Typer flag descriptions.
+    """
+    keys: list[str] = [str(question.prompt)]
+    if question.help is not None:
+        keys.append(str(question.help))
+    for choice in question.choices:
+        keys.append(str(choice.label))
+        if choice.description is not None:
+            keys.append(str(choice.description))
+    keys.append(f"wizard.{flow_id}.flags.{question.id}.help")
     return tuple(keys)
 
 
