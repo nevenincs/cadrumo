@@ -5,46 +5,26 @@ tags:
 date: '2026-05-18'
 tier: L2
 related:
-  - "[[2026-05-18-profile-lifecycle-cli-adr]]"
-  - "[[2026-05-17-profile-lifecycle-cli-cascade-closure-research]]"
-  - "[[2026-05-16-profile-lifecycle-cli-adr]]"
-  - "[[2026-05-16-profile-lifecycle-cli-plan]]"
-  - "[[2026-05-14-profile-bucket-lifecycle-adr]]"
-  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
-  - "[[2026-05-17-per-bucket-sqlite-cascade-audit]]"
+  - '[[2026-05-18-profile-lifecycle-cli-adr]]'
+  - '[[2026-05-17-profile-lifecycle-cli-cascade-closure-research]]'
+  - '[[2026-05-16-profile-lifecycle-cli-adr]]'
+  - '[[2026-05-16-profile-lifecycle-cli-plan]]'
+  - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
+  - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
+  - '[[2026-05-17-per-bucket-sqlite-cascade-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `profile-lifecycle-cli` cascade closure plan
-
-Closes the remaining 17 architectural cuts of the profile-lifecycle
-CLI redesign. Phase `P01` lands the crypto cutover and NIST
-passphrase floor first (security-critical, opens the file the other
-crypto work needs). Phases `P02` and `P03` are independent and run
-in parallel after `P01`: `P02` is the engine cutover plus
-`WorkflowState.profiles` retirement; `P03` is the operator CLI tail
-(validate / preflight / get / set / unset deletions and the
-`init` rename). Phase `P04` is the per-feature surface gate. No
-shims, no parallel chains; each removal lands in the same commit as
-its replacement.
-
-## Proposed Changes
-
-Three cuts and one gate. The crypto cut replaces the
-`MasterKeyProvider` ClassVar caches with a `ContextVar`-scoped
-`BucketSession` plus a free-function accessor and a CLI with-block,
-and enforces the NIST 8-character passphrase floor in the same
-commit window. The engine cut removes `Settings.aeat_database_url`
-as a static field and replaces it with a computed property
-resolving through the active-profile pointer chain;
-`WorkflowState.profiles` deletes in the same cut and bucket
-enumeration moves to manifest scan. The CLI cut deletes `validate`,
-`preflight`, `get`, `set`, `unset` from the operator surface,
-renames `init` to `profile create NAME` (positional), folds validate
-into `show`, relocates preflight to `aeat app modelo readiness`, and
-re-homes get/set/unset under `python -m aeat.diagnostics`. The gate
-documents and enforces a per-feature surface CI scope.
-
-## Steps
 
 ### Phase `P01` - crypto cutover + NIST passphrase floor
 
@@ -54,8 +34,8 @@ function and `activate_session()` contextmanager; wire the CLI root
 to enter the with-block; enforce NIST 8-char passphrase floor at the
 verifier.
 
-- [ ] `P01.S01` - add `_active_session.py` with `ContextVar`, `activate_session()`, `get_active_master_key()`; `src/aeat/adapters/persistence/storage/master_key/_active_session.py`.
-- [ ] `P01.S02` - add typed `NoActiveBucketSessionError` raised when `get_active_master_key()` is called outside a session block; `src/aeat/adapters/persistence/storage/master_key/_active_session.py`.
+- [x] `P01.S01` - add `_active_session.py` with `ContextVar`, `activate_session()`, `get_active_master_key()`; `src/aeat/adapters/persistence/storage/master_key/_active_session.py`.
+- [x] `P01.S02` - add typed `NoActiveBucketSessionError` raised when `get_active_master_key()` is called outside a session block; `src/aeat/adapters/persistence/storage/master_key/_active_session.py`.
 - [ ] `P01.S03` - replace `_resolve_master_key()` body with one-line delegation to `get_active_master_key()`; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
 - [ ] `P01.S04` - delete `_resolve_master_key_provider()`, `_provider_override`, `_provider_lock`, `override_master_key_provider`; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
 - [ ] `P01.S05` - delete `KeyringMasterKeyProvider._cache` ClassVar; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
@@ -80,7 +60,7 @@ retires; bucket enumeration moves to filesystem manifest scan. The
 shared `var/aeat.db` legacy default disappears entirely.
 
 - [ ] `P02.S18` - convert `Settings.aeat_database_url` from a static field to a computed property resolving the active-profile pointer; `src/aeat/core/config.py`.
-- [ ] `P02.S19` - remove the `var/aeat.db` default fallback; raise `NoActiveProfileError` if no active profile resolves; `src/aeat/core/config.py`.
+- [ ] `P02.S19` - remove the `var/aeat.db` default fallback; `raise `NoActiveProfileError` if no active profile resolves; `src/aeat/core/config.py`.
 - [ ] `P02.S20` - update `get_engine()` so its URL-keyed cache honours the new computed URL on profile switch; `src/aeat/adapters/persistence/storage/engine.py`.
 - [ ] `P02.S21` - extend `BucketSession.close()` to evict the matching engine from the `get_engine()` cache; `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py`.
 - [ ] `P02.S22` - provision `<aeat-root>/buckets/<id>/db/` via `Path.mkdir(parents=True, exist_ok=True)` before any engine open; `src/aeat/application/setup/_service.py`.
@@ -129,53 +109,3 @@ Document and enforce the per-feature CI scope. Trunk CI unchanged.
 - [ ] `P04.S50` - run `uv run pytest` against the touched test-module filter and resolve every failure in feature-owned tests; `src/aeat/`.
 - [ ] `P04.S51` - run `uv run vaultspec-core vault check all --feature profile-lifecycle-cli` and resolve every new error against the baseline; `.vault/`.
 - [ ] `P04.S52` - capture the surface-gate command output as evidence in the closing step record; `.vault/exec/2026-05-18-profile-lifecycle-cli/`.
-
-## Parallelization
-
-Phase `P01` lands first as one logical security boundary. Its
-seventeen Steps split into three internal groups that can run in
-parallel within the Phase: Steps `S01 - S08` (core ContextVar
-plumbing + ClassVar deletions), Steps `S09 - S11` (NIST gate + test
-fixture migration), Steps `S12 - S17` (CLI / diagnostics / test
-wiring + AST guard). Within each group Steps are ordered by their
-listed sequence; the Phase closes when all three groups close.
-
-Phase `P02` (engine cutover) and Phase `P03` (operator CLI tail) are
-independent and may run in parallel after Phase `P01` lands. They
-do not share files. Phase `P02`'s `WorkflowState.profiles`
-retirement depends on the ContextVar wiring from `P01` only because
-the manifest-scan path executes inside an active session; no
-file-level overlap.
-
-Phase `P04` runs last; it depends on all three preceding Phases
-having closed.
-
-## Verification
-
-The plan is complete when every Step is closed and:
-
-- `python -m aeat.locales audit` reports clean for the renamed
-  verbs.
-- `uv run ruff check` reports clean against the touched-files
-  filter (per-feature surface scope; trunk-wide diagnostics
-  out of scope per the cascade-closure ADR section 4).
-- `uv run pytest` reports green against the touched
-  test-module filter, including the AST-guard test
-  (`P01.S53`) and the per-bucket isolation tests
-  (`P02.S54`, `P02.S55`).
-- `uv run vaultspec-core vault check all --feature profile-lifecycle-cli`
-  reports no new errors against the branch-tip baseline.
-- A manual smoke run of `aeat config profile create NAME`,
-  `switch NAME`, `show`, `logout`, and `delete NAME` against
-  a throwaway `<aeat-root>` under `tmp_path` succeeds end to
-  end.
-- No `ClassVar` state remains on `KeyringMasterKeyProvider`
-  or `FileFallbackMasterKeyProvider` (asserted by the AST
-  guard).
-- No call site of `override_master_key_provider` remains in
-  production or tests (asserted by `grep -r`).
-- No `Settings.aeat_database_url` static-field reference
-  remains outside the computed-property definition (asserted
-  by `grep -r`).
-- No `WorkflowState.profiles` reference remains (asserted by
-  `grep -r`).
