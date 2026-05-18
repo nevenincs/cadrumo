@@ -12,10 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-    override_master_key_provider,
-)
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
@@ -114,48 +111,47 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
     """
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "workflow-state-roundtrip.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
+    with provider:
+        db_path = tmp_path / "workflow-state-roundtrip.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        original = _populated_workflow_state()
-        repo = WorkflowStateRepository()
-        repo.save(original)
-        loaded = repo.load()
+            original = _populated_workflow_state()
+            repo = WorkflowStateRepository()
+            repo.save(original)
+            loaded = repo.load()
 
-        # The repository stamps a fresh ``updated_at`` on every save
-        # (see ``WorkflowStateRepository.to_secure_object_write``).
-        # Compare every field EXCEPT updated_at by re-projecting the
-        # loaded state onto the original's timestamp; assert separately
-        # that the stamped timestamp is >= the original.
-        loaded_normalised = loaded.model_copy(update={"updated_at": original.updated_at})
-        assert loaded_normalised == original
-        assert loaded.updated_at >= original.updated_at
-        assert set(loaded.profiles) == {"profile-a", "profile-b"}
-        assert loaded.profiles["profile-a"].bucket_id == "b" * 32
-        assert "303:2025Q1" in loaded.declarations
-        loaded_decl = loaded.declarations["303:2025Q1"]
-        assert loaded_decl.draft_id == "d" * 64
-        assert loaded_decl.exported_path == "exports/303-2025Q1.txt"
-        assert len(loaded.bucket_events) == 1
-        assert loaded.bucket_events[0].action == "profile.bucket.created"
-        assert loaded.bucket_events[0].bucket_id == "b" * 32
-        assert set(loaded.invoice_reviews) == {"invoice-2024-001"}
-        loaded_invoice = loaded.invoice_reviews["invoice-2024-001"]
-        assert isinstance(loaded_invoice, InvoiceReviewRecord)
-        assert loaded_invoice.fields == {"note": "follow up VAT split"}
-        assert set(loaded.ledger_reviews) == {"transaction-2024-abc"}
-        loaded_ledger = loaded.ledger_reviews["transaction-2024-abc"]
-        assert isinstance(loaded_ledger, LedgerReviewRecord)
-        assert loaded_ledger.transaction_id == "transaction-2024-abc"
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            # The repository stamps a fresh ``updated_at`` on every save
+            # (see ``WorkflowStateRepository.to_secure_object_write``).
+            # Compare every field EXCEPT updated_at by re-projecting the
+            # loaded state onto the original's timestamp; assert separately
+            # that the stamped timestamp is >= the original.
+            loaded_normalised = loaded.model_copy(update={"updated_at": original.updated_at})
+            assert loaded_normalised == original
+            assert loaded.updated_at >= original.updated_at
+            assert set(loaded.profiles) == {"profile-a", "profile-b"}
+            assert loaded.profiles["profile-a"].bucket_id == "b" * 32
+            assert "303:2025Q1" in loaded.declarations
+            loaded_decl = loaded.declarations["303:2025Q1"]
+            assert loaded_decl.draft_id == "d" * 64
+            assert loaded_decl.exported_path == "exports/303-2025Q1.txt"
+            assert len(loaded.bucket_events) == 1
+            assert loaded.bucket_events[0].action == "profile.bucket.created"
+            assert loaded.bucket_events[0].bucket_id == "b" * 32
+            assert set(loaded.invoice_reviews) == {"invoice-2024-001"}
+            loaded_invoice = loaded.invoice_reviews["invoice-2024-001"]
+            assert isinstance(loaded_invoice, InvoiceReviewRecord)
+            assert loaded_invoice.fields == {"note": "follow up VAT split"}
+            assert set(loaded.ledger_reviews) == {"transaction-2024-abc"}
+            loaded_ledger = loaded.ledger_reviews["transaction-2024-abc"]
+            assert isinstance(loaded_ledger, LedgerReviewRecord)
+            assert loaded_ledger.transaction_id == "transaction-2024-abc"
+        finally:
+            engine.dispose()
 
 
 def test_workflow_state_absent_load_returns_empty_state(tmp_path: Path) -> None:
@@ -167,22 +163,21 @@ def test_workflow_state_absent_load_returns_empty_state(tmp_path: Path) -> None:
     """
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "workflow-state-empty.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
+    with provider:
+        db_path = tmp_path / "workflow-state-empty.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        repo = WorkflowStateRepository()
-        loaded = repo.load()
+            repo = WorkflowStateRepository()
+            loaded = repo.load()
 
-        # Empty-default identity: no profiles, no declarations, empty event tuple.
-        assert loaded.profiles == {}
-        assert loaded.declarations == {}
-        assert loaded.bucket_events == ()
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            # Empty-default identity: no profiles, no declarations, empty event tuple.
+            assert loaded.profiles == {}
+            assert loaded.declarations == {}
+            assert loaded.bucket_events == ()
+        finally:
+            engine.dispose()
