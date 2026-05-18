@@ -1540,13 +1540,40 @@ def _resolve_category(raw: str):
     ),
 )
 def ratios_list(ctx: typer.Context) -> None:
-    from ...domain.usage_ratios import load_usage_ratios
+    from ...application.profile import CensusSyncService
+    from ...domain.usage_ratios import (
+        CensusRatioMismatchError,
+        load_usage_ratios,
+        load_usage_ratios_with_census_guard,
+    )
 
-    bucket_id = _ratios_bucket_id()
-    profile = load_usage_ratios(bucket_id=bucket_id)
+    bucket_id, profile_id = _ratios_bucket_and_profile()
+    raw_afectacion = None
+    if profile_id is not None:
+        raw_afectacion = CensusSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(
+            profile_id=profile_id,
+        )
+    census_mismatch: str | None = None
+    try:
+        profile = load_usage_ratios_with_census_guard(
+            bucket_id=bucket_id,
+            raw_afectacion_ratio=raw_afectacion,
+        )
+    except CensusRatioMismatchError as exc:
+        # The operator should still see what's persisted; we surface the
+        # divergence as a typed warning row but never hide the rows.
+        census_mismatch = str(exc)
+        profile = load_usage_ratios(bucket_id=bucket_id)
     rows = [{"category": category.value, "ratio": str(ratio)} for category, ratio in profile.ratios.items()]
-    payload = {"bucket_id": bucket_id, "rows": rows, "count": len(rows)}
+    payload = {
+        "bucket_id": bucket_id,
+        "rows": rows,
+        "count": len(rows),
+        "census_mismatch": census_mismatch,
+    }
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    if census_mismatch is not None:
+        lines.append(f"census_mismatch\t{census_mismatch}")
     lines.extend(f"{row['category']}\t{row['ratio']}" for row in rows)
     _emit(ctx, payload, lines)
 
