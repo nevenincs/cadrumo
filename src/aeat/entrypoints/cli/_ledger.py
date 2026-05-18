@@ -67,7 +67,7 @@ from ._common import (
     _state,
     _tx_repo,
 )
-from ._i18n import tr
+from ...core.i18n import tr
 
 app = typer.Typer(
     name="ledger",

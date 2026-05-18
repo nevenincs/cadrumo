@@ -19,7 +19,7 @@ import typer
 from ....domain.profile._constants import BucketId, ProfileName
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
-from .._i18n import tr
+from ....core.i18n import tr
 
 
 def _active_pointer() -> tuple[ProfileName, BucketId]:

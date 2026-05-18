@@ -68,4 +68,3 @@ class InitializeWorkspaceResult(BaseModel):
     profile_id: str
     bucket_id: str
     auth_configured: bool
-    migrated_legacy_state: bool

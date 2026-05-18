@@ -52,7 +52,7 @@ from ...domain.modelos._filing_record import FilingRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date, _profile_to_autonomo
-from ._i18n import tr
+from ...core.i18n import tr
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 

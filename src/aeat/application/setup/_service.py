@@ -127,12 +127,8 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
             auth_configured = False
 
     # 4. Handle env configs (drafts_dir, submissions_dir, manuals_root)
-    # Env configuration events are emitted only if env-file persistence survives.
-    # We rely on the backend. Legacy setups are handled by setup_state migration.
-
     return InitializeWorkspaceResult(
         profile_id=command.profile_name,
         bucket_id=command.profile_name,
         auth_configured=auth_configured,
-        migrated_legacy_state=False,
     )
