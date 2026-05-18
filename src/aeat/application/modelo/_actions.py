@@ -1445,68 +1445,14 @@ def verify_modelo_revision(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
 
-    findings: list[ModeloVerificationFinding] = []
-    resolved_casillas: list[str] = []
-    missing_required: list[str] = []
-
-    registry_lookup = _required_input_casillas_for_revision(
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
+    findings, resolved_casillas, missing_required = _collect_revision_verification_findings(
+        work_unit=work_unit,
+        target=target,
     )
-    if registry_lookup is None:
-        findings.append(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    f"registry snapshot for modelo={work_unit.modelo!r} "
-                    f"year={work_unit.filing_year} period={work_unit.period!r} "
-                    f"could not be resolved"
-                ),
-                next_action="aeat app registry verify",
-            )
-        )
-    else:
-        required, _optional = registry_lookup
-        # Check operator-supplied inputs, not engine output. With the
-        # formula engine wired into calculate, every declared casilla
-        # appears in ``casilla_values`` (engine-defaulted to zero for
-        # missing inputs). ``inputs_snapshot`` carries only the inputs
-        # the operator actually supplied — that is the right basis for
-        # the "missing required" gate.
-        revision_keys = set(target.inputs_snapshot)
-        for casilla_id in required:
-            if casilla_id in revision_keys:
-                resolved_casillas.append(casilla_id)
-            else:
-                missing_required.append(casilla_id)
-                findings.append(
-                    ModeloVerificationFinding(
-                        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
-                        severity=ModeloVerificationFindingSeverity.BLOCKING,
-                        casilla_id=casilla_id,
-                        message=(
-                            f"required casilla {casilla_id!r} is not present in "
-                            f"the calculation revision's inputs_snapshot"
-                        ),
-                        next_action=(
-                            f"aeat app modelo work calculate {target.work_unit_id} --casilla {casilla_id}=VALUE"
-                        ),
-                    )
-                )
-
-    has_blocking = any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
-    if has_blocking:
-        completeness = (
-            VerificationCompletenessStatus.INCOMPLETE
-            if missing_required and not any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in findings)
-            else VerificationCompletenessStatus.BLOCKED
-        )
-        granted = False
-    else:
-        completeness = VerificationCompletenessStatus.COMPLETE
-        granted = True
+    completeness, granted = _classify_verification_outcome(
+        findings=findings,
+        missing_required=missing_required,
+    )
 
     now = clock or datetime.now(UTC)
     report_id = derive_verification_report_id(
@@ -1581,6 +1527,97 @@ def verify_modelo_revision(
     )
 
     return report
+
+
+def _collect_revision_verification_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+) -> tuple[list[ModeloVerificationFinding], list[str], list[str]]:
+    """Build the verification finding list for one calculation revision.
+
+    Returns ``(findings, resolved_casillas, missing_required)``. A
+    revision whose ``(modelo, year, period)`` triple does not resolve
+    against the registry yields a single BLOCKING_RULE finding and
+    empty resolved/missing lists — there is no per-casilla check to
+    perform without a registry snapshot.
+
+    With a snapshot present, the operator-supplied
+    ``inputs_snapshot`` keys are compared against the registry's
+    required-input casilla set. Each missing required casilla
+    produces a MISSING_REQUIRED_CASILLA finding plus an entry in the
+    missing-required list; each present required casilla lands in
+    the resolved-casillas list.
+    """
+    findings: list[ModeloVerificationFinding] = []
+    resolved_casillas: list[str] = []
+    missing_required: list[str] = []
+
+    registry_lookup = _required_input_casillas_for_revision(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    if registry_lookup is None:
+        findings.append(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message=(
+                    f"registry snapshot for modelo={work_unit.modelo!r} "
+                    f"year={work_unit.filing_year} period={work_unit.period!r} "
+                    f"could not be resolved"
+                ),
+                next_action="aeat app registry verify",
+            )
+        )
+        return findings, resolved_casillas, missing_required
+
+    required, _optional = registry_lookup
+    revision_keys = set(target.inputs_snapshot)
+    for casilla_id in required:
+        if casilla_id in revision_keys:
+            resolved_casillas.append(casilla_id)
+        else:
+            missing_required.append(casilla_id)
+            findings.append(_missing_required_casilla_finding(casilla_id, target.work_unit_id))
+    return findings, resolved_casillas, missing_required
+
+
+def _missing_required_casilla_finding(casilla_id: str, work_unit_id: str) -> ModeloVerificationFinding:
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=casilla_id,
+        message=(
+            f"required casilla {casilla_id!r} is not present in "
+            f"the calculation revision's inputs_snapshot"
+        ),
+        next_action=(f"aeat app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
+    )
+
+
+def _classify_verification_outcome(
+    *,
+    findings: list[ModeloVerificationFinding],
+    missing_required: list[str],
+) -> tuple[VerificationCompletenessStatus, bool]:
+    """Compute the completeness status + granted flag from finding shape.
+
+    With no BLOCKING finding, the report is COMPLETE and the
+    verified-complete transition is granted. With at least one
+    BLOCKING_RULE finding, the report is BLOCKED. With BLOCKING
+    findings that are exclusively MISSING_REQUIRED_CASILLA, the
+    report is INCOMPLETE so the operator sees that completing the
+    inputs unblocks the transition.
+    """
+    has_blocking = any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
+    if not has_blocking:
+        return VerificationCompletenessStatus.COMPLETE, True
+    has_blocking_rule = any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in findings)
+    if missing_required and not has_blocking_rule:
+        return VerificationCompletenessStatus.INCOMPLETE, False
+    return VerificationCompletenessStatus.BLOCKED, False
 
 
 def file_modelo_revision(
