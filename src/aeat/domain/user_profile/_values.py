@@ -173,6 +173,34 @@ class UserProfileSnapshot(BaseModel):
     facts: tuple[UserProfileFact, ...]
     canonical_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
 
+    @model_validator(mode="after")
+    def _canonical_hash_matches_facts(self) -> UserProfileSnapshot:
+        """Re-derive ``canonical_hash`` from the facts and reject drift.
+
+        Without this validator the snapshot's canonical_hash field is
+        only computed by :meth:`from_profile` at construction time; a
+        persisted snapshot whose facts are mutated post-save (or whose
+        canonical_hash drifts post-save) would load silently with a
+        stale digest. Re-deriving on every construction (including
+        ``model_validate_json``) anchors the content-addressing
+        guarantee at the boundary: the persisted hash MUST match the
+        persisted facts.
+        """
+
+        derived = _derive_canonical_hash(
+            schema_id=self.schema_id,
+            schema_version=self.schema_version,
+            profile_id=self.profile_id,
+            facts=self.facts,
+        )
+        if derived != self.canonical_hash:
+            raise UserProfileValidationError(
+                f"canonical_hash {self.canonical_hash!r} does not match "
+                f"the derived hash {derived!r} for profile "
+                f"{self.profile_id!r}; facts or hash drifted post-save"
+            )
+        return self
+
     @classmethod
     def from_profile(
         cls,
@@ -197,15 +225,12 @@ class UserProfileSnapshot(BaseModel):
                 ),
             )
         )
-        payload = _canonical_payload(
-            {
-                "schema_id": profile.schema_id,
-                "schema_version": profile.schema_version,
-                "profile_id": profile.profile_id,
-                "facts": [fact.model_dump(mode="json") for fact in facts],
-            }
+        digest = _derive_canonical_hash(
+            schema_id=profile.schema_id,
+            schema_version=profile.schema_version,
+            profile_id=profile.profile_id,
+            facts=facts,
         )
-        digest = hashlib.sha256(payload).hexdigest()
         return cls(
             snapshot_id=snapshot_id or new_profile_snapshot_id(profile.profile_id, created_at=instant),
             profile_id=profile.profile_id,
@@ -231,6 +256,34 @@ class UserProfilePortableExport(BaseModel):
     bundle_schema_version: int = Field(default=1, ge=1)
     exported_at: datetime = Field(default_factory=utc_now)
     profile: UserProfileRecord
+
+
+def _derive_canonical_hash(
+    *,
+    schema_id: str,
+    schema_version: int,
+    profile_id: str,
+    facts: tuple[UserProfileFact, ...],
+) -> str:
+    """Compute the canonical-hash digest for a snapshot.
+
+    Used both at :meth:`UserProfileSnapshot.from_profile` (to stamp
+    the snapshot at creation) and inside the post-construction
+    model_validator (to verify the persisted hash matches the
+    persisted facts on load). Sharing the derivation across both
+    sides anchors the content-addressing invariant — there is only
+    one place where the canonical payload shape is defined.
+    """
+
+    payload = _canonical_payload(
+        {
+            "schema_id": schema_id,
+            "schema_version": schema_version,
+            "profile_id": profile_id,
+            "facts": [fact.model_dump(mode="json") for fact in facts],
+        }
+    )
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _canonical_payload(payload: object) -> bytes:
