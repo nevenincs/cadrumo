@@ -15,6 +15,7 @@ unique within a bucket per ``new_profile_snapshot_id``.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import UTC, datetime
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
@@ -130,6 +131,24 @@ class UserProfileLifecycleRepository:
             payload=envelope.model_dump_json().encode("utf-8"),
         )
         _clear_output_language_cache()
+
+    def iter_records(self) -> Iterable[UserProfileRecord]:
+        """Yield every live :class:`UserProfileRecord` from the secure-object backend.
+
+        Walks the IDENTITY-class secure-object index for this bucket
+        namespace and validates each row against the typed envelope at
+        the configured schema version. The lifecycle service consumes
+        this iterator to list live profiles without reaching for the
+        repository's private secure-object reference.
+        """
+
+        for raw in self._objects.list_records(
+            USER_PROFILE_VALUE_NAMESPACE,
+            expected_class=SensitivityClass.IDENTITY,
+            max_supported_version=_USER_PROFILE_VALUE_VERSION,
+        ):
+            envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
+            yield envelope.payload
 
     def delete(self, profile_id: str) -> bool:
         deleted = self._objects.delete(
