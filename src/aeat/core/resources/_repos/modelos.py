@@ -11,12 +11,17 @@ and delegating ``get`` / ``all`` through it.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .._errors import ResourceNotFoundError
 from .._repository import Repository
 
+if TYPE_CHECKING:
+    from ....domain.calculations.registry import ValidatedRegistryAuthority
+    from ....domain.calculations.registry._schema import ModeloDefinition
 
-class ModeloRepository(Repository[object, str]):
+
+class ModeloRepository(Repository["ModeloDefinition", str]):
     """Modelo definitions keyed by their typed id (``"100"``, ``"180"``, …).
 
     Wraps :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`.
@@ -30,39 +35,41 @@ class ModeloRepository(Repository[object, str]):
         super().__init__()
         self._root = root
         self._source_root = source_root
-        self._authority: object | None = None
+        self._authority: ValidatedRegistryAuthority | None = None
 
-    def _resolve_authority(self) -> object:
+    def _resolve_authority(self) -> ValidatedRegistryAuthority:
         if self._authority is not None:
             return self._authority
-        from ....domain.calculations.registry import ValidatedRegistryAuthority
+        from ....domain.calculations.registry import (
+            ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
+        )
         from .._boundary import bundled_path
 
         root = self._root or bundled_path("registry", "aeat")
         source_root = self._source_root or bundled_path()
-        self._authority = ValidatedRegistryAuthority.load(
+        self._authority = _ValidatedRegistryAuthority.load(
             root, source_root=source_root
         )
         return self._authority
 
     @property
-    def authority(self) -> object:
+    def authority(self) -> ValidatedRegistryAuthority:
         """Return the backing :class:`ValidatedRegistryAuthority` instance."""
         return self._resolve_authority()
 
-    def _load(self, key: str) -> object:
+    def _load(self, key: str) -> ModeloDefinition:
         authority = self._resolve_authority()
         try:
-            return authority.modelo(key)  # type: ignore[attr-defined]
+            return authority.modelo(key)
         except Exception as exc:
             raise ResourceNotFoundError(
                 f"no modelo definition registered for {key!r}"
             ) from exc
 
-    def all(self) -> object:
+    def all(self) -> tuple[ModeloDefinition, ...]:
         """Return every modelo definition in the bundled registry."""
         authority = self._resolve_authority()
-        return tuple(authority.modelos)  # type: ignore[attr-defined]
+        return tuple(authority.modelos)
 
     def clear_cache(self) -> None:
         """Clear the Identity Map AND the backing authority reference."""
