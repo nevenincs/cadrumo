@@ -750,6 +750,121 @@ def config_profile_rename(
     )
 
 
+@profile_app.command(
+    "export",
+    help=tr(
+        "cli.config.profile.export_help",
+        default="Write a portable profile bundle to PATH.",
+    ),
+)
+def config_profile_export(
+    ctx: typer.Context,
+    name: str | None = typer.Argument(
+        None,
+        help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
+    ),
+    out: Path = typer.Option(
+        ...,
+        "--to",
+        help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
+    ),
+) -> None:
+    """Serialize a profile bundle to a JSON file."""
+
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....domain.user_profile import ProfileNotFoundError
+
+    state = _profile_state().load()
+    target = name or resolve_active_bucket_id(state)
+    if target is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    pointer = state.profiles.get(target)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        bundle = service.export(target)
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target)) from exc
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
+    _emit(
+        ctx,
+        {"profile_id": target, "out": str(out), "schema_version": bundle.bundle_schema_version},
+        (
+            f"profile_id\t{target}",
+            f"out\t{out}",
+            f"schema_version\t{bundle.bundle_schema_version}",
+        ),
+    )
+
+
+@profile_app.command(
+    "import",
+    help=tr(
+        "cli.config.profile.import_help",
+        default="Register a portable profile bundle from PATH into the active bucket.",
+    ),
+)
+def config_profile_import(
+    ctx: typer.Context,
+    path: Path = typer.Argument(
+        ..., help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle.")
+    ),
+) -> None:
+    """Read a portable profile bundle from a JSON file and register it."""
+
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.workflow._models import ProfileBucketPointer
+    from ....application.workflow._utils import utc_now
+    from ....domain.user_profile import ProfileAlreadyExistsError, UserProfilePortableExport
+
+    if not path.is_file():
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.profile.import_missing_bundle",
+                default=f"bundle path not found: {path}",
+                path=str(path),
+            )
+        )
+    bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
+    target_id = bundle.profile.profile_id
+    repository = _profile_state()
+    state = repository.load()
+    if target_id in state.profiles:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id))
+    active_bucket = resolve_active_bucket_id(state)
+    if active_bucket is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    bucket_pointer = state.profiles.get(active_bucket)
+    bucket_id = bucket_pointer.bucket_id if bucket_pointer is not None else active_bucket
+    service = build_lifecycle_service(bucket_id=bucket_id)
+    try:
+        result = service.import_archive(bundle)
+    except ProfileAlreadyExistsError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id)) from exc
+
+    def _register(current):
+        profiles = dict(current.profiles)
+        profiles[target_id] = ProfileBucketPointer(bucket_id=bucket_id)
+        return current.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
+
+    repository.update(_register)
+    _emit(
+        ctx,
+        {
+            "profile_id": result.profile.profile_id,
+            "display_name": result.profile.display_name,
+            "schema_version": bundle.bundle_schema_version,
+        },
+        (
+            f"profile_id\t{result.profile.profile_id}",
+            f"display_name\t{result.profile.display_name}",
+            f"schema_version\t{bundle.bundle_schema_version}",
+        ),
+    )
+
+
 @profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(ctx: typer.Context) -> None:
     """Show the readiness of the current configuration profile."""
