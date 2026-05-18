@@ -116,3 +116,91 @@ def test_workflow_run_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_workflow_run_aborted_reason_drift_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: ABORTED ↔ aborted_reason invariant holds post-persistence.
+
+    :class:`WorkflowResult` enforces that ABORTED final_stage MUST
+    carry a non-None ``aborted_reason``. A persisted ABORTED run
+    whose aborted_reason is silently cleared post-save would let an
+    unjustified abort masquerade as a normal completion on replay.
+
+    Persists via :func:`save_run`, uses :class:`SecureObjectRepository`
+    public API to load the encrypted record, surgically clears
+    ``aborted_reason`` in the JSON envelope payload, re-saves through
+    the same Repository, and asserts :func:`load_run` rejects via
+    the model_validator's stage ↔ reason pairing.
+
+    Going through the Repository public API (rather than reaching
+    into SecureObjectRow via session_scope) sidesteps the
+    HashedLookup digest-context plumbing that caused a previous
+    attempt to fail.
+    """
+
+    import json as _json
+
+    from ...adapters.persistence.storage import SensitivityClass
+    from ._persistence import _RUN_NAMESPACE, _RUN_VERSION
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "workflow-run-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        objects = SecureObjectRepository(engine=engine)
+        original = _populated_run()
+        save_run(original)
+
+        # Sanity: the run is loadable through the same engine.
+        loaded = objects.load(
+            _RUN_NAMESPACE,
+            original.run_id,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_RUN_VERSION,
+        )
+        assert loaded is not None, (
+            "save_run did not persist via the test's engine — re-check "
+            "engine cache wiring before treating the proof result as meaningful"
+        )
+
+        # Decrypt, mutate, re-encrypt — through the public API.
+        envelope = _json.loads(loaded.payload.decode("utf-8"))
+        payload = envelope["payload"]
+        assert payload.get("aborted_reason"), (
+            "fixture must persist ABORTED final_stage with a populated "
+            "aborted_reason for this proof test to be meaningful"
+        )
+        payload["aborted_reason"] = None
+        envelope["payload"] = payload
+        objects.save(
+            namespace=_RUN_NAMESPACE,
+            object_key=original.run_id,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_RUN_VERSION,
+            written_at=datetime.now(UTC),
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        # load_run must trip the ABORTED ↔ aborted_reason invariant.
+        regression_caught = False
+        try:
+            load_run(original.run_id)
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: clearing aborted_reason on "
+            "an ABORTED run did NOT surface on load. The workflow-runs "
+            "boundary is tautological and the abort-classification "
+            "contract cannot be trusted on replay."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
