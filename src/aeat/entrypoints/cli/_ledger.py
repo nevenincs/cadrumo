@@ -46,6 +46,7 @@ from ...application.review import (
     FilterParseError,
     LedgerReviewFilterSpec,
 )
+from ...application.workflow._models import resolve_active_bucket_id
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -228,7 +229,7 @@ def ledger_add(
     transaction_repository = _tx_repo(current_state)
     resolved_business_pct = _resolve_business_pct_with_census(
         bucket_id=transaction_repository.bucket_id,
-        active_profile=current_state.active_profile,
+        active_profile=resolve_active_bucket_id(),
         category_id=category_id,
         operator_supplied=_parse_decimal(business_pct, label="business-pct"),
     )
@@ -253,7 +254,7 @@ def ledger_add(
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
         notes=notes,
-        actor=actor or current_state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger add",
         idempotency_key=idempotency_key,
     )
@@ -323,7 +324,7 @@ def ledger_update(
             irpf_category=irpf_category,
             notes=notes,
         ),
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger update",
         transaction_repository=transaction_repository,
     )
@@ -365,7 +366,7 @@ def ledger_classify(
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
             irpf_category=irpf_category,
         ),
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger classify",
         transaction_repository=transaction_repository,
     )
@@ -404,7 +405,7 @@ def ledger_allocate(
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,
         ),
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger allocate",
         transaction_repository=transaction_repository,
     )
@@ -436,7 +437,7 @@ def ledger_attach(
         transaction_id=resolved_id,
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger attach",
         transaction_repository=transaction_repository,
     )
@@ -460,7 +461,7 @@ def ledger_archive(
     result = archive_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         source_command="aeat app ledger archive",
         transaction_repository=transaction_repository,
@@ -485,7 +486,7 @@ def ledger_stash(
     result = stash_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         source_command="aeat app ledger stash",
         transaction_repository=transaction_repository,
@@ -511,7 +512,7 @@ def ledger_remove(
     report = remove_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         dry_run=dry_run,
         source_command="aeat app ledger remove",
@@ -545,7 +546,7 @@ def ledger_reset(
     transaction_repository = _tx_repo(state)
     report = reset_ledger_catalogue(
         bucket_id=transaction_repository.bucket_id,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         dry_run=dry_run,
         source_command="aeat app ledger reset",
@@ -603,7 +604,7 @@ def ledger_split(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
         children=children,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger split",
         reason=reason,
         transaction_repository=transaction_repository,
@@ -651,7 +652,7 @@ def ledger_merge(
     result = merge_transactions(
         bucket_id=transaction_repository.bucket_id,
         child_transaction_ids=resolved_ids,
-        actor=actor or state.active_profile or "operator",
+        actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger merge",
         reason=reason,
         transaction_repository=transaction_repository,
@@ -1036,7 +1037,7 @@ def ledger_export(
             export_format=export_kind,
             include_inactive=include_inactive,
             output_path=output,
-            actor=actor or state.active_profile or "operator",
+            actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger export",
         ),
         transaction_repository=transaction_repository,
@@ -1201,7 +1202,7 @@ def ledger_import(
         current_state = _state()
         transaction_repository = _tx_repo(current_state)
         bucket_id = transaction_repository.bucket_id
-        actor = current_state.active_profile or "operator"
+        actor = resolve_active_bucket_id() or "operator"
     result = import_ledger_source(
         LedgerSourceImportCommand(
             bucket_id=bucket_id,
@@ -1349,7 +1350,7 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     silent because there is no profile to look up snapshots against.
     """
 
-    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._models import active_bucket_id_or_raise, resolve_active_bucket_id
     from ...application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
@@ -1357,7 +1358,7 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
         bucket_id = active_bucket_id_or_raise(state)
     except Exception as exc:  # NoActiveProfileError + downstream raises
         raise _bad(tr("cli.config.errors.no_active_profile")) from exc
-    return bucket_id, state.active_profile
+    return bucket_id, resolve_active_bucket_id()
 
 
 def _emit_ratios_event(
@@ -1439,7 +1440,6 @@ def _resolve_business_pct_with_census(
     perturbed.
     """
 
-    from decimal import Decimal
 
     from ...application.ledger._ratios import census_business_pct_for
     from ...application.profile import CensusSyncService

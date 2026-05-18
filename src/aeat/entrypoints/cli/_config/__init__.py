@@ -20,6 +20,7 @@ from ....application.diagnostics import (
 from ....application.operator_surface import build_help_document, render_help_text
 from ....application.wizard._catalogue import SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command
+from ....application.workflow._models import resolve_active_bucket_id
 from ....core.logging import default_log_file_path
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
@@ -287,13 +288,13 @@ def config_list(ctx: typer.Context) -> None:
     record = state.active_profile_record()
     values = record_to_path_values(record)
     payload = {
-        "active_profile": state.active_profile,
+        "active_profile": resolve_active_bucket_id(),
         "keys": [
             {"key": entry.key, "requirement": entry.requirement.value, "value": values.get(entry.key, "")}
             for entry in PROFILE_KEYS
         ],
     }
-    lines = [f"profile\t{state.active_profile or ''}"]
+    lines = [f"profile\t{resolve_active_bucket_id() or ''}"]
     for entry in PROFILE_KEYS:
         rendered_value = values.get(entry.key, "")
         lines.append(f"{entry.key}\t{entry.requirement.value}\t{rendered_value or '<unset>'}")
@@ -361,8 +362,7 @@ def config_set(
             raise CliRefusedBoundaryError(message) from exc
 
     repository = _profile_state()
-    state = repository.load()
-    if state.active_profile is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     fact = UserProfileFact(path=canonical_key, value=value)
     updated = repository.update(lambda current: set_active_field(current, fact))
@@ -385,8 +385,7 @@ def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli
     except KeyError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
     repository = _profile_state()
-    state = repository.load()
-    if state.active_profile is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     fact = UserProfileFact(path=key, value=None)
     repository.update(lambda current: set_active_field(current, fact))
@@ -404,16 +403,17 @@ def config_profile_validate(ctx: typer.Context) -> None:
     from ....domain.user_profile import ProfileNotFoundError
 
     state = _profile_state().load()
-    if state.active_profile is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(state.active_profile)
+    pointer = state.profiles.get(resolve_active_bucket_id() or "")
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(state.active_profile)
+        record = service.read(resolve_active_bucket_id() or "")
     except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=state.active_profile)) from exc
+        active = resolve_active_bucket_id() or ""
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=active)) from exc
     report = service._validator.validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     payload = report.model_dump(mode="json")
@@ -458,16 +458,17 @@ def config_profile_preflight(
     from ....domain.user_profile import ProfileNotFoundError
 
     state = _profile_state().load()
-    if state.active_profile is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(state.active_profile)
+    pointer = state.profiles.get(resolve_active_bucket_id() or "")
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(state.active_profile)
+        record = service.read(resolve_active_bucket_id() or "")
     except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=state.active_profile)) from exc
+        active = resolve_active_bucket_id() or ""
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=active)) from exc
     preflight = ProfilePreflightService(schema=_shared_schema())
     report = preflight.report(
         record=record,
@@ -633,7 +634,7 @@ def config_profile_remove(
         result = service.remove(RemoveProfileCommand(profile_id=name))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    if state.active_profile == name:
+    if resolve_active_bucket_id() == name:
         from ....application.workflow._utils import utc_now
 
         repository.update(lambda current: current.model_copy(update={"active_profile": None, "updated_at": utc_now()}))
@@ -725,7 +726,7 @@ def config_status(ctx: typer.Context) -> None:
     values = record_to_path_values(record)
     if not values.get("identity.tax_id") or not values.get("activities.description"):
         payload = {
-            "active_profile": state.active_profile,
+            "active_profile": resolve_active_bucket_id(),
             "tax_id_present": bool(values.get("identity.tax_id")),
             "activity_present": bool(values.get("activities.description")),
             "configured": False,
@@ -736,7 +737,7 @@ def config_status(ctx: typer.Context) -> None:
         projection = project_answers(SETUP_FLOW, values)
     except ValidationError:
         payload = {
-            "active_profile": state.active_profile,
+            "active_profile": resolve_active_bucket_id(),
             "tax_id_present": bool(values.get("identity.tax_id")),
             "activity_present": bool(values.get("activities.description")),
             "configured": False,
@@ -744,7 +745,7 @@ def config_status(ctx: typer.Context) -> None:
         _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
         return
     payload = {
-        "active_profile": state.active_profile,
+        "active_profile": resolve_active_bucket_id(),
         "tax_id_present": bool(values.get("identity.tax_id")),
         "activity_present": bool(values.get("activities.description")),
         "iva_regime": values.get("iva.regime", ""),
@@ -755,7 +756,7 @@ def config_status(ctx: typer.Context) -> None:
         ctx,
         payload,
         (
-            f"profile\t{state.active_profile or ''}",
+            f"profile\t{resolve_active_bucket_id() or ''}",
             f"identity.tax_id\t{values.get('identity.tax_id', '<unset>')}",
             f"activities.description\t{values.get('activities.description', '<unset>')}",
             f"iva.regime\t{values.get('iva.regime', '<unset>')}",
@@ -935,10 +936,10 @@ def apoderado_status(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    if not state.active_profile:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[state.active_profile]
+    pointer = state.profiles[resolve_active_bucket_id() or ""]
     svc = ApoderadoService()
     result = svc.status(bucket_id=pointer.bucket_id)
 
@@ -974,10 +975,10 @@ def apoderado_configure(
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    if not state.active_profile:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[state.active_profile]
+    pointer = state.profiles[resolve_active_bucket_id() or ""]
     svc = ApoderadoService()
     result = svc.configure(
         bucket_id=pointer.bucket_id,
@@ -1002,10 +1003,10 @@ def apoderado_clear(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    if not state.active_profile:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[state.active_profile]
+    pointer = state.profiles[resolve_active_bucket_id() or ""]
     svc = ApoderadoService()
     cleared = svc.clear(bucket_id=pointer.bucket_id)
 
@@ -1023,10 +1024,10 @@ def apoderado_check(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    if not state.active_profile:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[state.active_profile]
+    pointer = state.profiles[resolve_active_bucket_id() or ""]
     svc = ApoderadoService()
 
     try:
