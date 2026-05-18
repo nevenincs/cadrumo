@@ -19,6 +19,8 @@ from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
+    CasillaDefinition,
+    ConstructDefinition,
     DataBindingDefinition,
     DatedValue,
     DependencyClassificationDefinition,
@@ -819,7 +821,7 @@ class RegistryValidator:
         *,
         prefix: str,
         classification: DependencyClassificationDefinition,
-        construct_by_id: Mapping[str, object],
+        construct_by_id: Mapping[str, ConstructDefinition],
         relation_by_id: Mapping[str, RelationDefinition],
     ) -> None:
         owner = f"dependency classification {classification.id}"
@@ -832,7 +834,7 @@ class RegistryValidator:
                     f"{prefix}: {owner} references unknown construct {construct_id!r}"
                 )
                 continue
-            if classification.id not in construct.dependency_classifications:  # type: ignore[attr-defined]
+            if classification.id not in construct.dependency_classifications:
                 failures.append(
                     f"{prefix}: {owner} targets construct {construct_id!r} but the construct does not list it"
                 )
@@ -942,7 +944,7 @@ class RegistryValidator:
         revision: ModeloRevision,
         casillas: set[str],
         bindings: set[str],
-        casilla_by_id: Mapping[str, object],
+        casilla_by_id: Mapping[str, CasillaDefinition],
     ) -> None:
         for layout in revision.export_layouts:
             owner = f"export {layout.id}"
@@ -969,7 +971,7 @@ class RegistryValidator:
         record: ExportRecordDefinition,
         casillas: set[str],
         bindings: set[str],
-        casilla_by_id: Mapping[str, object],
+        casilla_by_id: Mapping[str, CasillaDefinition],
     ) -> None:
         if record.binding_record is not None:
             matching_bindings = [
@@ -1030,7 +1032,7 @@ class RegistryValidator:
         field: ExportFieldDefinition,
         casillas: set[str],
         bindings: set[str],
-        casilla_by_id: Mapping[str, object],
+        casilla_by_id: Mapping[str, CasillaDefinition],
     ) -> None:
         owner = f"export field {field.id}"
         failures.extend(self._missing_refs(prefix, owner, field.legal_refs, self._legal, "legal"))
@@ -1040,7 +1042,7 @@ class RegistryValidator:
         if (
             field.casilla is not None
             and field.casilla in casilla_by_id
-            and field.id not in casilla_by_id[field.casilla].export_refs  # type: ignore[attr-defined]
+            and field.id not in casilla_by_id[field.casilla].export_refs
         ):
             failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}")
         if field.binding is not None and field.binding not in bindings:
