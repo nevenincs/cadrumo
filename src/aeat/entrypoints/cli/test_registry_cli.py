@@ -29,7 +29,6 @@ from aeat.application.registry import (
     verify_filed_state,
 )
 from aeat.core.access_gate import AeatLiveReadNotEnabledError
-from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path, resources
 from aeat.domain.calculations.registry import calculate_registry_snapshot
 from aeat.tests.cli_runner import invoke_cached_cli
@@ -57,7 +56,16 @@ def _first_registry_modelo() -> str:
     return _registry_modelos()[0]
 
 
-def test_registry_inspect_cli_reports_tree_inventory() -> None:
+@pytest.fixture(scope="module")
+def _registry_inspect_payload() -> dict[str, object]:
+    """Run ``app registry inspect --format json`` once per module.
+
+    Reused across every test_registry_inspect_* assertion so the CLI
+    invocation (registry load + walk + payload synthesis) is paid
+    once instead of per-assertion. Module scope is the correct
+    bound: nothing in this file mutates the registry under
+    ``_REGISTRY_ROOT``.
+    """
     result = invoke_cached_cli(
         [
             "--format",
@@ -69,41 +77,124 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
             str(_REGISTRY_ROOT),
         ],
     )
+    assert result.exit_code == 0, result.output
+    return json.loads(result.output)
 
-    assert result.exit_code == 0
-    payload = json.loads(result.output)
+
+def test_registry_inspect_cli_reports_unverified_state(_registry_inspect_payload: dict[str, object]) -> None:
+    assert _registry_inspect_payload["verified"] is False
+
+
+def test_registry_inspect_cli_lists_every_registry_modelo(_registry_inspect_payload: dict[str, object]) -> None:
     registry_modelos = _registry_modelos()
-    registry_surfaces = _registry_application_surfaces()
-    assert payload["verified"] is False
-    assert payload["modelos"] == list(registry_modelos)
-    assert payload["modelo_count"] == len(registry_modelos)
-    assert payload["revision_count"] >= 1
-    assert payload["casilla_count"] > 0
-    assert payload["formula_count"] > 0
-    assert payload["extraction_profile_count"] > 0
-    assert payload["cross_reference_count"] > 0
-    assert payload["workbook_parity_ref_count"] > 0
-    assert payload["verification_expectation_count"] > 0
-    assert payload["application_link_count"] > 0
-    assert payload["relation_count"] > 0
-    assert "periodic_to_annual_summary" in payload["relation_dependency_roles"]
-    assert payload["filing_schedule_count"] > 0
-    assert set(payload["application_link_surfaces"]) == registry_surfaces
-    assert len(payload["revision_details"]) == payload["revision_count"]
-    revision = payload["revision_details"][0]
-    assert revision["modelo"] in payload["modelos"]
+    assert _registry_inspect_payload["modelos"] == list(registry_modelos)
+    assert _registry_inspect_payload["modelo_count"] == len(registry_modelos)
+
+
+_INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS = (
+    "casilla_count",
+    "formula_count",
+    "extraction_profile_count",
+    "cross_reference_count",
+    "workbook_parity_ref_count",
+    "verification_expectation_count",
+    "application_link_count",
+    "relation_count",
+    "filing_schedule_count",
+)
+
+
+@pytest.mark.parametrize("count_key", _INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS)
+def test_registry_inspect_cli_reports_non_zero_count(
+    _registry_inspect_payload: dict[str, object], count_key: str
+) -> None:
+    assert _registry_inspect_payload[count_key] > 0, f"{count_key}={_registry_inspect_payload[count_key]!r}"
+
+
+def test_registry_inspect_cli_reports_at_least_one_revision(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    assert _registry_inspect_payload["revision_count"] >= 1
+
+
+def test_registry_inspect_cli_advertises_expected_relation_role(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    assert "periodic_to_annual_summary" in _registry_inspect_payload["relation_dependency_roles"]
+
+
+def test_registry_inspect_cli_matches_registry_application_surfaces(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    assert set(_registry_inspect_payload["application_link_surfaces"]) == _registry_application_surfaces()
+
+
+def test_registry_inspect_cli_revision_details_match_revision_count(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    assert len(_registry_inspect_payload["revision_details"]) == _registry_inspect_payload["revision_count"]
+
+
+def test_registry_inspect_cli_first_revision_resolves_against_modelo_list(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    revision = _registry_inspect_payload["revision_details"][0]
+    assert revision["modelo"] in _registry_inspect_payload["modelos"]
     assert revision["revision"]
+
+
+def test_registry_inspect_cli_first_revision_carries_legal_and_source_refs(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    revision = _registry_inspect_payload["revision_details"][0]
     assert revision["legal_refs"]
     assert revision["source_refs"]
-    assert revision["export_layout_count"] == len(revision["export_layout_ids"])
-    assert revision["deadline_window_count"] == len(revision["deadline_periods"])
-    assert revision["relation_count"] == len(revision["relation_ids"])
-    assert revision["filing_schedule_count"] == len(revision["filing_schedule_ids"])
-    assert revision["workbook_parity"]
-    export_revision = next(detail for detail in payload["revision_details"] if detail["export_field_count"] > 0)
+
+
+_REVISION_COUNT_PAIRS = (
+    ("export_layout_count", "export_layout_ids"),
+    ("deadline_window_count", "deadline_periods"),
+    ("relation_count", "relation_ids"),
+    ("filing_schedule_count", "filing_schedule_ids"),
+)
+
+
+@pytest.mark.parametrize(("count_key", "ids_key"), _REVISION_COUNT_PAIRS)
+def test_registry_inspect_cli_first_revision_count_matches_id_list(
+    _registry_inspect_payload: dict[str, object], count_key: str, ids_key: str
+) -> None:
+    revision = _registry_inspect_payload["revision_details"][0]
+    assert revision[count_key] == len(revision[ids_key])
+
+
+def test_registry_inspect_cli_first_revision_has_workbook_parity(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    assert _registry_inspect_payload["revision_details"][0]["workbook_parity"]
+
+
+def test_registry_inspect_cli_export_revision_has_record_and_field_counts(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    export_revision = next(
+        detail for detail in _registry_inspect_payload["revision_details"] if detail["export_field_count"] > 0
+    )
     assert export_revision["export_record_count"] > 0
-    guarded_revision = next(detail for detail in payload["revision_details"] if detail["portal_guard_policy_ids"])
+
+
+def test_registry_inspect_cli_guarded_revision_lists_portal_guard_policies(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    guarded_revision = next(
+        detail for detail in _registry_inspect_payload["revision_details"] if detail["portal_guard_policy_ids"]
+    )
     assert guarded_revision["portal_guard_policy_ids"]
+
+
+def test_registry_inspect_cli_workbook_reference_resolves_against_revision(
+    _registry_inspect_payload: dict[str, object],
+) -> None:
+    revision = _registry_inspect_payload["revision_details"][0]
     workbook_reference = revision["workbook_parity"][0]
     assert workbook_reference["id"]
     assert workbook_reference["workbook_source"] in revision["source_refs"]
