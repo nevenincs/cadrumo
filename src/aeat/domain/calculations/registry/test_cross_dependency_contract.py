@@ -168,22 +168,39 @@ def test_relation_target_bindings_mirror_source_contract() -> None:
         for revision in modelo.revisions.values():
             bindings = {binding.id: binding for binding in revision.bindings}
             for relation in revision.relations:
-                binding = bindings[relation.target_binding]
-                selector = binding.selector
-                selector_modelo = selector.get("source_modelo", selector.get("modelo"))
-                selector_output = selector.get("source_output")
-                selector_casillas = selector.get("source_casillas")
-                selector_periods = selector.get("source_periods")
+                _assert_relation_binding_mirrors_source(
+                    binding=bindings[relation.target_binding],
+                    relation=relation,
+                    scope=f"{modelo.id}/{revision.id}/{relation.id}",
+                )
 
-                assert binding.source == "previous_filing", f"{modelo.id}/{revision.id}/{relation.id}"
-                assert selector_modelo == relation.source_modelo, f"{modelo.id}/{revision.id}/{relation.id}"
-                if selector_output is not None:
-                    assert selector_output == relation.source_output, f"{modelo.id}/{revision.id}/{relation.id}"
-                if selector_casillas is not None:
-                    assert selector_casillas == (relation.source_output,), f"{modelo.id}/{revision.id}/{relation.id}"
-                if selector_periods is not None:
-                    assert selector_periods == relation.source_periods, f"{modelo.id}/{revision.id}/{relation.id}"
-                assert (binding.aggregation or {}).get("op") == (relation.aggregation or {}).get("op")
+
+def _assert_relation_binding_mirrors_source(*, binding, relation, scope: str) -> None:  # type: ignore[no-untyped-def]
+    """Verify a relation's target binding mirrors the relation's source contract.
+
+    Reads four optional selector keys (``source_modelo`` /
+    ``modelo``, ``source_output``, ``source_casillas``,
+    ``source_periods``) and asserts that whichever are declared
+    match the relation's published source contract. The
+    aggregation-op equality check ensures the binding's
+    materialisation strategy agrees with what the relation
+    declared.
+    """
+    selector = binding.selector
+    selector_modelo = selector.get("source_modelo", selector.get("modelo"))
+    selector_output = selector.get("source_output")
+    selector_casillas = selector.get("source_casillas")
+    selector_periods = selector.get("source_periods")
+
+    assert binding.source == "previous_filing", scope
+    assert selector_modelo == relation.source_modelo, scope
+    if selector_output is not None:
+        assert selector_output == relation.source_output, scope
+    if selector_casillas is not None:
+        assert selector_casillas == (relation.source_output,), scope
+    if selector_periods is not None:
+        assert selector_periods == relation.source_periods, scope
+    assert (binding.aggregation or {}).get("op") == (relation.aggregation or {}).get("op")
 
 
 def test_formula_relation_dependencies_carry_relation_legal_basis() -> None:
