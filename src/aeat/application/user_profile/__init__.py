@@ -105,6 +105,24 @@ class DuplicateProfileCommand(BaseModel):
     target_display_name: str = Field(min_length=1, max_length=160)
 
 
+class RenameProfileCommand(BaseModel):
+    """Rename a live profile in place.
+
+    The source record is read, re-saved under ``target_profile_id``
+    (a new secure-object key), and the old key is deleted in the
+    same lifecycle service call. The orchestration layer handles
+    the parallel update of the workflow-state ``profiles`` map and
+    the plaintext active-profile pointer file when the renamed
+    profile is the active one.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    source_profile_id: str = Field(min_length=1, max_length=96)
+    target_profile_id: str = Field(min_length=1, max_length=96)
+    target_display_name: str | None = Field(default=None, max_length=160)
+
+
 # ---------------------------------------------------------------------------
 # Lifecycle results
 # ---------------------------------------------------------------------------
@@ -318,6 +336,7 @@ __all__ = [
     "ProfileValidationSeverity",
     "RegisterProfileCommand",
     "RemoveProfileCommand",
+    "RenameProfileCommand",
     "UserProfileLifecycleRepository",
     "UserProfilePortableExport",
     "UserProfileSnapshotRepository",

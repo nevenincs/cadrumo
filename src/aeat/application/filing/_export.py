@@ -435,33 +435,55 @@ def _field_value(
     binding_values: dict[tuple[str, int | None], object],
     row_index: int | None,
 ) -> object:
-    if field.kind == "literal":
-        return field.literal
-    if field.kind == "filler":
-        return ""
-    if field.kind == "casilla":
-        if field.casilla is None:
-            raise FilingExportValidationError(f"export field {field.id!r} must declare casilla")
-        return casilla_values.get(field.casilla)
-    if field.kind == "binding":
-        if field.binding is None:
-            raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
-        return binding_values.get((field.binding, row_index))
-    if field.kind == "header":
-        if field.header_key is None:
-            raise FilingExportValidationError(f"export field {field.id!r} must declare header_key")
-        value = headers.get(field.header_key.lower())
-        if field.required and (value is None or value == ""):
-            raise FilingExportValidationError(f"export header {field.header_key!r} is required")
-        return value or ""
-    if field.kind == "draft":
-        return _draft_value(field, draft)
-    if field.kind == "computed":
-        if field.computed_key == "envelope_closing_tag":
-            year, period = _period_parts(draft.period)
-            return f"</T{draft.modelo}0{year}{period}0000>"
-        raise FilingExportError(f"unsupported export computed field {field.computed_key!r}")
-    raise FilingExportError(f"unsupported export field kind {field.kind!r}")
+    match field.kind:
+        case "literal":
+            return field.literal
+        case "filler":
+            return ""
+        case "casilla":
+            return _casilla_field_value(field, casilla_values)
+        case "binding":
+            return _binding_field_value(field, binding_values, row_index)
+        case "header":
+            return _header_field_value(field, headers)
+        case "draft":
+            return _draft_value(field, draft)
+        case "computed":
+            return _computed_field_value(field, draft)
+        case _:
+            raise FilingExportError(f"unsupported export field kind {field.kind!r}")
+
+
+def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[str, object]) -> object:
+    if field.casilla is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare casilla")
+    return casilla_values.get(field.casilla)
+
+
+def _binding_field_value(
+    field: ExportFieldDefinition,
+    binding_values: dict[tuple[str, int | None], object],
+    row_index: int | None,
+) -> object:
+    if field.binding is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
+    return binding_values.get((field.binding, row_index))
+
+
+def _header_field_value(field: ExportFieldDefinition, headers: dict[str, str]) -> str:
+    if field.header_key is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare header_key")
+    value = headers.get(field.header_key.lower())
+    if field.required and (value is None or value == ""):
+        raise FilingExportValidationError(f"export header {field.header_key!r} is required")
+    return value or ""
+
+
+def _computed_field_value(field: ExportFieldDefinition, draft: FilingDraft) -> str:
+    if field.computed_key == "envelope_closing_tag":
+        year, period = _period_parts(draft.period)
+        return f"</T{draft.modelo}0{year}{period}0000>"
+    raise FilingExportError(f"unsupported export computed field {field.computed_key!r}")
 
 
 def _draft_value(field: ExportFieldDefinition, draft: FilingDraft) -> str:
