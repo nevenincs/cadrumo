@@ -118,8 +118,8 @@ new name. No aliases, no shims. The wizard backend
 the Typer registration changes.
 
 - [ ] `P05.S40` - rename `aeat config init` to `aeat config profile create NAME`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P05.S41` - rename `aeat config profile use` to `switch`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P05.S42` - rename `aeat config profile remove` to `delete`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P05.S41` - rename `aeat config profile use` to `switch`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P05.S42` - rename `aeat config profile remove` to `delete`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S43` - merge `view` and `status` into one `show` verb that defaults to the active profile and emits a readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S44` - delete `validate` and `preflight` verbs; `their schema-validation surface folds into `show`'s readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S45` - delete `get` / `set` / `unset` verbs from the operator CLI; `they re-home under `python -m aeat.diagnostics`; `src/aeat/entrypoints/cli/_config/__init__.py`.
