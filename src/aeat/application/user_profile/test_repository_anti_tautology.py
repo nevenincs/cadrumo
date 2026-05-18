@@ -30,7 +30,6 @@ from sqlalchemy import select
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base, SecureObjectRow
@@ -105,52 +104,51 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     """
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        original = _populated_record()
-        repo = UserProfileLifecycleRepository(bucket_id="probe-bucket")
-        repo.save(original)
-
-        baseline = repo.load(original.profile_id)
-        assert baseline == original
-        assert baseline.display_name == original.display_name
-
-        # Reach into the encrypted row, mutate the JSON envelope to
-        # drop the required ``display_name`` key, and let the
-        # column-level encryption re-wrap on flush.
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).limit(1)
-            row = session.execute(stmt).scalar_one()
-            decoded = json.loads(row.payload.decode("utf-8"))
-            assert "display_name" in decoded["payload"], (
-                "fixture must serialise display_name into the envelope payload "
-                "for this test to be meaningful"
-            )
-            del decoded["payload"]["display_name"]
-            row.payload = json.dumps(decoded).encode("utf-8")
-
-        regression_caught = False
-        try:
-            mutated = repo.load(original.profile_id)
-        except ValidationError:
-            regression_caught = True
-        else:
-            assert mutated != original
-            regression_caught = True
-
-        assert regression_caught, (
-            "boundary did not detect a deliberate field drop - every "
-            "roundtrip test against the user-profile boundary is suspect "
-            "and must be re-audited"
+    with provider:
+        db_path = tmp_path / "anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+
+            original = _populated_record()
+            repo = UserProfileLifecycleRepository(bucket_id="probe-bucket")
+            repo.save(original)
+
+            baseline = repo.load(original.profile_id)
+            assert baseline == original
+            assert baseline.display_name == original.display_name
+
+            # Reach into the encrypted row, mutate the JSON envelope to
+            # drop the required ``display_name`` key, and let the
+            # column-level encryption re-wrap on flush.
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).limit(1)
+                row = session.execute(stmt).scalar_one()
+                decoded = json.loads(row.payload.decode("utf-8"))
+                assert "display_name" in decoded["payload"], (
+                    "fixture must serialise display_name into the envelope payload "
+                    "for this test to be meaningful"
+                )
+                del decoded["payload"]["display_name"]
+                row.payload = json.dumps(decoded).encode("utf-8")
+
+            regression_caught = False
+            try:
+                mutated = repo.load(original.profile_id)
+            except ValidationError:
+                regression_caught = True
+            else:
+                assert mutated != original
+                regression_caught = True
+
+            assert regression_caught, (
+                "boundary did not detect a deliberate field drop - every "
+                "roundtrip test against the user-profile boundary is suspect "
+                "and must be re-audited"
+            )
+        finally:
+            engine.dispose()

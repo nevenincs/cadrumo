@@ -25,7 +25,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -93,50 +92,49 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
     """UserProfileRecord + UserProfileSnapshot roundtrip through both repos."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "user-profile-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        bucket_id = "profile-bucket-A"
-        lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id)
-        snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id)
-
-        original_record = _populated_record()
-        lifecycle.save(original_record)
-        loaded_record = lifecycle.load(original_record.profile_id)
-
-        assert loaded_record == original_record
-        assert len(loaded_record.facts) == 5
-        assert tuple(f.path for f in loaded_record.facts) == (
-            "identity.given_name",
-            "identity.family_name",
-            "residency.municipality_code",
-            "vat.recargo_equivalencia.applied",
-            "irpf.minimum_personal_amount",
+    with provider:
+        db_path = tmp_path / "user-profile-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        # The Decimal fact survives JSON round-trip strictly.
-        assert loaded_record.facts[-1].value == Decimal("5550.00")
-        assert loaded_record.facts[-1].valid_from == date(2024, 1, 1)
-        assert loaded_record.schema_version == 2
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        original_snapshot = UserProfileSnapshot.from_profile(loaded_record)
-        snapshots.save(original_snapshot)
-        loaded_snapshot = snapshots.load(original_snapshot.snapshot_id)
+            bucket_id = "profile-bucket-A"
+            lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id)
+            snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id)
 
-        assert loaded_snapshot == original_snapshot
-        # The canonical hash binds the snapshot identity to its facts;
-        # a silent fact drop on save would break it.
-        assert loaded_snapshot.canonical_hash == original_snapshot.canonical_hash
-        assert len(loaded_snapshot.facts) == 5
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            original_record = _populated_record()
+            lifecycle.save(original_record)
+            loaded_record = lifecycle.load(original_record.profile_id)
+
+            assert loaded_record == original_record
+            assert len(loaded_record.facts) == 5
+            assert tuple(f.path for f in loaded_record.facts) == (
+                "identity.given_name",
+                "identity.family_name",
+                "residency.municipality_code",
+                "vat.recargo_equivalencia.applied",
+                "irpf.minimum_personal_amount",
+            )
+            # The Decimal fact survives JSON round-trip strictly.
+            assert loaded_record.facts[-1].value == Decimal("5550.00")
+            assert loaded_record.facts[-1].valid_from == date(2024, 1, 1)
+            assert loaded_record.schema_version == 2
+
+            original_snapshot = UserProfileSnapshot.from_profile(loaded_record)
+            snapshots.save(original_snapshot)
+            loaded_snapshot = snapshots.load(original_snapshot.snapshot_id)
+
+            assert loaded_snapshot == original_snapshot
+            # The canonical hash binds the snapshot identity to its facts;
+            # a silent fact drop on save would break it.
+            assert loaded_snapshot.canonical_hash == original_snapshot.canonical_hash
+            assert len(loaded_snapshot.facts) == 5
+        finally:
+            engine.dispose()
 
 
 def test_user_profile_active_with_removed_at_surfaces_at_load(
@@ -172,58 +170,57 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     from ._repository import USER_PROFILE_VALUE_NAMESPACE
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "user-profile-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        objects = SecureObjectRepository(engine=engine)
-        bucket_id = "profile-bucket-A"
-        lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
-        record = _populated_record()
-        lifecycle.save(record)
-
-        with session_scope(engine) as session:
-            # Fetch all rows then filter by namespace in Python; the
-            # value namespace carries exactly one row in this fixture.
-            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-            value_rows = [r for r in all_rows if r.namespace == USER_PROFILE_VALUE_NAMESPACE]
-            assert len(value_rows) == 1, (
-                f"expected one value-namespace row, found {len(value_rows)} "
-                f"(total rows in db: {len(all_rows)}; namespaces: "
-                f"{sorted({r.namespace for r in all_rows})})"
-            )
-            row = value_rows[0]
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            payload = envelope["payload"]
-            assert payload["status"] == "active", (
-                "fixture must persist ACTIVE status for this proof "
-                "test to be meaningful"
-            )
-            # Stamp removed_at while keeping ACTIVE status. The
-            # lifecycle invariant must trip on load.
-            payload["removed_at"] = "2024-12-15T10:00:00+00:00"
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        regression_caught = False
-        try:
-            UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).load(
-                record.profile_id
-            )
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: stamping removed_at on an "
-            "ACTIVE record did NOT surface on load. The user-profile "
-            "lifecycle boundary is tautological and the state machine "
-            "is not actually enforced post-persistence."
+    with provider:
+        db_path = tmp_path / "user-profile-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            objects = SecureObjectRepository(engine=engine)
+            bucket_id = "profile-bucket-A"
+            lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
+            record = _populated_record()
+            lifecycle.save(record)
+
+            with session_scope(engine) as session:
+                # Fetch all rows then filter by namespace in Python; the
+                # value namespace carries exactly one row in this fixture.
+                all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+                value_rows = [r for r in all_rows if r.namespace == USER_PROFILE_VALUE_NAMESPACE]
+                assert len(value_rows) == 1, (
+                    f"expected one value-namespace row, found {len(value_rows)} "
+                    f"(total rows in db: {len(all_rows)}; namespaces: "
+                    f"{sorted({r.namespace for r in all_rows})})"
+                )
+                row = value_rows[0]
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                payload = envelope["payload"]
+                assert payload["status"] == "active", (
+                    "fixture must persist ACTIVE status for this proof "
+                    "test to be meaningful"
+                )
+                # Stamp removed_at while keeping ACTIVE status. The
+                # lifecycle invariant must trip on load.
+                payload["removed_at"] = "2024-12-15T10:00:00+00:00"
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            regression_caught = False
+            try:
+                UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).load(
+                    record.profile_id
+                )
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: stamping removed_at on an "
+                "ACTIVE record did NOT surface on load. The user-profile "
+                "lifecycle boundary is tautological and the state machine "
+                "is not actually enforced post-persistence."
+            )
+        finally:
+            engine.dispose()
 
 
 def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
@@ -259,61 +256,60 @@ def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
     from ._repository import USER_PROFILE_SNAPSHOT_NAMESPACE
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "user-profile-snapshot-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        objects = SecureObjectRepository(engine=engine)
-        bucket_id = "profile-bucket-A"
-        lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
-        snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=objects)
-        record = _populated_record()
-        lifecycle.save(record)
-        snapshot = UserProfileSnapshot.from_profile(record)
-        snapshots.save(snapshot)
-
-        with session_scope(engine) as session:
-            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-            snapshot_rows = [
-                r for r in all_rows if r.namespace == USER_PROFILE_SNAPSHOT_NAMESPACE
-            ]
-            assert len(snapshot_rows) == 1
-            row = snapshot_rows[0]
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            payload = envelope["payload"]
-            assert payload["facts"], (
-                "fixture must serialise at least one fact onto the "
-                "snapshot for this proof test to be meaningful"
-            )
-            # Mutate the first fact's value while leaving canonical_hash
-            # untouched. The model_validator's derived-hash check
-            # must reject the rehydrated record.
-            first_fact = payload["facts"][0]
-            original_value = first_fact.get("value")
-            mutated_value = (
-                "tampered-string"
-                if isinstance(original_value, str) and original_value != "tampered-string"
-                else "drift-canary"
-            )
-            first_fact["value"] = mutated_value
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        regression_caught = False
-        try:
-            snapshots.load(snapshot.snapshot_id)
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: mutating a fact without "
-            "recomputing canonical_hash did NOT surface on load. The "
-            "user-profile snapshot's content-addressing guarantee is "
-            "tautological — the persisted hash no longer proves the "
-            "persisted facts."
+    with provider:
+        db_path = tmp_path / "user-profile-snapshot-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            objects = SecureObjectRepository(engine=engine)
+            bucket_id = "profile-bucket-A"
+            lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
+            snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=objects)
+            record = _populated_record()
+            lifecycle.save(record)
+            snapshot = UserProfileSnapshot.from_profile(record)
+            snapshots.save(snapshot)
+
+            with session_scope(engine) as session:
+                all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+                snapshot_rows = [
+                    r for r in all_rows if r.namespace == USER_PROFILE_SNAPSHOT_NAMESPACE
+                ]
+                assert len(snapshot_rows) == 1
+                row = snapshot_rows[0]
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                payload = envelope["payload"]
+                assert payload["facts"], (
+                    "fixture must serialise at least one fact onto the "
+                    "snapshot for this proof test to be meaningful"
+                )
+                # Mutate the first fact's value while leaving canonical_hash
+                # untouched. The model_validator's derived-hash check
+                # must reject the rehydrated record.
+                first_fact = payload["facts"][0]
+                original_value = first_fact.get("value")
+                mutated_value = (
+                    "tampered-string"
+                    if isinstance(original_value, str) and original_value != "tampered-string"
+                    else "drift-canary"
+                )
+                first_fact["value"] = mutated_value
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            regression_caught = False
+            try:
+                snapshots.load(snapshot.snapshot_id)
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: mutating a fact without "
+                "recomputing canonical_hash did NOT surface on load. The "
+                "user-profile snapshot's content-addressing guarantee is "
+                "tautological — the persisted hash no longer proves the "
+                "persisted facts."
+            )
+        finally:
+            engine.dispose()
