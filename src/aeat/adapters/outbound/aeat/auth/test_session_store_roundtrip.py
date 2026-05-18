@@ -22,10 +22,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import Settings
-from ....persistence.storage import (
-    EphemeralMasterKeyProvider,
-    override_master_key_provider,
-)
+from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql import SecureObjectRepository
 from ....persistence.storage.sql._orm import Base
 from ....persistence.storage.sql.engine import create_engine_from_settings
@@ -72,50 +69,49 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
     """A saved browser session loads back with every key + SHA preserved."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "session-roundtrip.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        logical_path = Path("/profile/active/aeat-session")
-        storage_state = _playwright_shaped_storage_state()
-        metadata = {
-            "certificate_thumbprint": "AA:BB:CC:DD:EE:FF:00:11:22:33",
-            "certificate_subject": "CN=AEAT Test User",
-            "handshake_at": datetime.now(UTC).isoformat(),
-            "renewal_count": 0,
-        }
-        sha_at_save = _session_store.storage_state_sha256(storage_state)
-
-        _session_store.save(
-            logical_path,
-            storage_state=storage_state,
-            metadata=metadata,
+    with provider:
+        db_path = tmp_path / "session-roundtrip.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        loaded = _session_store.load(logical_path)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        assert loaded is not None
-        # Strict equality on the typed envelope: schema_version,
-        # storage_state, metadata, written_at must all survive.
-        assert loaded.storage_state == storage_state
-        assert loaded.metadata == metadata
-        # Cookie list preserves its inner shape: lists round-trip
-        # through JSON as lists (not tuples), so the assertion
-        # checks list identity rather than tuple.
-        assert isinstance(loaded.storage_state["cookies"], list)
-        cookies = loaded.storage_state["cookies"]
-        assert isinstance(cookies, list)
-        assert cookies[0]["name"] == "PRESTACIONES_SESSION"
-        assert cookies[0]["httpOnly"] is True
-        assert cookies[0]["expires"] == 1893456000
-        # The SHA computed on the loaded payload must match the
-        # SHA computed at save time. If column-encryption mangled
-        # any byte, this assertion fails before any field check.
-        assert loaded.storage_state_sha256 == sha_at_save
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            logical_path = Path("/profile/active/aeat-session")
+            storage_state = _playwright_shaped_storage_state()
+            metadata = {
+                "certificate_thumbprint": "AA:BB:CC:DD:EE:FF:00:11:22:33",
+                "certificate_subject": "CN=AEAT Test User",
+                "handshake_at": datetime.now(UTC).isoformat(),
+                "renewal_count": 0,
+            }
+            sha_at_save = _session_store.storage_state_sha256(storage_state)
+
+            _session_store.save(
+                logical_path,
+                storage_state=storage_state,
+                metadata=metadata,
+            )
+            loaded = _session_store.load(logical_path)
+
+            assert loaded is not None
+            # Strict equality on the typed envelope: schema_version,
+            # storage_state, metadata, written_at must all survive.
+            assert loaded.storage_state == storage_state
+            assert loaded.metadata == metadata
+            # Cookie list preserves its inner shape: lists round-trip
+            # through JSON as lists (not tuples), so the assertion
+            # checks list identity rather than tuple.
+            assert isinstance(loaded.storage_state["cookies"], list)
+            cookies = loaded.storage_state["cookies"]
+            assert isinstance(cookies, list)
+            assert cookies[0]["name"] == "PRESTACIONES_SESSION"
+            assert cookies[0]["httpOnly"] is True
+            assert cookies[0]["expires"] == 1893456000
+            # The SHA computed on the loaded payload must match the
+            # SHA computed at save time. If column-encryption mangled
+            # any byte, this assertion fails before any field check.
+            assert loaded.storage_state_sha256 == sha_at_save
+        finally:
+            engine.dispose()
