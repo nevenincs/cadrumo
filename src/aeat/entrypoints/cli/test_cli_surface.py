@@ -15,6 +15,7 @@ state envelope writes through the in-process plain-bytes backend.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -383,16 +384,75 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     _assert_ledger_review_filtered_by_period_returns_empty(transaction_id)
 
 
-def test_app_ledger_lifecycle_attach_remove_reset_and_export_use_backend_bucket(
+@dataclass(frozen=True, slots=True)
+class _LedgerLifecycleOutcome:
+    """Bundle returned by _drive_ledger_lifecycle_round_trip.
+
+    Captures every CLI payload + side-effect path that the focused
+    tests inspect: the attach result, the archive / stash state
+    transitions, the remove dry-run + final delete, the export
+    payload + path, and the reset payload.
+    """
+
+    purchase_invoice_evidence_id: str
+    attached_payload: dict[str, object]
+    archived_payload: dict[str, object]
+    stashed_payload: dict[str, object]
+    dry_remove_payload: dict[str, object]
+    refused_remove_exit_code: int
+    removed_payload: dict[str, object]
+    export_payload: dict[str, object]
+    export_path: Path
+    dry_reset_payload: dict[str, object]
+    refused_reset_exit_code: int
+    reset_payload: dict[str, object]
+
+
+def _drive_ledger_lifecycle_round_trip(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-) -> None:
+) -> _LedgerLifecycleOutcome:
+    """Drive the lifecycle round-trip: attach -> archive -> stash -> remove -> export -> reset.
+
+    Three rows are created so the export and reset surfaces see a
+    non-trivial inventory (one attached + one archived + one
+    stashed; the remove and reset paths exercise the final two
+    inactive rows).
+    """
     _isolate(monkeypatch, tmp_path)
     init = _invoke(
         ["config", "init", "--quiet", "--profile", "operator", "--tax-id", "12345678Z", "--activity", "Test"]
     )
     assert init.exit_code == 0, init.output
 
+    purchase_evidence_id = _seed_purchase_invoice_evidence()
+
+    attached = _ledger_lifecycle_attach(purchase_invoice_evidence_id=purchase_evidence_id)
+    archived = _ledger_lifecycle_lifecycle_transition("archive", reason="wrong account", key="cli-archive-row")
+    stashed = _ledger_lifecycle_lifecycle_transition("stash", reason="needs review", key="cli-stash-row")
+
+    remove_outcome = _ledger_lifecycle_remove()
+    export_outcome = _ledger_lifecycle_export(tmp_path)
+    reset_outcome = _ledger_lifecycle_reset()
+
+    return _LedgerLifecycleOutcome(
+        purchase_invoice_evidence_id=purchase_evidence_id,
+        attached_payload=attached,
+        archived_payload=archived,
+        stashed_payload=stashed,
+        dry_remove_payload=remove_outcome[0],
+        refused_remove_exit_code=remove_outcome[1],
+        removed_payload=remove_outcome[2],
+        export_payload=export_outcome[0],
+        export_path=export_outcome[1],
+        dry_reset_payload=reset_outcome[0],
+        refused_reset_exit_code=reset_outcome[1],
+        reset_payload=reset_outcome[2],
+    )
+
+
+def _seed_purchase_invoice_evidence() -> str:
+    """Persist one RECEIVED purchase invoice and return its id."""
     from aeat.domain.invoices import (
         Invoice,
         InvoiceCatalogue,
@@ -429,107 +489,173 @@ def test_app_ledger_lifecycle_attach_remove_reset_and_export_use_backend_bucket(
         }
     )
     InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
+    return purchase_evidence.invoice_id
 
-    attach_row = _create_manual_ledger_row("attach evidence row", amount="-121.00", key="cli-attach-row")
+
+def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, object]:
+    """Create a manual ledger row and attach the purchase-invoice evidence reference."""
+    row = _create_manual_ledger_row("attach evidence row", amount="-121.00", key="cli-attach-row")
     attached = _invoke(
         [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "attach",
-            "--id",
-            str(attach_row["transaction_id"]),
-            "--purchase-invoice-evidence-id",
-            purchase_evidence.invoice_id,
+            "--format", "json",
+            "app", "ledger", "attach",
+            "--id", str(row["transaction_id"]),
+            "--purchase-invoice-evidence-id", purchase_invoice_evidence_id,
         ]
-    )
+    )  # fmt: skip
     assert attached.exit_code == 0, attached.output
-    attached_payload = json.loads(attached.output)
-    assert attached_payload["transaction"]["purchase_invoice_evidence_id"] == purchase_evidence.invoice_id
-    assert attached_payload["bucket_event_ids"]
+    return json.loads(attached.output)
 
-    archive_row = _create_manual_ledger_row("archive row", key="cli-archive-row")
-    archived = _invoke(
+
+def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) -> dict[str, object]:
+    """Drive one ``app ledger <verb> --id ... --reason ... --yes`` lifecycle transition."""
+    row = _create_manual_ledger_row(f"{verb} row", key=key)
+    result = _invoke(
         [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "archive",
-            "--id",
-            str(archive_row["transaction_id"]),
-            "--reason",
-            "wrong account",
+            "--format", "json",
+            "app", "ledger", verb,
+            "--id", str(row["transaction_id"]),
+            "--reason", reason,
             "--yes",
         ]
-    )
-    assert archived.exit_code == 0, archived.output
-    assert json.loads(archived.output)["transaction"]["lifecycle_state"] == "ARCHIVED"
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    return json.loads(result.output)
 
-    stash_row = _create_manual_ledger_row("stash row", key="cli-stash-row")
-    stashed = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "stash",
-            "--id",
-            str(stash_row["transaction_id"]),
-            "--reason",
-            "needs review",
-            "--yes",
-        ]
-    )
-    assert stashed.exit_code == 0, stashed.output
-    assert json.loads(stashed.output)["transaction"]["lifecycle_state"] == "STASHED"
 
+def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object]]:
+    """Drive the three-step remove flow: --dry-run, refused (no --yes), confirmed --yes."""
     remove_row = _create_manual_ledger_row("remove row", key="cli-remove-row")
-    dry_remove = _invoke(
+    dry = _invoke(
         ["--format", "json", "app", "ledger", "remove", "--id", str(remove_row["transaction_id"]), "--dry-run"]
     )
-    assert dry_remove.exit_code == 0, dry_remove.output
-    assert json.loads(dry_remove.output)["dry_run"] is True
-    refused_remove = _invoke(["--format", "json", "app", "ledger", "remove", "--id", str(remove_row["transaction_id"])])
-    assert refused_remove.exit_code != 0
-    removed = _invoke(
+    assert dry.exit_code == 0, dry.output
+    refused = _invoke(["--format", "json", "app", "ledger", "remove", "--id", str(remove_row["transaction_id"])])
+    confirmed = _invoke(
         ["--format", "json", "app", "ledger", "remove", "--id", str(remove_row["transaction_id"]), "--yes"]
     )
-    assert removed.exit_code == 0, removed.output
-    assert json.loads(removed.output)["removed"] is True
+    assert confirmed.exit_code == 0, confirmed.output
+    return json.loads(dry.output), refused.exit_code, json.loads(confirmed.output)
 
+
+def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
+    """Drive the ledger export to a JSONL file under ``tmp_path``."""
     export_path = tmp_path / "ledger-export.jsonl"
     exported = _invoke(
         [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "export",
-            "--output",
-            str(export_path),
-            "--export-format",
-            "jsonl",
+            "--format", "json",
+            "app", "ledger", "export",
+            "--output", str(export_path),
+            "--export-format", "jsonl",
             "--include-inactive",
         ]
-    )
+    )  # fmt: skip
     assert exported.exit_code == 0, exported.output
-    export_payload = json.loads(exported.output)
-    assert export_payload["bucket_id"] == "operator"
-    assert export_payload["row_count"] == 3
-    assert export_path.read_text(encoding="utf-8").count("\n") == 3
+    return json.loads(exported.output), export_path
 
-    dry_reset = _invoke(["--format", "json", "app", "ledger", "reset", "--dry-run"])
-    assert dry_reset.exit_code == 0, dry_reset.output
-    assert json.loads(dry_reset.output)["dry_run"] is True
-    refused_reset = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup"])
-    assert refused_reset.exit_code != 0
-    reset = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup", "--yes"])
-    assert reset.exit_code == 0, reset.output
-    reset_payload = json.loads(reset.output)
-    assert reset_payload["reset"] is True
-    assert len(reset_payload["removed_transaction_ids"]) == 3
+
+def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]]:
+    """Drive the three-step reset flow: --dry-run, refused (no --yes), confirmed --yes."""
+    dry = _invoke(["--format", "json", "app", "ledger", "reset", "--dry-run"])
+    assert dry.exit_code == 0, dry.output
+    refused = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup"])
+    confirmed = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup", "--yes"])
+    assert confirmed.exit_code == 0, confirmed.output
+    return json.loads(dry.output), refused.exit_code, json.loads(confirmed.output)
+
+
+def test_app_ledger_lifecycle_attach_records_purchase_invoice_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    transaction = outcome.attached_payload["transaction"]
+    assert transaction["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
+    assert outcome.attached_payload["bucket_event_ids"]
+
+
+_LIFECYCLE_TRANSITION_EXPECTATIONS = (
+    ("archived_payload", "ARCHIVED"),
+    ("stashed_payload", "STASHED"),
+)
+
+
+@pytest.mark.parametrize(("attribute", "expected_state"), _LIFECYCLE_TRANSITION_EXPECTATIONS)
+def test_app_ledger_lifecycle_transition_advances_lifecycle_state(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    attribute: str,
+    expected_state: str,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    payload = getattr(outcome, attribute)
+    assert payload["transaction"]["lifecycle_state"] == expected_state
+
+
+def test_app_ledger_lifecycle_remove_dry_run_marks_payload(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    assert outcome.dry_remove_payload["dry_run"] is True
+
+
+def test_app_ledger_lifecycle_remove_requires_yes_flag(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    assert outcome.refused_remove_exit_code != 0
+
+
+def test_app_ledger_lifecycle_remove_with_yes_deletes_row(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    assert outcome.removed_payload["removed"] is True
+
+
+def test_app_ledger_lifecycle_export_targets_active_profile_bucket(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    assert outcome.export_payload["bucket_id"] == "operator"
+
+
+def test_app_ledger_lifecycle_export_records_three_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    assert outcome.export_payload["row_count"] == 3
+    assert outcome.export_path.read_text(encoding="utf-8").count("\n") == 3
+
+
+def test_app_ledger_lifecycle_reset_dry_run_marks_payload(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    assert outcome.dry_reset_payload["dry_run"] is True
+
+
+def test_app_ledger_lifecycle_reset_requires_yes_flag(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    assert outcome.refused_reset_exit_code != 0
+
+
+def test_app_ledger_lifecycle_reset_with_yes_clears_three_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    assert outcome.reset_payload["reset"] is True
+    assert len(outcome.reset_payload["removed_transaction_ids"]) == 3
 
 
 def test_app_ledger_import_reimport_review_round_trips_state(
