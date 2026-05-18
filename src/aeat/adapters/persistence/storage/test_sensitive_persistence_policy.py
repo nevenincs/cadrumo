@@ -160,12 +160,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "src/aeat/domain/calculations/registry/_parity_tapes.py",
         "save_parity_scenario",
         "path.write_text",
-    ): "developer registry parity tape generation",
+    ): "registry parity tape generation",
     (
         "src/aeat/domain/calculations/registry/_parity_tapes.py",
         "save_parity_tape",
         "path.write_text",
-    ): "developer registry parity tape generation",
+    ): "registry parity tape generation",
     (
         "src/aeat/domain/manuals/_fetch.py",
         "_stream_to_file",
@@ -180,12 +180,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "src/aeat/application/registry/__init__.py",
         "verify_registry_workbooks",
         "output.write_text",
-    ): "explicit developer registry verification report export through the registry service",
+    ): "registry verification report export through the registry service",
     (
         "src/aeat/locales/manager.py",
         "scaffold",
         "open",
-    ): "developer translation scaffold generation",
+    ): "translation scaffold generation",
 }
 
 
