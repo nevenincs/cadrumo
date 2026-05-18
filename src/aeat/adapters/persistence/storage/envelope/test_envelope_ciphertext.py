@@ -30,7 +30,6 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.classification import SensitivityClass
-from ..crypto import override_master_key_provider
 from ..errors import ClassificationError, DecryptionError
 from ..master_key import EphemeralMasterKeyProvider
 from . import CipherEnvelope, Envelope, load_encrypted_envelope, save_encrypted_envelope
@@ -58,11 +57,8 @@ def provider() -> EphemeralMasterKeyProvider:
 
 @pytest.fixture(autouse=True)
 def _patch_master_key(provider: EphemeralMasterKeyProvider) -> Iterator[None]:
-    override_master_key_provider(provider)
-    try:
+    with provider:
         yield
-    finally:
-        override_master_key_provider(None)
 
 
 def _build_envelope(classification: SensitivityClass = SensitivityClass.FINANCIAL) -> Envelope[_SamplePayload]:

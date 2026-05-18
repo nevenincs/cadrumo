@@ -30,7 +30,7 @@ import pytest
 from ....core.config import Settings
 from ....domain.attachments._enums import AttachmentKind, AttachmentSource
 from ....domain.attachments._models import Attachment
-from . import EphemeralMasterKeyProvider, override_master_key_provider
+from . import EphemeralMasterKeyProvider
 from .attachment import AttachmentStore
 from .sql import SecureObjectRepository
 from .sql._orm import Base
@@ -72,49 +72,48 @@ def test_attachment_blob_and_manifest_round_trip(tmp_path: Path) -> None:
     """Bytes survive put_bytes -> read_bytes; manifest survives write -> load."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "attachment-roundtrip.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        objects = SecureObjectRepository(engine=engine)
-        store = AttachmentStore(objects=objects)
+    with provider:
+        db_path = tmp_path / "attachment-roundtrip.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            objects = SecureObjectRepository(engine=engine)
+            store = AttachmentStore(objects=objects)
 
-        # --- Blob round-trip ---------------------------------------------
-        payload = b"%PDF-1.4\n%attachment-store-roundtrip-canary\n" + b"\x00" * 64
-        digest = store.put_bytes(payload)
+            # --- Blob round-trip ---------------------------------------------
+            payload = b"%PDF-1.4\n%attachment-store-roundtrip-canary\n" + b"\x00" * 64
+            digest = store.put_bytes(payload)
 
-        # Content-addressing invariant: the returned digest is the
-        # SHA-256 of the input bytes. A regression in the put path
-        # would return a digest that did not match.
-        assert digest == hashlib.sha256(payload).hexdigest()
+            # Content-addressing invariant: the returned digest is the
+            # SHA-256 of the input bytes. A regression in the put path
+            # would return a digest that did not match.
+            assert digest == hashlib.sha256(payload).hexdigest()
 
-        read_back = store.read_bytes(digest)
-        assert read_back == payload
+            read_back = store.read_bytes(digest)
+            assert read_back == payload
 
-        # verify_blob re-hashes the stored bytes; a mangled column
-        # would surface here as a digest mismatch raised by the
-        # store, not as a silent corruption on read.
-        store.verify_blob(digest)
+            # verify_blob re-hashes the stored bytes; a mangled column
+            # would surface here as a digest mismatch raised by the
+            # store, not as a silent corruption on read.
+            store.verify_blob(digest)
 
-        # --- Manifest round-trip -----------------------------------------
-        attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
-        store.write_manifest(attachment)
-        loaded = store.load_manifest(attachment.attachment_id)
+            # --- Manifest round-trip -----------------------------------------
+            attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
+            store.write_manifest(attachment)
+            loaded = store.load_manifest(attachment.attachment_id)
 
-        assert loaded == attachment
-        # Per-field witnesses for the iterable / optional fields most
-        # likely to silently drop in a regression.
-        assert loaded.linked_transaction_ids == ("tx-001", "tx-002")
-        assert loaded.linked_invoice_ids == ("inv-2025-001",)
-        assert loaded.metadata == {"vendor": "ACME SL", "currency": "EUR"}
-        assert loaded.captured_by == "cli/aeat"
-        assert loaded.bytes_size == len(payload)
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            assert loaded == attachment
+            # Per-field witnesses for the iterable / optional fields most
+            # likely to silently drop in a regression.
+            assert loaded.linked_transaction_ids == ("tx-001", "tx-002")
+            assert loaded.linked_invoice_ids == ("inv-2025-001",)
+            assert loaded.metadata == {"vendor": "ACME SL", "currency": "EUR"}
+            assert loaded.captured_by == "cli/aeat"
+            assert loaded.bytes_size == len(payload)
+        finally:
+            engine.dispose()
 
 
 def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
@@ -148,52 +147,51 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
     from .sql.session import session_scope
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "attachment-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-        store = AttachmentStore()
-        payload = b"sample attachment body for anti-tautology proof"
-        digest = store.put_bytes(payload)
-        attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
-        store.write_manifest(attachment)
-
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
-                SecureObjectRow.object_key == attachment.attachment_id,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            manifest = envelope["payload"]
-            assert manifest["sha256"] == manifest["attachment_id"], (
-                "fixture must persist matching sha256 + attachment_id "
-                "for this proof test to be meaningful"
-            )
-            # Flip sha256 to a different digest without touching the
-            # attachment_id. The model_validator must trip on the
-            # content-addressing mismatch.
-            tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
-            manifest["sha256"] = tampered_digest
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        regression_caught = False
-        try:
-            store.load_manifest(attachment.attachment_id)
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: mutating sha256 without "
-            "rewriting attachment_id did NOT surface on load. The "
-            "attachment store's content-addressing guarantee is "
-            "tautological and bytes-on-disk no longer prove the "
-            "manifest's identity."
+    with provider:
+        db_path = tmp_path / "attachment-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            store = AttachmentStore()
+            payload = b"sample attachment body for anti-tautology proof"
+            digest = store.put_bytes(payload)
+            attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
+            store.write_manifest(attachment)
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+                    SecureObjectRow.object_key == attachment.attachment_id,
+                )
+                row = session.execute(stmt).scalar_one()
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                manifest = envelope["payload"]
+                assert manifest["sha256"] == manifest["attachment_id"], (
+                    "fixture must persist matching sha256 + attachment_id "
+                    "for this proof test to be meaningful"
+                )
+                # Flip sha256 to a different digest without touching the
+                # attachment_id. The model_validator must trip on the
+                # content-addressing mismatch.
+                tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
+                manifest["sha256"] = tampered_digest
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            regression_caught = False
+            try:
+                store.load_manifest(attachment.attachment_id)
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: mutating sha256 without "
+                "rewriting attachment_id did NOT surface on load. The "
+                "attachment store's content-addressing guarantee is "
+                "tautological and bytes-on-disk no longer prove the "
+                "manifest's identity."
+            )
+        finally:
+            engine.dispose()

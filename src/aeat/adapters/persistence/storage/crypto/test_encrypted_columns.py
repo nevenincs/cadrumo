@@ -19,7 +19,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from ..errors import DecryptionError
 from ..master_key import EphemeralMasterKeyProvider
-from . import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedString, HashedLookup, override_master_key_provider
+from . import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedString, HashedLookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -48,11 +48,8 @@ def fixed_master_key() -> bytes:
 @pytest.fixture(autouse=True)
 def _patch_master_key(fixed_master_key: bytes) -> Iterator[None]:
     """Inject a deterministic master key for every test in this module."""
-    override_master_key_provider(EphemeralMasterKeyProvider(key=fixed_master_key))
-    try:
+    with EphemeralMasterKeyProvider(key=fixed_master_key):
         yield
-    finally:
-        override_master_key_provider(None)
 
 
 @pytest.fixture
@@ -253,8 +250,8 @@ class TestHashedLookup:
     def test_digest_changes_with_master_key(self) -> None:
         digest_a = HashedLookup.compute("payload")
         # Switch to a different master key; the digest must change.
-        override_master_key_provider(EphemeralMasterKeyProvider())
-        digest_b = HashedLookup.compute("payload")
+        with EphemeralMasterKeyProvider():
+            digest_b = HashedLookup.compute("payload")
         assert digest_a != digest_b
 
 

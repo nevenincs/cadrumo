@@ -20,10 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ...persistence.storage import (
-    EphemeralMasterKeyProvider,
-    override_master_key_provider,
-)
+from ...persistence.storage import EphemeralMasterKeyProvider
 from ...persistence.storage.sql import SecureObjectRepository
 from ...persistence.storage.sql._orm import Base
 from ...persistence.storage.sql.engine import create_engine_from_settings
@@ -93,42 +90,41 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(
     """InventoryLedgerDocument roundtrips strictly with non-default movements + layers."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "inventory-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        repo = InventoryLedgerRepository()
-        ledger = _populated_ledger()
-        original_doc = InventoryLedgerDocument(ledgers=(ledger,))
-        repo.save(original_doc)
-        loaded_doc = repo.load()
-
-        assert loaded_doc == original_doc
-        loaded_ledger = loaded_doc.ledgers[0]
-        assert len(loaded_ledger.opening_layers) == 2
-        assert tuple(layer.sku for layer in loaded_ledger.opening_layers) == (
-            "widget-blue",
-            "widget-red",
+    with provider:
+        db_path = tmp_path / "inventory-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        assert len(loaded_ledger.period_movements) == 2
-        assert tuple(m.kind for m in loaded_ledger.period_movements) == (
-            MovementKind.PURCHASE,
-            MovementKind.COGS,
-        )
-        # VAT decomposition is FINANCIAL-class identity; pin the
-        # explicit vat_amount survives un-quantised.
-        purchase = loaded_ledger.period_movements[0]
-        assert purchase.vat_amount == Decimal("173.25")
-        assert purchase.deductible_vat_ratio == Decimal("1.00")
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+
+            repo = InventoryLedgerRepository()
+            ledger = _populated_ledger()
+            original_doc = InventoryLedgerDocument(ledgers=(ledger,))
+            repo.save(original_doc)
+            loaded_doc = repo.load()
+
+            assert loaded_doc == original_doc
+            loaded_ledger = loaded_doc.ledgers[0]
+            assert len(loaded_ledger.opening_layers) == 2
+            assert tuple(layer.sku for layer in loaded_ledger.opening_layers) == (
+                "widget-blue",
+                "widget-red",
+            )
+            assert len(loaded_ledger.period_movements) == 2
+            assert tuple(m.kind for m in loaded_ledger.period_movements) == (
+                MovementKind.PURCHASE,
+                MovementKind.COGS,
+            )
+            # VAT decomposition is FINANCIAL-class identity; pin the
+            # explicit vat_amount survives un-quantised.
+            purchase = loaded_ledger.period_movements[0]
+            assert purchase.vat_amount == Decimal("173.25")
+            assert purchase.deductible_vat_ratio == Decimal("1.00")
+        finally:
+            engine.dispose()
 
 
 def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
@@ -163,47 +159,46 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
     from .inventory import _INVENTORY_NAMESPACE, _LEDGER_OBJECT_KEY
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "inventory-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-        repo = InventoryLedgerRepository()
-        ledger = _populated_ledger()
-        repo.save(InventoryLedgerDocument(ledgers=(ledger,)))
-
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _INVENTORY_NAMESPACE,
-                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
-            )
-            row = session.execute(stmt).scalar_one()
-            document = _json.loads(row.payload.decode("utf-8"))
-            ledger_dict = document["ledgers"][0]
-            assert ledger_dict.get("opening_stock"), (
-                "fixture must serialise opening_stock onto the ledger "
-                "for this proof test to be meaningful"
-            )
-            # Halve the opening_stock so the layer-balance check fails
-            # (sum of layers no longer matches the declared aggregate).
-            ledger_dict["opening_stock"] = "750.00"
-            row.payload = _json.dumps(document).encode("utf-8")
-
-        regression_caught = False
-        try:
-            repo.load()
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: corrupting opening_stock to "
-            "break the layer-balance check did NOT surface on load. "
-            "The inventory ledger boundary is tautological and every "
-            "ledger roundtrip in the suite is suspect."
+    with provider:
+        db_path = tmp_path / "inventory-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            repo = InventoryLedgerRepository()
+            ledger = _populated_ledger()
+            repo.save(InventoryLedgerDocument(ledgers=(ledger,)))
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _INVENTORY_NAMESPACE,
+                    SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+                )
+                row = session.execute(stmt).scalar_one()
+                document = _json.loads(row.payload.decode("utf-8"))
+                ledger_dict = document["ledgers"][0]
+                assert ledger_dict.get("opening_stock"), (
+                    "fixture must serialise opening_stock onto the ledger "
+                    "for this proof test to be meaningful"
+                )
+                # Halve the opening_stock so the layer-balance check fails
+                # (sum of layers no longer matches the declared aggregate).
+                ledger_dict["opening_stock"] = "750.00"
+                row.payload = _json.dumps(document).encode("utf-8")
+
+            regression_caught = False
+            try:
+                repo.load()
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: corrupting opening_stock to "
+                "break the layer-balance check did NOT surface on load. "
+                "The inventory ledger boundary is tautological and every "
+                "ledger roundtrip in the suite is suspect."
+            )
+        finally:
+            engine.dispose()
