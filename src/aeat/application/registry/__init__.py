@@ -241,6 +241,32 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
     )
 
 
+def _typed_oracle_environment(environment: str) -> OracleEnvironment:
+    """Validate ``environment`` against :data:`OracleEnvironment` literally.
+
+    Replaces the previous ``cast(OracleEnvironment, environment)``
+    pattern after an untyped string check. The match statement
+    returns each Literal arm verbatim so pyrefly narrows the return
+    type exactly — no cast, no type-ignore escape. A future
+    expansion of the Literal forces an explicit case here, surfacing
+    the contract change at the validator rather than letting the
+    cast silently widen.
+    """
+
+    match environment:
+        case "production":
+            return "production"
+        case "test_environment":
+            return "test_environment"
+        case "both":
+            return "both"
+        case _:
+            raise RegistryApplicationInputError(
+                f"environment must be one of {sorted(get_args(OracleEnvironment))!r}; "
+                f"got {environment!r}"
+            )
+
+
 def audit_registry_oracles(registry_root: Path, *, environment: str) -> RegistryOracleAuditReport:
     """Audit registered live-parity oracles against every registry cross-reference."""
 
