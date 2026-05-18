@@ -23,7 +23,6 @@ from pydantic import AnyHttpUrl
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -82,27 +81,26 @@ def test_justificante_survives_encrypted_storage_roundtrip(
     """
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "justificante-roundtrip.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
+    with provider:
+        db_path = tmp_path / "justificante-roundtrip.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        original = _populated_justificante()
-        repo = JustificanteRepository()
-        repo.save(original)
-        loaded = repo.load(original.csv)
+            original = _populated_justificante()
+            repo = JustificanteRepository()
+            repo.save(original)
+            loaded = repo.load(original.csv)
 
-        assert loaded is not None
-        assert loaded == original
-        assert loaded.total_a_ingresar == Decimal("12345.67")
-        assert loaded.total_a_devolver is None
-        assert str(loaded.verification_url).endswith("/ABCD12345678EFGH")
-        assert loaded.source_pdf_path == Path("justificantes/303-2025-1T-ABCD.pdf")
-        assert loaded.presentation_id == "PRES-2025-001-XYZ"
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            assert loaded is not None
+            assert loaded == original
+            assert loaded.total_a_ingresar == Decimal("12345.67")
+            assert loaded.total_a_devolver is None
+            assert str(loaded.verification_url).endswith("/ABCD12345678EFGH")
+            assert loaded.source_pdf_path == Path("justificantes/303-2025-1T-ABCD.pdf")
+            assert loaded.presentation_id == "PRES-2025-001-XYZ"
+        finally:
+            engine.dispose()

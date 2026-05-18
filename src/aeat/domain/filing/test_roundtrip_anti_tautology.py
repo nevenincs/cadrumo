@@ -33,7 +33,6 @@ from sqlalchemy import select
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base, SecureObjectRow
@@ -113,70 +112,69 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     """
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "anti-tautology.db"
-    # ``FilingDraftRepository()`` constructs its own
-    # ``SecureObjectRepository()`` which falls back to the
-    # process-default engine. Setting the env var here ensures the
-    # default engine and the explicit engine in this test point at
-    # the same SQLite file.
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        original = _populated_draft()
-        repo = FilingDraftRepository()
-        repo.save(original)
-
-        # Sanity check: a normal load yields strict equality.
-        baseline = repo.load(original.draft_id)
-        assert baseline is not None
-        assert baseline == original
-        assert baseline.snapshot_ref is not None
-
-        # Reach into the encrypted row and surgically delete the
-        # snapshot_ref field from the JSON envelope payload. The
-        # column accessor handles encrypt/decrypt automatically.
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).limit(1)
-            row = session.execute(stmt).scalar_one()
-            decoded = json.loads(row.payload.decode("utf-8"))
-            assert "snapshot_ref" in decoded["payload"], (
-                "fixture must serialise snapshot_ref into the envelope's payload "
-                "for this test to be meaningful"
-            )
-            del decoded["payload"]["snapshot_ref"]
-            row.payload = json.dumps(decoded).encode("utf-8")
-
-        # Now reload through the repository. With ``snapshot_ref``
-        # absent, one of two things must happen:
-        #   (a) the FilingDraft model validation raises (strict mode);
-        #   (b) the load succeeds but the loaded model has
-        #       ``snapshot_ref=None`` (the field default), which makes
-        #       it strictly unequal to the original.
-        regression_caught = False
-        try:
-            mutated = repo.load(original.draft_id)
-        except ValidationError:
-            regression_caught = True
-        else:
-            assert mutated is not None
-            # Strict equality against the original now fails: load
-            # returned a draft missing the snapshot_ref the original
-            # carried. The test fixture pattern (strict-eq witness)
-            # catches the drop.
-            assert mutated != original
-            assert mutated.snapshot_ref is None
-            regression_caught = True
-
-        assert regression_caught, (
-            "boundary did not detect a deliberate field drop — every "
-            "roundtrip test in the suite is suspect and must be re-audited"
+    with provider:
+        db_path = tmp_path / "anti-tautology.db"
+        # ``FilingDraftRepository()`` constructs its own
+        # ``SecureObjectRepository()`` which falls back to the
+        # process-default engine. Setting the env var here ensures the
+        # default engine and the explicit engine in this test point at
+        # the same SQLite file.
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+
+            original = _populated_draft()
+            repo = FilingDraftRepository()
+            repo.save(original)
+
+            # Sanity check: a normal load yields strict equality.
+            baseline = repo.load(original.draft_id)
+            assert baseline is not None
+            assert baseline == original
+            assert baseline.snapshot_ref is not None
+
+            # Reach into the encrypted row and surgically delete the
+            # snapshot_ref field from the JSON envelope payload. The
+            # column accessor handles encrypt/decrypt automatically.
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).limit(1)
+                row = session.execute(stmt).scalar_one()
+                decoded = json.loads(row.payload.decode("utf-8"))
+                assert "snapshot_ref" in decoded["payload"], (
+                    "fixture must serialise snapshot_ref into the envelope's payload "
+                    "for this test to be meaningful"
+                )
+                del decoded["payload"]["snapshot_ref"]
+                row.payload = json.dumps(decoded).encode("utf-8")
+
+            # Now reload through the repository. With ``snapshot_ref``
+            # absent, one of two things must happen:
+            #   (a) the FilingDraft model validation raises (strict mode);
+            #   (b) the load succeeds but the loaded model has
+            #       ``snapshot_ref=None`` (the field default), which makes
+            #       it strictly unequal to the original.
+            regression_caught = False
+            try:
+                mutated = repo.load(original.draft_id)
+            except ValidationError:
+                regression_caught = True
+            else:
+                assert mutated is not None
+                # Strict equality against the original now fails: load
+                # returned a draft missing the snapshot_ref the original
+                # carried. The test fixture pattern (strict-eq witness)
+                # catches the drop.
+                assert mutated != original
+                assert mutated.snapshot_ref is None
+                regression_caught = True
+
+            assert regression_caught, (
+                "boundary did not detect a deliberate field drop — every "
+                "roundtrip test in the suite is suspect and must be re-audited"
+            )
+        finally:
+            engine.dispose()

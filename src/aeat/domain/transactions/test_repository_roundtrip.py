@@ -21,7 +21,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -87,54 +86,53 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     """A populated transaction catalogue round-trips through the encrypted bucket store."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "transactions-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        bucket_id = "default-bucket"
-        repo = TransactionCatalogueRepository(bucket_id=bucket_id)
-
-        mixed_txn = _transaction(
-            provider_id="provider-row-1",
-            amount=Decimal("-100.00"),
-            description="Internet provider - mixed use",
-            classification=BusinessClassification.MIXED,
-            business_pct=Decimal("0.60"),
+    with provider:
+        db_path = tmp_path / "transactions-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        personal_txn = _transaction(
-            provider_id="provider-row-2",
-            amount=Decimal("-25.50"),
-            description="Personal lunch",
-            classification=BusinessClassification.PERSONAL,
-        )
-        original = TransactionCatalogue.from_transactions([mixed_txn, personal_txn])
-        repo.save(original)
-        loaded = repo.load()
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        assert loaded == original
-        assert set(loaded.transactions.keys()) == {
-            mixed_txn.transaction_id,
-            personal_txn.transaction_id,
-        }
-        loaded_mixed = loaded.transactions[mixed_txn.transaction_id]
-        loaded_personal = loaded.transactions[personal_txn.transaction_id]
-        # Per-field witnesses on non-default identity-bearing axes.
-        assert loaded_mixed.business_classification is BusinessClassification.MIXED
-        assert loaded_mixed.business_pct == Decimal("0.60")
-        assert loaded_personal.business_classification is BusinessClassification.PERSONAL
-        assert loaded_personal.business_pct is None
-        # Provenance must survive ingest.
-        assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
-        assert loaded_mixed.raw.provenance.source_row_index == 7
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            bucket_id = "default-bucket"
+            repo = TransactionCatalogueRepository(bucket_id=bucket_id)
+
+            mixed_txn = _transaction(
+                provider_id="provider-row-1",
+                amount=Decimal("-100.00"),
+                description="Internet provider - mixed use",
+                classification=BusinessClassification.MIXED,
+                business_pct=Decimal("0.60"),
+            )
+            personal_txn = _transaction(
+                provider_id="provider-row-2",
+                amount=Decimal("-25.50"),
+                description="Personal lunch",
+                classification=BusinessClassification.PERSONAL,
+            )
+            original = TransactionCatalogue.from_transactions([mixed_txn, personal_txn])
+            repo.save(original)
+            loaded = repo.load()
+
+            assert loaded == original
+            assert set(loaded.transactions.keys()) == {
+                mixed_txn.transaction_id,
+                personal_txn.transaction_id,
+            }
+            loaded_mixed = loaded.transactions[mixed_txn.transaction_id]
+            loaded_personal = loaded.transactions[personal_txn.transaction_id]
+            # Per-field witnesses on non-default identity-bearing axes.
+            assert loaded_mixed.business_classification is BusinessClassification.MIXED
+            assert loaded_mixed.business_pct == Decimal("0.60")
+            assert loaded_personal.business_classification is BusinessClassification.PERSONAL
+            assert loaded_personal.business_pct is None
+            # Provenance must survive ingest.
+            assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
+            assert loaded_mixed.raw.provenance.source_row_index == 7
+        finally:
+            engine.dispose()
 
 
 def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
@@ -163,61 +161,60 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
     from ._repository import TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "transactions-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        bucket_id = "default-bucket"
-        repo = TransactionCatalogueRepository(bucket_id=bucket_id)
-
-        mixed_txn = _transaction(
-            provider_id="provider-row-1",
-            amount=Decimal("-100.00"),
-            description="Internet provider - mixed use",
-            classification=BusinessClassification.MIXED,
-            business_pct=Decimal("0.60"),
+    with provider:
+        db_path = tmp_path / "transactions-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        original = TransactionCatalogue.from_transactions([mixed_txn])
-        repo.save(original)
-
-        object_key = transaction_catalogue_object_key(bucket_id)
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == TX_BUCKET_NAMESPACE,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
-            assert "business_pct" in txn_dict, (
-                "fixture must serialise business_pct into the envelope "
-                "for this proof test to be meaningful"
-            )
-            del txn_dict["business_pct"]
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        # Now reload. The model_validator enforces MIXED <-> business_pct;
-        # the mutated record must either raise or surface inequality.
-        regression_caught = False
+        Base.metadata.create_all(engine)
         try:
-            mutated = repo.load()
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        else:
-            if mutated != original:
+            SecureObjectRepository(engine=engine)
+
+            bucket_id = "default-bucket"
+            repo = TransactionCatalogueRepository(bucket_id=bucket_id)
+
+            mixed_txn = _transaction(
+                provider_id="provider-row-1",
+                amount=Decimal("-100.00"),
+                description="Internet provider - mixed use",
+                classification=BusinessClassification.MIXED,
+                business_pct=Decimal("0.60"),
+            )
+            original = TransactionCatalogue.from_transactions([mixed_txn])
+            repo.save(original)
+
+            object_key = transaction_catalogue_object_key(bucket_id)
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == TX_BUCKET_NAMESPACE,
+                    SecureObjectRow.object_key == object_key,
+                )
+                row = session.execute(stmt).scalar_one()
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
+                assert "business_pct" in txn_dict, (
+                    "fixture must serialise business_pct into the envelope "
+                    "for this proof test to be meaningful"
+                )
+                del txn_dict["business_pct"]
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            # Now reload. The model_validator enforces MIXED <-> business_pct;
+            # the mutated record must either raise or surface inequality.
+            regression_caught = False
+            try:
+                mutated = repo.load()
+            except Exception:  # noqa: BLE001 - boundary may raise different types
                 regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: deleting business_pct from a "
-            "MIXED transaction did NOT surface on load. The catalogue "
-            "boundary is tautological and every transaction roundtrip "
-            "in the suite is suspect."
-        )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            else:
+                if mutated != original:
+                    regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: deleting business_pct from a "
+                "MIXED transaction did NOT surface on load. The catalogue "
+                "boundary is tautological and every transaction roundtrip "
+                "in the suite is suspect."
+            )
+        finally:
+            engine.dispose()

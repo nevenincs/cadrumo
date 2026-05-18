@@ -21,7 +21,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -88,41 +87,40 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(
     """A populated SubmittedFiling roundtrips strictly across AUDIT-class storage."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "submission-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
+    with provider:
+        db_path = tmp_path / "submission-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        original = _populated_filing()
-        repo = SubmissionRepository()
-        repo.save(original)
-        loaded = repo.load(original.submission_id)
+            original = _populated_filing()
+            repo = SubmissionRepository()
+            repo.save(original)
+            loaded = repo.load(original.submission_id)
 
-        assert loaded is not None
-        assert loaded == original
-        # Per-field witnesses for the most fragile pieces:
-        # the SubmissionStatus enum, the nested attempts tuple
-        # with distinct statuses per attempt, and the typed Path
-        # field (browser_trace_path) which serialises as str on
-        # the wire and must reconstitute back to Path on load.
-        assert loaded.status is SubmissionStatus.ACKNOWLEDGED
-        assert loaded.justificante_csv == "ABCD12345678EFGH"
-        assert loaded.justificante_pdf_path == Path("justificantes/303-2025Q1-ABCD.pdf")
-        assert len(loaded.attempts) == 2
-        assert loaded.attempts[0].status is SubmissionStatus.FAILED
-        assert loaded.attempts[0].error_code == "TLS_HANDSHAKE_TIMEOUT"
-        assert loaded.attempts[0].browser_trace_path == Path("traces/attempt-1.zip")
-        assert loaded.attempts[1].status is SubmissionStatus.ACKNOWLEDGED
-        # The first-attempt-ended-before-submitted invariant survives.
-        assert loaded.submitted_at < loaded.acknowledged_at  # type: ignore[operator]
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            assert loaded is not None
+            assert loaded == original
+            # Per-field witnesses for the most fragile pieces:
+            # the SubmissionStatus enum, the nested attempts tuple
+            # with distinct statuses per attempt, and the typed Path
+            # field (browser_trace_path) which serialises as str on
+            # the wire and must reconstitute back to Path on load.
+            assert loaded.status is SubmissionStatus.ACKNOWLEDGED
+            assert loaded.justificante_csv == "ABCD12345678EFGH"
+            assert loaded.justificante_pdf_path == Path("justificantes/303-2025Q1-ABCD.pdf")
+            assert len(loaded.attempts) == 2
+            assert loaded.attempts[0].status is SubmissionStatus.FAILED
+            assert loaded.attempts[0].error_code == "TLS_HANDSHAKE_TIMEOUT"
+            assert loaded.attempts[0].browser_trace_path == Path("traces/attempt-1.zip")
+            assert loaded.attempts[1].status is SubmissionStatus.ACKNOWLEDGED
+            # The first-attempt-ended-before-submitted invariant survives.
+            assert loaded.submitted_at < loaded.acknowledged_at  # type: ignore[operator]
+        finally:
+            engine.dispose()
 
 
 def test_submission_dropped_justificante_csv_surfaces_at_load(
@@ -153,49 +151,48 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
     from ._repository import _SUBMISSION_NAMESPACE
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "submission-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        original = _populated_filing()
-        repo = SubmissionRepository()
-        repo.save(original)
-
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _SUBMISSION_NAMESPACE,
-                SecureObjectRow.object_key == original.submission_id,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            payload = envelope["payload"]
-            assert payload.get("justificante_csv"), (
-                "fixture must serialise justificante_csv onto the "
-                "ACKNOWLEDGED record for this proof test to be meaningful"
-            )
-            payload["justificante_csv"] = None
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        regression_caught = False
-        try:
-            mutated = repo.load(original.submission_id)
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        else:
-            if mutated != original:
-                regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: deleting justificante_csv "
-            "from an ACKNOWLEDGED submission did NOT surface on load. "
-            "The submission boundary is tautological and every "
-            "submission roundtrip in the suite is suspect."
+    with provider:
+        db_path = tmp_path / "submission-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+
+            original = _populated_filing()
+            repo = SubmissionRepository()
+            repo.save(original)
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _SUBMISSION_NAMESPACE,
+                    SecureObjectRow.object_key == original.submission_id,
+                )
+                row = session.execute(stmt).scalar_one()
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                payload = envelope["payload"]
+                assert payload.get("justificante_csv"), (
+                    "fixture must serialise justificante_csv onto the "
+                    "ACKNOWLEDGED record for this proof test to be meaningful"
+                )
+                payload["justificante_csv"] = None
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            regression_caught = False
+            try:
+                mutated = repo.load(original.submission_id)
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            else:
+                if mutated != original:
+                    regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: deleting justificante_csv "
+                "from an ACKNOWLEDGED submission did NOT surface on load. "
+                "The submission boundary is tautological and every "
+                "submission roundtrip in the suite is suspect."
+            )
+        finally:
+            engine.dispose()

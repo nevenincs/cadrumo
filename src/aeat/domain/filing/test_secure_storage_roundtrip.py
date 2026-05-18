@@ -24,7 +24,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -107,45 +106,44 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     """
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "filing-draft-roundtrip.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        # FilingDraftRepository builds its own SecureObjectRepository
-        # off the process-default engine; for the test we need to
-        # ensure the same engine + key provider is in scope when the
-        # repository is constructed. The override_master_key_provider
-        # call earlier in this fixture takes care of the key; we also
-        # rebuild the engine binding so the in-memory SQLite is used.
-        SecureObjectRepository(engine=engine)  # ensures the row table is created
-
-        # Build, save, load.
-        original = _populated_draft()
-        repo = FilingDraftRepository()
-        repo.save(original)
-        loaded = repo.load(original.draft_id)
-
-        assert loaded is not None
-        assert loaded == original
-
-        # Per-field witnesses so a future regression diagnoses
-        # immediately without diff-on-failure trawling.
-        assert loaded.subject_tax_id == "12345678Z"
-        assert loaded.snapshot_ref is not None
-        assert loaded.snapshot_ref.modelo == "303"
-        assert loaded.snapshot_ref.revision_id == "2025-y-siguientes"
-        assert loaded.snapshot_ref.filing_year == 2025
-        assert loaded.snapshot_ref.period == "1T"
-        computed = next(
-            v for v in loaded.values if v.kind is FilingValueKind.COMPUTED
+    with provider:
+        db_path = tmp_path / "filing-draft-roundtrip.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        assert computed.formula_trace == ("iva.devengado", "iva.deducible")
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            # FilingDraftRepository builds its own SecureObjectRepository
+            # off the process-default engine; for the test we need to
+            # ensure the same engine + key provider is in scope when the
+            # repository is constructed. The `with provider:` block
+            # earlier in this fixture takes care of the key; we also
+            # rebuild the engine binding so the in-memory SQLite is used.
+            SecureObjectRepository(engine=engine)  # ensures the row table is created
+
+            # Build, save, load.
+            original = _populated_draft()
+            repo = FilingDraftRepository()
+            repo.save(original)
+            loaded = repo.load(original.draft_id)
+
+            assert loaded is not None
+            assert loaded == original
+
+            # Per-field witnesses so a future regression diagnoses
+            # immediately without diff-on-failure trawling.
+            assert loaded.subject_tax_id == "12345678Z"
+            assert loaded.snapshot_ref is not None
+            assert loaded.snapshot_ref.modelo == "303"
+            assert loaded.snapshot_ref.revision_id == "2025-y-siguientes"
+            assert loaded.snapshot_ref.filing_year == 2025
+            assert loaded.snapshot_ref.period == "1T"
+            computed = next(
+                v for v in loaded.values if v.kind is FilingValueKind.COMPUTED
+            )
+            assert computed.formula_trace == ("iva.devengado", "iva.deducible")
+        finally:
+            engine.dispose()
 
 
 def test_calculation_revision_observations_survive_encrypted_storage(
@@ -177,60 +175,59 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     )
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "calc-revision-roundtrip.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        now = datetime.now(UTC).replace(microsecond=0)
-        observation = CasillaObservation(
-            casilla_id="iva.resultado-regimen-general",
-            value=Decimal("12345.67"),
-            formula_id="iva.formula.resultado",
-            operand_refs=("iva.devengado", "iva.deducible"),
-            operand_values=(Decimal("20000.00"), Decimal("7654.33")),
-            legal_refs=("LIVA.art-94",),
-            source_refs=("AEAT.IVA.2025",),
+    with provider:
+        db_path = tmp_path / "calc-revision-roundtrip.db"
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        work_unit_id = "9" * 64
-        casilla_values = {"iva.resultado-regimen-general": Decimal("12345.67")}
-        revision = CalculationRevision(
-            calculation_revision_id=derive_calculation_revision_id(
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+
+            now = datetime.now(UTC).replace(microsecond=0)
+            observation = CasillaObservation(
+                casilla_id="iva.resultado-regimen-general",
+                value=Decimal("12345.67"),
+                formula_id="iva.formula.resultado",
+                operand_refs=("iva.devengado", "iva.deducible"),
+                operand_values=(Decimal("20000.00"), Decimal("7654.33")),
+                legal_refs=("LIVA.art-94",),
+                source_refs=("AEAT.IVA.2025",),
+            )
+            work_unit_id = "9" * 64
+            casilla_values = {"iva.resultado-regimen-general": Decimal("12345.67")}
+            revision = CalculationRevision(
+                calculation_revision_id=derive_calculation_revision_id(
+                    work_unit_id=work_unit_id,
+                    inputs_snapshot={},
+                    binding_overrides={},
+                    casilla_values=casilla_values,
+                ),
                 work_unit_id=work_unit_id,
-                inputs_snapshot={},
-                binding_overrides={},
+                state=CalculationRevisionState.DRAFT,
                 casilla_values=casilla_values,
-            ),
-            work_unit_id=work_unit_id,
-            state=CalculationRevisionState.DRAFT,
-            casilla_values=casilla_values,
-            observations=(observation,),
-            created_at=now,
-            updated_at=now,
-        )
-        catalogue = CalculationRevisionCatalogue(
-            revisions={revision.calculation_revision_id: revision},
-        )
+                observations=(observation,),
+                created_at=now,
+                updated_at=now,
+            )
+            catalogue = CalculationRevisionCatalogue(
+                revisions={revision.calculation_revision_id: revision},
+            )
 
-        repo = CalculationRevisionCatalogueRepository()
-        repo.save(catalogue)
-        loaded = repo.load()
+            repo = CalculationRevisionCatalogueRepository()
+            repo.save(catalogue)
+            loaded = repo.load()
 
-        assert loaded == catalogue
-        loaded_revision = loaded.get(revision.calculation_revision_id)
-        assert loaded_revision is not None
-        # The typed envelope must be preserved; without it, the
-        # operand_refs / operand_values / legal_refs / source_refs
-        # provenance would be lost across the persistence boundary.
-        assert loaded_revision.observations == (observation,)
-        assert loaded_revision.observations[0].operand_refs == observation.operand_refs
-        assert loaded_revision.observations[0].operand_values == observation.operand_values
-        assert loaded_revision.observations[0].legal_refs == observation.legal_refs
-        assert loaded_revision.observations[0].source_refs == observation.source_refs
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            assert loaded == catalogue
+            loaded_revision = loaded.get(revision.calculation_revision_id)
+            assert loaded_revision is not None
+            # The typed envelope must be preserved; without it, the
+            # operand_refs / operand_values / legal_refs / source_refs
+            # provenance would be lost across the persistence boundary.
+            assert loaded_revision.observations == (observation,)
+            assert loaded_revision.observations[0].operand_refs == observation.operand_refs
+            assert loaded_revision.observations[0].operand_values == observation.operand_values
+            assert loaded_revision.observations[0].legal_refs == observation.legal_refs
+            assert loaded_revision.observations[0].source_refs == observation.source_refs
+        finally:
+            engine.dispose()

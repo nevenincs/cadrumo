@@ -14,7 +14,6 @@ from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
     RepositoryError,
     create_engine_from_settings,
-    override_master_key_provider,
     session_scope,
 )
 from aeat.adapters.persistence.storage.crypto._crypto import KEY_SIZE
@@ -41,11 +40,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 @pytest.fixture(autouse=True)
 def _patch_master_key() -> Iterator[None]:
     """Inject a deterministic master key for the encrypted address column."""
-    override_master_key_provider(EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)))
-    try:
+    with EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)):
         yield
-    finally:
-        override_master_key_provider(None)
 
 
 def _engine(tmp_path: Path):

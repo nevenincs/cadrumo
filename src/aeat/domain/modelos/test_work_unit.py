@@ -22,7 +22,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.application.modelo import (
@@ -67,16 +67,15 @@ def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
     """
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        yield WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=engine))
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            yield WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=engine))
+        finally:
+            engine.dispose()
 
 
 # ---------------------------------------------------------------------------
@@ -613,7 +612,6 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
 
     from aeat.adapters.persistence.storage import (
         EphemeralMasterKeyProvider,
-        override_master_key_provider,
     )
     from aeat.adapters.persistence.storage.sql import SecureObjectRepository
     from aeat.adapters.persistence.storage.sql._orm import Base
@@ -625,41 +623,40 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     )
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    try:
-        engine = create_engine_from_settings(Settings(aeat_database_url="sqlite:///:memory:"))
-        Base.metadata.create_all(engine)
-        objects = SecureObjectRepository(engine=engine)
-        wu_repo = WorkUnitCatalogueRepository(objects=objects)
-        bv_repo = BucketEventHistoryRepository(objects=objects)
-        unit = create_work_unit(
-            bucket_id="default",
-            modelo="303",
-            filing_year=2026,
-            period="Q1",
-            revision_id="rev",
-            repository=wu_repo,
-            clock=_T0,
-        )
-        renamed = rename_work_unit(
-            unit.work_unit_id,
-            "renta-q1-renamed",
-            actor="auditor-B",
-            repository=wu_repo,
-            bucket_event_repository=bv_repo,
-            clock=datetime(2026, 2, 5, 12, 0, 0, tzinfo=UTC),
-        )
-        events = bv_repo.load().for_bucket(renamed.bucket_id)
-        rename_events = [
-            event for event in events
-            if event.event_type is BucketEventType.MODELO_WORK_UNIT_RENAMED
-        ]
-        assert len(rename_events) == 1
-        rename_event = rename_events[0]
-        assert rename_event.actor == "auditor-B"
-        assert rename_event.object_id == renamed.work_unit_id
-        assert rename_event.payload["previous_name"] == unit.name
-        assert rename_event.payload["new_name"] == "renta-q1-renamed"
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        try:
+            engine = create_engine_from_settings(Settings(aeat_database_url="sqlite:///:memory:"))
+            Base.metadata.create_all(engine)
+            objects = SecureObjectRepository(engine=engine)
+            wu_repo = WorkUnitCatalogueRepository(objects=objects)
+            bv_repo = BucketEventHistoryRepository(objects=objects)
+            unit = create_work_unit(
+                bucket_id="default",
+                modelo="303",
+                filing_year=2026,
+                period="Q1",
+                revision_id="rev",
+                repository=wu_repo,
+                clock=_T0,
+            )
+            renamed = rename_work_unit(
+                unit.work_unit_id,
+                "renta-q1-renamed",
+                actor="auditor-B",
+                repository=wu_repo,
+                bucket_event_repository=bv_repo,
+                clock=datetime(2026, 2, 5, 12, 0, 0, tzinfo=UTC),
+            )
+            events = bv_repo.load().for_bucket(renamed.bucket_id)
+            rename_events = [
+                event for event in events
+                if event.event_type is BucketEventType.MODELO_WORK_UNIT_RENAMED
+            ]
+            assert len(rename_events) == 1
+            rename_event = rename_events[0]
+            assert rename_event.actor == "auditor-B"
+            assert rename_event.object_id == renamed.work_unit_id
+            assert rename_event.payload["previous_name"] == unit.name
+            assert rename_event.payload["new_name"] == "renta-q1-renamed"
+        finally:
+            engine.dispose()

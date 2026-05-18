@@ -21,7 +21,6 @@ from aeat.adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
     SecretStore,
-    override_master_key_provider,
     override_secret_store,
 )
 from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
@@ -43,22 +42,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
+    with provider:
+        blob_store = EncryptedBlobStore(
+            root_dir=tmp_path / "blobs",
+            master_key_provider=provider,
+        )
+        secret_store = SecretStore(
+            store_dir=tmp_path / "secrets",
+            blob_store=blob_store,
+            master_key_provider=provider,
+        )
+        override_secret_store(secret_store)
+        try:
+            yield
+        finally:
+            override_secret_store(None)
 
 
 def _invoice(invoice_number: str = "INV-001") -> Invoice:
