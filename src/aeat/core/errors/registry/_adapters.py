@@ -666,6 +666,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.errors.PassphraseTooShortError",
+        ErrorCode(
+            code="REFUSED_STORAGE_PASSPHRASE_TOO_SHORT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_passphrase_too_short",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.errors.SecretStoreError",
         ErrorCode(
             code="FAIL_STORAGE_SECRET_STORE",
