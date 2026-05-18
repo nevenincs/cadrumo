@@ -77,27 +77,62 @@ def _revision_matches_selector(revision: ModeloRevision, selector: Mapping[str, 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
     modelos, _catalogues = _validated_registry_tree()
-
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for relation in revision.relations:
-                assert relation.source_modelo != modelo.id
-                if relation.dependency_role == "periodic_to_annual_summary":
-                    assert relation.kind == "annual_summary", relation.id
-                    assert relation.target_periods == ("0A",), relation.id
-                    assert len(relation.source_periods) > 1, relation.id
-                    assert (relation.aggregation or {}).get("op") == "sum", relation.id
-                elif relation.dependency_role == "instalment_to_final_settlement":
-                    assert relation.kind == "cross_model_output", relation.id
-                    assert relation.target_periods == ("0A",), relation.id
-                    assert relation.source_periods, relation.id
-                elif relation.dependency_role == "direct_calculation":
-                    assert relation.kind == "cross_model_output", relation.id
-                    assert relation.target_periods, relation.id
-                elif relation.dependency_role == "factual_evidence":
-                    assert relation.kind == "cross_model_output", relation.id
-                elif relation.dependency_role == "profile_schedule":
-                    assert relation.source_modelo in {"036", "037", "840"}, relation.id
+                assert relation.source_modelo != modelo.id, f"{modelo.id}/{revision.id}/{relation.id}"
+                _assert_relation_role_contract(relation, scope=f"{modelo.id}/{revision.id}/{relation.id}")
+
+
+_PROFILE_SCHEDULE_SOURCE_MODELOS = frozenset({"036", "037", "840"})
+
+
+def _assert_periodic_to_annual_summary_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+    assert relation.kind == "annual_summary", scope
+    assert relation.target_periods == ("0A",), scope
+    assert len(relation.source_periods) > 1, scope
+    assert (relation.aggregation or {}).get("op") == "sum", scope
+
+
+def _assert_instalment_to_final_settlement_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+    assert relation.kind == "cross_model_output", scope
+    assert relation.target_periods == ("0A",), scope
+    assert relation.source_periods, scope
+
+
+def _assert_direct_calculation_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+    assert relation.kind == "cross_model_output", scope
+    assert relation.target_periods, scope
+
+
+def _assert_factual_evidence_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+    assert relation.kind == "cross_model_output", scope
+
+
+def _assert_profile_schedule_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+    assert relation.source_modelo in _PROFILE_SCHEDULE_SOURCE_MODELOS, scope
+
+
+_ROLE_CONTRACT_VALIDATORS = {
+    "periodic_to_annual_summary": _assert_periodic_to_annual_summary_contract,
+    "instalment_to_final_settlement": _assert_instalment_to_final_settlement_contract,
+    "direct_calculation": _assert_direct_calculation_contract,
+    "factual_evidence": _assert_factual_evidence_contract,
+    "profile_schedule": _assert_profile_schedule_contract,
+}
+
+
+def _assert_relation_role_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+    """Dispatch to the per-role contract validator (no-op for unrecognised roles).
+
+    Each role's contract lives in its own
+    ``_assert_<role>_contract`` helper so a change to one role's
+    rules touches exactly one function. Unrecognised roles are a
+    no-op here so the gate only enforces the declared families.
+    """
+    validator = _ROLE_CONTRACT_VALIDATORS.get(relation.dependency_role)
+    if validator is not None:
+        validator(relation, scope=scope)
 
 
 def test_cross_dependency_source_requirements_are_derivable_for_target_periods() -> None:

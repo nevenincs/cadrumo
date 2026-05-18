@@ -199,17 +199,10 @@ def _install_run_context_record_factory() -> None:
         nonlocal cached_vars
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
-            try:
-                from .observability._context import (
-                    RUN_CONTEXT_VAR,
-                    STEP_CONTEXT_VAR,
-                )
-            except ImportError:
-                # Partial import during module bootstrap — degrade
-                # gracefully and retry next time.
-                record.run_id = ""
-                record.step_id = ""
-                return record
+            from .observability._context import (
+                RUN_CONTEXT_VAR,
+                STEP_CONTEXT_VAR,
+            )
             cached_vars = (RUN_CONTEXT_VAR, STEP_CONTEXT_VAR)
         run_var, step_var = cached_vars
         ctx = run_var.get(None)

@@ -51,7 +51,7 @@ from ...core.errors import (
     render_error_text,
 )
 from ...core.logging import get_logger
-from ._context import json_output_requested
+from ...core.click_context import json_output_requested
 
 _log = get_logger(__name__)
 

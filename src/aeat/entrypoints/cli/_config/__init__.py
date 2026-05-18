@@ -1283,44 +1283,27 @@ def bucket_history(
 ) -> None:
     """Browse the append-only bucket-event history."""
 
-    from datetime import datetime as _datetime
+    from ....domain.buckets import BucketEventHistoryRepository
 
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
-
-    repository = BucketEventHistoryRepository()
-    catalogue = repository.load()
-    selected: tuple[BucketEventType, ...] | None
-    if event_type:
-        try:
-            selected = tuple(BucketEventType(value.strip()) for value in event_type)
-        except ValueError as exc:
-            raise typer.BadParameter(str(exc)) from exc
-    else:
-        selected = None
-
-    def _parse_filter_instant(raw: str, *, flag: str) -> _datetime:
-        try:
-            return _datetime.fromisoformat(raw.strip())
-        except ValueError as exc:
-            raise typer.BadParameter(
-                f"{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00); got {raw!r}",
-            ) from exc
-
-    since_dt = _parse_filter_instant(since, flag="--since") if since else None
-    until_dt = _parse_filter_instant(until, flag="--until") if until else None
+    selected = _parse_bucket_event_types(event_type)
+    since_dt = _parse_bucket_history_instant(since, flag="--since")
+    until_dt = _parse_bucket_history_instant(until, flag="--until")
     if since_dt is not None and until_dt is not None and since_dt > until_dt:
         raise typer.BadParameter("--since must be before or equal to --until")
-
     object_id_token = object_id.strip() if object_id else None
     actor_token = actor.strip() if actor else None
 
+    catalogue = BucketEventHistoryRepository().load()
     events = tuple(
-        e
-        for e in catalogue.for_bucket(bucket_id, event_types=selected)
-        if (since_dt is None or e.occurred_at >= since_dt)
-        and (until_dt is None or e.occurred_at <= until_dt)
-        and (object_id_token is None or e.object_id == object_id_token)
-        and (actor_token is None or e.actor == actor_token)
+        event
+        for event in catalogue.for_bucket(bucket_id, event_types=selected)
+        if _bucket_history_event_matches(
+            event,
+            since_dt=since_dt,
+            until_dt=until_dt,
+            object_id_token=object_id_token,
+            actor_token=actor_token,
+        )
     )
     payload = {
         "operation": "config.bucket.history",
@@ -1330,24 +1313,80 @@ def bucket_history(
         "until": until_dt.isoformat() if until_dt else None,
         "object_id": object_id_token,
         "actor": actor_token,
-        "events": [
-            {
-                "event_id": e.event_id,
-                "event_type": e.event_type.value,
-                "occurred_at": e.occurred_at.isoformat(),
-                "actor": e.actor,
-                "object_type": e.object_type.value,
-                "object_id": e.object_id,
-                "payload": dict(e.payload),
-            }
-            for e in events
-        ],
+        "events": [_bucket_history_event_payload(event) for event in events],
     }
     lines = ["operation\tconfig.bucket.history", f"bucket_id\t{bucket_id}", f"event_count\t{len(events)}"] + [
         f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
         for e in events
     ]
     _emit(ctx, payload, lines)
+
+
+def _parse_bucket_event_types(event_type: list[str] | None):  # type: ignore[no-untyped-def]
+    """Parse the ``--event-type`` flag tuple, raising :class:`typer.BadParameter` on unknown values.
+
+    Returns ``None`` when no filter was supplied so the catalogue
+    walker reads the full event stream; otherwise returns a typed
+    tuple of :class:`BucketEventType`.
+    """
+    if not event_type:
+        return None
+    from ....domain.buckets import BucketEventType
+
+    try:
+        return tuple(BucketEventType(value.strip()) for value in event_type)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+def _parse_bucket_history_instant(raw: str | None, *, flag: str):  # type: ignore[no-untyped-def]
+    """Parse one ``--since`` / ``--until`` value into a :class:`datetime`, or ``None`` when absent."""
+    if not raw:
+        return None
+    from datetime import datetime
+
+    try:
+        return datetime.fromisoformat(raw.strip())
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00); got {raw!r}",
+        ) from exc
+
+
+def _bucket_history_event_matches(
+    event,
+    *,
+    since_dt,
+    until_dt,
+    object_id_token: str | None,
+    actor_token: str | None,
+) -> bool:  # type: ignore[no-untyped-def]
+    """Return True when ``event`` passes every active history filter.
+
+    Filters checked, in order: --since (lower bound), --until
+    (upper bound), --object-id (exact match), --actor (exact match).
+    ``None`` for any filter means the gate is open.
+    """
+    if since_dt is not None and event.occurred_at < since_dt:
+        return False
+    if until_dt is not None and event.occurred_at > until_dt:
+        return False
+    if object_id_token is not None and event.object_id != object_id_token:
+        return False
+    return not (actor_token is not None and event.actor != actor_token)
+
+
+def _bucket_history_event_payload(event):  # type: ignore[no-untyped-def]
+    """Project one bucket event onto its JSON payload row."""
+    return {
+        "event_id": event.event_id,
+        "event_type": event.event_type.value,
+        "occurred_at": event.occurred_at.isoformat(),
+        "actor": event.actor,
+        "object_type": event.object_type.value,
+        "object_id": event.object_id,
+        "payload": dict(event.payload),
+    }
 
 
 from ._profile_census import register as _register_profile_census

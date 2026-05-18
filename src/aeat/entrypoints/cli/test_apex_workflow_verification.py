@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -102,53 +103,72 @@ def test_rejected_aliases_do_not_reach_apex_workflow_services() -> None:
         assert result.exit_code != 0, command
 
 
-def test_config_app_real_workflow_round_trip(_isolated_cli_backend: Path) -> None:
+@dataclass(frozen=True, slots=True)
+class _ApexWorkflowOutcome:
+    """Bundle returned by _drive_apex_workflow_round_trip.
+
+    Captures every payload the focused tests inspect: the
+    post-init profile status, the certificate-auth configure /
+    status / test results, and the imported / overview / review
+    payloads emitted by the canonical operator round-trip.
+    """
+
+    status_payload: dict[str, object]
+    configured_payload: dict[str, object]
+    auth_status_payload: dict[str, object]
+    auth_test_payload: dict[str, object]
+    imported_payload: dict[str, object]
+    overview_payload: dict[str, object]
+    review_payload: dict[str, object]
+
+
+def _drive_apex_workflow_round_trip(backend: Path) -> _ApexWorkflowOutcome:
+    """Drive the canonical operator round-trip through the apex CLI.
+
+    Five logical phases:
+
+    1. `config init` — register operator profile with --accept-defaults.
+    2. `config profile status` — verify the wizard persisted every
+       required profile fact.
+    3. `config auth configure/status/test --provider certificate` —
+       register a synthetic certificate file and exercise the
+       three auth-CLI verbs that read it back.
+    4. `app ledger import <csv>` — ingest one synthetic bank row.
+    5. `app overview status` + `app review queue` — verify the
+       imported row surfaces in the operator overview and review
+       queue with the expected metadata.
+
+    Every CLI invocation is asserted to exit 0 here; downstream
+    tests assert against the JSON payloads only.
+    """
     profile = _invoke(
         [
-            "--format",
-            "json",
-            "config",
-            "init",
-            "--quiet",
-            "--accept-defaults",
-            "--profile",
-            "operator",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
+            "--format", "json",
+            "config", "init",
+            "--quiet", "--accept-defaults",
+            "--profile", "operator",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--activity", "design",
+            "--iva-regime", "GENERAL",
         ]
-    )
+    )  # fmt: skip
     assert profile.exit_code == 0, profile.output
-
     status = _invoke(["--format", "json", "config", "profile", "status"])
     assert status.exit_code == 0, status.output
-    status_payload = _json(status)
-    assert status_payload["active_profile"] == "operator"
-    assert status_payload["tax_id_present"] is True
-    assert status_payload["activity_present"] is True
-    assert status_payload["iva_regime"] == "GENERAL"
 
-    certificate = _isolated_cli_backend / "certificate.p12"
+    certificate = backend / "certificate.p12"
     certificate.write_bytes(b"not-a-real-certificate")
     configured = _invoke(
         ["--format", "json", "config", "auth", "configure", "--provider", "certificate", "--file", str(certificate)]
     )
     auth_status = _invoke(["--format", "json", "config", "auth", "status", "--provider", "certificate"])
     auth_test = _invoke(["--format", "json", "config", "auth", "test", "--provider", "certificate"])
-
     assert configured.exit_code == 0, configured.output
-    assert _json(configured)["provider"] == "certificate"
     assert auth_status.exit_code == 0, auth_status.output
-    assert _json(auth_status)["configured"] is True
     assert auth_test.exit_code == 0, auth_test.output
-    assert _json(auth_test)["provider"] == "certificate"
 
-    statement = _isolated_cli_backend / "bank.csv"
+    statement = backend / "bank.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
         "2026-04-15,Client SL,Payment F-001,121.00,EUR,bank-001\n",
@@ -157,19 +177,94 @@ def test_config_app_real_workflow_round_trip(_isolated_cli_backend: Path) -> Non
     imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
     overview = _invoke(["--format", "json", "app", "overview", "status"])
     review = _invoke(["--format", "json", "app", "review", "queue", "--source-kind", "ledger_transaction"])
-
     assert imported.exit_code == 0, imported.output
-    assert _json(imported)["imported"] == 1
     assert overview.exit_code == 0, overview.output
-    assert _json(overview)["transactions"] == 1
     assert review.exit_code == 0, review.output
-    review_payload = _json(review)
-    assert len(review_payload["rows"]) == 1
-    row = review_payload["rows"][0]
-    assert row["source_kind"] == "ledger_transaction"
-    assert row["affected_object_id"]
-    assert row["bucket_id"] == "operator"
-    assert row["period"] == "2026-04"
-    assert row["canonical_next_command"].startswith("aeat app ledger review --id ")
-    assert " edit " not in row["canonical_next_command"]
-    assert "--set" not in row["canonical_next_command"]
+
+    return _ApexWorkflowOutcome(
+        status_payload=_json(status),
+        configured_payload=_json(configured),
+        auth_status_payload=_json(auth_status),
+        auth_test_payload=_json(auth_test),
+        imported_payload=_json(imported),
+        overview_payload=_json(overview),
+        review_payload=_json(review),
+    )
+
+
+_PROFILE_STATUS_EXPECTATIONS = (
+    ("active_profile", "operator"),
+    ("tax_id_present", True),
+    ("activity_present", True),
+    ("iva_regime", "GENERAL"),
+)
+
+
+@pytest.mark.parametrize(("key", "expected"), _PROFILE_STATUS_EXPECTATIONS)
+def test_config_app_round_trip_profile_status_records_field(
+    _isolated_cli_backend: Path, key: str, expected: object
+) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.status_payload[key] == expected
+
+
+def test_config_app_round_trip_certificate_configure_records_provider(_isolated_cli_backend: Path) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.configured_payload["provider"] == "certificate"
+
+
+def test_config_app_round_trip_certificate_auth_status_reports_configured(
+    _isolated_cli_backend: Path,
+) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.auth_status_payload["configured"] is True
+
+
+def test_config_app_round_trip_certificate_auth_test_records_provider(_isolated_cli_backend: Path) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.auth_test_payload["provider"] == "certificate"
+
+
+def test_config_app_round_trip_ledger_import_records_one_row(_isolated_cli_backend: Path) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.imported_payload["imported"] == 1
+
+
+def test_config_app_round_trip_overview_reports_one_transaction(_isolated_cli_backend: Path) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.overview_payload["transactions"] == 1
+
+
+def test_config_app_round_trip_review_queue_lists_imported_row(_isolated_cli_backend: Path) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert len(outcome.review_payload["rows"]) == 1
+
+
+_REVIEW_ROW_EXPECTATIONS = (
+    ("source_kind", "ledger_transaction"),
+    ("bucket_id", "operator"),
+    ("period", "2026-04"),
+)
+
+
+@pytest.mark.parametrize(("key", "expected"), _REVIEW_ROW_EXPECTATIONS)
+def test_config_app_round_trip_review_row_records_field(
+    _isolated_cli_backend: Path, key: str, expected: str
+) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.review_payload["rows"][0][key] == expected
+
+
+def test_config_app_round_trip_review_row_has_affected_object(_isolated_cli_backend: Path) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.review_payload["rows"][0]["affected_object_id"]
+
+
+def test_config_app_round_trip_review_row_canonical_next_command_is_review_verb(
+    _isolated_cli_backend: Path,
+) -> None:
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    canonical_next_command = outcome.review_payload["rows"][0]["canonical_next_command"]
+    assert canonical_next_command.startswith("aeat app ledger review --id ")
+    assert " edit " not in canonical_next_command
+    assert "--set" not in canonical_next_command

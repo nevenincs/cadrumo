@@ -53,10 +53,4 @@ class AttachmentStoreProtocol(Protocol):
         ...
 
 
-# Backwards-compatible alias: callers that imported ``AttachmentStore``
-# from this module for type-annotation purposes should migrate to
-# ``AttachmentStoreProtocol``. The alias keeps existing annotations
-# working without adapter imports entering the domain.
-AttachmentStore = AttachmentStoreProtocol
-
-__all__ = ["AttachmentStore", "AttachmentStoreProtocol"]
+__all__ = ["AttachmentStoreProtocol"]

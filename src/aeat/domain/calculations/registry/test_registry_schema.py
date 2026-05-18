@@ -91,41 +91,103 @@ def _copy_committed_modelo(path: Path) -> None:
     path.write_text(_MODELO_130_FILE.read_text(encoding="utf-8"), encoding="utf-8")
 
 
-def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
+@pytest.fixture(scope="module")
+def _modelo_130_snapshot():  # type: ignore[no-untyped-def]
+    """Validate + build the committed Modelo 130 / 2024 3T snapshot once per module.
+
+    Module scope is safe — both validation and snapshot construction
+    are read-only against the bundled registry data. Every focused
+    snapshot-attribute test below asserts against the same instance.
+    """
     modelo, catalogues = _committed_registry()
-
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="3T")
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="3T")
 
-    assert snapshot.modelo.id == "130"
-    assert snapshot.revision.id == "2019-y-siguientes"
-    assert snapshot.filing_year == 2024
-    assert snapshot.period == "3T"
-    assert "rd-439-2007:art-110" in snapshot.legal
-    assert "aeat-dr-130-2019-v12" in snapshot.sources
-    assert snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
-    assert snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
-    assert tuple(snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
-    assert set(snapshot.live_cross_references) == {
-        "modelo-130-static-official",
-        "modelo-130-filed-declarations-read",
-    }
-    assert snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
-    filed_read = snapshot.live_cross_references["modelo-130-filed-declarations-read"]
+
+_SNAPSHOT_HEADER_EXPECTATIONS = (
+    ("modelo.id", "130"),
+    ("revision.id", "2019-y-siguientes"),
+    ("filing_year", 2024),
+    ("period", "3T"),
+)
+
+
+@pytest.mark.parametrize(("attr_path", "expected"), _SNAPSHOT_HEADER_EXPECTATIONS)
+def test_committed_snapshot_resolves_header_field(_modelo_130_snapshot, attr_path: str, expected: object) -> None:  # type: ignore[no-untyped-def]
+    """Snapshot ``(modelo, revision, filing_year, period)`` tuple matches the committed registry coordinates."""
+    actual: object = _modelo_130_snapshot
+    for segment in attr_path.split("."):
+        actual = getattr(actual, segment)
+    assert actual == expected
+
+
+def test_committed_snapshot_indexes_legal_reference_with_authority_tier(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    """Legal-reference is indexed and its evidence_tier reads as legal_authority."""
+    assert "rd-439-2007:art-110" in _modelo_130_snapshot.legal
+    assert _modelo_130_snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
+
+
+def test_committed_snapshot_indexes_source_reference_with_layout_tier(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    """Source-reference is indexed and its evidence_tier reads as layout_authority."""
+    assert "aeat-dr-130-2019-v12" in _modelo_130_snapshot.sources
+    assert _modelo_130_snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
+
+
+def test_committed_snapshot_lists_single_extraction_profile(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    assert tuple(_modelo_130_snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
+
+
+_EXPECTED_LIVE_CROSS_REFERENCES = frozenset(
+    {"modelo-130-static-official", "modelo-130-filed-declarations-read"}
+)
+
+
+def test_committed_snapshot_lists_expected_live_cross_references(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    assert set(_modelo_130_snapshot.live_cross_references) == _EXPECTED_LIVE_CROSS_REFERENCES
+
+
+def test_committed_snapshot_static_cross_reference_carries_layout_tier(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    assert (
+        _modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier
+        == "layout_authority"
+    )
+
+
+def test_committed_snapshot_filed_declarations_read_is_authenticated_read_surface(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    """The filed-declarations cross-reference must declare an authenticated read surface."""
+    filed_read = _modelo_130_snapshot.live_cross_references["modelo-130-filed-declarations-read"]
     assert filed_read.surface == "authenticated_read_surface"
     assert set(filed_read.allowed_methods).issubset({"GET", "HEAD", "OPTIONS"})
     assert filed_read.requires_authentication is True
     assert filed_read.requires_aeat_authorization is True
-    assert tuple(snapshot.workbook_parity_refs) == ("modelo-130-dr-xls",)
-    assert tuple(snapshot.verification_expectations) == ("modelo-130-calculation-verification",)
-    assert snapshot.support_removal_decisions == {}
-    assert tuple(snapshot.deadline_windows) == (
-        "modelo-130-2026-1t",
-        "modelo-130-2026-2t",
-        "modelo-130-2026-3t",
-        "modelo-130-2026-4t",
-    )
-    required_application_links = {
+
+
+def test_committed_snapshot_lists_single_workbook_parity_ref(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    assert tuple(_modelo_130_snapshot.workbook_parity_refs) == ("modelo-130-dr-xls",)
+
+
+def test_committed_snapshot_lists_single_verification_expectation(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    assert tuple(_modelo_130_snapshot.verification_expectations) == ("modelo-130-calculation-verification",)
+
+
+def test_committed_snapshot_declares_no_support_removal_decisions(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    assert _modelo_130_snapshot.support_removal_decisions == {}
+
+
+_EXPECTED_DEADLINE_WINDOWS = (
+    "modelo-130-2026-1t",
+    "modelo-130-2026-2t",
+    "modelo-130-2026-3t",
+    "modelo-130-2026-4t",
+)
+
+
+def test_committed_snapshot_lists_four_quarterly_deadline_windows(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    assert tuple(_modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
+
+
+_REQUIRED_APPLICATION_LINKS = frozenset(
+    {
         "modelo-130-calculation",
         "modelo-130-deadline",
         "modelo-130-export",
@@ -135,7 +197,11 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
         "modelo-130-portal-cross-reference",
         "modelo-130-verification",
     }
-    assert required_application_links <= set(snapshot.application_links)
+)
+
+
+def test_committed_snapshot_application_links_cover_required_surfaces(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
+    assert set(_modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS
 
 
 def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() -> None:

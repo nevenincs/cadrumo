@@ -7,7 +7,6 @@ from html import unescape
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
 
 from . import RegistryValidator, build_snapshot, load_registry_tree

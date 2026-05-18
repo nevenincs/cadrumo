@@ -11,8 +11,8 @@ the orchestration helpers :func:`add_attachment`, :func:`list_attachments`,
 and :func:`load_attachment` exported from :mod:`._service`.
 
 The exported surface comprises :class:`Attachment`, :class:`AttachmentCatalogue`,
-:class:`AttachmentStore`, the :class:`AttachmentKind` and :class:`AttachmentSource`
-enums, and the :exc:`AttachmentError` family.
+:class:`AttachmentStoreProtocol`, the :class:`AttachmentKind` and
+:class:`AttachmentSource` enums, and the :exc:`AttachmentError` family.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ from ._errors import (
     AttachmentValidationError,
 )
 from ._models import Attachment, AttachmentCatalogue
-from ._repository import AttachmentStore, AttachmentStoreProtocol
+from ._repository import AttachmentStoreProtocol
 
 __all__ = [
     "Attachment",
@@ -35,7 +35,6 @@ __all__ = [
     "AttachmentNotFoundError",
     "AttachmentPersistenceError",
     "AttachmentSource",
-    "AttachmentStore",
     "AttachmentStoreProtocol",
     "AttachmentValidationError",
 ]

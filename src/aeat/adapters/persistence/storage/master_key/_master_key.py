@@ -839,6 +839,18 @@ class EphemeralMasterKeyProvider:
     """In-memory master-key provider used exclusively by tests.
 
     The key is generated once per provider instance and never persisted.
+    Doubles as a context manager: ``with EphemeralMasterKeyProvider():
+    ...`` opens a :class:`BucketSession` bound to the provider's key
+    bytes and activates it via :func:`activate_session` so column-
+    level decrypt and encrypt operations inside the block resolve
+    through :func:`get_active_master_key`. On exit the session is
+    closed (zeroising its buffers) and the ContextVar is restored.
+
+    The provider remains a plain :class:`MasterKeyProvider`
+    (``get_master_key()`` returns the same bytes) so blob-store,
+    secret-store, and envelope code paths that take an injected
+    ``master_key_provider`` continue to work unchanged inside the
+    ``with`` block.
     """
 
     def __init__(self, *, key: bytes | None = None) -> None:
@@ -855,9 +867,44 @@ class EphemeralMasterKeyProvider:
                 f"ephemeral master key must be {KEY_SIZE} bytes; got {len(key)}",
             )
         self._key = key
+        self._session: object | None = None
+        self._activation_cm: object | None = None
 
     def get_master_key(self) -> bytes:
         return self._key
+
+    def __enter__(self) -> object:
+        if self._session is not None:
+            raise RuntimeError(
+                "EphemeralMasterKeyProvider context manager is not re-entrant",
+            )
+        from datetime import UTC, datetime
+
+        from ._active_session import activate_session
+        from ._bucket_session import BucketSession
+
+        session = BucketSession.open(
+            bucket_id="ephemeral",
+            kek=self._key,
+            dek=self._key,
+            idle_minutes=60,
+            opened_at=datetime.now(UTC),
+        )
+        activation = activate_session(session)
+        activation.__enter__()
+        self._session = session
+        self._activation_cm = activation
+        return session
+
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        activation = self._activation_cm
+        session = self._session
+        self._activation_cm = None
+        self._session = None
+        if activation is not None:
+            activation.__exit__(exc_type, exc, tb)
+        if session is not None:
+            session.close()
 
 
 # Published deterministic key for the unsecured-mode provider. Public by

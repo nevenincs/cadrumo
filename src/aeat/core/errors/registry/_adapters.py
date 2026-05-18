@@ -1249,6 +1249,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.master_key._active_session.NoActiveBucketSessionError",
+        ErrorCode(
+            code="REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_master_key_no_active_session",
+            default_suggestion="aeat config profile switch NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.bucket._errors.BucketError",
         ErrorCode(
             code="ERROR_STORAGE_BUCKET",

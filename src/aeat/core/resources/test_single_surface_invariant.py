@@ -111,6 +111,47 @@ def test_allowlist_only_contains_files_that_actually_offend() -> None:
     )
 
 
+_PROJECT_ROOT_IMPORT_RE = re.compile(
+    r"^from\s+(?:aeat\.core\.paths|\.{1,4}core\.paths)\s+import\s+([^\n]+)$",
+    re.MULTILINE,
+)
+
+
+def test_no_dead_project_root_imports() -> None:
+    """Every file importing ``PROJECT_ROOT`` from ``aeat.core.paths`` must reference it.
+
+    ``PROJECT_ROOT`` is the legitimate resolver for ``var/``
+    operator outputs and ``env/.env`` operator config (and for
+    source-tree audit walks). When a module migrates a bundled-data
+    read to :func:`bundled_path` it MUST drop the now-unused
+    ``PROJECT_ROOT`` import — leaving the dead symbol on the import
+    line creates false signal that PROJECT_ROOT is still relevant
+    to that module.
+
+    Scans every ``.py`` file in the tree, parses the
+    ``from ...core.paths import ...`` lines, and asserts that any
+    file importing ``PROJECT_ROOT`` references it at least once
+    elsewhere in the body.
+    """
+    dead_imports: list[str] = []
+    for path in _SRC.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for match in _PROJECT_ROOT_IMPORT_RE.finditer(text):
+            imported = {name.strip() for name in match.group(1).split(",")}
+            if "PROJECT_ROOT" not in imported:
+                continue
+            # Strip the import line itself before searching for usage so
+            # that a single-line import does not satisfy its own gate.
+            body = text[: match.start()] + text[match.end() :]
+            if "PROJECT_ROOT" not in body:
+                dead_imports.append(str(path.relative_to(_REPO_ROOT)))
+    assert not dead_imports, (
+        "modules that import PROJECT_ROOT but never reference it "
+        "(drop the dead import; bundled-data reads go through "
+        f"aeat.core.resources.bundled_path instead): {dead_imports}"
+    )
+
+
 def test_resources_package_re_exports_boundary() -> None:
     """The boundary functions stay accessible through the package init."""
 
