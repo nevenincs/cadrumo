@@ -152,7 +152,7 @@ TODO: Phase intent paragraph required by the convention ADR.
 
 - [x] `P07.S59` - remove the `profile_override` parameter from `resolve_active_profile`; `src/aeat/adapters/outbound/google/_profile_binding.py`.
 - [x] `P07.S60` - remove the `--profile` flag from every `aeat config google` verb; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P07.S61` - run the locale scaffold + audit across es/en/ca/hu for every renamed string; `src/aeat/locales`.
+- [x] `P07.S61` - run the locale scaffold + audit across es/en/ca/hu for every renamed string; `src/aeat/locales`.
 
 ### Phase `P08` - diagnostics entrypoint and full gate
 

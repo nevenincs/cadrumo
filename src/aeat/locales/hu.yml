@@ -549,12 +549,23 @@ cli:
         refresh_help: cli.config.profile.census.refresh_help
         show_help: cli.config.profile.census.show_help
         snapshot_id_help: cli.config.profile.census.snapshot_id_help
+      delete_help: cli.config.profile.delete_help
+      delete_name_help: cli.config.profile.delete_name_help
+      delete_requires_yes: cli.config.profile.delete_requires_yes
+      delete_yes_help: cli.config.profile.delete_yes_help
       duplicate_display_name_help: Megjelenített név az új profilhoz (alapértelmezetten
         a cél-azonosító)
       duplicate_help: Profil másolása új azonosítóval és megjelenített névvel
       duplicate_source_help: A duplikálandó forrásprofil azonosítója
       duplicate_target_help: A duplikátum cél-azonosítója
+      edit_help: cli.config.profile.edit_help
+      export_help: cli.config.profile.export_help
+      export_name_help: cli.config.profile.export_name_help
+      export_out_help: cli.config.profile.export_out_help
       help: Az aktív profil konfigurációs értékeinek kezelése
+      import_help: cli.config.profile.import_help
+      import_missing_bundle: cli.config.profile.import_missing_bundle
+      import_path_help: cli.config.profile.import_path_help
       no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
         first.
       preflight_help: Report whether the active profile is ready for one modelo /
@@ -569,8 +580,14 @@ cli:
       remove_requires_yes: A törlés destruktív művelet. Futtasd újra 'aeat config
         profile remove %{name} --yes' megerősítéshez.
       remove_yes_help: A sírkövezés művelet kifejezett megerősítése
+      rename_display_name_help: cli.config.profile.rename_display_name_help
+      rename_help: cli.config.profile.rename_help
+      rename_source_help: cli.config.profile.rename_source_help
+      rename_target_help: cli.config.profile.rename_target_help
       show_name_help: A megjelenítendő profil azonosítója (alapértelmezetten az aktív
         profil)
+      switch_help: cli.config.profile.switch_help
+      switch_name_help: cli.config.profile.switch_name_help
       unknown_profile: 'Ismeretlen profil: %{name}. Futtasd: ''aeat config profile
         list'' a regisztrált profilok megtekintéséhez.'
       use_help: Meglévő profil kiválasztása aktív profilként
