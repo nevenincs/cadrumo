@@ -99,31 +99,58 @@ def parse_scope_tokens(
     result: list[str] = []
     seen: set[str] = set()
     for token in raw_tokens:
-        if "," in token:
-            raise UnknownScopeError(
-                f"scope token {token!r} contains a comma; pass --scope repeatedly instead",
-                suggestion="aeat config auth apoderado configure --scope SCOPE1 --scope SCOPE2",
-            )
-        if token != token.upper():
-            raise UnknownScopeError(
-                f"scope token {token!r} must be uppercase",
-                suggestion="aeat config auth apoderado configure",
-            )
-        if token == ALL_TOKEN:
-            for code in expand_all_token(catalogue):
-                if code not in seen:
-                    seen.add(code)
-                    result.append(code)
-            continue
-        if token not in known:
-            raise UnknownScopeError(
-                f"scope code {token!r} is not in catalogue version {catalogue.catalogue_version!r}",
-                suggestion="aeat config auth apoderado configure --scope ALL",
-            )
-        if token not in seen:
-            seen.add(token)
-            result.append(token)
+        _validate_scope_token_shape(token)
+        for code in _resolve_scope_token(token, catalogue=catalogue, known=known):
+            if code not in seen:
+                seen.add(code)
+                result.append(code)
     return tuple(result)
+
+
+def _validate_scope_token_shape(token: str) -> None:
+    """Reject comma-separated and lowercase tokens before catalogue lookup.
+
+    Both diagnostics carry an operator-facing remediation
+    suggestion: comma-separated values must be passed as repeated
+    ``--scope`` flags; lowercase tokens must be re-typed in upper
+    case. The catalogue-lookup step is the only side-effecting check
+    that needs the catalogue handle, so keeping these shape checks
+    separate lets the resolver run on already-clean input.
+    """
+    if "," in token:
+        raise UnknownScopeError(
+            f"scope token {token!r} contains a comma; pass --scope repeatedly instead",
+            suggestion="aeat config auth apoderado configure --scope SCOPE1 --scope SCOPE2",
+        )
+    if token != token.upper():
+        raise UnknownScopeError(
+            f"scope token {token!r} must be uppercase",
+            suggestion="aeat config auth apoderado configure",
+        )
+
+
+def _resolve_scope_token(
+    token: str,
+    *,
+    catalogue: ApoderamientosCatalogue,
+    known: frozenset[str],
+) -> tuple[str, ...]:
+    """Resolve one validated scope token to the catalogue codes it expands to.
+
+    The literal ``ALL`` token expands to every catalogue code in
+    declaration order. Any other token must be a known catalogue
+    code; otherwise an :class:`UnknownScopeError` is raised with the
+    catalogue version that rejected it so the operator can spot
+    catalogue drift versus their local fixture.
+    """
+    if token == ALL_TOKEN:
+        return tuple(expand_all_token(catalogue))
+    if token not in known:
+        raise UnknownScopeError(
+            f"scope code {token!r} is not in catalogue version {catalogue.catalogue_version!r}",
+            suggestion="aeat config auth apoderado configure --scope ALL",
+        )
+    return (token,)
 
 
 __all__ = [
