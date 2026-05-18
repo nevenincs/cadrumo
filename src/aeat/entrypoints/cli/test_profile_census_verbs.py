@@ -21,7 +21,6 @@ from aeat.adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
     SecretStore,
-    override_master_key_provider,
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
@@ -46,23 +45,22 @@ def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     monkeypatch.setenv("AEAT_PROFILE_BUCKET_ROOT", str(tmp_path / "buckets"))
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs-secret",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        dispose_engine()
-        override_master_key_provider(None)
-        override_secret_store(None)
+    with provider:
+        blob_store = EncryptedBlobStore(
+            root_dir=tmp_path / "blobs-secret",
+            master_key_provider=provider,
+        )
+        secret_store = SecretStore(
+            store_dir=tmp_path / "secrets",
+            blob_store=blob_store,
+            master_key_provider=provider,
+        )
+        override_secret_store(secret_store)
+        try:
+            yield
+        finally:
+            dispose_engine()
+            override_secret_store(None)
 
 
 def _seed_active_profile() -> None:

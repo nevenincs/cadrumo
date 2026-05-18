@@ -62,7 +62,7 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 @pytest.fixture
 def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
@@ -73,12 +73,11 @@ def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        yield tmp_path
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield tmp_path
+        finally:
+            dispose_engine()
 
 
 def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:

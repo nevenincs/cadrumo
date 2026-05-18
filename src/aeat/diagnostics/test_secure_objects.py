@@ -17,7 +17,6 @@ from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
@@ -39,16 +38,15 @@ def _isolated_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
     dispose_engine()
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'diag.db'}")
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{tmp_path / 'diag.db'}"))
-    Base.metadata.create_all(engine)
-    SecureObjectRepository(engine=engine)
-    try:
-        yield
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{tmp_path / 'diag.db'}"))
+        Base.metadata.create_all(engine)
+        SecureObjectRepository(engine=engine)
+        try:
+            yield
+        finally:
+            engine.dispose()
+            dispose_engine()
 
 
 def test_secure_objects_list_namespace_argument_required(runner: CliRunner) -> None:
