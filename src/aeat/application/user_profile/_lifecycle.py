@@ -280,19 +280,15 @@ class ProfileLifecycleService:
         self._events.save(append_bucket_event(self._events.load(), event))
 
     def _iter_profiles(self) -> Iterable[UserProfileRecord]:
-        # Listing requires walking the secure-object backend by namespace.
-        # The repository's underlying SecureObjectRepository supports list_records.
-        objects = self._repository._objects
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ._repository import USER_PROFILE_VALUE_NAMESPACE
+        """Yield every live profile record by delegating to the repository.
 
-        for raw in objects.list_records(
-            USER_PROFILE_VALUE_NAMESPACE,
-            expected_class=SensitivityClass.IDENTITY,
-            max_supported_version=1,
-        ):
-            envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
-            yield envelope.payload
+        Walking the secure-object index lives on
+        :class:`UserProfileLifecycleRepository.iter_records` so the
+        service consumes a public surface instead of reaching for the
+        repository's private secure-object reference.
+        """
+
+        return self._repository.iter_records()
 
 
 __all__ = ["ProfileLifecycleService"]
