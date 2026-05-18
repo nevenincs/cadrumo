@@ -448,10 +448,10 @@ def config_profile_preflight(
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("use", help=tr("cli.config.profile.use_help"))
-def config_profile_use(
+@profile_app.command("switch", help=tr("cli.config.profile.switch_help"))
+def config_profile_switch(
     ctx: typer.Context,
-    name: str = typer.Argument(..., help=tr("cli.config.profile.use_name_help")),
+    name: str = typer.Argument(..., help=tr("cli.config.profile.switch_name_help")),
 ) -> None:
     """Select an existing profile as the active profile."""
 
@@ -567,20 +567,23 @@ def config_profile_show(
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("remove", help=tr("cli.config.profile.remove_help"))
-def config_profile_remove(
+@profile_app.command("delete", help=tr("cli.config.profile.delete_help"))
+def config_profile_delete(
     ctx: typer.Context,
-    name: str = typer.Argument(..., help=tr("cli.config.profile.remove_name_help")),
-    confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.remove_yes_help")),
+    name: str = typer.Argument(..., help=tr("cli.config.profile.delete_name_help")),
+    confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.delete_yes_help")),
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
 
     from ....application.user_profile import RemoveProfileCommand
-    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.user_profile._orchestration import (
+        _clear_active_profile_pointer,
+        build_lifecycle_service,
+    )
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.remove_requires_yes", name=name))
+        raise CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
     repository = _profile_state()
     state = repository.load()
     pointer = state.profiles.get(name)
@@ -592,9 +595,7 @@ def config_profile_remove(
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
     if resolve_active_bucket_id() == name:
-        from ....application.workflow._utils import utc_now
-
-        repository.update(lambda current: current.model_copy(update={"active_profile": None, "updated_at": utc_now()}))
+        _clear_active_profile_pointer()
     _emit(
         ctx,
         {"profile_id": result.profile.profile_id, "status": result.profile.status.value},
