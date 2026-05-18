@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 import pytest
 
 from .....core.config import Settings
-from ....persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql.engine import dispose_engine
 from . import _session_store
 from ._clave_movil import (
@@ -46,12 +46,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 def _isolated_secure_session_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     dispose_engine()
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 # ── Browser-session stand-ins ────────────────────────────────────────────────
