@@ -122,15 +122,22 @@ def _config_help() -> HelpDocument:
         sections=(
             _section(
                 "First run",
-                _entry("aeat config init", "Create or update the active profile"),
-                _entry("aeat config profile status", "Show profile readiness"),
+                _entry("aeat config init --profile NAME", "Bootstrap the first profile"),
+                _entry("aeat config profile status", "Show active-profile readiness"),
             ),
             _section(
-                "Profile",
+                "Profile lifecycle",
+                _entry("aeat config profile switch NAME", "Switch to an existing profile"),
+                _entry("aeat config profile delete NAME", "Delete a profile (--yes confirms)"),
+                _entry("aeat config profile duplicate SRC DST", "Copy a profile under a new name"),
+                _entry("aeat config profile rename SRC DST", "Rename a profile in place"),
+            ),
+            _section(
+                "Profile inspection",
                 _entry("aeat config profile list", "List editable profile keys"),
-                _entry("aeat config profile get KEY", "Read one profile value"),
-                _entry("aeat config profile set KEY VALUE", "Set one profile value"),
-                _entry("aeat config profile unset KEY", "Clear one profile value"),
+                _entry("aeat config profile view [NAME]", "Show the live record"),
+                _entry("aeat config profile validate", "Validate the active record"),
+                _entry("aeat config profile preflight", "Modelo / year / period readiness"),
             ),
             _section(
                 "Authentication",

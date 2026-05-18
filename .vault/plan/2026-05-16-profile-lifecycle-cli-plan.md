@@ -123,7 +123,7 @@ the Typer registration changes.
 - [ ] `P05.S43` - merge `view` and `status` into one `show` verb that defaults to the active profile and emits a readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S44` - delete `validate` and `preflight` verbs; `their schema-validation surface folds into `show`'s readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S45` - delete `get` / `set` / `unset` verbs from the operator CLI; `they re-home under `python -m aeat.diagnostics`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P05.S46` - rewrite the top-level `_config_help` summary to advertise every operator profile verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P05.S46` - rewrite the top-level `_config_help` summary to advertise every operator profile verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
 
 ### Phase `P06` - add the genuinely missing operator verbs
 
