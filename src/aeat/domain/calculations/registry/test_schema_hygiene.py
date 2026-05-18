@@ -297,6 +297,45 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
         )
 
 
+def _renta_replay_captured_targets(replay_dir) -> set[str]:  # type: ignore[no-untyped-def]
+    """Return every 4-digit casilla id captured under ``*_by_casilla`` blocks in renta replays.
+
+    A missing replay directory returns an empty set (the gate is
+    dormant during initial scaffolding). Per-payload JSON parse
+    failures are tolerated — a malformed scratch file should not
+    block the suite. Only casilla-id keyed sections
+    (``expected_by_casilla`` / ``observed_by_casilla``) are scanned;
+    user-readable label keys are deliberately excluded so the
+    capture set stays aligned with the registry's canonical ids.
+    """
+    captured: set[str] = set()
+    if not replay_dir.exists():
+        return captured
+    import json as _json
+
+    for payload_path in replay_dir.glob("*.json"):
+        try:
+            document = _json.loads(payload_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for key in ("expected_by_casilla", "observed_by_casilla"):
+            section = document.get(key) or {}
+            if isinstance(section, dict):
+                captured.update(k for k in section if isinstance(k, str) and k.isdigit())
+    return captured
+
+
+def _modelo_100_formula_targets(modelos) -> set[str]:  # type: ignore[no-untyped-def]
+    """Return every ``formula.target`` casilla declared by any Modelo 100 revision."""
+    targets: set[str] = set()
+    for modelo in modelos:
+        if modelo.id != "100":
+            continue
+        for revision in modelo.revisions.values():
+            targets.update(formula.target for formula in revision.formulas)
+    return targets
+
+
 def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage() -> None:
     """Every Modelo 100 formula target should be exercised by at least one Renta WEB Open replay payload.
 
@@ -314,31 +353,9 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     """
 
     replay_dir = bundled_path("corpus", "parity_replays", "renta_web_open")
-    captured_targets: set[str] = set()
-    if replay_dir.exists():
-        import json as _json
-
-        for payload_path in replay_dir.glob("*.json"):
-            try:
-                document = _json.loads(payload_path.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                continue
-            # Per-formula gate scans casilla-id keyed sections only — labels
-            # (e.g. "Resultado de la declaración") are user-readable; the
-            # canonical registry id is the 4-digit casilla number captured
-            # under the *_by_casilla blocks.
-            for key in ("expected_by_casilla", "observed_by_casilla"):
-                section = document.get(key) or {}
-                if isinstance(section, dict):
-                    captured_targets.update(k for k in section if isinstance(k, str) and k.isdigit())
+    captured_targets = _renta_replay_captured_targets(replay_dir)
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    formula_targets: set[str] = set()
-    for modelo in modelos:
-        if modelo.id != "100":
-            continue
-        for revision in modelo.revisions.values():
-            for formula in revision.formulas:
-                formula_targets.add(formula.target)
+    formula_targets = _modelo_100_formula_targets(modelos)
     grounded = formula_targets & captured_targets
     ungrounded = sorted(formula_targets - captured_targets)
     metrics_path = PROJECT_ROOT / ".vault" / "audit" / "renta-formula-oracle-coverage.txt"
