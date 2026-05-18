@@ -130,6 +130,16 @@ def _load_modelo_directory_cached(
 ) -> ModeloDefinition:
     del fingerprints
     resolved = Path(directory)
+    manifest_data = _load_modelo_manifest(resolved)
+    merged_revisions = _load_modelo_revisions(resolved)
+    if not merged_revisions:
+        raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
+    merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
+    return _build_modelo_definition_from_data(resolved, merged)
+
+
+def _load_modelo_manifest(resolved: Path) -> dict[str, object]:
+    """Load the directory-mode manifest.toml and reject inlined [revisions]."""
     manifest_path = resolved / "manifest.toml"
     manifest_data = _freeze_toml(_read_toml(manifest_path))
     if "revisions" in manifest_data:
@@ -137,29 +147,44 @@ def _load_modelo_directory_cached(
             f"{manifest_path}: directory-mode manifest must not declare [revisions]; "
             f"revision data lives in revisions/<id>.toml"
         )
-    merged_revisions: dict[str, object] = {}
+    return manifest_data
+
+
+def _load_modelo_revisions(resolved: Path) -> dict[str, object]:
+    """Read every ``revisions/*.toml`` and merge into one ``{revision_id: raw}`` map.
+
+    A missing ``revisions/`` directory returns an empty dict; the
+    caller raises if no revisions land. Each per-file ``[revisions.X]``
+    payload is added to the merged map under its id, rejecting
+    inline ``[modelo]`` declarations, local catalogues, and any
+    duplicate ``revision_id`` across files.
+    """
     revisions_dir = resolved / "revisions"
-    if revisions_dir.is_dir():
-        for path in sorted(revisions_dir.glob("*.toml")):
-            rev_data = _freeze_toml(_read_toml(path))
-            _reject_local_catalogues(path, rev_data)
-            if "modelo" in rev_data:
-                raise RegistryLoadError(f"{path}: revision file must not declare [modelo]; that lives in manifest.toml")
-            file_revisions = rev_data.get("revisions")
-            if not isinstance(file_revisions, dict) or not file_revisions:
-                raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
-            for revision_id, raw_revision in file_revisions.items():
-                if not isinstance(revision_id, str):
-                    raise RegistryLoadError(f"{path}: revision key must be a string")
-                if revision_id in merged_revisions:
-                    raise RegistryLoadError(
-                        f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
-                    )
-                merged_revisions[revision_id] = raw_revision
-    if not merged_revisions:
-        raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
-    merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
-    return _build_modelo_definition_from_data(resolved, merged)
+    if not revisions_dir.is_dir():
+        return {}
+    merged_revisions: dict[str, object] = {}
+    for path in sorted(revisions_dir.glob("*.toml")):
+        _merge_revision_file(path, merged_revisions)
+    return merged_revisions
+
+
+def _merge_revision_file(path: Path, merged_revisions: dict[str, object]) -> None:
+    """Validate one revisions/*.toml file and append its revisions into ``merged_revisions``."""
+    rev_data = _freeze_toml(_read_toml(path))
+    _reject_local_catalogues(path, rev_data)
+    if "modelo" in rev_data:
+        raise RegistryLoadError(f"{path}: revision file must not declare [modelo]; that lives in manifest.toml")
+    file_revisions = rev_data.get("revisions")
+    if not isinstance(file_revisions, dict) or not file_revisions:
+        raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
+    for revision_id, raw_revision in file_revisions.items():
+        if not isinstance(revision_id, str):
+            raise RegistryLoadError(f"{path}: revision key must be a string")
+        if revision_id in merged_revisions:
+            raise RegistryLoadError(
+                f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
+            )
+        merged_revisions[revision_id] = raw_revision
 
 
 def load_catalogue_file(path: Path) -> RegistryCatalogues:
