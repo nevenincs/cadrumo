@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from pathlib import Path
-from typing import NamedTuple, cast
+from typing import NamedTuple, get_args
 
 from pydantic import BaseModel, ConfigDict
 
@@ -244,10 +244,7 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
 def audit_registry_oracles(registry_root: Path, *, environment: str) -> RegistryOracleAuditReport:
     """Audit registered live-parity oracles against every registry cross-reference."""
 
-    if environment not in {"production", "test_environment", "both"}:
-        raise RegistryApplicationInputError(
-            f"environment must be 'production', 'test_environment', or 'both'; got {environment!r}"
-        )
+    typed_environment = _typed_oracle_environment(environment)
     modelos, _catalogues = load_registry_tree(registry_root)
     oracle_catalogue = LiveParityCatalogue()
     oracle_catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
@@ -255,7 +252,7 @@ def audit_registry_oracles(registry_root: Path, *, environment: str) -> Registry
     failures = audit_registry_oracle_bindings(
         modelos,
         oracle_catalogue,
-        environment=cast(OracleEnvironment, environment),
+        environment=typed_environment,
     )
     applicability_declarations = collect_applicability_declarations(modelos)
     orphan_oracle_ids = collect_orphan_oracle_ids(modelos, oracle_catalogue)
