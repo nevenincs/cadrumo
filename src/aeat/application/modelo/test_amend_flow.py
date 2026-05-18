@@ -10,6 +10,7 @@ bucket event.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -264,17 +265,28 @@ def test_amend_refuses_when_baseline_already_superseded(repos) -> None:
         )
 
 
-def test_amend_creates_complementaria_filing_supersedes_baseline(repos) -> None:
-    """Baseline carrying imported evidence → operator submits overrides
-    → new revision (complementaria) + new filing record + supersedes
-    baseline + emits ``modelo.amended`` event."""
+@dataclass(frozen=True, slots=True)
+class _AmendOutcome:
+    """Bundle returned by _drive_amend_creates_complementaria.
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    Holds every state slice the focused tests inspect:
+    work_unit + baseline + baseline_revision + the new filing
+    record produced by ``amend_modelo_revision``.
+    """
+
+    work_unit: object
+    baseline_revision: object
+    baseline: object
+    new_filing: object
+
+
+def _drive_amend_creates_complementaria(repos) -> _AmendOutcome:  # type: ignore[no-untyped-def]
+    """Run the seed-baseline + amend scenario and bundle the observable state."""
+    wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
     work_unit, baseline_revision, baseline = _seed_external_baseline(
         repos,
         casilla_values={"01": Decimal("1000"), "02": Decimal("250")},
     )
-
     new_filing = amend_modelo_revision(
         from_filing_record_id=baseline.filing_record_id,
         overrides={"01": Decimal("1100")},
@@ -287,40 +299,110 @@ def test_amend_creates_complementaria_filing_supersedes_baseline(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T4,
     )
+    return _AmendOutcome(
+        work_unit=work_unit,
+        baseline_revision=baseline_revision,
+        baseline=baseline,
+        new_filing=new_filing,
+    )
 
-    assert new_filing.status is FilingRecordStatus.CURRENT
-    assert new_filing.amends_filing_record_id == baseline.filing_record_id
-    assert new_filing.external_evidence is None
-    assert new_filing.filed_at == _T4
-    assert new_filing.filed_by == "operator-A"
 
-    refreshed_baseline = get_filing_record(baseline.filing_record_id, filing_repository=fr_repo)
+def test_amend_new_filing_is_current_complementaria_record(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    assert outcome.new_filing.status is FilingRecordStatus.CURRENT
+    assert outcome.new_filing.amends_filing_record_id == outcome.baseline.filing_record_id
+    assert outcome.new_filing.external_evidence is None
+
+
+def test_amend_new_filing_records_filing_metadata(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    assert outcome.new_filing.filed_at == _T4
+    assert outcome.new_filing.filed_by == "operator-A"
+
+
+def test_amend_baseline_is_superseded_by_new_filing(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, _, fr_repo, _, _ = repos
+    refreshed_baseline = get_filing_record(outcome.baseline.filing_record_id, filing_repository=fr_repo)
     assert refreshed_baseline.status is FilingRecordStatus.SUPERSEDED
-    assert refreshed_baseline.superseded_by_filing_record_id == new_filing.filing_record_id
+    assert refreshed_baseline.superseded_by_filing_record_id == outcome.new_filing.filing_record_id
 
-    new_revision = get_calculation_revision(new_filing.calculation_revision_id, calculation_repository=cr_repo)
+
+def test_amend_new_revision_is_filed_complementaria(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, cr_repo, _, _, _ = repos
+    new_revision = get_calculation_revision(
+        outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
+    )
     assert new_revision.state is CalculationRevisionState.FILED
     assert new_revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
-    assert new_revision.amends_filing_record_id == baseline.filing_record_id
+    assert new_revision.amends_filing_record_id == outcome.baseline.filing_record_id
     assert new_revision.amendment_reason == "under-reported turnover discovered in audit"
+
+
+def test_amend_overridden_casilla_takes_new_value(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, cr_repo, _, _, _ = repos
+    new_revision = get_calculation_revision(
+        outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
+    )
     assert new_revision.casilla_values["01"] == Decimal("1100")
-    assert new_revision.casilla_values["02"] == baseline_revision.casilla_values["02"]
 
-    refreshed_wu = get_work_unit(work_unit.work_unit_id, repository=wu_repo)
-    assert refreshed_wu.filed_calculation_revision_id == new_filing.calculation_revision_id
-    assert refreshed_wu.current_filing_record_id == new_filing.filing_record_id
 
-    catalogue = bv_repo.load()
-    amended_events = catalogue.for_bucket(
-        work_unit.bucket_id,
+def test_amend_unoverridden_casilla_inherits_baseline_value(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, cr_repo, _, _, _ = repos
+    new_revision = get_calculation_revision(
+        outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
+    )
+    assert new_revision.casilla_values["02"] == outcome.baseline_revision.casilla_values["02"]
+
+
+def test_amend_work_unit_pointers_advance_to_new_filing(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    wu_repo, _, _, _, _ = repos
+    refreshed_wu = get_work_unit(outcome.work_unit.work_unit_id, repository=wu_repo)
+    assert refreshed_wu.filed_calculation_revision_id == outcome.new_filing.calculation_revision_id
+    assert refreshed_wu.current_filing_record_id == outcome.new_filing.filing_record_id
+
+
+def test_amend_emits_single_modelo_amended_event(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, _, _, _, bv_repo = repos
+    amended_events = bv_repo.load().for_bucket(
+        outcome.work_unit.bucket_id,
         event_types=(BucketEventType.MODELO_AMENDED,),
     )
     assert len(amended_events) == 1
+
+
+_AMENDED_EVENT_PAYLOAD_EXPECTATIONS = (
+    ("amendment_kind", "complementaria"),
+    ("override_count", "1"),
+)
+
+
+@pytest.mark.parametrize(("payload_key", "expected"), _AMENDED_EVENT_PAYLOAD_EXPECTATIONS)
+def test_amend_amended_event_payload_records_metadata(repos, payload_key: str, expected: str) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, _, _, _, bv_repo = repos
+    amended_events = bv_repo.load().for_bucket(
+        outcome.work_unit.bucket_id,
+        event_types=(BucketEventType.MODELO_AMENDED,),
+    )
+    assert amended_events[0].payload[payload_key] == expected
+
+
+def test_amend_amended_event_targets_new_filing_record(repos) -> None:
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, _, _, _, bv_repo = repos
+    amended_events = bv_repo.load().for_bucket(
+        outcome.work_unit.bucket_id,
+        event_types=(BucketEventType.MODELO_AMENDED,),
+    )
     event = amended_events[0]
-    assert event.object_id == new_filing.filing_record_id
-    assert event.payload["amends_filing_record_id"] == baseline.filing_record_id
-    assert event.payload["amendment_kind"] == "complementaria"
-    assert event.payload["override_count"] == "1"
+    assert event.object_id == outcome.new_filing.filing_record_id
+    assert event.payload["amends_filing_record_id"] == outcome.baseline.filing_record_id
 
 
 def test_amend_refuses_no_op_overrides(repos) -> None:
