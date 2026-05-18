@@ -84,19 +84,24 @@ def json_output_requested() -> bool:
 
     ctx = click.get_current_context(silent=True)
     while ctx is not None:
-        for name in _JSON_PARAM_NAMES:
-            if bool(ctx.params.get(name, False)):
-                return True
-        if _context_value_is_json(ctx.params.get("format")) or _context_value_is_json(ctx.params.get("format_")):
+        if _context_layer_requests_json(ctx):
             return True
-        if isinstance(ctx.obj, dict):
-            for name in _JSON_PARAM_NAMES:
-                if bool(ctx.obj.get(name, False)):
-                    return True
-            if _context_value_is_json(ctx.obj.get("format")):
-                return True
         ctx = ctx.parent
     return False
+
+
+def _context_layer_requests_json(ctx: click.Context) -> bool:
+    """Return True when this single context layer carries any recognised JSON request."""
+    if _params_request_json(ctx.params):
+        return True
+    return isinstance(ctx.obj, dict) and _params_request_json(ctx.obj)
+
+
+def _params_request_json(params: dict[str, object]) -> bool:
+    """Return True when ``params`` carries any recognised JSON flag or ``format=json`` option."""
+    if any(bool(params.get(name, False)) for name in _JSON_PARAM_NAMES):
+        return True
+    return _context_value_is_json(params.get("format")) or _context_value_is_json(params.get("format_"))
 
 
 def _context_value_is_json(value: object) -> bool:
