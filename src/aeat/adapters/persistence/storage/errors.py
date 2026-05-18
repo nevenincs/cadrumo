@@ -21,10 +21,6 @@ class StorageError(AeatError):
     """Base class for every error raised by :mod:`aeat.adapters.persistence.storage`."""
 
 
-class MigrationError(StorageError):
-    """Raised when an Alembic migration operation fails."""
-
-
 class RepositoryError(StorageError):
     """Raised when a repository operation fails (not-found, integrity, etc.)."""
 

@@ -13,7 +13,6 @@ Submodules
    :maxdepth: 4
 
    aeat.adapters.persistence.storage.sql.engine
-   aeat.adapters.persistence.storage.sql.migrations_api
    aeat.adapters.persistence.storage.sql.records
    aeat.adapters.persistence.storage.sql.repository
    aeat.adapters.persistence.storage.sql.session

@@ -589,17 +589,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.MigrationError",
-        ErrorCode(
-            code="FAIL_STORAGE_MIGRATION",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_storage_migration",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.adapters.persistence.storage.errors.NonceCollisionError",
         ErrorCode(
             code="INTEGRITY_STORAGE_NONCE_COLLISION",

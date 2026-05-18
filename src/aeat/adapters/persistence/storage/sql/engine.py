@@ -132,10 +132,10 @@ def create_engine_from_settings(settings: Settings) -> Engine:
 def get_engine(settings: Settings | None = None) -> Engine:
     """Return a process-wide singleton engine, keyed by database URL.
 
-    On first access, runs Alembic ``upgrade head`` against the new engine
-    when :attr:`aeat.core.config.Settings.aeat_storage_auto_migrate` is
-    enabled. The Alembic API is imported lazily so this module stays free
-    of an Alembic dependency at import time.
+    On first access, materialises every ORM table declared on
+    :class:`~aeat.adapters.persistence.storage.sql._orm.Base.metadata`
+    against the new engine. The codebase is forward-only: there is no
+    migration history; the schema is whatever the current ORM defines.
 
     Args:
         settings: Optional :class:`~aeat.core.config.Settings` override.
@@ -153,18 +153,9 @@ def get_engine(settings: Settings | None = None) -> Engine:
         if cached is not None:
             return cached
         engine = create_engine_from_settings(resolved)
-        if resolved.aeat_storage_auto_migrate:
-            # Imported lazily so `engine` stays free of an Alembic dependency
-            # at module import time.
-            from .migrations_api import upgrade_to_head
+        from ._orm import Base
 
-            _log.info("aeat_storage_auto_migrate=true; running alembic upgrade head")
-            try:
-                upgrade_to_head(engine)
-            except Exception:  # Alembic exception surface is undocumented; log+dispose+re-raise is correct boundary
-                _log.error("alembic upgrade head failed for url=%s", url, exc_info=True)
-                engine.dispose()
-                raise
+        Base.metadata.create_all(engine)
         _engines[url] = engine
         return engine
 
