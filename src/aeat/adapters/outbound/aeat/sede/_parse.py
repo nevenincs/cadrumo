@@ -16,7 +16,7 @@ import re
 from typing import Final
 from urllib.parse import urljoin, urlparse
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl
 
 from .....core.config import Settings
@@ -187,7 +187,7 @@ def _collect_category_path(anchor: object) -> tuple[str, ...]:
     return tuple(reversed(labels))
 
 
-def _li_header_label(li: object, *, leaf: object) -> str | None:
+def _li_header_label(li: Tag, *, leaf: Tag) -> str | None:
     """Return the header-anchor text for a sede ``<li>`` node, or ``None``.
 
     The header anchor is normally the first direct ``<a>`` child of the
@@ -197,9 +197,9 @@ def _li_header_label(li: object, *, leaf: object) -> str | None:
     walker the current ``<li>`` is an ancestor category rather than the
     leaf row itself.
     """
-    header_anchor = li.find("a", recursive=False)  # type: ignore[attr-defined]
+    header_anchor = li.find("a", recursive=False)
     if header_anchor is None:
-        first_anchor = li.find("a")  # type: ignore[attr-defined]
+        first_anchor = li.find("a")
         if first_anchor is not None and first_anchor is not leaf:
             header_anchor = first_anchor
     if header_anchor is None or header_anchor is leaf:
