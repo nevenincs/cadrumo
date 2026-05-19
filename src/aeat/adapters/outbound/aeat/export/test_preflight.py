@@ -32,7 +32,7 @@ class _Draft(ModeloDraftLike):
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO
     values: dict[str, str] = field(default_factory=dict)
     findings: tuple[ModeloFinding, ...] = ()
 
@@ -90,15 +90,15 @@ class TestPreflightGates:
 
     def test_gate_1_draft_not_approved(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="not approved"):
-            _preflight().check(_Draft(status=ModeloDraftStatus.DRAFT), today=_TODAY)
+            _preflight().check(_Draft(status=ModeloDraftStatus.BORRADOR), today=_TODAY)
 
     def test_gate_1_ready_but_unapproved_blocks(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="not approved"):
-            _preflight().check(_Draft(status=ModeloDraftStatus.READY_TO_SUBMIT), today=_TODAY)
+            _preflight().check(_Draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR), today=_TODAY)
 
     def test_gate_1_stale_approval_blocks(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="stale"):
-            _preflight().check(_Draft(status=ModeloDraftStatus.APPROVAL_STALE), today=_TODAY)
+            _preflight().check(_Draft(status=ModeloDraftStatus.APROBACION_CADUCADA), today=_TODAY)
 
     def test_gate_2_error_finding_blocks(self) -> None:
         findings = (

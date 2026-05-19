@@ -45,7 +45,7 @@ import contextlib
 import getpass
 import os
 import secrets
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal, Protocol, runtime_checkable
 
@@ -912,14 +912,14 @@ def _provider_enter(provider: object, *, fallback_bucket_id: str | None = None) 
 
     from datetime import UTC, datetime
 
-    from ..bucket._errors import NoActiveBucketError
-    from ._active_session import activate_session
-    from ._bucket_session import BucketSession
-
     # Lazy application-layer resolver import keeps the adapter free of
     # eager application coupling; resolve_active_bucket_id is the
     # canonical precedence-chain helper.
     from aeat.application.workflow._models import resolve_active_bucket_id
+
+    from ..bucket._errors import NoActiveBucketError
+    from ._active_session import activate_session
+    from ._bucket_session import BucketSession
 
     if getattr(provider, "_session", None) is not None:
         raise RuntimeError(
@@ -965,6 +965,27 @@ def _provider_exit(provider: object, exc_type: object, exc: object, tb: object) 
         activation.__exit__(exc_type, exc, tb)
     if session is not None:
         session.close()
+
+
+@contextlib.contextmanager
+def activate_master_key_provider(
+    provider: MasterKeyProvider,
+    *,
+    fallback_bucket_id: str | None = None,
+) -> Iterator[object]:
+    """Activate ``provider`` for encrypted storage within the current block.
+
+    ``fallback_bucket_id`` is used by bootstrap flows such as profile
+    creation, where the command knows the bucket being provisioned but
+    the active-profile pointer does not exist until the transaction
+    completes.
+    """
+
+    _provider_enter(provider, fallback_bucket_id=fallback_bucket_id)
+    try:
+        yield provider
+    finally:
+        _provider_exit(provider, None, None, None)
 
 
 class UnsecuredMasterKeyProvider:

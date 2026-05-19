@@ -19,6 +19,7 @@ from ..adapters.outbound.aeat.browser import (
     default_browser_session_factory,
 )
 from ..adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
+from ..adapters.persistence.storage.master_key._active_session import NoActiveBucketSessionError
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
@@ -31,6 +32,7 @@ from ..core.resources import bundled_path
 from ..domain.calculations.registry import ValidatedRegistryAuthority
 from .wizard._status import WizardStatusReport, build_wizard_status
 from .workflow import workflow_state_repository
+from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
 
 _log = get_logger(__name__)
 
@@ -192,20 +194,32 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                 summary=tr("cli.diagnostics.summary.state_backend_readable"),
             )
         )
+        profile_health = assess_active_profile_health(state)
+        checks.append(_active_profile_storage_check(profile_health))
         setup_report = build_wizard_status(state)
-        checks.append(_profile_check(setup_report))
+        checks.append(_profile_check(setup_report, profile_health=profile_health))
         checks.append(_auth_check(setup_report))
     except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
         _log.debug("config repair secure state probe failed", exc_info=True)
+        profile_health = assess_active_profile_health()
+        missing_active_bucket_session = _is_missing_active_bucket_session(exc)
         checks.append(
             DiagnosticCheck(
                 name="secure_state.load",
-                status="fail",
+                status="warn" if missing_active_bucket_session else "fail",
                 summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
                 detail=f"{type(exc).__name__}: {exc}",
-                next_action="aeat config repair reset-state --yes",
+                next_action=(
+                    profile_health.next_action
+                    or "aeat config profile switch NAME"
+                    if missing_active_bucket_session
+                    else "aeat config repair reset-state --yes"
+                ),
             )
         )
+        checks.append(_active_profile_storage_check(profile_health))
+        checks.append(_profile_unavailable_check(profile_health))
+        checks.append(_auth_unavailable_check(profile_health))
 
     secure_objects = _probe_secure_objects_integrity()
     checks.append(_secure_objects_integrity_check(secure_objects))
@@ -293,26 +307,29 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
     """Render a compact human-readable repair report."""
 
     lines = [
-        f"{tr('cli.diagnostics.repair.overall_label')}\t{report.overall}",
-        f"{tr('cli.diagnostics.repair.version_label')}\t{report.package_name} {report.package_version}",
-        f"{tr('cli.diagnostics.repair.python_label')}\t{report.python_version}",
-        f"{tr('cli.diagnostics.repair.logs_label')}\t{report.log_file}",
+        f"{tr('cli.diagnostics.repair.overall_label', default='Overall')}\t{report.overall}",
+        (
+            f"{tr('cli.diagnostics.repair.version_label', default='Version')}\t"
+            f"{report.package_name} {report.package_version}"
+        ),
+        f"{tr('cli.diagnostics.repair.python_label', default='Python')}\t{report.python_version}",
+        f"{tr('cli.diagnostics.repair.logs_label', default='Logs')}\t{report.log_file}",
     ]
     if report.setup is not None:
         lines.append(
-            f"{tr('cli.diagnostics.repair.profile_label')}\t{report.setup.active_profile or '-'} "
+            f"{tr('cli.diagnostics.repair.profile_label', default='Profile')}\t{report.setup.active_profile or '-'} "
             f"({report.setup.profile_present_keys}/{report.setup.profile_total_keys})"
         )
-        lines.append(f"{tr('cli.diagnostics.repair.auth_label')}\t{report.setup.auth_provider or '-'}")
-    lines.append(tr("cli.diagnostics.repair.checks_heading"))
+        lines.append(f"{tr('cli.diagnostics.repair.auth_label', default='Auth')}\t{report.setup.auth_provider or '-'}")
+    lines.append(tr("cli.diagnostics.repair.checks_heading", default="Checks"))
     for check in report.checks:
         lines.append(f"{check.status}\t{check.name}\t{check.summary}")
         if check.detail:
-            lines.append(f"{tr('cli.diagnostics.repair.detail_label')}\t{check.detail}")
+            lines.append(f"{tr('cli.diagnostics.repair.detail_label', default='Detail')}\t{check.detail}")
         if check.next_action:
-            lines.append(f"{tr('cli.diagnostics.repair.next_label')}\t{check.next_action}")
+            lines.append(f"{tr('cli.diagnostics.repair.next_label', default='Next')}\t{check.next_action}")
         if check.dead_end:
-            lines.append(f"{tr('cli.diagnostics.repair.note_label')}\t{check.dead_end}")
+            lines.append(f"{tr('cli.diagnostics.repair.note_label', default='Note')}\t{check.dead_end}")
     return "\n".join(lines) + "\n"
 
 
@@ -359,7 +376,20 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
             exc_info=True,
         )
         return SecureObjectIntegrityReport()
-    integrity = tuple(repo.probe_namespace_integrity(ns) for ns in namespaces)
+    integrity_items: list[SecureObjectNamespaceIntegrity] = []
+    for ns in namespaces:
+        try:
+            integrity_items.append(repo.probe_namespace_integrity(ns))
+        except Exception:
+            _log.debug("secure objects integrity probe failed for namespace=%s", ns, exc_info=True)
+            integrity_items.append(
+                SecureObjectNamespaceIntegrity(
+                    namespace=ns,
+                    readable=0,
+                    unreadable=1,
+                )
+            )
+    integrity = tuple(integrity_items)
     readable_total = sum(item.readable for item in integrity)
     unreadable_total = sum(item.unreadable for item in integrity)
     return SecureObjectIntegrityReport(
@@ -397,6 +427,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
         status="warn",
         summary=tr(
             "cli.diagnostics.summary.secure_objects_unreadable",
+            default="%{unreadable} unreadable row(s), %{readable} readable row(s)",
             unreadable=report.unreadable_total,
             readable=report.readable_total,
         ),
@@ -454,7 +485,61 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     )
 
 
-def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
+def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticCheck:
+    """Render pointer/manifest/profile-record health before semantic readiness."""
+
+    summary = tr(
+        "cli.diagnostics.summary.profile_storage",
+        active_profile=health.active_profile or "-",
+        source=health.source,
+        status=health.status,
+    )
+    if health.status in {"none", "incomplete", "ready"}:
+        return DiagnosticCheck(
+            name="profile.storage",
+            status="ok",
+            summary=summary,
+        )
+    detail = health.profile_record_error or None
+    return DiagnosticCheck(
+        name="profile.storage",
+        status="warn",
+        summary=summary,
+        detail=detail,
+        next_action=health.next_action,
+    )
+
+
+def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
+    if health.status in {"dangling_pointer", "missing_profile_record", "profile_record_unreadable"}:
+        return DiagnosticCheck(
+            name="profile.readiness",
+            status="warn",
+            summary=tr("cli.diagnostics.summary.profile_unreadable", status=health.status),
+            detail=health.profile_record_error or None,
+            next_action=health.next_action,
+        )
+    return DiagnosticCheck(
+        name="profile.readiness",
+        status="warn",
+        summary=tr("cli.diagnostics.summary.profile_none", default="No profile configured"),
+        next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+    )
+
+
+def _profile_check(report: WizardStatusReport, *, profile_health: ActiveProfileHealth | None = None) -> DiagnosticCheck:
+    if profile_health is not None and profile_health.status in {
+        "dangling_pointer",
+        "missing_profile_record",
+        "profile_record_unreadable",
+    }:
+        return DiagnosticCheck(
+            name="profile.readiness",
+            status="warn",
+            summary=tr("cli.diagnostics.summary.profile_unreadable", status=profile_health.status),
+            detail=profile_health.profile_record_error or None,
+            next_action=profile_health.next_action,
+        )
     if report.active_profile is None:
         return DiagnosticCheck(
             name="profile.readiness",
@@ -482,6 +567,15 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
             present=report.profile_present_keys,
             total=report.profile_total_keys,
         ),
+    )
+
+
+def _auth_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
+    return DiagnosticCheck(
+        name="auth.readiness",
+        status="warn",
+        summary=tr("cli.diagnostics.summary.auth_state_unreadable"),
+        next_action=health.next_action or "aeat config profile switch NAME",
     )
 
 
@@ -513,6 +607,15 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             provider=report.auth_provider,
         ),
     )
+
+
+def _is_missing_active_bucket_session(exc: BaseException) -> bool:
+    current: BaseException | None = exc
+    while current is not None:
+        if isinstance(current, NoActiveBucketSessionError):
+            return True
+        current = current.__cause__ or current.__context__
+    return "NoActiveBucketSessionError" in f"{type(exc).__name__}: {exc}"
 
 
 def _windows_stale_sync_check() -> DiagnosticCheck | None:

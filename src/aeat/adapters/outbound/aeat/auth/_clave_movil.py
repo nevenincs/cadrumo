@@ -7,10 +7,10 @@ to a successful login handshake.
 
 Design summary:
 
-* Cl@ve Móvil ALWAYS requires the operator to approve a push on their
-  phone, even in the non-QR fallback. The provider does not simulate
-  or retry the approval step — it sits on the AEAT QR page and waits
-  for the page's own JavaScript to complete the polling handshake.
+* Cl@ve Móvil is a human-in-the-loop flow. The provider observes only
+  AEAT browser state; it cannot know whether the Cl@ve app displayed,
+  accepted, rejected, or failed to receive a request unless the
+  operator reports that separately.
 * The provider opens a headed Playwright window on fresh login so the
   operator can scan the QR visually. Resume-from-storage-state runs
   headlessly because no human interaction is required.
@@ -68,6 +68,7 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
+_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS: Final[float] = 5.0
 
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
@@ -86,7 +87,7 @@ class ClaveMovilConfigurationError(AuthConfigurationError):
 
 
 class ClaveMovilApprovalTimeoutError(AuthError):
-    """Raised when the operator does not approve the Cl@ve push within the time window."""
+    """Raised when AEAT browser-side Cl@ve authentication does not complete."""
 
     def __init__(
         self,
@@ -97,7 +98,7 @@ class ClaveMovilApprovalTimeoutError(AuthError):
         suggestion: str | None = None,
         translated_message: str | None = None,
     ) -> None:
-        """Construct a Cl@ve Móvil approval failure with stable mode context."""
+        """Construct a Cl@ve Móvil authentication failure with stable mode context."""
 
         enriched_context = dict(context) if context is not None else {}
         if failure_mode is not None:
@@ -121,6 +122,7 @@ class ClaveMovilFailureMode(StrEnum):
 
     PENDING_PETITION_BLOCKED = "pending_petition_blocked"
     PUSH_WAIT_STATE_NOT_REACHED = "push_wait_state_not_reached"
+    AUTH_COMPLETION_TIMEOUT = "auth_completion_timeout"
     APPROVAL_TIMEOUT = "approval_timeout"
 
 
@@ -184,7 +186,7 @@ def _render_progress_banner(
     used_non_qr_fallback: bool,
     stream: IO[str] = sys.stderr,
 ) -> None:
-    """Print an operator-readable instruction block while the provider waits for approval."""
+    """Print operator instructions while waiting for AEAT browser auth completion."""
     lines = [
         "",
         "─────────────────────────────────────────────────────────────",
@@ -194,28 +196,28 @@ def _render_progress_banner(
     if used_non_qr_fallback:
         lines.extend(
             (
-                " • A push notification has been sent to your Cl@ve app.",
-                " • Open the app on your phone and tap 'Approve'.",
+                " • AEAT is showing the Cl@ve Móvil non-QR confirmation flow.",
+                " • Continue in the Cl@ve app if it presents this request.",
             )
         )
     else:
         lines.extend(
             (
                 " • A browser window just opened showing a QR code.",
-                " • Scan the QR with the Cl@ve app on your phone.",
+                " • Scan the QR with the Cl@ve app if it is available to you.",
             )
         )
     if verification_code:
         lines.extend(
             (
                 "",
-                f" Confirm this code on your phone: {verification_code}",
+                f" AEAT page verification code: {verification_code}",
             )
         )
     lines.extend(
         (
             "",
-            f" Waiting up to {timeout_seconds // 60}m {timeout_seconds % 60:02d}s for approval…",
+            f" Waiting up to {timeout_seconds // 60}m {timeout_seconds % 60:02d}s for AEAT to complete auth…",
             "─────────────────────────────────────────────────────────────",
             "",
         )
@@ -305,7 +307,7 @@ class ClaveMovilAuthProvider:
         fresh login and NEVER deletes the persisted session —
         even when the probe fails. Callers can
         therefore use it as a pure diagnostic without accidentally
-        triggering a phone-approval push.
+        triggering a fresh operator-mediated Cl@ve request.
         """
         async with self._lock:
             if self._active_session is not None:
@@ -515,15 +517,15 @@ class ClaveMovilAuthProvider:
                 identity_nif=dni_nie.upper(),
                 health_summary=str(exc),
             )
-        # Cl@ve Móvil always requires a live push on the phone, so we surface
-        # availability as "ready to prompt" rather than "healthy".
+        # Cl@ve Móvil requires operator-mediated live auth, so availability
+        # means the provider is configured to start that AEAT flow.
         return AuthProviderDescription(
             kind=self.kind,
             label="Cl@ve Móvil",
             configured=True,
             available=True,
             identity_nif=dni_nie.upper(),
-            health_summary="ready — requires push approval on the Cl@ve app",
+            health_summary=tr("application.auth.clave_movil.health.operator_completion_required"),
         )
 
     async def close(self) -> None:
@@ -693,23 +695,34 @@ class ClaveMovilAuthProvider:
                 diagnostic_id = await self._dump_diagnostic(page, reason="post-auth-landing-timeout")
                 current_url = getattr(page, "url", "") or ""
                 raise ClaveMovilApprovalTimeoutError(
-                    f"Cl@ve Móvil login timed out after {timeout_ms // 1000} seconds. "
-                    "Open the Cl@ve app on your phone and approve the login request, "
-                    "then run `aeat config auth test` again.",
-                    failure_mode=ClaveMovilFailureMode.APPROVAL_TIMEOUT,
+                    f"Cl@ve Móvil browser authentication did not complete after {timeout_ms // 1000} seconds. "
+                    "The driver observed the AEAT browser page but cannot infer the phone/app state.",
+                    failure_mode=ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT,
                     context={
                         "timeout_ms": timeout_ms,
                         "current_url": current_url,
                         "target_path": target_path,
                         "diagnostic_id": diagnostic_id,
+                        "phone_state": "unknown",
+                        "operator_report_required": True,
+                        "operator_report_options": (
+                            "app_prompted_and_accepted",
+                            "app_prompted_not_accepted",
+                            "app_did_not_prompt",
+                            "operator_did_not_check",
+                        ),
                     },
+                    suggestion=(
+                        "Report the Cl@ve app state for this attempt using the AEAT page verification code: "
+                        "prompted and accepted, prompted but not accepted, no prompt appeared, or not checked."
+                    ),
                 ) from exc
 
             storage_state = await context.storage_state()
             landing_url = getattr(page, "url", None)
             await page.close()
         except Exception as exc:
-            if page is not None:
+            if page is not None and not self._exception_already_has_diagnostic(exc):
                 try:
                     await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
                 except Exception as _exc:
@@ -945,7 +958,7 @@ class ClaveMovilAuthProvider:
         verification_code: str | None,
         used_non_qr_fallback: bool,
     ) -> None:
-        """Refuse to claim a Cl@ve push was sent unless AEAT shows the wait state."""
+        """Require an AEAT-observed Cl@ve waiting state before waiting further."""
 
         await self._raise_if_pending_request_error(page)
         current_url = getattr(page, "url", "") or ""
@@ -981,7 +994,8 @@ class ClaveMovilAuthProvider:
 
         diagnostic_id = await self._dump_diagnostic(page, reason="push-wait-state-not-reached")
         raise ClaveMovilApprovalTimeoutError(
-            "AEAT Cl@ve Móvil did not reach the push approval waiting state after submitting the login form.",
+            "AEAT Cl@ve Móvil did not reach a browser-observed confirmation waiting state "
+            "after submitting the login form.",
             failure_mode=ClaveMovilFailureMode.PUSH_WAIT_STATE_NOT_REACHED,
             context={
                 "reason": "aeat-clave-movil-wait-state-not-reached",
@@ -993,7 +1007,7 @@ class ClaveMovilAuthProvider:
             },
             suggestion=(
                 "Inspect the encrypted Cl@ve diagnostic artefact, then retry with QR mode "
-                "(AEAT_CLAVE_PREFER_NON_QR=false) if the non-QR push form no longer reaches the wait page."
+                "(AEAT_CLAVE_PREFER_NON_QR=false) if the non-QR form no longer reaches the wait page."
             ),
         )
 
@@ -1005,9 +1019,9 @@ class ClaveMovilAuthProvider:
         generar una nueva petición de autenticación con Cl@ve Móvil.
         Por su seguridad, acceda a la APP Cl@ve … y rechace la petición
         pendiente — o espere a que caduque tras un máximo de 5 minutos."
-        This happens when a prior login left an un-acknowledged push
+        This happens when a prior login left an unresolved request
         alive server-side. The polling loop that normally redirects on
-        approval is never rendered, so the authenticator would otherwise
+        browser-side completion is never rendered, so the authenticator would otherwise
         sit on the page until the outer timeout fires. Fail fast with a
         clear remediation message.
         """
@@ -1023,7 +1037,7 @@ class ClaveMovilAuthProvider:
         if any(marker in normalized for marker in pending_markers):
             diagnostic_id = await self._dump_diagnostic(page, reason="pending-request-refusal")
             raise ClaveMovilApprovalTimeoutError(
-                "AEAT refused to issue a new Cl@ve Móvil push: a prior "
+                "AEAT refused to issue a new Cl@ve Móvil authentication request: a prior "
                 "authentication request is still pending server-side.",
                 failure_mode=ClaveMovilFailureMode.PENDING_PETITION_BLOCKED,
                 context={
@@ -1086,12 +1100,24 @@ class ClaveMovilAuthProvider:
             }
             content = getattr(page, "content", None)
             if content is not None:
-                payload["html"] = await content()
+                try:
+                    payload["html"] = await asyncio.wait_for(
+                        content(),
+                        timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
+                    )
+                except (TimeoutError, PlaywrightTimeoutError):
+                    payload["html_capture_error"] = "timeout"
             screenshot = getattr(page, "screenshot", None)
             if screenshot is not None:
-                image = await screenshot(full_page=True)
-                if isinstance(image, (bytes, bytearray)):
-                    payload["screenshot_png_base64"] = base64.b64encode(bytes(image)).decode("ascii")
+                try:
+                    image = await asyncio.wait_for(
+                        screenshot(full_page=True),
+                        timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
+                    )
+                    if isinstance(image, (bytes, bytearray)):
+                        payload["screenshot_png_base64"] = base64.b64encode(bytes(image)).decode("ascii")
+                except (TimeoutError, PlaywrightTimeoutError):
+                    payload["screenshot_capture_error"] = "timeout"
             SecureObjectRepository().save(
                 namespace=_DIAGNOSTIC_NAMESPACE,
                 object_key=ts,
@@ -1111,6 +1137,15 @@ class ClaveMovilAuthProvider:
             log.warning("ClaveMovilAuthProvider: diagnostic dump failed", exc_info=True)
             return None
 
+    @staticmethod
+    def _exception_already_has_diagnostic(exc: Exception) -> bool:
+        """Return whether an auth exception already carries a diagnostic id."""
+
+        context = getattr(exc, "context", None)
+        if not isinstance(context, dict):
+            return False
+        return bool(context.get("diagnostic_id"))
+
     async def _wait_for_post_auth_landing(
         self,
         page: BrowserPageLike,
@@ -1119,7 +1154,7 @@ class ClaveMovilAuthProvider:
     ) -> None:
         """Poll until the browser reaches ``target_path`` or timeout.
 
-        After push approval AEAT may interpose
+        After Cl@ve completion AEAT may interpose
         AEAT's own-name representation dispatcher — the representation
         dispatcher. When AEAT has already selected "own name", the
         provider confirms that read-only acting scope and continues. It

@@ -749,8 +749,8 @@ class WorkflowEngine:
             steps=steps,
         )
         ready_statuses = {
-            ModeloDraftStatus.READY_TO_SUBMIT.value,
-            ModeloDraftStatus.APPROVED.value,
+            ModeloDraftStatus.LISTO_PARA_PRESENTAR.value,
+            ModeloDraftStatus.APROBADO.value,
         }
         if _enum_value(draft.status) not in ready_statuses:
             status_value = _enum_value(draft.status)

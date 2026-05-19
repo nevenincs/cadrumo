@@ -53,6 +53,7 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
@@ -69,6 +70,7 @@ def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
     monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
@@ -161,17 +163,20 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     )
     assert init_result.exit_code == 0, init_result.output
 
+    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.user_profile._orchestration import set_active_field
     from aeat.domain.user_profile import UserProfileFact
 
-    workflow_state_repository().update(
-        lambda current: set_active_field(
-            current, UserProfileFact(path="preferences.output_language", value="en")
+    provider = get_master_key_provider()
+    with activate_master_key_provider(provider):
+        workflow_state_repository().update(
+            lambda current: set_active_field(
+                current, UserProfileFact(path="preferences.output_language", value="en")
+            )
         )
-    )
 
-    refreshed = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
-    assert fact_value(refreshed, "preferences.output_language") == "en"
+        refreshed = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+        assert fact_value(refreshed, "preferences.output_language") == "en"
 
     status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
@@ -179,11 +184,12 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     assert status_payload["active_profile"] == "operator"
     assert status_payload["iva_regime"] == "GENERAL"
 
-    state = workflow_state_repository().load()
-    assert state.profiles["operator"].bucket_id == "operator"
-    stored = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
-    assert fact_value(stored, "identity.tax_id") == "00000000T"
-    assert fact_value(stored, "preferences.output_language") == "en"
+    with activate_master_key_provider(get_master_key_provider()):
+        state = workflow_state_repository().load()
+        assert state.active_profile_bucket_id() == "operator"
+        stored = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+        assert fact_value(stored, "identity.tax_id") == "00000000T"
+        assert fact_value(stored, "preferences.output_language") == "en"
 
     calendar_result = _invoke(
         [
@@ -191,8 +197,7 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
             "json",
             "app",
             "overview",
-            "status",
-            "--calendar",
+            "calendar",
             "--from",
             "2026-01-01",
             "--to",
@@ -202,9 +207,10 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     )
     assert calendar_result.exit_code == 0, calendar_result.output
     calendar_payload = json.loads(_json_output(calendar_result))
-    assert "iva.regime" in calendar_payload["calendar"]["completeness"]["explicitly_set_keys"]
+    assert "iva.regime" in calendar_payload["completeness"]["explicitly_set_keys"]
 
-    filing_profile = load_default_filing_profile()
+    with activate_master_key_provider(get_master_key_provider()):
+        filing_profile = load_default_filing_profile()
     assert filing_profile.tax_id == "00000000T"
 
 
@@ -465,6 +471,20 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     tmp_path: Path,
 ) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
+    created = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+        ]
+    )
+    assert created.exit_code == 0, created.output
 
     configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
     unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])

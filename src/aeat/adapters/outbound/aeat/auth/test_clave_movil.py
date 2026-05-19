@@ -8,8 +8,8 @@ stand-ins satisfy the same Protocol the production
 provider's choreography (selector clicks, form fills, post-auth
 landing assertions) is verified without a real browser.
 
-These tests do not prove real AEAT authentication or operator Cl@ve
-approval; the live handshake is covered by gated probes elsewhere.
+These tests do not prove real AEAT authentication or operator-side
+Cl@ve state; the live handshake is covered by gated probes elsewhere.
 """
 
 from __future__ import annotations
@@ -123,7 +123,7 @@ class _RecordingPage:
 
     async def wait_for_url(self, matcher: str | Callable[[str], bool], *, timeout: float | None = None) -> None:
         del timeout
-        # Simulate a phone approval that auto-redirects to the target.
+        # Simulate AEAT browser completion that redirects to the target.
         self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
         if not isinstance(matcher, str) and not matcher(self.url):
             raise TimeoutError("matcher rejected simulated URL")
@@ -461,8 +461,8 @@ class TestPendingPetitionRefusal:
         asyncio.run(run())
 
 
-class TestPushWaitState:
-    def test_login_refuses_to_claim_push_sent_without_wait_state(
+class TestClaveWaitState:
+    def test_login_refuses_to_wait_without_observed_confirmation_state(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -473,7 +473,7 @@ class TestPushWaitState:
         page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"push approval waiting state") as excinfo:
+            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"confirmation waiting state") as excinfo:
                 await provider._assert_push_wait_state(
                     page,
                     target_path=settings.aeat_sede_expedientes_path,

@@ -333,7 +333,7 @@ def _draft(
     draft_id: str,
     modelo: str = "130",
     period: str = "2026Q1",
-    status: ModeloDraftStatus = ModeloDraftStatus.READY_TO_SUBMIT,
+    status: ModeloDraftStatus = ModeloDraftStatus.LISTO_PARA_PRESENTAR,
     findings: tuple[ModeloValidationFinding, ...] = (),
 ) -> ModeloDraft:
     values = (
@@ -410,7 +410,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
     """`status=DRAFT` with no findings must emit the same placeholder as VALIDATED."""
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d_draft", status=ModeloDraftStatus.DRAFT))
+    _write_draft(settings, _draft(draft_id="d_draft", status=ModeloDraftStatus.BORRADOR))
     items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
@@ -422,7 +422,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
 def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d2", status=ModeloDraftStatus.VALIDATED))
+    _write_draft(settings, _draft(draft_id="d2", status=ModeloDraftStatus.VALIDADO))
     items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
@@ -433,7 +433,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     """`status=APPROVAL_STALE` must surface as a HIGH-severity finding row."""
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d_stale", status=ModeloDraftStatus.APPROVAL_STALE))
+    _write_draft(settings, _draft(draft_id="d_stale", status=ModeloDraftStatus.APROBACION_CADUCADA))
     items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
@@ -447,7 +447,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d3", status=ModeloDraftStatus.READY_TO_SUBMIT))
+    _write_draft(settings, _draft(draft_id="d3", status=ModeloDraftStatus.LISTO_PARA_PRESENTAR))
     assert drafts_pending(settings) == ()
 
 

@@ -34,7 +34,7 @@ class AuthProviderKind(StrEnum):
 
     Attributes:
         CERTIFICATE: PKCS#12 client certificate (FNMT-RCM and equivalents).
-        CLAVE_MOVIL: ``Cl@ve`` Móvil push-approval flow.
+        CLAVE_MOVIL: operator-mediated ``Cl@ve`` Móvil flow.
     """
 
     CERTIFICATE = "certificate"
@@ -166,6 +166,7 @@ from ._diagnostics import (
 from ._models import AuthState
 from ._operator import (
     AuthClearResult,
+    AuthConfigureDanglingActiveProfileError,
     AuthConfigureResult,
     AuthProviderReservedError,
     AuthProvidersReport,
@@ -196,6 +197,7 @@ __all__ = [
     "AuthAcquisitionLockStatus",
     "AuthAcquisitionLockedError",
     "AuthClearResult",
+    "AuthConfigureDanglingActiveProfileError",
     "AuthConfigureResult",
     "AuthDiagnosticDetail",
     "AuthDiagnosticListReport",

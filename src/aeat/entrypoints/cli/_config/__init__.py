@@ -172,6 +172,51 @@ def repair_reset_state(
 
 
 @repair_app.command(
+    "profile",
+    help=tr(
+        "cli.config.repair.profile_help",
+        default="Inspect and repair the active-profile pointer.",
+    ),
+)
+def repair_profile(
+    ctx: typer.Context,
+    clear_active: bool = typer.Option(
+        False,
+        "--clear-active",
+        help=tr(
+            "cli.config.repair.profile_clear_active_help",
+            default="Clear a pointer-file active profile only when it points at unreadable profile state.",
+        ),
+    ),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help", default="Confirm repair.")),
+) -> None:
+    """Inspect or safely clear a degraded active-profile pointer."""
+
+    from ....application.workflow._profile_health import repair_active_profile_pointer
+
+    if clear_active and not yes:
+        raise CliRefusedBoundaryError(tr("cli.config.repair.profile_requires_yes"))
+    result = repair_active_profile_pointer(clear_active=clear_active, confirmed=yes)
+    health = result.after or result.before
+    payload = result.model_dump(mode="json")
+    lines = [
+        f"dry_run\t{result.dry_run}",
+        f"cleared_pointer\t{result.cleared_pointer}",
+        f"active_profile\t{health.active_profile or ''}",
+        f"source\t{health.source}",
+        f"status\t{health.status}",
+        f"registered_bucket\t{health.registered_bucket}",
+        f"profile_record_present\t{health.profile_record_present}",
+        f"repairable_by_clearing_pointer\t{health.repairable_by_clearing_pointer}",
+    ]
+    if health.profile_record_error:
+        lines.append(f"profile_record_error\t{health.profile_record_error}")
+    if health.next_action:
+        lines.append(f"next_action\t{health.next_action}")
+    _emit(ctx, payload, lines)
+
+
+@repair_app.command(
     "integrity",
     help=tr(
         "cli.config.repair.integrity_help",
@@ -240,25 +285,35 @@ def _profile_state():
 
 @profile_app.command("list", help=tr("cli.config.list.help"))
 def config_list(ctx: typer.Context) -> None:
-    """List every profile key with its current value (or ``<unset>``)."""
+    """List every registered profile via the manifest-scan helper.
 
-    from ....application.user_profile._projections import record_to_path_values
-    from ....domain.profile import PROFILE_KEYS
+    Replaces the prior behaviour that enumerated only the active
+    profile's key values (Axis B / Axis D / dual-persona pain). The
+    canonical source of profile-existence truth is the per-bucket
+    ``manifest.toml`` file written by every profile-creation path;
+    :func:`list_profile_buckets` reads them and returns the full
+    set without unlocking any bucket.
+    """
 
-    state = _profile_state().load()
-    record = state.active_profile_record()
-    values = record_to_path_values(record)
+    from ....application.workflow._profile_bucket_scan import list_profile_buckets
+
+    active = resolve_active_bucket_id()
+    buckets = list_profile_buckets()
+    sorted_names = sorted(buckets)
     payload = {
-        "active_profile": resolve_active_bucket_id(),
-        "keys": [
-            {"key": entry.key, "requirement": entry.requirement.value, "value": values.get(entry.key, "")}
-            for entry in PROFILE_KEYS
+        "active_profile": active,
+        "profiles": [
+            {"name": name, "bucket_id": buckets[name].bucket_id, "active": name == active}
+            for name in sorted_names
         ],
     }
-    lines = [f"profile\t{resolve_active_bucket_id() or ''}"]
-    for entry in PROFILE_KEYS:
-        rendered_value = values.get(entry.key, "")
-        lines.append(f"{entry.key}\t{entry.requirement.value}\t{rendered_value or '<unset>'}")
+    if not sorted_names:
+        lines = [f"active_profile\t{active or '<none>'}", "profiles\t<none>"]
+    else:
+        lines = [f"active_profile\t{active or '<none>'}"]
+        for name in sorted_names:
+            marker = "*" if name == active else " "
+            lines.append(f"{marker}\t{name}")
     _emit(ctx, payload, lines)
 
 
@@ -784,18 +839,67 @@ def config_status(ctx: typer.Context) -> None:
     from ....application.wizard._catalogue import SETUP_FLOW
     from ....application.wizard._persistence import project_answers
     from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow._profile_health import assess_active_profile_health
 
     state = workflow_state_repository().load()
+    profile_health = assess_active_profile_health(state)
+    active_profile = profile_health.active_profile
+    if profile_health.status == "dangling_pointer":
+        payload = {
+            "active_profile": active_profile,
+            "registered_profile": False,
+            "configured": False,
+        }
+        _emit(
+            ctx,
+            payload,
+            (
+                f"profile\t{active_profile}",
+                "readiness\tdangling_pointer",
+                "registered_profile\tmissing",
+                f"next_action\t{profile_health.next_action}",
+            ),
+        )
+        return
+    if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
+        payload = {
+            "active_profile": active_profile,
+            "registered_profile": True,
+            "profile_record_present": False,
+            "configured": False,
+            "profile_record_error": profile_health.profile_record_error,
+        }
+        lines = [
+            f"profile\t{active_profile}",
+            f"readiness\t{profile_health.status}",
+            "registered_profile\tpresent",
+            "profile_record\tmissing",
+        ]
+        if profile_health.profile_record_error:
+            lines.append(f"profile_record_error\t{profile_health.profile_record_error}")
+        lines.append(f"next_action\t{profile_health.next_action}")
+        _emit(ctx, payload, lines)
+        return
     record = state.active_profile_record()
     values = record_to_path_values(record)
     if not values.get("identity.tax_id") or not values.get("activities.description"):
         payload = {
-            "active_profile": resolve_active_bucket_id(),
+            "active_profile": active_profile,
             "tax_id_present": bool(values.get("identity.tax_id")),
             "activity_present": bool(values.get("activities.description")),
             "configured": False,
         }
-        _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
+        if active_profile is None:
+            lines = (tr("cli.config.status.empty_profile"),)
+        else:
+            lines = (
+                f"profile\t{active_profile}",
+                "readiness\tblocked",
+                f"identity.tax_id\t{'present' if values.get('identity.tax_id') else 'missing'}",
+                f"activities.description\t{'present' if values.get('activities.description') else 'missing'}",
+                f"next_action\taeat config profile edit {active_profile}",
+            )
+        _emit(ctx, payload, lines)
         return
     try:
         projection = project_answers(SETUP_FLOW, values)
@@ -893,7 +997,10 @@ def auth_configure(
     """Configure the active authentication provider."""
 
     from ....application.auth import AuthProviderReservedError, configure_operator_auth
-    from ....application.auth._operator import AuthConfigureNoActiveBucketError
+    from ....application.auth._operator import (
+        AuthConfigureDanglingActiveProfileError,
+        AuthConfigureNoActiveBucketError,
+    )
 
     try:
         result = configure_operator_auth(provider, certificate_path=file)
@@ -903,7 +1010,23 @@ def auth_configure(
         raise CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider)) from exc
     except AuthConfigureNoActiveBucketError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.auth.no_active_bucket")) from exc
-    _emit(ctx, result.model_dump(mode="json"), (f"provider\t{result.provider}", f"file\t{result.file}"))
+    except AuthConfigureDanglingActiveProfileError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+    lines = [
+        f"provider\t{result.provider}",
+        f"file\t{result.file}",
+        f"active_profile\t{result.active_profile}",
+    ]
+    if result.provider == "clave_movil":
+        lines.extend(
+            (
+                f"profile_tax_id\t{'present' if result.profile_tax_id_present else 'missing'}",
+                f"clave_identity\t{'present' if result.provider_identity_present else 'missing'}",
+                f"identity_alignment\t{result.identity_alignment}",
+            )
+        )
+    lines.append(f"next_action\t{result.next_action}")
+    _emit(ctx, result.model_dump(mode="json"), lines)
 
 
 @auth_app.command("status", help=tr("cli.config.auth.status_help"))
