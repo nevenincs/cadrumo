@@ -28,6 +28,39 @@ expediente_detail_template = "/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_i
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
 iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
 
+[aeat.clave_movil]
+selector_access_url_template = "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
+selector_access_path_marker = "SelectorAccesos"
+dialogo_representacion_path_marker = "DialogoRepresentacion"
+obtener_clave_movil_path_marker = "ObtenerClaveMovil"
+obtener_clave_movil_qr_path_marker = "ObtenerClaveMovilQR"
+authorize_button_selector = "button[name=\"autoriza-P\"]"
+non_qr_link_selector = "a[href*=\"ObtenerClaveMovil?qAA=2\"]"
+nif_input_selector = "#NIF"
+dni_fecha_input_selector = "#FECHA"
+dni_fecha_visible_selector = "#FECHA:visible"
+nie_soporte_input_selector = "#SOPORTE"
+nie_soporte_visible_selector = "#SOPORTE:visible"
+continue_button_selector = "#botonContinuar"
+continue_button_visible_selector = "#botonContinuar:visible"
+verification_code_selector = "#spanCodigoVerificacion"
+wait_text_markers = [
+  "codigo de verificacion",
+  "código de verificación",
+  "spanCodigoVerificacion",
+  "clave movil",
+  "cl@ve móvil",
+  "cl@ve movil",
+]
+pending_petition_text_markers = [
+  "no ha sido posible generar una nueva petición",
+  "no ha sido posible generar una nueva petici",
+  "petición pendiente",
+  "peticion pendiente",
+  "rechace la petición pendiente",
+  "rechace la peticion pendiente",
+]
+
 [aeat.help_pages]
 csv_verification = "/Sede/ayuda/consultas-practicas-manuales/verificacion-integridad-documentos.html"
 renta_web_open_landing = "/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-web-open.html"

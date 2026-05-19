@@ -140,6 +140,11 @@ class _PendingPetitionPage(_RecordingPage):
         )
 
 
+class _NoPushWaitStatePage(_RecordingPage):
+    async def content(self) -> str:
+        return "<html><body>Servicio no disponible temporalmente</body></html>"
+
+
 class _RecordingContext:
     def __init__(
         self,
@@ -431,6 +436,7 @@ class TestPendingPetitionRefusal:
             assert excinfo.value.context is not None
             assert excinfo.value.context["failure_mode"] == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
             assert "detected_markers" in excinfo.value.context
+            assert "diagnostic_id" in excinfo.value.context
             assert excinfo.value.suggestion is not None
 
         asyncio.run(run())
@@ -451,6 +457,54 @@ class TestPendingPetitionRefusal:
             assert excinfo.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
             assert excinfo.value.context is not None
             assert excinfo.value.context["reason"] == "aeat-refused-new-clave-movil-petition"
+
+        asyncio.run(run())
+
+
+class TestPushWaitState:
+    def test_login_refuses_to_claim_push_sent_without_wait_state(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _NoPushWaitStatePage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
+
+        async def run() -> None:
+            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"push approval waiting state") as excinfo:
+                await provider._assert_push_wait_state(
+                    page,
+                    target_path=settings.aeat_sede_expedientes_path,
+                    verification_code=None,
+                    used_non_qr_fallback=True,
+                )
+            assert excinfo.value.failure_mode == ClaveMovilFailureMode.PUSH_WAIT_STATE_NOT_REACHED
+            assert excinfo.value.context is not None
+            assert excinfo.value.context["reason"] == "aeat-clave-movil-wait-state-not-reached"
+            assert excinfo.value.context["verification_code_present"] is False
+            assert "diagnostic_id" in excinfo.value.context
+
+        asyncio.run(run())
+
+    def test_login_accepts_observed_verification_code_as_wait_state(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _NoPushWaitStatePage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
+
+        async def run() -> None:
+            await provider._assert_push_wait_state(
+                page,
+                target_path=settings.aeat_sede_expedientes_path,
+                verification_code="YLL",
+                used_non_qr_fallback=True,
+            )
 
         asyncio.run(run())
 

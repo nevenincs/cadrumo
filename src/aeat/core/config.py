@@ -88,6 +88,18 @@ class AuthProviderKindSetting(StrEnum):
     CLAVE_MOVIL = "clave_movil"
 
 
+def _default_clave_sede_access_url_template() -> str:
+    from .external_constants import load_external_constants
+
+    return load_external_constants().aeat.clave_movil.selector_access_url_template
+
+
+def _default_sede_expedientes_path() -> str:
+    from .external_constants import load_external_constants
+
+    return load_external_constants().aeat.sede_paths.expedientes_resumen
+
+
 class JustificanteParserBackendSetting(StrEnum):
     """Settings-shape selector for the justificante PDF parsing backend."""
 
@@ -673,10 +685,7 @@ class Settings(BaseSettings):
         ),
     )
     aeat_clave_sede_access_url_template: str = Field(
-        default=(
-            "https://sede.agenciatributaria.gob.es/static_files/common/html/"
-            "selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
-        ),
+        default_factory=_default_clave_sede_access_url_template,
         description=(
             "URL template for AEAT's auth-method selector page. `{target}` "
             "is replaced with the URL-encoded target path (e.g. "
@@ -684,7 +693,7 @@ class Settings(BaseSettings):
         ),
     )
     aeat_sede_expedientes_path: str = Field(
-        default="/wlpl/TEWV-CORE/ResumenVlt",
+        default_factory=_default_sede_expedientes_path,
         description=(
             "AEAT Sede path for 'Mis expedientes' — the default post-auth "
             "target used by Cl@ve Móvil login and the expedientes reader."

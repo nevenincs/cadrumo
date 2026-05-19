@@ -156,6 +156,13 @@ from ._acquisition_lock import (
     inspect_auth_acquisition_lock,
 )
 from ._actions import update_auth
+from ._diagnostics import (
+    AuthDiagnosticDetail,
+    AuthDiagnosticListReport,
+    AuthDiagnosticSummary,
+    list_auth_diagnostics,
+    load_auth_diagnostic,
+)
 from ._models import AuthState
 from ._operator import (
     AuthClearResult,
@@ -190,6 +197,9 @@ __all__ = [
     "AuthAcquisitionLockedError",
     "AuthClearResult",
     "AuthConfigureResult",
+    "AuthDiagnosticDetail",
+    "AuthDiagnosticListReport",
+    "AuthDiagnosticSummary",
     "AuthProvider",
     "AuthProviderDescription",
     "AuthProviderKind",
@@ -217,8 +227,10 @@ __all__ = [
     "inspect_auth_acquisition_lock",
     "inspect_operator_auth",
     "known_auth_provider_ids",
+    "list_auth_diagnostics",
     "list_auth_providers",
     "list_operator_auth_providers",
+    "load_auth_diagnostic",
     "load_persisted_session",
     "require_verified_aeat_session",
     "select_provider",
