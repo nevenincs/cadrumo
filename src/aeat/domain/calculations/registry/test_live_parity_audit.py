@@ -27,11 +27,11 @@ import pytest
 
 from aeat.core.resources import resources
 
-from ._aeat_nif_iva_oracle import ORACLE_ID as AEAT_NIF_IVA_ORACLE_ID
+from ._aeat_nif_iva_oracle import ORACLE_ID
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
 from ._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ._live_parity import (
-    CrossReferenceApplicabilityDeclaration,
+    CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
@@ -73,7 +73,7 @@ def test_collect_orphan_oracle_ids_returns_every_catalogue_id_when_no_modelos_bi
 
     orphans = collect_orphan_oracle_ids((), catalogue)
 
-    assert orphans == tuple(sorted({AEAT_NIF_IVA_ORACLE_ID, GROI_ORACLE_ID, RENTA_WEB_OPEN_ORACLE_ID}))
+    assert orphans == tuple(sorted({ORACLE_ID, GROI_ORACLE_ID, RENTA_WEB_OPEN_ORACLE_ID}))
 
 
 def test_collect_orphan_oracle_ids_returns_lexicographically_sorted_output() -> None:
@@ -97,13 +97,13 @@ def test_collect_orphan_oracle_ids_omits_ids_bound_by_a_cross_reference() -> Non
         for cross_reference in revision.live_cross_references
         if cross_reference.oracle_id is not None
     }
-    assert {AEAT_NIF_IVA_ORACLE_ID, GROI_ORACLE_ID} <= bound_ids
+    assert {ORACLE_ID, GROI_ORACLE_ID} <= bound_ids
     assert RENTA_WEB_OPEN_ORACLE_ID not in bound_ids
 
     catalogue = _full_production_catalogue()
     orphans = collect_orphan_oracle_ids(modelos, catalogue)
 
-    assert AEAT_NIF_IVA_ORACLE_ID not in orphans
+    assert ORACLE_ID not in orphans
     assert GROI_ORACLE_ID not in orphans
     assert RENTA_WEB_OPEN_ORACLE_ID in orphans
 
@@ -182,7 +182,7 @@ def test_collect_applicability_declarations_returns_typed_records() -> None:
 
     assert isinstance(declarations, tuple)
     for declaration in declarations:
-        assert isinstance(declaration, CrossReferenceApplicabilityDeclaration)
+        assert isinstance(declaration, CrossReferenceApplicabilityDeclaracion)
         assert declaration.modelo_id
         assert declaration.revision_id
         assert declaration.cross_reference_id

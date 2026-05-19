@@ -11,7 +11,7 @@ from aeat.core.resources import bundled_path
 
 from . import (
     CasillaObservation,
-    RegistryFilingObservation,
+    RegistryModeloObservation,
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
@@ -109,7 +109,7 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
             value = _value_for(source_casilla.data_type, index)
             observed_by_period.setdefault(period, {})[requirement.source_output] = value
     observations = tuple(
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="123",
             filing_year=2025,
             period=period,

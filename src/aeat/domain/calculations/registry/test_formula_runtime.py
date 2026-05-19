@@ -13,7 +13,7 @@ from ....core.resources import bundled_path
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import (
     CasillaObservation,
-    RegistryFilingObservation,
+    RegistryModeloObservation,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
@@ -159,7 +159,7 @@ def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
     result = resolve_previous_filing_binding_values(
         committed_modelo_130_snapshot.revision,
         (
-            RegistryFilingObservation(
+            RegistryModeloObservation(
                 modelo=str(selector["source_modelo"]),
                 filing_year=2025,
                 period=str(selector["period"]),
@@ -235,7 +235,7 @@ def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods
     #      arithmetic on input values);
     #   3. type: the summed bindings are Decimal-valued, sign-preserving.
     observations = tuple(
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="115",
             filing_year=2026,
             period=period,
@@ -282,7 +282,7 @@ def test_previous_filing_binding_requires_complete_observed_casillas(
         resolve_previous_filing_binding_values(
             committed_modelo_130_snapshot.revision,
             (
-                RegistryFilingObservation(
+                RegistryModeloObservation(
                     modelo=str(selector["source_modelo"]),
                     filing_year=2025,
                     period=str(selector["period"]),

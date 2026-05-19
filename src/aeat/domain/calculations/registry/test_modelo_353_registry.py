@@ -104,7 +104,7 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.vat import IvaFlowDirection, VATCategory, VATRateKind
+    from aeat.domain.iva import IvaFlowDirection, IvaCategory, IvaRateKind
 
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-y-siguientes"]
@@ -112,8 +112,8 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
         IvaLedgerObservation(
             ledger_id="agg-rep-1",
             transaction_date=date(2025, 6, 1),
-            category=VATCategory.DOMESTIC_GENERAL_21,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("8000"),
             iva_amount=Decimal("1680"),
@@ -121,8 +121,8 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
         IvaLedgerObservation(
             ledger_id="agg-sop-1",
             transaction_date=date(2025, 6, 5),
-            category=VATCategory.DOMESTIC_GENERAL_21,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("3000"),
             iva_amount=Decimal("630"),
