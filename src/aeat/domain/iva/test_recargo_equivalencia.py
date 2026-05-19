@@ -9,9 +9,9 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.core.resources import bundled_path
-from aeat.domain.vat import (
+from aeat.domain.iva import (
     LivaArt161RecargoRates,
-    VATRateKind,
+    IvaRateKind,
     load_recargo_rates,
     recargo_rate_for,
 )
@@ -79,25 +79,25 @@ def test_recargo_record_is_frozen() -> None:
 
 
 def test_recargo_rate_for_general_returns_5_2_percent() -> None:
-    assert recargo_rate_for(VATRateKind.GENERAL) == Decimal("0.052")
+    assert recargo_rate_for(IvaRateKind.GENERAL) == Decimal("0.052")
 
 
 def test_recargo_rate_for_reduced_returns_1_4_percent() -> None:
-    assert recargo_rate_for(VATRateKind.REDUCED) == Decimal("0.014")
+    assert recargo_rate_for(IvaRateKind.REDUCED) == Decimal("0.014")
 
 
 def test_recargo_rate_for_super_reduced_returns_0_5_percent() -> None:
-    assert recargo_rate_for(VATRateKind.SUPER_REDUCED) == Decimal("0.005")
+    assert recargo_rate_for(IvaRateKind.SUPER_REDUCED) == Decimal("0.005")
 
 
 def test_recargo_rate_for_zero_returns_none() -> None:
     """Recargo de equivalencia does not apply to zero-rated operations."""
-    assert recargo_rate_for(VATRateKind.ZERO) is None
+    assert recargo_rate_for(IvaRateKind.ZERO) is None
 
 
 def test_recargo_rate_for_exempt_returns_none() -> None:
     """Recargo de equivalencia does not apply to exempt operations."""
-    assert recargo_rate_for(VATRateKind.EXEMPT) is None
+    assert recargo_rate_for(IvaRateKind.EXEMPT) is None
 
 
 def test_recargo_record_validates_inputs_in_strict_mode() -> None:

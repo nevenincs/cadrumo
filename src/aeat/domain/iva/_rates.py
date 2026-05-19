@@ -13,10 +13,10 @@ from types import MappingProxyType
 from pydantic import ValidationError
 
 from ...core.resources import bundled_path
-from ._schema import EUMemberState, VATRate, VATRateKind
-from .errors import VatCatalogueError, VatRateOverlapError, VatValidationError
+from ._schema import EUMemberState, IvaRateRecord, IvaRateKind
+from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 
-def load_vat_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tuple[VATRate, ...]]:
+def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
     """Load VAT rates from the committed registry file.
 
     Resolves the bundled rates path on every call so the
@@ -34,36 +34,36 @@ def _load_vat_rate_table_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
-) -> Mapping[EUMemberState, tuple[VATRate, ...]]:
+) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
     del byte_count, modified_ns
     target = Path(path)
     try:
         with target.open("rb") as fh:
             payload = tomllib.load(fh)
     except tomllib.TOMLDecodeError as exc:
-        raise VatCatalogueError(f"{target}: invalid VAT rate TOML: {exc}") from exc
+        raise IvaCatalogueError(f"{target}: invalid VAT rate TOML: {exc}") from exc
     except OSError as exc:
-        raise VatCatalogueError(f"{target}: cannot read VAT rate registry: {exc}") from exc
+        raise IvaCatalogueError(f"{target}: cannot read VAT rate registry: {exc}") from exc
 
     raw_rates = payload.get("rates")
     if not isinstance(raw_rates, list) or not raw_rates:
-        raise VatCatalogueError(f"{target}: missing [[rates]] entries")
+        raise IvaCatalogueError(f"{target}: missing [[rates]] entries")
 
-    by_member_state: dict[EUMemberState, list[VATRate]] = {}
+    by_member_state: dict[EUMemberState, list[IvaRateRecord]] = {}
     for index, raw_rate in enumerate(raw_rates, start=1):
         if not isinstance(raw_rate, dict):
-            raise VatCatalogueError(f"{target}: rates[{index}] must be a table")
+            raise IvaCatalogueError(f"{target}: rates[{index}] must be a table")
         try:
             rate = _parse_rate(raw_rate)
-        except (ValidationError, VatValidationError, ValueError) as exc:
-            raise VatCatalogueError(f"{target}: invalid rates[{index}]: {exc}") from exc
+        except (ValidationError, IvaValidationError, ValueError) as exc:
+            raise IvaCatalogueError(f"{target}: invalid rates[{index}]: {exc}") from exc
         by_member_state.setdefault(rate.member_state, []).append(rate)
 
     missing = sorted(member_state.value for member_state in set(EUMemberState) - set(by_member_state))
     if missing:
-        raise VatCatalogueError(f"{target}: VAT rate registry missing member states: {missing}")
+        raise IvaCatalogueError(f"{target}: VAT rate registry missing member states: {missing}")
 
-    immutable: dict[EUMemberState, tuple[VATRate, ...]] = {}
+    immutable: dict[EUMemberState, tuple[IvaRateRecord, ...]] = {}
     for member_state, rates in by_member_state.items():
         partition = tuple(sorted(rates, key=lambda rate: (rate.kind.value, rate.effective_from)))
         _assert_no_overlap(member_state, partition)
@@ -71,17 +71,17 @@ def _load_vat_rate_table_cached(
     return MappingProxyType(immutable)
 
 
-def _parse_rate(raw_rate: object) -> VATRate:
+def _parse_rate(raw_rate: object) -> IvaRateRecord:
     if not isinstance(raw_rate, dict):
-        raise VatValidationError(f"VAT rate entry must be a table, got: {type(raw_rate)!r}")
+        raise IvaValidationError(f"VAT rate entry must be a table, got: {type(raw_rate)!r}")
     data: dict[str, object] = {str(k): v for k, v in raw_rate.items()}
     try:
         member_state = EUMemberState(str(data.get("member_state")))
-        kind = VATRateKind(str(data.get("kind")))
+        kind = IvaRateKind(str(data.get("kind")))
         pct = Decimal(str(data.get("pct")))
     except (ArithmeticError, TypeError, ValueError) as exc:
-        raise VatValidationError(f"invalid VAT rate key or pct: {raw_rate!r}") from exc
-    return VATRate.model_validate(
+        raise IvaValidationError(f"invalid VAT rate key or pct: {raw_rate!r}") from exc
+    return IvaRateRecord.model_validate(
         {
             "member_state": member_state,
             "kind": kind,
@@ -95,11 +95,11 @@ def _parse_rate(raw_rate: object) -> VATRate:
 
 def _assert_no_overlap(
     member_state: EUMemberState,
-    rates: Iterable[VATRate],
+    rates: Iterable[IvaRateRecord],
 ) -> None:
     """Raise on any same-kind date-window overlap."""
 
-    by_kind: dict[VATRateKind, list[VATRate]] = {}
+    by_kind: dict[IvaRateKind, list[IvaRateRecord]] = {}
     for rate in rates:
         by_kind.setdefault(rate.kind, []).append(rate)
     for kind, partition in by_kind.items():
@@ -109,7 +109,7 @@ def _assert_no_overlap(
             current = ordered[idx]
             previous_end = previous.effective_until or date.max
             if previous_end >= current.effective_from:
-                raise VatRateOverlapError(
+                raise IvaRateOverlapError(
                     f"VAT rate registry has overlapping windows for "
                     f"member_state={member_state.value!r} kind={kind.value!r}: "
                     f"{previous.effective_from}/{previous.effective_until} vs. "
@@ -117,4 +117,4 @@ def _assert_no_overlap(
                 )
 
 
-__all__ = ["load_vat_rate_table"]
+__all__ = ["load_iva_rate_table"]
