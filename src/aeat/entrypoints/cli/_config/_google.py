@@ -65,7 +65,7 @@ from ....adapters.outbound.google._session_store import (
     save_token,
 )
 from ....adapters.outbound.storage import (
-    StorageError,
+    OutboundStorageError,
     get_storage_provider,
 )
 from ....adapters.outbound.storage._factory import (
@@ -450,7 +450,7 @@ def google_sync_probe(
     try:
         provider = get_storage_provider(settings=drive_settings)
         report = provider.probe(read_only=read_only)
-    except (GoogleAuthError, StorageError) as exc:
+    except (GoogleAuthError, OutboundStorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     # Pull the actual root folder id from the provider — the env var
@@ -553,7 +553,7 @@ def google_sync_push(
 
     try:
         provider = get_storage_provider(settings=drive_settings)
-    except (GoogleAuthError, StorageError) as exc:
+    except (GoogleAuthError, OutboundStorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     resolved_root_folder_id = getattr(provider, "root_folder_id", "")
@@ -584,7 +584,7 @@ def google_sync_push(
                 content_hash=content_hash,
                 label=label,
             )
-        except StorageError as exc:
+        except OutboundStorageError as exc:
             failed.append((raw_row.namespace, hmac_hex, str(exc)))
             continue
         pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
@@ -720,7 +720,7 @@ def google_sync_calc_export(
 
     try:
         credentials, root_folder_id = _resolve_credentials_and_root(active)
-    except (GoogleAuthError, StorageError) as exc:
+    except (GoogleAuthError, OutboundStorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     snapshot = _load_snapshot(modelo, period, year)
@@ -743,7 +743,7 @@ def google_sync_calc_export(
             credentials=credentials,
             root_folder_id=root_folder_id,
         )
-    except (GoogleAuthError, StorageError) as exc:
+    except (GoogleAuthError, OutboundStorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     payload = {
@@ -828,7 +828,7 @@ def google_sync_calc_verify(
 
     try:
         credentials, root_folder_id = _resolve_credentials_and_root(active)
-    except (GoogleAuthError, StorageError) as exc:
+    except (GoogleAuthError, OutboundStorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     snapshot = _load_snapshot(modelo, period, year)
@@ -943,7 +943,7 @@ def google_sync_calc_pull(
 
     try:
         credentials, _ = _resolve_credentials_and_root(active)
-    except (GoogleAuthError, StorageError) as exc:
+    except (GoogleAuthError, OutboundStorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     snapshot = _load_snapshot(modelo, period, year)
@@ -954,7 +954,7 @@ def google_sync_calc_pull(
             spreadsheet_id=spreadsheet_id,
             credentials=credentials,
         )
-    except (GoogleAuthError, StorageError) as exc:
+    except (GoogleAuthError, OutboundStorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     populated_operator = [e for e in result.operator_edits if e.value is not None]
@@ -1099,7 +1099,7 @@ def _assemble_pull_observations(
                 snapshot.revision,
                 filing_year=snapshot.filing_year,
             )
-        except StorageError as exc:
+        except OutboundStorageError as exc:
             raise CliRefusedBoundaryError(str(exc)) from exc
         total += len(observations)
         groupings.append(
@@ -1139,7 +1139,7 @@ def _compute_pull_casillas(
         )
     try:
         calc = compute_from_pull(snapshot, result)
-    except StorageError as exc:
+    except OutboundStorageError as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
     return [
         {
