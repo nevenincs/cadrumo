@@ -27,7 +27,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.vat import IvaFlowDirection, ProrrataKind, ProrrataRegime, IvaCategory, IvaRateKind
+from ...domain.vat import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from . import (
     AggregationValidationError,
     IvaLedgerAggregationIssueReason,
@@ -339,12 +339,15 @@ def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
     ]
 
 
-def test_repository_backed_projection_rejects_bucket_mismatch_before_loading() -> None:
+def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(secure_engine: Engine) -> None:
     with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
         aggregate_iva_ledger_observations_from_repositories(
             bucket_id="bucket-a",
             period="2026Q2",
-            transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-b"),
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id="bucket-b",
+                objects=SecureObjectRepository(engine=secure_engine),
+            ),
         )
 
 

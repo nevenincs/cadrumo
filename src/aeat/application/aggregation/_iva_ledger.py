@@ -23,12 +23,12 @@ from ...domain.transactions import (
 )
 from ...domain.vat import (
     EUMemberState,
-    IvaFlowDirection,
-    ProrrataInputError,
-    ProrrataReference,
     IvaCategory,
+    IvaFlowDirection,
     IvaRateKind,
     IvaRateNotFoundError,
+    ProrrataInputError,
+    ProrrataReference,
     lookup_rate,
     validate_prorrata_reference,
 )
