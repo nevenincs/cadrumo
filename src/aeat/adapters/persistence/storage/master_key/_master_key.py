@@ -884,8 +884,45 @@ class UnsecuredMasterKeyProvider:
     published deterministic master key.
     """
 
+    def __init__(self) -> None:
+        self._session: object | None = None
+        self._activation_cm: object | None = None
+
     def get_master_key(self) -> bytes:
         return _UNSECURED_PUBLISHED_KEY
+
+    def __enter__(self) -> object:
+        if self._session is not None:
+            raise RuntimeError(
+                "UnsecuredMasterKeyProvider context manager is not re-entrant",
+            )
+        from datetime import UTC, datetime
+
+        from ._active_session import activate_session
+        from ._bucket_session import BucketSession
+
+        session = BucketSession.open(
+            bucket_id="unsecured",
+            kek=_UNSECURED_PUBLISHED_KEY,
+            dek=_UNSECURED_PUBLISHED_KEY,
+            idle_minutes=60,
+            opened_at=datetime.now(UTC),
+        )
+        activation = activate_session(session)
+        activation.__enter__()
+        self._session = session
+        self._activation_cm = activation
+        return session
+
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        activation = self._activation_cm
+        session = self._session
+        self._activation_cm = None
+        self._session = None
+        if activation is not None:
+            activation.__exit__(exc_type, exc, tb)
+        if session is not None:
+            session.close()
 
 
 # Synthetic-NIF allow-list: tax-id-shaped strings that are valid under

@@ -2547,6 +2547,11 @@ def _emit_semantic_role_typo_twin_warnings(
 #   per the role-rollout-strategy audit).
 _REQUIRED_ROLE_LABEL_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"^Ejercicio al que se refiere la declaracion$", re.IGNORECASE), "filing_year"),
+    # Exact-match "Resultado a ingresar" (not "...o a devolver" or
+    # "...de autoliquidaciones anteriores"; those carry distinct
+    # semantics — signed cuota vs. prior-period balance — and would
+    # need their own roles).
+    (re.compile(r"^Resultado a ingresar$", re.IGNORECASE), "cuota_a_ingresar"),
 )
 
 

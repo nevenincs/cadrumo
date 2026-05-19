@@ -26,7 +26,7 @@ from aeat.application.modelo import (
 from aeat.core.config import override_settings
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.calculations.registry._bindings import CasillaObservation, RegistryFilingObservation
+from aeat.domain.calculations.registry import CasillaObservation, RegistryFilingObservation
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 
