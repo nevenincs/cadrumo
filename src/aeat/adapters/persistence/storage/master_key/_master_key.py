@@ -383,6 +383,14 @@ class KeyringMasterKeyProvider:
         self._service = service
         self._username = username
         self._client: KeyringClient = client or _RealKeyringClient()
+        self._session: object | None = None
+        self._activation_cm: object | None = None
+
+    def __enter__(self) -> object:
+        return _provider_enter(self)
+
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        _provider_exit(self, exc_type, exc, tb)
 
     @classmethod
     def _reset_for_tests(cls) -> None:
@@ -519,6 +527,14 @@ class FileFallbackMasterKeyProvider:
         """
         self._store_dir = Path(store_dir)
         self._passphrase_callback = passphrase_callback or _default_passphrase_callback
+        self._session: object | None = None
+        self._activation_cm: object | None = None
+
+    def __enter__(self) -> object:
+        return _provider_enter(self)
+
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        _provider_exit(self, exc_type, exc, tb)
 
     @classmethod
     def _reset_for_tests(cls) -> None:
@@ -878,6 +894,79 @@ _UNSECURED_PUBLISHED_KEY: Final[bytes] = _UNSECURED_KEY_PREFIX + b"\x00" * (KEY_
 assert len(_UNSECURED_PUBLISHED_KEY) == KEY_SIZE
 
 
+def _provider_enter(provider: object, *, fallback_bucket_id: str | None = None) -> object:
+    """Open and activate a :class:`BucketSession` for ``provider``.
+
+    Resolves the active bucket id via the canonical precedence chain
+    (env override > pointer file). When the chain yields no active
+    profile, falls back to ``fallback_bucket_id`` if supplied (the
+    Unsecured provider uses ``"unsecured"`` as a stable label so the
+    engine cache keys consistently). When neither resolves, raises
+    :class:`NoActiveProfileError` so the CLI root callback can refuse
+    the verb with a translated message.
+
+    Stores the opened session and the activation context manager on
+    ``provider._session`` and ``provider._activation_cm`` so the
+    matching ``_provider_exit`` can tear them down.
+    """
+
+    from datetime import UTC, datetime
+
+    from ..bucket._errors import NoActiveBucketError
+    from ._active_session import activate_session
+    from ._bucket_session import BucketSession
+
+    # Lazy application-layer resolver import keeps the adapter free of
+    # eager application coupling; resolve_active_bucket_id is the
+    # canonical precedence-chain helper.
+    from aeat.application.workflow._models import resolve_active_bucket_id
+
+    if getattr(provider, "_session", None) is not None:
+        raise RuntimeError(
+            f"{type(provider).__name__} context manager is not re-entrant",
+        )
+
+    bucket_id = resolve_active_bucket_id() or fallback_bucket_id
+    if not bucket_id:
+        raise NoActiveBucketError(
+            "no active profile resolves; run `aeat config profile create NAME` "
+            "or `aeat config profile switch NAME` before invoking commands that "
+            "decrypt stored records.",
+        )
+
+    key_bytes = provider.get_master_key()  # type: ignore[attr-defined]
+    session = BucketSession.open(
+        bucket_id=bucket_id,
+        kek=key_bytes,
+        dek=key_bytes,
+        idle_minutes=60,
+        opened_at=datetime.now(UTC),
+    )
+    activation = activate_session(session)
+    activation.__enter__()
+    provider._session = session  # type: ignore[attr-defined]
+    provider._activation_cm = activation  # type: ignore[attr-defined]
+    return session
+
+
+def _provider_exit(provider: object, exc_type: object, exc: object, tb: object) -> None:
+    """Tear down the activation + session opened by :func:`_provider_enter`.
+
+    Idempotent on the provider's bookkeeping attributes; tolerant of
+    the case where ``_provider_enter`` raised before fully populating
+    them.
+    """
+
+    activation = getattr(provider, "_activation_cm", None)
+    session = getattr(provider, "_session", None)
+    provider._activation_cm = None  # type: ignore[attr-defined]
+    provider._session = None  # type: ignore[attr-defined]
+    if activation is not None:
+        activation.__exit__(exc_type, exc, tb)
+    if session is not None:
+        session.close()
+
+
 class UnsecuredMasterKeyProvider:
     """Master-key provider for testing / throwaway scenarios.
 
@@ -906,37 +995,10 @@ class UnsecuredMasterKeyProvider:
         return _UNSECURED_PUBLISHED_KEY
 
     def __enter__(self) -> object:
-        if self._session is not None:
-            raise RuntimeError(
-                "UnsecuredMasterKeyProvider context manager is not re-entrant",
-            )
-        from datetime import UTC, datetime
-
-        from ._active_session import activate_session
-        from ._bucket_session import BucketSession
-
-        session = BucketSession.open(
-            bucket_id="unsecured",
-            kek=_UNSECURED_PUBLISHED_KEY,
-            dek=_UNSECURED_PUBLISHED_KEY,
-            idle_minutes=60,
-            opened_at=datetime.now(UTC),
-        )
-        activation = activate_session(session)
-        activation.__enter__()
-        self._session = session
-        self._activation_cm = activation
-        return session
+        return _provider_enter(self, fallback_bucket_id="unsecured")
 
     def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
-        activation = self._activation_cm
-        session = self._session
-        self._activation_cm = None
-        self._session = None
-        if activation is not None:
-            activation.__exit__(exc_type, exc, tb)
-        if session is not None:
-            session.close()
+        _provider_exit(self, exc_type, exc, tb)
 
 
 # Synthetic-NIF allow-list: tax-id-shaped strings that are valid under

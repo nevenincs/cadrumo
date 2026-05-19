@@ -46,10 +46,10 @@ Provider parity, CLI root `ctx.with_resource`, two-tier bootstrap
 with active-gate, idle-timeout polling. The substrate change that
 unblocks every operator-facing verb.
 
-- [ ] `P02.S07` - add `__enter__`/`__exit__` to `KeyringMasterKeyProvider` mirroring the Unsecured pattern; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P02.S08` - add `__enter__`/`__exit__` to `FileFallbackMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P02.S09` - add `__enter__`/`__exit__` to the auto-resolved provider (`get_master_key_provider`); `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P02.S10` - parameterise `BucketSession.open` by resolved `bucket_id` from the active-profile chain, not a hardcoded string; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `P02.S07` - add `__enter__`/`__exit__` to `KeyringMasterKeyProvider` mirroring the Unsecured pattern; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `P02.S08` - add `__enter__`/`__exit__` to `FileFallbackMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `P02.S09` - add `__enter__`/`__exit__` to the auto-resolved provider (`get_master_key_provider`); `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `P02.S10` - parameterise `BucketSession.open` by resolved `bucket_id` from the active-profile chain, not a hardcoded string; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [ ] `P02.S11` - define the bootstrap-exempt verb registry as a typed tuple; `src/aeat/entrypoints/cli/_bootstrap_exempt.py`.
 - [ ] `P02.S12` - rewrite the CLI root callback to active-gate on the exempt registry plus `ctx.with_resource(provider)` for non-exempt verbs; `src/aeat/entrypoints/cli/__init__.py`.
 - [ ] `P02.S13` - emit a translated `CliRefusedBoundaryError` for non-exempt verbs when no profile resolves, naming `profile create` and `profile switch` as next actions; `src/aeat/entrypoints/cli/__init__.py`.
