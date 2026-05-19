@@ -22,10 +22,10 @@ from ....application.wizard._catalogue import SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command
 from ....application.workflow._models import resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket
+from ....core.i18n import tr
 from ....core.logging import default_log_file_path
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
-from ....core.i18n import tr
 
 _wizard_init_command = build_wizard_command(SETUP_FLOW)
 
@@ -269,7 +269,7 @@ def config_profile_switch(
 
     repository = _profile_state()
     try:
-        updated = repository.update(lambda current: select_profile(current, profile_id=name))
+        repository.update(lambda current: select_profile(current, profile_id=name))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
     active = resolve_active_bucket_id()
@@ -354,7 +354,7 @@ def config_profile_show(
     from ....application.user_profile._projections import record_to_path_values
     from ....domain.user_profile import ProfileNotFoundError
 
-    state = _profile_state().load()
+    _profile_state().load()
     target = name or resolve_active_bucket_id()
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
@@ -412,7 +412,7 @@ def config_profile_delete(
     if not confirmed:
         raise CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
     repository = _profile_state()
-    state = repository.load()
+    repository.load()
     pointer = read_profile_bucket(name)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
@@ -443,12 +443,11 @@ def config_profile_duplicate(
 
     from ....application.user_profile import DuplicateProfileCommand
     from ....application.user_profile._orchestration import build_lifecycle_service
-    from ....application.workflow._models import ProfileBucketPointer
     from ....application.workflow._utils import utc_now
     from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
 
     repository = _profile_state()
-    state = repository.load()
+    repository.load()
     pointer = read_profile_bucket(source)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
@@ -542,12 +541,11 @@ def config_profile_rename(
         _write_active_profile_pointer,
         build_lifecycle_service,
     )
-    from ....application.workflow._models import ProfileBucketPointer
     from ....application.workflow._utils import utc_now
     from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
 
     repository = _profile_state()
-    state = repository.load()
+    repository.load()
     pointer = read_profile_bucket(source)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
@@ -614,7 +612,7 @@ def config_profile_export(
     from ....application.user_profile._orchestration import build_lifecycle_service
     from ....domain.user_profile import ProfileNotFoundError
 
-    state = _profile_state().load()
+    _profile_state().load()
     target = name or resolve_active_bucket_id()
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
@@ -655,7 +653,6 @@ def config_profile_import(
     """Read a portable profile bundle from a JSON file and register it."""
 
     from ....application.user_profile._orchestration import build_lifecycle_service
-    from ....application.workflow._models import ProfileBucketPointer
     from ....application.workflow._utils import utc_now
     from ....domain.user_profile import ProfileAlreadyExistsError, UserProfilePortableExport
 
@@ -670,7 +667,7 @@ def config_profile_import(
     bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
     target_id = bundle.profile.profile_id
     repository = _profile_state()
-    state = repository.load()
+    repository.load()
     if read_profile_bucket(target_id) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id))
     active_bucket = resolve_active_bucket_id()
@@ -949,7 +946,7 @@ def apoderado_status(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
+    workflow_state_repository().load()
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
@@ -988,7 +985,7 @@ def apoderado_configure(
     from ....application.auth._apoderado import ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
+    workflow_state_repository().load()
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
@@ -1016,7 +1013,7 @@ def apoderado_clear(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
+    workflow_state_repository().load()
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
@@ -1037,7 +1034,7 @@ def apoderado_check(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoLiveCheckUnavailableError, ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
+    workflow_state_repository().load()
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 

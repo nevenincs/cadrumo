@@ -576,17 +576,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._reconcile.WorkUnitNotFoundError",
-        ErrorCode(
-            code="REFUSED_RECONCILIATION_WORK_UNIT_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.reconciliation_work_unit_not_found",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.modelo._reconcile.ReconciliationCrossBucketRefusedError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_CROSS_BUCKET",

@@ -99,11 +99,6 @@ from .crypto._encrypted_columns import (
     EncryptedString,
     HashedLookup,
 )
-from .master_key._active_session import (
-    NoActiveBucketSessionError,
-    activate_session,
-    get_active_master_key,
-)
 from .envelope._envelope import (
     AeadAlgorithm,
     CipherEnvelope,
@@ -141,6 +136,11 @@ from .errors import (
     StorageError,
     StorageValidationError,
     UnsecuredModeRefusedError,
+)
+from .master_key._active_session import (
+    NoActiveBucketSessionError,
+    activate_session,
+    get_active_master_key,
 )
 from .master_key._master_key import (
     EphemeralMasterKeyProvider,
@@ -218,6 +218,7 @@ __all__ = [
     "MasterKeyUnavailableError",
     "ModeloRecord",
     "ModeloRepository",
+    "NoActiveBucketSessionError",
     "NonceCollisionError",
     "PathContainmentError",
     "PersistenceError",
@@ -244,6 +245,7 @@ __all__ = [
     "UnsecuredMasterKeyProvider",
     "UnsecuredModeRefusedError",
     "WrappedMasterKey",
+    "activate_session",
     "assert_corpus_clean",
     "atomic_write_secure_bytes",
     "build_corpus_manifest",
@@ -264,6 +266,7 @@ __all__ = [
     "exclusive_file_lock",
     "export_to_temp_path",
     "generate_recovery_key",
+    "get_active_master_key",
     "get_engine",
     "get_master_key_provider",
     "get_secret_store",
@@ -275,9 +278,6 @@ __all__ = [
     "looks_like_real_tax_id",
     "manifest_path_for",
     "materialise_secret",
-    "NoActiveBucketSessionError",
-    "activate_session",
-    "get_active_master_key",
     "override_secret_store",
     "redact",
     "redact_for_log",

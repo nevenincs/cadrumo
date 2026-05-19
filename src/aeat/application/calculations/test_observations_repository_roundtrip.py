@@ -29,6 +29,7 @@ from ...domain.calculations.registry._bindings import (
     CasillaObservation,
     RegistryFilingObservation,
 )
+from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 from ._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -193,5 +194,52 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
                 "tautological and every observation roundtrip in the "
                 "suite is suspect."
             )
+        finally:
+            engine.dispose()
+
+
+def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An IVA wallet reconciliation decision round-trips as AUDIT state."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "iva-wallet-decision-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            repo = CalculationObservationRepository()
+            decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+            decision = IvaCompensationReconciliationDecision(
+                taxpayer_nif="12345678Z",
+                target_year=2026,
+                target_period="2T",
+                selected_authority="aeat_wallet",
+                selected_amount=Decimal("1200"),
+                wallet_amount=Decimal("1200"),
+                local_recurrence_amount=Decimal("1200"),
+                override_amount=None,
+                divergence="match",
+                blocked=False,
+                stale_wallet=False,
+                reason="Using latest valid AEAT wallet observation for Modelo 303 prior compensation.",
+                wallet_captured_at=decided_at,
+                decided_at=decided_at,
+            )
+
+            repo.save_iva_wallet_decision(decision)
+            loaded = repo.load_iva_wallet_decision("12345678Z", 2026, "2T")
+
+            assert loaded == decision
+            assert loaded is not None
+            assert loaded.selected_authority == "aeat_wallet"
+            assert loaded.selected_amount == Decimal("1200")
+            assert loaded.blocked is False
         finally:
             engine.dispose()

@@ -27,7 +27,6 @@ from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.live._census import CensusSnapshotService
 from aeat.entrypoints.cli._config import profile_app
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
@@ -195,7 +194,7 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
     assert result.exit_code == 0, result.output
 
     catalogue = BucketEventHistoryRepository().load()
-    state = workflow_state_repository().load()
+    workflow_state_repository().load()
     active = resolve_active_bucket_id()
     matching = [
         event
