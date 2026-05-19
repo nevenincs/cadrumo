@@ -152,7 +152,7 @@ def _drive_import_persists_filing(repos) -> _ImportOutcome:  # type: ignore[no-u
 
 def test_import_filing_is_current_and_accepted(repos) -> None:  # type: ignore[no-untyped-def]
     outcome = _drive_import_persists_filing(repos)
-    assert outcome.filing.status is ModeloRecordStatus.CURRENT
+    assert outcome.filing.status is ModeloRecordStatus.VIGENTE
     assert outcome.filing.aeat_accepted is True
 
 
@@ -181,7 +181,7 @@ def test_import_persists_filed_calculation_revision(repos) -> None:  # type: ign
     outcome = _drive_import_persists_filing(repos)
     _, cr_repo, _, _, _ = repos
     revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
-    assert revision.state is CalculationRevisionState.FILED
+    assert revision.state is CalculationRevisionState.PRESENTADO
     assert revision.amendment_kind is None  # import is not an amendment
 
 
@@ -266,13 +266,13 @@ def test_import_supersedes_prior_current_filing(repos) -> None:
     )
 
     refreshed_first = get_filing_record(first.filing_record_id, filing_repository=fr_repo)
-    assert refreshed_first.status is ModeloRecordStatus.SUPERSEDED
+    assert refreshed_first.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_first.superseded_by_filing_record_id == second.filing_record_id
 
     refreshed_first_revision = get_calculation_revision(first.calculation_revision_id, calculation_repository=cr_repo)
-    assert refreshed_first_revision.state is CalculationRevisionState.FILED_SUPERSEDED
+    assert refreshed_first_revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
 
-    assert second.status is ModeloRecordStatus.CURRENT
+    assert second.status is ModeloRecordStatus.VIGENTE
     assert second.external_evidence is not None
     assert second.external_evidence.kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
 
@@ -323,7 +323,7 @@ def test_import_then_amend_unlocks_amendment_path(repos) -> None:
 
     assert amended.amends_filing_record_id == imported.filing_record_id
     refreshed_baseline = get_filing_record(imported.filing_record_id, filing_repository=fr_repo)
-    assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDED
+    assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_baseline.superseded_by_filing_record_id == amended.filing_record_id
 
     # Chronological event chain: import → amend.

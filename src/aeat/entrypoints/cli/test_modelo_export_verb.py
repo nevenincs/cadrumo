@@ -90,7 +90,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
-        state=CalculationRevisionState.DRAFT,
+        state=CalculationRevisionState.BORRADOR,
         created_at=now,
         updated_at=now,
     )

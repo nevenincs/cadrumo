@@ -35,14 +35,14 @@ class ReconciliationStatus(StrEnum):
     """Operator-observable verdict of a ModeloDraft vs Justificante compare.
 
     Attributes:
-        MATCH: Every compared field agreed within tolerance.
-        DIVERGENT: At least one :class:`FieldMismatch` was detected.
+        COINCIDE: Every compared field agreed within tolerance.
+        DIVERGENTE: At least one :class:`FieldMismatch` was detected.
         NOT_YET_FOUND: AEAT's sede has no record of a matching
             submission for this ``(modelo, period)``.
     """
 
-    MATCH = "match"
-    DIVERGENT = "divergent"
+    COINCIDE = "coincide"
+    DIVERGENTE = "divergente"
     NOT_YET_FOUND = "not_yet_found"
 
 
@@ -129,7 +129,7 @@ class ReconciliationReport(BaseModel):
     Returned by :func:`reconcile` for every compare. The ``status``
     field is the primary verdict; ``mismatches`` carries the detailed
     per-field breakdown when ``status`` is
-    :attr:`ReconciliationStatus.DIVERGENT`.
+    :attr:`ReconciliationStatus.DIVERGENTE`.
 
     Attributes:
         status: One of :class:`ReconciliationStatus` — MATCH, DIVERGENT,

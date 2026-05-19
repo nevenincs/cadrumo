@@ -428,7 +428,7 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
         clock=discard_time,
     )
     assert discarded.work_unit_id == original.work_unit_id
-    assert discarded.state is WorkUnitState.DISCARDED
+    assert discarded.state is WorkUnitState.DESCARTADO
     assert discarded.discarded_at == discard_time
     assert discarded.discarded_by == "operator-A"
     assert discarded.discard_reason == "wrong-profile"
@@ -538,7 +538,7 @@ def test_work_unit_schema_rejects_discard_metadata_on_draft_state() -> None:
 
     with pytest.raises(ValidationError, match=r"DRAFT|discard|state"):
         _build_unit(
-            state=WorkUnitState.DRAFT,
+            state=WorkUnitState.BORRADOR,
             discarded_at=_T0,
             discarded_by="operator-A",
         )
@@ -549,7 +549,7 @@ def test_work_unit_schema_requires_discard_metadata_on_discarded_state() -> None
     ``discarded_at`` and ``discarded_by``."""
 
     with pytest.raises(ValidationError, match=r"DISCARDED|discard|state"):
-        _build_unit(state=WorkUnitState.DISCARDED)
+        _build_unit(state=WorkUnitState.DESCARTADO)
 
 
 # ---------------------------------------------------------------------------

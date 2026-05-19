@@ -351,7 +351,7 @@ class _RevisionDraftBuilder:
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        if draft.status is not ModeloDraftStatus.READY_TO_SUBMIT:
+        if draft.status is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
             return draft
         return approve_draft(
             draft,
@@ -525,7 +525,7 @@ def list_work_units(
         unit
         for unit in catalogue.values()
         if (bucket_id is None or unit.bucket_id == bucket_id)
-        and (include_discarded or unit.state is WorkUnitState.DRAFT)
+        and (include_discarded or unit.state is WorkUnitState.BORRADOR)
     )
     return tuple(
         sorted(
@@ -586,7 +586,7 @@ def rename_work_unit(
     existing = catalogue.get(work_unit_id)
     if existing is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if existing.state is WorkUnitState.DISCARDED:
+    if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(
             f"work unit {work_unit_id!r} is discarded; "
             "create a fresh work unit on the same modelo / year / period to continue"
@@ -647,7 +647,7 @@ def discard_work_unit(
     existing = catalogue.get(work_unit_id)
     if existing is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if existing.state is WorkUnitState.DISCARDED:
+    if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitAlreadyDiscardedError(
             f"work unit {work_unit_id!r} is already discarded "
             f"(by {existing.discarded_by!r} at {existing.discarded_at!s})"
@@ -655,7 +655,7 @@ def discard_work_unit(
     now = clock or datetime.now(UTC)
     discarded = existing.model_copy(
         update={
-            "state": WorkUnitState.DISCARDED,
+            "state": WorkUnitState.DESCARTADO,
             "discarded_at": now,
             "discarded_by": actor.strip(),
             "discard_reason": reason.strip() if reason else None,
@@ -867,7 +867,7 @@ def calculate_modelo_revision(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        state=CalculationRevisionState.DRAFT,
+        state=CalculationRevisionState.BORRADOR,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
         source_transaction_ids=source_transaction_ids,
@@ -1018,7 +1018,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if work_unit.state is WorkUnitState.DISCARDED:
+    if work_unit.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
@@ -1203,7 +1203,7 @@ def mark_revision_verified_complete(
     existing = catalogue.get(calculation_revision_id)
     if existing is None:
         raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
-    if existing.state is not CalculationRevisionState.DRAFT:
+    if existing.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete"
@@ -1460,7 +1460,7 @@ def verify_modelo_revision(
     target = revisions.get(calculation_revision_id)
     if target is None:
         raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
-    if target.state is not CalculationRevisionState.DRAFT:
+    if target.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{target.state.value!r}; only DRAFT revisions can be verified"
@@ -1659,7 +1659,7 @@ def _load_work_unit_for_calculation(work_units, *, work_unit_id: str):  # type: 
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if work_unit.state is WorkUnitState.DISCARDED:
+    if work_unit.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
     return work_unit
 
@@ -1853,7 +1853,7 @@ def file_modelo_revision(
         filed_by=actor.strip(),
         notes=notes.strip() if notes else None,
         aeat_accepted=False,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
     )
 
     # 2. Supersede prior filing record if present.
@@ -1861,7 +1861,7 @@ def file_modelo_revision(
     if prior_current is not None:
         superseded_prior = prior_current.model_copy(
             update={
-                "status": ModeloRecordStatus.SUPERSEDED,
+                "status": ModeloRecordStatus.SUPERSEDIDO,
                 "superseded_at": now,
                 "superseded_by_filing_record_id": new_filing_id,
             }
@@ -1870,10 +1870,10 @@ def file_modelo_revision(
 
         # Transition prior filed calculation revision to FILED_SUPERSEDED.
         prior_revision = revisions.get(prior_current.calculation_revision_id)
-        if prior_revision is not None and prior_revision.state is CalculationRevisionState.FILED:
+        if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
             superseded_revision = prior_revision.model_copy(
                 update={
-                    "state": CalculationRevisionState.FILED_SUPERSEDED,
+                    "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
                     "superseded_at": now,
                     "updated_at": now,
                 }
@@ -1884,7 +1884,7 @@ def file_modelo_revision(
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
     filed_target = target.model_copy(
         update={
-            "state": CalculationRevisionState.FILED,
+            "state": CalculationRevisionState.PRESENTADO,
             "filed_at": now,
             "filed_by": actor.strip(),
             "updated_at": now,
@@ -1970,7 +1970,7 @@ def list_filing_records(
         record
         for record in catalogue.values()
         if (bucket_id is None or record.bucket_id == bucket_id)
-        and (include_superseded or record.status is ModeloRecordStatus.CURRENT)
+        and (include_superseded or record.status is ModeloRecordStatus.VIGENTE)
     )
     return tuple(
         sorted(
@@ -2094,7 +2094,7 @@ def amend_modelo_revision(
             f"modelo amend path requires an imported AEAT-attested baseline. Use the "
             f"standard re-file path (calculate → verify → file) for locally-filed returns."
         )
-    if baseline.status is not ModeloRecordStatus.CURRENT:
+    if baseline.status is not ModeloRecordStatus.VIGENTE:
         raise AmendmentTargetStateError(
             f"filing record {from_filing_record_id!r} is in status {baseline.status.value!r}; "
             f"only CURRENT filings can be amended"
@@ -2143,7 +2143,7 @@ def amend_modelo_revision(
     amendment_draft = CalculationRevision(
         calculation_revision_id=new_revision_id,
         work_unit_id=baseline.work_unit_id,
-        state=CalculationRevisionState.DRAFT,
+        state=CalculationRevisionState.BORRADOR,
         inputs_snapshot=baseline_revision.inputs_snapshot,
         binding_overrides=baseline_revision.binding_overrides,
         source_transaction_ids=baseline_revision.source_transaction_ids,
@@ -2199,14 +2199,14 @@ def amend_modelo_revision(
         filed_by=actor.strip(),
         notes=None,
         aeat_accepted=False,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
         external_evidence=None,
         amends_filing_record_id=baseline.filing_record_id,
     )
 
     superseded_baseline = baseline.model_copy(
         update={
-            "status": ModeloRecordStatus.SUPERSEDED,
+            "status": ModeloRecordStatus.SUPERSEDIDO,
             "superseded_at": now,
             "superseded_by_filing_record_id": new_filing_id,
         }
@@ -2216,7 +2216,7 @@ def amend_modelo_revision(
 
     filed_amendment = verified_amendment.model_copy(
         update={
-            "state": CalculationRevisionState.FILED,
+            "state": CalculationRevisionState.PRESENTADO,
             "filed_at": now,
             "filed_by": actor.strip(),
             "updated_at": now,
@@ -2325,7 +2325,7 @@ def import_external_filing_evidence(
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if work_unit.state is WorkUnitState.DISCARDED:
+    if work_unit.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
 
     _reject_unknown_import_casillas(
@@ -2356,7 +2356,7 @@ def import_external_filing_evidence(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        state=CalculationRevisionState.FILED,
+        state=CalculationRevisionState.PRESENTADO,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
         casilla_values=outputs,
@@ -2396,7 +2396,7 @@ def import_external_filing_evidence(
         filed_by=actor.strip(),
         notes=None,
         aeat_accepted=True,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=evidence_kind,
             reference_id=cleaned_reference,
@@ -2408,17 +2408,17 @@ def import_external_filing_evidence(
     if prior_current is not None:
         superseded_prior = prior_current.model_copy(
             update={
-                "status": ModeloRecordStatus.SUPERSEDED,
+                "status": ModeloRecordStatus.SUPERSEDIDO,
                 "superseded_at": now,
                 "superseded_by_filing_record_id": new_filing_id,
             }
         )
         updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
         prior_revision = revisions.get(prior_current.calculation_revision_id)
-        if prior_revision is not None and prior_revision.state is CalculationRevisionState.FILED:
+        if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
             superseded_revision = prior_revision.model_copy(
                 update={
-                    "state": CalculationRevisionState.FILED_SUPERSEDED,
+                    "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
                     "superseded_at": now,
                     "updated_at": now,
                 }

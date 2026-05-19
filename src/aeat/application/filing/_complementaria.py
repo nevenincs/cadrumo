@@ -18,7 +18,6 @@ from ...domain.filing._amendment import (
     CasillaChange,
     CasillaDelta,
     CasillaInputs,
-    FilingAmendment,
     ModeloCode,
     ModeloComplementaria,
     ModeloSustitutiva,
@@ -164,7 +163,7 @@ def _delta(original_draft: ModeloDraft, amended_draft: ModeloDraft) -> CasillaDe
     return tuple(changes)
 
 
-def load_amendment(amendment_id: str) -> FilingAmendment:
+def load_amendment(amendment_id: str) -> ModeloComplementaria | ModeloSustitutiva:
     """Load a previously persisted amendment by id."""
     from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
 
@@ -180,7 +179,7 @@ def load_amendment(amendment_id: str) -> FilingAmendment:
     return loaded
 
 
-def list_amendments(*, modelo: str | None = None) -> tuple[FilingAmendment, ...]:
+def list_amendments(*, modelo: str | None = None) -> tuple[ModeloComplementaria | ModeloSustitutiva, ...]:
     """Return every persisted amendment, optionally filtered by modelo."""
     from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
 

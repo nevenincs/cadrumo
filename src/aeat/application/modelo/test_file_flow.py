@@ -480,7 +480,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos) -> None
         first.calculation_revision_id,
         second.calculation_revision_id,
     }
-    assert all(r.state is CalculationRevisionState.DRAFT for r in revisions)
+    assert all(r.state is CalculationRevisionState.BORRADOR for r in revisions)
 
     # Current pointer follows most-recent calculate.
     refreshed_work_unit = get_work_unit(
@@ -625,7 +625,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
         clock=_T3,
     )
 
-    assert filing.status is ModeloRecordStatus.CURRENT
+    assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
     assert filing.notes == "Q1 IVA"
     assert filing.filed_by == "operator-A"
@@ -635,7 +635,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision.state is CalculationRevisionState.FILED
+    assert refreshed_revision.state is CalculationRevisionState.PRESENTADO
     assert refreshed_revision.filed_at == _T3
     assert refreshed_revision.filed_by == "operator-A"
 
@@ -755,7 +755,7 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision.state is CalculationRevisionState.DRAFT
+    assert refreshed_revision.state is CalculationRevisionState.BORRADOR
     assert (
         list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
@@ -842,19 +842,19 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     )
 
     # New filing is current.
-    assert filing_two.status is ModeloRecordStatus.CURRENT
+    assert filing_two.status is ModeloRecordStatus.VIGENTE
     refreshed_revision_two = get_calculation_revision(
         revision_two.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision_two.state is CalculationRevisionState.FILED
+    assert refreshed_revision_two.state is CalculationRevisionState.PRESENTADO
 
     # Prior filing is superseded; prior revision moved to FILED_SUPERSEDED.
     refreshed_filing_one = get_filing_record(
         filing_one.filing_record_id,
         filing_repository=fr_repo,
     )
-    assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDED
+    assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_filing_one.superseded_at == _T5
     assert refreshed_filing_one.superseded_by_filing_record_id == filing_two.filing_record_id
 
@@ -862,7 +862,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
         revision_one.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision_one.state is CalculationRevisionState.FILED_SUPERSEDED
+    assert refreshed_revision_one.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
     assert refreshed_revision_one.superseded_at == _T5
 
     # current_for resolves to the new filing only.
@@ -962,7 +962,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
         filing_repository=fr_repo,
     )
     assert len(default_listing) == 1
-    assert default_listing[0].status is ModeloRecordStatus.CURRENT
+    assert default_listing[0].status is ModeloRecordStatus.VIGENTE
 
     with_history = list_filing_records(
         include_superseded=True,
@@ -1167,7 +1167,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed.state is CalculationRevisionState.DRAFT
+    assert refreshed.state is CalculationRevisionState.BORRADOR
 
     persisted = get_verification_report(
         report.verification_report_id,
@@ -1221,7 +1221,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     revision = CalculationRevision(
         calculation_revision_id=rid,
         work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.DRAFT,
+        state=CalculationRevisionState.BORRADOR,
         inputs_snapshot=inputs,
         binding_overrides=overrides_map,
         casilla_values=casillas,
@@ -1249,7 +1249,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed.state is CalculationRevisionState.DRAFT
+    assert refreshed.state is CalculationRevisionState.BORRADOR
 
 
 def test_verify_rejects_non_draft_revision_real_registry(repos) -> None:

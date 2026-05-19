@@ -125,33 +125,34 @@ class ModeloDraftStatus(StrEnum):
 
     The state machine carries a draft from creation through validation,
     operator approval, submission, and the AEAT-side terminal states.
-    The preflight engine consumes only :attr:`APPROVED` and
-    :attr:`APPROVAL_STALE` on its happy path; the broader filing /
-    submission stack consumes the full lifecycle.
+    The preflight engine consumes only :attr:`APROBADO` and
+    :attr:`APROBACION_CADUCADA` on its happy path; the broader filing /
+    submission stack consumes the full lifecycle. Member names and
+    values mirror the AEAT Sede labels per ADR A7.2.
 
     Attributes:
-        DRAFT: New draft, not yet validated.
-        VALIDATED: Validation rules executed without errors.
-        READY_TO_SUBMIT: Draft fully prepared for an attempt.
-        APPROVED: Operator-approved for submission.
-        APPROVAL_STALE: Approval timestamp aged out.
-        SUBMITTED: A submission attempt is recorded.
-        ACKNOWLEDGED: AEAT acknowledged the filing.
-        REJECTED: AEAT rejected the filing.
-        AMENDED: Superseded by an amendment record.
-        CANCELLED: Operator cancelled before submission.
+        BORRADOR: New draft, not yet validated.
+        VALIDADO: Validation rules executed without errors.
+        LISTO_PARA_PRESENTAR: Draft fully prepared for an attempt.
+        APROBADO: Operator-approved for submission.
+        APROBACION_CADUCADA: Approval timestamp aged out.
+        PRESENTADA: A submission attempt is recorded.
+        ACEPTADA: AEAT acknowledged the filing.
+        RECHAZADA: AEAT rejected the filing.
+        ENMENDADO: Superseded by an amendment record.
+        ANULADO: Operator cancelled before submission.
     """
 
-    DRAFT = "DRAFT"
-    VALIDATED = "VALIDATED"
-    READY_TO_SUBMIT = "READY_TO_SUBMIT"
-    APPROVED = "APPROVED"
-    APPROVAL_STALE = "APPROVAL_STALE"
-    SUBMITTED = "SUBMITTED"
-    ACKNOWLEDGED = "ACKNOWLEDGED"
-    REJECTED = "REJECTED"
-    AMENDED = "AMENDED"
-    CANCELLED = "CANCELLED"
+    BORRADOR = "BORRADOR"
+    VALIDADO = "VALIDADO"
+    LISTO_PARA_PRESENTAR = "LISTO_PARA_PRESENTAR"
+    APROBADO = "APROBADO"
+    APROBACION_CADUCADA = "APROBACION_CADUCADA"
+    PRESENTADA = "PRESENTADA"
+    ACEPTADA = "ACEPTADA"
+    RECHAZADA = "RECHAZADA"
+    ENMENDADO = "ENMENDADO"
+    ANULADO = "ANULADO"
 
 
 @runtime_checkable

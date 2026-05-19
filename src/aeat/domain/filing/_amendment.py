@@ -81,12 +81,6 @@ class BaseAmendment(BaseModel):
     created_at: datetime
 
 
-class FilingAmendment(BaseAmendment):
-    """Compatibility amendment record for persisted pre-variant envelopes."""
-
-    amendment_kind: AmendmentKind
-
-
 class ModeloComplementaria(BaseAmendment):
     """LGT Art. 122.2 complementaria: corrects an already-presented filing."""
 
@@ -121,7 +115,6 @@ __all__ = [
     "CasillaChange",
     "CasillaDelta",
     "CasillaInputs",
-    "FilingAmendment",
     "ModeloCode",
     "ModeloComplementaria",
     "ModeloSustitutiva",

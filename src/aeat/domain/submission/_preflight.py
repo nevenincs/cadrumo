@@ -71,7 +71,7 @@ class Preflight:
 
     Gates run in order:
 
-    1. Draft status is :attr:`ModeloDraftStatus.APPROVED`.
+    1. Draft status is :attr:`ModeloDraftStatus.APROBADO`.
     2. No ``ERROR``-severity entries in ``draft.findings``.
     3. Deadline window is open via
        :meth:`DeadlineWindowChecker.is_window_open`.
@@ -119,9 +119,9 @@ class Preflight:
         )
 
         status_value = _enum_value(draft.status)
-        if status_value != ModeloDraftStatus.APPROVED.value:
+        if status_value != ModeloDraftStatus.APROBADO.value:
             _logger.debug("preflight gate-1 fail: draft status=%s", draft.status)
-            if status_value == ModeloDraftStatus.APPROVAL_STALE.value:
+            if status_value == ModeloDraftStatus.APROBACION_CADUCADA.value:
                 raise SubmissionPreflightError("draft approval is stale; review and approve the draft again")
             raise SubmissionPreflightError(f"draft not approved for submission (status={status_value})")
         _logger.debug("preflight gate-1 ok: draft is approved")

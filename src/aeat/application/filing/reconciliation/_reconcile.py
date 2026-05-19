@@ -99,8 +99,8 @@ def reconcile(
     Returns:
         A frozen :class:`ReconciliationReport` whose
         :attr:`ReconciliationReport.status` is one of
-        :attr:`ReconciliationStatus.MATCH`,
-        :attr:`ReconciliationStatus.DIVERGENT`, or
+        :attr:`ReconciliationStatus.COINCIDE`,
+        :attr:`ReconciliationStatus.DIVERGENTE`, or
         :attr:`ReconciliationStatus.NOT_YET_FOUND`, accompanied by
             per-field mismatches and a multilingual narrative summary.
     """
@@ -206,7 +206,7 @@ def reconcile(
         )
 
     if mismatches:
-        status = ReconciliationStatus.DIVERGENT
+        status = ReconciliationStatus.DIVERGENTE
         narrative = _narrative_divergent(draft, remote, mismatches)
         _logger.warning(
             "reconciliation divergent draft_id=%s modelo=%s period=%s mismatches=%d",
@@ -216,7 +216,7 @@ def reconcile(
             len(mismatches),
         )
     else:
-        status = ReconciliationStatus.MATCH
+        status = ReconciliationStatus.COINCIDE
         narrative = _narrative_match(draft, remote)
         _logger.info(
             "reconciliation matched draft_id=%s modelo=%s period=%s csv=%s",

@@ -52,7 +52,7 @@ def _populated_workflow_state() -> WorkflowState:
                 modelo="303",
                 period="2025Q1",
                 draft_id="d" * 64,
-                status="DRAFT",
+                status="BORRADOR",
                 exported_path="exports/303-2025Q1.txt",
                 verified=False,
                 updated_at=now,

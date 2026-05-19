@@ -43,7 +43,7 @@ def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> ModeloDraft
         modelo="130",
         period=period,
         profile_tax_id="00000000T",
-        status=ModeloDraftStatus.VALIDATED,
+        status=ModeloDraftStatus.VALIDADO,
         values=values,
         created_at=now,
         updated_at=now,
