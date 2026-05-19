@@ -14,6 +14,11 @@ related:
 
 # `iva-compensation-chain` adr: `modelo 303 and 390 compensation balance remediation` | (**status:** `accepted`)
 
+> **Updated 2026-05-19**: Tax-domain identifier mentions in this ADR follow the Spanish-stem terminology authority. The compensation-chain decisions (Modelo 303 casilla identities 110, 78, 87, 69; the Modelo 390 annual reconciliation fields 97 and 662; the source_period_offset_from_target previous-filing selector; and the registry-as-arithmetic-truth rule) are unaffected and require no edit.
+> See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
+> rename ledger and Spanish-stem terminology authority.
+
+
 ## Problem Statement
 
 The IVA calculation chain treated the prior-period compensation balance as the old Modelo 303 casilla `67` and calculated the final result as casilla `71`. The current bundled AEAT 2025 record design declares the relevant Modelo 303 result fields as casilla `110` for pending prior-period compensation, `78` for the amount applied in the period, `87` for prior-period compensation still pending for later periods, and `69` for the final autoliquidacion result.

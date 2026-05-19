@@ -14,6 +14,11 @@ related:
 
 # `cli-workflow-redesign` adr: `domain harvest OSS/IOSS` | (**status:** `accepted`)
 
+> **PARTIALLY-SUPERSEDED 2026-05-19**: The Value-Added Tax direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers and domain/vat/_oss.py migrates into domain/iva/_oss.py. The app-modelo orchestration surface, profile keys (iva.regime, iva.oss_enrolled), ledger_oss_aggregation binding flow, calculation event surface, destination-country VAT rate validation, and rejected-shapes list remain in force; only the substrate module path renames per the canonical rename ledger.
+> See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
+> rename ledger and Spanish-stem terminology authority.
+
+
 ## CLI Backend Boundary
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.

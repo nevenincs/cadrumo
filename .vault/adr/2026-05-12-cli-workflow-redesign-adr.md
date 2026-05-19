@@ -80,6 +80,11 @@ related:
   - "[[2026-04-18-unified-review-queue-adr]]"
 ---
 
+> **Updated 2026-05-19**: Module-path mentions of domain/vat/_classification.py and domain/vat/_oss.py in the backend exit-cap inventory, plus the domain/vat legal prorrata substrate reference in the functional gap inventory, follow the Spanish-stem terminology authority: domain/vat migrates into domain/iva. The CLI verb tree, root-command contract, phantom-family adjudication, and backend exit-cap inventory shape are unaffected.
+> See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
+> rename ledger and Spanish-stem terminology authority.
+
+
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
      outside the YAML frontmatter above -->
 
