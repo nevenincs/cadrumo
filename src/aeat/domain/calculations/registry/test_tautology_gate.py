@@ -26,7 +26,6 @@ structural / graph-wiring assertions, and Python primitive contracts.
 from __future__ import annotations
 
 import ast
-import tomllib
 from decimal import Decimal
 from itertools import combinations
 from pathlib import Path
@@ -35,15 +34,17 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
+from aeat.domain.calculations.registry._loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_modelo_100_formulas_2025() -> dict[str, dict]:
-    data = tomllib.loads(
-        (bundled_path("registry", "aeat", "modelos", "100", "revisions", "2025.toml")).read_text(encoding="utf-8")
-    )
-    return {f["target"]: f for f in data["revisions"]["2025"].get("formulas", [])}
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100"))
+    return {
+        formula.target: formula.model_dump(mode="json", exclude_none=True)
+        for formula in modelo.revisions["2025"].formulas
+    }
 
 
 def _evaluate_expression(expr: dict | None, casilla_values: dict[str, Decimal]) -> Decimal | None:
@@ -350,7 +351,7 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         # job is to thread a sum through Decimal addition; the
         # accompanying test verifies the Python primitive contract,
         # not a registry formula.
-        "src/aeat/domain/vat/test_prorrata.py::test_sum_deductible_amounts_threads_through_decimal_addition",
+        "src/aeat/domain/iva/test_prorrata.py::test_sum_deductible_amounts_threads_through_decimal_addition",
         # Round-trip identity: asserts the deserialised modelo-190
         # perceptor rows preserve the original per-perceptor amounts
         # byte-for-byte. The sum across perceptors is incidental

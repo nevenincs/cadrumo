@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0267"
+number = "0267"
+label = "Contribuyente que debe efectuar la imputación"
+section = ["toma_datos_ampliada"]
+data_type = "text"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

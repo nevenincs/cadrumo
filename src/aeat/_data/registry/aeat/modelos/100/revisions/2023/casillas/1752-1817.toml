@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1817"
+number = "1817"
+label = "Tipo de elemento patrimonial. Clave (I: Inmueble en propiedad O= otros derechos reales sobre bienes inmuebles)"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

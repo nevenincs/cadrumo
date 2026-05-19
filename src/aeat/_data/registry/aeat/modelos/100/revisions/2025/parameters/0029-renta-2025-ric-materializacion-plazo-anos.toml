@@ -1,0 +1,16 @@
+[[revisions."2025".parameters]]
+id = "renta-2025-ric-materializacion-plazo-anos"
+data_type = "decimal"
+unit = "years"
+legal_refs = ["ley-19-1994:art-27"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Reserva para Inversiones en Canarias", "tres años"]
+
+[[revisions."2025".parameters.values]]
+value = "3"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

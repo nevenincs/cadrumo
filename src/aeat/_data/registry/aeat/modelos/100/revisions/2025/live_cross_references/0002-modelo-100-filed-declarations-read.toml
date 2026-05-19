@@ -1,0 +1,23 @@
+[[revisions."2025".live_cross_references]]
+id = "modelo-100-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-100-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "borrador-confirmation",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-modelo-100-procedure"]

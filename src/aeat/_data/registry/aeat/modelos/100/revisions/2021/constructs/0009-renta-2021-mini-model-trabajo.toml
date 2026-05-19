@@ -1,0 +1,21 @@
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-trabajo"
+title = "Modelo 100 2021 rendimientos del trabajo aggregators"
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-99",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-trabajo-especie-importe-integro",
+    "renta-2021-trabajo-rendimiento-neto",
+    "renta-2021-trabajo-rendimiento-neto-previo",
+    "renta-2021-trabajo-rendimiento-neto-reducido",
+    "renta-2021-trabajo-suma-rendimientos-netos-previos",
+    "renta-2021-trabajo-total-ingresos-integros-computables",
+]

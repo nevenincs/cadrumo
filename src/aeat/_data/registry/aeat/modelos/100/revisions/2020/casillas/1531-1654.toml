@@ -1,0 +1,18 @@
+[[revisions."2020".casillas]]
+id = "1654"
+number = "1654"
+label = "Ganancia patrimonial reducida no exenta imputable a 2020"
+section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
+
+
+# ===========================================================================
+# Auto-generated casilla schema for revision 2021 sourced from
+# corpus/aeat_official/disenos_registro/modelo_100/files/05-100-diccionario-declaracion-individual-ejercicio-2021-actualizado-18-03-2022-330-kb-otros-fi.properties
+# (the AEAT-published declaracion-individual data dictionary). Each block
+# carries the casilla number, AEAT label, section path derived from the
+# XPath, and data_type mapped from the AEAT type code (P102/P102/etc. ->
+# money, X/FEC -> text, LGC/S_N -> boolean, N102 -> decimal, SEQ -> integer).
+# Existing hand-authored casillas in this revision are preserved.
+# ===========================================================================

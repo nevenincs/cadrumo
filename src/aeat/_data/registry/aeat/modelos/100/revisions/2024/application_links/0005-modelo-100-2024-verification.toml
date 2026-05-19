@@ -1,0 +1,7 @@
+[[revisions."2024".application_links]]
+id = "modelo-100-2024-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]

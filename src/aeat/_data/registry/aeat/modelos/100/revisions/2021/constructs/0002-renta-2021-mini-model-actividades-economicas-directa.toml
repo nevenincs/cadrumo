@@ -1,0 +1,25 @@
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-actividades-economicas-directa"
+title = "Modelo 100 2021 estimacion directa aggregators"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-estimacion-directa-diferencia-previa",
+    "renta-2021-estimacion-directa-gastos-dificil-justificacion",
+    "renta-2021-estimacion-directa-gastos-normal",
+    "renta-2021-estimacion-directa-gastos-previos",
+    "renta-2021-estimacion-directa-gastos-simplificada",
+    "renta-2021-estimacion-directa-ingresos-computables",
+    "renta-2021-estimacion-directa-rendimiento-neto",
+    "renta-2021-estimacion-directa-rendimiento-neto-reducido",
+    "renta-2021-estimacion-directa-rendimiento-neto-reducido-total",
+    "renta-2021-estimacion-directa-total-rendimiento-neto-reducido",
+]

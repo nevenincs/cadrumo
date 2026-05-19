@@ -1,0 +1,15 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-escala-autonomica-sobre-minimo-personal-familiar"
+target = "0531"
+expression = { op = "lookup_bracket_by_ccaa", args = [
+    { casilla = "0521" },
+    { binding = "renta-2024-profile-tax-residence-ccaa" },
+    { dispatch_table = { andalucia = "renta-2024-escala-autonomica-andalucia-base-general", aragon = "renta-2024-escala-autonomica-aragon-base-general", asturias = "renta-2024-escala-autonomica-asturias-base-general", baleares = "renta-2024-escala-autonomica-baleares-base-general", canarias = "renta-2024-escala-autonomica-canarias-base-general", cantabria = "renta-2024-escala-autonomica-cantabria-base-general", castilla_la_mancha = "renta-2024-escala-autonomica-castilla-la-mancha-base-general", castilla_y_leon = "renta-2024-escala-autonomica-castilla-y-leon-base-general", cataluna = "renta-2024-escala-autonomica-cataluna-base-general", comunidad_valenciana = "renta-2024-escala-autonomica-comunidad-valenciana-base-general", extremadura = "renta-2024-escala-autonomica-extremadura-base-general", galicia = "renta-2024-escala-autonomica-galicia-base-general", la_rioja = "renta-2024-escala-autonomica-la-rioja-base-general", madrid = "renta-2024-escala-autonomica-madrid-base-general", murcia = "renta-2024-escala-autonomica-murcia-base-general" } },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["escala autonómica", "mínimo personal"]

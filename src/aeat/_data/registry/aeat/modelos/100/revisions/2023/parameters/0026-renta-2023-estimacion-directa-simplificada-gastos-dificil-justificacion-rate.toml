@@ -1,0 +1,16 @@
+[[revisions."2023".parameters]]
+id = "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "actividades económicas"]
+
+[[revisions."2023".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31

@@ -1,0 +1,7 @@
+[[revisions."2021".application_links]]
+id = "modelo-100-2021-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]

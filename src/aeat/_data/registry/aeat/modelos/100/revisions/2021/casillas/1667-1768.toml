@@ -1,0 +1,7 @@
+[[revisions."2021".casillas]]
+id = "1768"
+number = "1768"
+label = "Consumo de energía primaria no renovable anterior"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

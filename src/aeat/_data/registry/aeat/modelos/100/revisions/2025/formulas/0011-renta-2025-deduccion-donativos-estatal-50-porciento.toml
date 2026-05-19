@@ -1,0 +1,19 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-donativos-estatal-50-porciento"
+target = "0552"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]

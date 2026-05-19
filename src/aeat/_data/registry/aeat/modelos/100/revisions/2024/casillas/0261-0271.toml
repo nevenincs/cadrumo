@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0271"
+number = "0271"
+label = "Contribuyente que debe efectuar la imputación como consecuencia de la cesión del derecho de imagen"
+section = ["toma_datos_ampliada"]
+data_type = "text"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

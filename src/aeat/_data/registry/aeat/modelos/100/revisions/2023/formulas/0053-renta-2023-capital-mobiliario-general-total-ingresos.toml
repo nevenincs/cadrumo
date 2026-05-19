@@ -1,0 +1,17 @@
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-general-total-ingresos"
+target = "0052"
+expression = { op = "sum", args = [
+        { casilla = "0046" },
+        { casilla = "0047" },
+        { casilla = "0048" },
+        { casilla = "0050" },
+        { casilla = "0051" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]

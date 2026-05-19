@@ -1,0 +1,15 @@
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-escala-autonomica-sobre-minimo-personal-familiar"
+target = "0531"
+expression = { op = "lookup_bracket_by_ccaa", args = [
+    { casilla = "0521" },
+    { binding = "renta-2020-profile-tax-residence-ccaa" },
+    { dispatch_table = { andalucia = "renta-2020-escala-autonomica-andalucia-base-general", aragon = "renta-2020-escala-autonomica-aragon-base-general", asturias = "renta-2020-escala-autonomica-asturias-base-general", baleares = "renta-2020-escala-autonomica-baleares-base-general", canarias = "renta-2020-escala-autonomica-canarias-base-general", cantabria = "renta-2020-escala-autonomica-cantabria-base-general", castilla_la_mancha = "renta-2020-escala-autonomica-castilla-la-mancha-base-general", castilla_y_leon = "renta-2020-escala-autonomica-castilla-y-leon-base-general", cataluna = "renta-2020-escala-autonomica-cataluna-base-general", comunidad_valenciana = "renta-2020-escala-autonomica-comunidad-valenciana-base-general", extremadura = "renta-2020-escala-autonomica-extremadura-base-general", galicia = "renta-2020-escala-autonomica-galicia-base-general", la_rioja = "renta-2020-escala-autonomica-la-rioja-base-general", madrid = "renta-2020-escala-autonomica-madrid-base-general", murcia = "renta-2020-escala-autonomica-murcia-base-general" } },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["escala autonómica", "mínimo personal"]

@@ -1,0 +1,9 @@
+[[revisions."2018-y-siguientes".deadline_windows]]
+id = "modelo-232-2021-0a"
+filing_year = 2021
+period = "2021-0A"
+period_kind = "annual"
+opens_on = 2022-11-01
+closes_on = 2022-11-30
+legal_refs = ["orden-hfp-816-2017:art-4", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-232-2017-form"]

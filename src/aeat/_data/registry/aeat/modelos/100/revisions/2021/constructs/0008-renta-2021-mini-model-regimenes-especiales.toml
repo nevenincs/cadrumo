@@ -1,0 +1,35 @@
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-regimenes-especiales"
+title = "Modelo 100 2021 atribucion / imputacion de rentas aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-2",
+    "orden-hap-2250-2015:art-3",
+    "orden-hap-2250-2015:art-4",
+    "orden-hap-2250-2015:art-5",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-atribucion-actividades-economicas-suma",
+    "renta-2021-atribucion-actividades-rendimiento-neto-computable",
+    "renta-2021-atribucion-deuda-subordinada-preferentes-suma",
+    "renta-2021-atribucion-ganancias-no-transmision-base-general",
+    "renta-2021-atribucion-ganancias-transmision-base-ahorro",
+    "renta-2021-atribucion-perdidas-no-transmision-base-general",
+    "renta-2021-atribucion-perdidas-transmision-base-ahorro",
+    "renta-2021-bases-imputadas-suma",
+    "renta-2021-diferimiento-reinversion-imputacion-suma",
+    "renta-2021-transparencia-fiscal-suma",
+]
