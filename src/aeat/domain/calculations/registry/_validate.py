@@ -6,6 +6,7 @@ import re
 import warnings
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
+from difflib import SequenceMatcher
 from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
 from importlib import import_module
@@ -2525,6 +2526,8 @@ def _emit_semantic_role_typo_twin_warnings(
     for role, observations in grouped.items():
         if len(observations) != 1:
             continue
+        if not _semantic_role_looks_like_typo(role, grouped.keys()):
+            continue
         obs = observations[0]
         warnings.warn(
             f"semantic_role {role!r} appears on exactly one casilla "
@@ -2532,6 +2535,35 @@ def _emit_semantic_role_typo_twin_warnings(
             "likely typo or missing role declarations on sibling casillas",
             stacklevel=2,
         )
+
+
+def _semantic_role_looks_like_typo(role: str, known_roles: Iterable[str]) -> bool:
+    if "-" in role:
+        return True
+    normalised = role.replace("-", "_")
+    for known in known_roles:
+        if known == role:
+            continue
+        if _semantic_roles_are_tax_domain_siblings(role, known):
+            continue
+        if known.replace("-", "_") == normalised:
+            return True
+        if SequenceMatcher(None, role, known).ratio() >= 0.92:
+            return True
+    return False
+
+
+def _semantic_roles_are_tax_domain_siblings(left: str, right: str) -> bool:
+    domain_suffixes = {"irpf", "is", "iva"}
+    left_parts = left.split("_")
+    right_parts = right.split("_")
+    return (
+        len(left_parts) > 1
+        and len(right_parts) > 1
+        and left_parts[:-1] == right_parts[:-1]
+        and left_parts[-1] in domain_suffixes
+        and right_parts[-1] in domain_suffixes
+    )
 
 
 # Plan C W05 validator hard-flip surface (semantic_role requirement).
@@ -2644,6 +2676,32 @@ def _cross_revision_signature(casilla: CasillaDefinition) -> tuple[object, ...]:
     return tuple(getattr(casilla, field) for field in _CROSS_REVISION_CASILLA_FIELDS)
 
 
+def _period_selector_year_bounds(selector: PeriodSelector) -> tuple[int, int | None]:
+    if selector.years:
+        return min(selector.years), max(selector.years)
+    if selector.year_from is None:
+        return 0, None
+    return selector.year_from, selector.year_to
+
+
+def _period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
+    left_start, left_end = _period_selector_year_bounds(left)
+    right_start, right_end = _period_selector_year_bounds(right)
+    if left_end is not None and left_end < right_start:
+        return False
+    if right_end is not None and right_end < left_start:
+        return False
+    return bool(set(left.periods).intersection(right.periods))
+
+
+def _revisions_overlap(left: object, right: object) -> bool:
+    left_selector = getattr(left, "period_selector", None)
+    right_selector = getattr(right, "period_selector", None)
+    if not isinstance(left_selector, PeriodSelector) or not isinstance(right_selector, PeriodSelector):
+        return True
+    return _period_selectors_overlap(left_selector, right_selector)
+
+
 def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefinition]) -> None:
     """Raise when a repeated casilla id drifts across revisions."""
 
@@ -2671,32 +2729,35 @@ def _validate_cross_revision_casilla_consistency(
     failures: list[str] = []
     for modelo in modelos:
         # Group casillas by id across all revisions of this modelo.
-        by_id: dict[str, list[tuple[str, CasillaDefinition]]] = defaultdict(list)
+        by_id: dict[str, list[tuple[ModeloRevision, CasillaDefinition]]] = defaultdict(list)
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
-                by_id[casilla.id].append((revision.id, casilla))
+                by_id[casilla.id].append((revision, casilla))
         for casilla_id, occurrences in by_id.items():
             if len(occurrences) < 2:
                 continue
-            canonical_rev, canonical_casilla = occurrences[0]
-            canonical_sig = _cross_revision_signature(canonical_casilla)
-            for rev_id, casilla in occurrences[1:]:
-                sig = _cross_revision_signature(casilla)
-                if sig == canonical_sig:
-                    continue
-                divergences = tuple(
-                    (rev_id, field, (canonical_value, observed_value))
-                    for field, canonical_value, observed_value in zip(
-                        _CROSS_REVISION_CASILLA_FIELDS,
-                        canonical_sig,
-                        sig,
-                        strict=True,
+            for index, (left_revision, left_casilla) in enumerate(occurrences[:-1]):
+                left_sig = _cross_revision_signature(left_casilla)
+                for right_revision, right_casilla in occurrences[index + 1 :]:
+                    if not _revisions_overlap(left_revision, right_revision):
+                        continue
+                    right_sig = _cross_revision_signature(right_casilla)
+                    if right_sig == left_sig:
+                        continue
+                    divergences = tuple(
+                        (right_revision.id, field, (left_value, right_value))
+                        for field, left_value, right_value in zip(
+                            _CROSS_REVISION_CASILLA_FIELDS,
+                            left_sig,
+                            right_sig,
+                            strict=True,
+                        )
+                        if left_value != right_value
                     )
-                    if canonical_value != observed_value
-                )
-                failures.append(
-                    f"cross-revision drift: modelo {modelo.id} casilla "
-                    f"{casilla_id!r} canonical revision {canonical_rev!r} "
-                    f"divergences {divergences!r}"
-                )
+                    failures.append(
+                        f"cross-revision drift: modelo {modelo.id} casilla "
+                        f"{casilla_id!r} canonical revision {left_revision.id!r} "
+                        f"divergences {divergences!r}"
+                    )
+                    continue
     return tuple(failures)
