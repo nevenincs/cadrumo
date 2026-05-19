@@ -53,9 +53,9 @@ Unify copy-pasted pdfplumber extraction logic, logging control suppression, and 
 - [x] `W02.P03.S08` - Migrate all PDF text extraction calls to canonical pdfplumber utility and implement the shared `_suppress_pdfminer_debug_logging` control to eliminate PDF logging noise globally; `src/aeat/adapters/inbound/pdf/_pdfplumber.py`.
 - [x] `W02.P03.S09` - Refactor borrador parser to use shared PDF text extraction utility; `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py`.
 - [x] `W02.P03.S10` - Refactor declaracion parser to use shared PDF text extraction utility; `src/aeat/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`.
-- [ ] `W02.P03.S11` - Extract BaseCheckerOracle and shared JSON-decoding replay driver under live parity backend; `src/aeat/domain/calculations/registry/_live_parity.py`.
-- [ ] `W02.P03.S12` - Refactor AeatNifIvaCheckerOracle to inherit from BaseCheckerOracle; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
-- [ ] `W02.P03.S13` - Refactor GroiCheckerOracle to inherit from BaseCheckerOracle; `src/aeat/domain/calculations/registry/_groi_oracle.py`.
+- [x] `W02.P03.S11` - Extract BaseCheckerOracle and shared JSON-decoding replay driver under live parity backend; `src/aeat/domain/calculations/registry/_live_parity.py`.
+- [x] `W02.P03.S12` - Refactor AeatNifIvaCheckerOracle to inherit from BaseCheckerOracle; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
+- [x] `W02.P03.S13` - Refactor GroiCheckerOracle to inherit from BaseCheckerOracle; `src/aeat/domain/calculations/registry/_groi_oracle.py`.
 
 ## Wave `W03` - Acronym & Term Standardization
 
