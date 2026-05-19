@@ -1,13 +1,65 @@
 access_gate:
   errors:
-    default_translatable: el envío en vivo a la AEAT está permanentemente prohibido;
-      usa produce -> verify -> export y sube el fichero manualmente en el portal de
-      la AEAT
+    default_translatable: el envío en vivo a la AEAT está permanentemente prohibido; usa produce -> verify -> export y sube el fichero manualmente en el portal de la AEAT
+adapters:
+  aeat:
+    clave_movil:
+      errors:
+        pending_petition_blocked: La AEAT rechazó emitir una nueva solicitud push de Cl@ve Móvil porque una petición de autenticación anterior aún está pendiente en el servidor.
+      suggestions:
+        reject_pending_request: Abre la app Cl@ve en tu móvil, rechaza todas las peticiones pendientes y vuelve a ejecutar `aeat config auth test` (o espera hasta 5 minutos a que la AEAT las cancele automáticamente).
+    sede:
+      groi:
+        suggestions:
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado el formulario GROI.
+      nif_iva:
+        suggestions:
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado el formulario NIF-IVA.
+      renta_web_open:
+        suggestions:
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado la página Renta WEB Open.
+  google:
+    calc_sheets:
+      errors:
+        api_call_failed: La llamada a Google {action} ha fallado.
+        api_call_refused: La llamada a Google {action} fue rechazada (HTTP {status}).
+        api_target_not_found: El destino de Google {action} no se encontró.
+        googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador de Google no puede acceder a la API.
+    oauth_flow:
+      errors:
+        browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento OAuth en el navegador.
+        client_config_refused: La configuración del cliente Google OAuth fue rechazada.
+        email_claim_missing: El id_token de Google se verificó pero no incluye la reclamación email.
+        endpoint_unreachable: El endpoint OAuth de Google no es accesible.
+        id_token_missing: Google no devolvió un id_token; el consentimiento OAuth no incluyó los ámbitos openid+email.
+        id_token_module_not_importable: El módulo id_token de google-auth no se puede importar.
+        id_token_verification_failed: La verificación del id_token de Google ha fallado.
+        loopback_bind_failed: El receptor OAuth loopback local no pudo asignar un puerto.
+        oauthlib_not_importable: google-auth-oauthlib no se puede importar; el flujo OAuth no puede iniciarse.
+        scope_missing: La pantalla de consentimiento de Google se cerró sin conceder todos los ámbitos requeridos.
+        unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos está en modo inseguro y el perfil activo lleva un identificador fiscal español real.
+      suggestions:
+        close_loopback_port: Cierra la aplicación que esté ocupando un puerto loopback huérfano y vuelve a intentarlo.
+        open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento impresa.
+        use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o cambia el perfil activo a un identificador fiscal sintético de prueba.
+    profile_binding:
+      errors:
+        no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
+    refresh:
+      errors:
+        google_auth_not_importable: La librería google-auth no se puede importar; la renovación de OAuth Google no puede continuar.
+        reauth_required: La credencial OAuth de Google está marcada como pendiente de reautenticación; la ruta de renovación automática está cerrada.
+        refresh_failed: La renovación de Google OAuth ha fallado.
+        refresh_refused: Google OAuth rechazó la solicitud de renovación; el refresh token ya no es válido.
+        token_endpoint_unreachable: El endpoint de token de Google OAuth no es accesible.
+      suggestions:
+        check_network: Comprueba la conectividad de red con los endpoints OAuth de Google y vuelve a intentarlo.
+      testing_project_cap_warning: El refresh token de Google OAuth se acerca al límite de 7 días del proyecto en modo Testing (quedan unas {hours_remaining}h); vuelve a ejecutar `aeat config google login`
+        para prolongar la vida útil de la credencial.
 aggregation:
   iva_ledger:
     errors:
-      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
-        bucket de agregación solicitado.
+      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el bucket de agregación solicitado.
   modelo_bindings:
     errors:
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
@@ -15,53 +67,89 @@ aggregation:
     errors:
       annual_period_mixed: El periodo no puede mezclar valores anuales y subaños (trimestre/mes).
       month_required: El tipo de periodo mensual requiere un valor de mes.
-      period_type_ambiguous: El tipo de periodo es ambiguo; especifique trimestre
-        o mes explícitamente.
+      period_type_ambiguous: El tipo de periodo es ambiguo; especifique trimestre o mes explícitamente.
       quarter_required: El tipo de periodo trimestral requiere un valor de trimestre.
   per_modelo:
     errors:
       unsupported_modelo: Modelo no soportado para la agregación por modelo
     registry:
       errors:
-        invalid_accrued_on: 'Fecha de devengo no válida para la observación %{source_object_id}:
-          %{accrued_on}'
-        unsupported_provider: 'Proveedor de agregación no soportado para el modelo
-          %{modelo}: %{provider}'
+        invalid_accrued_on: 'Fecha de devengo no válida para la observación %{source_object_id}: %{accrued_on}'
+        unsupported_provider: 'Proveedor de agregación no soportado para el modelo %{modelo}: %{provider}'
   period:
     parse_error: Formato de período no reconocido
   renta_ledger:
     errors:
-      annual_period_required: Se requiere un periodo anual para la agregación del
-        libro de Renta.
-      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
-        bucket solicitado del libro de Renta.
-      modelo_mismatch: El modelo tributario no coincide con el modelo esperado del
-        libro de Renta.
-      period_mismatch: El periodo no coincide con el periodo esperado del libro de
-        Renta.
+      annual_period_required: Se requiere un periodo anual para la agregación del libro de Renta.
+      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el bucket solicitado del libro de Renta.
+      modelo_mismatch: El modelo tributario no coincide con el modelo esperado del libro de Renta.
+      period_mismatch: El periodo no coincide con el periodo esperado del libro de Renta.
 application:
   auth:
+    acquisition_lock:
+      errors:
+        acquire_failed: No se pudo adquirir el bloqueo de autenticación AEAT tras la recuperación del bloqueo obsoleto.
+        lock_held: Ya hay otra operación de autenticación AEAT en curso para este perfil. No inicies una segunda petición de Cl@ve; espera a que termine el proceso en curso o deja expirar el bloqueo si
+          ese proceso ha fallado.
+        lock_held_suggestion: Ejecuta `aeat config auth status --format json` para inspeccionar el bloqueo de autenticación activo.
+    operator:
+      errors:
+        no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create NAME` antes de configurar la autenticación.
     provider_impact:
-      certificate_ready: La autenticación con certificado está lista. El operador
-        mantiene el mismo flujo de presentación en la CLI para lecturas respaldadas
-        por la AEAT; todos los proveedores utilizan el mismo flujo de comandos.
-      generic_ready: '%{label} está listo. El operador mantiene el mismo flujo de
-        presentación en la CLI mientras este proveedor se conecta al protocolo de
-        autenticación compartido.'
-      unavailable: '%{label} está configurado pero aún no está listo. El operador
-        todavía puede generar, verificar y exportar presentaciones localmente, pero
-        las lecturas respaldadas por la AEAT permanecerán no disponibles hasta que
-        se solucione la autenticación.'
-      unconfigured: El operador todavía puede generar, verificar y exportar presentaciones
-        localmente, pero las lecturas respaldadas por la AEAT permanecerán no disponibles
-        hasta que se configure un proveedor de autenticación.
+      certificate_ready: La autenticación con certificado está lista. El operador mantiene el mismo flujo de presentación en la CLI para lecturas respaldadas por la AEAT; todos los proveedores utilizan
+        el mismo flujo de comandos.
+      generic_ready: '%{label} está listo. El operador mantiene el mismo flujo de presentación en la CLI mientras este proveedor se conecta al protocolo de autenticación compartido.'
+      unavailable: '%{label} está configurado pero aún no está listo. El operador todavía puede generar, verificar y exportar presentaciones localmente, pero las lecturas respaldadas por la AEAT permanecerán
+        no disponibles hasta que se solucione la autenticación.'
+      unconfigured: El operador todavía puede generar, verificar y exportar presentaciones localmente, pero las lecturas respaldadas por la AEAT permanecerán no disponibles hasta que se configure un proveedor
+        de autenticación.
+    sessions:
+      errors:
+        corrupt_session: La sesión de autenticación guardada está dañada y no se puede leer. Ejecuta `aeat config auth clear --sessions` y después `aeat config auth test`.
+        no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes de leer datos AEAT.
+        sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `aeat config auth test` antes de leer datos AEAT.
+        session_expired: La sesión AEAT ha caducado; ejecuta `aeat config auth test` antes de leer datos AEAT.
+        state_missing: Falta el estado de la sesión AEAT; ejecuta `aeat config auth test` antes de leer datos AEAT.
+        verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `aeat config auth test` antes de leer datos AEAT.
+  modelo:
+    borrador_binding:
+      errors:
+        caller_binding_keys_blank: Las claves de binding aportadas no pueden estar en blanco.
+        snapshot_id_required: Los valores procedentes del borrador requieren un borrador_snapshot_id.
+        snapshot_not_active: El snapshot de borrador no está activo; lista los snapshots activos con `aeat app live borrador 100 list`.
+        source_trace_mismatch: La traza de origen del borrador debe coincidir con los identificadores de binding resueltos.
+    errors:
+      export_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create NAME` antes de exportar una revisión de modelo.
+      external_filing_evidence_reference_blank: La importación de declaración externa requiere un evidence_reference_id no vacío.
+      external_filing_no_casilla_values: La importación de declaración externa requiere al menos un valor de casilla; el mapeo aportado está vacío.
+      reconcile_declaration_unsupported: La reconciliación desde PDF de declaración aún no está disponible; usa --from-justificante PATH hasta que el parser de declaración esté implementado.
+      reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create NAME` antes de reconciliar una unidad de trabajo.
+  overview:
+    explain:
+      errors:
+        modelo_blank: El identificador de modelo no puede estar en blanco.
+  user_profile:
+    errors:
+      no_active_profile_selected: No hay un perfil activo seleccionado.
+  wizard:
+    errors:
+      profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto 'default' implícito).
+      quiet_missing_flags: Faltan flags obligatorios para una ejecución del asistente con --quiet.
+    status:
+      errors:
+        missing_tax_id: El perfil activo no tiene tax.id.
+        no_active_profile: No hay perfil activo configurado.
+        projection_failed: El perfil activo no supera la proyección del asistente.
+        unexpected_projection_type: Las respuestas del flujo de setup no se proyectaron como SetupAnswers.
+  workflow:
+    errors:
+      no_active_profile_bucket: No hay un perfil activo.
+      state_unreadable: No se pudo leer el estado de configuración local.
 auth:
   catalogue:
-    certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
-      u otra autoridad reconocida). Compatible con todos los flujos de la sede electrónica.
+    certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM u otra autoridad reconocida). Compatible con todos los flujos de la sede electrónica.
     certificate_label: Certificado digital
-    clave_movil_description: Autenticación con aprobación push en el móvil del titular
-      registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
+    clave_movil_description: Autenticación con aprobación push en el móvil del titular registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
     clave_movil_label: Cl@ve Móvil
     clave_permanente_description: Hueco reservado y cerrado para Cl@ve Permanente.
     clave_permanente_label: Cl@ve Permanente
@@ -140,8 +228,7 @@ cli:
         eligible_help: Lista las categorías que admiten proporción específica
         group_help: Proporciones de uso profesional por categoría de gasto
         list_help: Lista las proporciones por categoría del bucket activo
-        no_override_error: No hay proporción guardada para la categoría {category!r}
-          en el bucket {bucket_id!r}
+        no_override_error: No hay proporción guardada para la categoría {category!r} en el bucket {bucket_id!r}
         ratio_help: Proporción aplicable entre 0 y 1
         set_help: Establece o sustituye la proporción de una categoría
         unknown_category: 'Categoría de gasto desconocida: {raw!r}'
@@ -157,8 +244,7 @@ cli:
         list_help: Listar snapshots persistidos del borrador del modelo 100
         modelo_100_help: Comandos de snapshots del borrador del modelo 100
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
-        state_help: 'Filtro de estado del snapshot: active, superseded, discarded
-          o all'
+        state_help: 'Filtro de estado del snapshot: active, superseded, discarded o all'
         view_help: Mostrar un snapshot del borrador del modelo 100
       expediente_help: Identificador de expediente AEAT
       expedientes:
@@ -170,8 +256,7 @@ cli:
         view_help: Muestra un snapshot de expedientes
       filed:
         capture_help: Capturar datos de declaraciones presentadas desde AEAT
-        capture_sources_help: Capturar observaciones presentadas requeridas por una
-          declaración objetivo
+        capture_sources_help: Capturar observaciones presentadas requeridas por una declaración objetivo
         list_help: Listar declaraciones presentadas sin descargar artefactos
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
@@ -183,8 +268,7 @@ cli:
         list_help: Lista los snapshots de notificaciones DEHú guardados
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de notificaciones DEHú
-      output_root_help: Directorio para observaciones capturadas de declaraciones
-        presentadas
+      output_root_help: Directorio para observaciones capturadas de declaraciones presentadas
       period_help: Periodo de presentación
       portals:
         app_help: Catálogo local de portales AEAT de solo lectura
@@ -205,8 +289,7 @@ cli:
         list_help: Lista observaciones de verificación guardadas
         nif_help: Filtra por un NIF
         nif_iva_arg_help: Valor NIF-IVA (p. ej. ESB12345678)
-        nif_iva_help: Verifica un NIF-IVA intracomunitario en AEAT IXVI y guarda la
-          observación
+        nif_iva_help: Verifica un NIF-IVA intracomunitario en AEAT IXVI y guarda la observación
         observation_id_help: Id de observación (o prefijo no ambiguo)
         surface_help: 'Filtra por superficie: nif_iva o tgvi'
         tgvi_arg_help: NIF/NIE español que quieres comprobar
@@ -215,108 +298,72 @@ cli:
       year_help: Ejercicio de presentación
     modelo:
       aggregate:
-        counterpart_observation_help: Objeto JSON CounterpartObservation. El valor
-          source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
-          o collectible_invoice. Repetible para varias observaciones.
-        foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
-          source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
-          o collectible_invoice. Repetible para varias observaciones.
-        modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
-          (111, 115, 123, 180, 190, 193, 347, 349 o 720).
+        counterpart_observation_help: Objeto JSON CounterpartObservation. El valor source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice o collectible_invoice. Repetible para
+          varias observaciones.
+        foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice o collectible_invoice. Repetible
+          para varias observaciones.
+        modelo_help: Codigo de modelo soportado por el servicio backend de agregacion (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: Periodo de agregacion enviado al servicio backend.
-        retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
-          debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
-          o collectible_invoice. Repetible para varias observaciones.
-      aggregate_help: Ejecuta el servicio backend de agregacion por modelo con observaciones
-        canonicas explicitas. Los valores source_kind aceptados son ledger_transaction,
-        purchase_invoice_evidence, payable_invoice y collectible_invoice.
+        retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice o collectible_invoice. Repetible para varias
+          observaciones.
+      aggregate_help: Ejecuta el servicio backend de agregacion por modelo con observaciones canonicas explicitas. Los valores source_kind aceptados son ledger_transaction, purchase_invoice_evidence, payable_invoice
+        y collectible_invoice.
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       audit:
-        bundle_id_help: Identificador del paquete de evidencia (SHA-256 completo o
-          prefijo inequívoco).
-        check_help: Reverificar un paquete de evidencia recalculando los digests de
-          los registros.
-        export_help: Generar un archivo ZIP determinista del paquete de evidencia
-          (manifest.json se escribe el último).
-        force_incomplete_help: Permitir la exportación cuando la verificación señale
-          el paquete como incompleto.
+        bundle_id_help: Identificador del paquete de evidencia (SHA-256 completo o prefijo inequívoco).
+        check_help: Reverificar un paquete de evidencia recalculando los digests de los registros.
+        export_help: Generar un archivo ZIP determinista del paquete de evidencia (manifest.json se escribe el último).
+        force_incomplete_help: Permitir la exportación cuando la verificación señale el paquete como incompleto.
         group_help: Verbos de auditoría del paquete de evidencia (show/check/export/replay).
         output_help: Ruta de salida para el ZIP del paquete.
-        replay_help: Reproducir la verificación del caso de evidencia para entrega
-          forense; nunca contacta con AEAT ni realiza envíos.
-        show_help: Mostrar el manifiesto y los registros referenciados de un paquete
-          de evidencia
+        replay_help: Reproducir la verificación del caso de evidencia para entrega forense; nunca contacta con AEAT ni realiza envíos.
+        show_help: Mostrar el manifiesto y los registros referenciados de un paquete de evidencia
       bindings:
         app_help: Inspeccionar y previsualizar los bindings de un modelo tributario
-        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
-          (AAAA-MM-DD)
-        list_help: Listar los bindings requeridos y disponibles para un modelo / ejercicio
-          / periodo
-        missing_help: Filtrar a los bindings sin valor resuelto (requieren datos del
-          bucket / libro / perfil)
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada (AAAA-MM-DD)
+        list_help: Listar los bindings requeridos y disponibles para un modelo / ejercicio / periodo
+        missing_help: Filtrar a los bindings sin valor resuelto (requieren datos del bucket / libro / perfil)
         missing_required_options: 'Faltan opciones obligatorias: %{options}'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
-        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
-          ejemplos periodicos incluyen 2026Q1 y 2026-01
-        preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
-          el estado
+        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y 2026-01
+        preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar el estado
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casillas:
-        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
-          (AAAA-MM-DD)
-        form_number_help: Filtrar casillas por número de casilla impreso en el BOE
-          (p. ej. 46)
-        input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
-          computed, informational)
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada (AAAA-MM-DD)
+        form_number_help: Filtrar casillas por número de casilla impreso en el BOE (p. ej. 46)
+        input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound, computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
-          ejemplos periodicos incluyen 2026Q1 y 2026-01
+        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y 2026-01
         required_help: Mostrar solo las casillas marcadas como obligatorias
       describe:
-        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
-          (AAAA-MM-DD)
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada (AAAA-MM-DD)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Token de periodo para resolver la revision del modelo; para Modelo
-          036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y
-          2026-01
+        period_help: Token de periodo para resolver la revision del modelo; para Modelo 036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y 2026-01
       export:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
-          no_exportable_revision: La unidad de trabajo no tiene ninguna revisión de
-            cálculo verificada o presentada para exportar. Ejecuta `aeat app modelo
-            verify` primero.
-        help: Exporta una revisión de modelo verificada o presentada a un fichero
-          local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
+          no_exportable_revision: La unidad de trabajo no tiene ninguna revisión de cálculo verificada o presentada para exportar. Ejecuta `aeat app modelo verify` primero.
+        help: Exporta una revisión de modelo verificada o presentada a un fichero local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
-        revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
-          la revisión verificada o presentada más reciente de la unidad de trabajo.
-        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
-          inequívoco).
+        revision_help: Identificador de la revisión de cálculo a exportar; por defecto, la revisión verificada o presentada más reciente de la unidad de trabajo.
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo inequívoco).
       filing_record:
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
         bucket_id_help: Filtrar por bucket
-        evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf, aeat_csv_register,
-          aeat_live_capture)
-        evidence_reference_id_help: Identificador estable de la evidencia importada
-          (número de justificante, id del registro CSV, id de captura en vivo)
+        evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf, aeat_csv_register, aeat_live_capture)
+        evidence_reference_id_help: Identificador estable de la evidencia importada (número de justificante, id del registro CSV, id de captura en vivo)
         filing_record_id_help: Identificador estable de un filing record
-        import_casilla_help: Valor de casilla importado con sintaxis CASILLA=DECIMAL
-          (repetible; al menos uno requerido)
-        import_help: Persistir una declaración presentada externamente como filing
-          record base con evidencia oficial importada de la AEAT
-        include_superseded_help: Incluir los filing records superados (excluidos por
-          defecto)
+        import_casilla_help: Valor de casilla importado con sintaxis CASILLA=DECIMAL (repetible; al menos uno requerido)
+        import_help: Persistir una declaración presentada externamente como filing record base con evidencia oficial importada de la AEAT
+        include_superseded_help: Incluir los filing records superados (excluidos por defecto)
         list_help: Listar los filing records registrados
         view_help: Mostrar un filing record por id
       formulas:
-        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
-          (AAAA-MM-DD)
-        explain_help: Incluir legal_refs y source_refs que sustentan cada fórmula
-          en la salida de texto. El payload JSON los lleva siempre.
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada (AAAA-MM-DD)
+        explain_help: Incluir legal_refs y source_refs que sustentan cada fórmula en la salida de texto. El payload JSON los lleva siempre.
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
-          ejemplos periodicos incluyen 2026Q1 y 2026-01
+        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y 2026-01
       history:
         modelo_help: Código de modelo (p. ej. 100, 303)
         period_help: Filtro opcional de periodo (p. ej. Q1, annual)
@@ -332,102 +379,66 @@ cli:
       readiness_help: cli.app.modelo.readiness_help
       reconcile:
         errors:
-          exclusive_source: --from-justificante y --from-declaration son mutuamente
-            excluyentes.
+          exclusive_source: --from-justificante y --from-declaration son mutuamente excluyentes.
           missing_source: Indica --from-justificante RUTA o --from-declaration RUTA.
-        from_declaration_help: Ruta al PDF de la declaración presentada para reconciliar
-          (reservado; parser pendiente).
+        from_declaration_help: Ruta al PDF de la declaración presentada para reconciliar (reservado; parser pendiente).
         from_justificante_help: Ruta al PDF del justificante AEAT para reconciliar.
-        help: Reconciliar una unidad de trabajo de modelo con evidencia externa (PDF
-          de justificante). Local; nunca contacta con AEAT.
-        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
-          inequívoco).
+        help: Reconciliar una unidad de trabajo de modelo con evidencia externa (PDF de justificante). Local; nunca contacta con AEAT.
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo inequívoco).
       reconcile_from_justificante:
-        help: Reconciliar una unidad de trabajo de modelo con un PDF de justificante.
-          Azúcar para operadores que piensan "reconciliar desde este justificante"
-          en lugar de "reconciliar, fuente = justificante". Comparte el mismo punto
-          de entrada del servicio modelo_reconcile con la forma basada en flags. Local;
-          nunca contacta con AEAT.
+        help: Reconciliar una unidad de trabajo de modelo con un PDF de justificante. Azúcar para operadores que piensan "reconciliar desde este justificante" en lugar de "reconciliar, fuente = justificante".
+          Comparte el mismo punto de entrada del servicio modelo_reconcile con la forma basada en flags. Local; nunca contacta con AEAT.
         justificante_path_help: Ruta al PDF del justificante AEAT para reconciliar.
-        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
-          inequívoco).
+        work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo inequívoco).
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
-        list_help: Listar los informes de verificación, opcionalmente filtrados por
-          revisión de cálculo
-        verification_report_id_help: Identificador estable (SHA-256 de 64 caracteres)
-          de un informe de verificación
+        list_help: Listar los informes de verificación, opcionalmente filtrados por revisión de cálculo
+        verification_report_id_help: Identificador estable (SHA-256 de 64 caracteres) de un informe de verificación
         view_help: Mostrar un informe de verificación por id
       work:
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
-        amend_help: Construir una declaración complementaria sobre una declaración
-          presentada externamente. Requiere un filing record con evidencia oficial
-          importada de la AEAT
+        amend_help: Construir una declaración complementaria sobre una declaración presentada externamente. Requiere un filing record con evidencia oficial importada de la AEAT
         amendment_kind_help: Tipo legal de la amendación (complementaria o sustitutiva)
-        amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
-          operador)
-        app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
-          tributario
-        borrador_help: Id del snapshot de borrador del modelo 100 (completo o prefijo
-          no ambiguo). Sus valores de binding se usan solo para bindings marcados
-          aeat_prefilled; las sobrescrituras --binding del operador siempre tienen
-          prioridad.
+        amendment_reason_help: Motivo libre de la amendación (traza de auditoría del operador)
+        app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo tributario
+        borrador_help: Id del snapshot de borrador del modelo 100 (completo o prefijo no ambiguo). Sus valores de binding se usan solo para bindings marcados aeat_prefilled; las sobrescrituras --binding
+          del operador siempre tienen prioridad.
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
-        calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
-          de una revisión de cálculo
+        calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres) de una revisión de cálculo
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible)
-        create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
-          periodo, revisión)
-        discard_help: Marcar una unidad de trabajo como descartada (transición de
-          estado auditable)
-        file_help: Marcar una revisión verificada como internamente presentada. NO
-          envía a la AEAT
-        from_filing_record_help: Identificador estable del filing record base a amendar.
-          Debe llevar evidencia externa importada (justificante / CSV / captura en
-          vivo)
-        history_help: Muestra todos los eventos del ciclo de vida de una unidad de
-          trabajo
-        history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
-          ver
-        include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
-          por defecto)
-        invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
-          en minúsculas más separadores . _ : -, máx. 128 caracteres)'
-        invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
-          más separadores . _ : -, máx. 64 caracteres)'
-        invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
-          64 caracteres (resumen SHA-256)
-        list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
-          por bucket
+        create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio, periodo, revisión)
+        discard_help: Marcar una unidad de trabajo como descartada (transición de estado auditable)
+        file_help: Marcar una revisión verificada como internamente presentada. NO envía a la AEAT
+        from_filing_record_help: Identificador estable del filing record base a amendar. Debe llevar evidencia externa importada (justificante / CSV / captura en vivo)
+        history_help: Muestra todos los eventos del ciclo de vida de una unidad de trabajo
+        history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres ver
+        include_discarded_help: Incluir las unidades descartadas en el listado (excluidas por defecto)
+        invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico en minúsculas más separadores . _ : -, máx. 128 caracteres)'
+        invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico más separadores . _ : -, máx. 64 caracteres)'
+        invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de 64 caracteres (resumen SHA-256)
+        list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas por bucket
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
         notes_help: Notas opcionales asociadas al filing record
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
-        period_help: Token de periodo de la unidad; para Modelo 036 usa alta, modificacion
-          o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
+        period_help: Token de periodo de la unidad; para Modelo 036 usa alta, modificacion o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
-        relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
-          KEY es un id de relación del registry; VALUE es un decimal. Repetible.
+        relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE. KEY es un id de relación del registry; VALUE es un decimal. Repetible.
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
-        resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
-          sin contactar con AEAT
+        resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida sin contactar con AEAT
         resume_workflow_run_id_help: Id de ejecución de flujo de 16 caracteres
         revision_help: Identificador estable de la revisión registrada del modelo
-        revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
-          por unidad de trabajo
-        set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
-          (repetible; al menos uno requerido)
+        revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas por unidad de trabajo
+        set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL (repetible; al menos uno requerido)
         status_help: Mostrar los metadatos de una unidad de trabajo
         verify_help: Verificar una revisión draft contra el contrato verified-complete
-        work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
-          unidad de trabajo
+        work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hay perfil activo. Ejecuta `aeat config init` antes de
-        usar comandos de datos del perfil.
+      no_active_profile: No hay perfil activo. Ejecuta `aeat config init` antes de usar comandos de datos del perfil.
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: Periodo no reconocido
   config:
@@ -462,35 +473,26 @@ cli:
       configure_help: Configurar el proveedor de autenticación activo
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
-      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config init'
-        antes de configurar la autenticación.
+      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config init' antes de configurar la autenticación.
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
-      reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
-        %{provider}.'
+      reserved_provider: 'Proveedor de autenticación reservado pero no disponible: %{provider}.'
       status_help: Mostrar el estado de autenticación configurado
       test_help: Comprobar la preparación de autenticación local
-      unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
-        ''aeat config auth --help'' para ver los identificadores válidos.'
+      unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta ''aeat config auth --help'' para ver los identificadores válidos.'
     bucket:
-      actor_help: Filtrar el historial a eventos registrados por un actor concreto
-        (coincidencia exacta)
+      actor_help: Filtrar el historial a eventos registrados por un actor concreto (coincidencia exacta)
       bucket_id_help: Identificador del bucket cuyo historial de eventos se inspecciona
       event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
       help: Inspeccionar el almacenamiento por bucket y su historial de eventos
       history_help: Mostrar el historial de eventos solo-append de un bucket
-      object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia
-        exacta)
-      since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601 (p.
-        ej. 2026-04-01T00:00:00+00:00)
-      until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601
-        (p. ej. 2026-04-30T23:59:59+00:00)
+      object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia exacta)
+      since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00)
+      until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config init --tax-id
-        <NIF>' primero.
-      unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
-        profile list'' para ver las claves disponibles.'
+      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config init --tax-id <NIF>' primero.
+      unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config profile list'' para ver las claves disponibles.'
     get:
       help: Mostrar el valor actual de una clave de configuración
       key_help: Clave a leer (ej. tax.id, iva.regime)
@@ -502,56 +504,34 @@ cli:
         help: Gestiona la carpeta raíz de Google Drive
         set_help: Vincula una carpeta de Google Drive al perfil activo
       help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
-      login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial
-        existente)
-      logout_help: Limpiar el token de refresco y los metadatos; conservar el cliente
-        registrado
-      profile_help: Perfil AEAT a usar (por defecto = perfil activo del estado de
-        flujo)
-      refresh_only_help: Omitir el consentimiento y refrescar solo una credencial
-        existente
-      register_help: Registrar un JSON de cliente OAuth Desktop de Cloud Console para
-        el perfil activo
-      status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
-        activo
+      login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial existente)
+      logout_help: Limpiar el token de refresco y los metadatos; conservar el cliente registrado
+      profile_help: Perfil AEAT a usar (por defecto = perfil activo del estado de flujo)
+      refresh_only_help: Omitir el consentimiento y refrescar solo una credencial existente
+      register_help: Registrar un JSON de cliente OAuth Desktop de Cloud Console para el perfil activo
+      status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil activo
       sync:
         calc:
           export:
             modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
             period_help: Código de período (p. ej. 1T, 2T, 0A)
-            prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
-              desde el almacén local de observaciones antes de exportar (resúmenes
-              anuales, arrastre de trimestres anteriores, etc.)
-            root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
-              `aeat config google folder set <id>` primero
-            snapshot_failure: 'No se puede construir el snapshot del registry para
-              modelo {modelo} ({period} {year}): {detail}'
-            unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
-              son {available}
+            prefill_relations_help: Prerrellenar valores de relaciones entre revisiones desde el almacén local de observaciones antes de exportar (resúmenes anuales, arrastre de trimestres anteriores, etc.)
+            root_folder_required: No hay carpeta raíz de Drive configurada; ejecute `aeat config google folder set <id>` primero
+            snapshot_failure: 'No se puede construir el snapshot del registry para modelo {modelo} ({period} {year}): {detail}'
+            unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles son {available}
             year_help: Año de declaración (p. ej. 2025)
-          export_help: Exporta la superficie de cálculo del registro para un modelo
-            y período a una hoja de Google Sheets dentro de `aeat-vault/`
+          export_help: Exporta la superficie de cálculo del registro para un modelo y período a una hoja de Google Sheets dentro de `aeat-vault/`
           help: Superficie de cálculo esquema-a-hoja (exportar y recuperar)
           pull:
-            assemble_observations_help: Tras recuperar, reensambla las celdas de filas
-              de la pestaña Detalle en observaciones tipadas (perceptores, bienes
-              en el extranjero, operaciones vinculadas, miembros de atribución, operaciones
-              de devolución) y emítelas en el payload junto a los row_set_edits brutos
-            compute_help: Tras recuperar las ediciones, ejecuta el motor Decimal local
-              contra ellas y emite los valores calculados de las casillas
-            compute_refused_stale: rechazo a calcular contra un libro cuyas marcas
-              de metadatos no coinciden con el snapshot suministrado (metadata_match={metadata_match});
-              reexporte y vuelva a recuperar
-            spreadsheet_id_help: Identificador del archivo de Drive del libro del
-              que leer las ediciones del operador (debe estar marcado como propio
-              de la app y vinculado al snapshot suministrado)
-          pull_help: Lee las celdas editadas por el operador de una hoja calc-sheets
-            a registros tipados (tras validar la marca registry-SHA del libro)
+            assemble_observations_help: Tras recuperar, reensambla las celdas de filas de la pestaña Detalle en observaciones tipadas (perceptores, bienes en el extranjero, operaciones vinculadas, miembros
+              de atribución, operaciones de devolución) y emítelas en el payload junto a los row_set_edits brutos
+            compute_help: Tras recuperar las ediciones, ejecuta el motor Decimal local contra ellas y emite los valores calculados de las casillas
+            compute_refused_stale: rechazo a calcular contra un libro cuyas marcas de metadatos no coinciden con el snapshot suministrado (metadata_match={metadata_match}); reexporte y vuelva a recuperar
+            spreadsheet_id_help: Identificador del archivo de Drive del libro del que leer las ediciones del operador (debe estar marcado como propio de la app y vinculado al snapshot suministrado)
+          pull_help: Lee las celdas editadas por el operador de una hoja calc-sheets a registros tipados (tras validar la marca registry-SHA del libro)
           verify:
-            scenario_help: Ruta a un archivo JSON con entradas del operador y, si
-              está disponible, un mapa de salidas esperadas publicadas por AEAT
-          verify_help: Comprobación de paridad triple del modelo (oráculo AEAT vs
-            motor Decimal local vs hoja de Sheets)
+            scenario_help: Ruta a un archivo JSON con entradas del operador y, si está disponible, un mapa de salidas esperadas publicadas por AEAT
+          verify_help: Comprobación de paridad triple del modelo (oráculo AEAT vs motor Decimal local vs hoja de Sheets)
         help: Sincroniza datos locales con la carpeta configurada de Google Drive
         probe_help: Comprueba el acceso a la carpeta configurada de Google Drive
         probe_read_only_help: Comprueba Google Drive en modo solo lectura
@@ -559,13 +539,11 @@ cli:
         push_help: Sube los espacios de datos locales a Google Drive
         push_limit_help: Número máximo de archivos que se subirán
         push_namespace_help: Espacio de datos que quieres subir; se puede repetir
-        root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta
-          `aeat config google folder set <id>` primero
+        root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta `aeat config google folder set <id>` primero
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
       auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate
-        password
+      certificate_password_env_help: Environment variable name containing the certificate password
       certificate_path_help: Path to the .p12 or .pfx certificate file
       drafts_dir_help: Directory to store local filing drafts
       dry_run_help: Report changes without modifying the configuration
@@ -587,8 +565,7 @@ cli:
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       census:
-        apply_help: Sobrescribe el perfil con los valores censales comunicados por
-          AEAT
+        apply_help: Sobrescribe el perfil con los valores censales comunicados por AEAT
         compare_help: Compara campo a campo el censo AEAT con este perfil
         help: Sincroniza el censo 036 de AEAT con este perfil
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
@@ -597,11 +574,9 @@ cli:
       create_help: cli.config.profile.create_help
       delete_help: Elimina un perfil y su estado local; --yes confirma
       delete_name_help: Nombre del perfil que quieres eliminar
-      delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
-        config profile delete %{name} --yes' para confirmar.
+      delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat config profile delete %{name} --yes' para confirmar.
       delete_yes_help: Confirma explícitamente la eliminación
-      duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
-        el id de destino)
+      duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto el id de destino)
       duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible
       duplicate_source_help: Id del perfil de origen a duplicar
       duplicate_target_help: Id del perfil de destino para el duplicado
@@ -614,21 +589,17 @@ cli:
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
-      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
-        first.
-      preflight_help: Report whether the active profile is ready for one modelo /
-        year / period.
+      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>` first.
+      preflight_help: Report whether the active profile is ready for one modelo / year / period.
       preflight_modelo_help: Modelo code (e.g. 303).
       preflight_period_help: Period token (e.g. Q1, annual).
       preflight_revision_help: Registry revision id.
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
-      remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
-        profile remove %{name} --yes' para confirmar.
+      remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config profile remove %{name} --yes' para confirmar.
       remove_yes_help: Confirma explícitamente la operación de retirada
-      rename_display_name_help: Etiqueta visible para el operador; por defecto, la
-        existente
+      rename_display_name_help: Etiqueta visible para el operador; por defecto, la existente
       rename_help: Renombra un perfil y mueve el puntero activo automáticamente
       rename_source_help: Nombre actual del perfil
       rename_target_help: Nuevo nombre del perfil
@@ -636,8 +607,7 @@ cli:
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
       switch_help: Activa un perfil existente
       switch_name_help: Nombre del perfil que quieres activar
-      unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
-        list'' para ver los perfiles registrados.'
+      unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile list'' para ver los perfiles registrados.'
       use_help: Seleccionar un perfil existente como perfil activo
       use_name_help: Id del perfil que se activará
       validate_help: Validate the active profile against the schema.
@@ -645,32 +615,23 @@ cli:
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
-      help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
-        y logs
-      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
-        all).
+      help: Diagnosticar y reparar configuración local, registro, perfil, autenticación y logs
+      integrity_help: Probe AES-256-GCM tag verification across one namespace (or all).
       integrity_namespace_help: Restrict the integrity probe to one namespace.
       list_all_help: Return every key, including unreadable.
-      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
-        or neither.
+      list_conflicting_flags: --all and --unreadable cannot be combined; pass one or neither.
       list_help: List secure-object keys stored under one namespace.
       list_namespace_help: Namespace to inventory.
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
-      quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
-        destructiva, requiere --yes)
-      quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
-        --yes para confirmar.
+      quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción destructiva, requiere --yes)
+      quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
-      reset_state_dry_run_help: Informar la huella del envoltorio sin eliminar la
-        fila
-      reset_state_help: Descartar el envoltorio ilegible del estado del flujo de trabajo
-        (destructivo; requiere --yes)
-      reset_state_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
-        --yes para confirmar o pasa --dry-run para inspeccionar la huella.
-      reset_state_yes_help: Confirmar explícitamente el reinicio del estado del flujo
-        de trabajo
+      reset_state_dry_run_help: Informar la huella del envoltorio sin eliminar la fila
+      reset_state_help: Descartar el envoltorio ilegible del estado del flujo de trabajo (destructivo; requiere --yes)
+      reset_state_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar o pasa --dry-run para inspeccionar la huella.
+      reset_state_yes_help: Confirmar explícitamente el reinicio del estado del flujo de trabajo
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
@@ -684,15 +645,12 @@ cli:
     setup:
       accept_defaults_help: Aceptar los valores por defecto del descriptor sin preguntar
       errors:
-        missing_required_flags: Faltan banderas obligatorias para el modo --quiet;
-          proporciona un valor para cada pregunta obligatoria.
+        missing_required_flags: Faltan banderas obligatorias para el modo --quiet; proporciona un valor para cada pregunta obligatoria.
       help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
-      quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
-        banderas
+      quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las banderas
       success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
-          tu espacio de trabajo.'
+        next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config init` para empezar.
@@ -702,6 +660,54 @@ cli:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
     workflow_help: Mostrar ayuda del flujo de configuración
+  diagnostics:
+    browser:
+      http_status_label: cli.diagnostics.browser.http_status_label
+      markers_label: cli.diagnostics.browser.markers_label
+      markers_none: cli.diagnostics.browser.markers_none
+      observed_at_label: cli.diagnostics.browser.observed_at_label
+      retry_after_label: cli.diagnostics.browser.retry_after_label
+      state_label: cli.diagnostics.browser.state_label
+      target_browser: cli.diagnostics.browser.target_browser
+      target_label: cli.diagnostics.browser.target_label
+    dead_end:
+      registry_bundled: cli.diagnostics.dead_end.registry_bundled
+    next_action:
+      inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+    repair:
+      auth_label: cli.diagnostics.repair.auth_label
+      checks_heading: cli.diagnostics.repair.checks_heading
+      detail_label: cli.diagnostics.repair.detail_label
+      logs_label: cli.diagnostics.repair.logs_label
+      next_label: cli.diagnostics.repair.next_label
+      note_label: cli.diagnostics.repair.note_label
+      overall_label: cli.diagnostics.repair.overall_label
+      profile_label: cli.diagnostics.repair.profile_label
+      python_label: cli.diagnostics.repair.python_label
+      version_label: cli.diagnostics.repair.version_label
+    summary:
+      auth_no_session: cli.diagnostics.summary.auth_no_session
+      auth_none: cli.diagnostics.summary.auth_none
+      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      profile_keys_set: cli.diagnostics.summary.profile_keys_set
+      profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
+      profile_none: cli.diagnostics.summary.profile_none
+      registry_counts: cli.diagnostics.summary.registry_counts
+      registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
+      registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
+      registry_integrity_skipped: cli.diagnostics.summary.registry_integrity_skipped
+      registry_unavailable: cli.diagnostics.summary.registry_unavailable
+      secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
+      secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
+      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      state_backend_readable: cli.diagnostics.summary.state_backend_readable
+      state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
+      venv_in_sync: cli.diagnostics.summary.venv_in_sync
+      venv_stale: cli.diagnostics.summary.venv_stale
+    version:
+      no_revisions: cli.diagnostics.version.no_revisions
+      registry_summary: cli.diagnostics.version.registry_summary
+      registry_unavailable: cli.diagnostics.version.registry_unavailable
   ledger:
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -730,8 +736,7 @@ cli:
       actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1
       category_help: Id de categoría de gasto o ingreso
-      help: Registrar proporcionalidad profesional/personal para un movimiento del
-        libro
+      help: Registrar proporcionalidad profesional/personal para un movimiento del libro
       id_help: Id del movimiento del libro a asignar
       prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
       usage_ratio_help: Id de proporción de uso para uso profesional proporcional
@@ -744,18 +749,14 @@ cli:
       yes_help: Confirma el archivo de la transacción del libro
     attach:
       actor_help: Nombre del operador registrado en el evento del bucket
-      attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
-        varios adjuntos
+      attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para varios adjuntos
       help: Adjuntar objetos de evidencia segura a un movimiento del libro
       id_help: Id del movimiento del libro al que adjuntar evidencia
-      purchase_invoice_evidence_help: Id de justificante de factura de compra que
-        soporta el movimiento
+      purchase_invoice_evidence_help: Id de justificante de factura de compra que soporta el movimiento
     check:
       bucket_id_help: Id del bucket a examinar (por defecto el bucket del perfil activo).
-      help: Examina los movimientos del libro del bucket direccionado (por defecto
-        el bucket del perfil activo) e informa de filas con anomalías agregadas a
-        través de cada período que los movimientos toquen. Local; nunca contacta con
-        AEAT.
+      help: Examina los movimientos del libro del bucket direccionado (por defecto el bucket del perfil activo) e informa de filas con anomalías agregadas a través de cada período que los movimientos toquen.
+        Local; nunca contacta con AEAT.
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       category_help: Id de categoría de gasto o ingreso
@@ -767,18 +768,13 @@ cli:
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       taxable_base_help: Importe de base imponible
     errors:
-      confirm_required: Pasa --yes para confirmar esta operación destructiva del libro,
-        o usa --dry-run primero
+      confirm_required: Pasa --yes para confirmar esta operación destructiva del libro, o usa --dry-run primero
       filter_parse_error: Fallo al analizar el filtro del libro
-      id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
-        %{candidates}. Amplía el prefijo para desambiguar.'
-      id_prefix_empty: El prefijo de id de transacción está vacío; indica al menos
-        un carácter hexadecimal.
+      id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones: %{candidates}. Amplía el prefijo para desambiguar.'
+      id_prefix_empty: El prefijo de id de transacción está vacío; indica al menos un carácter hexadecimal.
       id_prefix_not_found: Ninguna transacción coincide con el prefijo de id %{prefix!r}.
-      id_prefix_not_hex: 'El prefijo de id %{prefix!r} contiene caracteres no hexadecimales
-        (permitidos: 0-9, a-f).'
-      id_prefix_too_long: El prefijo de id %{prefix!r} supera los 64 caracteres de
-        un SHA-256 completo.
+      id_prefix_not_hex: 'El prefijo de id %{prefix!r} contiene caracteres no hexadecimales (permitidos: 0-9, a-f).'
+      id_prefix_too_long: El prefijo de id %{prefix!r} supera los 64 caracteres de un SHA-256 completo.
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -789,8 +785,7 @@ cli:
     history:
       help: Muestra la cadena cronológica de eventos de una transacción
       id_help: Id de la transacción (o prefijo no ambiguo)
-      include_split_siblings_help: Incluye transacciones hermanas del mismo grupo
-        de división
+      include_split_siblings_help: Incluye transacciones hermanas del mismo grupo de división
     import:
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
       help: Importar extractos bancarios o registros al libro contable
@@ -842,16 +837,12 @@ cli:
     link:
       actor_help: Etiqueta del operador registrada en los eventos del bucket.
       errors:
-        cross_bucket_invoice: La factura pertenece a un bucket distinto del perfil
-          activo.
-        invoice_not_found: La factura no existe en el catálogo de facturas del perfil
-          activo.
+        cross_bucket_invoice: La factura pertenece a un bucket distinto del perfil activo.
+        invoice_not_found: La factura no existe en el catálogo de facturas del perfil activo.
         missing_target: Indica al menos uno de --invoice-id o --evidence-id.
-      evidence_id_help: Id del registro de evidencia de factura de compra a adjuntar
-        al movimiento.
-      help: Vincula un movimiento contable con una factura y/o con un registro de
-        evidencia de factura de compra en una única llamada canónica. Rechaza vínculos
-        entre buckets. Local; nunca contacta con AEAT.
+      evidence_id_help: Id del registro de evidencia de factura de compra a adjuntar al movimiento.
+      help: Vincula un movimiento contable con una factura y/o con un registro de evidencia de factura de compra en una única llamada canónica. Rechaza vínculos entre buckets. Local; nunca contacta con
+        AEAT.
       id_help: Id del movimiento contable (SHA-256 o prefijo inequívoco).
       invoice_id_help: Id de la factura a vincular bidireccionalmente con el movimiento.
     list:
@@ -866,9 +857,8 @@ cli:
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la fusión de las transacciones hijas
     preflight:
-      help: Informa de los datos contables que faltan (categoría, base imponible,
-        importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
-        del bucket activo en un período dado. Local; nunca contacta con AEAT.
+      help: Informa de los datos contables que faltan (categoría, base imponible, importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos del bucket activo en un período dado. Local; nunca
+        contacta con AEAT.
       period_help: Período canónico (p. ej. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -908,8 +898,7 @@ cli:
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma el envío de la transacción a la reserva
     status:
-      help: Resumir el estado del libro y la preparación de cálculo del bucket del
-        perfil activo
+      help: Resumir el estado del libro y la preparación de cálculo del bucket del perfil activo
       period_help: Periodo fiscal para preflight (AAAA-MM o periodo de modelo)
     track:
       help: Mostrar el linaje de eventos de un movimiento del libro
@@ -936,86 +925,188 @@ cli:
   locales:
     app_help: Auditar y generar catálogos de traducción
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
+  log_levels:
+    errors:
+      flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
+      invalid_env_value: 'AEAT_LOG_LEVEL debe ser uno de: %{allowed}; valor recibido: %{value}.'
+  operator_surface:
+    errors:
+      accepted_roots_only: cli.operator_surface.errors.accepted_roots_only
+      contract_not_accepted: cli.operator_surface.errors.contract_not_accepted
+      source_kind_options: cli.operator_surface.errors.source_kind_options
+      unknown_source_kind: cli.operator_surface.errors.unknown_source_kind
+    help:
+      app:
+        footer: cli.operator_surface.help.app.footer
+        heading: cli.operator_surface.help.app.heading
+        ledger_allocate: cli.operator_surface.help.app.ledger_allocate
+        ledger_archive: cli.operator_surface.help.app.ledger_archive
+        ledger_attach: cli.operator_surface.help.app.ledger_attach
+        ledger_classify: cli.operator_surface.help.app.ledger_classify
+        ledger_export: cli.operator_surface.help.app.ledger_export
+        ledger_import: cli.operator_surface.help.app.ledger_import
+        ledger_list: cli.operator_surface.help.app.ledger_list
+        ledger_remove: cli.operator_surface.help.app.ledger_remove
+        ledger_reset: cli.operator_surface.help.app.ledger_reset
+        ledger_review: cli.operator_surface.help.app.ledger_review
+        ledger_stash: cli.operator_surface.help.app.ledger_stash
+        ledger_status: cli.operator_surface.help.app.ledger_status
+        ledger_update: cli.operator_surface.help.app.ledger_update
+        ledger_view: cli.operator_surface.help.app.ledger_view
+        live_filed_capture: cli.operator_surface.help.app.live_filed_capture
+        live_filed_capture_sources: cli.operator_surface.help.app.live_filed_capture_sources
+        live_filed_list: cli.operator_surface.help.app.live_filed_list
+        modelo_bindings: cli.operator_surface.help.app.modelo_bindings
+        modelo_describe: cli.operator_surface.help.app.modelo_describe
+        modelo_list: cli.operator_surface.help.app.modelo_list
+        modelo_work: cli.operator_surface.help.app.modelo_work
+        overview_status: cli.operator_surface.help.app.overview_status
+        paragraph_operational_workflow: cli.operator_surface.help.app.paragraph_operational_workflow
+        registry_inspect: cli.operator_surface.help.app.registry_inspect
+        registry_verify: cli.operator_surface.help.app.registry_verify
+        review_queue: cli.operator_surface.help.app.review_queue
+        review_view: cli.operator_surface.help.app.review_view
+        section_ledger: cli.operator_surface.help.app.section_ledger
+        section_live_reads: cli.operator_surface.help.app.section_live_reads
+        section_modelo: cli.operator_surface.help.app.section_modelo
+        section_overview: cli.operator_surface.help.app.section_overview
+        section_review_and_registry: cli.operator_surface.help.app.section_review_and_registry
+      config:
+        auth_clear: cli.operator_surface.help.config.auth_clear
+        auth_configure: cli.operator_surface.help.config.auth_configure
+        auth_providers: cli.operator_surface.help.config.auth_providers
+        auth_status: cli.operator_surface.help.config.auth_status
+        auth_test: cli.operator_surface.help.config.auth_test
+        diagnostics_logs: cli.operator_surface.help.config.diagnostics_logs
+        diagnostics_quarantine: cli.operator_surface.help.config.diagnostics_quarantine
+        diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
+        diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
+        first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
+        first_run_status: cli.operator_surface.help.config.first_run_status
+        footer: cli.operator_surface.help.config.footer
+        heading: cli.operator_surface.help.config.heading
+        paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
+        profile_delete: cli.operator_surface.help.config.profile_delete
+        profile_duplicate: cli.operator_surface.help.config.profile_duplicate
+        profile_list: cli.operator_surface.help.config.profile_list
+        profile_preflight: cli.operator_surface.help.config.profile_preflight
+        profile_rename: cli.operator_surface.help.config.profile_rename
+        profile_switch: cli.operator_surface.help.config.profile_switch
+        profile_validate: cli.operator_surface.help.config.profile_validate
+        profile_view: cli.operator_surface.help.config.profile_view
+        section_authentication: cli.operator_surface.help.config.section_authentication
+        section_diagnostics: cli.operator_surface.help.config.section_diagnostics
+        section_first_run: cli.operator_surface.help.config.section_first_run
+        section_profile_inspection: cli.operator_surface.help.config.section_profile_inspection
+        section_profile_lifecycle: cli.operator_surface.help.config.section_profile_lifecycle
+      root:
+        diagnostics_live_filed: cli.operator_surface.help.root.diagnostics_live_filed
+        diagnostics_overview: cli.operator_surface.help.root.diagnostics_overview
+        diagnostics_registry_inspect: cli.operator_surface.help.root.diagnostics_registry_inspect
+        diagnostics_repair: cli.operator_surface.help.root.diagnostics_repair
+        diagnostics_review_queue: cli.operator_surface.help.root.diagnostics_review_queue
+        footer: cli.operator_surface.help.root.footer
+        heading: cli.operator_surface.help.root.heading
+        ledger_allocate: cli.operator_surface.help.root.ledger_allocate
+        ledger_archive: cli.operator_surface.help.root.ledger_archive
+        ledger_attach: cli.operator_surface.help.root.ledger_attach
+        ledger_classify: cli.operator_surface.help.root.ledger_classify
+        ledger_export: cli.operator_surface.help.root.ledger_export
+        ledger_import: cli.operator_surface.help.root.ledger_import
+        ledger_list: cli.operator_surface.help.root.ledger_list
+        ledger_remove: cli.operator_surface.help.root.ledger_remove
+        ledger_reset: cli.operator_surface.help.root.ledger_reset
+        ledger_review: cli.operator_surface.help.root.ledger_review
+        ledger_stash: cli.operator_surface.help.root.ledger_stash
+        ledger_status: cli.operator_surface.help.root.ledger_status
+        ledger_update: cli.operator_surface.help.root.ledger_update
+        ledger_view: cli.operator_surface.help.root.ledger_view
+        modelo_bindings_list: cli.operator_surface.help.root.modelo_bindings_list
+        modelo_list: cli.operator_surface.help.root.modelo_list
+        modelo_work: cli.operator_surface.help.root.modelo_work
+        paragraph_two_roots: cli.operator_surface.help.root.paragraph_two_roots
+        paragraph_type_help: cli.operator_surface.help.root.paragraph_type_help
+        section_daily_ledger: cli.operator_surface.help.root.section_daily_ledger
+        section_diagnostics: cli.operator_surface.help.root.section_diagnostics
+        section_modelo_lifecycle: cli.operator_surface.help.root.section_modelo_lifecycle
+        section_setup: cli.operator_surface.help.root.section_setup
+        setup_configure_auth: cli.operator_surface.help.root.setup_configure_auth
+        setup_create_profile: cli.operator_surface.help.root.setup_create_profile
+        setup_inspect_profile: cli.operator_surface.help.root.setup_inspect_profile
+    landing:
+      active_profile_message: cli.operator_surface.landing.active_profile_message
+      no_active_profile_message: cli.operator_surface.landing.no_active_profile_message
+      text_template: cli.operator_surface.landing.text_template
+    retired:
+      archive_reason: cli.operator_surface.retired.archive_reason
+      data_reason: cli.operator_surface.retired.data_reason
+      declaration_reason: cli.operator_surface.retired.declaration_reason
+      filing_reason: cli.operator_surface.retired.filing_reason
+      financial_reason: cli.operator_surface.retired.financial_reason
+      invoice_reason: cli.operator_surface.retired.invoice_reason
+      llm_reason: cli.operator_surface.retired.llm_reason
+      preflight_reason: cli.operator_surface.retired.preflight_reason
+      presentation_reason: cli.operator_surface.retired.presentation_reason
+      sanitize_reason: cli.operator_surface.retired.sanitize_reason
+      setup_reason: cli.operator_surface.retired.setup_reason
+      submit_reason: cli.operator_surface.retired.submit_reason
+      topic_reason: cli.operator_surface.retired.topic_reason
+      workflow_reason: cli.operator_surface.retired.workflow_reason
   overview:
     agenda:
       allow_incomplete_help: Generar la agenda aunque los datos del perfil estén incompletos.
-      date_help: Fecha de referencia para la agenda (ISO YYYY-MM-DD); por defecto,
-        hoy.
+      date_help: Fecha de referencia para la agenda (ISO YYYY-MM-DD); por defecto, hoy.
       errors:
         invalid_horizon: --horizon debe ser un número entero positivo (días).
-      help: Clasifica las obligaciones próximas y vencidas alrededor de una fecha
-        de referencia. Indica un único `next_due` más cohortes due-today / due-soon
-        / overdue. Local; nunca contacta con AEAT.
+      help: Clasifica las obligaciones próximas y vencidas alrededor de una fecha de referencia. Indica un único `next_due` más cohortes due-today / due-soon / overdue. Local; nunca contacta con AEAT.
       horizon_help: Ventana hacia adelante (en días) que considera la cohorte `due_soon`.
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     backlog:
-      allow_incomplete_help: Generar el backlog aunque los datos del perfil estén
-        incompletos.
-      from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días
-        antes de hoy.
-      help: Lista las obligaciones vencidas que el operador aún no ha presentado.
-        Ordenadas de más antigua a más reciente para priorizar la triaje. Local; nunca
-        contacta con AEAT.
+      allow_incomplete_help: Generar el backlog aunque los datos del perfil estén incompletos.
+      from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días antes de hoy.
+      help: Lista las obligaciones vencidas que el operador aún no ha presentado. Ordenadas de más antigua a más reciente para priorizar la triaje. Local; nunca contacta con AEAT.
       to_help: Fecha de fin inclusiva (ISO YYYY-MM-DD); por defecto, hoy.
     calendar:
-      allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
-        incompletos.
+      allow_incomplete_help: Generar el calendario aunque los datos del perfil estén incompletos.
       from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
-      help: Genera el calendario de plazos para el perfil activo en la ventana de
-        fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
-        contacta con AEAT.
+      help: Genera el calendario de plazos para el perfil activo en la ventana de fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca contacta con AEAT.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
-    calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
-      ''aeat config profile set <clave> <valor>'' o usa --allow-incomplete para ver
-      el calendario calculado bajo valores por defecto.'
+    calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta ''aeat config profile set <clave> <valor>'' o usa --allow-incomplete para ver el calendario calculado bajo valores por
+      defecto.'
     drafts: Borradores
     explain:
-      help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
-        el indicador binario, el texto registral de justificación y los datos del
-        perfil de los que depende la decisión. Local; nunca contacta con AEAT.
+      help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra el indicador binario, el texto registral de justificación y los datos del perfil de los que depende la decisión. Local;
+        nunca contacta con AEAT.
       modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
-      year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
-        actual.
+      year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año actual.
     period: Periodo
     period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
-      drafts_present: '%{count} borrador(es) de declaraciones guardados existen en
-        este almacenamiento local. Un espacio vacio recien creado normalmente tiene
-        0, asi que este perfil/base de datos ya contiene estado local de borradores.'
-      integrity_next: Ejecuta `aeat config repair` para ver el detalle. No pongas
-        filas en cuarentena salvo que quieras archivar deliberadamente datos locales
-        antiguos ilegibles.
+      drafts_present: '%{count} borrador(es) de declaraciones guardados existen en este almacenamiento local. Un espacio vacio recien creado normalmente tiene 0, asi que este perfil/base de datos ya contiene
+        estado local de borradores.'
+      integrity_next: Ejecuta `aeat config repair` para ver el detalle. No pongas filas en cuarentena salvo que quieras archivar deliberadamente datos locales antiguos ilegibles.
       invoices_empty: Aun no se han importado operaciones de negocio.
-      invoices_present: '%{count} operacion(es) de negocio estan disponibles para
-        revisar.'
+      invoices_present: '%{count} operacion(es) de negocio estan disponibles para revisar.'
       next_heading: Que escribir ahora
-      next_import_command: '  aeat app ledger import <extracto-bancario.csv> --provider
-        csv - importar movimientos bancarios.'
+      next_import_command: '  aeat app ledger import <extracto-bancario.csv> --provider csv - importar movimientos bancarios.'
       next_landing_command: '  aeat --help - volver a la guia de comandos.'
       next_review_command: '  aeat app ledger review - revisar filas importadas.'
       profile_active: Estas trabajando en el perfil `%{profile}`.
-      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config init`
-        antes de importar datos.
-      storage_ok: El almacenamiento local cifrado se puede leer con la clave maestra
-        actual.
-      storage_warning: '%{count} fila(s) cifradas del almacenamiento local no se pueden
-        leer con la clave maestra actual. No son filas de tu extracto bancario; puedes
-        importar movimientos nuevos, pero revisa diagnosticos antes de confiar en
-        datos locales antiguos.'
+      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config init` antes de importar datos.
+      storage_ok: El almacenamiento local cifrado se puede leer con la clave maestra actual.
+      storage_warning: '%{count} fila(s) cifradas del almacenamiento local no se pueden leer con la clave maestra actual. No son filas de tu extracto bancario; puedes importar movimientos nuevos, pero revisa
+        diagnosticos antes de confiar en datos locales antiguos.'
       title: Estado del espacio de trabajo
       transactions_empty: Aun no se han importado movimientos bancarios.
-      transactions_present: '%{count} movimiento(s) bancarios estan disponibles en
-        el libro.'
+      transactions_present: '%{count} movimiento(s) bancarios estan disponibles en el libro.'
     status_help: Mostrar el estado del perfil, libro y modelos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
     app_help: Gestión del registro de modelos fiscales
-    audit_oracles_environment_help: Entorno del catálogo de paridad en vivo a auditar
-      (production, test_environment o both)
+    audit_oracles_environment_help: Entorno del catálogo de paridad en vivo a auditar (production, test_environment o both)
     audit_oracles_help: Mostrar discrepancias de oráculos de paridad en vivo al arrancar
-    casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas
-      por defecto
+    casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas por defecto
     citations:
       app_help: Inspeccionar el corpus normativo (Ley 37/1992, Ley 35/2006, ...)
       articulo_help: Artículo concreto a mostrar (p. ej. 91.Uno.2.1º)
@@ -1031,8 +1122,7 @@ cli:
       kind_help: Filtrar por tipo de regla del manual
       list_help: Listar los manuales disponibles localmente
       manual_help: Identificador del manual (renta, iva, sociedades)
-      part_help: Volumen del manual (single, part1, part2-deducciones-autonomicas,
-        part3)
+      part_help: Volumen del manual (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: Listar las reglas codificadas en un manual
       section_help: Identificador opcional de sección a mostrar
       verify_help: Verificar la integridad del manual contra su contrato
@@ -1084,22 +1174,16 @@ cli:
       workbook_count: Nº libros (workbooks)
       workbook_parity_ref_count: Nº referencias de paridad de libro
       workbook_path: Ruta del libro
-    observation_help: Manifiesto cifrado de observación de declaración presentada
-      que se va a verificar
+    observation_help: Manifiesto cifrado de observación de declaración presentada que se va a verificar
     parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
     parity_output_help: Archivo JSON de destino para la cinta de paridad generada
-    parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime
-      actual del registro
-    parity_run_help: Ejecutar un escenario de paridad guardado y archivar la cinta
-      resultante
+    parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime actual del registro
+    parity_run_help: Ejecutar un escenario de paridad guardado y archivar la cinta resultante
     parity_scenario_help: Ruta a un archivo JSON de escenario de paridad
-    parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad
-      generadas
+    parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad generadas
     parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
-    source_observation_help: Manifiesto cifrado de observación fuente requerido por
-      vínculos de declaraciones previas o relaciones
-    verify_filed_state_help: Comparar el cálculo local del registro con el estado
-      presentado capturado de AEAT
+    source_observation_help: Manifiesto cifrado de observación fuente requerido por vínculos de declaraciones previas o relaciones
+    verify_filed_state_help: Comparar el cálculo local del registro con el estado presentado capturado de AEAT
     verify_help: Verificar la integridad del registro local
     verify_source_root_help: Ruta al directorio de origen para verificar
     workbooks_app_help: Gestión de libros de trabajo del registro
@@ -1110,8 +1194,7 @@ cli:
     workbooks_timeout_help: Tiempo de espera máximo (en segundos) para la compilación
     workbooks_verify_help: Verificar la integridad de los libros de trabajo generados
   review:
-    app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
-      de compra e incidencias de modelo'
+    app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes de compra e incidencias de modelo'
     errors:
       invalid_state: 'Estado de revisión inválido: %{state}'
     labels:
@@ -1134,8 +1217,7 @@ cli:
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
-    app_app_help: Espacio de trabajo fiscal para overview, ledger, modelo, registry
-      y review
+    app_app_help: Espacio de trabajo fiscal para overview, ledger, modelo, registry y review
     app_help: 'Asistente de flujo fiscal español
 
 
@@ -1147,21 +1229,14 @@ cli:
     help_help: Mostrar ayuda orientada al flujo de trabajo
     landing:
       headline: Asistente fiscal AEAT
-      help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
-        --help`.'
+      help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app --help`.'
       quick_start_heading: Inicio rápido
-      quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
-        csv` - añadir tus movimientos bancarios.'
-      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuración,
-        almacenamiento y salud local.'
-      quick_start_review: '  4. `aeat app ledger review` - revisar y clasificar las
-        filas importadas.'
-      quick_start_setup_done: '  1. `aeat config profile status` - comprobar el perfil
-        activo antes del trabajo operativo.'
-      quick_start_setup_needed: '  1. `aeat config init` - crear primero tu perfil
-        fiscal local.'
-      quick_start_status: '  2. `aeat app overview status` - leer el estado actual
-        del espacio y sus diagnosticos.'
+      quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider csv` - añadir tus movimientos bancarios.'
+      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuración, almacenamiento y salud local.'
+      quick_start_review: '  4. `aeat app ledger review` - revisar y clasificar las filas importadas.'
+      quick_start_setup_done: '  1. `aeat config profile status` - comprobar el perfil activo antes del trabajo operativo.'
+      quick_start_setup_needed: '  1. `aeat config init` - crear primero tu perfil fiscal local.'
+      quick_start_status: '  2. `aeat app overview status` - leer el estado actual del espacio y sus diagnosticos.'
       section_config: '  config - perfil, autenticación y diagnósticos'
       section_ledger: '  app ledger - importación bancaria y revisión de movimientos'
       section_modelo: '  app modelo - catálogo de modelos y unidades de trabajo'
@@ -1170,21 +1245,17 @@ cli:
       section_review: '  app review - elementos que requieren atención'
       sections_heading: Secciones principales
       tagline: Flujo fiscal español local-first para autónomos.
-      welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
-        empieza por la configuración.
+      welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado; empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
     language_help: Idioma de salida para este comando (sustituye al perfil activo)
     quiet_help: Mostrar solo errores en stderr
-    unavailable_app_help: Los comandos de app no están disponibles porque falta una
-      dependencia opcional
+    unavailable_app_help: Los comandos de app no están disponibles porque falta una dependencia opcional
     verbose_help: Mostrar logs internos informativos en stderr
-    version_help: Mostrar la versión del paquete (añade --detail para el resumen completo
-      del registro)
+    version_help: Mostrar la versión del paquete (añade --detail para el resumen completo del registro)
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
-      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app registry citations''
-        para listar los temas registrados.'
+      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app registry citations'' para listar los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
 dotted:
@@ -1192,29 +1263,19 @@ dotted:
 errors:
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
-    bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
-      negativa {base}.
-    bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que
-      cubra la base {base}.
-    bracket_no_window: El parámetro escalonado {parameter_id} no tiene tramo válido
-      para {as_of}.
-    casilla_constraint_violation: 'La casilla {casilla_id} con valor {value} infringe
-      su restricción declarada: {violation}. Refs: {legal_refs}.'
-    casilla_referenced_before_evaluation: La casilla {casilla_id} se referenció antes
-      de evaluar su fórmula.
-    computed_supplied_as_input: 'No se pueden suministrar como entrada las casillas
-      calculadas: {casilla_ids}.'
-    dispatch_key_unknown: 'La clave de despacho {dispatch_key!r} no está en la tabla
-      del operador {op} sobre la vinculación {binding_id} (claves declaradas: {available_keys}).'
-    dispatch_parameter_kind: El parámetro {parameter_id} no encaja con el operador
-      {op}; se esperaba un parámetro escalar (decimal / dinerario / entero / ratio).
+    bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base negativa {base}.
+    bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que cubra la base {base}.
+    bracket_no_window: El parámetro escalonado {parameter_id} no tiene tramo válido para {as_of}.
+    casilla_constraint_violation: 'La casilla {casilla_id} con valor {value} infringe su restricción declarada: {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: La casilla {casilla_id} se referenció antes de evaluar su fórmula.
+    computed_supplied_as_input: 'No se pueden suministrar como entrada las casillas calculadas: {casilla_ids}.'
+    dispatch_key_unknown: 'La clave de despacho {dispatch_key!r} no está en la tabla del operador {op} sobre la vinculación {binding_id} (claves declaradas: {available_keys}).'
+    dispatch_parameter_kind: El parámetro {parameter_id} no encaja con el operador {op}; se esperaba un parámetro escalar (decimal / dinerario / entero / ratio).
     divide_by_zero: La fórmula con operador {op} divide entre cero.
     empty_expression: Expresión de fórmula vacía.
-    enum_binding_value_missing: La vinculación enumerada {binding_id} no tiene valor
-      asignado (requerida por el operador {op}).
+    enum_binding_value_missing: La vinculación enumerada {binding_id} no tiene valor asignado (requerida por el operador {op}).
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
-    lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
-      sea una hoja de tipo {expected_kind}.
+    lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position} sea una hoja de tipo {expected_kind}.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
@@ -1277,67 +1338,49 @@ sheets:
       valuation_amount: Valoración
 topic:
   authentication:
-    body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
-      digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth configure
-      --provider certificate' y verifica con 'aeat config auth test'.
+    body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth configure --provider certificate' y verifica
+      con 'aeat config auth test'.
     title: Autenticación con la AEAT
   calendar:
-    body: El calendario muestra las obligaciones de presentación (modelos y periodos)
-      dentro de un rango. Necesita un perfil con régimen IVA declarado para no asumir
-      valores por defecto.
+    body: El calendario muestra las obligaciones de presentación (modelos y periodos) dentro de un rango. Necesita un perfil con régimen IVA declarado para no asumir valores por defecto.
     title: Calendario de obligaciones
   casilla:
-    body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales,
-      calculadas (computed) o derivadas de bindings. 'aeat app modelo casillas <modelo>'
-      las lista.
+    body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales, calculadas (computed) o derivadas de bindings. 'aeat app modelo casillas <modelo>' las lista.
     title: Casillas
   formats:
-    body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es
-      el formato recomendado para automatización; text para inspección humana.
+    body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es el formato recomendado para automatización; text para inspección humana.
     title: Formatos de salida
   irpf-regime:
-    body: Régimen IRPF de un autónomo. Estimación directa (normal o simplificada)
-      o estimación objetiva (módulos). Determina qué modelos de pago fraccionado aplican
-      (130 vs 131).
+    body: Régimen IRPF de un autónomo. Estimación directa (normal o simplificada) o estimación objetiva (módulos). Determina qué modelos de pago fraccionado aplican (130 vs 131).
     title: Régimen IRPF
   iva-regime:
-    body: Régimen IVA aplicable al contribuyente. General, simplificado, recargo de
-      equivalencia, exento, REAGP o REBU. Determina el modelo 303 trimestral y el
-      resumen anual 390.
+    body: Régimen IVA aplicable al contribuyente. General, simplificado, recargo de equivalencia, exento, REAGP o REBU. Determina el modelo 303 trimestral y el resumen anual 390.
     title: Régimen IVA
   modelos:
-    body: Catálogo de modelos tributarios AEAT (303, 130, 100, 347, 349, 111, 115,
-      184, etc.). Cada modelo tiene su propio calendario, casillas y reglas de aplicabilidad.
-      'aeat app modelo list' enumera los disponibles.
+    body: Catálogo de modelos tributarios AEAT (303, 130, 100, 347, 349, 111, 115, 184, etc.). Cada modelo tiene su propio calendario, casillas y reglas de aplicabilidad. 'aeat app modelo list' enumera
+      los disponibles.
     title: Modelos tributarios
   pago-fraccionado:
-    body: Pago a cuenta del IRPF que realiza un autónomo cada trimestre. El modelo
-      130 aplica a estimación directa; el 131 a estimación objetiva. El cálculo usa
-      los datos del trimestre y, para algunos casos, los del ejercicio anterior.
+    body: Pago a cuenta del IRPF que realiza un autónomo cada trimestre. El modelo 130 aplica a estimación directa; el 131 a estimación objetiva. El cálculo usa los datos del trimestre y, para algunos casos,
+      los del ejercicio anterior.
     title: Pago fraccionado IRPF
   profile:
-    body: El perfil local contiene tu identificación fiscal (NIF), actividad principal,
-      régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat config profile set <clave> <valor>'.
+    body: El perfil local contiene tu identificación fiscal (NIF), actividad principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario). Edítalo con 'aeat config profile
+      set <clave> <valor>'.
     title: Perfil del contribuyente
   providers:
-    body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
-      'aeat config auth --help' lista los proveedores con sus prerrequisitos.
+    body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos. 'aeat config auth --help' lista los proveedores con sus prerrequisitos.
     title: Proveedores de autenticación
   recargo-extemporaneo:
-    body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula
-      un recargo del 1% por mes (hasta el 12%) durante el primer año y 15% más intereses
-      tras 12 meses. Base legal Ley 58/2003 art-27.
+    body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula un recargo del 1% por mes (hasta el 12%) durante el primer año y 15% más intereses tras 12 meses. Base legal Ley 58/2003
+      art-27.
     title: Recargo por presentación extemporánea
   regimens:
-    body: Conjunto de regímenes fiscales aplicables a un autónomo. Las dos dimensiones
-      principales son IVA (general, simplificado, recargo de equivalencia, exento)
-      e IRPF (directa, objetiva).
+    body: Conjunto de regímenes fiscales aplicables a un autónomo. Las dos dimensiones principales son IVA (general, simplificado, recargo de equivalencia, exento) e IRPF (directa, objetiva).
     title: Regímenes fiscales
   sii-verifactu:
-    body: Sistemas de remisión electrónica de facturas a la AEAT. SII (Suministro
-      Inmediato de Información) aplica obligatoriamente a grandes empresas; Verifactu
-      (RD 1007/2023) es un requisito gradual para sistemas de facturación.
+    body: Sistemas de remisión electrónica de facturas a la AEAT. SII (Suministro Inmediato de Información) aplica obligatoriamente a grandes empresas; Verifactu (RD 1007/2023) es un requisito gradual para
+      sistemas de facturación.
     title: SII y Verifactu
 transactions:
   import:
@@ -1366,21 +1409,16 @@ wizard:
     blank_secret: Valor secreto requerido para %{prompt_key}.
     blank_text: Valor obligatorio para %{prompt_key}.
     checkbox_required: Selecciona al menos una opción para %{prompt_key}.
-    checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
-      %{choices}.'
+    checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas: %{choices}.'
     checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
     invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
     invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
     invalid_tax_id: 'NIF/NIE/CIF no válido para %{prompt_key}: %{raw}. %{detail}.'
-    select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
-      %{choices}.'
+    select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas: %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
-    unsupported_console: "No pude abrir el asistente guiado en esta ejecución.\nTodavía\
-      \ no se ha guardado nada.\n\nPrueba otra vez el asistente desde una sesión de\
-      \ terminal interactiva:\n  aeat config init\n\nSi el estado del perfil puede\
-      \ estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\nPara\
-      \ descartar solo el estado local del perfil y empezar de nuevo:\n  aeat config\
-      \ reset --scope profile --yes"
+    unsupported_console: "No pude abrir el asistente guiado en esta ejecución.\nTodavía no se ha guardado nada.\n\nPrueba otra vez el asistente desde una sesión de terminal interactiva:\n  aeat config init\n\
+      \nSi el estado del perfil puede estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\nPara descartar solo el estado local del perfil y empezar de nuevo:\n  aeat config reset --scope\
+      \ profile --yes"
   other:
     description: Other configuration options
     section:
@@ -1509,14 +1547,11 @@ wizard:
     intro: 'Configuración guiada del perfil tributario
 
 
-      Esto prepara el perfil local que la app usa para los libros registro y las comprobaciones
-      de modelos.
+      Esto prepara el perfil local que la app usa para los libros registro y las comprobaciones de modelos.
 
-      Hay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias
-      para empezar; puedes dejar en blanco lo que todavía no sepas.
+      Hay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias para empezar; puedes dejar en blanco lo que todavía no sepas.
 
-      Ten a mano tu NIF/NIE/CIF, una descripción breve de la actividad, régimen de
-      IVA/IRPF, residencia fiscal y datos familiares si aplican.
+      Ten a mano tu NIF/NIE/CIF, una descripción breve de la actividad, régimen de IVA/IRPF, residencia fiscal y datos familiares si aplican.
 
       Después de guardar, revisa el progreso con `aeat config profile status`.'
     iva:

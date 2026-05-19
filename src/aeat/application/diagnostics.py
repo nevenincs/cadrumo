@@ -25,6 +25,7 @@ from ..adapters.persistence.storage.sql.secure_objects import (
 )
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
+from ..core.i18n import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.resources import bundled_path
 from ..domain.calculations.registry import ValidatedRegistryAuthority
@@ -168,21 +169,29 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             name="registry.load",
             status="ok" if registry.available else "fail",
             summary=(
-                f"{registry.modelo_count} modelos, {registry.casilla_count} casillas"
+                tr(
+                    "cli.diagnostics.summary.registry_counts",
+                    modelos=registry.modelo_count,
+                    casillas=registry.casilla_count,
+                )
                 if registry.available
-                else "registry unavailable"
+                else tr("cli.diagnostics.summary.registry_unavailable")
             ),
             detail=registry.error,
-            dead_end=(
-                None if registry.available else "registry is bundled with aeat; reinstall the package to recover."
-            ),
+            dead_end=(None if registry.available else tr("cli.diagnostics.dead_end.registry_bundled")),
         ),
     ]
 
     setup_report: WizardStatusReport | None = None
     try:
         state = workflow_state_repository().load()
-        checks.append(DiagnosticCheck(name="secure_state.load", status="ok", summary="state backend readable"))
+        checks.append(
+            DiagnosticCheck(
+                name="secure_state.load",
+                status="ok",
+                summary=tr("cli.diagnostics.summary.state_backend_readable"),
+            )
+        )
         setup_report = build_wizard_status(state)
         checks.append(_profile_check(setup_report))
         checks.append(_auth_check(setup_report))
@@ -192,7 +201,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             DiagnosticCheck(
                 name="secure_state.load",
                 status="fail",
-                summary="state backend unreadable",
+                summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
                 detail=f"{type(exc).__name__}: {exc}",
                 next_action="aeat config repair reset-state --yes",
             )
@@ -230,16 +239,16 @@ def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthSt
 def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
     """Render one site-health status as compact repair output."""
 
-    markers = ", ".join(status.evidence.detected_markers) or "none"
+    markers = ", ".join(status.evidence.detected_markers) or tr("cli.diagnostics.browser.markers_none")
     lines = [
-        "target\tbrowser",
-        f"state\t{status.state.value}",
-        f"http_status\t{status.evidence.http_status}",
-        f"markers\t{markers}",
-        f"observed_at\t{status.observed_at.isoformat()}",
+        f"{tr('cli.diagnostics.browser.target_label')}\t{tr('cli.diagnostics.browser.target_browser')}",
+        f"{tr('cli.diagnostics.browser.state_label')}\t{status.state.value}",
+        f"{tr('cli.diagnostics.browser.http_status_label')}\t{status.evidence.http_status}",
+        f"{tr('cli.diagnostics.browser.markers_label')}\t{markers}",
+        f"{tr('cli.diagnostics.browser.observed_at_label')}\t{status.observed_at.isoformat()}",
     ]
     if status.retry_after_seconds is not None:
-        lines.append(f"retry_after_seconds\t{status.retry_after_seconds}")
+        lines.append(f"{tr('cli.diagnostics.browser.retry_after_label')}\t{status.retry_after_seconds}")
     return "\n".join(lines) + "\n"
 
 
@@ -284,26 +293,26 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
     """Render a compact human-readable repair report."""
 
     lines = [
-        f"Overall\t{report.overall}",
-        f"Version\t{report.package_name} {report.package_version}",
-        f"Python\t{report.python_version}",
-        f"Logs\t{report.log_file}",
+        f"{tr('cli.diagnostics.repair.overall_label')}\t{report.overall}",
+        f"{tr('cli.diagnostics.repair.version_label')}\t{report.package_name} {report.package_version}",
+        f"{tr('cli.diagnostics.repair.python_label')}\t{report.python_version}",
+        f"{tr('cli.diagnostics.repair.logs_label')}\t{report.log_file}",
     ]
     if report.setup is not None:
         lines.append(
-            f"Profile\t{report.setup.active_profile or '-'} "
+            f"{tr('cli.diagnostics.repair.profile_label')}\t{report.setup.active_profile or '-'} "
             f"({report.setup.profile_present_keys}/{report.setup.profile_total_keys})"
         )
-        lines.append(f"Auth\t{report.setup.auth_provider or '-'}")
-    lines.append("Checks")
+        lines.append(f"{tr('cli.diagnostics.repair.auth_label')}\t{report.setup.auth_provider or '-'}")
+    lines.append(tr("cli.diagnostics.repair.checks_heading"))
     for check in report.checks:
         lines.append(f"{check.status}\t{check.name}\t{check.summary}")
         if check.detail:
-            lines.append(f"detail\t{check.detail}")
+            lines.append(f"{tr('cli.diagnostics.repair.detail_label')}\t{check.detail}")
         if check.next_action:
-            lines.append(f"next\t{check.next_action}")
+            lines.append(f"{tr('cli.diagnostics.repair.next_label')}\t{check.next_action}")
         if check.dead_end:
-            lines.append(f"note\t{check.dead_end}")
+            lines.append(f"{tr('cli.diagnostics.repair.note_label')}\t{check.dead_end}")
     return "\n".join(lines) + "\n"
 
 
@@ -367,12 +376,16 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
             return DiagnosticCheck(
                 name="secure_objects.integrity",
                 status="ok",
-                summary="no rows stored",
+                summary=tr("cli.diagnostics.summary.secure_objects_empty"),
             )
         return DiagnosticCheck(
             name="secure_objects.integrity",
             status="ok",
-            summary=f"{report.readable_total} row(s) decryptable across {len(report.namespaces)} namespace(s)",
+            summary=tr(
+                "cli.diagnostics.summary.secure_objects_readable",
+                readable=report.readable_total,
+                namespaces=len(report.namespaces),
+            ),
         )
     affected = ", ".join(
         f"{item.namespace} ({item.unreadable}/{item.readable + item.unreadable})"
@@ -382,9 +395,10 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
     return DiagnosticCheck(
         name="secure_objects.integrity",
         status="warn",
-        summary=(
-            f"{report.unreadable_total} unreadable row(s) sealed under a prior master key; "
-            f"{report.readable_total} row(s) decryptable"
+        summary=tr(
+            "cli.diagnostics.summary.secure_objects_unreadable",
+            unreadable=report.unreadable_total,
+            readable=report.readable_total,
         ),
         detail=affected,
         next_action="aeat config repair quarantine --yes",
@@ -422,21 +436,21 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
         return DiagnosticCheck(
             name="registry.integrity",
             status="fail",
-            summary="registry snapshot build surfaced integrity failures",
+            summary=tr("cli.diagnostics.summary.registry_integrity_failed"),
             detail=str(exc),
-            next_action="inspect the affected registry TOML files; integrity gates run at every snapshot.",
+            next_action=tr("cli.diagnostics.next_action.inspect_registry_toml"),
         )
     except Exception as exc:  # pragma: no cover - defensive: registry not loadable
         return DiagnosticCheck(
             name="registry.integrity",
             status="warn",
-            summary="cross-domain integrity check skipped",
+            summary=tr("cli.diagnostics.summary.registry_integrity_skipped"),
             detail=f"{type(exc).__name__}: {exc}",
         )
     return DiagnosticCheck(
         name="registry.integrity",
         status="ok",
-        summary="snapshot-build gates clean (typed IDs + renta routing + selector shapes)",
+        summary=tr("cli.diagnostics.summary.registry_integrity_ok"),
     )
 
 
@@ -445,20 +459,27 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
         return DiagnosticCheck(
             name="profile.readiness",
             status="warn",
-            summary="no active profile",
+            summary=tr("cli.diagnostics.summary.profile_none"),
             next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     if not report.profile_ready:
         return DiagnosticCheck(
             name="profile.readiness",
             status="warn",
-            summary=f"missing required keys: {', '.join(report.missing_required)}",
+            summary=tr(
+                "cli.diagnostics.summary.profile_missing_keys",
+                keys=", ".join(report.missing_required),
+            ),
             next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     return DiagnosticCheck(
         name="profile.readiness",
         status="ok",
-        summary=f"{report.profile_present_keys}/{report.profile_total_keys} keys set",
+        summary=tr(
+            "cli.diagnostics.summary.profile_keys_set",
+            present=report.profile_present_keys,
+            total=report.profile_total_keys,
+        ),
     )
 
 
@@ -467,20 +488,26 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
         return DiagnosticCheck(
             name="auth.readiness",
             status="warn",
-            summary="no authentication provider configured",
+            summary=tr("cli.diagnostics.summary.auth_none"),
             next_action="aeat config auth setup",
         )
     if not report.login_ready:
         return DiagnosticCheck(
             name="auth.readiness",
             status="warn",
-            summary=f"{report.auth_provider} configured but no active session",
+            summary=tr(
+                "cli.diagnostics.summary.auth_no_session",
+                provider=report.auth_provider,
+            ),
             next_action="aeat config auth setup",
         )
     return DiagnosticCheck(
         name="auth.readiness",
         status="ok",
-        summary=f"{report.auth_provider} session ready",
+        summary=tr(
+            "cli.diagnostics.summary.auth_session_ready",
+            provider=report.auth_provider,
+        ),
     )
 
 
@@ -506,12 +533,12 @@ def _windows_stale_sync_check() -> DiagnosticCheck | None:
         return DiagnosticCheck(
             name="runtime.dependency_sync",
             status="ok",
-            summary="venv is in sync with pyproject.toml",
+            summary=tr("cli.diagnostics.summary.venv_in_sync"),
         )
     return DiagnosticCheck(
         name="runtime.dependency_sync",
         status="warn",
-        summary="pyproject.toml is newer than .venv; venv is stale",
+        summary=tr("cli.diagnostics.summary.venv_stale"),
         next_action="uv sync",
     )
 
@@ -529,14 +556,23 @@ def render_cli_version_text(report: CliVersionReport) -> str:
 
     registry = report.registry
     if not registry.available:
-        return f"{report.package_name} {report.package_version} (registry unavailable: {registry.error})"
-    revision_label = ", ".join(registry.revision_ids) if registry.revision_ids else "no revisions"
-    return (
-        f"{report.package_name} {report.package_version} "
-        f"(registry revisions {revision_label}; "
-        f"{registry.modelo_count} modelos, "
-        f"{registry.casilla_count} casillas, "
-        f"{registry.formula_count} formulas)"
+        return tr(
+            "cli.diagnostics.version.registry_unavailable",
+            package=report.package_name,
+            version=report.package_version,
+            error=registry.error or "",
+        )
+    revision_label = ", ".join(registry.revision_ids) if registry.revision_ids else tr(
+        "cli.diagnostics.version.no_revisions"
+    )
+    return tr(
+        "cli.diagnostics.version.registry_summary",
+        package=report.package_name,
+        version=report.package_version,
+        revisions=revision_label,
+        modelos=registry.modelo_count,
+        casillas=registry.casilla_count,
+        formulas=registry.formula_count,
     )
 
 

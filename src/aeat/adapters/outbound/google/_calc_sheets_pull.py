@@ -210,6 +210,7 @@ def _drive_service(credentials: object) -> Any:
         raise StorageNetworkError(
             f"googleapiclient not importable: {exc}",
             suggestion="uv sync",
+            translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
         ) from exc
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
@@ -221,6 +222,7 @@ def _sheets_service(credentials: object) -> Any:
         raise StorageNetworkError(
             f"googleapiclient not importable: {exc}",
             suggestion="uv sync",
+            translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
         ) from exc
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
@@ -237,16 +239,19 @@ def _execute(request: Any, *, action: str) -> Any:
                 raise StoragePermissionError(
                     f"Google {action} refused (HTTP {status}): {exc}",
                     suggestion="aeat config google login",
-                    context={"action": action},
+                    context={"action": action, "status": status},
+                    translated_message="adapters.google.calc_sheets.errors.api_call_refused",
                 ) from exc
             if status == 404:
                 raise StorageNotFoundError(
                     f"Google {action} target not found (HTTP 404): {exc}",
                     context={"action": action},
+                    translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
                 ) from exc
         raise StorageNetworkError(
             f"Google {action} failed: {exc}",
             context={"action": action},
+            translated_message="adapters.google.calc_sheets.errors.api_call_failed",
         ) from exc
 
 

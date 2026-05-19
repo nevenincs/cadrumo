@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
+from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
     RENTA_WEB_OPEN_APP_URL,
@@ -40,7 +41,7 @@ logger = get_logger(__name__)
 _playwright_stage = build_playwright_stage_runner(
     surface_label="Renta WEB Open",
     log_prefix="renta web open",
-    shape_suggestion="Re-run the live oracle after checking whether AEAT changed the Renta WEB Open page shape.",
+    shape_suggestion=tr("adapters.aeat.sede.renta_web_open.suggestions.shape_change"),
     logger=logger,
 )
 

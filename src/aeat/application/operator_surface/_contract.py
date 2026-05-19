@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import OperatorSurfaceContractError
 from ._models import (
@@ -46,85 +47,85 @@ RETIRED_OPERATOR_SURFACES: tuple[RetiredOperatorSurface, ...] = (
         name="setup",
         replacement="config",
         suggestion="aeat config profile create NAME",
-        reason="setup and config are consolidated under the config root",
+        reason=tr("cli.operator_surface.retired.setup_reason"),
     ),
     RetiredOperatorSurface(
         name="archive",
         replacement="config bucket",
         suggestion="aeat config bucket",
-        reason="bucket storage operations belong under config",
+        reason=tr("cli.operator_surface.retired.archive_reason"),
     ),
     RetiredOperatorSurface(
         name="data",
         replacement="app ledger",
         suggestion="aeat app ledger",
-        reason="ledger data operations belong under the app ledger workflow",
+        reason=tr("cli.operator_surface.retired.data_reason"),
     ),
     RetiredOperatorSurface(
         name="filing",
         replacement="app modelo",
         suggestion="aeat app modelo",
-        reason="modelo lifecycle is calculate -> verify -> file under app modelo",
+        reason=tr("cli.operator_surface.retired.filing_reason"),
     ),
     RetiredOperatorSurface(
         name="financial",
         replacement="app ledger",
         suggestion="aeat app ledger",
-        reason="financial transaction work is ledger work",
+        reason=tr("cli.operator_surface.retired.financial_reason"),
     ),
     RetiredOperatorSurface(
         name="invoice",
         replacement="app ledger",
         suggestion="aeat app ledger",
-        reason="bare invoice terminology is replaced by the source-kind taxonomy",
+        reason=tr("cli.operator_surface.retired.invoice_reason"),
     ),
     RetiredOperatorSurface(
         name="declaration",
         replacement="app modelo",
         suggestion="aeat app modelo",
-        reason="declaration behavior folds into modelo work units and revisions",
+        reason=tr("cli.operator_surface.retired.declaration_reason"),
     ),
     RetiredOperatorSurface(
         name="sanitize",
         replacement="app ledger",
         suggestion="aeat app ledger check",
-        reason="sanitization is internal to ledger ingestion",
+        reason=tr("cli.operator_surface.retired.sanitize_reason"),
     ),
     RetiredOperatorSurface(
         name="llm",
         replacement=None,
         suggestion="aeat app ledger classify",
-        reason="classification is exposed only through ledger services",
+        reason=tr("cli.operator_surface.retired.llm_reason"),
     ),
     RetiredOperatorSurface(
         name="topic",
         replacement="app registry",
         suggestion="aeat app registry citations",
-        reason="topic content folds into registry citations and inline help",
+        reason=tr("cli.operator_surface.retired.topic_reason"),
     ),
     RetiredOperatorSurface(
         name="submit",
         replacement=None,
         suggestion=None,
-        reason="live submission is permanently disabled",
+        reason=tr("cli.operator_surface.retired.submit_reason"),
     ),
     RetiredOperatorSurface(
         name="presentation",
         replacement="app modelo export",
         suggestion="aeat app modelo export",
-        reason="presentation artifacts are modelo exports",
+        reason=tr("cli.operator_surface.retired.presentation_reason"),
     ),
     RetiredOperatorSurface(
         name="preflight",
         replacement="app modelo verify",
         suggestion="aeat app modelo verify",
-        reason="preflight is internal to verify and file",
+        reason=tr("cli.operator_surface.retired.preflight_reason"),
     ),
     RetiredOperatorSurface(
         name="workflow",
         replacement="app modelo",
         suggestion="aeat app modelo",
-        reason="workflow execution is exposed through domain mini-apps",
+        reason=tr("cli.operator_surface.retired.workflow_reason"),
     ),
 )
 
@@ -327,7 +328,7 @@ def require_accepted_root(name: str) -> RootSurface:
             return root
     retired = retired_surface_suggestion(normalized)
     suggestion = retired.suggestion if retired is not None else "aeat --help"
-    reason = retired.reason if retired is not None else "accepted roots are config and app"
+    reason = retired.reason if retired is not None else tr("cli.operator_surface.errors.accepted_roots_only")
     raise OperatorSurfaceContractError(normalized or name, reason=reason, suggestion=suggestion)
 
 
@@ -353,6 +354,6 @@ def resolve_source_kind_alias(value: str) -> SourceKind:
             return alias.canonical
     raise OperatorSurfaceContractError(
         value,
-        reason="unknown source kind",
-        suggestion="use ledger_transaction, purchase_invoice_evidence, payable_invoice, or collectible_invoice",
+        reason=tr("cli.operator_surface.errors.unknown_source_kind"),
+        suggestion=tr("cli.operator_surface.errors.source_kind_options"),
     )

@@ -46,6 +46,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
+from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
     GroiObservation,
@@ -85,12 +86,14 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
     'input[type="submit"][value="Enviar"]',
 )
 
-_GROI_SHAPE_SUGGESTION = "Re-run the live oracle after checking whether AEAT changed the GROI form shape."
+def _groi_shape_suggestion() -> str:
+    return tr("adapters.aeat.sede.groi.suggestions.shape_change")
+
 
 _playwright_stage = build_playwright_stage_runner(
     surface_label="GROI",
     log_prefix="groi",
-    shape_suggestion=_GROI_SHAPE_SUGGESTION,
+    shape_suggestion=_groi_shape_suggestion(),
     logger=logger,
 )
 
@@ -111,7 +114,7 @@ async def _locate(
         timeout_ms=timeout_ms,
         probe_timeout_ms=_SELECTOR_PROBE_TIMEOUT_MS,
         surface_label="GROI",
-        shape_suggestion=_GROI_SHAPE_SUGGESTION,
+        shape_suggestion=_groi_shape_suggestion(),
     )
 
 

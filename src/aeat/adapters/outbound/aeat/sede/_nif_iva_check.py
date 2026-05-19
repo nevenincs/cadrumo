@@ -33,6 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
+from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
     RegistryValidationError,
@@ -54,11 +55,14 @@ from ._browser_stage import build_playwright_stage_runner
 from ._errors import SedeError, SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)
-_NIF_IVA_SHAPE_SUGGESTION = "Re-run the live oracle after checking whether AEAT changed the NIF-IVA form shape."
+def _nif_iva_shape_suggestion() -> str:
+    return tr("adapters.aeat.sede.nif_iva.suggestions.shape_change")
+
+
 _playwright_stage = build_playwright_stage_runner(
     surface_label="NIF-IVA",
     log_prefix="nif iva",
-    shape_suggestion=_NIF_IVA_SHAPE_SUGGESTION,
+    shape_suggestion=_nif_iva_shape_suggestion(),
     logger=logger,
 )
 
@@ -79,7 +83,7 @@ async def _locate(
         timeout_ms=timeout_ms,
         probe_timeout_ms=_SELECTOR_PROBE_TIMEOUT_MS,
         surface_label="NIF-IVA",
-        shape_suggestion=_NIF_IVA_SHAPE_SUGGESTION,
+        shape_suggestion=_nif_iva_shape_suggestion(),
     )
 
 
