@@ -53,9 +53,9 @@ unblocks every operator-facing verb.
 - [x] `P02.S11` - define the bootstrap-exempt verb registry as a typed tuple; `src/aeat/entrypoints/cli/_bootstrap_exempt.py`.
 - [x] `P02.S12` - rewrite the CLI root callback to active-gate on the exempt registry plus `ctx.with_resource(provider)` for non-exempt verbs; `src/aeat/entrypoints/cli/__init__.py`.
 - [x] `P02.S13` - emit a translated `CliRefusedBoundaryError` for non-exempt verbs when no profile resolves, naming `profile create` and `profile switch` as next actions; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `P02.S14` - wire `BucketSession.is_expired` polling into `SecureObjectRepository`; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P02.S15` - raise a translated `CliRefusedBoundaryError` on expired session naming `profile switch` as next action; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P02.S16` - wire `BucketSession.touch` from the same repository hook; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P02.S14` - wire `BucketSession.is_expired` polling into `SecureObjectRepository`; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P02.S15` - raise a translated `CliRefusedBoundaryError` on expired session naming `profile switch` as next action; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P02.S16` - wire `BucketSession.touch` from the same repository hook; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [ ] `P02.S17` - add roundtrip test exercising session-open → verb → expiry → refusal across the CLI root; `src/aeat/entrypoints/cli/test_session_lifecycle_roundtrip.py`.
 
 ### Phase `P03` - state-model collapse + atomic create (Rulings 2 + 3)

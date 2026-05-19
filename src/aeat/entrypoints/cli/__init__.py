@@ -180,21 +180,11 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...adapters.persistence.storage import get_master_key_provider
     from ...application.workflow._models import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
-    from ._errors import CliRefusedBoundaryError
 
     if is_bootstrap_exempt(_full_invocation_verb_path()):
         return
     if resolve_active_bucket_id() is None:
-        raise CliRefusedBoundaryError(
-            tr(
-                "cli.root.errors.no_active_profile",
-                default=(
-                    "No active profile. Run `aeat config profile create NAME` "
-                    "to create your first profile, or `aeat config profile "
-                    "switch NAME` to activate an existing one."
-                ),
-            ),
-        )
+        return
     ctx.with_resource(get_master_key_provider())
 
 

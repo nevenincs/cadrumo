@@ -1488,10 +1488,6 @@ cli:
     app_help_help: Mostrar ayuda del flujo de app
     debug_help: Mostrar logs internos de depuración en stderr
     detail_help: Mostrar también el resumen detallado del registro
-    errors:
-      no_active_profile: 'No hay perfil activo. Ejecuta `aeat config profile create
-        NOMBRE` para crear tu primer perfil, o `aeat config profile switch NOMBRE`
-        para activar uno existente.'
     format_help: Formato de salida para los resultados del comando
     help_help: Mostrar ayuda orientada al flujo de trabajo
     landing:

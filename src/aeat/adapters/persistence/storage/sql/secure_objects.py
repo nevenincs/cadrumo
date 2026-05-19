@@ -155,6 +155,43 @@ class SecureObjectRepository:
         assert isinstance(local_table, _Table)
         local_table.create(self._engine, checkfirst=True)
 
+    def _check_session_freshness(self) -> None:
+        """Refuse the operation when the active session has crossed its idle deadline.
+
+        Polls :func:`evaluate_idle` against the live
+        :class:`BucketSession` registered in the active-session
+        ContextVar. When the session is sealed or past its deadline,
+        raises :class:`SessionExpiredError` (translated by the CLI
+        error decorator into a refusal that names ``aeat config
+        profile switch`` as the next action). On a fresh session,
+        calls :meth:`BucketSession.touch` to roll the deadline
+        forward by the configured idle window — the operator's
+        active session remains usable for the next window's
+        duration without re-authentication.
+
+        No-op when no session is bound (bootstrap-exempt verbs);
+        the active-gate at the CLI root callback already refused
+        non-exempt verbs that lack a session.
+        """
+
+        from datetime import UTC, datetime
+
+        from ..errors import SessionExpiredError
+        from ..master_key._active_session import _active_session
+        from ..master_key._idle_timeout import evaluate_idle
+
+        session = _active_session.get()
+        if session is None:
+            return
+        now = datetime.now(UTC)
+        outcome = evaluate_idle(session=session, now=now)
+        if outcome.expired:
+            raise SessionExpiredError(
+                "the active profile session has expired; run "
+                "`aeat config profile switch NAME` to re-activate.",
+            )
+        session.touch(now)
+
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""
 
@@ -558,6 +595,7 @@ class SecureObjectRepository:
     ) -> SecureObjectRecord | None:
         """Load and decrypt one object, returning ``None`` when absent."""
 
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             row = session.execute(
                 select(_orm.SecureObjectRow).where(
@@ -590,6 +628,7 @@ class SecureObjectRepository:
         restoring an archive bundle whose natural key was lost in the
         original HMAC), use :meth:`save_with_raw_key` instead.
         """
+        self._check_session_freshness()
         self._save_internal(
             namespace=namespace,
             key=object_key,
@@ -604,6 +643,7 @@ class SecureObjectRepository:
 
         if not writes:
             return
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             for write in writes:
                 self._save_internal_in_session(
@@ -773,6 +813,7 @@ class SecureObjectRepository:
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""
 
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             row_id = session.execute(
                 select(_orm.SecureObjectRow.id).where(

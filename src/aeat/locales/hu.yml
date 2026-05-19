@@ -1449,10 +1449,6 @@ cli:
     app_help_help: Show app workflow help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
-    errors:
-      no_active_profile: 'Nincs aktív profil. Futtasd az `aeat config profile create
-        NÉV` parancsot az első profil létrehozásához, vagy az `aeat config profile
-        switch NÉV` parancsot egy meglévő aktiválásához.'
     format_help: A parancseredmények kimeneti formátuma
     help_help: Show workflow-oriented help
     landing:
