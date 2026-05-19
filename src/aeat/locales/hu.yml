@@ -6,56 +6,56 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: adapters.aeat.clave_movil.errors.pending_petition_blocked
+        pending_petition_blocked: "Az AEAT visszautasította egy új Cl@ve Móvil push küldését, mert egy korábbi hitelesítési kérés még függőben van a szerver oldalon."
       suggestions:
-        reject_pending_request: adapters.aeat.clave_movil.suggestions.reject_pending_request
+        reject_pending_request: "Nyisd meg a Cl@ve appot a telefonodon, utasíts el minden függőben lévő kérést, majd futtasd újra az `aeat config auth test` parancsot (vagy várj akár 5 percet, amíg az AEAT automatikusan kiszórja őket)."
     sede:
       groi:
         suggestions:
-          shape_change: adapters.aeat.sede.groi.suggestions.shape_change
+          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy az AEAT módosította-e a GROI űrlap szerkezetét.
       nif_iva:
         suggestions:
-          shape_change: adapters.aeat.sede.nif_iva.suggestions.shape_change
+          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy az AEAT módosította-e a NIF-IVA űrlap szerkezetét.
       renta_web_open:
         suggestions:
-          shape_change: adapters.aeat.sede.renta_web_open.suggestions.shape_change
+          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy az AEAT módosította-e a Renta WEB Open oldal szerkezetét.
   google:
     calc_sheets:
       errors:
-        api_call_failed: adapters.google.calc_sheets.errors.api_call_failed
-        api_call_refused: adapters.google.calc_sheets.errors.api_call_refused
-        api_target_not_found: adapters.google.calc_sheets.errors.api_target_not_found
-        googleapiclient_not_importable: adapters.google.calc_sheets.errors.googleapiclient_not_importable
+        api_call_failed: "A Google {action} hívás meghiúsult."
+        api_call_refused: "A Google {action} hívást a szerver elutasította (HTTP {status})."
+        api_target_not_found: "A Google {action} célja nem található."
+        googleapiclient_not_importable: A googleapiclient nem importálható; a Google adapter nem éri el az API-t.
     oauth_flow:
       errors:
-        browser_launcher_refused: adapters.google.oauth_flow.errors.browser_launcher_refused
-        client_config_refused: adapters.google.oauth_flow.errors.client_config_refused
-        email_claim_missing: adapters.google.oauth_flow.errors.email_claim_missing
-        endpoint_unreachable: adapters.google.oauth_flow.errors.endpoint_unreachable
-        id_token_missing: adapters.google.oauth_flow.errors.id_token_missing
-        id_token_module_not_importable: adapters.google.oauth_flow.errors.id_token_module_not_importable
-        id_token_verification_failed: adapters.google.oauth_flow.errors.id_token_verification_failed
-        loopback_bind_failed: adapters.google.oauth_flow.errors.loopback_bind_failed
-        oauthlib_not_importable: adapters.google.oauth_flow.errors.oauthlib_not_importable
-        scope_missing: adapters.google.oauth_flow.errors.scope_missing
-        unsecured_mode_refused: adapters.google.oauth_flow.errors.unsecured_mode_refused
+        browser_launcher_refused: Az operációs rendszer böngészőindítója elutasította az OAuth hozzájárulási URL megnyitását.
+        client_config_refused: A Google OAuth kliens konfigurációját a rendszer elutasította.
+        email_claim_missing: A Google id_token érvényesítése sikerült, de nem tartalmaz email mezőt.
+        endpoint_unreachable: A Google OAuth végpont nem elérhető.
+        id_token_missing: A Google nem küldött id_token-t; az OAuth hozzájárulás nem tartalmazta az openid+email scope-okat.
+        id_token_module_not_importable: A google-auth id_token modulja nem importálható.
+        id_token_verification_failed: A Google id_token érvényesítése meghiúsult.
+        loopback_bind_failed: A helyi loopback OAuth fogadó nem tudott portot lefoglalni.
+        oauthlib_not_importable: A google-auth-oauthlib nem importálható; az OAuth folyamat nem indítható el.
+        scope_missing: A Google hozzájárulási képernyő úgy zárult be, hogy nem adta meg az összes szükséges scope-ot.
+        unsecured_mode_refused: A Google OAuth elutasítva, mert a titoktároló unsecured módban fut és az aktív profil valós spanyol adóazonosítót tartalmaz.
       suggestions:
-        close_loopback_port: adapters.google.oauth_flow.suggestions.close_loopback_port
-        open_consent_url_manually: adapters.google.oauth_flow.suggestions.open_consent_url_manually
-        use_keyring_or_synthetic: adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic
+        close_loopback_port: Zárd be azt az alkalmazást, amely egy árván maradt loopback portot tart, és próbáld újra.
+        open_consent_url_manually: Nyisd meg manuálisan a kiírt hozzájárulási URL-t a böngésződben.
+        use_keyring_or_synthetic: Állítsd be az aeat_secret_store_backend=keyring értéket, vagy válts az aktív profilon szintetikus teszt adóazonosítóra.
     profile_binding:
       errors:
-        no_active_profile: adapters.google.profile_binding.errors.no_active_profile
+        no_active_profile: Nincs aktív AEAT profil hozzárendelve a Google OAuth-hoz.
     refresh:
       errors:
-        google_auth_not_importable: adapters.google.refresh.errors.google_auth_not_importable
-        reauth_required: adapters.google.refresh.errors.reauth_required
-        refresh_failed: adapters.google.refresh.errors.refresh_failed
-        refresh_refused: adapters.google.refresh.errors.refresh_refused
-        token_endpoint_unreachable: adapters.google.refresh.errors.token_endpoint_unreachable
+        google_auth_not_importable: A google-auth könyvtár nem importálható; a Google OAuth frissítés nem folytatható.
+        reauth_required: A Google OAuth hitelesítő adat újra-hitelesítésre van jelölve; az automatikus frissítési útvonal le van zárva.
+        refresh_failed: A Google OAuth frissítés meghiúsult.
+        refresh_refused: A Google OAuth visszautasította a frissítési kérést; a refresh token már nem érvényes.
+        token_endpoint_unreachable: A Google OAuth token végpont nem elérhető.
       suggestions:
-        check_network: adapters.google.refresh.suggestions.check_network
-      testing_project_cap_warning: adapters.google.refresh.testing_project_cap_warning
+        check_network: Ellenőrizd a hálózati kapcsolatot a Google OAuth végpontjaival, és próbáld újra.
+      testing_project_cap_warning: "A Google OAuth refresh token közelít a 7 napos Testing projekt limithez (körülbelül {hours_remaining} óra van hátra); futtasd újra az `aeat config google login` parancsot a hitelesítő adat élettartamának meghosszabbításához."
 aggregation:
   iva_ledger:
     errors:
