@@ -14,8 +14,8 @@ from ._schema import SourceReference
 def verify_source_file(root: Path, source: SourceReference) -> None:
     """Verify one source reference against the local repository filesystem."""
 
-    path = (root / source.corpus_path).resolve()
     repo_root = root.resolve()
+    path = _resolve_corpus_path(repo_root, source)
     if repo_root not in path.parents and path != repo_root:
         raise RegistryValidationError(f"source {source.id!r} escapes repository root")
     if not path.is_file():
@@ -26,6 +26,16 @@ def verify_source_file(root: Path, source: SourceReference) -> None:
         raise RegistryValidationError(f"source {source.id!r} byte count mismatch")
     if actual_sha256 != source.sha256:
         raise RegistryValidationError(f"source {source.id!r} sha256 mismatch")
+
+
+def _resolve_corpus_path(root: Path, source: SourceReference) -> Path:
+    direct = (root / source.corpus_path).resolve()
+    if direct.is_file():
+        return direct
+    packaged = (root / "src" / "aeat" / "_data" / source.corpus_path).resolve()
+    if packaged.is_file():
+        return packaged
+    return direct
 
 
 @lru_cache(maxsize=2048)
