@@ -41,7 +41,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._errors import PdfFilingImportError
+from ._errors import PdfModeloImportError
 from ._utils import sha256_file
 
 SCRUB_VERSION = "1.0.0"
@@ -83,7 +83,7 @@ _SCRUB_EMAIL = "demo@example.invalid"
 _SCRUB_CP = "CP 00000"
 
 
-class ScrubError(PdfFilingImportError):
+class ScrubError(PdfModeloImportError):
     """Raised when scrubbing cannot produce a safe output."""
 
 

@@ -10,6 +10,6 @@ with the error-code registry.
 
 from __future__ import annotations
 
-from ....domain.justificante._errors import PdfFilingImportError
+from ....domain.justificante._errors import PdfModeloImportError
 
-__all__ = ["PdfFilingImportError"]
+__all__ = ["PdfModeloImportError"]
