@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...core.errors import AeatError
+from ...core.i18n import tr
 from . import AuthProviderKind
 
 if TYPE_CHECKING:
@@ -179,11 +180,9 @@ def acquire_auth_acquisition_lock(
                 _remove_lock_file(path)
                 continue
             raise AuthAcquisitionLockedError(
-                "Another AEAT auth operation is already in progress for this profile. "
-                "Do not start a second Cl@ve request; wait for the running process to finish "
-                "or let the lock expire if that process crashed.",
+                tr("application.auth.acquisition_lock.errors.lock_held"),
                 context=_status_context(status),
-                suggestion="Run `aeat config auth status --format json` to inspect the active auth lock.",
+                suggestion=tr("application.auth.acquisition_lock.errors.lock_held_suggestion"),
             ) from None
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as file:
@@ -197,7 +196,7 @@ def acquire_auth_acquisition_lock(
     if not acquired:
         status = inspect_auth_acquisition_lock(settings, kind)
         raise AuthAcquisitionLockedError(
-            "AEAT auth lock could not be acquired after stale-lock recovery.",
+            tr("application.auth.acquisition_lock.errors.acquire_failed"),
             context=_status_context(status),
         )
 

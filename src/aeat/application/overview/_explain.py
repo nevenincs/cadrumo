@@ -30,6 +30,7 @@ this union is a contract change; keep it tight so the boundary
 remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
 
+from ...core.i18n import tr
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.deadlines._errors import DeadlineValidationError, ScheduleComputationError
 from ._errors import OverviewExplainError
@@ -132,7 +133,7 @@ def build_overview_explain(
     """
 
     if not modelo.strip():
-        raise OverviewExplainError("modelo identifier must not be blank")
+        raise OverviewExplainError(tr("application.overview.explain.errors.modelo_blank"))
     resolved_year = year or date.today().year
     deadline_engine = engine or DeadlineEngine()
     try:

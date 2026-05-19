@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ...core.i18n import tr
 from ..auth._models import AuthState
 from ._utils import utc_now
 
@@ -231,7 +232,7 @@ def active_bucket_id_or_raise() -> str:
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
-        raise NoActiveProfileError("no active profile bucket")
+        raise NoActiveProfileError(tr("application.workflow.errors.no_active_profile_bucket"))
     return bucket_id
 
 
@@ -258,7 +259,7 @@ def require_active_bucket_id() -> str:
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
-        raise NoActiveProfileError("no active profile bucket")
+        raise NoActiveProfileError(tr("application.workflow.errors.no_active_profile_bucket"))
     return bucket_id
 
 
@@ -276,7 +277,7 @@ def active_transaction_catalogue_repository(
         bucket_id = active_bucket_id_or_raise()
     except NoActiveProfileError as exc:
         raise LedgerNoActiveBucketError(
-            "no active profile bucket",
+            tr("application.workflow.errors.no_active_profile_bucket"),
             context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
             suggestion="aeat config profile create NAME",
         ) from exc

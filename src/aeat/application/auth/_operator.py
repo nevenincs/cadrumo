@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...core.i18n import tr
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import clear_auth_acquisition_lock
 from ._actions import update_auth
@@ -123,7 +124,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     current_state = state_repo.load()
     if current_state.active_profile_bucket_id() is None:
         raise AuthConfigureNoActiveBucketError(
-            "no active profile bucket; run `aeat config profile create NAME` before configuring auth",
+            tr("application.auth.operator.errors.no_active_bucket"),
         )
 
     next_state = _append_bucket_event(
