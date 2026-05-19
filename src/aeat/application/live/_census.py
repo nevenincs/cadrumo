@@ -276,7 +276,7 @@ class CensusSnapshotRepository:
         )
 
 
-class CensusSnapshotService:
+class CensusSnapshotService(SnapshotService[CensusSnapshot]):
     """Canonical backend service for bucket-scoped 036 census snapshots.
 
     Mirrors :class:`Borrador100SnapshotService`. The CLI's
@@ -298,12 +298,10 @@ class CensusSnapshotService:
         bucket_id: str,
         repository: CensusSnapshotRepository | None = None,
     ) -> None:
-        self._repository = repository or CensusSnapshotRepository(bucket_id=bucket_id)
-        if self._repository.bucket_id != bucket_id.strip():
-            raise LiveApplicationInputError(
-                f"census service bucket_id={bucket_id!r} does not match repository bucket "
-                f"{self._repository.bucket_id!r}",
-            )
+        resolved_repository = repository or CensusSnapshotRepository(bucket_id=bucket_id)
+        super().__init__(bucket_id=bucket_id, repository=resolved_repository)
+
+    # ---- public API (signatures unchanged for external callers) ----------
 
     def capture(
         self,
@@ -320,53 +318,26 @@ class CensusSnapshotService:
         and returned without supersession.
         """
 
-        snapshot_id = derive_census_snapshot_id(
+        return self._capture_with_lifecycle(
             profile_id=profile_id,
             captured_at=captured_at,
             source_url=source_url,
             census_facts=census_facts,
         )
-        if self._repository.exists(snapshot_id):
-            return self._repository.load(snapshot_id)
-        snapshot = CensusSnapshot(
-            snapshot_id=snapshot_id,
-            bucket_id=self._repository.bucket_id,
-            profile_id=profile_id.strip(),
-            captured_at=captured_at,
-            source_url=source_url,
-            state=CensusSnapshotState.ACTIVE,
-            census_facts=dict(census_facts),
-        )
-        active_snapshot = self._latest_active_for_profile(snapshot)
-        if active_snapshot is not None and active_snapshot.captured_at > snapshot.captured_at:
-            snapshot = snapshot.model_copy(
-                update={
-                    "state": CensusSnapshotState.SUPERSEDED,
-                    "superseded_by_snapshot_id": active_snapshot.snapshot_id,
-                },
-            )
-            self._repository.save(snapshot)
-            return snapshot
-        self._supersede_current_for_profile(snapshot)
-        self._repository.save(snapshot)
-        return snapshot
 
-    def list_snapshots(
+    def list_snapshots(  # type: ignore[override]
         self,
         *,
         profile_id: str | None = None,
-        state: CensusSnapshotState | None = CensusSnapshotState.ACTIVE,
+        state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
     ) -> tuple[CensusSnapshot, ...]:
-        snapshots = self._repository.list_snapshots()
+        snapshots: tuple[CensusSnapshot, ...] = super().list_snapshots()
         if profile_id is not None:
             trimmed = profile_id.strip()
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.profile_id == trimmed)
         if state is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.state is state)
         return snapshots
-
-    def resolve_snapshot(self, snapshot_id: str) -> CensusSnapshot:
-        return self._repository.resolve(snapshot_id)
 
     def latest_active(self, *, profile_id: str) -> CensusSnapshot | None:
         snapshots = self.list_snapshots(profile_id=profile_id)
@@ -393,11 +364,11 @@ class CensusSnapshotService:
         if not trimmed_actor:
             raise LiveApplicationInputError("discarded_by must not be blank")
         existing = self._repository.resolve(snapshot_id)
-        if existing.state is CensusSnapshotState.DISCARDED:
+        if existing.state is SnapshotLifecycleState.DISCARDED:
             return existing
         updated = existing.model_copy(
             update={
-                "state": CensusSnapshotState.DISCARDED,
+                "state": SnapshotLifecycleState.DISCARDED,
                 "discarded_at": datetime.now(UTC),
                 "discarded_by": trimmed_actor,
                 "discard_reason": discard_reason.strip(),
@@ -407,35 +378,48 @@ class CensusSnapshotService:
         self._repository.save(updated)
         return updated
 
-    def _supersede_current_for_profile(self, replacement: CensusSnapshot) -> None:
-        for snapshot in self._repository.list_snapshots():
-            if (
-                snapshot.snapshot_id != replacement.snapshot_id
-                and snapshot.profile_id == replacement.profile_id
-                and snapshot.state is CensusSnapshotState.ACTIVE
-            ):
-                self._repository.save(
-                    snapshot.model_copy(
-                        update={
-                            "state": CensusSnapshotState.SUPERSEDED,
-                            "superseded_by_snapshot_id": replacement.snapshot_id,
-                        },
-                    ),
-                )
+    # ---- SnapshotService[CensusSnapshot] hooks ---------------------------
 
-    def _latest_active_for_profile(self, snapshot: CensusSnapshot) -> CensusSnapshot | None:
-        active = [
-            candidate
-            for candidate in self._repository.list_snapshots()
-            if (
-                candidate.snapshot_id != snapshot.snapshot_id
-                and candidate.profile_id == snapshot.profile_id
-                and candidate.state is CensusSnapshotState.ACTIVE
-            )
-        ]
-        if not active:
-            return None
-        return max(active, key=lambda candidate: (candidate.captured_at, candidate.snapshot_id))
+    def _derive_snapshot_id(self, **kwargs: Any) -> str:
+        return derive_census_snapshot_id(
+            profile_id=kwargs["profile_id"],
+            captured_at=kwargs["captured_at"],
+            source_url=kwargs["source_url"],
+            census_facts=kwargs["census_facts"],
+        )
+
+    def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> CensusSnapshot:
+        return CensusSnapshot(
+            snapshot_id=snapshot_id,
+            bucket_id=self._repository.bucket_id,
+            profile_id=kwargs["profile_id"].strip(),
+            captured_at=kwargs["captured_at"],
+            source_url=kwargs["source_url"],
+            state=SnapshotLifecycleState.ACTIVE,
+            census_facts=dict(kwargs["census_facts"]),
+        )
+
+    def _payload_axis_key(self, payload: CensusSnapshot) -> tuple[Any, ...]:
+        return (payload.profile_id,)
+
+    def _payload_captured_at(self, payload: CensusSnapshot) -> datetime:
+        return payload.captured_at
+
+    def _payload_snapshot_id(self, payload: CensusSnapshot) -> str:
+        return payload.snapshot_id
+
+    def _payload_state(self, payload: CensusSnapshot) -> SnapshotLifecycleState:
+        return payload.state
+
+    def _demote_to_superseded(
+        self, payload: CensusSnapshot, *, superseded_by: str
+    ) -> CensusSnapshot:
+        return payload.model_copy(
+            update={
+                "state": SnapshotLifecycleState.SUPERSEDED,
+                "superseded_by_snapshot_id": superseded_by,
+            }
+        )
 
 
 __all__ = [
