@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import warnings
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
@@ -19,6 +20,7 @@ from ._bindings import (
 )
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
+from ._relations import _derive_offset_source_period
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
     CasillaDefinition,
@@ -342,6 +344,9 @@ class RegistryValidator:
         # the corpus and enforces intra-role data_type and constraints
         # consistency. Typo-twin warnings are emitted out-of-band.
         failures.extend(_validate_semantic_role_consistency(modelo_tuple))
+        # Hard-flip: required-role label patterns must declare the
+        # canonical role on every matching casilla.
+        failures.extend(_validate_required_role_declarations(modelo_tuple))
         _emit_semantic_role_typo_twin_warnings(modelo_tuple)
 
         if failures:
@@ -1295,7 +1300,9 @@ class RegistryValidator:
         if source_modelo is None:
             failures.append(f"{relation_scope} references unknown source modelo {relation.source_modelo!r}")
             return failures
-        if not relation.source_periods:
+        source_periods, period_failures = RegistryValidator._relation_source_periods_for_validation(relation)
+        failures.extend(f"{relation_scope} {failure}" for failure in period_failures)
+        if not source_periods:
             failures.append(f"{relation_scope} must declare source periods")
         if not relation.target_periods:
             failures.append(f"{relation_scope} must declare target periods")
@@ -1327,7 +1334,7 @@ class RegistryValidator:
                 relation_scope,
                 target_selector=revision.period_selector,
                 source_revisions=source_revisions,
-                source_periods=relation.source_periods,
+                source_periods=source_periods,
                 filing_year_delta=RegistryValidator._relation_filing_year_delta(
                     relation.source_revision_selector
                 ),
@@ -1350,14 +1357,34 @@ class RegistryValidator:
         source_values = RegistryValidator._revision_output_ids(source_revision)
         if relation.source_output not in source_values:
             failures.append(f"{source_scope} has no source output {relation.source_output!r}")
+        source_periods, period_failures = RegistryValidator._relation_source_periods_for_validation(relation)
+        failures.extend(f"{source_scope} {failure}" for failure in period_failures)
         unknown_source_periods = sorted(
-            set(relation.source_periods).difference(source_revision.period_selector.periods)
+            set(source_periods).difference(source_revision.period_selector.periods)
         )
         if unknown_source_periods:
             failures.append(
                 f"{source_scope} does not support source periods {unknown_source_periods!r}"
             )
         return failures
+
+    @staticmethod
+    def _relation_source_periods_for_validation(relation: RelationDefinition) -> tuple[tuple[str, ...], list[str]]:
+        if relation.source_periods:
+            return relation.source_periods, []
+        if relation.source_period_offset_from_target is None:
+            return (), []
+        derived: list[str] = []
+        failures: list[str] = []
+        for target_period in relation.target_periods:
+            try:
+                source_period = _derive_offset_source_period(relation, target_period=target_period)
+            except RegistryValidationError as exc:
+                failures.append(str(exc))
+                continue
+            if source_period is not None:
+                derived.append(source_period)
+        return tuple(dict.fromkeys(derived)), failures
 
     @staticmethod
     def _validate_previous_filing_binding_closure(
@@ -2502,3 +2529,85 @@ def _emit_semantic_role_typo_twin_warnings(
             "likely typo or missing role declarations on sibling casillas",
             stacklevel=2,
         )
+
+
+# Plan C W05 validator hard-flip surface (semantic_role requirement).
+#
+# Each entry is (label_pattern, expected_role). A casilla whose label
+# matches the pattern must declare the expected semantic_role; missing
+# declarations raise RegistryValidationError at snapshot build. The set
+# starts conservative — only patterns where corpus rollout is provably
+# complete should land here. Modellers extending this set must run a
+# discovery audit first to confirm all in-corpus casillas already carry
+# the role.
+#
+# Today's enforcement set:
+# - "Ejercicio al que se refiere la declaracion" -> filing_year
+#   (16 casillas covered across 13 modelos, complete rollout
+#   per the role-rollout-strategy audit).
+_REQUIRED_ROLE_LABEL_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^Ejercicio al que se refiere la declaracion$", re.IGNORECASE), "filing_year"),
+)
+
+
+def _validate_required_role_declarations(
+    modelos: Iterable[ModeloDefinition],
+) -> tuple[str, ...]:
+    """Hard-flip: every casilla matching a required-role label pattern must declare that role.
+
+    Each entry in :data:`_REQUIRED_ROLE_LABEL_PATTERNS` names a label
+    pattern plus the canonical role expected on every matching casilla.
+    A miss-declared casilla (wrong role or missing role) is a snapshot-
+    build failure. Start the set narrow and widen as role rollouts
+    complete.
+    """
+
+    failures: list[str] = []
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            for casilla in revision.casillas:
+                for pattern, expected_role in _REQUIRED_ROLE_LABEL_PATTERNS:
+                    if not pattern.match(casilla.label):
+                        continue
+                    if casilla.semantic_role is None:
+                        failures.append(
+                            f"required-role gate: casilla "
+                            f"{modelo.id}.{revision.id}.{casilla.id} label "
+                            f"{casilla.label!r} matches pattern {pattern.pattern!r} "
+                            f"but declares no semantic_role (expected "
+                            f"{expected_role!r})"
+                        )
+                    elif casilla.semantic_role != expected_role:
+                        failures.append(
+                            f"required-role gate: casilla "
+                            f"{modelo.id}.{revision.id}.{casilla.id} label "
+                            f"{casilla.label!r} matches pattern {pattern.pattern!r} "
+                            f"but declares semantic_role "
+                            f"{casilla.semantic_role!r} (expected "
+                            f"{expected_role!r})"
+                        )
+    return tuple(failures)
+
+
+def collect_casillas_by_semantic_role(
+    modelos: Iterable[ModeloDefinition],
+) -> Mapping[str, tuple[tuple[str, str, str], ...]]:
+    """Cross-reference accessor: role -> tuple of (modelo_id, revision_id, casilla_id).
+
+    Used by downstream consumers that need to walk every casilla
+    sharing a semantic role across the corpus. The returned mapping
+    is immutable and document-order stable per role; the validator
+    consumes the same accessor through
+    :func:`_collect_role_observations` internally.
+    """
+
+    grouped: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            for casilla in revision.casillas:
+                if casilla.semantic_role is None:
+                    continue
+                grouped[casilla.semantic_role].append(
+                    (modelo.id, revision.id, casilla.id)
+                )
+    return {role: tuple(occs) for role, occs in grouped.items()}

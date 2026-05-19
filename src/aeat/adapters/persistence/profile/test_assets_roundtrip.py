@@ -22,10 +22,6 @@ from pathlib import Path
 
 import pytest
 
-from ...persistence.storage import EphemeralMasterKeyProvider
-from ...persistence.storage.sql import SecureObjectRepository
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
 from ....core.config import Settings
 from ....domain.profile.assets import (
     AmortizationEntry,
@@ -35,6 +31,10 @@ from ....domain.profile.assets import (
     AssetsLedgerDocument,
     LibertadAmortizacionElection,
 )
+from ...persistence.storage import EphemeralMasterKeyProvider
+from ...persistence.storage.sql import SecureObjectRepository
+from ...persistence.storage.sql._orm import Base
+from ...persistence.storage.sql.engine import create_engine_from_settings
 from .assets import (
     AmortizationLedgerRepository,
     AssetsLedgerRepository,
@@ -186,7 +186,7 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
             regression_caught = False
             try:
                 assets_repo.load()
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: corrupting cost_basis to "

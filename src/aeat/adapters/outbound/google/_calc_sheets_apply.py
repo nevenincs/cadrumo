@@ -16,9 +16,9 @@ Composition:
   protected ranges, and developer metadata stamping the engine
   version + registry SHA.
 
-The adapter raises typed `StorageError` subclasses on Drive / Sheets
-failures (e.g., `StoragePermissionError` for 401/403, `StorageNotFoundError`
-for 404, `StorageConflictError` when refusing foreign Drive content),
+The adapter raises typed `OutboundStorageError` subclasses on Drive / Sheets
+failures (e.g., `OutboundStoragePermissionError` for 401/403, `OutboundStorageNotFoundError`
+for 404, `OutboundStorageConflictError` when refusing foreign Drive content),
 with concrete remediation context attached.
 """
 
@@ -41,12 +41,12 @@ from ....application.storage.calc_sheets import (
 )
 from ....core.config import Settings as _Settings
 from ...outbound.storage._errors import (
-    StorageConflictError,
-    StorageError,
-    StorageNetworkError,
-    StorageNotFoundError,
-    StoragePermissionError,
-    StorageValidationError,
+    OutboundStorageConflictError,
+    OutboundStorageError,
+    OutboundStorageNetworkError,
+    OutboundStorageNotFoundError,
+    OutboundStoragePermissionError,
+    OutboundStorageValidationError,
 )
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
@@ -82,7 +82,7 @@ def _drive_service(credentials: object) -> Any:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise StorageNetworkError(
+        raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             suggestion="uv sync",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
@@ -94,7 +94,7 @@ def _sheets_service(credentials: object) -> Any:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise StorageNetworkError(
+        raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             suggestion="uv sync",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
@@ -105,7 +105,7 @@ def _sheets_service(credentials: object) -> Any:
 def _execute(request: Any, *, action: str) -> Any:
     try:
         return request.execute()
-    except StorageError:
+    except OutboundStorageError:
         raise
     except Exception as exc:
         from googleapiclient.errors import HttpError
@@ -113,19 +113,19 @@ def _execute(request: Any, *, action: str) -> Any:
         if isinstance(exc, HttpError):
             status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
             if status in (401, 403):
-                raise StoragePermissionError(
+                raise OutboundStoragePermissionError(
                     f"Google {action} refused (HTTP {status}): {exc}",
                     suggestion="aeat config google login",
                     context={"action": action, "status": status},
                     translated_message="adapters.google.calc_sheets.errors.api_call_refused",
                 ) from exc
             if status == 404:
-                raise StorageNotFoundError(
+                raise OutboundStorageNotFoundError(
                     f"Google {action} target not found (HTTP 404): {exc}",
                     context={"action": action},
                     translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
                 ) from exc
-        raise StorageNetworkError(
+        raise OutboundStorageNetworkError(
             f"Google {action} failed: {exc}",
             context={"action": action},
             translated_message="adapters.google.calc_sheets.errors.api_call_failed",
@@ -167,7 +167,7 @@ def _find_folder(
                 action="drive.files.update.backfill_marker",
             )
             return entry
-        raise StorageConflictError(
+        raise OutboundStorageConflictError(
             f"folder named {name!r} under parent {parent_id!r} exists but is not marked as "
             "app-owned; refusing to adopt foreign Drive content",
             context={"parent_id": parent_id, "name": name},
@@ -239,7 +239,7 @@ def _find_spreadsheet(
                 action="drive.files.update.backfill_marker.spreadsheet",
             )
             return entry
-        raise StorageConflictError(
+        raise OutboundStorageConflictError(
             f"spreadsheet {name!r} exists under parent {parent_id!r} but is not marked as "
             "app-owned; refusing to overwrite",
             context={"parent_id": parent_id, "name": name},
@@ -702,19 +702,19 @@ def apply_export_plan(
         A `CalcSheetsApplyResult` with the spreadsheet's id and URL.
 
     Raises:
-        StoragePermissionError: The Drive scope grant is insufficient
+        OutboundStoragePermissionError: The Drive scope grant is insufficient
             (HTTP 401 / 403 mapped from `googleapiclient.errors.HttpError`).
-        StorageNotFoundError: The supplied root folder id does not exist
+        OutboundStorageNotFoundError: The supplied root folder id does not exist
             or is not visible to the operator (HTTP 404).
-        StorageConflictError: A folder or spreadsheet matching the
+        OutboundStorageConflictError: A folder or spreadsheet matching the
             engine's target name exists but is not marked as app-owned.
-        StorageNetworkError: A transport or unmapped HTTP failure.
-        StorageValidationError: The plan is internally inconsistent or
+        OutboundStorageNetworkError: A transport or unmapped HTTP failure.
+        OutboundStorageValidationError: The plan is internally inconsistent or
             the supplied `root_folder_id` is blank.
     """
 
     if not root_folder_id.strip():
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             "root_folder_id must not be blank",
             context={"root_folder_id": root_folder_id},
         )

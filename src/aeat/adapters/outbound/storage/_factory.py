@@ -19,7 +19,7 @@ Composition order:
    - `LOCAL_FILESYSTEM` → `LocalFileSystemProvider(root=settings.aeat_local_storage_root / profile)`
    - `GOOGLE_DRIVE` → loads `oauth-client` + `oauth-token` for profile, builds `Credentials`,
      instantiates `GoogleDriveProvider(credentials=..., root_folder_id=settings.aeat_google_drive_root_folder_id)`.
-4. Refuse unknown kinds with `StorageValidationError`.
+4. Refuse unknown kinds with `OutboundStorageValidationError`.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from google.oauth2.credentials import Credentials
 
 from ....core.config import Settings, load_settings
-from ._errors import StorageError, StorageValidationError
+from ._errors import OutboundStorageError, OutboundStorageValidationError
 from ._google_drive import GoogleDriveProvider
 from ._local import LocalFileSystemProvider
 from ._protocol import StorageProvider
@@ -40,7 +40,7 @@ from ._records import ProviderKind
 def _parse_kind(raw: str) -> ProviderKind:
     cleaned = raw.strip().lower()
     if not cleaned:
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             "aeat_storage_provider_kind is empty",
             context={"value": raw},
         )
@@ -48,7 +48,7 @@ def _parse_kind(raw: str) -> ProviderKind:
         return ProviderKind(cleaned)
     except ValueError as exc:
         valid = sorted(kind.value for kind in ProviderKind)
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             f"aeat_storage_provider_kind={raw!r} is not a recognised ProviderKind; expected one of {valid!r}",
             context={"value": raw, "expected": valid},
         ) from exc
@@ -65,21 +65,21 @@ def _build_google_credentials(*, profile: str) -> Credentials:
 
     client = load_client(profile)
     if client is None:
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             f"no Google OAuth client registered for profile {profile!r}; "
             "run `aeat config google register --client-json <path>` first",
             context={"profile": profile},
         )
     token = load_token(profile)
     if token is None:
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             f"no Google OAuth token persisted for profile {profile!r}; run `aeat config google login` first",
             context={"profile": profile},
         )
     try:
         from google.oauth2.credentials import Credentials
     except ImportError as exc:
-        raise StorageError(
+        raise OutboundStorageError(
             f"google-auth not importable: {exc}",
             suggestion="uv sync",
         ) from exc
@@ -142,7 +142,7 @@ def get_storage_provider(
         root directory / folder ID for the resolved profile.
 
     Raises:
-        StorageValidationError: When the settings value is unknown, the
+        OutboundStorageValidationError: When the settings value is unknown, the
             Drive backend is selected without `aeat_google_drive_root_folder_id`,
             or the profile lacks the records the chosen backend needs.
         GoogleAuthProfileUnboundError: When no profile is bound.
@@ -159,7 +159,7 @@ def get_storage_provider(
     if kind is ProviderKind.GOOGLE_DRIVE:
         root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings_resolved)
         if not root_folder_id:
-            raise StorageValidationError(
+            raise OutboundStorageValidationError(
                 "no Drive root folder id is configured for this profile; "
                 "set it via `aeat config google folder set <id>` "
                 "(or the AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID env var for one-off runs)",
@@ -169,7 +169,7 @@ def get_storage_provider(
         return GoogleDriveProvider(credentials=credentials, root_folder_id=root_folder_id)
 
     # Should never be reached — _parse_kind already refused unknown kinds.
-    raise StorageValidationError(
+    raise OutboundStorageValidationError(
         f"unhandled ProviderKind {kind!r}",
         context={"kind": kind.value},
     )

@@ -32,6 +32,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...domain.calculations.registry._bindings import (
     RegistryFilingObservation,
+    previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
 from ...domain.calculations.registry._schema import RegistrySnapshot
@@ -99,25 +100,36 @@ def _gather_observations(
     """
 
     needed: dict[tuple[str, int, str], RegistryFilingObservation] = {}
-    for binding in snapshot.revision.bindings:
-        if binding.source != "previous_filing":
+    for requirement in previous_filing_observation_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    ):
+        payload = repository.load(requirement.modelo, requirement.filing_year, requirement.period)
+        if payload is None:
             continue
-        selector = binding.selector
-        source_modelo = str(getattr(selector, "source_modelo", "") or "")
-        if not source_modelo:
-            continue
-        delta = _selector_year_delta(getattr(selector, "filing_year_delta", 0))
-        target_year = snapshot.filing_year + delta
-        source_periods = _selector_periods(getattr(selector, "source_periods", ()))
-        for payload in repository.iter_modelo(source_modelo):
-            obs = payload.observation
-            if obs.filing_year != target_year:
-                continue
-            if source_periods and obs.period not in source_periods:
-                continue
-            key = (obs.modelo, obs.filing_year, obs.period)
-            needed.setdefault(key, obs)
+        obs = payload.observation
+        key = (obs.modelo, obs.filing_year, obs.period)
+        needed.setdefault(key, obs)
     return tuple(needed.values())
+
+
+def _requirements_by_binding(
+    snapshot: RegistrySnapshot,
+) -> dict[str, tuple[str, int, tuple[str, ...]]]:
+    grouped: dict[str, tuple[str, int, set[str]]] = {}
+    for requirement in previous_filing_observation_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    ):
+        for binding_id in requirement.binding_ids:
+            current = grouped.setdefault(binding_id, (requirement.modelo, requirement.filing_year, set()))
+            current[2].add(requirement.period)
+    return {
+        binding_id: (source_modelo, source_year, tuple(sorted(periods)))
+        for binding_id, (source_modelo, source_year, periods) in grouped.items()
+    }
 
 
 def resolve_bindings_from_local_store(
@@ -163,19 +175,26 @@ def resolve_bindings_from_local_store(
 
     prefilled: list[PrefilledBinding] = []
     binding_index = {binding.id: binding for binding in snapshot.revision.bindings}
+    requirement_index = _requirements_by_binding(snapshot)
     for binding_id, value in resolved_map.items():
         binding = binding_index.get(binding_id)
         if binding is None:
             continue
         selector = binding.selector
-        source_periods = _selector_periods(getattr(selector, "source_periods", ()))
+        source_modelo, source_filing_year, source_periods = requirement_index.get(
+            binding_id,
+            (
+                str(getattr(selector, "source_modelo", "") or ""),
+                snapshot.filing_year + _selector_year_delta(getattr(selector, "filing_year_delta", 0)),
+                _selector_periods(getattr(selector, "source_periods", ())),
+            ),
+        )
         prefilled.append(
             PrefilledBinding(
                 binding_id=binding_id,
                 value=Decimal(value),
-                source_modelo=str(getattr(selector, "source_modelo", "") or ""),
-                source_filing_year=snapshot.filing_year
-                + _selector_year_delta(getattr(selector, "filing_year_delta", 0)),
+                source_modelo=source_modelo,
+                source_filing_year=source_filing_year,
                 source_periods=source_periods,
                 resolved_at=when,
             )

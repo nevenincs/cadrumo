@@ -50,7 +50,7 @@ from ..errors import (
     StorageValidationError,
 )
 from ..master_key._active_session import get_active_master_key
-from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
+from ..master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
 

@@ -16,6 +16,7 @@ from ...application.workflow import (
     active_transaction_catalogue_repository,
     workflow_state_repository,
 )
+from ...core.i18n import tr
 from ...core.output_rendering import render_command_output
 from ...core.resources import resources
 from ...domain.calculations.registry import (
@@ -27,7 +28,6 @@ from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
 from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogue, TransactionCatalogueRepository
-from ...core.i18n import tr
 
 # ---------------------------------------------------------------------
 # Transport helpers

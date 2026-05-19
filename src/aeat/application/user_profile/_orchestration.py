@@ -27,7 +27,7 @@ from ...domain.user_profile import (
 )
 from ..workflow._bucket_pointer import BucketPointer
 from ..workflow._bucket_pointer_io import write_pointer
-from ..workflow._models import ProfileBucketPointer, WorkflowEvent, WorkflowState
+from ..workflow._models import WorkflowEvent, WorkflowState
 from ..workflow._utils import utc_now
 from . import (
     EditProfileFieldCommand,

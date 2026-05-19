@@ -36,6 +36,7 @@ from ...core.logging import get_logger
 from ...domain.calculations.registry._bindings import RegistryFilingObservation
 from ...domain.calculations.registry._errors import RegistryValidationError
 from ...domain.calculations.registry._relations import (
+    relation_source_requirements,
     resolve_relation_values_from_observations,
 )
 from ...domain.calculations.registry._schema import RegistrySnapshot
@@ -52,25 +53,26 @@ def _gather_observations_for_snapshot(
 ) -> tuple[RegistryFilingObservation, ...]:
     """Collect every observation a relation in `snapshot.revision` could need.
 
-    Walks every relation, computes the set of `(source_modelo,
-    source_periods)` requirements, and pulls matching observations
+    Uses the registry relation requirement resolver to compute the set of
+    `(source_modelo, filing_year, period)` requirements, and pulls matching observations
     from the local store. Returns the union (deduplicated) so the
     runtime resolver can fold them through the declared aggregation
     in one pass.
     """
 
     needed: dict[tuple[str, int, str], RegistryFilingObservation] = {}
-    target_year = snapshot.filing_year
-    for relation in snapshot.revision.relations:
-        delta = int(
-            relation.source_revision_selector.get("filing_year_delta", 0) if relation.source_revision_selector else 0
-        )
-        source_year = target_year + delta
-        for payload in repository.iter_modelo(relation.source_modelo):
+    requirements = relation_source_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+    for requirement in requirements:
+        required_periods = set(requirement.periods)
+        for payload in repository.iter_modelo(requirement.source_modelo):
             obs = payload.observation
-            if obs.filing_year != source_year:
+            if obs.filing_year != requirement.filing_year:
                 continue
-            if relation.source_periods and obs.period not in relation.source_periods:
+            if obs.period not in required_periods:
                 continue
             key = (obs.modelo, obs.filing_year, obs.period)
             needed.setdefault(key, obs)
@@ -111,6 +113,15 @@ def resolve_relations_from_local_store(
     repo = repository if repository is not None else CalculationObservationRepository()
     when = captured_at if captured_at is not None else datetime.now(UTC)
     observations = _gather_observations_for_snapshot(snapshot, repository=repo)
+    requirements_by_relation = {
+        relation_id: requirement
+        for requirement in relation_source_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        for relation_id in requirement.relation_ids
+    }
 
     if observations:
         try:
@@ -143,9 +154,11 @@ def resolve_relations_from_local_store(
 
     values: list[RelationValue] = []
     for relation in snapshot.revision.relations:
-        target_year = snapshot.filing_year + int(
+        requirement = requirements_by_relation.get(relation.id)
+        target_year = requirement.filing_year if requirement is not None else snapshot.filing_year + int(
             relation.source_revision_selector.get("filing_year_delta", 0) if relation.source_revision_selector else 0
         )
+        source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
         resolved = resolved_map.get(relation.id)
         if resolved is None:
             values.append(RelationValue(relation=relation.id, value=None))
@@ -156,12 +169,12 @@ def resolve_relations_from_local_store(
                 value=Decimal(resolved),
                 provenance=_LOCAL_FILING_PROVENANCE,
                 source_filing_year=target_year,
-                source_periods=tuple(relation.source_periods),
+                source_periods=source_periods,
                 resolved_at=when,
                 note=_provenance_note(
                     relation.id,
                     relation.source_modelo,
-                    tuple(relation.source_periods),
+                    source_periods,
                     target_year,
                     when,
                 ),

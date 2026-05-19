@@ -93,7 +93,7 @@ CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
     ("aeat.adapters.outbound.google", "OAuthClient"),
     ("aeat.adapters.outbound.google", "GoogleAuthError"),
     ("aeat.adapters.outbound.storage", "StorageProvider"),
-    ("aeat.adapters.outbound.storage", "StorageError"),
+    ("aeat.adapters.outbound.storage", "OutboundStorageError"),
     ("aeat.adapters.outbound.storage", "get_storage_provider"),
     ("aeat.application.auth", "select_provider"),
 )

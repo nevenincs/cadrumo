@@ -43,6 +43,7 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
+from ...core.i18n import tr
 from ...domain.calculations.registry import RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
@@ -52,7 +53,6 @@ from ...domain.modelos._filing_record import FilingRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date, _profile_to_autonomo
-from ...core.i18n import tr
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 
@@ -136,10 +136,28 @@ def _run_query[T](call: Callable[[], T]) -> T:
 )
 def modelo_readiness(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.readiness.modelo_help", default="Modelo code (e.g. 303)."))],
-    revision_id: Annotated[str, typer.Option("--revision-id", help=tr("cli.app.modelo.readiness.revision_help", default="Registry revision id."))],
-    filing_year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.readiness.year_help", default="Filing year."))],
-    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.readiness.period_help", default="Period token (e.g. Q1, annual)."))] = None,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.readiness.modelo_help", default="Modelo code (e.g. 303).")),
+    ],
+    revision_id: Annotated[
+        str,
+        typer.Option(
+            "--revision-id",
+            help=tr("cli.app.modelo.readiness.revision_help", default="Registry revision id."),
+        ),
+    ],
+    filing_year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.readiness.year_help", default="Filing year.")),
+    ],
+    period: Annotated[
+        str | None,
+        typer.Option(
+            "--period",
+            help=tr("cli.app.modelo.readiness.period_help", default="Period token (e.g. Q1, annual)."),
+        ),
+    ] = None,
 ) -> None:
     """Walk the ProfilePreflightService over the active profile for one modelo target.
 
@@ -155,12 +173,10 @@ def modelo_readiness(
     )
     from ...application.user_profile._preflight import ProfilePreflightService
     from ...application.workflow._models import resolve_active_bucket_id
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.workflow._profile_bucket_scan import read_profile_bucket
     from ...core.i18n import tr as _tr
     from ...domain.user_profile import ProfileNotFoundError
     from ._errors import CliRefusedBoundaryError
-
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
 
     active = resolve_active_bucket_id()
     if active is None:
@@ -1942,7 +1958,6 @@ def _evidence_bundle_service():
 
 def _audit_bucket_id() -> str:
     from ...application.workflow._models import active_bucket_id_or_raise
-    from ...application.workflow._persistence import workflow_state_repository
 
     try:
         return active_bucket_id_or_raise()

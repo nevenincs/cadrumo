@@ -115,10 +115,11 @@ def test_initialize_workspace_preserves_salt_when_manifest_already_present(
     registration.
     """
 
+    from datetime import UTC, datetime
+
     from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
     from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, KdfParams
     from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
-    from datetime import UTC, datetime
 
     settings = load_settings()
     paths = provision_bucket_directory(settings.aeat_local_storage_root, "catering")

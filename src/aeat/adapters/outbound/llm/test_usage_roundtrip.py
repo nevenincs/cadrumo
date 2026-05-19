@@ -19,11 +19,11 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import Settings
 from ...persistence.storage import EphemeralMasterKeyProvider
 from ...persistence.storage.sql import SecureObjectRepository
 from ...persistence.storage.sql._orm import Base
 from ...persistence.storage.sql.engine import create_engine_from_settings
-from ....core.config import Settings
 from ._models import LLMProvider, UsageRecord
 from ._usage import UsageRecorder
 

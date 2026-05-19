@@ -163,6 +163,36 @@ def resolve_relation_values_from_observations(
     return resolve_relation_values(revision, external_outputs, period=period)
 
 
+def materialize_relation_binding_values(
+    revision: ModeloRevision,
+    relation_values: Mapping[str, Decimal],
+    *,
+    period: str | None = None,
+) -> dict[str, Decimal]:
+    """Copy resolved relation values into their declared target bindings.
+
+    Relation ids remain the canonical formula-runtime keys. This helper is an
+    additive bridge for registry rows that also declare ``target_binding`` so
+    bound casillas can consume a relation-backed value without duplicating
+    relation resolution in the application layer.
+    """
+
+    values: dict[str, Decimal] = {}
+    for relation in _active_relations(revision, period=period):
+        if relation.id not in relation_values:
+            continue
+        value = relation_values[relation.id]
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError(f"relation {relation.id!r} materialization requires a Decimal value")
+        existing = values.get(relation.target_binding)
+        if existing is not None and existing != value:
+            raise RegistryValidationError(
+                f"target binding {relation.target_binding!r} receives conflicting relation values"
+            )
+        values[relation.target_binding] = value
+    return values
+
+
 def _active_relations(revision: ModeloRevision, *, period: str | None) -> tuple[RelationDefinition, ...]:
     if period is None:
         return revision.relations

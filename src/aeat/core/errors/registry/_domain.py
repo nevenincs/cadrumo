@@ -1062,6 +1062,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._actions.ModeloIvaWalletReconciliationBlocked",
+        ErrorCode(
+            code="ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_iva_wallet_reconciliation_blocked",
+            default_suggestion="aeat app live iva-wallet pull",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._actions.FilingRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",

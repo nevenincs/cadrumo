@@ -22,7 +22,7 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from . import ProfileBucketPointer, WorkflowState, active_transaction_catalogue_repository
+from . import WorkflowState, active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -31,7 +31,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     provider = EphemeralMasterKeyProvider()
     with provider:
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"))
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+        )
         Base.metadata.create_all(engine)
         try:
             yield SecureObjectRepository(engine=engine)

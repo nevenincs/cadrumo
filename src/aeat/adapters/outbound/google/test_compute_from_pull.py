@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ...outbound.storage._errors import StorageConflictError
+from ...outbound.storage._errors import OutboundStorageConflictError
 from ._calc_sheets_pull import (
     BindingEdit,
     OperatorEdit,
@@ -118,7 +118,7 @@ def test_compute_from_pull_refuses_stale_workbook() -> None:
         cells_read=0,
     )
 
-    with pytest.raises(StorageConflictError, match="metadata_match='stale'"):
+    with pytest.raises(OutboundStorageConflictError, match="metadata_match='stale'"):
         compute_from_pull(snapshot, pull)
 
 
@@ -134,7 +134,7 @@ def test_compute_from_pull_refuses_missing_metadata() -> None:
         cells_read=0,
     )
 
-    with pytest.raises(StorageConflictError, match="metadata_match='missing'"):
+    with pytest.raises(OutboundStorageConflictError, match="metadata_match='missing'"):
         compute_from_pull(snapshot, pull)
 
 

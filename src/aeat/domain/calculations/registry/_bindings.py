@@ -252,7 +252,10 @@ def resolve_previous_filing_binding_values(
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
         values = []
-        for required_period in selector.required_periods_for_target(period):
+        required_periods = selector.required_periods_for_target(period)
+        if not required_periods:
+            continue
+        for required_period in required_periods:
             matches = tuple(
                 observation
                 for observation in available
@@ -1657,7 +1660,7 @@ def resolve_counterpart_binding_values(
         matched = tuple(
             _counterpart_to_invoice(observation)
             for observation in available
-            if binding.source == "invoice" or observation.source_kind == binding.source
+            if observation.source_kind == binding.source
         )
         scope_filtered = tuple(_filter_invoice_observations(matched, selector))
         resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)

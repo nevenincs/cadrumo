@@ -47,6 +47,7 @@ class AeatSedePaths(_Frozen):
     certificate_selector: str
     expediente_detail_template: str
     notificaciones: str
+    iva_compensation_wallet: str
 
 
 class AeatHelpPages(_Frozen):

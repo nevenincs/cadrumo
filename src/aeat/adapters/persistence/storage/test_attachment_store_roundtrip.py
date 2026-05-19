@@ -184,7 +184,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
             regression_caught = False
             try:
                 store.load_manifest(attachment.attachment_id)
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: mutating sha256 without "

@@ -21,7 +21,6 @@ from ..auth._models import AuthState
 from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
 from ._models import (
     DeclarationPointer,
-    ProfileBucketPointer,
     WorkflowEvent,
     WorkflowState,
 )

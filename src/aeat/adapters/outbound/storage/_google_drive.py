@@ -13,7 +13,7 @@ Maps the `StorageProvider` Protocol onto the Drive API:
   `aeat.adapters.outbound.google.DriveAppProperties` (written on every
   push by P03's coordinator, not by this provider).
 - Downloads use `files().get_media(fileId=...)`.
-- HttpError status codes are mapped onto the typed `StorageError`
+- HttpError status codes are mapped onto the typed `OutboundStorageError`
   hierarchy: 401/403 → Permission, 404 → NotFound, 409 → Conflict,
   429 → Quota, 5xx → Unavailable, every other failure → Network.
 
@@ -34,15 +34,15 @@ from typing import Any
 
 from ....core.config import Settings as _Settings
 from ._errors import (
-    StorageConflictError,
-    StorageError,
-    StorageIntegrityError,
-    StorageNetworkError,
-    StorageNotFoundError,
-    StoragePermissionError,
-    StorageQuotaError,
-    StorageUnavailableError,
-    StorageValidationError,
+    OutboundStorageConflictError,
+    OutboundStorageError,
+    OutboundStorageIntegrityError,
+    OutboundStorageNetworkError,
+    OutboundStorageNotFoundError,
+    OutboundStoragePermissionError,
+    OutboundStorageQuotaError,
+    OutboundStorageUnavailableError,
+    OutboundStorageValidationError,
 )
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
@@ -66,9 +66,9 @@ _OWNERSHIP_VALUE = "aeat"
 def _validate_namespace(namespace: str) -> str:
     cleaned = namespace.strip()
     if not cleaned:
-        raise StorageValidationError("namespace must not be blank")
+        raise OutboundStorageValidationError("namespace must not be blank")
     if "/" in cleaned or "\\" in cleaned:
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             f"namespace {namespace!r} contains forbidden characters",
             context={"namespace": namespace},
         )
@@ -78,7 +78,7 @@ def _validate_namespace(namespace: str) -> str:
 def _validate_hmac(object_key_hmac: str) -> str:
     cleaned = object_key_hmac.strip()
     if not cleaned:
-        raise StorageValidationError("object_key_hmac must not be blank")
+        raise OutboundStorageValidationError("object_key_hmac must not be blank")
     return cleaned
 
 
@@ -94,8 +94,8 @@ def _filename(object_key_hmac: str, label: str) -> str:
     return f"{object_key_hmac[:_HMAC_PREFIX_LEN]}--{label}{_FILE_EXTENSION}"
 
 
-def _translate_http_error(error: Exception, *, action: str) -> StorageError:
-    """Translate a Google API HttpError (or any upstream failure) into a typed `StorageError`.
+def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageError:
+    """Translate a Google API HttpError (or any upstream failure) into a typed `OutboundStorageError`.
 
     The lazy-import guard makes this callable without `google-api-python-client`
     installed, which is important for unit tests that inject fakes.
@@ -105,16 +105,16 @@ def _translate_http_error(error: Exception, *, action: str) -> StorageError:
     detail = f"drive {action} failed: {error}"
     context = {"action": action, "status": str(status) if status is not None else "unknown"}
     if status in (401, 403):
-        return StoragePermissionError(detail, context=context)
+        return OutboundStoragePermissionError(detail, context=context)
     if status == 404:
-        return StorageNotFoundError(detail, context=context)
+        return OutboundStorageNotFoundError(detail, context=context)
     if status == 409:
-        return StorageConflictError(detail, context=context)
+        return OutboundStorageConflictError(detail, context=context)
     if status == 429:
-        return StorageQuotaError(detail, context=context)
+        return OutboundStorageQuotaError(detail, context=context)
     if status is not None and 500 <= int(status) < 600:
-        return StorageUnavailableError(detail, context=context)
-    return StorageNetworkError(detail, context=context)
+        return OutboundStorageUnavailableError(detail, context=context)
+    return OutboundStorageNetworkError(detail, context=context)
 
 
 def _service_factory(credentials: object) -> Any:
@@ -123,7 +123,7 @@ def _service_factory(credentials: object) -> Any:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise StorageNetworkError(
+        raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             suggestion="uv sync",
         ) from exc
@@ -146,7 +146,7 @@ class GoogleDriveProvider:
 
     def __init__(self, *, credentials: object, root_folder_id: str) -> None:
         if not root_folder_id.strip():
-            raise StorageValidationError(
+            raise OutboundStorageValidationError(
                 "root_folder_id must not be blank for GoogleDriveProvider",
                 context={"root_folder_id": root_folder_id},
             )
@@ -168,7 +168,7 @@ class GoogleDriveProvider:
     def _execute(self, request: Any, *, action: str) -> Any:
         try:
             return request.execute()
-        except StorageError:
+        except OutboundStorageError:
             raise
         except Exception as exc:
             raise _translate_http_error(exc, action=action) from exc
@@ -199,7 +199,7 @@ class GoogleDriveProvider:
         if files:
             entry = files[0]
             if entry.get("mimeType") != _FOLDER_MIME:
-                raise StorageValidationError(
+                raise OutboundStorageValidationError(
                     f"aeat_google_drive_root_folder_id points at a folder containing "
                     f"a file named {_VAULT_FOLDER_NAME!r} that is not itself a folder",
                     context={"root_folder_id": self._root_folder_id},
@@ -219,7 +219,7 @@ class GoogleDriveProvider:
             action="create_vault_folder",
         )
         if not isinstance(created, dict) or "id" not in created:
-            raise StorageNetworkError(
+            raise OutboundStorageNetworkError(
                 "drive create_vault_folder returned no id",
                 context={"response": str(created)},
             )
@@ -239,7 +239,7 @@ class GoogleDriveProvider:
           their own folder or change `aeat_google_drive_root_folder_id`.
 
         Raises:
-            StorageConflictError: When the entry has appProperties that
+            OutboundStorageConflictError: When the entry has appProperties that
                 do not include our ownership marker — the folder
                 belongs to the operator's pre-existing work.
         """
@@ -261,7 +261,7 @@ class GoogleDriveProvider:
                 action=f"stamp_ownership_{kind}",
             )
             return
-        raise StorageConflictError(
+        raise OutboundStorageConflictError(
             f"Drive folder named {kind!r} exists under the configured root but is not "
             f"marked as owned by this app. Refusing to write to it to protect operator data. "
             f"To use this folder for the aeat-vault mirror, manually add "
@@ -311,7 +311,7 @@ class GoogleDriveProvider:
             action=f"create_namespace_{namespace}",
         )
         if not isinstance(created, dict) or "id" not in created:
-            raise StorageNetworkError(
+            raise OutboundStorageNetworkError(
                 f"drive create_namespace_{namespace} returned no id",
                 context={"response": str(created)},
             )
@@ -374,7 +374,7 @@ class GoogleDriveProvider:
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
         if not content_hash.strip():
-            raise StorageValidationError("content_hash must not be blank")
+            raise OutboundStorageValidationError("content_hash must not be blank")
         label_clean = _safe_label(label)
 
         service = self._get_service()
@@ -422,7 +422,7 @@ class GoogleDriveProvider:
             action = "files.update"
         response = self._execute(request, action=action)
         if not isinstance(response, dict):
-            raise StorageNetworkError(f"drive {action} returned non-dict response", context={"response": str(response)})
+            raise OutboundStorageNetworkError(f"drive {action} returned non-dict response", context={"response": str(response)})
 
         return _metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
 
@@ -433,13 +433,13 @@ class GoogleDriveProvider:
         service = self._get_service()
         namespace_folder_id = self._resolve_namespace_folder(namespace_clean, create=False)
         if namespace_folder_id is None:
-            raise StorageNotFoundError(
+            raise OutboundStorageNotFoundError(
                 f"namespace {namespace_clean!r} not present in Drive",
                 context={"namespace": namespace_clean},
             )
         entry = self._find_file(namespace_folder_id, hmac_clean)
         if entry is None:
-            raise StorageNotFoundError(
+            raise OutboundStorageNotFoundError(
                 f"object {hmac_clean!r} not found in Drive namespace {namespace_clean!r}",
                 context={"namespace": namespace_clean, "object_key_hmac": hmac_clean},
             )
@@ -447,12 +447,12 @@ class GoogleDriveProvider:
         request = service.files().get_media(fileId=entry["id"])
         try:
             payload = request.execute()
-        except StorageError:
+        except OutboundStorageError:
             raise
         except Exception as exc:
             raise _translate_http_error(exc, action="files.get_media") from exc
         if not isinstance(payload, (bytes, bytearray)):
-            raise StorageNetworkError(
+            raise OutboundStorageNetworkError(
                 f"drive files.get_media returned non-bytes payload: {type(payload).__name__}",
             )
 
@@ -468,7 +468,7 @@ class GoogleDriveProvider:
             if len(stripped) == 64:
                 actual = hashlib.sha256(bytes(payload)).hexdigest()
                 if stripped != actual:
-                    raise StorageIntegrityError(
+                    raise OutboundStorageIntegrityError(
                         f"drive content_hash mismatch for {hmac_clean!r} in {namespace_clean!r}",
                         context={"stored_hash": stored_hash, "actual_sha256": actual},
                     )
@@ -513,7 +513,7 @@ class GoogleDriveProvider:
         service = self._get_service()
         namespace_folder_id = self._resolve_namespace_folder(namespace_clean, create=False)
         if namespace_folder_id is None:
-            raise StorageNotFoundError(
+            raise OutboundStorageNotFoundError(
                 f"namespace {namespace_clean!r} does not exist",
                 context={"namespace": namespace_clean},
             )
@@ -547,7 +547,7 @@ class GoogleDriveProvider:
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
         try:
             service = self._get_service()
-        except StorageError as exc:
+        except OutboundStorageError as exc:
             return ProviderProbeReport(
                 provider_kind=ProviderKind.GOOGLE_DRIVE,
                 reachable=False,
@@ -562,7 +562,7 @@ class GoogleDriveProvider:
                 service.files().get(fileId=self._root_folder_id, fields="id,mimeType,trashed"),
                 action="probe.get_root",
             )
-        except StorageNotFoundError:
+        except OutboundStorageNotFoundError:
             return ProviderProbeReport(
                 provider_kind=ProviderKind.GOOGLE_DRIVE,
                 reachable=True,
@@ -571,7 +571,7 @@ class GoogleDriveProvider:
                 root_folder_present=False,
                 detail=f"root_folder_id {self._root_folder_id!r} not found",
             )
-        except StorageError as exc:
+        except OutboundStorageError as exc:
             return ProviderProbeReport(
                 provider_kind=ProviderKind.GOOGLE_DRIVE,
                 reachable=False,
@@ -622,7 +622,7 @@ class GoogleDriveProvider:
                 label="sentinel",
             )
             self.delete(_PROBE_NAMESPACE, "00000000probe")
-        except StorageError as exc:
+        except OutboundStorageError as exc:
             return ProviderProbeReport(
                 provider_kind=ProviderKind.GOOGLE_DRIVE,
                 reachable=True,
@@ -648,7 +648,7 @@ def _build_media_body(payload: bytes) -> Any:
     try:
         from googleapiclient.http import MediaIoBaseUpload
     except ImportError as exc:
-        raise StorageNetworkError(
+        raise OutboundStorageNetworkError(
             f"googleapiclient.http not importable: {exc}",
             suggestion="uv sync",
         ) from exc

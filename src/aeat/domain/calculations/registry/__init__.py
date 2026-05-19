@@ -141,6 +141,7 @@ from ._record_design import (
     extract_record_design_workbook,
 )
 from ._relations import (
+    materialize_relation_binding_values,
     relation_source_requirements,
     resolve_relation_values,
     resolve_relation_values_from_observations,
@@ -394,6 +395,7 @@ __all__ = [
     "load_parity_scenario",
     "load_parity_tape",
     "load_registry_tree",
+    "materialize_relation_binding_values",
     "parse_export_payload",
     "parse_modelo_period",
     "parse_renta_web_open_live_payload",

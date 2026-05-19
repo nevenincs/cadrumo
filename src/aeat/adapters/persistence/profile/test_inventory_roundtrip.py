@@ -20,10 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from ...persistence.storage import EphemeralMasterKeyProvider
-from ...persistence.storage.sql import SecureObjectRepository
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
 from ....core.config import Settings
 from ....domain.profile.inventory import (
     InventoryLedger,
@@ -33,6 +29,10 @@ from ....domain.profile.inventory import (
     StockLayer,
     ValuationMethod,
 )
+from ...persistence.storage import EphemeralMasterKeyProvider
+from ...persistence.storage.sql import SecureObjectRepository
+from ...persistence.storage.sql._orm import Base
+from ...persistence.storage.sql.engine import create_engine_from_settings
 from .inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -192,7 +192,7 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
             regression_caught = False
             try:
                 repo.load()
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: corrupting opening_stock to "

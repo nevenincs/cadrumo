@@ -22,11 +22,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ._errors import (
-    StorageConflictError,
-    StorageIntegrityError,
-    StorageNotFoundError,
-    StoragePermissionError,
-    StorageValidationError,
+    OutboundStorageConflictError,
+    OutboundStorageIntegrityError,
+    OutboundStorageNotFoundError,
+    OutboundStoragePermissionError,
+    OutboundStorageValidationError,
 )
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
@@ -40,9 +40,9 @@ _DEFAULT_LABEL = "object"
 def _validate_namespace(namespace: str) -> str:
     cleaned = namespace.strip()
     if not cleaned:
-        raise StorageValidationError("namespace must not be blank")
+        raise OutboundStorageValidationError("namespace must not be blank")
     if "/" in cleaned or "\\" in cleaned or cleaned.startswith("."):
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             f"namespace {namespace!r} contains forbidden characters",
             context={"namespace": namespace},
         )
@@ -52,9 +52,9 @@ def _validate_namespace(namespace: str) -> str:
 def _validate_hmac(object_key_hmac: str) -> str:
     cleaned = object_key_hmac.strip()
     if not cleaned:
-        raise StorageValidationError("object_key_hmac must not be blank")
+        raise OutboundStorageValidationError("object_key_hmac must not be blank")
     if not all(c.isalnum() or c == "-" or c == "_" for c in cleaned):
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             f"object_key_hmac {object_key_hmac!r} contains forbidden characters",
             context={"object_key_hmac": object_key_hmac},
         )
@@ -102,7 +102,7 @@ class LocalFileSystemProvider:
         try:
             target.mkdir(parents=True, exist_ok=True)
         except PermissionError as exc:
-            raise StoragePermissionError(
+            raise OutboundStoragePermissionError(
                 f"cannot create namespace directory {target}: {exc}",
                 context={"namespace": namespace, "path": str(target)},
             ) from exc
@@ -129,12 +129,12 @@ class LocalFileSystemProvider:
         try:
             payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            raise StorageIntegrityError(
+            raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is unreadable or malformed: {exc}",
                 context={"sidecar_path": str(sidecar_path)},
             ) from exc
         if not isinstance(payload, dict):
-            raise StorageIntegrityError(
+            raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is not a JSON object",
                 context={"sidecar_path": str(sidecar_path)},
             )
@@ -161,7 +161,7 @@ class LocalFileSystemProvider:
         hmac_clean = _validate_hmac(object_key_hmac)
         label_clean = _validate_label(label)
         if not content_hash.strip():
-            raise StorageValidationError("content_hash must not be blank")
+            raise OutboundStorageValidationError("content_hash must not be blank")
 
         namespace_dir = self._ensure_namespace_dir(namespace_clean)
         existing_path = self._resolve_object_path(namespace_clean, hmac_clean)
@@ -184,13 +184,13 @@ class LocalFileSystemProvider:
             os.replace(tmp_path, target_path)
         except PermissionError as exc:
             tmp_path.unlink(missing_ok=True)
-            raise StoragePermissionError(
+            raise OutboundStoragePermissionError(
                 f"cannot write object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
             ) from exc
         except OSError as exc:
             tmp_path.unlink(missing_ok=True)
-            raise StorageConflictError(
+            raise OutboundStorageConflictError(
                 f"failed to commit object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
             ) from exc
@@ -208,7 +208,7 @@ class LocalFileSystemProvider:
             sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding="utf-8")
         except OSError as exc:
             target_path.unlink(missing_ok=True)
-            raise StoragePermissionError(
+            raise OutboundStoragePermissionError(
                 f"failed to write sidecar {sidecar_path}: {exc}",
                 context={"path": str(sidecar_path)},
             ) from exc
@@ -228,13 +228,13 @@ class LocalFileSystemProvider:
 
         target_path = self._resolve_object_path(namespace_clean, hmac_clean)
         if target_path is None:
-            raise StorageNotFoundError(
+            raise OutboundStorageNotFoundError(
                 f"object {hmac_clean!r} not found in namespace {namespace_clean!r}",
                 context={"namespace": namespace_clean, "object_key_hmac": hmac_clean},
             )
         sidecar_path = target_path.with_name(target_path.stem + _SIDECAR_EXTENSION)
         if not sidecar_path.is_file():
-            raise StorageIntegrityError(
+            raise OutboundStorageIntegrityError(
                 f"object {target_path.name} has no sidecar; storage corrupt",
                 context={"path": str(target_path)},
             )
@@ -243,7 +243,7 @@ class LocalFileSystemProvider:
         try:
             payload = target_path.read_bytes()
         except PermissionError as exc:
-            raise StoragePermissionError(
+            raise OutboundStoragePermissionError(
                 f"cannot read object payload from {target_path}: {exc}",
                 context={"path": str(target_path)},
             ) from exc
@@ -255,7 +255,7 @@ class LocalFileSystemProvider:
         # portion matches.
         stripped_stored = stored_hash.split("-", 1)[1] if stored_hash.startswith("sha256-") else stored_hash
         if stripped_stored and stripped_stored != actual_hash:
-            raise StorageIntegrityError(
+            raise OutboundStorageIntegrityError(
                 f"content_hash mismatch for {target_path.name}: stored={stored_hash!r} actual_sha256={actual_hash!r}",
                 context={"path": str(target_path), "stored_hash": stored_hash, "actual_sha256": actual_hash},
             )
@@ -291,7 +291,7 @@ class LocalFileSystemProvider:
             target_path.unlink()
             sidecar_path.unlink(missing_ok=True)
         except PermissionError as exc:
-            raise StoragePermissionError(
+            raise OutboundStoragePermissionError(
                 f"cannot delete object {target_path}: {exc}",
                 context={"path": str(target_path)},
             ) from exc
@@ -308,7 +308,7 @@ class LocalFileSystemProvider:
         namespace_clean = _validate_namespace(namespace)
         namespace_dir = self._root / namespace_clean
         if not namespace_dir.is_dir():
-            raise StorageNotFoundError(
+            raise OutboundStorageNotFoundError(
                 f"namespace {namespace_clean!r} does not exist",
                 context={"namespace": namespace_clean},
             )
@@ -369,7 +369,7 @@ class LocalFileSystemProvider:
                 content_hash="sha256-empty",
                 label="sentinel",
             )
-        except (PermissionError, OSError, StoragePermissionError, StorageConflictError) as exc:
+        except (PermissionError, OSError, OutboundStoragePermissionError, OutboundStorageConflictError) as exc:
             return ProviderProbeReport(
                 provider_kind=ProviderKind.LOCAL_FILESYSTEM,
                 read_only=read_only,
@@ -377,7 +377,7 @@ class LocalFileSystemProvider:
                 writable=False,
                 detail=f"sentinel write refused: {exc}",
             )
-        with contextlib.suppress(PermissionError, OSError, StoragePermissionError):
+        with contextlib.suppress(PermissionError, OSError, OutboundStoragePermissionError):
             self.delete(_PROBE_NAMESPACE, "00000000probe")
         del metadata
         return ProviderProbeReport(
