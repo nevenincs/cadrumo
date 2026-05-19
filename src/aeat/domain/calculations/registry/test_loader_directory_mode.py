@@ -14,6 +14,7 @@ single-file to directory layout can be done without behavioral risk.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -30,6 +31,7 @@ from ._loader import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+_REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 
 
 def _build_directory_layout(
@@ -48,52 +50,100 @@ def _build_directory_layout(
         (revisions_dir / filename).write_text(content, encoding="utf-8")
 
 
-@pytest.mark.parametrize(
-    "modelo_filename",
-    ["130.toml", "184.toml", "190.toml", "193.toml", "303.toml", "390.toml"],
-)
-def test_directory_mode_round_trip_matches_single_file_for_real_modelo(tmp_path: Path, modelo_filename: str) -> None:
-    """Existing single-file modelos load byte-identically in directory mode.
+def _split_single_file_modelo_text(text: str) -> tuple[str, str, dict[str, str]]:
+    """Split one modelo TOML into manifest text and revision table text."""
 
-    For each real modelo TOML in registry/aeat/modelos/, this test:
-      1. Reads the file's text.
-      2. Splits it into manifest (everything before the first
-         [revisions table) + a single revisions/single.toml.
-      3. Builds a directory-mode layout in tmp_path.
-      4. Asserts ``load_modelo_directory(tmp_dir) ==
-         load_modelo_file(original)``.
+    manifest_lines: list[str] = []
+    revision_lines: list[str] = []
+    revision_lines_by_id: dict[str, list[str]] = {}
+    current_revision_id: str | None = None
+    in_revision = False
+    for line in text.splitlines(keepends=True):
+        stripped = line.strip()
+        match = _REVISION_HEADER_RE.match(stripped)
+        if stripped.startswith("[revisions") or stripped.startswith("[[revisions"):
+            in_revision = True
+            if match is None:
+                raise AssertionError(f"cannot determine revision id from TOML header {stripped!r}")
+            current_revision_id = match.group(1) or match.group(2)
+            revision_lines_by_id.setdefault(current_revision_id, [])
+        if in_revision:
+            revision_lines.append(line)
+            if current_revision_id is None:
+                raise AssertionError(f"revision line appeared before a revision header: {line!r}")
+            revision_lines_by_id[current_revision_id].append(line)
+        else:
+            manifest_lines.append(line)
+
+    return (
+        "".join(manifest_lines),
+        "".join(revision_lines),
+        {revision_id: "".join(lines) for revision_id, lines in revision_lines_by_id.items()},
+    )
+
+
+def test_directory_mode_round_trip_matches_every_single_file_modelo(tmp_path: Path) -> None:
+    """Every single-file modelo loads byte-identically in directory mode.
+
+    For each real single-file modelo TOML in registry/aeat/modelos/,
+    this test builds a temporary directory layout with one revision
+    file carrying the original revision tables, then checks it produces
+    the same ``ModeloDefinition`` object as the source file.
 
     Equivalence is at the ``ModeloDefinition`` level — pydantic
     structural equality. Any divergence between the two loaders is a
     blocker for migrating modelos to directory mode.
     """
 
-    single_file_path = bundled_path("registry", "aeat", "modelos") / modelo_filename
-    if not single_file_path.is_file():
-        pytest.skip(f"{modelo_filename} not present")
-    expected = load_modelo_file(single_file_path)
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    checked: list[str] = []
+    for source in discover_modelo_sources(modelos_dir):
+        if source.layout != "single_file":
+            continue
+        checked.append(source.modelo_id)
+        expected = load_modelo_source(source)
+        manifest_text, revision_text, _revision_text_by_id = _split_single_file_modelo_text(
+            source.path.read_text(encoding="utf-8")
+        )
 
-    text = single_file_path.read_text(encoding="utf-8")
-    manifest_lines: list[str] = []
-    revision_lines: list[str] = []
-    in_revision = False
-    for line in text.splitlines(keepends=True):
-        stripped = line.strip()
-        if stripped.startswith("[revisions") or stripped.startswith("[[revisions"):
-            in_revision = True
-        if in_revision:
-            revision_lines.append(line)
-        else:
-            manifest_lines.append(line)
+        target = tmp_path / f"modelo_dir_{source.modelo_id}"
+        _build_directory_layout(
+            target,
+            manifest_text=manifest_text,
+            revision_files={"all.toml": revision_text},
+        )
+        actual = load_modelo_directory(target)
+        assert actual == expected, source.modelo_id
 
-    target = tmp_path / "modelo_dir"
-    _build_directory_layout(
-        target,
-        manifest_text="".join(manifest_lines),
-        revision_files={"all.toml": "".join(revision_lines)},
-    )
-    actual = load_modelo_directory(target)
-    assert actual == expected
+    assert checked, "at least one committed modelo must exercise single-file loading"
+
+
+def test_fragment_directory_round_trip_matches_every_single_file_modelo(tmp_path: Path) -> None:
+    """Every single-file modelo can be represented as revision fragment directories."""
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    checked: list[str] = []
+    for source in discover_modelo_sources(modelos_dir):
+        if source.layout != "single_file":
+            continue
+        checked.append(source.modelo_id)
+        expected = load_modelo_source(source)
+        manifest_text, _revision_text, revision_text_by_id = _split_single_file_modelo_text(
+            source.path.read_text(encoding="utf-8")
+        )
+
+        target = tmp_path / f"fragmented_modelo_{source.modelo_id}"
+        (target / "revisions").mkdir(parents=True)
+        (target / "manifest.toml").write_text(manifest_text, encoding="utf-8")
+        for revision_id, revision_text in revision_text_by_id.items():
+            revision_dir = target / "revisions" / revision_id
+            revision_dir.mkdir()
+            (revision_dir / "revision.toml").write_text(revision_text, encoding="utf-8")
+
+        actual = load_modelo_directory(target)
+        assert actual == expected, source.modelo_id
+
+    assert checked, "at least one committed modelo must exercise single-file loading"
 
 
 def test_directory_mode_rejects_manifest_with_revisions_table(tmp_path: Path) -> None:
