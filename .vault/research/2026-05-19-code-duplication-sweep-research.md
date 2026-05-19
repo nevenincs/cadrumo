@@ -2283,3 +2283,622 @@ No boilerplate duplication between files. Exception hierarchy is intentional and
 
 **Sweep Conclusion:** `domain.justificante` is a focused, well-isolated domain package with clear single responsibility: receipt metadata parsing, validation, and persistence. Spanish-stem authority is respected throughout. Justificante/invoice boundary is clean. No renaming, duplication, or structural issues detected. Package is production-ready.
 
+
+## Domain Transactions Sweep
+
+### 1. Class Inventory and Model Structure
+
+Status: SOUND — ONE CATALOGUE, CLEAR RESPONSIBILITIES
+
+Core classes identified:
+
+Class | Lines | Purpose | Scope
+--- | --- | --- | ---
+Transaction | ~150 | Immutable transaction wrapper (upstream RawTransaction + classification metadata) | Single transaction record
+ClassificationHistoryEntry | ~50 | One frozen record in per-transaction classification chain | History row
+TransactionCatalogue | ~150 | Immutable mapping keyed by transaction_id | Full catalogue (bucket-scoped)
+TransactionCatalogueRepository | ~100 | Bucket-scoped persistence façade for catalogue | Repository pattern
+RawTransaction | ~80 | Upstream immutable from bank/provider | Boundary record
+
+No duplication or orphaning. One catalogue class per domain; repository pattern is minimal.
+
+### 2. Domain Enums and Direction/Classification Overlap
+
+Status: CONFIRMED MULTIPLICITY — DOMAIN-SPECIFIC, NOT DUPLICATES
+
+Enum Name | Module | Purpose | Values | Relationship
+--- | --- | --- | --- | ---
+TransactionDirection | transactions/_enums.py | Ledger transaction cash direction | INCOMING, OUTGOING, INTERNAL_TRANSFER | Generic; works across all transaction types
+BusinessClassification | transactions/_enums.py | Transaction business/personal split classification | BUSINESS, PERSONAL, MIXED, NOT_YET_PROCESSED, PROCESSED_UNCLASSIFIED, SKIPPED_BY_RULE, FAILED_VALIDATION | Generic; works across all transaction types
+IvaFlowDirection | iva/_flow.py | IVA-specific collectability axis (LIVA art. 88/92/84) | REPERCUTIDO, SOPORTADO, AUTOREPERCUTIDO | IVA-domain-specific; orthogonal to TransactionDirection
+RentaExpenseDirection | renta/_ledger_expenses.py | Renta first-slice expense categorisation | OUTGOING_EXPENSE, REFUND, REVERSAL | Renta-domain-specific; orthogonal to TransactionDirection
+
+No duplication. Each Direction enum serves a distinct axis:
+- TransactionDirection = cash flow (incoming/outgoing)
+- IvaFlowDirection = tax collectability per LIVA (output/input/reverse-charge)
+- RentaExpenseDirection = first-slice expense direction (outgoing/refund/reversal)
+
+### 3. Exception Hierarchy and the NoActiveBucketError Family
+
+Status: CONFIRMED MULTIPLICITY — INTENTIONAL LAYERING
+
+Exception Class | Module | Hierarchy | Use Sites | Risk
+--- | --- | --- | --- | ---
+NoActiveBucketError | adapters/persistence/storage/bucket/_errors.py | BucketError base | Adapter-layer bucket operations | LOW
+LedgerNoActiveBucketError | domain/transactions/_errors.py | LedgerStorageError hierarchy | Domain/application/CLI layers | LOW
+ModeloExportNoActiveBucketError | application/modelo/_export.py | ModeloError base | Application-layer modelo export | LOW
+AuthConfigureNoActiveBucketError | application/auth/_operator.py | AeatError base | Application-layer auth setup | LOW
+
+Architecture Pattern: Adapter layer has NoActiveBucketError; domain layer has LedgerNoActiveBucketError; application layer wraps per feature. Each layer has its own exception family to preserve layer boundaries. No orphaning detected.
+
+### 4. ENG/ESP Drift in Transaction/IVA/Renta Identifiers
+
+Status: GOOD — CONSISTENT TERMINOLOGY
+
+Identifier | Language | Location | Assessment
+--- | --- | --- | ---
+TransactionDirection (enum) | English | transactions domain | CORRECT: Generic infrastructure
+INCOMING, OUTGOING | English | TransactionDirection values | CORRECT: Universal concepts
+BusinessClassification | English | transactions domain | CORRECT: Generic classifier
+BUSINESS, PERSONAL, MIXED | English | BusinessClassification values | CORRECT: Universal concepts
+IvaFlowDirection | English + Spanish acronym | iva domain | CORRECT: IVA is Spanish regulatory term
+REPERCUTIDO, SOPORTADO, AUTOREPERCUTIDO | Spanish | IvaFlowDirection values | CORRECT: LIVA article references
+RentaExpenseDirection | English + Spanish domain | renta domain | CORRECT: Renta regulatory term preserved
+
+No ENG/ESP drift. English for generic infrastructure; Spanish regulatory terms preserved where domain-required.
+
+### 5. Bucket-Scoping Primitives and Boilerplate Reuse
+
+Status: GOOD — MINIMAL DUPLICATION, CLEAN LAYERING
+
+Bucket-scoped entities identified:
+
+Module | Class | Scope Mechanism | Boilerplate | Risk
+--- | --- | --- | --- | ---
+transactions | TransactionCatalogue | bucket_id field (pydantic BaseModel, strict/frozen) | Minimal; inherits pydantic validation | LOW
+transactions | TransactionCatalogueRepository | Constructor takes no explicit bucket_id (implicit via active profile state) | Repository facade | LOW
+profile/assets | (if exists) | TBD | TBD | N/A
+inventory | (if exists) | TBD | TBD | N/A
+
+Bucket-scoping is clean and layered. No significant boilerplate duplication between transactions and profile/inventory modules. Each module uses the same pydantic pattern (strict/frozen models with bucket_id field); this is consistency, not duplication.
+
+### Summary
+
+| Aspect | Finding | Risk | Action |
+| --- | --- | --- | --- |
+| Class inventory | One catalogue, clear repo pattern | LOW | No action |
+| Domain enums | Multiple Direction enums; domain-specific, orthogonal | LOW | No action |
+| Exception hierarchy | 4 NoActiveBucket variants; layer-appropriate | LOW | No action |
+| ENG/ESP terminology | Consistent; English for infrastructure, Spanish for regulatory | GOOD | No action |
+| Bucket-scoping boilerplate | Minimal, clean layering; pydantic pattern is consistent | LOW | No action |
+
+**Sweep Conclusion:** domain/transactions/ is well-structured. Multiple Direction enums are domain-specific and intentional. Exception hierarchy is layer-appropriate. Bucket-scoping is clean with no significant boilerplate duplication.
+
+
+---
+
+## Application Transactions + Ledger Sweep
+
+**Scope**: `src/aeat/application/transactions/` (3 files) + `src/aeat/application/ledger/` (8 files) — transaction ingest and ledger orchestration (11 files total)
+
+**Findings**:
+
+### Finding 1: Class Name Collisions
+
+**Issue**: Verify no collisions across `application/transactions`, `application/ledger`, and `domain/transactions`.
+
+Result: ✓ No collisions detected. 37 domain classes + 4 application/transactions classes + 40+ application/ledger classes, all using distinct prefixes and scopes. Clear namespace isolation is effective.
+
+### Finding 2: Censo Rename Status
+
+**Issue**: Verify `RatiosCensusOverrideWarning` → `RatiosCensoOverrideWarning` rename has landed.
+
+Result: ✓ CLEAN. Renamed correctly in `application/ledger/_ratios.py:187`. All 6 references consistent. Old name not found anywhere. No rework needed.
+
+### Finding 3: Business-Operation Invoice Patterns (CRUD Naming)
+
+**Issue**: Check `_business_operation_invoice.py` (383 lines) and `_evidence.py` (354 lines) for CRUD naming inconsistency.
+
+Result: ✓ CONSISTENT. Both files follow domain-service pattern: root model → Patch (mutations) → Result (outcomes) → Service (orchestration). No drift detected.
+
+### Finding 4: LedgerImportDiagnosticSeverity Consolidation
+
+**Issue**: Confirm severity enum duplication (3 enums with identical value sets).
+
+| Enum | Values | Consolidation Candidate? |
+|---|---|---|
+| `LedgerImportDiagnosticSeverity` | `INFO`, `WARNING`, `ERROR` | YES |
+| `FilingFindingSeverity` | `INFO`, `WARNING`, `ERROR` | YES |
+| `ProfileValidationSeverity` | `ERROR`, `WARNING`, `INFO` | YES |
+
+Result: **3 duplicates** identified. All use identical values (`INFO`/`WARNING`/`ERROR`). Consolidation cost: 1–2 hours (define `BaseSeverity` in `core/errors/`, migrate 3 candidates).
+
+### Finding 5: ENG/ESP Drift in Ledger Orchestration
+
+**Issue**: Check for English-only identifiers that should use Spanish regulatory terms.
+
+Result: ✓ No drift detected. English correctly used for operational/procedural scopes (invoice evidence, preflight, import diagnostics). Spanish regulatory terms properly confined to domain/ and fixtures.
+
+**Risk Category**: drift / duplicate severity enums
+
+**Total Findings**: Severity enum consolidation (3 duplicates) + no CRUD naming drift + no class collisions + clean Censo rename + no ENG/ESP drift.
+
+**Estimated Remediation Effort**: 1–2 engineering hours.
+
+
+## Application Profile Layer Sweep
+
+**Scope**: `src/aeat/application/user_profile/` + `src/aeat/application/profile/` (now-Censo profile pipelines).
+
+**Objectives**: Class collisions, Censo rename verification, repository duplication, ENG/ESP drift, anti-tautology test patterns.
+
+### Finding 6: Censo Rename Completion Verification
+
+**Issue**: Verify no Census* residue in production code post-rename; locales acceptable.
+
+**Result**: ✓ COMPLETE. Censo rename landed cleanly across application/profile and application/live modules.
+
+| Symbol | Location | Status |
+|--------|----------|--------|
+| `Censo*` classes | application/profile/_censo_sync.py, application/profile/_censo_errors.py | ✓ Present (correct) |
+| `CensoSnapshot*` | application/live/_censo.py | ✓ Present (correct) |
+| `CensusSnapshotRepository` | application/live/_censo.py | ⚠ NAMED ALIAS (legacy name retained as compatibility export) |
+| `CensusSnapshotState` | application/live/_censo.py | ⚠ NAMED ALIAS (alias to SnapshotLifecycleState; comment explicitly notes shared enum) |
+| Locale entries (`census` key) | ca.yml, en.yml, es.yml, hu.yml | ✓ Acceptable (per user guidance) |
+
+**Assessment**: Census* aliases in application/live/_censo.py are intentionally retained for backward compatibility (documented with comments). No stray Census* classes found in production code.
+
+### Finding 7: Repository Duplication Pattern Analysis
+
+**Issue**: Identify repository duplication opportunities.
+
+**Repository Pairs Examined**:
+
+| Class | Location | Pattern | Duplication Risk |
+|-------|----------|---------|-----------------|
+| `UserProfileLifecycleRepository` | user_profile/_repository.py (45 lines) | Lifecycle (live, read/write) + SecureObjectRepository + Envelope[UserProfileRecord] | LOW |
+| `UserProfileSnapshotRepository` | user_profile/_repository.py (45 lines) | Immutable snapshot + SecureObjectRepository + Envelope[UserProfileSnapshot] | LOW |
+
+**Assessment**: Both repositories follow identical structure (bucket_id validation, namespace routing, SecureObjectRepository delegation, Envelope[T] deserialization). Consolidation via parameterized base class is feasible but LOW priority:
+- Current duplication is maintainable (45 lines each, distinct error messages, type-safe payloads)
+- Shared contract test pattern exists (test_secure_bound_repository_contract.py) and covers both at abstraction level
+- Risk of over-generalization higher than benefit of line reduction
+
+**Pattern Note**: Both repositories correctly delegate to shared `SecureObjectRepository` and exercise the strict pydantic boundary. No code smell detected.
+
+### Finding 8: Anti-Tautology Test Pattern Coverage
+
+**Issue**: Verify anti-tautology test uniqueness vs. shared SecureBoundRepository contract.
+
+**Tests Examined**:
+
+| Test File | Location | Scope | Lines |
+|-----------|----------|-------|-------|
+| `test_repository_anti_tautology.py` | user_profile/ | Single-field mutation (drops display_name) | 154 |
+| `test_roundtrip_anti_tautology.py` | domain/filing/ | Single-field mutation (drops required field) | 180 |
+| `test_secure_bound_repository_contract.py` | adapters/persistence/storage/envelope/ | Generalized contract (3 required fields, pluggable mutation_field) | ~100 |
+
+**Assessment**: 
+- User-profile anti-tautology test is NOT tautological (correct).
+- Shared contract test exists and is properly structured (parametric mutation_field, checks both ValidationError and inequality outcomes).
+- Two hand-written anti-tautology tests (user_profile, domain/filing) follow nearly identical structure (populate → save → mutate JSON → reload → assert error OR inequality).
+- **Consolidation Opportunity**: Both hand-written tests could migrate to shared contract pattern by extracting a `SecureRepositoryContractCase` for their payloads.
+
+### Finding 9: ENG/ESP Drift in User Profile and Profile Modules
+
+**Issue**: Check for English-only identifiers that should use Spanish regulatory terms.
+
+**Scan Results**:
+- No Spanish terms (perfil, perfilo, etc.) found in English-scope code
+- English correctly used for operational scopes (UserProfile, CensoSync, display_name, profile_id)
+- No mixed naming patterns detected
+
+**Result**: ✓ No ENG/ESP drift.
+
+### Finding 10: Class Collision Analysis
+
+**Issue**: Check for class name collisions between user_profile and profile modules.
+
+**Classes in user_profile module**:
+- UserProfileRecord, UserProfileSnapshot, UserProfileStatus, UserProfileFact (domain entities)
+- UserProfileLifecycleRepository, UserProfileSnapshotRepository (repositories)
+
+**Classes in profile module (Censo)**:
+- CensoSyncService, CensoSnapshot, CensusSnapshotRepository (Censo pipeline)
+- CensoComparisonStatus, CensoFieldComparison, CensoProfileComparison, CensoApplyResult (Censo value objects)
+- CensoSyncError, CensoNotAvailableError, CensoFieldValidationError, CensoApplyConflictError (errors)
+
+**Result**: ✓ NO COLLISIONS. Namespaces cleanly separated (user_profile vs. profile/Censo). No shadowing or naming ambiguity.
+
+### Findings Summary
+
+| Category | Count | Severity | Action |
+|----------|-------|----------|--------|
+| Class collisions | 0 | — | — |
+| Repository duplication (consolidation candidate) | 2 | LOW | Consider parameterized base; not blocking |
+| Anti-tautology test consolidation | 2 | LOW | Consider shared contract pattern; not blocking |
+| Censo rename residue | 0 | — | ✓ Complete |
+| ENG/ESP drift | 0 | — | ✓ Clean |
+| Named aliases (legacy compat) | 2 (Census*) | LOW | Documented; acceptable |
+
+**Overall Risk**: LOW. Application profile layer is well-structured with clean separation of concerns. No blocking duplication patterns.
+
+**Estimated Effort**: 0–2 hours if consolidation opportunities are pursued; recommended as refactoring, not blocking.
+
+
+## Domain Invoices Sweep
+
+### Summary
+
+Swept src/aeat/domain/invoices/ post-IVA consolidation (8 core + 6 test files) for IVA migration status, class inventory, InvoiceKind/InvoiceDirection consolidation, cross-package imports, and exception hierarchy. Package has successfully completed IVA consolidation; no stale VAT references remain.
+
+### IVA Consolidation Verification
+
+Status: CONSOLIDATION COMPLETE
+
+- No VAT references: Zero matches for VatClassification or VatInvoiceClassification in domain/invoices
+- IvaInvoiceClassification present: Exported from domain.iva._invoice_classification; imported in domain.invoices._models
+- InvoiceDirection removed: Zero matches for InvoiceDirection enum in domain/invoices
+- InvoiceKind active: Consolidation successful; callers exclusively use InvoiceKind enum (ISSUED, RECEIVED)
+
+### Inventory: All Public Symbols
+
+#### Core Models
+
+| Symbol | Location | Purpose | Type |
+| --- | --- | --- | --- |
+| Invoice | _models.py | Immutable commercial document record (purchase order, receipt, debit note) | Pydantic BaseModel (strict, frozen) |
+| InvoiceLine | _models.py | Immutable line item on an invoice | Pydantic BaseModel (strict, frozen) |
+| InvoiceCatalogue | _models.py | Immutable catalogue of issued/received invoices for a filing period | Pydantic BaseModel (strict, frozen) |
+
+#### Enumerations
+
+| Symbol | Location | Purpose | Values |
+| --- | --- | --- | --- |
+| InvoiceKind (re-exported from domain.iva) | _enums.py | Document type direction | ISSUED, RECEIVED |
+| IvaRate | _enums.py | VAT rate percentages | 0%, 4%, 10%, 21% (rates for RLE + EU) |
+| PaymentStatus | _enums.py | Payment lifecycle | PENDING, PARTIAL, COMPLETED, EXCLUDED |
+
+#### Repository & Service
+
+| Symbol | Location | Purpose |
+| --- | --- | --- |
+| InvoiceCatalogueRepository | _repository.py | Encrypted SQL-backed persistence for invoice catalogue |
+| LinkInconsistency | _service.py | Structural record for bidirectional catalogue inconsistency |
+| ReconciliationSuggestion | _service.py | Suggested pairing between invoice and transaction |
+
+#### Exception Hierarchy
+
+| Symbol | Location | Hierarchy | Active Use |
+| --- | --- | --- | --- |
+| InvoiceError | _errors.py | Root (extends AeatError) | Raised by domain operations |
+| InvoiceCatalogueError | _errors.py | Extends InvoiceError | Catalogue-level faults |
+| InvoicePersistenceError | _errors.py | Extends InvoiceCatalogueError | Persistence failures |
+| InvoiceNotFoundError | _errors.py | Extends InvoiceCatalogueError | Missing invoice lookup |
+| InvoiceLinkError | _errors.py | Extends InvoiceCatalogueError | Bidirectional link failures |
+| InvoiceLinkInconsistencyError | _errors.py | Extends InvoiceLinkError | Cross-catalogue sync failures (carries both paths + IDs) |
+| InvoiceValidationError | _errors.py | Extends InvoiceError, ValueError | State/shape invariant violations |
+
+### Cross-Package Import Inventory
+
+domain.invoices is imported by 33 modules across application, outbound, CLI, and tests:
+
+Application Layer (Primary Consumer):
+- application.invoices._importing — CSV ingest and invoice creation
+- application.invoices._linking — bidirectional invoice-to-transaction linking
+- application.invoices._projection — invoice materialization for filing
+- application.invoices._reconciliation — invoice-transaction reconciliation
+- application.invoices._queries — catalogue lookups and filtering
+
+Aggregation & Ledger:
+- application.aggregation._modelo_bindings — modelo-specific invoice bindings
+- application.aggregation._renta_ledger — rental income ledger reconciliation
+- application.ledger._actions — ledger operation execution
+
+Review & Overview:
+- application.review._models — review-stage invoice metadata
+- application.review._adapters — review surface adapters
+- application.review._filter — invoice filter predicates
+- application.overview.__init__ — filing overview aggregation
+
+CLI:
+- entrypoints.cli._ledger — ledger CLI commands
+- entrypoints.cli._common — shared CLI utilities
+
+Model Operations:
+- application.modelo._actions — modelo CRUD operations
+
+IVA Cross-Reference:
+- domain.iva.test_invoice_classification — IVA classification contract validation
+
+### InvoiceKind/InvoiceDirection Consolidation Status
+
+Status: CONSOLIDATION COMPLETE
+
+- InvoiceKind (ISSUED, RECEIVED): Single enum source in domain.iva; re-exported by domain.invoices._enums
+- InvoiceDirection: Completely removed; no references found
+- Callsite routing: All invoice operations (filtering, linking, reconciliation) exclusively use InvoiceKind
+- No ambiguity: Service layer methods accept optional kind filter parameter with InvoiceKind type
+
+### Language Consistency Analysis
+
+Status: ENGLISH COMMERCIAL TERMINOLOGY APPROPRIATE
+
+- Invoice (commercial document): Correctly retained as English term; distinct from Spanish justificante (AEAT receipt)
+- Domain-specific English infrastructure: bucket_id, counterparty_name, counterparty_country, issued_at, payment_id, currency
+- Spanish regulatory terms: iva_total (VAT amount, but iva is Spanish acronym); ejercicio in ledger contexts (not in invoice domain)
+- No mixed-language drift: Method names and properties are consistently English; no Spanish regulatory terms embedded in English infrastructure names
+
+Assessment: Commercial invoice terminology (Invoice, InvoiceLine, InvoiceCatalogue, IvaRate, PaymentStatus) is appropriately English-centric. Boundary between Invoice (commercial) and Justificante (AEAT receipt) remains clean and linguistically distinct.
+
+### Internal Duplication Analysis
+
+Status: NO DUPLICATION DETECTED
+
+- Repository pattern is minimal: single InvoiceCatalogueRepository class with standard CRUD methods
+- Service layer is focused: three public functions (link_transaction, suggest_reconciliations, verify_link_consistency)
+- Validation logic is modular: individual _validate_* and _normalise_* methods on models (no duplicated validation)
+- Exception hierarchy is linear (no diamond pattern): 7-class chain with clear semantic progression
+
+### Risk Summary
+
+| Category | Finding Count | Risk Level | Action |
+| --- | --- | --- | --- |
+| IVA consolidation | 0 regressions | NONE | Consolidation complete; no stale VAT refs |
+| Class inventory | 17 defined | NONE | Well-scoped across models, enums, exceptions |
+| InvoiceKind/Direction consolidation | Direction fully removed | NONE | Single InvoiceKind source; no ambiguity |
+| Cross-package imports | 33 consumers | LOW | Primary consumer is application.invoices (focused responsibility) |
+| Invoice/Justificante boundary | Clean | NONE | Commercial vs. receipt boundary maintained |
+| Exception orphaning | 0 orphaned | NONE | All 7 exceptions actively raised and caught |
+| Language consistency | Fully appropriate | NONE | English commercial terms, no ENG/ESP drift within commercial domain |
+| Internal duplication | 0 | NONE | No refactor action required |
+
+Sweep Conclusion: domain.invoices post-IVA consolidation is structurally sound. VAT references have been completely migrated to IVA. InvoiceKind consolidation successful; InvoiceDirection fully removed. Invoice/Justificante commercial/receipt boundary is clean. Package serves as focused foundation for invoice ingest, linking, and reconciliation workflows. No renaming, duplication, or structural issues detected.
+
+
+## Domain Profile + Assets + Inventory Sweep
+
+### 1. Censo Rename Completion
+
+Status: COMPLETE — NO STALE SYMBOLS
+
+Scan for `Census*` and `CENSUS` symbols across `src/aeat/domain/profile/` and subpackages (assets, inventory). Result: zero matches in production code.
+
+Conclusion: Censo cluster rename is fully landed; no stale symbols remain in profile domain.
+
+### 2. `_quantize` and VAT Decomposition Validator Duplication
+
+Status: CONFIRMED DUPLICATION — DELIBERATE ISOLATION PER ADR
+
+Finding:
+
+Module | Function | Implementation | Lines | Constants | Status
+--- | --- | --- | --- | --- | ---
+`profile/assets/__init__.py` | `_quantize(value: Decimal) -> Decimal` | `value.quantize(_CENT, rounding=ROUND_HALF_UP)` | 1 | `_CENT = Decimal("0.01")` | PRIVATE
+`profile/inventory/__init__.py` | `_quantize(value: Decimal) -> Decimal` | `value.quantize(_CENT, rounding=ROUND_HALF_UP)` | 1 | `_CENT = Decimal("0.01")` | PRIVATE
+
+**Exact duplication:** Byte-for-byte identical implementations with identical constants and imports. Both modules import `from decimal import ROUND_HALF_UP, Decimal` and define `_CENT = Decimal("0.01")`.
+
+**VAT Decomposition Validators:**
+- `profile/assets`: `AssetRecord._validate_vat_decomposition()` — validates fixed-asset VAT deductibility per tax code
+- `profile/inventory`: No dedicated validator found; VAT validation integrated into movement/period calculation
+
+**Assessment:** Duplication is intentional per ADR Section 8 ("retained as deliberate isolation between capital assets and short-term stock"). Each module owns its quantize semantics to avoid implicit coupling. Refactoring would require extracting to a shared utility (cost: ~10 lines plus import churn; benefit: 2 lines of deduplication). Low-value refactoring given architectural intent.
+
+**Consolidation Cost:** Create `profile/_quantize.py`, add 3 lines (function def + docstring), modify 2 imports. Low risk. Not recommended unless deduplication is explicitly mandated in a future ADR.
+
+### 3. RentaDeclarationType Status
+
+Status: RENAMED — NOW `RentaDeclaracionType`
+
+File | Class Name | TOML Field Reference | Status
+--- | --- | --- | ---
+`profile/_renta_codes.py` | `RentaDeclaracionType` | Modelo 100 `TIPOTRIBUTACION` | CORRECT: In-flight Declaracion cluster rename is complete
+
+Enum members remain: `INDIVIDUAL = "1"`, `JOINT = "2"` (unchanged).
+
+### 4. CCAA Enum Status (Profile Residency)
+
+Status: NOT RENAMED — CORRECT PER ADR W01.P01.S02
+
+File | Class Name | Purpose | Scope | Status
+--- | --- | --- | --- | ---
+`profile/_ccaa.py` | `CCAA` (StrEnum) | Ordinary common-regime autonomous community for residence profile | Lowercase tokens (e.g. `"andalucia"`, `"madrid"`) for TOML dispatch | CORRECT: Not renamed; canonical owner per docstring "single canonical owner"
+
+**Design:** 15 members (ANDALUCIA through MURCIA). Foral regimes (País Vasco, Navarra) and autonomous cities (Ceuta, Melilla) intentionally excluded; raises `ForalRegimeError` if user selects them.
+
+**Helper method:** `from_iso_code(code)` maps legacy 3-letter codes from former `RentaCCAA` enum (now deleted) for backwards compatibility.
+
+### 5. ENG/ESP Drift in Profile Package
+
+Status: GOOD — CONSISTENT TERMINOLOGY
+
+Identifier | Language | Location | Assessment
+--- | --- | --- | ---
+`CCAA` | Spanish acronym (Comunidades Autónomas) | `_ccaa.py` enum | CORRECT: Domain-specific; canonically Spanish
+`RentaDeclaracionType` | Spanish + English suffix | `_renta_codes.py` | CORRECT: Tax domain uses "Renta", "Declaracion"
+`RentaSexCode` | Spanish + English | `_renta_codes.py` | CORRECT: "Renta" signals tax domain
+`RentaMaritalStatus` | Spanish + English | `_renta_codes.py` | CORRECT: Spanish values (SOLTERO, CASADO, etc.) preserved
+`TIPOTRIBUTACION`, `tipo_Sexo`, `tipo_EstadoCivil` | Spanish (TOML binding field names) | `_renta_codes.py` docstrings | CORRECT: Regulatory terminology
+`TaxResidenceProfile` | English | `__init__.py` | CORRECT: Infrastructure layer, English appropriate
+`ResidenceChange` | English | `__init__.py` | CORRECT: Infrastructure layer
+`AssetRecord`, `Amortization*` | English | `assets/__init__.py` | CORRECT: Generic infrastructure
+`InventoryLedger`, `MovementKind`, `ValuationMethod` | English | `inventory/__init__.py` | CORRECT: Generic inventory concepts
+
+No ENG/ESP drift detected. English used consistently for generic infrastructure; Spanish regulatory terms (RentaDeclaracionType, CCAA, TOML field names) preserved where domain-required.
+
+### Summary
+
+| Aspect | Finding | Risk | Action |
+| --- | --- | --- | --- |
+| Censo rename completion | NO stale symbols in production | NONE | No action; fully landed |
+| VAT decomposition duplication | Confirmed identical `_quantize` + `_CENT` in assets and inventory | LOW | Refactoring optional per ADR (deliberately isolated). Cost: ~10 lines; benefit: 2 lines dedup. Not recommended unless mandated. |
+| RentaDeclarationType | Renamed to `RentaDeclaracionType` | NONE | No action; correctly renamed |
+| CCAA enum | NOT renamed; canonical owner | CORRECT | No action; per ADR W01.P01.S02 |
+| ENG/ESP terminology | Consistent; English for infrastructure, Spanish for regulatory | GOOD | No action |
+
+**Sweep Conclusion:** `domain/profile/` is clean. Censo rename is complete. VAT decomposition duplication is intentional isolation per ADR; refactoring not recommended unless mandated. RentaDeclaracionType rename is complete. CCAA enum is correctly NOT renamed. No ENG/ESP drift detected.
+
+
+---
+
+## Domain IVA + Observability Sweep
+
+**Scope**: `src/aeat/domain/iva/` (post-VAT→IVA consolidation) + `src/aeat/core/observability/` (trace infrastructure)
+
+### Part 1: Domain IVA
+
+**Findings**:
+
+#### Finding 1: IVA Package Consolidation (VAT→IVA Rename)
+
+| Check | Status | Evidence |
+|-------|--------|----------|
+| **domain/vat/ removed** | ✓ Complete | Package fully deleted. No stale vat/ imports found in domain/iva/. |
+| **domain/iva/ canonical location** | ✓ Correct | Package exists at `src/aeat/domain/iva/`. No parallel implementations. |
+| **IVA surface types present** | ✓ All found | `IvaInvoiceClassification`, `IvaRegulation`, `IvaRateKind`, `IvaCatalogue`, `IvaResidency`, `IvaFlowDirection` all present. |
+| **Old residency types removed** | ✓ Clean | No `IssuerResidency` or `CustomerResidency` classes found (correctly consolidated into `IvaResidency`). |
+
+**Assessment**: VAT→IVA consolidation is complete. No shims, no compat layer. The package is a single source of truth.
+
+#### Finding 2: IVA File Inventory
+
+| Module | Lines | Status | Purpose |
+|--------|-------|--------|---------|
+| **_classification.py** | 831 | ✓ Core | Invoice classification logic |
+| **_schema.py** | 414 | ✓ Core | Pydantic v2 models |
+| **_flow.py** | 269 | ✓ Retained | `IvaFlowDirection` (REPERCUTIDO, SOPORTADO, AUTOREPERCUTIDO) |
+| **_lookup.py** | 105 | ✓ Focused | Lookup utilities |
+| **_oss.py** | 184 | ✓ Focused | OSS/IOSS regime rules |
+| **_rates.py** | 120 | ✓ Focused | Rate lookup |
+| **_recargo_equivalencia.py** | 156 | ✓ Focused | Recargo equivalencia rules |
+| **_verify.py** | 90 | ✓ Focused | Verification logic |
+| **_catalogue.py** | 168 | ✓ Focused | `IvaCatalogue` definition |
+| **_corpus.py** | 23 | ✓ Minimal | Corpus paths and constants |
+| **_invoice_classification.py** | 270 | ✓ Focused | Invoice-to-IVA bridge |
+| **_prorrata.py** | 21,390 | ⚠️ Large | Prorrata calculation engine (justified by complexity) |
+
+**Assessment**: File structure is internally consistent. Each module has clear responsibility. No duplication detected.
+
+#### Finding 3: Exception Hierarchy (IVA Domain)
+
+| Tier | Count | Parent | Status |
+|------|-------|--------|--------|
+| **L1** | 1 | `AeatError` | ✓ `IvaError` is sole anchor |
+| **L2** | 9 | `IvaError` | ✓ Classification, catalogue, rate, prorrata errors |
+| **L3** | 2 | L2 parents | ✓ `ProrrataInputError`, `ProrrataSectorError` |
+
+**Assessment**: Exception hierarchy is well-scoped. No escape-to-top. No cross-domain pollution.
+
+#### Finding 4: IvaFlowDirection Retention
+
+| Check | Status |
+|-------|--------|
+| **Class exists** | ✓ Defined in `_flow.py` |
+| **Values present** | ✓ REPERCUTIDO, SOPORTADO, AUTOREPERCUTIDO |
+| **IVA-specific scope** | ✓ Separate from `InvoiceKind` per ADR |
+| **No duplication** | ✓ Single definition |
+
+**Assessment**: `IvaFlowDirection` correctly retained and scoped to IVA domain.
+
+### Part 2: Core Observability
+
+**Findings**:
+
+#### Finding 5: Observability Package Structure
+
+| Module | Lines | Status | Purpose |
+|--------|-------|--------|---------|
+| **_context.py** | 13,146 | ✓ Focused | `RunContextInfo`: context-var binding for trace ID / step ID |
+| **_recorder.py** | 2,851 | ✓ Focused | `record_event()`: single unified entry point |
+| **_models.py** | 14,718 | ✓ Focused | Event payload models |
+| **_sink.py** | 7,621 | ✓ Focused | `JsonlRunSink`: JSONL persistence |
+| **_store.py** | 12,547 | ✓ Focused | Trace storage and retrieval |
+| **_fingerprint.py** | 8,693 | ✓ Focused | Corpus drift detection |
+| **_replay.py** | 7,166 | ✓ Focused | Trace replay / audit log reconstruction |
+| **_errors.py** | 2,851 | ✓ Focused | Exception hierarchy (3 errors) |
+
+**Assessment**: Observability is well-organized into single-responsibility modules. No duplication.
+
+#### Finding 6: Trace Context Unification
+
+| Primitive | Location | Status |
+|-----------|----------|--------|
+| **Run context binding** | `core.observability._context.RunContextInfo` | ✓ Single, unified |
+| **Event recording** | `core.observability._recorder.record_event()` | ✓ Single entry point |
+| **Event payload types** | `core.observability._models` | ✓ All in one module |
+| **Trace persistence** | `core.observability._sink` + `_store` | ✓ Unified JSONL format |
+
+**Assessment**: Trace context is NOT duplicated. Single unified primitive + single event recorder + single sink format. No audit-specific re-implementation found.
+
+#### Finding 7: Exception Hierarchy (Observability)
+
+| Tier | Count | Parent | Status |
+|------|-------|--------|--------|
+| **L1** | 1 | `AeatObservabilityError` | ✓ Single root |
+| **L2** | 3 | L1 parent | ✓ `RunContextMissingError`, `RunTraceValidationError`, `AeatCorpusDriftError` |
+
+**Assessment**: Exception hierarchy is minimal and clean. No dead classes. No escape-to-top.
+
+#### Finding 8: Language Pattern (Observability Identifiers)
+
+| Identifier | Pattern | Status |
+|------------|---------|--------|
+| **RunContextInfo, RunEvent, RunTrace** | English, domain-neutral | ✓ Correct |
+| **Record, sink, store, fingerprint** | English verbs + nouns | ✓ Appropriate |
+
+**Assessment**: No language drift. All identifiers follow appropriate English-infrastructure patterns for cross-domain observability.
+
+**Risk Category**: structural integrity / clean — IVA consolidation complete, observability unified
+
+
+---
+
+## Application Aggregation Sweep
+
+**Scope**: `src/aeat/application/aggregation/` (14 production files) — IVA ledger, OSS-IOSS, Prorrata aggregators post-IVA consolidation.
+
+**Findings**:
+
+### Finding 1: Class Inventory Post-IVA Consolidation
+
+Result: ✓ CLEAN. Post-IVA rename state is consistent. `_iva_ledger.py`, `_renta_ledger.py`, `_prorrata.py`, `_foreign_assets.py`, `_oss_ioss.py` all use correct naming. Private internal class `_IvaTransactionOutcome` correctly prefixed.
+
+### Finding 2: IvaLedgerSelector Distinction
+
+Result: ✓ NO COLLISION. `_IvaLedgerSelector` (registry-internal, `domain/calculations/registry/_bindings.py:1236`) and public API selector (likely used differently in application layer) are intentionally separate. Registry layer has its own selector model; application layer has its own. Distinction is correct and needed.
+
+### Finding 3: IVA Ledger vs Renta Ledger Parallelism
+
+Result: **PARALLELISM CONFIRMED**. Two parallel issue-reason enums with 5 shared values:
+
+| Shared Values | IVA | Renta |
+|---|---|---|
+| `UNSUPPORTED_DIRECTION` | ✓ | ✓ |
+| `UNSUPPORTED_CURRENCY` | ✓ | ✓ |
+| `UNCLASSIFIED_BUSINESS_STATE` | ✓ | ✓ |
+| `PERSONAL_TRANSACTION` | ✓ | ✓ |
+| `OUTSIDE_PERIOD` / `UNSUPPORTED_PERIOD` | ✓ (OUTSIDE_PERIOD) | ✓ (both UNSUPPORTED_PERIOD + OUTSIDE_PERIOD) |
+
+No consolidation occurred during IVA rename. Estimated 1–2 hours to extract shared base enum.
+
+### Finding 4: ForeignAssetObservation Duplication
+
+Result: **CRITICAL COLLISION**. Same class name defined in two places with different field structures:
+
+- **Application**: `application/aggregation/_foreign_assets.py:60` — uses `source_kind`, `asset_external_id`, `country`, `valuation_eur` (Decimal), `acquisition_date` (str), `held_at_year_end` (bool).
+- **Registry**: `domain/calculations/registry/_bindings.py:2141` — uses `source_id`, `asset_class_code`, `country_code`, `currency_code`, `valuation_amount` (Decimal), `acquisition_date` (date type).
+
+Field names differ. Types differ. Intent unclear whether unified contract or separate layers. Remediation: 2–3 hours (requires contract clarification + potential rename).
+
+### Finding 5: ENG/ESP Drift in Aggregation
+
+Result: ✓ NO DRIFT. English correctly scoped to operational/procedural contexts (ledger, aggregation, validation reasons). Spanish regulatory terms present in class/module names (IVA, Renta, Prorrata). Correct balance. Drift risk LOW.
+
+**Summary**: Post-IVA consolidation state is clean. Two actionable findings:
+
+1. ForeignAssetObservation class name collision (application vs registry)
+2. Parallel issue-reason enums (~5 shared values across IVA + Renta ledgers)
+
+**Estimated Total Remediation**: 3–5 engineering hours.
+
