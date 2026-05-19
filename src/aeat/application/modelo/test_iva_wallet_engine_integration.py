@@ -26,7 +26,7 @@ from aeat.application.modelo import (
 from aeat.core.config import override_settings
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.calculations.registry import CasillaObservation, RegistryFilingObservation
+from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 
@@ -53,7 +53,14 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine(settings)
 
 
-def _wallet_observation(*, pending: Decimal):
+def _wallet_observation(
+    *,
+    pending: Decimal,
+    target_year: int = _TARGET_YEAR,
+    target_period: str = _TARGET_PERIOD,
+    generation_year: int = 2026,
+    generation_period: str = "1T",
+):
     pending_text = _spanish_amount(pending)
     return parse_iva_compensation_wallet_html(
         f"""
@@ -68,7 +75,8 @@ def _wallet_observation(*, pending: Decimal):
               </thead>
               <tbody>
                 <tr>
-                  <td>2026</td><td>1T</td><td>{pending_text}</td><td>0,00</td><td>{pending_text}</td>
+                  <td>{generation_year}</td><td>{generation_period}</td>
+                  <td>{pending_text}</td><td>0,00</td><td>{pending_text}</td>
                 </tr>
               </tbody>
             </table>
@@ -77,8 +85,8 @@ def _wallet_observation(*, pending: Decimal):
         """,
         taxpayer_nif=_TAXPAYER_NIF,
         authenticated_identity=_TAXPAYER_NIF,
-        target_year=_TARGET_YEAR,
-        target_period=_TARGET_PERIOD,
+        target_year=target_year,
+        target_period=target_period,
         source_url="https://www1.agenciatributaria.gob.es/wlpl/DAI3-RUTI/CarteraCuotas",
         captured_at=_DECIDED_AT,
     )
@@ -93,8 +101,14 @@ def _spanish_amount(value: Decimal) -> str:
     return f"{'.'.join(reversed(chunks))},{cents}"
 
 
-def _store_prior_303_compensation(repo: CalculationObservationRepository, *, amount: Decimal) -> None:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period="1T")
+def _store_prior_303_compensation(
+    repo: CalculationObservationRepository,
+    *,
+    amount: Decimal,
+    filing_year: int = _TARGET_YEAR,
+    period: str = "1T",
+) -> None:
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
     casilla = next(
         item for item in snapshot.revision.casillas if item.id == "iva.compensacion-disponible-fin-periodo"
     )
@@ -102,10 +116,10 @@ def _store_prior_303_compensation(repo: CalculationObservationRepository, *, amo
         item for item in snapshot.revision.formulas if item.target == "iva.compensacion-disponible-fin-periodo"
     )
     repo.save(
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="303",
-            filing_year=_TARGET_YEAR,
-            period="1T",
+            filing_year=filing_year,
+            period=period,
             observations=(
                 CasillaObservation(
                     casilla_id="iva.compensacion-disponible-fin-periodo",
@@ -190,6 +204,67 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             obs.casilla_id == "iva.compensacion-aplicada-periodo" and obs.legal_refs and obs.source_refs
             for obs in revision.observations
         )
+
+
+def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        observation_repo = CalculationObservationRepository()
+        _store_prior_303_compensation(
+            observation_repo,
+            amount=Decimal("450.00"),
+            filing_year=2025,
+            period="4T",
+        )
+        target_year = 2026
+        target_period = "1T"
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=target_year, period=target_period)
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_NIF,
+            wallet=_wallet_observation(
+                pending=Decimal("450.00"),
+                target_year=target_year,
+                target_period=target_period,
+                generation_year=2025,
+                generation_period="4T",
+            ),
+            repository=observation_repo,
+            decided_at=_DECIDED_AT,
+        )
+
+        assert report.decision.selected_authority == "aeat_wallet"
+        assert report.decision.local_recurrence_amount == Decimal("450.00")
+        assert report.prefill_report.prefilled[0].source_filing_year == 2025
+        assert report.prefill_report.prefilled[0].source_periods == ("4T",)
+
+        work_repo, calc_repo, event_repo = _work_unit_repositories()
+        work_unit = create_work_unit(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=target_year,
+            period=target_period,
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_DECIDED_AT,
+        )
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs={},
+            binding_values={},
+            backend_binding_values=_modelo_303_engine_inputs(),
+            iva_compensation_decision=report.decision,
+            filing_period_date=date(2026, 3, 31),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=_DECIDED_AT,
+        )
+
+        assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("450.00")
+        assert revision.casilla_values["iva.compensacion-aplicada-periodo"] == Decimal("450.00")
+        assert revision.casilla_values["iva.resultado"] == Decimal("550.00")
+        assert revision.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("0.00")
 
 
 def test_wallet_divergence_blocks_real_modelo_303_engine_before_persisting_revision(tmp_path: Path) -> None:

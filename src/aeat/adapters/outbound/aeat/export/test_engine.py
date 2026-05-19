@@ -23,13 +23,13 @@ from .....domain.submission import (
     SubmissionError,
     SubmissionRepository,
     SubmissionStatus,
-    SubmittedFiling,
+    ModeloPresentado,
     make_submission_id,
 )
 from . import (
-    DraftStatus,
-    FilingDraftLike,
-    FilingFinding,
+    ModeloDraftStatus,
+    ModeloDraftLike,
+    ModeloFinding,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
@@ -48,16 +48,16 @@ def _secure_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterato
 
 
 @dataclass
-class _Draft(FilingDraftLike):
-    """Minimal :class:`FilingDraftLike` test double for engine inputs."""
+class _Draft(ModeloDraftLike):
+    """Minimal :class:`ModeloDraftLike` test double for engine inputs."""
 
     draft_id: str = "draft-ut"
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: DraftStatus = DraftStatus.APPROVED
+    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED
     values: dict[str, str] = field(default_factory=dict)
-    findings: tuple[FilingFinding, ...] = ()
+    findings: tuple[ModeloFinding, ...] = ()
 
 
 class _OpenDeadlines:
@@ -99,10 +99,10 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
     )
 
 
-def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> SubmittedFiling:
-    """Build a synthetic :class:`SubmittedFiling` for historical-records tests."""
+def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> ModeloPresentado:
+    """Build a synthetic :class:`ModeloPresentado` for historical-records tests."""
     now = datetime.now(UTC)
-    return SubmittedFiling(
+    return ModeloPresentado(
         submission_id=submission_id,
         draft_id="draft-1",
         modelo=modelo,

@@ -24,7 +24,7 @@ from ...domain.filing._amendment import (
 from ...domain.filing._complementaria_repository import (
     FilingAmendmentRepository,
 )
-from ...domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind, compute_draft_id
+from ...domain.filing._schema import FilingDraft, ModeloDraftStatus, FilingValue, FilingValueKind, compute_draft_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -50,7 +50,7 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> FilingAmendment:
         modelo="130",
         period="2026Q1",
         profile_tax_id="00000000T",
-        status=FilingDraftStatus.VALIDATED,
+        status=ModeloDraftStatus.VALIDATED,
         values=values,
         created_at=now,
         updated_at=now,

@@ -25,7 +25,7 @@ from ._errors import (
 # WorkflowState / utc_now from this package during their own module load,
 # those names are already present in the partially-initialised module.
 from ._models import (
-    DeclarationPointer,
+    DeclaracionPointer,
     ProfileBucketPointer,
     SiteHealthAlert,
     WorkflowAbortReason,
@@ -72,7 +72,7 @@ __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineAdapter",
     "DeadlineEngineProtocol",
-    "DeclarationPointer",
+    "DeclaracionPointer",
     "FilingDraftBuilderAdapter",
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
