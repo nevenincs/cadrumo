@@ -109,7 +109,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     when you are done — auth providers already do this in their
     ``close()`` path.
     """
-    from ....application.workflow._models import resolve_active_bucket_id
+    from .....application.workflow._models import resolve_active_bucket_id
 
     # This factory is reachable from the diagnostic browser-connectivity
     # probe under `aeat config status`, so a missing active profile MUST
