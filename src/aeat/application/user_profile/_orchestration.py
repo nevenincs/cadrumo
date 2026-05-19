@@ -17,6 +17,7 @@ from collections.abc import Iterable
 from datetime import date
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.i18n import tr
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
@@ -282,7 +283,7 @@ def _require_active(state: WorkflowState) -> str:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        raise ProfileNotFoundError("no active profile selected")
+        raise ProfileNotFoundError(tr("application.user_profile.errors.no_active_profile_selected"))
     return bucket_id
 
 

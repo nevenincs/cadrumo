@@ -26,6 +26,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -194,7 +195,7 @@ def export_modelo_revision(
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
-            "no active profile bucket; run `aeat config profile create NAME` before exporting a modelo revision",
+            tr("application.modelo.errors.export_no_active_bucket"),
         )
 
     revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)

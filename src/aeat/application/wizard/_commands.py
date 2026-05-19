@@ -434,7 +434,7 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
         raw_profile_name = kwargs.pop("profile_name")
         if not isinstance(raw_profile_name, str) or not raw_profile_name.strip():
             raise WizardMissingFlagError(
-                "wizard requires --profile NAME (no implicit 'default' fallback)",
+                tr("application.wizard.errors.profile_flag_required"),
                 context={"flow_id": flow.id, "missing": ("profile_name",)},
             )
         profile_name = raw_profile_name.strip()
@@ -456,7 +456,7 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
             missing = _missing_required_flags(flow, canonical)
             if missing:
                 raise WizardMissingFlagError(
-                    "missing required flags for --quiet wizard run",
+                    tr("application.wizard.errors.quiet_missing_flags"),
                     context={"flow_id": flow.id, "missing": missing},
                 )
             scripted = _scripted_from_canonical(flow, canonical)

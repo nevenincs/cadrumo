@@ -5359,6 +5359,7 @@ number = "0077"
 label = "NIF del excónyuge"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
+semantic_role = "spouse_or_foreign_id_nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
@@ -5477,6 +5478,7 @@ number = "0091"
 label = "Nif del arrendatario 1 (*)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
+semantic_role = "tenant_or_foreign_id_nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
@@ -5504,6 +5506,7 @@ number = "0094"
 label = "Nif del arrendatario 2 (*)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
+semantic_role = "tenant_or_foreign_id_nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
@@ -5522,6 +5525,7 @@ number = "0097"
 label = "Nif del arrendatario 3 (*)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
+semantic_role = "tenant_or_foreign_id_nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
@@ -12078,6 +12082,7 @@ number = "0911"
 label = "NIF/NIE del arrendador 1"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 data_type = "text"
+semantic_role = "landlord_or_foreign_id_nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
@@ -13704,6 +13709,7 @@ number = "1122"
 label = "NIF/NIE del arrendador 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arr"]
 data_type = "text"
+semantic_role = "landlord_or_foreign_id_nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
@@ -13730,6 +13736,7 @@ number = "1125"
 label = "NIF/NIE del arrendador 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arr"]
 data_type = "text"
+semantic_role = "landlord_or_foreign_id_nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 

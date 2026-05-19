@@ -14,6 +14,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.classification import SensitivityClass
 from ...core.config import Settings
+from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import WorkflowError
 from ._events import (
@@ -62,7 +63,7 @@ class WorkflowStateRepository:
             envelope = Envelope[WorkflowState].model_validate_json(raw_payload)
         except ValidationError as exc:
             raise WorkflowError(
-                "Local configuration state could not be read.",
+                tr("application.workflow.errors.state_unreadable"),
             ) from exc
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise ClassificationError(
