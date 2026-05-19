@@ -130,10 +130,22 @@ application:
           proceso en curso o deja expirar el bloqueo si ese proceso ha fallado.
         lock_held_suggestion: Ejecuta `aeat config auth status --format json` para
           inspeccionar el bloqueo de autenticación activo.
+    clave_movil:
+      health:
+        operator_completion_required: Preparado; requiere finalización de Cl@ve mediada
+          por el operador.
     operator:
       errors:
+        dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
+          resuelve a un bucket de perfil registrado. Ejecuta `aeat config profile list`
+          para inspeccionar los perfiles registrados y después `aeat config profile
+          switch NAME` o `aeat config profile create NAME`.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
+        unreadable_active_profile: El perfil activo '%{active_profile}' tiene un manifiesto
+          de bucket pero no tiene un registro de perfil legible (status=%{status}).
+          Ejecuta `aeat config repair profile --clear-active --yes` y después cambia
+          a un perfil válido o créalo antes de configurar autenticación.
     provider_impact:
       certificate_ready: La autenticación con certificado está lista. El operador
         mantiene el mismo flujo de presentación en la CLI para lecturas respaldadas
@@ -823,8 +835,10 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
-      profile_clear_active_help: cli.config.repair.profile_clear_active_help
-      profile_help: cli.config.repair.profile_help
+      profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
+        cuando apunta a estado de perfil ilegible.
+      profile_help: Inspeccionar y reparar el puntero de perfil activo.
+      profile_requires_yes: Pasa --yes para limpiar el puntero de perfil activo.
       quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
         destructiva, requiere --yes)
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
@@ -838,7 +852,7 @@ cli:
         --yes para confirmar o pasa --dry-run para inspeccionar la huella.
       reset_state_yes_help: Confirmar explícitamente el reinicio del estado del flujo
         de trabajo
-      yes_help: cli.config.repair.yes_help
+      yes_help: Confirmar la reparación.
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
@@ -886,23 +900,28 @@ cli:
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
-      auth_label: cli.diagnostics.repair.auth_label
-      checks_heading: cli.diagnostics.repair.checks_heading
-      detail_label: cli.diagnostics.repair.detail_label
-      logs_label: cli.diagnostics.repair.logs_label
-      next_label: cli.diagnostics.repair.next_label
-      note_label: cli.diagnostics.repair.note_label
-      overall_label: cli.diagnostics.repair.overall_label
-      profile_label: cli.diagnostics.repair.profile_label
-      python_label: cli.diagnostics.repair.python_label
-      version_label: cli.diagnostics.repair.version_label
+      auth_label: Autenticación
+      checks_heading: Comprobaciones
+      detail_label: Detalle
+      logs_label: Logs
+      next_label: Siguiente
+      note_label: Nota
+      overall_label: Estado
+      profile_label: Perfil
+      python_label: Python
+      version_label: Versión
     summary:
-      auth_no_session: cli.diagnostics.summary.auth_no_session
-      auth_none: cli.diagnostics.summary.auth_none
-      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      auth_no_session: El proveedor de autenticación %{provider} no tiene una sesión
+        lista
+      auth_none: La autenticación no está configurada
+      auth_session_ready: Sesión de autenticación lista para %{provider}
+      auth_state_unreadable: No se puede comprobar la preparación de autenticación
+        hasta que el estado seguro del flujo sea legible.
       profile_keys_set: cli.diagnostics.summary.profile_keys_set
       profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
-      profile_none: cli.diagnostics.summary.profile_none
+      profile_none: No hay perfil configurado
+      profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
+      profile_unreadable: 'No se puede leer el perfil: %{status}'
       registry_counts: cli.diagnostics.summary.registry_counts
       registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
       registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
@@ -910,7 +929,8 @@ cli:
       registry_unavailable: cli.diagnostics.summary.registry_unavailable
       secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
       secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
-      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable}
+        fila(s) legible(s)'
       state_backend_readable: cli.diagnostics.summary.state_backend_readable
       state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
       venv_in_sync: cli.diagnostics.summary.venv_in_sync

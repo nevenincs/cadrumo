@@ -119,10 +119,21 @@ application:
           or let the lock expire if that process crashed.
         lock_held_suggestion: Run `aeat config auth status --format json` to inspect
           the active auth lock.
+    clave_movil:
+      health:
+        operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
     operator:
       errors:
+        dangling_active_profile: Active profile pointer '%{active_profile}' does not
+          resolve to a registered profile bucket. Run `aeat config profile list` to
+          inspect registered profiles, then `aeat config profile switch NAME` or `aeat
+          config profile create NAME`.
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
+        unreadable_active_profile: Active profile '%{active_profile}' has a bucket
+          manifest but no readable profile record (status=%{status}). Run `aeat config
+          repair profile --clear-active --yes`, then switch to or create a valid profile
+          before configuring authentication.
     provider_impact:
       certificate_ready: Certificate auth is ready. The operator keeps the same CLI
         filing flow for AEAT-backed reads; every provider uses the same command workflow.
@@ -769,8 +780,10 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
-      profile_clear_active_help: cli.config.repair.profile_clear_active_help
-      profile_help: cli.config.repair.profile_help
+      profile_clear_active_help: Clear a pointer-file active profile only when it
+        points at unreadable profile state.
+      profile_help: Inspect and repair the active-profile pointer.
+      profile_requires_yes: Pass --yes to clear the active-profile pointer.
       quarantine_help: Move undecryptable rows into a quarantine table (destructive;
         requires --yes)
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
@@ -783,7 +796,7 @@ cli:
       reset_state_requires_yes: This operation is destructive. Re-run with --yes to
         confirm or pass --dry-run to inspect the fingerprint.
       reset_state_yes_help: Explicitly confirm the workflow-state reset
-      yes_help: cli.config.repair.yes_help
+      yes_help: Confirm repair.
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -829,23 +842,27 @@ cli:
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
-      auth_label: cli.diagnostics.repair.auth_label
-      checks_heading: cli.diagnostics.repair.checks_heading
-      detail_label: cli.diagnostics.repair.detail_label
-      logs_label: cli.diagnostics.repair.logs_label
-      next_label: cli.diagnostics.repair.next_label
-      note_label: cli.diagnostics.repair.note_label
-      overall_label: cli.diagnostics.repair.overall_label
-      profile_label: cli.diagnostics.repair.profile_label
-      python_label: cli.diagnostics.repair.python_label
-      version_label: cli.diagnostics.repair.version_label
+      auth_label: Auth
+      checks_heading: Checks
+      detail_label: Detail
+      logs_label: Logs
+      next_label: Next
+      note_label: Note
+      overall_label: Overall
+      profile_label: Profile
+      python_label: Python
+      version_label: Version
     summary:
-      auth_no_session: cli.diagnostics.summary.auth_no_session
-      auth_none: cli.diagnostics.summary.auth_none
-      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      auth_no_session: Authentication provider %{provider} has no ready session
+      auth_none: Authentication is not configured
+      auth_session_ready: Authentication session ready for %{provider}
+      auth_state_unreadable: Authentication readiness cannot be checked until secure
+        workflow state is readable.
       profile_keys_set: cli.diagnostics.summary.profile_keys_set
       profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
-      profile_none: cli.diagnostics.summary.profile_none
+      profile_none: No profile configured
+      profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
+      profile_unreadable: 'Profile cannot be read: %{status}'
       registry_counts: cli.diagnostics.summary.registry_counts
       registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
       registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
@@ -853,7 +870,8 @@ cli:
       registry_unavailable: cli.diagnostics.summary.registry_unavailable
       secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
       secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
-      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      secure_objects_unreadable: '%{unreadable} unreadable row(s), %{readable} readable
+        row(s)'
       state_backend_readable: cli.diagnostics.summary.state_backend_readable
       state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
       venv_in_sync: cli.diagnostics.summary.venv_in_sync

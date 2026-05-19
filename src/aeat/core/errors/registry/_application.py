@@ -696,4 +696,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.user_profile._orchestration.ProfileAlreadyRegisteredError",
+        ErrorCode(
+            code="REFUSED_PROFILE_ALREADY_REGISTERED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_already_registered",
+            default_suggestion="aeat config profile switch NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
