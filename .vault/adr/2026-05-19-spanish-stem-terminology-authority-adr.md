@@ -121,3 +121,189 @@ The prior code-duplication-sweep ADR proposed creating a VatClassification schem
 - _iva_ledger.py and _IvaLedgerSelector are the canonical ledger-aggregation surface.
 - The W03.P04 phase in the existing plan must be retargeted by the plan-authoring agent to consolidate VAT into IVA, not the reverse.
 
+
+### 7. Canonical rename ledger
+
+The tables below are the QC-filtered, ADR-Specialist-approved subset of the 189-row raw inventory. Rows where the raw inventory proposed stem-stuttering, generic-infra translation, or international-identifier translation have been removed. Rows blocked on the Renta-vs-Rental adjudication are included now that the adjudication is settled. Stem authority cites the canonical glossary entry; phase references map to the existing plan wave/phase structure where known and to TBD where plan retargeting is required.
+
+#### Modelo cluster (Filing to Modelo)
+
+Stem authority: modelo per AEAT nomenclature and per-modelo Ordenes Ministeriales.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| FilingDraft | src/aeat/domain/filing/_schema.py | ModeloDraft | TBD |
+| FilingDraftStatus | src/aeat/domain/filing/_schema.py | ModeloDraftStatus | TBD |
+| FilingValue | src/aeat/domain/filing/_schema.py | ModeloValue | TBD |
+| FilingValueKind | src/aeat/domain/filing/_schema.py | ModeloValueKind | TBD |
+| FilingBindingValue | src/aeat/domain/filing/_schema.py | ModeloBindingValue | TBD |
+| FilingValidationFinding | src/aeat/domain/filing/_schema.py | ModeloValidationFinding | TBD |
+| FilingApprovalBasis | src/aeat/domain/filing/_schema.py | ModeloApprovalBasis | TBD |
+| FilingValidator | src/aeat/domain/filing/_validator.py | ModeloValidator | TBD |
+| FilingAmendment | src/aeat/domain/filing/_amendment.py | ModeloAmendment | TBD |
+| FilingAmendmentError | src/aeat/domain/filing/_errors.py | ModeloAmendmentError | TBD |
+| FilingDraftError | src/aeat/domain/filing/_errors.py | ModeloDraftError | TBD |
+| FilingBuilderError | src/aeat/domain/filing/_errors.py | ModeloBuilderError | TBD |
+| FilingValidationError | src/aeat/domain/filing/_errors.py | ModeloValidationError | TBD |
+| FilingComputationError | src/aeat/domain/filing/_errors.py | ModeloComputationError | TBD |
+| FilingImportError | src/aeat/domain/filing/_errors.py | ModeloImportError | TBD |
+| FilingExportError | src/aeat/domain/filing/_errors.py | ModeloExportError | TBD |
+| FilingExportValidationError | src/aeat/domain/filing/_errors.py | ModeloExportValidationError | TBD |
+| FilingProfile | src/aeat/domain/filing/_protocols.py | ModeloProfile | TBD |
+| FilingDraftRepository | src/aeat/domain/filing/_repository.py | ModeloDraftRepository | TBD |
+| FilingRecord | src/aeat/domain/modelos/_filing_record.py | ModeloRecord (consolidates with persistence-side; see footnote 1) | schema-impact |
+| FilingRecordStatus | src/aeat/domain/modelos/_filing_record.py | ModeloRecordStatus | schema-impact |
+| FilingRecordCatalogue | src/aeat/domain/modelos/_filing_record.py | ModeloRecordCatalogue | schema-impact |
+| FilingRecordPersistenceError | src/aeat/domain/modelos/_filing_record.py | ModeloRecordPersistenceError | schema-impact |
+| FilingRecordCatalogueRepository | src/aeat/domain/modelos/_filing_repository.py | ModeloRecordCatalogueRepository | schema-impact |
+| FilingObligation | src/aeat/domain/deadlines/_models.py | ModeloObligation | TBD |
+| FilingEnrollment | src/aeat/domain/deadlines/_models.py | ModeloEnrollment | TBD |
+| FilingIVAProfile | src/aeat/domain/deadlines/_models.py | ModeloIvaProfile | TBD |
+| FilingScheduleDefinition | src/aeat/domain/calculations/registry/_schema.py | ModeloScheduleDefinition | TBD |
+| RegistryFilingObservation | src/aeat/domain/calculations/registry/_bindings.py | RegistryModeloObservation | TBD |
+| OracleFilingObservation | src/aeat/domain/calculations/registry/_bindings.py | OracleModeloObservation | TBD |
+| RegistryFilingObservationRequirement | src/aeat/domain/calculations/registry/_bindings.py | RegistryModeloObservationRequirement | TBD |
+| _PreviousFilingSelector | src/aeat/domain/calculations/registry/_bindings.py | _PreviousModeloSelector | TBD |
+| FilingApplicationError | src/aeat/application/filing/errors.py | ModeloApplicationError | TBD |
+| FilingCalculateError | src/aeat/application/filing/errors.py | ModeloCalculateError | TBD |
+| FilingHistory | src/aeat/application/filing/_history_models.py | ModeloHistory | TBD |
+| FilingHistoryEntry | src/aeat/application/filing/_history_models.py | ModeloHistoryEntry | TBD |
+| FilingHistoryRepository | src/aeat/application/filing/_history_repository.py | ModeloHistoryRepository | TBD |
+| FilingApprovalStaleReason | src/aeat/application/filing/_review.py | ModeloApprovalStaleReason | TBD |
+| FilingDivergenceKind | src/aeat/application/filing/reconciliation/ | ModeloDivergenceKind | TBD |
+| FilingDraftRef | src/aeat/application/filing/reconciliation/ | ModeloDraftRef | TBD |
+| FilingOperatorProfile | src/aeat/application/filing/runtime.py | ModeloOperatorProfile | TBD |
+| RegistryFilingSubview | src/aeat/application/filing/runtime.py | RegistryModeloSubview | TBD |
+| FilingTestProfile | src/aeat/application/filing/testing.py | ModeloTestProfile | TBD |
+| FilingTestDeadlineStatus | src/aeat/application/filing/testing.py | ModeloTestDeadlineStatus | TBD |
+| FilingTestDeadlineChecker | src/aeat/application/filing/testing.py | ModeloTestDeadlineChecker | TBD |
+| FilingDraftBuilderAdapter | src/aeat/application/workflow/_adapters.py | ModeloDraftBuilderAdapter | TBD |
+| RegistryFilingDraftProtocol | src/aeat/application/workflow/_protocols.py | RegistryModeloDraftProtocol | TBD |
+| FilingDraftBuilderProtocol | src/aeat/application/workflow/_protocols.py | ModeloDraftBuilderProtocol | TBD |
+| FilingInputsProviderProtocol | src/aeat/application/workflow/_protocols.py | ModeloInputsProviderProtocol | TBD |
+| FilingRecordNotFoundError | src/aeat/application/modelo/_actions.py | ModeloRecordNotFoundError | TBD |
+| ExternalFilingImportError | src/aeat/application/modelo/_actions.py | ExternalModeloImportError | TBD |
+| FilingFixtureError | src/aeat/core/errors/__init__.py | ModeloFixtureError | TBD |
+| FilingRecordPayload | src/aeat/entrypoints/cli/_modelo_payloads.py | ModeloRecordPayload | public-API |
+| FilingRecordListResult | src/aeat/entrypoints/cli/_modelo_payloads.py | ModeloRecordListResult | public-API |
+| FilingRecordShowResult | src/aeat/entrypoints/cli/_modelo_payloads.py | ModeloRecordShowResult | public-API |
+| FilingFindingSeverity | src/aeat/domain/submission/ | ModeloFindingSeverity | TBD |
+| FilingFinding | src/aeat/domain/submission/ | ModeloFinding | TBD |
+| FilingDraftLike | src/aeat/domain/submission/ | ModeloDraftLike | TBD |
+| DraftLoader | src/aeat/domain/submission/ | ModeloDraftLoader | TBD |
+| DraftStatus | src/aeat/domain/submission/_protocols.py | consolidate with ModeloDraftStatus (see footnote 2) | TBD |
+| SubmittedFiling | src/aeat/domain/submission/ | SubmittedModelo | TBD |
+| PdfFilingImportError | src/aeat/domain/justificante/_errors.py | PdfModeloImportError | TBD |
+
+Footnote 1: ModeloRecord already exists in src/aeat/adapters/persistence/storage/sql/records.py. The consolidation must reconcile the domain FilingRecord (pydantic write-active boundary record) with the persistence ModeloRecord (SQL row). Project lead to confirm whether they collapse into one type or whether the SQL row becomes ModeloRow (already present in _orm.py) with ModeloRecord as the domain pydantic record.
+
+Footnote 2: DraftStatus and FilingDraftStatus carry identical 10-value sets. Consolidate to a single ModeloDraftStatus enum and remove the duplicate.
+
+
+#### Declaracion cluster (Declaration to Declaracion)
+
+Stem authority: declaracion per Ley 58/2003 LGT Articulo 119.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| Declaration | src/aeat/adapters/outbound/aeat/sede/_declarations.py | Declaracion | public-API |
+| DeclarationsRegisterSession | src/aeat/adapters/outbound/aeat/sede/_declarations.py | DeclaracionesRegisterSession | public-API |
+| FiledDeclarationArtefact | src/aeat/adapters/outbound/aeat/sede/_schema.py | FiledDeclaracionArtefact | public-API |
+| FiledDeclarationObservation | src/aeat/adapters/outbound/aeat/sede/_schema.py | FiledDeclaracionObservation | public-API |
+| FiledDeclarationObservationStore | src/aeat/adapters/outbound/aeat/sede/_observation_store.py | FiledDeclaracionObservationStore | public-API |
+| DeclarationCalculateNextAction | src/aeat/application/filing/_calculate.py | DeclaracionCalculateNextAction | TBD |
+| DeclarationCalculateSummary | src/aeat/application/filing/_calculate.py | DeclaracionCalculateSummary | TBD |
+| DeclarationExportFormat | src/aeat/application/filing/_export.py | DeclaracionExportFormat | TBD |
+| DeclarationVerifyVerdict | src/aeat/application/filing/_export.py | DeclaracionVerifyVerdict | TBD |
+| DeclarationExportResult | src/aeat/application/filing/_export.py | DeclaracionExportResult | TBD |
+| DeclarationVerifyResult | src/aeat/application/filing/_export.py | DeclaracionVerifyResult | TBD |
+| DeclarationEditSpec | src/aeat/application/review/_edit.py | DeclaracionEditSpec | TBD |
+| DeclarationReviewFilterKey | src/aeat/application/review/_filter.py | DeclaracionReviewFilterKey | TBD |
+| DeclarationReviewStatus | src/aeat/application/review/_filter.py | DeclaracionReviewStatus | TBD |
+| DeclarationReviewFilterSpec | src/aeat/application/review/_filter.py | DeclaracionReviewFilterSpec | TBD |
+| DeclarationPointer | src/aeat/application/workflow/_models.py | DeclaracionPointer | TBD |
+| DeclarationParseError | src/aeat/domain/filing/reconciliation/_errors.py | DeclaracionParseError | TBD |
+| ReconciliationDeclarationSourceUnsupportedError | src/aeat/application/modelo/_reconcile.py | ReconciliationDeclaracionSourceUnsupportedError | TBD |
+| CrossReferenceApplicabilityDeclaration | src/aeat/domain/calculations/registry/_live_parity.py | CrossReferenceApplicabilityDeclaracion | TBD |
+| RentaDeclarationType | src/aeat/domain/profile/_renta_codes.py | RentaDeclaracionType | TBD |
+
+#### Censo cluster (Census to Censo)
+
+Stem authority: censo per RD 1065/2007 RGAGI.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| CensusSyncError | src/aeat/application/profile/_census_errors.py | CensoSyncError | TBD |
+| CensusNotAvailableError | src/aeat/application/profile/_census_errors.py | CensoNotAvailableError | TBD |
+| CensusFieldValidationError | src/aeat/application/profile/_census_errors.py | CensoFieldValidationError | TBD |
+| CensusApplyConflictError | src/aeat/application/profile/_census_errors.py | CensoApplyConflictError | TBD |
+| CensusComparisonStatus | src/aeat/application/profile/_census_sync.py | CensoComparisonStatus | TBD |
+| CensusFieldComparison | src/aeat/application/profile/_census_sync.py | CensoFieldComparison | TBD |
+| CensusProfileComparison | src/aeat/application/profile/_census_sync.py | CensoProfileComparison | TBD |
+| CensusApplyResult | src/aeat/application/profile/_census_sync.py | CensoApplyResult | TBD |
+| CensusSyncService | src/aeat/application/profile/_census_sync.py | CensoSyncService | TBD |
+| CensusSnapshot | src/aeat/application/live/_census.py | CensoSnapshot (Snapshot suffix retained per disambiguation rule) | TBD |
+| CensusStaleRefusedError | src/aeat/domain/modelos/_errors.py | CensoStaleRefusedError | TBD |
+| CensusRatioMismatchError | src/aeat/domain/usage_ratios/_errors.py | CensoRatioMismatchError | TBD |
+| RatiosCensusOverrideWarning | src/aeat/application/ledger/_ratios.py | RatiosCensoOverrideWarning | TBD |
+| CensusModeloRole | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloRole | TBD |
+| CensusModeloEventKind | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloEventKind | TBD |
+| CensusModeloFoundationLogFields | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloFoundationLogFields | TBD |
+| CensusModeloOwnership | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloOwnership | TBD |
+| CensusModeloFoundationContract | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloFoundationContract | TBD |
+| CensusModeloFoundationCommand | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloFoundationCommand | TBD |
+| CensusModeloFoundationResult | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloFoundationResult | TBD |
+| CensusFactSet | src/aeat/adapters/outbound/aeat/sede/_census.py | CensoFactSet | public-API |
+| CensusParseError | src/aeat/adapters/outbound/aeat/sede/_census.py | CensoParseError | public-API |
+
+The module path src/aeat/application/live/_census.py and the outbound module src/aeat/adapters/outbound/aeat/sede/_census.py also rename to _censo.py in lockstep with the contained symbols.
+
+
+#### IVA cluster (VAT to IVA, reversing prior ADR)
+
+Stem authority: iva per Ley 37/1992 IVA.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| VatClassification | src/aeat/domain/vat/_classification.py | merge into IvaInvoiceClassification; VatClassification deleted | W03.P04 (retargeted) |
+| VatRegulation | src/aeat/domain/vat/_classification.py | IvaRegulation (consolidate with existing IvaRegulation if present) | W03.P04 |
+| VATRateKind | src/aeat/domain/vat/_schema.py | IvaRateKind (consolidate with existing) | W03.P04 |
+| VATCatalogue | src/aeat/domain/vat/_schema.py | IvaCatalogue | W03.P04 |
+| VatLedgerSelector | src/aeat/domain/vat/_flow.py | _IvaLedgerSelector (already exists; reconcile) | W03.P04 |
+| IssuerResidency | src/aeat/domain/vat/_classification.py | IvaIssuerResidency (or consolidate into single IvaResidency enum; see footnote 3) | W03.P04 |
+| CustomerResidency | src/aeat/domain/vat/_classification.py | IvaCustomerResidency | W03.P04 |
+| InvoiceDirection | src/aeat/domain/vat/_classification.py | consolidate with InvoiceKind into a single InvoiceKind enum; remove InvoiceDirection | W03.P04 |
+| IvaFlowDirection | src/aeat/domain/vat/_flow.py | retain as-is (REPERCUTIDO/SOPORTADO/AUTOREPERCUTIDO is IVA-specific; not the same axis as InvoiceKind) | n/a |
+| Package path src/aeat/domain/vat/ | n/a | rename to src/aeat/domain/iva/ | W03.P04 (retargeted) |
+
+Footnote 3: IssuerResidency and CustomerResidency carry identical 5-value sets (ES_MAINLAND, ES_CANARIAS, ES_CEUTA_MELILLA, EU_MEMBER, THIRD_COUNTRY). Project lead to confirm whether they collapse into a single IvaResidency enum used in two field roles, or stay as two parallel enums under Spanish names.
+
+#### Fincas cluster (Renta/Rental adjudicated above)
+
+Stem authority: finca per Ley Hipotecaria + RDLeg 1/2004 Catastro.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| Package path src/aeat/domain/rental/ | n/a | rename to src/aeat/domain/fincas/ | schema-impact |
+| RentalFinca | src/aeat/domain/rental/_models.py | Finca | schema-impact |
+| RentalFincaRow | src/aeat/adapters/persistence/storage/sql/_orm.py | FincaRow | schema-impact |
+| RentalContract | src/aeat/domain/rental/_models.py | Arrendamiento | schema-impact |
+| RentalContractRow | src/aeat/adapters/persistence/storage/sql/_orm.py | ArrendamientoRow | schema-impact |
+| RentalIncomeRecord | src/aeat/domain/rental/_models.py | FincaIncomeRecord (or FincaRendimientoRecord; see open question) | schema-impact |
+| RentalIncomeRecordRow | src/aeat/adapters/persistence/storage/sql/_orm.py | FincaIncomeRecordRow | schema-impact |
+| RentalExpense | src/aeat/domain/rental/_models.py | FincaExpense (or FincaGasto; see open question) | schema-impact |
+| RentalExpenseRow | src/aeat/adapters/persistence/storage/sql/_orm.py | FincaExpenseRow | schema-impact |
+| RentalAmortizationLedger | src/aeat/domain/rental/_amortization_ledger.py | FincaAmortizationLedger (verify Amortization vs Amortizacion; see open question) | schema-impact |
+| RentalAmortizationLedgerRow | src/aeat/adapters/persistence/storage/sql/_orm.py | FincaAmortizationLedgerRow | schema-impact |
+
+### 8. Items explicitly retained (no rename)
+
+The following identifiers, although flagged in the raw inventory, remain unchanged under this ADR:
+
+- Snapshot family used as generic state-capture (ProfileSnapshot, RegistrySnapshot, AeatGateEnvSnapshot, RegistrySnapshotRef, RegistrySnapshotError, ProfileSnapshotPolicy, ProfileSnapshotHashMismatchError, ProfileSnapshotNotFoundError, UserProfileSnapshot). Snapshot is generic infra.
+- All *Repository, *Row, *Record, *Service, *Factory, *Validator, *Observation, *Protocol, *Error, *Selector, *Catalogue, *Store, *Adapter, *Driver, *Oracle, *Result, *Payload, *Ref suffixes. Generic infra.
+- NIF, CIF, NIE, IBAN, SWIFT, BIC. International identifiers.
+- Decimal, datetime, primitive types. Python primitives.
+- Justificante* family (already Spanish-stem; only the surrounding suffixes are English-infra).
+- Borrador* family except the duplicate BorradorPrefillEntry and Borrador100Snapshot collision in _borrador.py (those are handled by the original ADR W03.P05 phase as deletion of the legacy module, not as renames).
+
