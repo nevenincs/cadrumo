@@ -1,0 +1,91 @@
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-general"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "tipo de gravamen",
+    "cuota integra",
+]
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+# Entity-type-dispatched tipo gravamen parameters per LIS art. 29.
+# Encode each special-regime rate as a discoverable parameter cited
+# to the relevant LIS article. The new `lookup_parameter_by_entity_type`
+# op (T1.3) consumes these via a dispatch_table keyed on a profile
+# binding (entity_type ∈ {general, pyme, new_2y, cooperative,
+# non_profit}). No formula consumes them today — the parameters
+# carry the legal grounding ahead of the cuota-íntegra chain landing
+# in a follow-on slice.
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-pyme"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "23"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-new-entity-first-2-years"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "15"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-cooperative-protected"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "20"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-non-profit-special-regime"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2024-01-01
