@@ -50,7 +50,7 @@ from ._errors import LiveApplicationInputError
 from ._snapshot_base import SnapshotNotFoundError, StatelessSnapshotService
 
 
-class NotificationsSnapshotNotFoundError(SnapshotNotFoundError, AeatError):
+class NotificationsSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
     """Raised when a snapshot lookup misses by id."""
 
 
