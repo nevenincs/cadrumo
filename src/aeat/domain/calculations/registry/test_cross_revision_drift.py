@@ -17,7 +17,6 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
-from ._errors import RegistryValidationError
 from ._schema import CasillaDefinition
 from ._validate import (
     RegistryValidator,
@@ -118,8 +117,8 @@ class TestCrossRevisionConsistency:
         c = _casilla(cid="0700", label="Different")
         m = _modelo("100", {"2023": [a], "2024": [b], "2025": [c]})
         failures = _validate_cross_revision_casilla_consistency([m])
-        assert len(failures) == 1
-        assert "2025" in failures[0]
+        assert len(failures) == 2
+        assert all("2025" in failure for failure in failures)
 
     def test_two_modelos_independent(self) -> None:
         m100 = _modelo("100", {"2024": [_casilla(cid="0700", label="A")],
@@ -138,26 +137,13 @@ class TestCrossRevisionConsistency:
         assert "2025" in failures[0]
 
 
-def test_cross_revision_validator_catches_real_committed_corpus_drift() -> None:
+def test_cross_revision_validator_accepts_committed_corpus() -> None:
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
 
-    with pytest.raises(RegistryValidationError) as exc_info:
-        validate_cross_revision_casilla_consistency(modelos)
-
-    message = str(exc_info.value)
-    assert "cross-revision casilla drift detected" in message
-    assert "cross-revision drift: modelo " in message
-    assert "canonical revision" in message
-    assert "divergences" in message
+    validate_cross_revision_casilla_consistency(modelos)
 
 
-def test_backend_registry_validation_enforces_committed_corpus_drift() -> None:
+def test_backend_registry_validation_accepts_committed_corpus_drift_gate() -> None:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
-    with pytest.raises(RegistryValidationError) as exc_info:
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
-
-    message = str(exc_info.value)
-    assert "registry validation failed" in message
-    assert "cross-revision drift: modelo " in message
-    assert "divergences" in message
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)

@@ -21,13 +21,11 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ._errors import RegistryValidationError
 from ._schema import CasillaAlias, CasillaConstraints, CasillaDefinition
 from ._validate import (
     _emit_semantic_role_typo_twin_warnings,
     _validate_semantic_role_consistency,
 )
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -127,7 +125,6 @@ class TestValidateSemanticRoleConsistency:
         assert any("taxpayer_nif" in f for f in failures)
 
     def test_diverging_constraints_rejected(self) -> None:
-        from decimal import Decimal
         common_legal = ("ley-58-2003:art-29",)
         common_source = ("aeat-manual",)
         constrained = CasillaConstraints(
