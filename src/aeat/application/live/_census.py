@@ -145,18 +145,14 @@ def derive_census_snapshot_id(
     re-saving is then a no-op via :meth:`CensusSnapshotService.refresh`.
     """
 
-    canonical = json.dumps(
+    return derive_snapshot_id_from_json(
         {
             "profile_id": profile_id.strip(),
             "captured_at": captured_at.isoformat(),
             "source_url": source_url,
             "census_facts": dict(sorted(census_facts.items())),
-        },
-        ensure_ascii=True,
-        sort_keys=True,
-        separators=(",", ":"),
+        }
     )
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _snapshot_from_record(
