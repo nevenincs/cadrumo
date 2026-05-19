@@ -1114,3 +1114,144 @@ This section presents a detailed consolidation strategy for the 5 near-identical
 Exception-audit remediation: outbound storage errors disambiguated with `Outbound` prefix on 2026-05-19 (`StorageError → OutboundStorageError` and all eight subclasses in `src/aeat/adapters/outbound/storage/_errors.py`, with importers in `_local.py`, `_google_drive.py`, `_factory.py`, `_protocol.py`, the storage test suite, `outbound/google/_calc_sheets_{pull,apply}.py`, `outbound/google/test_compute_from_pull.py`, `entrypoints/cli/_config/_google.py`, `core/errors/registry/_adapters.py`, and `tests/test_layout_import_smoke.py` updated in lock-step). Persistence-side `StorageError` in `aeat.adapters.persistence.storage.errors` remains canonical and untouched; developers catching either hierarchy can no longer accidentally shadow the other.
 
 Snapshot consolidation Phase 1 landed 2026-05-19: Borrador100SnapshotService migrated onto SnapshotService[TPayload].
+
+---
+
+## Registry TOML Drift Sweep
+
+Exhaustive READ-ONLY audit of `src/aeat/_data/registry/aeat/` (65+ TOML files across modelos/, legal/, topics/) for duplicate casilla definitions, ENG/ESP drift, formula-id inconsistency, orphaned refs, and structural copy-paste violations.
+
+### FINDING 1: English-Stem Key 'filing_year' Used Throughout; Spanish Authority ADR Not Enforced
+
+**Risk Category**: drift / english-stem-needs-spanish
+
+**Locations**:
+- 32 modelos TOML files (all revisions): `filing_year` used as draft_attribute (modelos 111, 115, 123, 130, 131, 180, 184, 193, 202, 232, 303)
+- Modelos 111.toml:18 occurrences; 123.toml:11; 115.toml:4; 130.toml:8; 131.toml:8; 180.toml:4; 184.toml:9; 202.toml:11; 232.toml:9; 303.toml:8
+- Example: `draft_attribute = "filing_year"` (modelos 111:532, 802; 123:332, 587, 1391, 1660; etc.)
+
+**Evidence**: The ADR mandates Spanish stems for tax domain keys. `filing_year` is English metadata infrastructure (acceptable) BUT its use in casilla-level `draft_attribute` and selector filters (`filing_year_delta`, `source_revision_selector`) leaks English naming into domain logic.
+
+**Issue**: `filing_year` is mixed with Spanish-authority fields in same TOML blocks. Cross-check modelos 100 revisions (2020-2025): only English labels found (2025.toml:23268 shows `label = "NIF"`).
+
+**Remediation**: Document distinction: `filing_year` is metadata (English OK); casilla labels are user-facing (must be Spanish per ADR). Add validation rule: `draft_attribute` must use Spanish stems or pre-approved infrastructure keys.
+
+---
+
+### FINDING 2: Inconsistent 'source_output' Naming Convention (Numeric, Dash-Delimited, Nested Paths)
+
+**Risk Category**: drift / formula-id naming inconsistency
+
+**Locations**:
+- Modelo 202.toml: `source_output = "34"` (numeric string, lines 1312, 1327, 1342, 2315, 2330, 2345, 3316, 3331, 3346)
+- Modelo 180.toml: `source_output = "01"` numeric (lines 92, 107, 122)
+- Modelo 131.toml: `source_output = "saldo-negativo-fin-periodo"` (dash-delimited, lines 817, 847, 2596, 2626)
+- Modelo 303.toml: `source_output = "iva.compensacion-disponible-fin-periodo"` (dot-nested, lines 389, 559)
+- Modelo 100 revisions (2020-2025): Mixed numeric + compound (`"decl.retenciones-total"`, `"tipo2.renta-atribuible-importe"` with orthogonal `relation` metadata)
+
+**Issue**: No consistent schema for output identifiers. Risk of cross-referencing errors and duplicate outputs with different ID formats.
+
+**Remediation**: Formalize `OutputID` type with validation. Add reverse index from output IDs to source casilla revisions. Audit all 32 modelos for numeric vs. semantic output classification.
+
+---
+
+### FINDING 3: No Shared Casilla Repository; 24+ Duplicate 'retenciones_ingresos_a_cuenta' Semantic Role Definitions
+
+**Risk Category**: duplicate
+
+**Locations**:
+- Modelos 111.toml (lines 100, 175, 250, 325, 413), 115.toml:78, 123.toml (lines 112, 126, 140, 1236), 130.toml (lines 124, 178), 131.toml (lines 193, 1138, 2908, 4614), 180.toml (lines 200, 227, 1529, 1556), 193.toml:157, 202.toml (lines 610, 1881, 2882)
+
+**Count**: 24+ identical semantic_role definitions across 8 independent modelos. Each redeclares data_type, constraints, legal_refs, source_refs identically.
+
+**Remediation**: Create shared `[[semantic_roles]]` section in `topics/casilla.toml`. Each role definition includes id, data_type, constraints, generic legal_refs, template source_refs. Modelos reference by role ID only. Replaces 24+ duplicate blocks with 8 role-references (90% reduction).
+
+---
+
+### FINDING 4: 'section' Array Inconsistency (Underscores, Nesting Depth, Language Mix)
+
+**Risk Category**: drift
+
+**Locations**:
+- English underscores: modelos 111, 115, 123, 130 (e.g., `"trabajo_dinerario"`, `"actividades_economicas_estimacion_directa"`)
+- Spanish underscores: modelos 180, 184 (e.g., `"declarante"`, `"perceptor"`, `"inmueble"` with nesting depth up to 3 in 180.toml:172+)
+- No nesting: most modelos; deep nesting: modelo 180 only
+
+**Remediation**: Create canonical `topics/sections.toml` with section hierarchy and usage constraints. Validate all section references against this registry. Align naming per ADR (English infrastructure vs. Spanish domain).
+
+---
+
+### FINDING 5: Legal and Source Refs Point to Undefined Reference IDs
+
+**Risk Category**: orphan-ref
+
+**Locations**:
+- All modelos: `legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80", ...]` — NO corresponding definition
+- All modelos: `source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions", ...]` — NO definition
+- Some refs lack version suffixes (`"aeat-modelo-036-procedure"`, no version)
+
+**Issue**: Refs are declarative strings with no schema validation. Typos or changes are undetectable.
+
+**Remediation**: Add `[[legal_refs]]` and `[[source_refs]]` registry sections (new file `legal/references.toml`). Each ref must exist or be marked `unresolved = true` with issue link.
+
+---
+
+### FINDING 6: Manifest-Based Modelos (100) vs. Flat Modelos (111+) Structural Inconsistency
+
+**Risk Category**: drift / structural inconsistency
+
+**Locations**:
+- Modelo 100: `modelos/100/manifest.toml` + per-year revisions (`revisions/2020.toml` through `revisions/2025.toml`, 7 files)
+- Modelos 111, 115, 123, etc.: Single file with embedded `[revisions."2019-y-siguientes"]` (~2100–7300 lines per file)
+
+**Issue**: No consistency. Modelo 100 is modular (easy to version-pin); Modelos 111–232 are monolithic (hard to navigate and maintain).
+
+**Remediation**: Standardize to manifest + per-year revisions for all modelos (follow modelo 100 pattern).
+
+---
+
+### FINDING 7: ID Namespace Collision (Dash vs. Underscore, Mixed Type Encoding)
+
+**Risk Category**: drift
+
+**Locations**:
+- Export refs (dash): `"modelo-111-casilla-01"` (modelos 111.toml:78+)
+- Semantic roles (underscore): `"retenciones_ingresos_a_cuenta"` (modelos 111+)
+- Output IDs (dash): `"saldo-negativo-fin-periodo"` (modelos 130, 131)
+- Casilla IDs (numeric): `"01"`, `"02"` (modelos 111.toml:71+)
+
+**Issue**: No authority for delimiters. Both `"modelo-111-casilla-01"` and `"01"` refer to the same casilla with no clear signal of which is authoritative.
+
+**Remediation**: Define ID prefixes and separators: casilla (numeric or `{modelo}:casilla:{number}`), semantic_role (`semantic:{slug}`), export (`export:{tipo}:{id}`), output (`output:{source_modelo}:{id}`).
+
+---
+
+### FINDING 8: Per-Modelo Copy-Pasted Headers and Profile Conditions (No Inheritance)
+
+**Risk Category**: duplicate / structural copy-paste
+
+**Locations**:
+- Each modelo (111, 115, 123, 180, etc.) redeclares identical `[modelo]` block structure: `tax_domain`, `jurisdiction = "ES-AEAT"`, `output_sensitivity`, `legal_refs`, `source_refs`
+- Each revision level redeclares `legal_refs` and `source_refs` verbatim (often identical to parent)
+- Ejemplo: Modelo 111.toml declares 8 legal refs at lines 9 (modelo), 16 (revision), 24 (filing_schedule), 32+ (profile_conditions) — same content repeated 10+ times
+
+**Remediation**: Define `[modelo_template.irpf_quarterly]` in shared template file (e.g., `templates/irpf.toml`). Each modelo references `template = "irpf_quarterly"` and overrides only differing fields. Reduces duplicate 111.toml from 2100 to ~500 lines of unique content.
+
+---
+
+### Summary: TOML Registry Findings by Risk Category
+
+| Category | Count | Examples |
+|----------|-------|----------|
+| **drift** | 3 | `filing_year` ENG/SPA mix, section naming, ID delimiters |
+| **duplicate** | 2 | 24+ semantic_role redefinitions, 8+ modelo headers copy-pasted |
+| **orphan-ref** | 1 | legal_refs/source_refs undefined |
+| **english-stem-needs-spanish** | 1 | `filing_year` in domain-logic contexts |
+| **structural inconsistency** | 2 | Flat modelos vs. manifest+revisions, no shared registries |
+
+**Total Unique Findings**: 8
+
+**Estimated Remediation Effort**: 80–120 engineering hours (shared registry creation, template extraction, ID validation, mass refactoring across 32 modelos).
+
+---
+
