@@ -9,7 +9,7 @@ citations and review metadata, and Python consumers import them
 from this module.
 
 The loader follows the same idiom as
-:mod:`aeat.domain.rental._imputacion_parameters`: a frozen pydantic
+:mod:`aeat.domain.fincas._imputacion_parameters`: a frozen pydantic
 record loaded once at module import time, with an explicit
 :func:`recargo_rate_for` helper that maps from the substrate's
 :class:`IvaRateKind` tier to the corresponding recargo Decimal.

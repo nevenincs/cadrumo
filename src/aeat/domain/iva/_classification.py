@@ -18,10 +18,10 @@ every classification outcome is reproducible by replaying the same
 Examples:
     >>> from datetime import date
     >>> from . import (
-    ...     IvaResidency,
+    ...     IvaTerritorialScope,
     ...     CustomerTaxStatus,
     ...     EUMemberState,
-    ...     IvaResidency,
+    ...     IvaTerritorialScope,
     ...     InvoiceKind,
     ...     TransactionKind,
     ...     IvaRateKind,
@@ -30,8 +30,8 @@ Examples:
     ... )
     >>> criteria = IvaInvoiceClassificationCriteria(
     ...     transaction_date=date(2025, 6, 15),
-    ...     issuer_residency=IvaResidency.ES_MAINLAND,
-    ...     customer_residency=IvaResidency.EU_MEMBER,
+    ...     issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+    ...     customer_residency=IvaTerritorialScope.EU_MEMBER,
     ...     customer_member_state=EUMemberState.DE,
     ...     customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
     ...     kind=TransactionKind.GOODS,
@@ -67,16 +67,21 @@ _logger = get_logger(__name__)
 # -- Closed enumerations --------------------------------------------------
 
 
-class IvaResidency(StrEnum):
-    """Tax-residency classification of an invoice party.
+class IvaTerritorialScope(StrEnum):
+    """Territorial-scope classification of an invoice party.
 
-    The five values partition the universe of residencies the classifier
-    distinguishes. Used for both issuer and customer roles via field name
-    semantics (``issuer_residency: IvaResidency``,
-    ``customer_residency: IvaResidency``). Parties in Canarias, Ceuta or
-    Melilla are NOT subject to LIVA; the classifier short-circuits to
-    :attr:`aeat.domain.iva.IvaCategory.DOMESTIC_NOT_SUBJECT` for issuers in
-    those territories (out of TAI).
+    Per Ley 37/1992 Art. 3.Dos and Arts. 68-72, the substrate segments
+    parties by ``territorio de aplicación del impuesto`` and the
+    ``lugar de realización`` rules rather than tax residency in the
+    civil-law sense. The five values partition that territorial scope
+    for both issuer and customer roles via field-name semantics
+    (``issuer_residency: IvaTerritorialScope``,
+    ``customer_residency: IvaTerritorialScope`` — the field name keeps
+    the role label; the type carries the territorial framing). Parties
+    in Canarias, Ceuta or Melilla are NOT subject to LIVA; the
+    classifier short-circuits to
+    :attr:`aeat.domain.iva.IvaCategory.DOMESTIC_NOT_SUBJECT` for issuers
+    in those territories (out of TAI).
 
     Attributes:
         ES_MAINLAND: Spanish mainland and Balearic Islands (TAI).
@@ -212,16 +217,16 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
         direction: ``ISSUED`` or ``RECEIVED``.
         issuer_member_state: Issuer's :class:`aeat.domain.iva.EUMemberState`,
             required when :attr:`issuer_residency` is
-            :attr:`IvaResidency.EU_MEMBER`.
+            :attr:`IvaTerritorialScope.EU_MEMBER`.
         customer_member_state: Customer's
             :class:`aeat.domain.iva.EUMemberState`, required when
-            :attr:`customer_residency` is :attr:`IvaResidency.EU_MEMBER`.
+            :attr:`customer_residency` is :attr:`IvaTerritorialScope.EU_MEMBER`.
         rate_tier: Explicit rate-tier axis for ES-to-ES domestic rules.
     """
 
     transaction_date: date = Field(description="When the supply takes place.")
-    issuer_residency: IvaResidency = Field(description="Issuer's tax residency.")
-    customer_residency: IvaResidency = Field(description="Customer's tax residency.")
+    issuer_residency: IvaTerritorialScope = Field(description="Issuer's tax residency.")
+    customer_residency: IvaTerritorialScope = Field(description="Customer's tax residency.")
     customer_tax_status: CustomerTaxStatus = Field(description="Customer's VAT status.")
     kind: TransactionKind = Field(description="Kind of supply.")
     direction: InvoiceKind = Field(description="ISSUED or RECEIVED.")
@@ -266,13 +271,13 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
           before ``R05`` runs, so their rate tier is a payload concern not a
           classification axis.
         """
-        if self.issuer_residency is IvaResidency.EU_MEMBER and self.issuer_member_state is None:
+        if self.issuer_residency is IvaTerritorialScope.EU_MEMBER and self.issuer_member_state is None:
             raise IvaValidationError("issuer_member_state is required when issuer_residency is EU_MEMBER")
-        if self.customer_residency is IvaResidency.EU_MEMBER and self.customer_member_state is None:
+        if self.customer_residency is IvaTerritorialScope.EU_MEMBER and self.customer_member_state is None:
             raise IvaValidationError("customer_member_state is required when customer_residency is EU_MEMBER")
         if (
-            self.issuer_residency is IvaResidency.ES_MAINLAND
-            and self.customer_residency is IvaResidency.ES_MAINLAND
+            self.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+            and self.customer_residency is IvaTerritorialScope.ES_MAINLAND
             and self.kind
             not in {
                 TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
@@ -318,9 +323,9 @@ class IvaClassificationResult(_IvaStrictFrozen):
 # -- Predicate-driven decision table --------------------------------------
 
 
-def _is_es(residency: IvaResidency) -> bool:
+def _is_es(residency: IvaTerritorialScope) -> bool:
     """Return ``True`` when ``residency`` is mainland Spain (TAI)."""
-    return residency is IvaResidency.ES_MAINLAND
+    return residency is IvaTerritorialScope.ES_MAINLAND
 
 
 def _r01_construction_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
@@ -390,8 +395,8 @@ def _r05_domestic_at_rate(criteria: IvaInvoiceClassificationCriteria) -> bool:
 def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2B goods supply (Art. 25 exempt)."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.ISSUED
@@ -401,8 +406,8 @@ def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
 def _r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an EU_MEMBER to ES B2B goods acquisition (Art. 13 + reverse charge)."""
     return (
-        criteria.issuer_residency is IvaResidency.EU_MEMBER
-        and criteria.customer_residency is IvaResidency.ES_MAINLAND
+        criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
+        and criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.RECEIVED
@@ -412,8 +417,8 @@ def _r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> boo
 def _r12_services_b2b_eu_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2B services supply (Art. 69, place of supply at destination)."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
@@ -423,8 +428,8 @@ def _r12_services_b2b_eu_outbound(criteria: IvaInvoiceClassificationCriteria) ->
 def _r13_services_b2b_eu_inbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an EU_MEMBER to ES B2B services supply (Art. 84.Uno.2º.a reverse charge at ES)."""
     return (
-        criteria.issuer_residency is IvaResidency.EU_MEMBER
-        and criteria.customer_residency is IvaResidency.ES_MAINLAND
+        criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
+        and criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.RECEIVED
@@ -434,8 +439,8 @@ def _r13_services_b2b_eu_inbound(criteria: IvaInvoiceClassificationCriteria) -> 
 def _r14_digital_b2c_oss_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2C digital service routed via OSS (Art. 70.Uno.4º)."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.SERVICES_DIGITAL_B2C_OSS
         and criteria.direction is InvoiceKind.ISSUED
@@ -445,8 +450,8 @@ def _r14_digital_b2c_oss_outbound(criteria: IvaInvoiceClassificationCriteria) ->
 def _r15_distance_sales_b2c_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2C distance-sales supply (caller enforces threshold)."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.ISSUED
@@ -456,8 +461,8 @@ def _r15_distance_sales_b2c_outbound(criteria: IvaInvoiceClassificationCriteria)
 def _r16_external_scheme_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a THIRD_COUNTRY to EU_MEMBER B2C service routed through Esquema Exterior (LIVA art. 163 octiesdecies)."""
     return (
-        criteria.issuer_residency is IvaResidency.THIRD_COUNTRY
-        and criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.issuer_residency is IvaTerritorialScope.THIRD_COUNTRY
+        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.EXTERNAL_SCHEME_SERVICES
         and criteria.direction is InvoiceKind.ISSUED
@@ -467,8 +472,8 @@ def _r16_external_scheme_services(criteria: IvaInvoiceClassificationCriteria) ->
 def _r17_oss_union_goods_distance_sale(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2C OSS-Unión goods distance sale (LIVA art. 163 unvicies)."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE
         and criteria.direction is InvoiceKind.ISSUED
@@ -478,8 +483,8 @@ def _r17_oss_union_goods_distance_sale(criteria: IvaInvoiceClassificationCriteri
 def _r18_oss_union_goods_interface_facilitated(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match ES to EU_MEMBER B2C OSS-Unión interface-facilitated goods."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.OSS_UNION_GOODS_INTERFACE_FACILITATED
         and criteria.direction is InvoiceKind.ISSUED
@@ -489,8 +494,8 @@ def _r18_oss_union_goods_interface_facilitated(criteria: IvaInvoiceClassificatio
 def _r19_oss_union_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2C OSS-Unión services supply (LIVA art. 163 unvicies)."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.OSS_UNION_SERVICES
         and criteria.direction is InvoiceKind.ISSUED
@@ -500,8 +505,8 @@ def _r19_oss_union_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
 def _r20_export_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to THIRD_COUNTRY goods export (Art. 21, exención plena)."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.THIRD_COUNTRY
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.THIRD_COUNTRY
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.ISSUED
     )
@@ -510,8 +515,8 @@ def _r20_export_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
 def _r21_import_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a THIRD_COUNTRY to ES goods import (Art. 18)."""
     return (
-        criteria.issuer_residency is IvaResidency.THIRD_COUNTRY
-        and criteria.customer_residency is IvaResidency.ES_MAINLAND
+        criteria.issuer_residency is IvaTerritorialScope.THIRD_COUNTRY
+        and criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.RECEIVED
     )
@@ -520,8 +525,8 @@ def _r21_import_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
 def _r22_services_outbound_third_country(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to THIRD_COUNTRY services supply (Art. 69, place of supply outside TAI)."""
     return (
-        criteria.issuer_residency is IvaResidency.ES_MAINLAND
-        and criteria.customer_residency is IvaResidency.THIRD_COUNTRY
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency is IvaTerritorialScope.THIRD_COUNTRY
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
     )
@@ -530,7 +535,7 @@ def _r22_services_outbound_third_country(criteria: IvaInvoiceClassificationCrite
 def _r23_ioss_distance_sale_low_value(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a low-value imported-goods distance sale routed through IOSS (LIVA art. 163 quinvicies)."""
     return (
-        criteria.customer_residency is IvaResidency.EU_MEMBER
+        criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE
         and criteria.direction is InvoiceKind.ISSUED
@@ -540,8 +545,8 @@ def _r23_ioss_distance_sale_low_value(criteria: IvaInvoiceClassificationCriteria
 def _r30_canarias_ceuta_melilla(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match issuers based in Canarias / Ceuta / Melilla (out of TAI)."""
     return criteria.issuer_residency in {
-        IvaResidency.ES_CANARIAS,
-        IvaResidency.ES_CEUTA_MELILLA,
+        IvaTerritorialScope.ES_CANARIAS,
+        IvaTerritorialScope.ES_CEUTA_MELILLA,
     }
 
 
@@ -825,7 +830,7 @@ __all__ = [
     "InvoiceKind",
     "IvaClassificationResult",
     "IvaInvoiceClassificationCriteria",
-    "IvaResidency",
+    "IvaTerritorialScope",
     "TransactionKind",
     "classify_iva",
 ]
