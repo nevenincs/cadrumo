@@ -32,6 +32,21 @@ from ...domain.user_profile import (
 )
 
 if TYPE_CHECKING:
+    from ._censo_errors import (
+        CensoApplyConflictError,
+        CensoFieldValidationError,
+        CensoNotAvailableError,
+        CensoSyncError,
+    )
+    from ._censo_sync import (
+        CENSUS_SOURCE_TAG,
+        CensoApplyResult,
+        CensoComparisonStatus,
+        CensoFactSource,
+        CensoFieldComparison,
+        CensoProfileComparison,
+        CensoSyncService,
+    )
     from ._lifecycle import ProfileLifecycleService
     from ._preflight import ProfilePreflightService
     from ._projections import facts_to_values, projection_for_autonomo, record_to_values, snapshot_to_values
@@ -279,6 +294,27 @@ def __getattr__(name: str):
         from ._lifecycle import ProfileLifecycleService
 
         return ProfileLifecycleService
+    if name in (
+        "CensoApplyConflictError",
+        "CensoFieldValidationError",
+        "CensoNotAvailableError",
+        "CensoSyncError",
+    ):
+        from . import _censo_errors
+
+        return getattr(_censo_errors, name)
+    if name in (
+        "CENSUS_SOURCE_TAG",
+        "CensoApplyResult",
+        "CensoComparisonStatus",
+        "CensoFactSource",
+        "CensoFieldComparison",
+        "CensoProfileComparison",
+        "CensoSyncService",
+    ):
+        from . import _censo_sync
+
+        return getattr(_censo_sync, name)
     if name in ("facts_to_values", "projection_for_autonomo", "record_to_values", "snapshot_to_values"):
         from . import _projections
 
@@ -306,8 +342,19 @@ def __getattr__(name: str):
 
 
 __all__ = [
+    "CENSUS_SOURCE_TAG",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
+    "CensoApplyConflictError",
+    "CensoApplyResult",
+    "CensoComparisonStatus",
+    "CensoFactSource",
+    "CensoFieldComparison",
+    "CensoFieldValidationError",
+    "CensoNotAvailableError",
+    "CensoProfileComparison",
+    "CensoSyncError",
+    "CensoSyncService",
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",

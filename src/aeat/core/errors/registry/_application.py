@@ -653,7 +653,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._censo_errors.CensoSyncError",
+        "aeat.application.user_profile._censo_errors.CensoSyncError",
         ErrorCode(
             code="FAIL_CENSUS_SYNC",
             category=ErrorCategory.FAIL,
@@ -664,7 +664,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._censo_errors.CensoNotAvailableError",
+        "aeat.application.user_profile._censo_errors.CensoNotAvailableError",
         ErrorCode(
             code="REFUSED_CENSUS_NOT_AVAILABLE",
             category=ErrorCategory.REFUSED,
@@ -675,7 +675,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._censo_errors.CensoFieldValidationError",
+        "aeat.application.user_profile._censo_errors.CensoFieldValidationError",
         ErrorCode(
             code="REFUSED_CENSUS_FIELD_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -686,7 +686,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._censo_errors.CensoApplyConflictError",
+        "aeat.application.user_profile._censo_errors.CensoApplyConflictError",
         ErrorCode(
             code="REFUSED_CENSUS_APPLY_CONFLICT",
             category=ErrorCategory.REFUSED,

@@ -47,6 +47,7 @@ from ...application.review import (
     LedgerReviewFilterSpec,
 )
 from ...application.workflow._models import resolve_active_bucket_id
+from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -67,7 +68,6 @@ from ._common import (
     _state,
     _tx_repo,
 )
-from ...core.i18n import tr
 
 app = typer.Typer(
     name="ledger",
@@ -1364,7 +1364,6 @@ def _ratios_bucket_id() -> str:
     """Return the active workflow bucket id or raise the standard CLI refusal."""
 
     from ...application.workflow._models import active_bucket_id_or_raise
-    from ...application.workflow._persistence import workflow_state_repository
 
     try:
         return active_bucket_id_or_raise()
@@ -1382,9 +1381,7 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     """
 
     from ...application.workflow._models import active_bucket_id_or_raise, resolve_active_bucket_id
-    from ...application.workflow._persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
     try:
         bucket_id = active_bucket_id_or_raise()
     except Exception as exc:  # NoActiveProfileError + downstream raises
@@ -1473,7 +1470,7 @@ def _resolve_business_pct_with_census(
 
 
     from ...application.ledger._ratios import census_business_pct_for
-    from ...application.profile import CensoSyncService
+    from ...application.user_profile import CensoSyncService
     from ...domain.categories import SpendingCategory
 
     if operator_supplied is not None:
@@ -1571,7 +1568,7 @@ def _resolve_category(raw: str):
     ),
 )
 def ratios_list(ctx: typer.Context) -> None:
-    from ...application.profile import CensoSyncService
+    from ...application.user_profile import CensoSyncService
     from ...domain.usage_ratios import (
         CensoRatioMismatchError,
         load_usage_ratios,
@@ -1622,7 +1619,7 @@ def ratios_set(
     ),
 ) -> None:
     from ...application.ledger._ratios import census_override_warning
-    from ...application.profile import CensoSyncService
+    from ...application.user_profile import CensoSyncService
     from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
 
     category_enum = _resolve_category(category)

@@ -2,7 +2,7 @@
 
 Mounts the operator-facing census-sync surface on the existing
 ``config profile`` subgroup. The backend is
-:class:`aeat.application.profile.CensoSyncService`; this module is the
+:class:`aeat.application.user_profile.CensoSyncService`; this module is the
 thin Typer layer that resolves the active profile/bucket, calls the
 service, emits payload + text, and surfaces typed refusals.
 
@@ -36,7 +36,7 @@ def _active_pointer() -> tuple[ProfileName, ProfileName]:
 
 
 def _build_service(bucket_id: str):
-    from ....application.profile import CensoSyncService
+    from ....application.user_profile import CensoSyncService
 
     return CensoSyncService(bucket_id=bucket_id)
 
@@ -105,7 +105,7 @@ def register(profile_app: typer.Typer) -> None:
     def census_refresh(ctx: typer.Context) -> None:
         import asyncio
 
-        from ....application.profile import CensoNotAvailableError
+        from ....application.user_profile import CensoNotAvailableError
         from ....domain.buckets import BucketEventType
 
         profile_id, bucket_id = _active_pointer()
@@ -151,7 +151,7 @@ def register(profile_app: typer.Typer) -> None:
             ),
         ),
     ) -> None:
-        from ....application.profile import CensoNotAvailableError
+        from ....application.user_profile import CensoNotAvailableError
 
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
@@ -197,7 +197,7 @@ def register(profile_app: typer.Typer) -> None:
             ),
         ),
     ) -> None:
-        from ....application.profile import CensoNotAvailableError
+        from ....application.user_profile import CensoNotAvailableError
 
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
@@ -240,7 +240,7 @@ def register(profile_app: typer.Typer) -> None:
             ),
         ),
     ) -> None:
-        from ....application.profile import (
+        from ....application.user_profile import (
             CensoApplyConflictError,
             CensoNotAvailableError,
         )
