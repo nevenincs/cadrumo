@@ -64,7 +64,9 @@ def _observation(
     country: str,
     base: str,
     clave: str | None,
-    source_kind: str = "ledger_transaction",
+    # 349 bindings declare source="collectible_invoice"; observations
+    # must match for the counterpart resolver to aggregate them.
+    source_kind: str = "collectible_invoice",
     is_rectification: bool = False,
     previous: str | None = None,
     period: str | None = None,
