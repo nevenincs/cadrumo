@@ -41,6 +41,18 @@ from pydantic import BaseModel
 from ._errors import LiveApplicationInputError
 
 
+class SnapshotNotFoundError(KeyError):
+    """Shared base for per-service snapshot-lookup-miss errors.
+
+    Per-service subclasses (BorradorSnapshotNotFoundError,
+    ExpedientesSnapshotNotFoundError, NotificationsSnapshotNotFoundError,
+    and future siblings) inherit from this base in addition to
+    :class:`aeat.core.errors.AeatError`, so callers can either catch the
+    domain-specific class name or the shared parent. Inheriting from
+    :class:`KeyError` mirrors the semantics of a missing lookup key.
+    """
+
+
 class SnapshotLifecycleState(StrEnum):
     """Lifecycle states shared across stateful live snapshot services.
 
@@ -326,6 +338,7 @@ class StatelessSnapshotService(ABC, Generic[TPayload]):
 
 __all__ = [
     "SnapshotLifecycleState",
+    "SnapshotNotFoundError",
     "SnapshotRepository",
     "SnapshotService",
     "StatelessSnapshotService",

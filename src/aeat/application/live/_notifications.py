@@ -47,10 +47,10 @@ from ...adapters.outbound.aeat.sede._notifications import (
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ._errors import LiveApplicationInputError
-from ._snapshot_base import StatelessSnapshotService
+from ._snapshot_base import SnapshotNotFoundError, StatelessSnapshotService
 
 
-class NotificationsSnapshotNotFoundError(AeatError):
+class NotificationsSnapshotNotFoundError(SnapshotNotFoundError, AeatError):
     """Raised when a snapshot lookup misses by id."""
 
 

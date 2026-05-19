@@ -34,10 +34,10 @@ from ...adapters.outbound.aeat.sede._declarations import Declaration
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ._errors import LiveApplicationInputError
-from ._snapshot_base import StatelessSnapshotService
+from ._snapshot_base import SnapshotNotFoundError, StatelessSnapshotService
 
 
-class ExpedientesSnapshotNotFoundError(AeatError):
+class ExpedientesSnapshotNotFoundError(SnapshotNotFoundError, AeatError):
     """Raised when an expedientes snapshot lookup misses by id."""
 
 
