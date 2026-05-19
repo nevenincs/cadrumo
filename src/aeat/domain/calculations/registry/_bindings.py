@@ -212,11 +212,11 @@ def previous_filing_observation_requirements(
             continue
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
-        for required_period in selector.required_periods:
+        for required_period in selector.required_periods_for_target(period):
             key = (selector.source_modelo, expected_year, required_period)
             bucket = grouped.setdefault(key, {"binding_ids": set(), "source_casillas": set()})
             bucket["binding_ids"].add(binding.id)
-            bucket["source_casillas"].update(selector.source_casillas)
+            bucket["source_casillas"].update(_previous_filing_source_ids(selector))
     return tuple(
         RegistryFilingObservationRequirement(
             modelo=modelo,
@@ -252,7 +252,7 @@ def resolve_previous_filing_binding_values(
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
         values = []
-        for required_period in selector.required_periods:
+        for required_period in selector.required_periods_for_target(period):
             matches = tuple(
                 observation
                 for observation in available
@@ -265,7 +265,7 @@ def resolve_previous_filing_binding_values(
                     f"binding {binding.id!r} expected one observed filing "
                     f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}"
                 )
-            for casilla_id in selector.source_casillas:
+            for casilla_id in _previous_filing_source_ids(selector):
                 casilla_value = matches[0].casilla_values.get(casilla_id)
                 if casilla_value is None:
                     raise RegistryValidationError(
@@ -297,6 +297,7 @@ class _PreviousFilingSelector(BaseModel):
     filing_year_delta: int = 0
     period: str | None = Field(default=None, min_length=1, max_length=8)
     source_periods: tuple[str, ...] = ()
+    source_period_offset_from_target: int | None = None
     # Two-shape source spec: ``source_casillas`` (plural) carries a
     # tuple of casillas on the source filing for aggregation; the
     # singular ``source_output`` covers the direct-value-copy shape
@@ -321,6 +322,14 @@ class _PreviousFilingSelector(BaseModel):
             return (self.period,)
         return self.source_periods
 
+    def required_periods_for_target(self, target_period: str) -> tuple[str, ...]:
+        if self.source_period_offset_from_target is None:
+            return self.required_periods
+        derived = _derive_offset_source_period(self.source_period_offset_from_target, target_period=target_period)
+        if derived is None:
+            return ()
+        return (derived,)
+
     @field_validator("period")
     @classmethod
     def _period_not_empty(cls, value: str | None) -> str | None:
@@ -337,6 +346,14 @@ class _PreviousFilingSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_period_selector(self) -> _PreviousFilingSelector:
+        if self.source_period_offset_from_target is not None:
+            if self.period is not None or self.source_periods:
+                raise RegistryValidationError(
+                    "previous-filing selector cannot declare period/source_periods together with "
+                    "source_period_offset_from_target"
+                )
+            if self.source_period_offset_from_target == 0:
+                raise RegistryValidationError("previous-filing source_period_offset_from_target must be non-zero")
         if self.period is not None and self.source_periods:
             raise RegistryValidationError("previous-filing selector must use period or source_periods, not both")
         if self.period is None and not self.source_periods:
@@ -381,20 +398,58 @@ def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousFiling
 def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
     """Return ``True`` when the binding declares a direct observation selector.
 
-    A direct previous-filing binding declares ``source_casillas`` plus a
-    period anchor (``period`` or ``source_periods``) in its selector and
-    is consumed by :func:`resolve_previous_filing_binding_values`.
+    A direct previous-filing binding declares ``source_casillas`` or a
+    singular ``source_output`` plus a period anchor (``period``,
+    ``source_periods``, or ``source_period_offset_from_target``) in its
+    selector and is consumed by
+    :func:`resolve_previous_filing_binding_values`.
 
-    A binding lacking ``source_casillas`` is relation-driven: it is the
+    A binding lacking a period anchor is relation-driven: it is the
     target of one or more :class:`RelationDefinition` records that
     supply the source casilla + period at resolve time. The direct
     resolver skips these to avoid spurious malformed-selector errors.
     """
 
-    selector = binding.selector
-    if isinstance(selector, dict):
-        return "source_casillas" in selector
-    return getattr(selector, "source_casillas", None) is not None
+    selector = _selector_as_dict(binding)
+    if selector.get("source_casillas"):
+        return True
+    if selector.get("source_output") is None:
+        return False
+    return any(key in selector for key in ("period", "source_periods", "source_period_offset_from_target"))
+
+
+def _previous_filing_source_ids(selector: _PreviousFilingSelector) -> tuple[str, ...]:
+    if selector.source_casillas:
+        return selector.source_casillas
+    if selector.source_output is not None:
+        return (selector.source_output,)
+    return ()
+
+
+_QUARTERLY_PERIOD_ORDINAL: dict[str, int] = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}
+_ORDINAL_TO_QUARTERLY: dict[int, str] = {ordinal: code for code, ordinal in _QUARTERLY_PERIOD_ORDINAL.items()}
+_PAGO_FRACCIONADO_PERIOD_ORDINAL: dict[str, int] = {"1P": 1, "2P": 2, "3P": 3}
+_ORDINAL_TO_PAGO_FRACCIONADO: dict[int, str] = {
+    ordinal: code for code, ordinal in _PAGO_FRACCIONADO_PERIOD_ORDINAL.items()
+}
+
+
+def _derive_offset_source_period(offset: int, *, target_period: str) -> str | None:
+    if target_period in _QUARTERLY_PERIOD_ORDINAL:
+        ordinal = _QUARTERLY_PERIOD_ORDINAL[target_period] + offset
+        return _ORDINAL_TO_QUARTERLY.get(ordinal)
+    if target_period in _PAGO_FRACCIONADO_PERIOD_ORDINAL:
+        ordinal = _PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] + offset
+        return _ORDINAL_TO_PAGO_FRACCIONADO.get(ordinal)
+    if len(target_period) == 2 and target_period.isdigit():
+        ordinal = int(target_period) + offset
+        if 1 <= ordinal <= 12:
+            return f"{ordinal:02d}"
+        return None
+    raise RegistryValidationError(
+        "previous-filing source_period_offset_from_target cannot interpret "
+        f"target period {target_period!r}"
+    )
 
 
 def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:
@@ -582,13 +637,14 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
     {"rectified_year", "rectified_period", "rectified_base_previous"}
 )
 
-# party_legal_name is optional on InvoiceObservation: the row-builder
-# omits it from the row dict when no observation in the bucket has a
-# non-None legal_name. A binding declaring row_field="party_legal_name"
-# therefore fails deterministically at runtime whenever its bucket has
-# only legal-name-absent observations. Reject it at snapshot-build so
-# the latent hazard cannot land via a TOML edit.
-_OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset({"party_legal_name"})
+# Row fields the InvoiceObservation model cannot supply at all. The
+# validator rejects bindings asking for these so the failure surfaces
+# at snapshot-build rather than as a silent missing column at runtime.
+# ``party_legal_name`` is NOT on this list: AEAT modelo-349 operator
+# rows require it, and a missing legal_name in an observation is a
+# real-data defect that must surface loudly at row-build time rather
+# than be filtered out by a binding-validation guard.
+_OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset()
 
 
 def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
