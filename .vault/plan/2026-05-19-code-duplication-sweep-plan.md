@@ -95,11 +95,47 @@ Rename the 20 Declaration-prefixed identifiers to Declaracion across the outboun
 - [ ] `W04.P06.S27` - Rename FiledDeclarationObservationStore to FiledDeclaracionObservationStore; `src/aeat/adapters/outbound/aeat/sede/_observation_store.py`.
 - [ ] `W04.P06.S28` - Rename DeclarationCalculateNextAction to DeclaracionCalculateNextAction; `src/aeat/application/filing/_calculate.py`.
 - [ ] `W04.P06.S29` - Rename DeclarationCalculateSummary to DeclaracionCalculateSummary; `src/aeat/application/filing/_calculate.py`.
+- [ ] `W04.P06.S30` - Rename DeclarationExportFormat to DeclaracionExportFormat; `src/aeat/application/filing/_export.py`.
+- [ ] `W04.P06.S31` - Rename DeclarationVerifyVerdict to DeclaracionVerifyVerdict; `src/aeat/application/filing/_export.py`.
+- [ ] `W04.P06.S32` - Rename DeclarationExportResult to DeclaracionExportResult; `src/aeat/application/filing/_export.py`.
+- [ ] `W04.P06.S33` - Rename DeclarationVerifyResult to DeclaracionVerifyResult; `src/aeat/application/filing/_export.py`.
+- [ ] `W04.P06.S34` - Rename DeclarationEditSpec to DeclaracionEditSpec; `src/aeat/application/review/_edit.py`.
+- [ ] `W04.P06.S35` - Rename DeclarationReviewFilterKey to DeclaracionReviewFilterKey; `src/aeat/application/review/_filter.py`.
+- [ ] `W04.P06.S36` - Rename DeclarationReviewStatus to DeclaracionReviewStatus; `src/aeat/application/review/_filter.py`.
+- [ ] `W04.P06.S37` - Rename DeclarationReviewFilterSpec to DeclaracionReviewFilterSpec; `src/aeat/application/review/_filter.py`.
+- [ ] `W04.P06.S38` - Rename DeclarationPointer to DeclaracionPointer; `src/aeat/application/workflow/_models.py`.
+- [ ] `W04.P06.S39` - Rename DeclarationParseError to DeclaracionParseError; `src/aeat/domain/filing/reconciliation/_errors.py`.
+- [ ] `W04.P06.S40` - Rename ReconciliationDeclarationSourceUnsupportedError to ReconciliationDeclaracionSourceUnsupportedError; `src/aeat/application/modelo/_reconcile.py`.
+- [ ] `W04.P06.S41` - Rename CrossReferenceApplicabilityDeclaration to CrossReferenceApplicabilityDeclaracion; `src/aeat/domain/calculations/registry/_live_parity.py`.
+- [ ] `W04.P06.S42` - Rename RentaDeclarationType to RentaDeclaracionType in the renta codes module; `src/aeat/domain/profile/_renta_codes.py`.
 
 ### Phase `W04.P07` - Census to Censo Rename
 
 Rename the 22 Census-prefixed identifiers to Censo across application profile sync, live snapshot, domain calculations registry, and outbound Sede surfaces. The module paths application/live/_census.py and adapters/outbound/aeat/sede/_census.py rename to _censo.py in lockstep with the contained symbols. The CensoSnapshot retains its Snapshot infra suffix per the ADR disambiguation rule.
 
+- [ ] `W04.P07.S43` - Rename CensusSyncError to CensoSyncError; `src/aeat/application/profile/_census_errors.py`.
+- [ ] `W04.P07.S44` - Rename CensusNotAvailableError to CensoNotAvailableError; `src/aeat/application/profile/_census_errors.py`.
+- [ ] `W04.P07.S45` - Rename CensusFieldValidationError to CensoFieldValidationError; `src/aeat/application/profile/_census_errors.py`.
+- [ ] `W04.P07.S46` - Rename CensusApplyConflictError to CensoApplyConflictError; `src/aeat/application/profile/_census_errors.py`.
+- [ ] `W04.P07.S47` - Rename CensusComparisonStatus to CensoComparisonStatus; `src/aeat/application/profile/_census_sync.py`.
+- [ ] `W04.P07.S48` - Rename CensusFieldComparison to CensoFieldComparison; `src/aeat/application/profile/_census_sync.py`.
+- [ ] `W04.P07.S49` - Rename CensusProfileComparison to CensoProfileComparison; `src/aeat/application/profile/_census_sync.py`.
+- [ ] `W04.P07.S50` - Rename CensusApplyResult to CensoApplyResult; `src/aeat/application/profile/_census_sync.py`.
+- [ ] `W04.P07.S51` - Rename CensusSyncService to CensoSyncService; `src/aeat/application/profile/_census_sync.py`.
+- [ ] `W04.P07.S52` - Rename CensusSnapshot to CensoSnapshot (retain Snapshot infra suffix per ADR disambiguation rule); `src/aeat/application/live/_censo.py`.
+- [ ] `W04.P07.S53` - Rename module application/live/_census.py to _censo.py in lockstep with the Censo rename; `src/aeat/application/live/_censo.py`.
+- [ ] `W04.P07.S54` - Rename CensusStaleRefusedError to CensoStaleRefusedError; `src/aeat/domain/modelos/_errors.py`.
+- [ ] `W04.P07.S55` - Rename CensusRatioMismatchError to CensoRatioMismatchError; `src/aeat/domain/usage_ratios/_errors.py`.
+- [ ] `W04.P07.S56` - Rename RatiosCensusOverrideWarning to RatiosCensoOverrideWarning; `src/aeat/application/ledger/_ratios.py`.
+- [ ] `W04.P07.S57` - Rename CensusModeloRole to CensoModeloRole; `src/aeat/domain/calculations/registry/_census_modelos.py`.
+- [ ] `W04.P07.S58` - Rename CensusModeloEventKind to CensoModeloEventKind; `src/aeat/domain/calculations/registry/_census_modelos.py`.
+- [ ] `W04.P07.S59` - Rename CensusModeloFoundationLogFields to CensoModeloFoundationLogFields; `src/aeat/domain/calculations/registry/_census_modelos.py`.
+- [ ] `W04.P07.S60` - Rename CensusModeloOwnership to CensoModeloOwnership; `src/aeat/domain/calculations/registry/_census_modelos.py`.
+- [ ] `W04.P07.S61` - Rename CensusModeloFoundationContract to CensoModeloFoundationContract; `src/aeat/domain/calculations/registry/_census_modelos.py`.
+- [ ] `W04.P07.S62` - Rename CensusModeloFoundationCommand to CensoModeloFoundationCommand; `src/aeat/domain/calculations/registry/_census_modelos.py`.
+- [ ] `W04.P07.S63` - Rename CensusModeloFoundationResult to CensoModeloFoundationResult; `src/aeat/domain/calculations/registry/_census_modelos.py`.
+- [ ] `W04.P07.S64` - Rename CensusFactSet to CensoFactSet and module _census.py to _censo.py under outbound Sede; `src/aeat/adapters/outbound/aeat/sede/_censo.py`.
+- [ ] `W04.P07.S65` - Rename CensusParseError to CensoParseError under outbound Sede; `src/aeat/adapters/outbound/aeat/sede/_censo.py`.
 
 ### Phase `W04.P08` - Modelo Cluster: domain/filing Schema and Errors
 
