@@ -1,0 +1,19 @@
+[[revisions.2019-2022.parameters]]
+id = "is.modalidad_cuota.percentage"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions.2019-2022.parameters.source_citations]]
+source_ref = "aeat-modelo-202-instructions-2023-2024"
+required_text = [
+    "porcentaje del 18%",
+    "base del pago fraccionado",
+]
+
+[[revisions.2019-2022.parameters.values]]
+value = "18"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+valid_to = 2022-12-31
