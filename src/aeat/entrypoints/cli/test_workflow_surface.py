@@ -146,10 +146,10 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     init_result = _invoke(
         [
             "config",
-            "init",
-            "--quiet",
-            "--profile",
+            "profile",
+            "create",
             "operator",
+            "--quiet",
             "--tax-id",
             "00000000T",
             "--activity",
@@ -162,12 +162,17 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     )
     assert init_result.exit_code == 0, init_result.output
 
-    set_result = _invoke(["config", "profile", "set", "preferences.output_language", "en"])
-    assert set_result.exit_code == 0, set_result.output
+    from aeat.application.user_profile._orchestration import set_active_field
+    from aeat.domain.user_profile import UserProfileFact
 
-    get_result = _invoke(["--format", "json", "config", "profile", "get", "preferences.output_language"])
-    assert get_result.exit_code == 0, get_result.output
-    assert json.loads(_json_output(get_result))["value"] == "en"
+    workflow_state_repository().update(
+        lambda current: set_active_field(
+            current, UserProfileFact(path="preferences.output_language", value="en")
+        )
+    )
+
+    refreshed = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+    assert fact_value(refreshed, "preferences.output_language") == "en"
 
     status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
