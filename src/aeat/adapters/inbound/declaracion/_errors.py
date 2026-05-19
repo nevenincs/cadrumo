@@ -2,17 +2,17 @@
 
 Defines the parse-error tree raised by
 :mod:`aeat.adapters.inbound.declaracion`. All exceptions descend from
-:exc:`aeat.adapters.inbound.pdf._errors.PdfFilingImportError` so callers
+:exc:`aeat.adapters.inbound.pdf._errors.PdfModeloImportError` so callers
 can catch the generic PDF-import boundary without needing declaración
 specifics.
 """
 
 from __future__ import annotations
 
-from ..pdf._errors import PdfFilingImportError
+from ..pdf._errors import PdfModeloImportError
 
 
-class DeclaracionParseError(PdfFilingImportError):
+class DeclaracionParseError(PdfModeloImportError):
     """Raised when a PDF cannot be parsed into a declaración filing.
 
     Base class for all parse-time errors emitted by

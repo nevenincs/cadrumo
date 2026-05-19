@@ -1,7 +1,7 @@
 """Public-surface stability guard for :mod:`aeat.domain.justificante`.
 
 The rehoming of :class:`JustificanteError` under
-:class:`aeat.adapters.inbound.pdf.PdfFilingImportError` must not accidentally prune
+:class:`aeat.adapters.inbound.pdf.PdfModeloImportError` must not accidentally prune
 any of the module's ``__all__`` exports. This test pins the frozen minimum
 surface so future refactors trip this check instead of silently breaking
 downstream callers.

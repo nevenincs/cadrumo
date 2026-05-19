@@ -3,7 +3,7 @@
 Exercises the strict + frozen invariants of :class:`ExtractedCasilla`
 (value-type tolerance, frozen attributes, source-page bounds,
 extraction-confidence range, bounding-box shape, JSON round-trip) and
-the :class:`PdfFilingImportError` root's inheritance chain.
+the :class:`PdfModeloImportError` root's inheritance chain.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.errors import AeatError
-from . import ExtractedCasilla, PdfFilingImportError
+from . import ExtractedCasilla, PdfModeloImportError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
@@ -104,16 +104,16 @@ class TestExtractedCasillaShape:
         assert reloaded == record
 
 
-class TestPdfFilingImportError:
+class TestPdfModeloImportError:
     """The shared error root inherits from :class:`AeatError`."""
 
     def test_is_aeat_error(self) -> None:
-        assert issubclass(PdfFilingImportError, AeatError)
+        assert issubclass(PdfModeloImportError, AeatError)
 
     def test_can_be_caught_as_aeat_error(self) -> None:
         with pytest.raises(AeatError, match=r"test"):
-            raise PdfFilingImportError("test")
+            raise PdfModeloImportError("test")
 
     def test_can_be_caught_as_pdf_filing_import_error(self) -> None:
-        with pytest.raises(PdfFilingImportError, match=r"test"):
-            raise PdfFilingImportError("test")
+        with pytest.raises(PdfModeloImportError, match=r"test"):
+            raise PdfModeloImportError("test")
