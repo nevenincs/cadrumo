@@ -15,7 +15,7 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path, resources
+from aeat.core.resources import resources
 
 from ._bindings import (
     InvoiceObservation,
@@ -479,10 +479,7 @@ def test_registry_modelo_349_has_no_bare_invoice_source_kind() -> None:
     state so a regression surfaces immediately at registry load."""
 
 
-    from aeat.domain.calculations.registry import load_modelo_file
-
-    modelo_path = bundled_path("registry", "aeat", "modelos", "349.toml")
-    modelo = load_modelo_file(modelo_path)
+    modelo = resources().modelos.get("349")
 
     bare_invoice_bindings = []
     for revision in modelo.revisions.values():
