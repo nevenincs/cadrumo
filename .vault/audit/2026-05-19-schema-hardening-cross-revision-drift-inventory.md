@@ -131,11 +131,31 @@ labels), the wiring flips to fatal by changing one line in
   the M123/01 label drift is surfaced — this proves the validator
   works against the actual committed state.
 
-## Acceptance
+## Acceptance — corpus is now drift-free
 
-This audit replaces the earlier 291-case count with the
-corrected 10-case count. The schema-hardening campaign has met
-its goal on this surface: the validator framework is in place,
-the corpus state is documented, the remediation paths are
-identified, and the flip to fatal enforcement is a one-line
-change once M123 and M369 are addressed.
+Both remediation paths landed in the same session as this audit:
+
+- **M369 unification** (commit `a6cbda6e3`): the three
+  per-esquema `decl.periodo` casillas now share the label
+  "Periodo de la declaracion". The period_code value (`EXT-NT`
+  vs `1T..4T` vs `01..12`) continues to encode the esquema
+  family; the label no longer needs to. Removes 2 drift cases.
+- **M123 -legacy rename** (commit `01c117d56`): the 2019-2023
+  casillas 01-08 are renamed to 01-legacy through 08-legacy,
+  giving the AEAT-renumbered 2024+ revision a clean canonical
+  namespace. 34 lines touched (casilla declarations + formula
+  / binding / export references inside the 2019-2023 revision
+  block). Removes 8 drift cases.
+
+Cross-revision drift count goes from 10 to **zero**. The
+validator wiring at `RegistryValidator.validate_registry`
+already calls the fatal
+`_validate_cross_revision_casilla_consistency` (since commit
+`2f352d9fa`); the gate now enforces strictly because the corpus
+is clean.
+
+A future modeller introducing a casilla with a divergent shape
+across revisions will fail registry load. The schema-hardening
+campaign's core directive — *every year every casilla has
+identical and legally bound responsibilities* — is now enforced
+at the load boundary, not just documented.
