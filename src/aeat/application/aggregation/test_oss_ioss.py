@@ -45,13 +45,13 @@ from aeat.domain.calculations.registry import (
     ModeloRevision,
     OssIossLedgerObservation,
 )
-from aeat.domain.vat import (
+from aeat.domain.iva import (
     EUMemberState,
-    InvoiceDirection,
+    InvoiceKind,
     OssIossRegime,
     TransactionKind,
-    VATRateKind,
-    VatRateNotFoundError,
+    IvaRateKind,
+    IvaRateNotFoundError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -78,8 +78,8 @@ def _candidate(
     transaction_date: date = _SUPPLY_DATE,
     regime: OssIossRegime = OssIossRegime.UNION_SCHEME,
     destination: EUMemberState = EUMemberState.DE,
-    rate_kind: VATRateKind = VATRateKind.GENERAL,
-    direction: InvoiceDirection = InvoiceDirection.ISSUED,
+    rate_kind: IvaRateKind = IvaRateKind.GENERAL,
+    direction: InvoiceKind = InvoiceKind.ISSUED,
     transaction_kind: TransactionKind = TransactionKind.OSS_UNION_SERVICES,
     base: Decimal = Decimal("100"),
     iva: Decimal = Decimal("19"),
@@ -117,8 +117,8 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
                 "transaction_date": _SUPPLY_DATE,
                 "regime": OssIossRegime.UNION_SCHEME,
                 "destination_member_state": EUMemberState.DE,
-                "rate_kind": VATRateKind.GENERAL,
-                "invoice_direction": InvoiceDirection.ISSUED,
+                "rate_kind": IvaRateKind.GENERAL,
+                "invoice_direction": InvoiceKind.ISSUED,
                 "transaction_kind": TransactionKind.OSS_UNION_SERVICES,
                 "base_amount": Decimal("100"),
                 "iva_amount": Decimal("19"),
@@ -154,7 +154,7 @@ def test_validation_accepts_candidate_matching_destination_de_general_rate() -> 
 
     candidate = _candidate(
         destination=EUMemberState.DE,
-        rate_kind=VATRateKind.GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
         base=Decimal("100"),
         iva=Decimal("19"),
     )
@@ -173,7 +173,7 @@ def test_validation_accepts_candidate_matching_destination_fr_general_rate() -> 
 
     candidate = _candidate(
         destination=EUMemberState.FR,
-        rate_kind=VATRateKind.GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
         base=Decimal("100"),
         iva=Decimal("20"),
     )
@@ -190,7 +190,7 @@ def test_validation_rejects_candidate_with_iva_off_by_six_euros_on_destination_d
 
     candidate = _candidate(
         destination=EUMemberState.DE,
-        rate_kind=VATRateKind.GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
         base=Decimal("100"),
         iva=Decimal("25"),
     )
@@ -206,7 +206,7 @@ def test_validation_rejects_zero_iva_when_destination_rate_is_non_zero() -> None
 
     candidate = _candidate(
         destination=EUMemberState.DE,
-        rate_kind=VATRateKind.GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
         base=Decimal("100"),
         iva=Decimal("0"),
     )
@@ -222,7 +222,7 @@ def test_validation_accepts_one_cent_rounding_drift() -> None:
 
     candidate = _candidate(
         destination=EUMemberState.DE,
-        rate_kind=VATRateKind.GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
         base=Decimal("100"),
         iva=Decimal("19.01"),
     )
@@ -236,7 +236,7 @@ def test_validation_rejects_beyond_tolerance_drift() -> None:
 
     candidate = _candidate(
         destination=EUMemberState.DE,
-        rate_kind=VATRateKind.GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
         base=Decimal("100"),
         iva=Decimal("19.02"),
     )
@@ -253,7 +253,7 @@ def test_validation_attaches_diagnostic_context_to_the_error() -> None:
     candidate = _candidate(
         ledger_id="line-bad-iva",
         destination=EUMemberState.DE,
-        rate_kind=VATRateKind.GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
         base=Decimal("100"),
         iva=Decimal("25"),
     )
@@ -271,18 +271,18 @@ def test_validation_attaches_diagnostic_context_to_the_error() -> None:
 
 def test_validation_raises_rate_not_found_for_pre_registry_date() -> None:
     """When the supply date is before any registered rate window, the
-    substrate raises :class:`VatRateNotFoundError`. The wrapper
+    substrate raises :class:`IvaRateNotFoundError`. The wrapper
     must propagate that signal — the line cannot be aggregated
     without an applicable rate."""
 
     candidate = _candidate(
         transaction_date=date(1900, 1, 1),
         destination=EUMemberState.DE,
-        rate_kind=VATRateKind.GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
         base=Decimal("100"),
         iva=Decimal("19"),
     )
-    with pytest.raises(VatRateNotFoundError, match=r"DE|1900|rate"):
+    with pytest.raises(IvaRateNotFoundError, match=r"DE|1900|rate"):
         validate_oss_ioss_observation(candidate)
 
 

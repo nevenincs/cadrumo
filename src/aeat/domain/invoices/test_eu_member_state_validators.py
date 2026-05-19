@@ -1,6 +1,6 @@
 """Tests for the registry-grounded EU member state validators.
 
-Country code validation anchors to :class:`aeat.domain.vat.EUMemberState`
+Country code validation anchors to :class:`aeat.domain.iva.EUMemberState`
 rather than a hand-maintained list, and the
 :func:`assert_eu_member_state_code` helper rejects non-EU codes for
 callers (e.g. Modelo 369 binding selectors) that need an EU-only
@@ -17,7 +17,7 @@ from aeat.domain.invoices._validators import (
     is_eu_member_state_code,
     validate_country_code,
 )
-from aeat.domain.vat import EUMemberState
+from aeat.domain.iva import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

@@ -16,7 +16,7 @@ from ._errors import (
     InvoiceNotFoundError,
     InvoicePersistenceError,
 )
-from ._iva_classification import (
+from ..iva._invoice_classification import (
     IvaInvoiceClassification,
     classify_invoice_line_for_iva,
     invoice_line_to_iva_observation,

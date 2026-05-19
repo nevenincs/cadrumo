@@ -24,12 +24,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from ...core.identity import validate_spanish_tax_id
 from .._identifiers import canonical_decimal_string
-from ..vat import EUMemberState, VATCategory
+from ..iva import EUMemberState, IvaCategory
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import InvoiceValidationError
 
 if TYPE_CHECKING:
-    from ._iva_classification import IvaInvoiceClassification
+    from ..iva._invoice_classification import IvaInvoiceClassification
 from ._validators import (
     is_eu_member_state_code,
     validate_country_code,
@@ -115,7 +115,7 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
         payload["payment_status"] = PaymentStatus(payload["payment_status"])
     if "iva_category" in payload and isinstance(payload["iva_category"], str):
         stripped = payload["iva_category"].strip()
-        payload["iva_category"] = VATCategory(stripped) if stripped else None
+        payload["iva_category"] = IvaCategory(stripped) if stripped else None
     return payload
 
 
@@ -339,7 +339,7 @@ class Invoice(BaseModel):
     payment_status: PaymentStatus
     linked_transaction_ids: tuple[str, ...] = ()
     notes: str = ""
-    iva_category: VATCategory | None = None
+    iva_category: IvaCategory | None = None
     retention_rate: Decimal | None = None
     retention_amount: Decimal | None = None
     payment_id: str | None = None
@@ -420,7 +420,7 @@ class Invoice(BaseModel):
         with the closed substrate enum without a per-call lowercase /
         membership check. Anchored to
         :data:`aeat.domain.invoices.EU_MEMBER_STATE_CODES` which
-        derives from :class:`aeat.domain.vat.EUMemberState`.
+        derives from :class:`aeat.domain.iva.EUMemberState`.
         """
         if not is_eu_member_state_code(self.counterparty_country):
             return None
@@ -444,18 +444,18 @@ class Invoice(BaseModel):
 
         Routes through the standard-case helper for the most common
         autónomo case: domestic IVA, where the line's IvaRate slot
-        determines the VATCategory + VATRateKind and the Invoice's
+        determines the IvaCategory + IvaRateKind and the Invoice's
         :attr:`kind` determines the IvaFlowDirection. The returned
-        record bundles the substrate triple (VATCategory + VATRateKind
+        record bundles the substrate triple (IvaCategory + IvaRateKind
         + IvaFlowDirection) plus the derived IvaSettlementSide set
         (devengada and / or deducible cornerstone classification).
 
         For reverse-charge, intra-community, OSS / IOSS, export, and
         import lines, callers must construct
         :class:`IvaInvoiceClassification` directly with the appropriate
-        substrate :class:`VATCategory` (the standard-case helper only
+        substrate :class:`IvaCategory` (the standard-case helper only
         handles domestic operations). The classifier
-        :func:`aeat.domain.vat.classify_vat` is the authority for those
+        :func:`aeat.domain.iva.classify_iva` is the authority for those
         cases.
 
         Args:
@@ -469,10 +469,10 @@ class Invoice(BaseModel):
             InvoiceValidationError: If the line carries
                 :attr:`IvaRate.NOT_SUBJECT` (operations outside the
                 scope of IVA need explicit
-                :attr:`VATCategory.OPERACION_NO_SUJETA` construction).
+                :attr:`IvaCategory.OPERACION_NO_SUJETA` construction).
         """
         # Local import to avoid circular dependency at module load.
-        from ._iva_classification import classify_invoice_line_for_iva
+        from ..iva._invoice_classification import classify_invoice_line_for_iva
 
         return classify_invoice_line_for_iva(
             iva_rate=line.iva_rate,

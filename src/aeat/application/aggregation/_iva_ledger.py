@@ -26,9 +26,9 @@ from ...domain.vat import (
     IvaFlowDirection,
     ProrrataInputError,
     ProrrataReference,
-    VATCategory,
-    VATRateKind,
-    VatRateNotFoundError,
+    IvaCategory,
+    IvaRateKind,
+    IvaRateNotFoundError,
     lookup_rate,
     validate_prorrata_reference,
 )
@@ -36,11 +36,11 @@ from ._errors import AggregationValidationError, t
 from ._models import Period
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_RATE_KIND_TO_DOMESTIC_CATEGORY: dict[VATRateKind, VATCategory] = {
-    VATRateKind.ZERO: VATCategory.DOMESTIC_ZERO,
-    VATRateKind.SUPER_REDUCED: VATCategory.DOMESTIC_SUPER_REDUCED_4,
-    VATRateKind.REDUCED: VATCategory.DOMESTIC_REDUCED_10,
-    VATRateKind.GENERAL: VATCategory.DOMESTIC_GENERAL_21,
+_RATE_KIND_TO_DOMESTIC_CATEGORY: dict[IvaRateKind, IvaCategory] = {
+    IvaRateKind.ZERO: IvaCategory.DOMESTIC_ZERO,
+    IvaRateKind.SUPER_REDUCED: IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+    IvaRateKind.REDUCED: IvaCategory.DOMESTIC_REDUCED_10,
+    IvaRateKind.GENERAL: IvaCategory.DOMESTIC_GENERAL_21,
 }
 
 
@@ -408,11 +408,11 @@ def _prorrata_reference_for(
         )
 
 
-def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> VATRateKind | None:
+def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
     for kind in _RATE_KIND_TO_DOMESTIC_CATEGORY:
         try:
             rate_record = lookup_rate(EUMemberState.ES, kind, on_date)
-        except VatRateNotFoundError:
+        except IvaRateNotFoundError:
             continue
         if rate_record.pct / Decimal("100") == rate:
             return kind
