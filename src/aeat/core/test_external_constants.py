@@ -54,6 +54,7 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
         paths.notifications_query,
         paths.certificate_selector,
         paths.notificaciones,
+        paths.iva_compensation_wallet,
     ):
         assert value.startswith("/")
 

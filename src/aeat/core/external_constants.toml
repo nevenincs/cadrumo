@@ -26,6 +26,7 @@ notifications_query = "/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
 certificate_selector = "/wlpl/BUCV-JDIT/SelectorCertificado"
 expediente_detail_template = "/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}"
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
+iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
 
 [aeat.help_pages]
 csv_verification = "/Sede/ayuda/consultas-practicas-manuales/verificacion-integridad-documentos.html"
