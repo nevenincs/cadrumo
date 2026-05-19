@@ -78,7 +78,7 @@ Establish a uniform terminology glossary and merge overlapping classification lo
 Retire the insecure local file-based borrador.py snapshotting strategy and consolidate all Modelo 100 draft persistence under borrador_100.py.
 
 - [ ] `W03.P05.S16` - Migrate all active commands from local file-based borrador storage to secure borrador_100 object repository; `src/aeat/application/live/_borrador_100.py`.
-- [ ] `W03.P05.S17` - Delete deprecated local filesystem-based borrador parser file-caching implementation; `src/aeat/application/live/_borrador.py`.
+- [x] `W03.P05.S17` - Delete deprecated local filesystem-based borrador parser file-caching implementation; `src/aeat/application/live/_borrador.py`.
 
 ## Wave `W04` - Spanish-Stem Terminology Renames
 
