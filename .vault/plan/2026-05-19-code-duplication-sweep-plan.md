@@ -88,6 +88,13 @@ Execute the ADR-approved English-to-Spanish identifier renames across the Declar
 
 Rename the 20 Declaration-prefixed identifiers to Declaracion across the outbound Sede contract, application filing/review/workflow surface, registry live-parity, and domain reconciliation. Public-API rows in the outbound Sede contract are coordinated cuts: every callsite renames in the same commit.
 
+- [ ] `W04.P06.S23` - Rename Declaration to Declaracion in the outbound Sede declarations surface; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W04.P06.S24` - Rename DeclarationsRegisterSession to DeclaracionesRegisterSession in the outbound Sede declarations surface; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W04.P06.S25` - Rename FiledDeclarationArtefact to FiledDeclaracionArtefact in the outbound Sede schema; `src/aeat/adapters/outbound/aeat/sede/_schema.py`.
+- [ ] `W04.P06.S26` - Rename FiledDeclarationObservation to FiledDeclaracionObservation in the outbound Sede schema; `src/aeat/adapters/outbound/aeat/sede/_schema.py`.
+- [ ] `W04.P06.S27` - Rename FiledDeclarationObservationStore to FiledDeclaracionObservationStore; `src/aeat/adapters/outbound/aeat/sede/_observation_store.py`.
+- [ ] `W04.P06.S28` - Rename DeclarationCalculateNextAction to DeclaracionCalculateNextAction; `src/aeat/application/filing/_calculate.py`.
+- [ ] `W04.P06.S29` - Rename DeclarationCalculateSummary to DeclaracionCalculateSummary; `src/aeat/application/filing/_calculate.py`.
 
 ### Phase `W04.P07` - Census to Censo Rename
 
