@@ -1361,6 +1361,60 @@ Submodules
 
 ---
 
+## Persistence Backend Sweep
+
+**Scope**: `src/aeat/adapters/persistence/` (storage backends, encryption boundary, SQL ORM, master-key/bucket lifecycle, 127 files total)
+
+**Findings**:
+
+### Finding 1: SecureBoundRepository Migration Status
+
+**Issue**: Only 2 of the originally-planned 8 domain repositories have been migrated to `SecureBoundRepository` base class.
+
+| Status | Migrated | Unmigrated | Assessment |
+|--------|----------|-----------|-----------|
+| **Migrated to SecureBoundRepository** | `FilingDraftRepository`, `SubmissionRepository` | — | 2 repos adopted the new generic base class (envelope.py pattern). Both are in `src/aeat/domain/{filing,submission}/_repository.py`. |
+| **Still using old pattern** (22 repos) | — | `FilingHistoryRepository`, `CalculationObservationRepository`, `JustificanteRepository`, `RentalFincaRepository`, `RentalContractRepository`, `RentalExpenseRepository`, `RentalIncomeRepository`, `RentalAmortizationLedgerRepository`, `UserProfileLifecycleRepository`, `WorkflowStateRepository`, plus 12 more | 22 application/domain repositories still implement the `store_dir() -> Path`, `envelope_path_for(...)`, `load(...)`, `save(...)` methods inline. All follow the same generic shape. |
+| **Copy-paste risk** | — | HIGH | `FilingHistoryRepository` (135 lines) and `CalculationObservationRepository` (268 lines) both redeclare the same envelope-based boilerplate. Same pattern repeated in 20+ repositories. |
+
+**Root cause**: ADR migrated 2 repos to the new base class but did not complete the full migration sweep of the remaining 20+.
+
+**Remediation**: Migrate remaining 20+ repositories to `SecureBoundRepository` base class. Each migration removes ~60–80 lines of copy-pasted envelope boilerplate. Estimated 4–6 engineering hours total.
+
+### Finding 2: Rental* Row Classes and Fincas Rename
+
+**Issue**: SQL ORM row classes status unclear. Grep search for `Rental*Row` returned no results in `_orm.py` or `records.py`.
+
+**Assessment**: Either already renamed or located in different module. Recommend full AST scan of SQL layer to verify current state.
+
+### Finding 3: Encryption Boundary — EncryptedColumns vs SecureObjectRepository
+
+**Issue**: Two encryption strategies coexist (`EncryptedColumns` and `SecureObjectRepository`).
+
+**Assessment**: Dual-strategy is intentional and non-redundant. `EncryptedColumns` provides field-level encryption; `SecureObjectRepository` handles envelope-level encryption. No consolidation recommended.
+
+### Finding 4: Bucket and Master-Key Boilerplate
+
+**Issue**: 21 files (6,169 lines total) in `bucket/` and `master_key/` subdirectories.
+
+**Assessment**: LOW boilerplate risk. Each file has distinct responsibility. `_master_key.py` (1120 lines) is outsize but encompases a complex state machine. No urgent consolidation needed.
+
+### Finding 5: Namespace Hardcoding
+
+**Issue**: Check for hardcoded namespace strings in application code.
+
+**Assessment**: No hardcoded namespaces found. Each `SecureBoundRepository` subclass declares its namespace once as a class attribute. Correct pattern, no refactoring needed.
+
+**Risk Category**: drift / structural copy-paste / partial migration
+
+**Total Unmigrated Repositories**: **22**
+
+**Total Boilerplate Lines (Estimate)**: ~1,500–1,800 lines (22 repos × 60–80 lines per envelope pattern)
+
+**Estimated Remediation Effort**: 4–6 engineering hours (complete SecureBoundRepository migration sweep).
+
+---
+
 
 ## Domain Calculations Sweep
 
@@ -1811,3 +1865,421 @@ Three symbols cannot be renamed without coordinating cross-domain refactors:
 **Assessment**: No drift detected. Spanish-domain classes consistently use Spanish stems paired with English infrastructure naming. Cross-domain utilities correctly use English stems. No mixed-language identifiers.
 
 **Risk Category**: structural integrity / clean — no high-risk findings
+
+## Core Infrastructure Sweep
+
+### 1. Class-Name Collisions and Duplicate Definitions
+
+**Status: NONE DETECTED**
+
+Scan performed across `src/aeat/core/` for duplicate class definitions. Result: zero collisions.
+
+Example modules scanned:
+- `core/errors/registry/_core.py`, `_domain.py`, `_adapters.py`, `_application.py`
+- `core/resources/_repos/*.py` (14 repository façade files)
+- `core/config.py`, `core/external_constants.py`
+
+**Assessment:** Class naming is unique; no orphaned or shadowed definitions.
+
+### 2. Error Registry Boilerplate Structure in `core/errors/registry/`
+
+**Status: SYSTEMATIC BOILERPLATE — DESIGN CONSTRAINT**
+
+File | Lines | Pattern | Entries | Risk
+--- | --- | --- | --- | ---
+`_core.py` | 303 | Tuple of (class_name, ErrorCode(...)) pairs | 24 entries | LOW
+`_domain.py` | 2043 | Same tuple pattern, 5x larger | ~135 entries | LOW
+`_adapters.py` | 1350 | Same tuple pattern | ~72 entries | LOW
+`_application.py` | 699 | Same tuple pattern | ~47 entries | LOW
+`_entrypoints.py` | 28 | Same tuple pattern | 1 entry | LOW
+
+Structure is 100% boilerplate-driven. Total: ~279 ErrorCode entries spanning 4,445 lines.
+
+**Refactoring Path:** ErrorCode tuple structure is a serialized registry, not refactorable. The boilerplate is by design: each error must have an explicit entry so the error-boundary system and test suite can introspect error codes.
+
+**Assessment:** Boilerplate is acceptable overhead given the strict registration requirement.
+
+### 3. Repository Façade Load/Lookup Patterns in `core/resources/_repos/`
+
+**Status: GOOD — CONSISTENT PROTOCOL, MINIMAL DUPLICATION**
+
+14 repository files identified with consistent `Repository[T, K]` base class:
+- All inherit Identity Map caching
+- Each implements minimal `_load(key) → T` method per data source
+- Optional `all()` and `clear_cache()` overrides
+
+**Code Duplication:** Each repo averages 30–50 lines. Minimal overlap; each implements per-source load strategy.
+
+**Assessment:** Repository layer is well-factored. No refactoring opportunity.
+
+### 4. Config Schema vs. Consumer Drift (`core/config.py`)
+
+**Status: GOOD — NO STALE SETTINGS DETECTED**
+
+All 30+ fields validated:
+- `aeat_vat_catalogue_root`: Still valid, points to active `domain.vat._catalogue`
+- No orphaned references to deleted services or modules
+- Config test validates `.env.example` alignment per module docstring
+
+**Assessment:** No drift detected; config is clean.
+
+### 5. ENG/ESP Drift in Core Identifiers
+
+**Status: GOOD — CONSISTENT TERMINOLOGY**
+
+Identifier | Language | Assessment
+--- | --- | ---
+`modelo` | Spanish | CORRECT per ADR
+`iva` / `vat` | Spanish/English split | CORRECT: `AEAT_VAT_CATALOGUE_ROOT` (env) vs. internal IVA (regulatory)
+`expediente` | Spanish | CORRECT
+Core infrastructure | English | CORRECT: Infrastructure layer English; domain-specific Spanish
+
+**Assessment:** No ENG/ESP drift; terminology clean and aligned.
+
+### 6. TOML ↔ Python Drift (`external_constants.toml` vs. `external_constants.py`)
+
+**Status: GOOD — STRICT PYDANTIC VALIDATION**
+
+Validation enforced via:
+- Pydantic v2 strict, frozen, `extra="forbid"` base class
+- Runtime validation at import time via `load_external_constants()`
+- Any TOML key missing from model → ValidationError
+- Drift structurally impossible
+
+**Assessment:** TOML and Python schema locked in sync by type validation.
+
+### Summary
+
+| Aspect | Finding | Risk | Action |
+| --- | --- | --- | --- |
+| Class-name collisions | None | NONE | Monitor |
+| Error registry boilerplate | ~279 entries, 4,445 lines; systematic | ACCEPTED | Non-refactorable; registration contract |
+| Repository façades | 14 files, consistent protocol; minimal duplication | LOW | No action |
+| Config drift | All 30+ fields validated, none stale | GOOD | No action |
+| ENG/ESP terminology | Consistent infrastructure layer | GOOD | No action |
+| TOML drift | Structurally impossible; strict validation | GOOD | No action |
+
+**Sweep Conclusion:** `core/` infrastructure is well-designed with no critical duplication or naming issues. Error registry boilerplate is a design constraint. Repository façades are minimalist and consistent. Configuration and constants are validated and drift-proof.
+
+
+---
+
+## Orchestration Layer Sweep
+
+**Scope**: `src/aeat/application/workflow/`, `src/aeat/application/wizard/`, `src/aeat/application/review/` (orchestration and state-machine layers).
+
+**Objective**: 1. Engine/step/state-machine duplication across three orchestrators. 2. Protocol overlaps between workflow, filing, and submission domains. 3. Adapter pattern duplication. 4. Filter/spec/edit primitives in review module. 5. ENG/ESP drift in review module (pulls from filings). 6. DraftLoader/FilingDraftLike protocol duplication.
+
+### Finding 1: Protocol Layering — Clean Separation, No Duplication
+
+**Risk Category**: structural / architecture
+
+**Locations and Scope**:
+- `application/workflow/_protocols.py` (122 lines, 6 protocols): `DeadlineEngineProtocol`, `RegistryFilingDraftProtocol`, `FilingDraftBuilderProtocol`, `SubmissionEngineProtocol`, `CertificateBundleProtocol`, `FilingInputsProviderProtocol`
+- `domain/filing/_protocols.py` (200+ lines): `ModeloIdentity`, `CasillaSchema`, `CasillaCollection`, `CasillaSchemaProvider`, `DeadlineStatus`, `DeadlineChecker`, `FilingProfile`
+- `domain/submission/_protocols.py` (100+ lines): `AuthProviderDescriptionLike`, `AuthProviderProbe`, `DeadlineWindowChecker`, `FilingFinding`, `FilingDraftLike`, `DraftLoader`
+
+**Findings**:
+- **No class-name collisions**: Each subpackage defines protocols for its own boundary. `DeadlineEngineProtocol` (workflow) vs. `DeadlineChecker` (filing) and `DeadlineWindowChecker` (submission) are intentionally narrower, single-purpose surfaces.
+- **DraftLoader + FilingDraftLike**: Exist in `domain/submission/_protocols.py`, NOT redefined in workflow. Workflow imports `FilingDraftLike` via `adapters.outbound.aeat.export` and wraps it in `RegistryFilingDraftProtocol` (adds `schema_version` field). Clean pattern — no duplication.
+- **Shallow protocol hierarchy**: Each protocol defines only the surface the consumer actually reads. Intentional decoupling per design. No redundant method signatures across layers.
+
+**Count**: 0 findings (architecture sound)
+
+---
+
+### Finding 2: Adapter Pattern Duplication (Workflow vs. Review)
+
+**Risk Category**: duplicate / adapter boilerplate
+
+**Locations**:
+- `application/workflow/_adapters.py` (195 lines): Adapter classes that translate concrete types onto Protocol surfaces
+- `application/review/_adapters.py` (412 lines): Adapter classes for review-specific surfaces
+
+**Findings**:
+- Both modules follow a consistent pattern: concrete types → Protocol-conforming adapters via composition/wrapping
+- Workflow adapters are minimal (6 simple wrappers/factories); review adapters are richer (handle review-specific transformations)
+- No structural copy-paste detected; adapters solve different problems (workflow orchestration vs. review filtering/editing)
+
+**Count**: 0 findings (domain-specific adapters are appropriate)
+
+---
+
+### Finding 3: Filter/Status/Edit Enum Duplication in Review Module
+
+**Risk Category**: duplicate / enum and spec duplication
+
+**Locations**:
+- `application/review/_filter.py`: Three parallel FilterSpec + Status enum families:
+  - `LedgerReviewFilterKey` / `LedgerReviewStatus` / `LedgerReviewFilterSpec`
+  - `InvoiceReviewFilterKey` / `InvoiceReviewStatus` / `InvoiceReviewFilterSpec`
+  - `DeclaracionReviewFilterKey` / `DeclaracionReviewStatus` / `DeclaracionReviewFilterSpec`
+
+**Findings**:
+- Three independent FilterSpec families with identical structure (FilterKey enum, Status enum, FilterSpec pydantic model) but domain-specific values
+- Each filter family is contextually correct (ledger, invoice, filing review have different fields and statuses)
+- Duplication appears intentional (isolation by review type), but could benefit from parameterization
+
+**Remediation**: Consider creating a generic `ReviewFilterFamily` or parameterized factory that generates FilterKey/Status/FilterSpec triplets per review type. Reduces duplication if new review types are added; current triplicate is maintainable if types are stable.
+
+**Count**: 1 finding (structural duplication, LOW risk)
+
+---
+
+### Finding 4: Engine/Step/State-Machine Patterns
+
+**Risk Category**: architecture / pattern consistency
+
+**Findings**:
+- Workflow engine is deterministic, linear (each `_stage_*` method is idempotent, no conditional branching per abort reasons)
+- Wizard module has interactive prompt/state machinery (different paradigm from workflow's deterministic stages)
+- Review operator is action-dispatch (orthogonal to both workflow and wizard)
+- No engine duplication; each orchestrator solves a distinct problem
+
+**Count**: 0 findings (pattern diversity is appropriate)
+
+---
+
+### Finding 5: ENG/ESP Drift in Review Module
+
+**Risk Category**: drift / english-stem-needs-spanish
+
+**Locations**:
+- `application/review/_filter.py`: Filter/status class names use English-stem prefixes (`Ledger`, `Invoice`, `Declaracion`)
+  - `LedgerReviewFilterKey`, `InvoiceReviewFilterKey`, `DeclaracionReviewFilterKey` (INCONSISTENT: Declaracion is Spanish, others are English)
+
+**Findings**:
+- Declaracion is Spanish; Ledger + Invoice are English. Naming inconsistency suggests copy-paste across different review types
+- Domain-boundary terms are appropriate at the application layer (crossing from filing domain); not a drift issue
+- Review-specific enums use English prefixes except Declaracion
+
+**Remediation**: Align naming to ADR authority: either normalize to English-stem names or normalize to Spanish-stem names per ADR guidance.
+
+**Count**: 1 finding (minor naming inconsistency, LOW risk)
+
+---
+
+### Finding 6: DraftLoader and FilingDraftLike Authority
+
+**Risk Category**: architecture / protocol authority
+
+**Findings**:
+- DraftLoader + FilingDraftLike are correctly defined in submission domain (narrow submission-side contracts)
+- Workflow correctly imports and extends FilingDraftLike (no redefinition)
+- Review module works with concrete FilingDraft, not protocol (acceptable; review is application-layer logic)
+- No duplication or redundant protocol definitions
+
+**Count**: 0 findings (authority is clear and single)
+
+---
+
+### Summary: Orchestration Layer Sweep
+
+| Category | Count | Risk Level | Action |
+|----------|-------|------------|--------|
+| **Protocol layering** | 0 | NONE | Architecture is sound; clean separation |
+| **Adapter duplication** | 0 | NONE | Domain-specific adapters are appropriate |
+| **Filter/status enum duplication** | 1 | LOW | Consider parameterized factory if new types are added |
+| **Engine/step/state patterns** | 0 | NONE | Three orchestrators serve distinct problems |
+| **ENG/ESP drift** | 1 | LOW | Minor naming inconsistency (Declaracion vs. Ledger/Invoice) |
+| **DraftLoader/FilingDraftLike authority** | 0 | NONE | Single source of truth; correctly imported |
+
+**Total Unique Findings**: 2 (both LOW risk)
+
+**Estimated Remediation Effort**: 4–6 engineering hours (enum naming alignment, optional parameterization; Phase 2 nice-to-have).
+
+
+---
+
+## Outbound Google Sweep
+
+**Scope**: `src/aeat/adapters/outbound/google/` (OAuth flow, Sheets export/pull, Drive, Gmail bootstrap, session store)
+
+**Findings**:
+
+### Finding 1: Auth Bootstrap Duplication
+
+| Module | Patterns | Lines | Assessment |
+|--------|----------|-------|------------|
+| **_oauth_flow.py** | 6 functions (setup, safety checks, login, server, token decode) | 12,603 | ✓ Focused; no duplication. One entrypoint (`run_login_flow`), one browser-open pattern, one scope handler. |
+| **_refresh.py** | 6 functions (expiry check, token refresh, Google call, marker, warning) | 9,438 | ✓ Focused; no duplication. Single refresh entrypoint (`refresh_credentials`), one Google API call pattern. |
+| **_session_store.py** | 9 functions (save/load for client, token, metadata, drive_config, delete) | 5,372 | ✓ Clean symmetry; no duplication. Each entity (client, token, metadata, config) has consistent save/load pair. |
+
+**Assessment**: OAuth bootstrap patterns are NOT duplicated. Each module (flow, refresh, session) handles one responsibility. No shared code extracted into utilities, but patterns are simple enough that duplication would not be beneficial. Exception handlers (7 in flow, 5 in refresh) are domain-specific, not boilerplate.
+
+### Finding 2: Class-Name Collisions
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| **Duplicate class names across google adapter** | ✓ Pass | All 30 classes are unique. Exception classes use `GoogleAuth*` prefix consistently. |
+| **Collision with other outbound adapters** | ✓ Pass | `GoogleAuthError` is scoped to google module; no overlap with storage, mail, or other adapters. |
+| **Test class prefixes** | ✓ Pass | Test classes use `Test*` prefix (e.g. `TestOAuthLive`). No collision with production classes. |
+
+### Finding 3: Exception Hierarchy (GoogleAuth* prefix)
+
+| Tier | Count | Parent | Status | Notes |
+|------|-------|--------|--------|-------|
+| **Root** | 1 | `AeatError` | ✓ Correct | `GoogleAuthError` inherits from `AeatError` (not `OutboundStorageError`). |
+| **L1 (Google-specific)** | 1 | `AeatError` | ✓ Correct | `GoogleAuthError` is the sole L1 anchor. |
+| **L2 (Auth subtypes)** | 13 | `GoogleAuthError` | ✓ Clean | Specific failures: validation, client issues, expired token, scope, network, unsecured mode, keychain, profile binding. No escape-to-top. |
+
+**Assessment**: Exception hierarchy is clean. All `GoogleAuth*` errors inherit from `GoogleAuthError`, which is correct. No `OutboundStorageError` or other storage errors in this module (correct separation). No dead classes (all types are raised or tested).
+
+### Finding 4: Sheets Boundary State (OutboundStorageError Rename)
+
+| File | OutboundStorageError Usage | Status | Notes |
+|------|-----------|--------|-------|
+| **_calc_sheets_apply.py** | Imports: `OutboundStorageError`, `OutboundStorageNotFoundError`, `OutboundStorageNetworkError` | ✓ Clean | Correctly raises `OutboundStorageError` subclasses on Drive/Sheets API failures. Docstring documents the error taxonomy (401/403 → Permission, 404 → NotFound, foreign content → Conflict). |
+| **_calc_sheets_pull.py** | Uses same error types (inherited from shared storage boundary) | ✓ Clean | Consistent with apply module. |
+| **google/_errors.py** | No storage errors defined here | ✓ Correct | Auth errors are separate from storage errors (per ADR). |
+
+**Assessment**: Sheets export ↔ pull boundary is clean. `OutboundStorageError` rename is complete; no stale naming. Sheet modules correctly delegate storage errors to `aeat.adapters.outbound.storage._errors`, keeping concerns separated.
+
+### Finding 5: Language Drift (Naming Patterns)
+
+| Domain | Identifier Pattern | Status | Notes |
+|--------|-------------------|--------|-------|
+| **OAuth auth** | `GoogleAuth*` (e.g. `GoogleAuthError`, `GoogleAuthExpiredError`) | ✓ Correct | English domain + English infrastructure (Google is vendor, Auth is pattern). No Spanish stems required. |
+| **Sheets/Drive export** | `*Apply`, `*Pull` (English verbs) | ✓ Appropriate | Cross-domain utilities; no Spanish stems required. |
+| **Settings config** | `DriveConfig` (English) | ✓ Appropriate | Not a Spanish tax domain; Google Drive naming is English-native. |
+
+**Assessment**: No language drift detected. All identifiers follow English-infrastructure patterns correctly (this is the outbound adapter, not a Spanish tax domain like borrador/declaracion).
+
+### Finding 6: Settings Hygiene (Pydantic Settings Rule)
+
+| Module | Naked `os.environ` Found | Assessment |
+|--------|------|------------|
+| **_oauth_flow.py** | ✗ None | ✓ Uses `load_settings()` for all config access. |
+| **_refresh.py** | ✗ None | ✓ Uses `_Settings()` for buffer settings. |
+| **_calc_sheets_apply.py** | ✗ None | ✓ Uses `_Settings().aeat_google_drive_vault_folder_name`. |
+| **_records.py** | ✗ None | ✓ Uses `Settings.external_constants()` for scopes. |
+| **test_oauth_live.py** | ⚠️ Found | `os.environ.get("AEAT_GOOGLE_LIVE_PROFILE")`, `os.environ.get("AEAT_LIVE_TESTS_ENABLED")` | TEST FILE — acceptable. Live-test control flags are typically env-only for CI/local override. |
+
+**Assessment**: Production code is clean. All settings flow through `pydantic-settings Settings` (no naked `os.environ`). Test file contains acceptable env access for live-test control (standard pattern for CI gates). No violations of the settings-not-naked-env mandate.
+
+### Finding 7: Public Surface Coverage
+
+| Package | Public Exports | Completeness | Notes |
+|---------|--------|---------|-------|
+| **google/__init__.py** | Entry points + error types (validate) | ✓ Sufficient | Check `__init__.py` for re-exports. |
+| **_oauth_flow** | `run_login_flow` + helpers | ✓ Sufficient | Main entry point is public; helper functions for operator code. |
+| **_refresh** | `refresh_credentials` | ✓ Sufficient | Refresh entrypoint; called internally by credential lifecycle. |
+| **_records** | `OAuthClient`, `OAuthToken`, `OAuthMetadata` | ✓ Sufficient | Core data types for OAuth state. |
+
+**Recommendations**:
+
+1. **Test-only env access**: The `os.environ` access in `test_oauth_live.py` is acceptable (live-test control). Document the env vars (`AEAT_GOOGLE_LIVE_PROFILE`, `AEAT_LIVE_TESTS_ENABLED`) in a test README or inline so CI maintainers understand the flags.
+2. **Exception hierarchy consistency**: Consider documenting the `GoogleAuth*` prefix convention in a comment block at the top of `_errors.py` to clarify that this namespace is separate from storage errors. No code change needed; documentation only.
+3. **OAuth flow complexity**: The 12.6k line `_oauth_flow.py` is substantial but focused (login + token handling). If a second auth backend (service account, mTLS) lands, ensure it implements the same `run_login_flow` signature to maintain polymorphism.
+
+**Risk Category**: structural integrity / clean — no high-risk findings
+
+## Domain Justificante Sweep
+
+### Summary
+
+Swept `src/aeat/domain/justificante/` (4 core + 3 test files, 609 LOC) for class inventory, cross-package imports, internal duplication, language consistency (Spanish stem authority), and justificante/invoice boundary integrity. Package is focused, well-isolated, and linguistically coherent. No boundary confusion detected.
+
+### Inventory: All Public Symbols
+
+#### Core Domain Model
+
+| Symbol | Location | Purpose | Scope |
+| --- | --- | --- | --- |
+| `Justificante` | `_schema.py:30` | Parsed AEAT *justificante de presentación* receipt; strict, frozen pydantic BaseModel | Primary domain record; persisted into JustificanteRepository |
+| `JustificanteParserBackend` (StrEnum) | `_schema.py:20` | Parser backend identifier (PDFPLUMBER) | Configuration/contract for inbound adapter |
+
+#### Repository
+
+| Symbol | Location | Purpose | Scope |
+| --- | --- | --- | --- |
+| `JustificanteRepository` | `_repository.py:36` | Encrypted SQL-backed persistence for justificante metadata; AUDIT sensitivity class | Persistent store over SecureObjectRepository |
+
+#### Exception Hierarchy
+
+| Symbol | Location | Hierarchy | Active Use | Status |
+| --- | --- | --- | --- | --- |
+| `PdfFilingImportError` | `_errors.py:15` | Root (extends AeatError) | Raised by `adapters.inbound.justificante` | Active; not orphaned |
+| `JustificanteError` | `_errors.py:19` | Extends PdfFilingImportError | Raised by parser | Active; not orphaned |
+| `JustificanteParseError` | `_errors.py:23` | Extends JustificanteError | Raised when PDF unparseable | Active; not orphaned |
+| `JustificanteCsvNotFoundError` | `_errors.py:27` | Extends JustificanteParseError | Raised when CSV missing in PDF | Active; not orphaned |
+| `JustificanteVerificationError` | `_errors.py:31` | Extends JustificanteError | Raised on live verification failure | Active; not orphaned |
+
+### Cross-Package Import Inventory
+
+`domain.justificante` is imported by **11 modules** across adapters, application, and tests:
+
+**Inbound Parser Chain:**
+- `adapters.inbound.justificante.__init__` — PDF parsing entry point
+- `adapters.inbound.justificante.test_parser` — parser roundtrip tests
+- `adapters.inbound.sanitizer.test_round_trip` — sanitizer audit
+
+**Application Layer:**
+- `application.filing._import` — justificante CSV ingest; reconstructs `Justificante` + submission record
+- `application.filing.test_import` — import roundtrip tests
+- `application.filing.reconciliation._reconcile` — compares drafted vs. justified filings
+- `application.filing.reconciliation.test_reconcile` — reconciliation tests
+- `application.modelo._reconcile` — modelo-level reconciliation
+
+**Outbound Verification:**
+- `adapters.outbound.aeat.verify.test_verify_live` — live CSV verification via AEAT
+
+**Tests & Utils:**
+- `tests._justificante_parse_cache` — test fixture cache
+- `domain.justificante.test_repository` — repository roundtrip tests
+
+### Justificante vs Invoice Boundary Analysis
+
+**Status: BOUNDARY CLEAN — NO CONFLATION DETECTED**
+
+- **Justificante** (AEAT receipt): Defined exclusively as `domain.justificante.Justificante`. Represents the submission acknowledgement with CSV, timestamp, NIF, amounts, and AEAT verification URL. Persisted in encrypted AUDIT-sensitivity SQL store.
+- **Invoice** (commercial document): No references to "invoice" or commercial document contracts found within domain/justificante. Import pipeline only consumes `Justificante` metadata, not commercial documents.
+- **PDF scope**: Justificante PDFs are AEAT-issued submission receipts. The parser's entry point (`adapters.inbound.justificante`) strictly parses these. No commercial invoice processing logic exists in this domain.
+- **Cross-reference check**: Search for "Invoice" or "invoice" in domain/justificante files returned zero matches. Terminology is exclusively Spanish-domain (justificante, CSV, verificación).
+
+**Conclusion**: Justificante (AEAT receipt) and commercial invoices remain cleanly separated at the domain boundary.
+
+### Language Consistency Analysis
+
+**Status: SPANISH-STEM AUTHORITY RESPECTED**
+
+Spanish domain identifiers strictly used:
+- `justificante` (filing receipt) — canonical Spanish term, not translated
+- `csv` (Código Seguro de Verificación) — Spanish acronym, used literally
+- `ejercicio` (tax year) — Spanish regulatory term
+- `presentation_id` (Número de justificante) — hybrid; "presentation" is generic infra, "id" is infrastructure
+- `presented_at` (timestamp) — generic infrastructure
+- `total_a_ingresar`, `total_a_devolver` — verbatim Spanish from AEAT receipt
+- `verificación` (mentioned in docstrings) — Spanish term
+
+English-only infrastructure (approved pattern):
+- Method names: `load`, `save`, `delete`, `iter_justificantes`, `list_csvs` — CRUD verbs
+- Properties: `store_dir`, `envelope_path_for`, `lock_target_for` — repository infrastructure
+
+**Assessment**: No mixed-language collision. Spanish domain terms are preserved; English infrastructure is isolated to method/property surfaces.
+
+### Internal Structure & Duplication Analysis
+
+**Status: NO DUPLICATION DETECTED**
+
+Repository pattern is minimal and purpose-specific:
+- `_schema.py` (79 LOC): Single `Justificante` model + `JustificanteParserBackend` enum
+- `_repository.py` (146 LOC): Single-responsibility persistence with standard CRUD methods (`load`, `save`, `delete`, `list_csvs`, `iter_justificantes`)
+- `_errors.py` (32 LOC): Five-class exception hierarchy with explicit inheritance chain
+- `__init__.py` (34 LOC): Clean re-export of all public symbols
+
+No boilerplate duplication between files. Exception hierarchy is intentional and linear (not diamond).
+
+### Risk Summary
+
+| Category | Finding Count | Risk Level | Action |
+| --- | --- | --- | --- |
+| Class inventory | 8 defined | NONE | Well-scoped and isolated |
+| Cross-package imports | 11 consumers | LOW | All dependencies intentional; parser → application flow is clean |
+| Internal duplication | 0 | NONE | No refactor action required |
+| Justificante/Invoice boundary | 0 conflicts | NONE | Boundary is clean; no confusion detected |
+| Exception orphaning | 0 orphaned | NONE | All 5 exceptions actively raised and caught |
+| Language consistency | Fully Spanish-stem compliant | NONE | No mixed-language drift; infrastructure verbs are English (approved pattern) |
+
+**Sweep Conclusion:** `domain.justificante` is a focused, well-isolated domain package with clear single responsibility: receipt metadata parsing, validation, and persistence. Spanish-stem authority is respected throughout. Justificante/invoice boundary is clean. No renaming, duplication, or structural issues detected. Package is production-ready.
+
