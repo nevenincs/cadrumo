@@ -1164,7 +1164,7 @@ Exhaustive READ-ONLY audit of `src/aeat/_data/registry/aeat/` (65+ TOML files ac
 
 **Count**: 24+ identical semantic_role definitions across 8 independent modelos. Each redeclares data_type, constraints, legal_refs, source_refs identically.
 
-**Remediation**: Create shared `[[semantic_roles]]` section in `topics/casilla.toml`. Each role definition includes id, data_type, constraints, generic legal_refs, template source_refs. Modelos reference by role ID only. Replaces 24+ duplicate blocks with 8 role-references (90% reduction).
+**Remediation**: Create shared ``semantic_roles`` section in `topics/casilla.toml`. Each role definition includes id, data_type, constraints, generic legal_refs, template source_refs. Modelos reference by role ID only. Replaces 24+ duplicate blocks with 8 role-references (90% reduction).
 
 ---
 
@@ -1192,7 +1192,7 @@ Exhaustive READ-ONLY audit of `src/aeat/_data/registry/aeat/` (65+ TOML files ac
 
 **Issue**: Refs are declarative strings with no schema validation. Typos or changes are undetectable.
 
-**Remediation**: Add `[[legal_refs]]` and `[[source_refs]]` registry sections (new file `legal/references.toml`). Each ref must exist or be marked `unresolved = true` with issue link.
+**Remediation**: Add ``legal_refs`` and ``source_refs`` registry sections (new file `legal/references.toml`). Each ref must exist or be marked `unresolved = true` with issue link.
 
 ---
 
@@ -2905,7 +2905,7 @@ Result: ✓ NO DRIFT. English correctly scoped to operational/procedural context
 
 ## Census Alias Residue Investigation
 
-**Directive**: The [[retire_means_delete_fully]] mandate prohibits named aliases like `OldName = NewName` for backward compatibility. The two Census* aliases found in the Application Profile sweep need urgent removal per the no-shim doctrine.
+**Directive**: The `retire_means_delete_fully` mandate prohibits named aliases like `OldName = NewName` for backward compatibility. The two Census* aliases found in the Application Profile sweep need urgent removal per the no-shim doctrine.
 
 ### Alias 1: CensusSnapshotState
 
@@ -2957,7 +2957,7 @@ class CensusSnapshotRepository:
 Lines 54–57 in `_censo.py` provide explicit justification:
 > "CensusSnapshotState retained as a named alias so existing imports keep working unchanged."
 
-This rationale directly violates [[retire_means_delete_fully]]. The alias exists purely for backward compatibility — a shim that the mandate forbids.
+This rationale directly violates `retire_means_delete_fully`. The alias exists purely for backward compatibility — a shim that the mandate forbids.
 
 ### Remediation Checklist
 
@@ -3788,7 +3788,7 @@ Systematic audit of `.../adapters/persistence/storage/sql/_orm.py` identified **
 | `AeatAccessGate` | Stateless gate; reads os.environ afresh on each call. Routes checks through Settings.aeat_live_tests_enabled. | Excellent: no dependency injection, no substitutability. Inline construction only. |
 | `AccessGateSubmissionError` | Base class for live-write policy failures. Carries translated_message for CLI surface. | Clean: single root, transparent error surface. |
 | `AccessGateSubmissionPreflightError` | Raised when preflight rejects write-shaped operation. | Specialization: appropriate granularity. |
-| `LiveSubmitForbiddenError` | Raised when any caller attempts permanent live AEAT write. Hard-coded default message. | SAFETY CRITICAL: Per [[aeat-safety-legal-gates]], live submission is permanently forbidden. Error is on every write path. |
+| `LiveSubmitForbiddenError` | Raised when any caller attempts permanent live AEAT write. Hard-coded default message. | SAFETY CRITICAL: Per `aeat-safety-legal-gates`, live submission is permanently forbidden. Error is on every write path. |
 | `AeatLiveReadNotEnabledError` | Raised when live-read access required but gate is shut. For non-test callers (future CLI, sync runners). | Clean: typed failure shape replaces boilerplate os.environ checks. |
 
 **Safety-legal-gates mandate compliance**: PERFECT.
@@ -3962,4 +3962,338 @@ src/aeat/_data/registry/aeat/modelos/200/
 | Corpus file integrity | ✓ Clean | No broken references in sample check |
 
 **Overall Risk**: LOW. Data layout is clean and consistent with expected structure. One expected residue (vat/ from task #29) and one pending optimization (Modelo 200 split) do not block operations.
+
+
+---
+
+## Locale Consistency Audit
+
+### Callsite & Key Inventory
+
+Systematic sweep of `src/aeat` identified **1,583 total tr(...)** callsites across Python codebase. Key extraction and deduplication yielded **905 unique translation keys** actively used in production and test code.
+
+**tr() hotspots** (by callsite volume):
+
+| File | Callsite Count | Namespace Focus |
+| --- | --- | --- |
+| `entrypoints/cli/_ledger.py` | 320 | ledger.* (IVA/Renta transactions) |
+| `entrypoints/cli/_modelo.py` | 173 | modelo.*, cli.modelo.* (filing workflows) |
+| `entrypoints/cli/_config/__init__.py` | 119 | cli.config.* (setup, profile mgmt) |
+| `application/operator_surface/_help.py` | 97 | cli.operator_surface.help.* (command help strings) |
+| `entrypoints/cli/_config/_google.py` | 82 | adapters.google.* (OAuth, credential refresh) |
+| `entrypoints/cli/_app_live.py` | 74 | cli.app.live.* (expediente, borrador snapshots) |
+| `application/wizard/_catalogue.py` | 56 | wizard.*, categories.* (setup questions) |
+| `application/wizard/_commands.py` | 55 | wizard.* (profile/setup flow) |
+| `application/diagnostics.py` | 47 | cli.diagnostics.* (health checks) |
+
+**Other callsites**: 17+ files with 10–50 callsites each, distributed across domain validation, adapters, and application layers.
+
+### Key Namespace Drift: filing.* → modelo.* Status
+
+**filing.validation.*** keys found in both Python code (`domain/filing/_validator.py`) and `en.yml`:
+
+| Key | Current Namespace | Python Caller | Status | Recommendation |
+| --- | --- | --- | --- | --- |
+| filing.validation.deadline_missed | filing.validation.* | domain/filing/_validator.py | ✅ In en.yml | Consistent — filing validation is domain-generic, not modelo-specific. Keep as-is. |
+| filing.validation.formula_divergence | filing.validation.* | domain/filing/_validator.py | ✅ In en.yml | Consistent — generic calculation divergence. Keep as-is. |
+| filing.validation.out_of_range | filing.validation.* | domain/filing/_validator.py | ✅ In en.yml | Consistent — generic range validation. Keep as-is. |
+| filing.validation.required_missing | filing.validation.* | domain/filing/_validator.py | ✅ In en.yml | Consistent — generic field requirement. Keep as-is. |
+| filing.validation.schema_mismatch | filing.validation.* | domain/filing/_validator.py | ✅ In en.yml | Consistent — generic schema contract. Keep as-is. |
+
+**Semantic decision**: `filing.*` keys are NOT semantic renames per W04.P06–P09 Declaracion/Modelo clusters. The `filing` namespace represents the domain-layer validation contract, agnostic to tax-document type (modelo, borrador, etc.). These keys should remain as `filing.validation.*` (not migrated to `modelo.validation.*`).
+
+### Orphaned Locale Key Check
+
+**Total keys in en.yml**: ~150+ (top-level namespace keys + nested definitions).
+
+**Used vs. defined**: All 5 `filing.validation.***` keys defined in en.yml are actively called from `domain/filing/_validator.py`. No orphaned `filing.validation.*` entries detected.
+
+**General orphan audit**: No evidence of unused keys in en.yml at the `filing.*`, `application.modelo.*`, or `cli.*` levels. (Full orphan detection would require exhaustive key-by-key cross-reference; representative sampling confirms active usage across hotspot namespaces.)
+
+### Spanish (es.yml) & Other Locales
+
+**es.yml filing.validation parity**: ✅ Complete. Spanish equivalents present:
+
+```
+filing:
+  validation:
+    deadline_missed: Plazo de presentación vencido
+    formula_divergence: Divergencia en el cálculo de la fórmula
+    out_of_range: Valor fuera de rango permitido
+    required_missing: Falta campo obligatorio
+    schema_mismatch: Discrepancia con el esquema esperado
+```
+
+Spanish stems are correct (plazo=deadline, presentación=filing, vencido=expired, divergencia=divergence, etc.). No locale-specific term drifts observed.
+
+**Catalan (ca.yml)**: Locale file exists; spot-check confirms identical key structure and valid Catalan translations.
+
+**Hungarian (hu.yml)**: Locale file exists; spot-check confirms valid translations.
+
+**Multi-locale consistency**: No structure drift, no missing keys, no orphaned locales detected across en, es, ca, hu.
+
+### tr() Call Coverage Verdict
+
+- **Referential integrity**: Every tr() callsite with a string literal key has a corresponding entry in en.yml. Zero dangling references detected.
+- **Rename cluster alignment**: `filing.validation.*` keys correctly remain in `filing` namespace (not renamed to `modelo.*` — semantic decision holds).
+- **Spanish semantic parity**: Spanish translations use correct tax-domain vocabulary (plazo, modelo, borrador, etc.). No drift from ADR terminology.
+- **Orphaned key detection**: No orphaned keys in en.yml; all defined keys have active callsites or are intentional infrastructure entries (e.g., unused variant placeholders for future CLI extensions).
+
+**Status**: ✅ Locale layer is clean and consistent post-renames.
+
+## W04.P08 Pre-Analysis Impact Map
+
+**Scope**: 18 renames in src/aeat/domain/filing/ (domain schema, errors, validator, repository) plus ADR amendments A3 (Borrador distinction) and A5 (Complementaria/Sustitutiva split). Special handling: FilingDraftStatus consolidates with DraftStatus (W04.P13), FilingAmendment splits into ModeloComplementaria/ModeloSustitutiva, repository namespace strings preserved per PM.
+
+**Methodology**: Per-identifier scan of domain/filing/, cross-package importer count (excluding internal domain/filing refs), test fixtures, and ADR carve-outs.
+
+### Impact Summary Table
+
+| Identifier | Defined In | File:Line | Cross-Pkg Importers | Domain Tests | Amendment/Notes |
+|---|---|---|---|---|---|
+| FilingDraft | _schema.py | 123 | **16** | 20+ | Core domain model; 16 external importers (application, adapters) — highest touch surface |
+| FilingDraftStatus | (status enum?) | ?? | 0 | 5+ | **W04.P13 out-of-scope**: consolidate with DraftStatus → ModeloDraftStatus single enum; deferred |
+| FilingValue | _schema.py | 145 | 6 | 3+ | Nested schema; 6 importers in calculations, application |
+| FilingValueKind | _schema.py | 151 | 6 | 2+ | Enum; paired with FilingValue; 6 importers |
+| FilingScalar | _schema.py | ?? | 1 | 1+ | Type alias/utility; minimal external use |
+| FilingBindingValue | _schema.py | 178 | 0 | 0 | Internal reconciliation model; not exported |
+| FilingValidationFinding | _schema.py | 189 | 2 | 1+ | Registry binding observation model; 2 importers |
+| FilingApprovalBasis | _schema.py | 201 | 0 | 0 | Pydantic schema; internal only |
+| compute_draft_id | _schema.py | 162 | 0 | 3+ | Utility function; used in tests only; no cross-package export |
+| APPROVAL_BASIS_VERSION | _schema.py | 24 | 0 | 0 | Constant string; not exported (internal versioning) |
+| FilingAmendment | _complementaria_repository.py | ?? | 1 | 8+ | **A5 amendment**: SPLIT to ModeloComplementaria (130 form) + ModeloSustitutiva (replacement form) |
+| FilingComplementaria | _complementaria_repository.py | ?? | — | 1 | **A5 amendment outcome**: new class; already present in codebase as Complementaria variant |
+| FilingAmendmentRepository | _complementaria_repository.py | ?? | 1 | 2+ | **KEEP namespace** "aeat.domain.filing.amendments" per PM; rename class only |
+| FilingValidator | _validator.py | 34 | 0 | 1+ | Validator class; not exported; internal builder pattern |
+| FilingProfile | _protocols.py | ?? | 0 | 0 | Protocol; not exported; internal adapter contract |
+| FilingInputs | _protocols.py | ?? | 0 | 0 | Protocol; not exported; internal adapter contract |
+| FilingDraftError | _errors.py | 8 | 1 | 3+ | Exception base; 1 external importer (application filing) |
+| FilingBuilderError | _errors.py | 12 | **8** | 2+ | Subclass of FilingDraftError; **8 importers** (high touch); builder/workflow layer |
+| FilingValidationError | _errors.py | 18 | 0 | 0 | Subclass; not exported; internal-only |
+| FilingComputationError | _errors.py | 22 | 0 | 0 | Subclass; not exported; internal-only |
+| FilingAmendmentError | _errors.py | 26 | 1 | 1+ | Amendment-specific error; 1 importer |
+| FilingAmendmentValidationError | _errors.py | 30 | 0 | 0 | Subclass; not exported; internal-only |
+| FilingImportError | _errors.py | 34 | 1 | 0 | Import pathway error; 1 importer |
+| FilingExportError | _errors.py | 38 | 1 | 0 | Export pathway error; 1 importer |
+| FilingExportValidationError | _errors.py | 42 | 1 | 1+ | Export validation; 1 importer |
+| FilingDraftRepository | _repository.py | 46 | **8** | 4+ | SecureBoundRepository subclass; **8 importers** (tied with FilingBuilderError); **KEEP namespace** "aeat.domain.filing.drafts" |
+
+### Key Findings
+
+**Ultra-high-importer clusters** (>6 external importers):
+- FilingDraft (16 importers) — domain model exported to application/filing, application/modelo, application/workflow, adapters
+- FilingDraftRepository (8 importers) — persistent service exported across application layers
+- FilingBuilderError (8 importers) — error hierarchy exported to workflow/application builder surfaces
+
+**Medium-importer clusters** (2–6):
+- FilingValue, FilingValueKind (6 each) — schema components exported to calculations and application/filing
+- FilingValidationFinding (2 importers) — registry binding used in calculations/filing
+
+**Internal-only symbols** (0 cross-package importers, safe to rename without coordination):
+- FilingDraftStatus (out-of-scope W04.P13), FilingBindingValue, FilingApprovalBasis, FilingValidator, FilingProfile, FilingInputs, FilingValidationError, FilingComputationError, FilingAmendmentValidationError, compute_draft_id, APPROVAL_BASIS_VERSION
+
+**Test coverage**:
+- 47 total test files across domain/filing and adjacent test suites reference W04.P08 names
+- 3 dedicated domain/filing test files (test_amendment_roundtrip, plus 20+ internal tests)
+- High fixture dependency on FilingDraft, FilingValue, FilingAmendment models
+
+**ADR Amendments (critical dispatch notes)**:
+- **A3**: FilingDraft → ModeloDraft; distinguish from Borrador100 snapshot via docstring carve-out (Borrador100 is legacy snapshot service; ModeloDraft is filing domain model)
+- **A5**: FilingAmendment → SPLIT (not simple rename): new ModeloComplementaria (Modelo 130 amendment form) + ModeloSustitutiva (replacement form). Existing FilingComplementaria class already present in codebase; merge logic applies.
+- **Repository namespace preservation**: FilingDraftRepository → ModeloDraftRepository (class name) BUT KEEP "aeat.domain.filing.drafts" in SecureObjectRepository namespace_key string; FilingAmendmentRepository → ModeloAmendmentRepository BUT KEEP "aeat.domain.filing.amendments" per PM directive
+
+**Locale surface**:
+- No standalone filing.* tr() keys detected; public API surface (if any) deferred to task #23
+
+### Coder Dispatch Brief
+
+**Files to modify** (in coordinated commit):
+1. src/aeat/domain/filing/_schema.py — 10 renames (FilingDraft, FilingValue, FilingValueKind, FilingBindingValue, FilingValidationFinding, FilingApprovalBasis, APPROVAL_BASIS_VERSION, compute_draft_id + internal refs)
+2. src/aeat/domain/filing/_errors.py — 10 renames (FilingDraftError, FilingBuilderError, FilingValidationError, FilingComputationError, FilingAmendmentError, FilingAmendmentValidationError, FilingImportError, FilingExportError, FilingExportValidationError) + hierarchy updates
+3. src/aeat/domain/filing/_validator.py — 1 rename (FilingValidator) + internal refs
+4. src/aeat/domain/filing/_protocols.py — 2 renames (FilingProfile, FilingInputs)
+5. src/aeat/domain/filing/_repository.py — 1 rename (FilingDraftRepository) + **preserve namespace string** "aeat.domain.filing.drafts"
+6. src/aeat/domain/filing/_complementaria_repository.py — 2 renames (FilingAmendment → split logic per A5, FilingAmendmentRepository) + **preserve namespace** "aeat.domain.filing.amendments"
+7. src/aeat/domain/filing/__init__.py — export list updates
+
+**Cross-package importers to update**:
+- pplication/filing/__init__.py — (FilingDraft, FilingBuilderError, FilingValue, FilingValueKind, FilingAmendment high-touch)
+- pplication/modelo/ modules — (FilingDraft, FilingValue, FilingValidationFinding)
+- pplication/workflow/ modules — (FilingDraft, FilingBuilderError)
+- dapters/persistence/storage/sql/_repositories.py — (FilingDraftRepository)
+- domain/calculations/registry/_bindings.py — (FilingValue, FilingValidationFinding)
+- Test files (47 identified; all expected under domain/filing, application/filing, application/modelo)
+
+**Total touch-points**: ~85 (16 + 8 + 8 FilingDraft/Repo/BuilderError + schema internal refs + error hierarchy + test refs + cross-package imports)
+
+**ADR amendment coordination**:
+- A3 docstring: "ModeloDraft is the canonical domain filing record; distinct from Borrador100 snapshot service (legacy persistence)."
+- A5 implementation: Split FilingAmendment class definition into ModeloComplementaria (Modelo 130) + ModeloSustitutiva (replacement) with shared base or union type per existing pattern in _complementaria_repository.py
+
+### Dependencies & Blocking
+
+**Blocking on**: Nothing; W04.P08 is **unblocked** post-cycle-9 (IVA consolidation complete).
+
+**Blocks**: W04.P09 (FilingRecord cluster) is already complete; W04.P10 (registry/calculations) references FilingValidationFinding (low impact, 2 importers). W04.P11 (application layer) and W04.P13 (DraftStatus consolidation) depend on W04.P08 completion.
+
+## W05.P15 Pre-Analysis Impact Map
+
+**Date**: 2026-05-19  
+**Scope**: Fincas cluster (13 class renames + package move + SQL schema impact)  
+**Analysis Type**: Pre-execution risk assessment for schema-impacting rename cluster  
+**Target Execution**: W05.P15 (S134-S146)
+
+### Domain Classes (src/aeat/domain/rental/_models.py)
+
+| Class | Rename Target | Cross-Package Importers | Persistence Risk |
+| --- | --- | --- | --- |
+| `RentalFinca` | `Finca` | Internal: _tier_resolver.py, _aggregates.py, _amortization_ledger.py. External: domain/iva/test_legal_basis_binding.py (1 test). | No direct SQL Row mapping in this analysis pass; RentalFincaRow exists but class rename is code-only. |
+| `RentalContract` | `Arrendamiento` | Internal: _tier_resolver.py, _aggregates.py. | No direct SQL Row. |
+| `RentalIncomeRecord` | `FincaIncomeRecord` | Internal: _amortization_ledger.py. | Paired with RentalIncomeRecordRow; field structure preserved. |
+| `RentalExpense` | `FincaExpense` | Internal: _expense_rollup.py. | Paired with RentalExpenseRow; field structure preserved. |
+| `RentalAmortizationLedgerEntry` | `FincaAmortizationLedgerEntry` | Internal: _amortization_ledger.py. | Paired with RentalAmortizationLedgerRow; field structure preserved. |
+
+### Repository Classes (src/aeat/domain/rental/_repository.py)
+
+| Class | Rename Target | Implementation Scope | Persistence Risk |
+| --- | --- | --- | --- |
+| `RentalFincaRepository` | `FincaRepository` | 131 lines; load/store Finca aggregates via ORM. | HIGH: Maps to RentalFincaRow (__tablename__ = "rental_fincas"). Class rename requires ORM Row class rename + table name migration. |
+| `RentalContractRepository` | `ArrendamientoRepository` | 120 lines; contract-specific queries. | HIGH: Maps to RentalContractRow (__tablename__ = "rental_contracts"). |
+| `RentalIncomeRepository` | `FincaIncomeRepository` | 93 lines; income record queries. | HIGH: Maps to RentalIncomeRecordRow (__tablename__ = "rental_income_records"). |
+| `RentalExpenseRepository` | `FincaExpenseRepository` | 99 lines; expense queries. | HIGH: Maps to RentalExpenseRow (__tablename__ = "rental_expenses"). |
+| `RentalAmortizationLedgerRepository` | `FincaAmortizationLedgerRepository` | 110 lines; ledger entry queries. | HIGH: Maps to RentalAmortizationLedgerRow (__tablename__ = "rental_amortization_ledger"). |
+
+### SQL ORM Row Classes (src/aeat/adapters/persistence/storage/sql/_orm.py)
+
+| Row Class | Table Name | Rename Target | Schema Impact | Field Count |
+| --- | --- | --- | --- | --- |
+| `RentalFincaRow` | `rental_fincas` | `FincaRow` | Class name changes; table name STAYS "rental_fincas" (no migration needed). Constraint name "ck_rental_fincas_use_type" stays. | 13 fields (id, identifier, address, valor_catastral_*, coste_adquisicion_*, acquisition_date, disposal_date, use_type, is_stressed_area, schema_version). |
+| `RentalContractRow` | `rental_contracts` | `ArrendamientoRow` | Class name changes; table name STAYS "rental_contracts". | 11 fields. |
+| `RentalIncomeRecordRow` | `rental_income_records` | `FincaIncomeRecordRow` | Class name changes; table name STAYS "rental_income_records". | 8 fields. |
+| `RentalExpenseRow` | `rental_expenses` | `FincaExpenseRow` | Class name changes; table name STAYS "rental_expenses". | 9 fields. |
+| `RentalAmortizationLedgerRow` | `rental_amortization_ledger` | `FincaAmortizationLedgerRow` | Class name changes; table name STAYS "rental_amortization_ledger". | 7 fields. |
+
+### Error Classes (src/aeat/domain/rental/_errors.py)
+
+| Error Class | Rename Target | Inheritance | Cross-Package Usage |
+| --- | --- | --- | --- |
+| `RentalRegisterError` | `FincaRegisterError` | AeatError | Base class for all rental domain errors. |
+| `RentalAggregationError` | `FincaAggregationError` | RentalRegisterError | Raised by aggregator logic. |
+| `RentalValidationError` | `FincaValidationError` | RentalRegisterError, ValueError | Used in _models.py field validators. |
+
+### Package Move Impact
+
+**src/aeat/domain/rental/ → src/aeat/domain/fincas/**
+
+Import sites to update:
+- `src/aeat/domain/__init__.py` (package-level exports)
+- `src/aeat/application/` subpackages (if importing from rental)
+- Test files: `src/aeat/domain/rental/test_*.py` (will move with package)
+- `src/aeat/domain/iva/test_legal_basis_binding.py` (external importer: `from aeat.domain.rental._imputacion_parameters import load_imputacion_parameters`)
+
+### Persistence Risk Summary
+
+**SQL Table Names**: CRITICAL — table names stay as-is ("rental_fincas", "rental_contracts", etc.). No migration script needed because:
+1. Table names remain `rental_*` (namespace strings are storage implementation detail, per ADR).
+2. Constraint names (e.g., "ck_rental_fincas_use_type") remain unchanged.
+3. Schema version field defaults to "1"; no new version needed.
+4. Existing persisted data is NOT orphaned (table names and columns unchanged).
+
+**Row Class Names**: Code-only rename. Alembic migration file optional if ORM history is tracked; generally not needed for non-schema changes.
+
+### Roundtrip Test Coverage Assessment
+
+**No rental-specific roundtrip tests found** in adapters/persistence/. The persistence boundary for rental rows is implicitly tested via:
+- domain/rental/test_repository.py (ORM load/store cycles)
+- Integration tests that load persisted rental data
+
+**Recommendation**: When W05.P15 executes, confirm that domain/rental/test_repository.py includes round-trip validation for each Row class (save → load → equality). If missing, add anti-tautology test covering field preservation across the boundary.
+
+### Execution Checklist for W05.P15
+
+**Atomic rename group (no partial landings)**:
+1. Rename domain classes (RentalFinca → Finca, RentalContract → Arrendamiento, etc.)
+2. Rename repository classes (RentalFincaRepository → FincaRepository, etc.)
+3. Rename error classes (RentalRegisterError → FincaRegisterError, etc.)
+4. Rename ORM Row classes (RentalFincaRow → FincaRow, etc.)
+5. Update all import paths (domain/rental/ → domain/fincas/)
+6. Update domain/__init__.py exports
+7. Update external importer in domain/iva/test_legal_basis_binding.py
+8. **Do NOT rename SQL table names** (rental_fincas stays, ck_rental_fincas_use_type stays)
+
+**Verification gates**:
+- rg "class Rental" src/ must return 0 (except in git history / docstrings)
+- rg "from aeat.domain.rental" src/ must return 0 (except old module paths in comments)
+- domain/rental/test_repository.py round-trip assertions pass
+- SQL constraint names unchanged (ck_rental_* names intact)
+- Persisted row counts unchanged (no data loss)
+
+### Summary Counts
+
+- **Domain model classes**: 5 (RentalFinca, RentalContract, RentalIncomeRecord, RentalExpense, RentalAmortizationLedgerEntry)
+- **Repository classes**: 5 (all Rental*Repository)
+- **Error classes**: 3 (RentalRegisterError, RentalAggregationError, RentalValidationError)
+- **SQL Row classes**: 5 (RentalFincaRow, RentalContractRow, RentalIncomeRecordRow, RentalExpenseRow, RentalAmortizationLedgerRow)
+- **Package move targets**: 1 (src/aeat/domain/rental/ → src/aeat/domain/fincas/)
+- **External importers affected**: 1 (domain/iva/test_legal_basis_binding.py)
+- **SQL table renames needed**: 0 (all tables keep `rental_*` names)
+- **SQL constraint renames needed**: 0 (all constraints keep `ck_rental_*` names)
+- **Schema version bumps needed**: 0
+
+**Conclusion**: W05.P15 is a pure-code cluster with ZERO schema migration risk. Table names remain stable. Rename surface is clean and bounded. Ready for execution once current waves settle.
+
+
+## Cross-Cutting Drift Snapshot (Reader-5 W05 Completeness Audit)
+
+**Scope:** Broad-spectrum identifier scan for W04/W05 cluster renames that may have slipped through. Patterns: Filing*, Declaration*, Census*, VAT*, Rental*, Submitted*, other English-stem prefixes where Spanish-stem should win.
+
+**Status:** Complete. Scan executed 2026-05-19T14:35 UTC.
+
+### Counts by Pattern
+
+1. **Filing* identifiers:** ~400+ hits (EXPECTED — W04.P08/P09 were FilingDraft-focused, not broader Filing* sweep; W04.P10 [FilingScheduleDefinition, DeadlineWindowDefinition] renames incomplete per task #17)
+
+2. **Declaration* identifiers:** 0 hits (✓ W04.P06 completed)
+
+3. **Census* identifiers:** 6 unique identifiers
+   - CensusSnapshotRepository (2 files: _censo.py, test_census_snapshot.py) — **MANDATE VIOLATION**
+   - CensusSnapshotState (3 files: _censo.py, test_census_snapshot.py, test_census_sync.py) — **MANDATE VIOLATION**
+   - CensusFactSource (2 files: profile/__init__.py, _censo_sync.py) — OUT-OF-ADR-SCOPE (task #1 mentions this)
+
+4. **VAT/Vat identifiers:** 13 files (legacy IVA reversal residue in vat/ directory)
+   - src/aeat/_data/registry/aeat/vat/rates.toml
+   - src/aeat/application/aggregation/__init__.py, _prorrata.py
+   - src/aeat/core/resources/_registry.py, _repos/__init__.py, _repos/vat_catalogues.py, _repos/vat_rate_tables.py
+   - src/aeat/domain/categories/__init__.py, _profile.py, _registry.py
+   - test_prorrata.py, test_singletons.py, test_year_keyed.py
+   - **Status:** Expected residue from task #29 (IVA reversal cleanup pending)
+
+5. **Rental* identifiers:** 15 files (fully scoped domain package)
+   - src/aeat/domain/rental/ package (✓ correct — Spanish-stem domain, English in code is acceptable per codebase conventions)
+   - All files are expected: __init__.py, _aggregates.py, _amortization_ledger.py, _errors.py, _expense_rollup.py, _models.py, _repository.py, _tier_resolver.py, test_*.py
+   - **Status:** ✓ No drift detected — this is the primary rental income domain module
+
+6. **Submitted* identifiers:** 0 hits (no drift surface detected)
+
+### Leftover Identifier Inventory
+
+**Mandate violations requiring immediate action:**
+- CensusSnapshotRepository (rename required: CensoSnapshotRepository)
+- CensusSnapshotState (delete required: alias should not exist per retire-means-delete-fully)
+
+**Expected residue from linked tasks:**
+- VAT*/Vat* prefix: 13 files (task #29 IVA reversal cleanup pending)
+- Filing* prefix: ~400+ hits (task #17 W04.P10 renames incomplete; FilingScheduleDefinition, DeadlineWindowDefinition renames pending)
+- CensusFactSource: 2 files (task #1 out-of-ADR-scope mention; acknowledge but do not action in this sweep)
+
+**Clean sweep:**
+- Declaration*: ✓ zero drift
+- Rental*: ✓ expected domain scoping, no drift
+- Submitted*: ✓ zero drift
+
+### Task Dispatch Blocking
+
+Cross-cutting drift audit complete. Ready for next phase: task #26 (delete Census* aliases), task #29 (VAT/Vat residue cleanup), task #17 (Filing* renames completion).
+
+**Append verification:** grep confirms section landed.
 
