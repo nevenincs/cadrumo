@@ -78,6 +78,7 @@ _VALIDATOR_TEST_ALLOWLIST = frozenset(
         "test_period_code_data_type.py",
         "test_referential_integrity.py",
         "test_selector_shape.py",
+        "test_semantic_role.py",
         "test_year_data_type.py",
     }
 )

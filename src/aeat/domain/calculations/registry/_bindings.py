@@ -21,6 +21,15 @@ from ._schema import DataBindingDefinition, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
 
+# Canonical source-kind strings the registry uses for invoice-shaped
+# bindings after the W84.S2309 migration retired the bare ``"invoice"``
+# source. Every consumer that needs "is this binding an invoice
+# binding?" routes through this frozenset so the answer stays single-
+# sourced.
+INVOICE_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
+    {"collectible_invoice", "payable_invoice", "purchase_invoice_evidence"}
+)
+
 __all__ = [
     "CasillaObservation",
     "DataBindingDefinition",
@@ -543,7 +552,7 @@ def invoice_binding_requirements(
         set[str],
     ] = {}
     for binding in revision.bindings:
-        if binding.source != "invoice":
+        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
             continue
         selector = _validated_invoice_selector(binding)
         key = (tuple(sorted(selector.claves)), selector.rectification_scope, selector.vat_regime)
@@ -656,7 +665,7 @@ def resolve_invoice_binding_values(
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "invoice":
+        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
             continue
         selector = _validated_invoice_selector(binding)
         if selector.fact == "row_field":
@@ -690,7 +699,7 @@ def resolve_invoice_binding_row_values(
         list[tuple[DataBindingDefinition, _InvoiceSelector]],
     ] = {}
     for binding in revision.bindings:
-        if binding.source != "invoice":
+        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
             continue
         selector = _validated_invoice_selector(binding)
         if selector.fact != "row_field":
