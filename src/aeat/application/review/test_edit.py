@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ._edit import (
-    DeclarationEditSpec,
+    DeclaracionEditSpec,
     EditClause,
     EditParseError,
     InvoiceEditKey,
@@ -233,18 +233,18 @@ def test_invoice_spec_empty_returns_empty_spec() -> None:
 
 
 # ---------------------------------------------------------------------
-# DeclarationEditSpec
+# DeclaracionEditSpec
 # ---------------------------------------------------------------------
 
 
 def test_declaration_spec_parses_casilla_override() -> None:
     """Parse a declaration casilla override."""
-    spec = DeclarationEditSpec.from_strings(["casilla.71=1200.00"])
+    spec = DeclaracionEditSpec.from_strings(["casilla.71=1200.00"])
     assert spec.casilla_edits == {"71": Decimal("1200.00")}
 
 
 def test_declaration_spec_parses_multi_casilla_edits() -> None:
-    spec = DeclarationEditSpec.from_strings(
+    spec = DeclaracionEditSpec.from_strings(
         [
             "casilla.71=1200.00",
             "casilla.03=-500.50",
@@ -260,36 +260,36 @@ def test_declaration_spec_parses_multi_casilla_edits() -> None:
 
 def test_declaration_spec_rejects_non_casilla_key() -> None:
     with pytest.raises(EditParseError, match=r"unknown-key-declaration") as exc:
-        DeclarationEditSpec.from_strings(["category=software"])
+        DeclaracionEditSpec.from_strings(["category=software"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
 def test_declaration_spec_rejects_short_casilla_id() -> None:
     with pytest.raises(EditParseError, match=r"unknown-key-declaration") as exc:
-        DeclarationEditSpec.from_strings(["casilla.1=10"])
+        DeclaracionEditSpec.from_strings(["casilla.1=10"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
 def test_declaration_spec_rejects_long_casilla_id() -> None:
     with pytest.raises(EditParseError, match=r"unknown-key-declaration") as exc:
-        DeclarationEditSpec.from_strings(["casilla.123456=10"])
+        DeclaracionEditSpec.from_strings(["casilla.123456=10"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
 def test_declaration_spec_rejects_non_decimal_value() -> None:
     with pytest.raises(EditParseError, match=r"invalid-value-declaration-casilla") as exc:
-        DeclarationEditSpec.from_strings(["casilla.71=tbd"])
+        DeclaracionEditSpec.from_strings(["casilla.71=tbd"])
     assert exc.value.reason == "invalid-value-declaration-casilla"
 
 
 def test_declaration_spec_rejects_duplicate_casilla_key() -> None:
     with pytest.raises(EditParseError, match=r"duplicate-key-declaration") as exc:
-        DeclarationEditSpec.from_strings(["casilla.71=1.0", "casilla.71=2.0"])
+        DeclaracionEditSpec.from_strings(["casilla.71=1.0", "casilla.71=2.0"])
     assert exc.value.reason == "duplicate-key-declaration"
 
 
 def test_declaration_spec_empty_returns_empty_spec() -> None:
-    spec = DeclarationEditSpec.from_strings([])
+    spec = DeclaracionEditSpec.from_strings([])
     assert spec.clauses == ()
     assert spec.casilla_edits == {}
 
@@ -319,7 +319,7 @@ def test_invoice_spec_rejects_inconsistent_construction() -> None:
 
 def test_declaration_spec_rejects_inconsistent_construction() -> None:
     with pytest.raises(ValueError, match=r"clauses|casilla_edits|inconsistent"):
-        DeclarationEditSpec(clauses=(), casilla_edits={"71": Decimal("100.00")})
+        DeclaracionEditSpec(clauses=(), casilla_edits={"71": Decimal("100.00")})
 
 
 # ---------------------------------------------------------------------

@@ -32,7 +32,7 @@ from ._adapters import (
 )
 from ._aggregator import ReviewQueue
 from ._edit import (
-    DeclarationEditSpec,
+    DeclaracionEditSpec,
     EditClause,
     EditParseError,
     InvoiceEditKey,
@@ -52,9 +52,9 @@ from ._enums import (
 )
 from ._errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
 from ._filter import (
-    DeclarationReviewFilterKey,
-    DeclarationReviewFilterSpec,
-    DeclarationReviewStatus,
+    DeclaracionReviewFilterKey,
+    DeclaracionReviewFilterSpec,
+    DeclaracionReviewStatus,
     FilterClause,
     FilterParseError,
     InvoiceReviewFilterKey,
@@ -78,10 +78,10 @@ from ._models import (
 from ._operator import ReviewQueueReport, project_review_item, project_review_queue
 
 __all__ = [
-    "DeclarationEditSpec",
-    "DeclarationReviewFilterKey",
-    "DeclarationReviewFilterSpec",
-    "DeclarationReviewStatus",
+    "DeclaracionEditSpec",
+    "DeclaracionReviewFilterKey",
+    "DeclaracionReviewFilterSpec",
+    "DeclaracionReviewStatus",
     "EditClause",
     "EditParseError",
     "FilterClause",

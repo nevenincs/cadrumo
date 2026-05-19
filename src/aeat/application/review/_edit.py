@@ -17,7 +17,7 @@ declaration ``edit`` command. The canonical grammar:
 The CLI argv layer parses the raw strings; this module turns them
 into typed :class:`EditClause` records and binds them to per-scope
 :class:`LedgerEditSpec` / :class:`InvoiceEditSpec` /
-:class:`DeclarationEditSpec` records. Each spec validates its closed
+:class:`DeclaracionEditSpec` records. Each spec validates its closed
 key catalogue, coerces each value to its typed shape (``Decimal``,
 ``Path``, free text, foreign-key id, casilla id), and exposes typed
 accessors the orchestration layer reads instead of re-parsing strings
@@ -53,7 +53,7 @@ _DECIMAL_RE = re.compile(r"^-?\d+(\.\d+)?$")
 """Reject malformed decimals before constructor; ruff-friendly fast path."""
 
 __all__ = (
-    "DeclarationEditSpec",
+    "DeclaracionEditSpec",
     "EditClause",
     "EditParseError",
     "InvoiceEditKey",
@@ -143,7 +143,7 @@ _INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = frozenset({Decimal("0"), Decimal
 """Closed set of integer-percentage IVA rates the CLI accepts on
 ``--set iva.rate``. The values map onto :class:`aeat.domain.invoices.IvaRate`
 slots (``RATE_0`` / ``RATE_4`` / ``RATE_10`` / ``RATE_21``); the underlying
-substrate at :func:`aeat.domain.vat.lookup_rate` is the authority for the
+substrate at :func:`aeat.domain.iva.lookup_rate` is the authority for the
 fractional percentages those slots resolve to at a date.
 
 Rejecting non-canonical values at parse time keeps free-form Decimal IVA
@@ -476,7 +476,7 @@ class InvoiceEditSpec(BaseModel):
         return self
 
 
-class DeclarationEditSpec(BaseModel):
+class DeclaracionEditSpec(BaseModel):
     """Typed modelo casilla edit spec.
 
     The declaration edit grammar uses the dotted prefix
@@ -497,7 +497,7 @@ class DeclarationEditSpec(BaseModel):
     casilla_edits: dict[str, Decimal] = Field(default_factory=dict)
 
     @classmethod
-    def from_strings(cls, raw: Iterable[str]) -> DeclarationEditSpec:
+    def from_strings(cls, raw: Iterable[str]) -> DeclaracionEditSpec:
         """Parse ``--set`` arguments into a typed declaration spec."""
         clauses = parse_edit_clauses(raw)
         _ensure_unique_keys(clauses, scope="declaration")
@@ -514,7 +514,7 @@ class DeclarationEditSpec(BaseModel):
         return cls(clauses=clauses, casilla_edits=casilla_edits)
 
     @model_validator(mode="after")
-    def _enforce_clause_consistency(self) -> DeclarationEditSpec:
+    def _enforce_clause_consistency(self) -> DeclaracionEditSpec:
         """Resolved field must agree with the clauses tuple."""
         present_ids: set[str] = set()
         for clause in self.clauses:
@@ -528,7 +528,7 @@ class DeclarationEditSpec(BaseModel):
 
 
 __all__ = [
-    "DeclarationEditSpec",
+    "DeclaracionEditSpec",
     "EditClause",
     "EditParseError",
     "InvoiceEditKey",
