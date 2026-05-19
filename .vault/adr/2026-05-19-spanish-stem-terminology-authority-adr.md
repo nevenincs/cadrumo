@@ -307,3 +307,160 @@ The following identifiers, although flagged in the raw inventory, remain unchang
 - Justificante* family (already Spanish-stem; only the surrounding suffixes are English-infra).
 - Borrador* family except the duplicate BorradorPrefillEntry and Borrador100Snapshot collision in _borrador.py (those are handled by the original ADR W03.P05 phase as deletion of the legacy module, not as renames).
 
+## Implementation
+
+### 1. Decision
+
+Spanish stems are authoritative for tax-domain identifiers. The canonical stems, each grounded in the cited primary source, are:
+
+- iva per Ley 37/1992 IVA (BOE-A-1992-28740). Supersedes vat, value_added_tax.
+- irpf per Ley 35/2006 IRPF (BOE-A-2006-20764). Supersedes income_tax, personal_income_tax, pit.
+- modelo per AEAT Sede Electronica nomenclature and the per-modelo Ordenes Ministeriales (e.g. Orden HFP/227/2017 for Modelo 303). Supersedes form, tax_form, return_form. Always followed by the three-digit modelo number.
+- declaracion per Ley 58/2003 LGT Articulo 119 (BOE-A-2003-23186). Supersedes declaration, return when used in the LGT-119 sense.
+- autoliquidacion per Ley 58/2003 LGT Articulo 120. Supersedes self_assessment, self_liquidation.
+- justificante per AEAT Sede Electronica (CSV / justificante de presentacion workflow); regulatory framework Ley 40/2015 Articulo 27. Supersedes receipt, proof, confirmation when the artifact is the AEAT submission attestation. Does not absorb factura (commercial invoice, RD 1619/2012) or recibo (commercial receipt).
+- borrador per Ley 35/2006 IRPF Articulo 98 (AEAT Renta Web draft). Supersedes draft, prefill when the entity is the AEAT-prepared Modelo 100 draft.
+- renta per Ley 35/2006 IRPF (Titulo I, Capitulo I). Supersedes income in the IRPF base sense. Never collapses with English rental.
+- fincas (singular finca) per Ley Hipotecaria (Decreto 1946, BOE-A-1946-2453) and RDLeg 1/2004 del Catastro Inmobiliario. Supersedes real_estate, properties when the unit is a registrable real-estate parcel.
+- expediente per Ley 39/2015 LPAC Articulo 70 (BOE-A-2015-10565). Supersedes case_file, case when the artifact is the AEAT administrative expediente.
+- censo per RD 1065/2007 RGAGI Titulo II Capitulo I (BOE-A-2007-15984). Supersedes census, taxpayer_registry. declaracion_censal for Modelos 036 / 037.
+- ccaa / comunidad_autonoma per Constitucion Espanola Titulo VIII; financial framework LOFCA (Ley Organica 8/1980). Already standardised.
+
+### 2. English exceptions (retained)
+
+The following remain in English regardless of the Spanish-stem default and are explicitly composable with Spanish stems as suffixes:
+
+- International identifiers fixed in BOE or ISO standards: NIF, CIF, NIE, IBAN (ISO 13616), SWIFT / BIC (ISO 9362).
+- Python standard-library primitives: Decimal, datetime, bool, str, int. Never translated.
+- Generic infrastructure suffixes used in adapter and persistence layers. These compose with Spanish stems; they do not replace them: Snapshot, Repository, Record, Row, Service, Factory, Validator, Observation, Protocol, Error, Selector, Catalogue, Store, Adapter, Driver, Oracle, Result, Payload, Ref, Spec, Kind, Status.
+- Examples of valid composition: ModeloRepository, DeclaracionObservation, Borrador100Snapshot, JustificanteFetchError, FincaRow, CensoSyncService.
+
+These suffixes remain English because they encode generic infrastructure roles, not tax semantics, and translating them would produce stem-stuttering or over-translation (FilaModelo, RegistroModelo, OracleVerificador).
+
+### 3. Stem-stuttering rule
+
+No rename may produce stem-stuttering. If the canonical stem already appears in the identifier, do not re-add it during the rename. The following raw-inventory proposals are explicitly invalid and must be filtered out by any executing agent:
+
+- BorradorSnapshotNotFoundError to BorradorBorradorNotFoundError.
+- Borrador100Snapshot to Borrador100Borrador.
+- RentaIncomeType to RentaRentaType.
+- RentalFinca to FincasFinca (also blocked on Renta vs Rental adjudication; Fincas is plural and incorrect as a singular class prefix in any case).
+- Any Snapshot to Borrador rename where the entity is a generic state-capture (ProfileSnapshot, RegistrySnapshot, AeatGateEnvSnapshot, etc.).
+
+The rule generalises: a single canonical stem appears at most once per identifier, and the surrounding tokens are infrastructure suffixes from the English-exceptions list.
+
+### 4. Snapshot disambiguation
+
+Snapshot is a generic infrastructure suffix and stays English in every case EXCEPT where the entity is itself the AEAT-prepared Modelo draft. The semantic test is what entity is captured, not what suffix is used:
+
+- Snapshot stays as a generic state-capture suffix when the underlying entity is a Sede scrape, an AEAT remote-state cache, or a point-in-time snapshot of a domain record. Examples: CensusSnapshot (becomes CensoSnapshot for stem reasons, but retains Snapshot), ProfileSnapshot, RegistrySnapshot, AeatGateEnvSnapshot, ExpedienteSnapshot, NotificationSnapshot.
+- Borrador100Snapshot keeps the Borrador stem because the entity itself is the AEAT borrador (Ley 35/2006 Art. 98); Snapshot here is the generic cache-state suffix on top of the borrador entity. The composition Borrador100Snapshot is therefore correct and is NOT a stem stutter.
+
+The rule is therefore: rename the stem token within the identifier to its Spanish form (Census to Censo, Expediente already correct), but leave the Snapshot suffix in place.
+
+### 5. Renta vs Rental adjudication
+
+The Renta (IRPF base) vs Rental (English rental-property terminology) collision is the single largest blocked rename surface, covering the entire domain/rental package, the Rental*Row cluster in adapters/persistence/storage/sql/_orm.py, and the RentalAmortizationLedger family.
+
+Decision: rename domain/rental to domain/fincas.
+
+Justification:
+
+- The domain primary tax surface is rendimientos del capital inmobiliario, which AEAT settles per finca (registrable parcel) for Modelo 100 and Modelo 210. The unit of account is the finca, not the lease contract.
+- fincas is the BOE term per Ley Hipotecaria and the Catastro Inmobiliario (RDLeg 1/2004) and is also used for Modelo 347 arrendamientos and IBI municipal references. It is the broadest authoritative covering term.
+- alquiler (rental contract) is one possible status of a finca, not the canonical unit; restricting the domain to alquiler would exclude vacant fincas, owner-occupied fincas declared for imputed-renta purposes, and non-leased parcels feeding Modelo 100.
+- Operational status (is_rented, lease_active) becomes a field on the finca model, not a package name.
+
+Consequences of this adjudication:
+
+- The package path becomes src/aeat/domain/fincas/.
+- Identifiers rename per the canonical ledger below: RentalFinca to Finca, RentalContract to Arrendamiento, RentalIncome* to Finca* with the income/expense role expressed as a separate suffix, RentalAmortizationLedger to FincaAmortizationLedger.
+- Existing Renta* identifiers under domain/renta are unaffected; the IRPF income-base package stays domain/renta.
+- The SQL ORM Rental*Row cluster renames in lockstep with the domain package and is gated by a roundtrip-test pass.
+
+### 6. Supersession of the prior W03.P04 direction
+
+The prior code-duplication-sweep ADR proposed creating a VatClassification schema under domain/vat and absorbing IvaInvoiceClassification into it. That direction is reversed:
+
+- IvaInvoiceClassification is canonical.
+- VatClassification, VatRegulation, VATRateKind, the entire domain/vat package surface, the IssuerResidency / CustomerResidency pair, and InvoiceDirection migrate into domain/iva (or the existing IVA-bearing package, to be selected during plan retargeting).
+- _iva_ledger.py and _IvaLedgerSelector are the canonical ledger-aggregation surface.
+- The W03.P04 phase in the existing plan must be retargeted by the plan-authoring agent to consolidate VAT into IVA, not the reverse.
+
+### 7. Canonical rename ledger
+
+The tables below are the QC-filtered, ADR-Specialist-approved subset of the 189-row raw inventory. Rows where the raw inventory proposed stem-stuttering, generic-infra translation, or international-identifier translation have been removed. Rows blocked on the Renta-vs-Rental adjudication are included now that the adjudication is settled. Stem authority cites the canonical glossary entry; phase references map to the existing plan wave/phase structure where known and to TBD where plan retargeting is required.
+
+#### Modelo cluster (Filing to Modelo)
+
+Stem authority: modelo per AEAT nomenclature and per-modelo Ordenes Ministeriales.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| FilingDraft | src/aeat/domain/filing/_schema.py | ModeloDraft | TBD |
+| FilingDraftStatus | src/aeat/domain/filing/_schema.py | ModeloDraftStatus | TBD |
+| FilingValue | src/aeat/domain/filing/_schema.py | ModeloValue | TBD |
+| FilingValueKind | src/aeat/domain/filing/_schema.py | ModeloValueKind | TBD |
+| FilingBindingValue | src/aeat/domain/filing/_schema.py | ModeloBindingValue | TBD |
+| FilingValidationFinding | src/aeat/domain/filing/_schema.py | ModeloValidationFinding | TBD |
+| FilingApprovalBasis | src/aeat/domain/filing/_schema.py | ModeloApprovalBasis | TBD |
+| FilingValidator | src/aeat/domain/filing/_validator.py | ModeloValidator | TBD |
+| FilingAmendment | src/aeat/domain/filing/_amendment.py | ModeloAmendment | TBD |
+| FilingAmendmentError | src/aeat/domain/filing/_errors.py | ModeloAmendmentError | TBD |
+| FilingDraftError | src/aeat/domain/filing/_errors.py | ModeloDraftError | TBD |
+| FilingBuilderError | src/aeat/domain/filing/_errors.py | ModeloBuilderError | TBD |
+| FilingValidationError | src/aeat/domain/filing/_errors.py | ModeloValidationError | TBD |
+| FilingComputationError | src/aeat/domain/filing/_errors.py | ModeloComputationError | TBD |
+| FilingImportError | src/aeat/domain/filing/_errors.py | ModeloImportError | TBD |
+| FilingExportError | src/aeat/domain/filing/_errors.py | ModeloExportError | TBD |
+| FilingExportValidationError | src/aeat/domain/filing/_errors.py | ModeloExportValidationError | TBD |
+| FilingProfile | src/aeat/domain/filing/_protocols.py | ModeloProfile | TBD |
+| FilingDraftRepository | src/aeat/domain/filing/_repository.py | ModeloDraftRepository | TBD |
+| FilingRecord | src/aeat/domain/modelos/_filing_record.py | ModeloRecord (consolidates with persistence-side; see footnote 1) | schema-impact |
+| FilingRecordStatus | src/aeat/domain/modelos/_filing_record.py | ModeloRecordStatus | schema-impact |
+| FilingRecordCatalogue | src/aeat/domain/modelos/_filing_record.py | ModeloRecordCatalogue | schema-impact |
+| FilingRecordPersistenceError | src/aeat/domain/modelos/_filing_record.py | ModeloRecordPersistenceError | schema-impact |
+| FilingRecordCatalogueRepository | src/aeat/domain/modelos/_filing_repository.py | ModeloRecordCatalogueRepository | schema-impact |
+| FilingObligation | src/aeat/domain/deadlines/_models.py | ModeloObligation | TBD |
+| FilingEnrollment | src/aeat/domain/deadlines/_models.py | ModeloEnrollment | TBD |
+| FilingIVAProfile | src/aeat/domain/deadlines/_models.py | ModeloIvaProfile | TBD |
+| FilingScheduleDefinition | src/aeat/domain/calculations/registry/_schema.py | ModeloScheduleDefinition | TBD |
+| RegistryFilingObservation | src/aeat/domain/calculations/registry/_bindings.py | RegistryModeloObservation | TBD |
+| OracleFilingObservation | src/aeat/domain/calculations/registry/_bindings.py | OracleModeloObservation | TBD |
+| RegistryFilingObservationRequirement | src/aeat/domain/calculations/registry/_bindings.py | RegistryModeloObservationRequirement | TBD |
+| _PreviousFilingSelector | src/aeat/domain/calculations/registry/_bindings.py | _PreviousModeloSelector | TBD |
+| FilingApplicationError | src/aeat/application/filing/errors.py | ModeloApplicationError | TBD |
+| FilingCalculateError | src/aeat/application/filing/errors.py | ModeloCalculateError | TBD |
+| FilingHistory | src/aeat/application/filing/_history_models.py | ModeloHistory | TBD |
+| FilingHistoryEntry | src/aeat/application/filing/_history_models.py | ModeloHistoryEntry | TBD |
+| FilingHistoryRepository | src/aeat/application/filing/_history_repository.py | ModeloHistoryRepository | TBD |
+| FilingApprovalStaleReason | src/aeat/application/filing/_review.py | ModeloApprovalStaleReason | TBD |
+| FilingDivergenceKind | src/aeat/application/filing/reconciliation/ | ModeloDivergenceKind | TBD |
+| FilingDraftRef | src/aeat/application/filing/reconciliation/ | ModeloDraftRef | TBD |
+| FilingOperatorProfile | src/aeat/application/filing/runtime.py | ModeloOperatorProfile | TBD |
+| RegistryFilingSubview | src/aeat/application/filing/runtime.py | RegistryModeloSubview | TBD |
+| FilingTestProfile | src/aeat/application/filing/testing.py | ModeloTestProfile | TBD |
+| FilingTestDeadlineStatus | src/aeat/application/filing/testing.py | ModeloTestDeadlineStatus | TBD |
+| FilingTestDeadlineChecker | src/aeat/application/filing/testing.py | ModeloTestDeadlineChecker | TBD |
+| FilingDraftBuilderAdapter | src/aeat/application/workflow/_adapters.py | ModeloDraftBuilderAdapter | TBD |
+| RegistryFilingDraftProtocol | src/aeat/application/workflow/_protocols.py | RegistryModeloDraftProtocol | TBD |
+| FilingDraftBuilderProtocol | src/aeat/application/workflow/_protocols.py | ModeloDraftBuilderProtocol | TBD |
+| FilingInputsProviderProtocol | src/aeat/application/workflow/_protocols.py | ModeloInputsProviderProtocol | TBD |
+| FilingRecordNotFoundError | src/aeat/application/modelo/_actions.py | ModeloRecordNotFoundError | TBD |
+| ExternalFilingImportError | src/aeat/application/modelo/_actions.py | ExternalModeloImportError | TBD |
+| FilingFixtureError | src/aeat/core/errors/__init__.py | ModeloFixtureError | TBD |
+| FilingRecordPayload | src/aeat/entrypoints/cli/_modelo_payloads.py | ModeloRecordPayload | public-API |
+| FilingRecordListResult | src/aeat/entrypoints/cli/_modelo_payloads.py | ModeloRecordListResult | public-API |
+| FilingRecordShowResult | src/aeat/entrypoints/cli/_modelo_payloads.py | ModeloRecordShowResult | public-API |
+| FilingFindingSeverity | src/aeat/domain/submission/ | ModeloFindingSeverity | TBD |
+| FilingFinding | src/aeat/domain/submission/ | ModeloFinding | TBD |
+| FilingDraftLike | src/aeat/domain/submission/ | ModeloDraftLike | TBD |
+| DraftLoader | src/aeat/domain/submission/ | ModeloDraftLoader | TBD |
+| DraftStatus | src/aeat/domain/submission/_protocols.py | consolidate with ModeloDraftStatus (see footnote 2) | TBD |
+| SubmittedFiling | src/aeat/domain/submission/ | SubmittedModelo | TBD |
+| PdfFilingImportError | src/aeat/domain/justificante/_errors.py | PdfModeloImportError | TBD |
+
+Footnote 1: ModeloRecord already exists in src/aeat/adapters/persistence/storage/sql/records.py. The consolidation must reconcile the domain FilingRecord (pydantic write-active boundary record) with the persistence ModeloRecord (SQL row). Project lead to confirm whether they collapse into one type or whether the SQL row becomes ModeloRow (already present in _orm.py) with ModeloRecord as the domain pydantic record.
+
+Footnote 2: DraftStatus and FilingDraftStatus carry identical 10-value sets. Consolidate to a single ModeloDraftStatus enum and remove the duplicate.
+
