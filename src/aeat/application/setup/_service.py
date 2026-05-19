@@ -6,7 +6,7 @@ import secrets
 from datetime import UTC, datetime
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
-from ...adapters.persistence.storage.bucket._manifest import BucketManifest, KdfParams
+from ...adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, write_manifest
 from ...core.config import load_settings
 from ...domain.user_profile import UserProfileFact
@@ -19,7 +19,7 @@ from ..workflow._persistence import workflow_state_repository
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
 
 # OWASP 2024 baseline Argon2id parameters; mirrors the master-key
-# helper KdfParams.default() factory at
+# helper ManifestKdfParams.default() factory at
 # adapters/persistence/storage/master_key/_kdf_params.py:81 so the
 # manifest the workspace writes at init records the same parameter
 # set the future recovery enrollment will derive its KEK under.
@@ -31,15 +31,15 @@ _BASELINE_SALT_BYTES = 16
 _BASELINE_OUTPUT_BYTES = 32
 
 
-def _baseline_kdf_params() -> KdfParams:
-    """Return a fresh KdfParams record with a per-bucket Argon2id salt.
+def _baseline_kdf_params() -> ManifestKdfParams:
+    """Return a fresh ManifestKdfParams record with a per-bucket Argon2id salt.
 
     The bucket records its KDF parameters at provisioning so a future
     recovery-enrollment flow consumes the same salt + cost vector.
     Argon2 salts are public per the algorithm contract.
     """
 
-    return KdfParams(
+    return ManifestKdfParams(
         algorithm="argon2id",
         version=_ARGON2_V13,
         memory_cost=_BASELINE_MEMORY_KIB,

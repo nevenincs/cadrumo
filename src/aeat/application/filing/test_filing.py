@@ -13,16 +13,16 @@ from ...domain.transactions import TransactionCatalogue
 from . import (
     CasillaSchemaProvider,
     FilingCalculateError,
-    FilingDraft,
-    FilingDraftError,
+    ModeloDraft,
+    ModeloDraftError,
     ModeloDraftStatus,
-    FilingValidationFinding,
-    FilingValidator,
-    FilingValueKind,
+    ModeloValidationFinding,
+    ModeloValidator,
+    ModeloValueKind,
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
-    compute_draft_id,
+    compute_modelo_draft_id,
     iter_findings,
     refresh_review_status,
     validate_draft,
@@ -47,7 +47,7 @@ def _schema_provider() -> CasillaSchemaProvider:
     return build_runtime_schema_provider(filing_year=2026, period="1T")
 
 
-def _draft(schema_provider: CasillaSchemaProvider | None = None) -> FilingDraft:
+def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
     return build_draft(
         modelo="130",
         period="2026Q1",
@@ -89,10 +89,10 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert draft.schema_version == "registry:130:2019-y-siguientes"
     assert "19" in values
-    assert values["19"].kind is FilingValueKind.COMPUTED
+    assert values["19"].kind is ModeloValueKind.COMPUTED
     assert values["19"].formula_trace == ("17", "18")
 
 
@@ -117,10 +117,10 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert draft.schema_version == "registry:111:2019-y-siguientes"
     assert {"28", "30"} <= set(values)
-    assert values["28"].kind is FilingValueKind.COMPUTED
+    assert values["28"].kind is ModeloValueKind.COMPUTED
     assert values["28"].formula_trace == ("03", "06", "09", "12", "15", "18", "21", "24", "27")
     assert values["30"].formula_trace == ("28", "29")
 
@@ -139,10 +139,10 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert draft.schema_version == "registry:115:2019-y-siguientes"
     assert {"03", "05"} <= set(values)
-    assert values["03"].kind is FilingValueKind.COMPUTED
+    assert values["03"].kind is ModeloValueKind.COMPUTED
     assert values["03"].formula_trace == ("02",)
     assert values["05"].formula_trace == ("03", "04")
 
@@ -167,7 +167,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert draft.schema_version == "registry:123:2024-y-siguientes"
     assert {"03", "06", "09", "12", "14"} <= set(values)
     assert values["03"].formula_trace == ("01", "02")
@@ -200,7 +200,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
     values = {value.casilla_id: value for value in draft.values}
     binding_values = {value.binding_id: value.value for value in draft.binding_values}
 
-    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert draft.schema_version == "registry:131:2026"
     assert "15" in values
     assert binding_values["modelo-131.dpa.013-016.epigrafe-iae"] == "722"
@@ -268,7 +268,7 @@ def test_validate_draft_preserves_id_without_builder_dispatch() -> None:
 def test_validator_reports_schema_version_mismatch_against_registry_schema() -> None:
     draft = _draft()
     stale = draft.model_copy(update={"schema_version": f"{draft.schema_version}:changed"})
-    findings = FilingValidator(schema_provider=_schema_provider()).validate(stale)
+    findings = ModeloValidator(schema_provider=_schema_provider()).validate(stale)
     assert any(f.code == "filing-schema-version-mismatch" for f in findings)
 
 
@@ -280,13 +280,13 @@ def test_validator_reports_formula_divergence_against_registry_formula_trace() -
         for value in draft.values
     )
     divergent = draft.model_copy(update={"values": values})
-    findings = FilingValidator(schema_provider=schema_provider).validate(divergent)
+    findings = ModeloValidator(schema_provider=schema_provider).validate(divergent)
     assert any(f.code == "formula-divergence" and f.casilla_id == "19" for f in findings)
 
 
 def test_compute_draft_id_excludes_findings_and_status() -> None:
     draft = _draft()
-    recomputed = compute_draft_id(
+    recomputed = compute_modelo_draft_id(
         modelo=draft.modelo,
         period=draft.period,
         profile_tax_id=draft.profile_tax_id,
@@ -298,13 +298,13 @@ def test_compute_draft_id_excludes_findings_and_status() -> None:
 
 
 def test_iter_findings_threshold() -> None:
-    finding_error = FilingValidationFinding(
+    finding_error = ModeloValidationFinding(
         casilla_id=None,
         severity=BaseSeverity.ERROR,
         code="x",
         message=tr("translation"),
     )
-    finding_info = FilingValidationFinding(
+    finding_info = ModeloValidationFinding(
         casilla_id=None,
         severity=BaseSeverity.INFO,
         code="y",
@@ -341,7 +341,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
     )
 
-    assert approved.status is ModeloDraftStatus.APPROVED
+    assert approved.status is ModeloDraftStatus.APROBADO
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
     assert approved.review_checksum is not None
@@ -376,7 +376,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
     )
 
-    assert approved.status is ModeloDraftStatus.APPROVED
+    assert approved.status is ModeloDraftStatus.APROBADO
     assert approved.schema_version == "registry:111:2019-y-siguientes"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
@@ -404,7 +404,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
     )
 
-    assert approved.status is ModeloDraftStatus.APPROVED
+    assert approved.status is ModeloDraftStatus.APROBADO
     assert approved.schema_version == "registry:115:2019-y-siguientes"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
@@ -438,7 +438,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
     )
 
-    assert approved.status is ModeloDraftStatus.APPROVED
+    assert approved.status is ModeloDraftStatus.APROBADO
     assert approved.schema_version == "registry:123:2024-y-siguientes"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
@@ -448,7 +448,7 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider).model_copy(update={"schema_version": "registry:130:wrong-revision"})
 
-    with pytest.raises(FilingDraftError, match="registry review surface"):
+    with pytest.raises(ModeloDraftError, match="registry review surface"):
         approve_draft(
             draft,
             bucket_id="test",
@@ -466,7 +466,7 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
     )
     draft = _draft(schema_provider).model_copy(update={"values": values})
 
-    with pytest.raises(FilingDraftError, match="registry review surface"):
+    with pytest.raises(ModeloDraftError, match="registry review surface"):
         approve_draft(
             draft,
             bucket_id="test",
@@ -480,7 +480,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     schema_provider = _schema_provider()
     draft = _draft(schema_provider).model_copy(
         update={
-            "status": ModeloDraftStatus.SUBMITTED,
+            "status": ModeloDraftStatus.PRESENTADA,
             "approved_at": datetime(2026, 4, 18, 8, 0, tzinfo=UTC),
             "approved_by": "operator",
             "review_checksum": "a" * 64,
@@ -493,14 +493,14 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
         schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
     )
-    assert refreshed.status is ModeloDraftStatus.SUBMITTED
+    assert refreshed.status is ModeloDraftStatus.PRESENTADA
     assert refreshed.approved_at is None
     assert refreshed.approved_by is None
     assert refreshed.review_checksum is None
 
 
 def test_deadline_validator_still_reports_overdue_status() -> None:
-    findings = FilingValidator(
+    findings = ModeloValidator(
         schema_provider=_schema_provider(),
         deadline_checker=FilingTestDeadlineChecker(
             status=FilingTestDeadlineStatus(

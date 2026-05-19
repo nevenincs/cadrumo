@@ -16,16 +16,17 @@ from ...core.resources import bundled_path
 from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationSource, IvaRegulation
 from .errors import IvaCatalogueError
 
-def load_vat_catalogue(path: Path) -> IvaCatalogue:
+
+def load_iva_catalogue(path: Path) -> IvaCatalogue:
     """Load one VAT catalogue TOML file."""
 
     resolved = path.resolve()
     stat = resolved.stat()
-    return _load_vat_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _load_iva_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
 @lru_cache(maxsize=32)
-def _load_vat_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> IvaCatalogue:
+def _load_iva_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> IvaCatalogue:
     del byte_count, modified_ns
     target = Path(path)
     try:
@@ -66,11 +67,11 @@ def load_iva_catalogues(root: Path | None = None) -> Mapping[int, IvaCatalogue]:
     single resolution surface.
     """
 
-    target = root if root is not None else bundled_path("registry", "aeat", "vat", "catalogues")
+    target = root if root is not None else bundled_path("registry", "aeat", "iva", "catalogues")
     resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))
     fingerprint = tuple(_file_fingerprint(path) for path in paths)
-    return _load_vat_catalogues_cached(str(resolved), fingerprint)
+    return _load_iva_catalogues_cached(str(resolved), fingerprint)
 
 
 def _file_fingerprint(path: Path) -> tuple[str, int, int]:
@@ -79,7 +80,7 @@ def _file_fingerprint(path: Path) -> tuple[str, int, int]:
 
 
 @lru_cache(maxsize=8)
-def _load_vat_catalogues_cached(
+def _load_iva_catalogues_cached(
     root: str,
     fingerprint: tuple[tuple[str, int, int], ...],
 ) -> Mapping[int, IvaCatalogue]:
@@ -91,7 +92,7 @@ def _load_vat_catalogues_cached(
             year = int(path.stem)
         except ValueError as exc:
             raise IvaCatalogueError(f"{path}: VAT catalogue filename must be a year") from exc
-        catalogues[year] = load_vat_catalogue(path)
+        catalogues[year] = load_iva_catalogue(path)
     if not catalogues:
         raise IvaCatalogueError(f"{root_path}: no VAT catalogue TOML files found")
     return MappingProxyType(catalogues)
@@ -162,7 +163,7 @@ def _parse_citation(raw_citation: object) -> IvaCitation:
 
 
 __all__ = [
-    "load_vat_catalogue",
+    "load_iva_catalogue",
     "load_iva_catalogues",
     "resolve_catalogue",
 ]

@@ -83,6 +83,17 @@ class SecretStoreError(PersistenceError):
     """Base class for secret-store I/O failures."""
 
 
+class SessionExpiredError(SecretStoreError):
+    """Raised when the active :class:`BucketSession` has crossed its idle deadline.
+
+    The session was opened earlier in the process lifetime but the
+    operator did not act before the configured idle-lock window
+    elapsed. The session is sealed; the operator must re-activate by
+    running ``aeat config profile switch NAME`` (or a subsequent
+    bootstrap-exempt verb that opens a fresh session).
+    """
+
+
 class PassphraseTooShortError(SecretStoreError):
     """Raised when an operator-supplied passphrase falls below the NIST floor.
 

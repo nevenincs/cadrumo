@@ -22,14 +22,14 @@ def test_iva_flow_direction_enum_has_three_closed_members() -> None:
     assert {m for m in IvaFlowDirection} == {
         IvaFlowDirection.REPERCUTIDO,
         IvaFlowDirection.SOPORTADO,
-        IvaFlowDirection.AUTOREPERCUTIDO,
+        IvaFlowDirection.INVERSION_SUJETO_PASIVO,
     }
 
 
 def test_iva_flow_direction_string_values_are_kebab_case() -> None:
     assert IvaFlowDirection.REPERCUTIDO.value == "repercutido"
     assert IvaFlowDirection.SOPORTADO.value == "soportado"
-    assert IvaFlowDirection.AUTOREPERCUTIDO.value == "autorepercutido"
+    assert IvaFlowDirection.INVERSION_SUJETO_PASIVO.value == "inversion_sujeto_pasivo"
 
 
 @pytest.mark.parametrize(
@@ -71,14 +71,14 @@ def test_derive_flow_classifies_received_non_reverse_charge_as_soportado(
 def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido(
     direction: InvoiceKind,
 ) -> None:
-    """Domestic reverse-charge (LIVA art 84.Uno.2) routes to AUTOREPERCUTIDO
+    """Domestic reverse-charge (LIVA art 84.Uno.2) routes to INVERSION_SUJETO_PASIVO
     irrespective of invoice direction; the recipient self-assesses."""
     assert (
         derive_flow_for_classification(
             category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
             invoice_direction=direction,
         )
-        is IvaFlowDirection.AUTOREPERCUTIDO
+        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
     )
 
 
@@ -94,7 +94,7 @@ def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             invoice_direction=direction,
         )
-        is IvaFlowDirection.AUTOREPERCUTIDO
+        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
     )
 
 
@@ -190,7 +190,7 @@ def test_autorepercutido_flow_contributes_to_both_sides() -> None:
     303 but both must be booked."""
     from aeat.domain.iva import IvaSettlementSide, settlement_sides_for_flow
 
-    sides = settlement_sides_for_flow(IvaFlowDirection.AUTOREPERCUTIDO)
+    sides = settlement_sides_for_flow(IvaFlowDirection.INVERSION_SUJETO_PASIVO)
     assert sides == frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE})
 
 
@@ -199,7 +199,7 @@ def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
 
     assert {
         IvaFlowDirection.REPERCUTIDO,
-        IvaFlowDirection.AUTOREPERCUTIDO,
+        IvaFlowDirection.INVERSION_SUJETO_PASIVO,
     } == DEVENGADA_FLOW_DIRECTIONS
     for flow in IvaFlowDirection:
         assert is_devengada_flow(flow) == (flow in DEVENGADA_FLOW_DIRECTIONS)
@@ -210,7 +210,7 @@ def test_deducible_flow_directions_set_matches_deducible_predicate() -> None:
 
     assert {
         IvaFlowDirection.SOPORTADO,
-        IvaFlowDirection.AUTOREPERCUTIDO,
+        IvaFlowDirection.INVERSION_SUJETO_PASIVO,
     } == DEDUCIBLE_FLOW_DIRECTIONS
     for flow in IvaFlowDirection:
         assert is_deducible_flow(flow) == (flow in DEDUCIBLE_FLOW_DIRECTIONS)
@@ -218,14 +218,14 @@ def test_deducible_flow_directions_set_matches_deducible_predicate() -> None:
 
 def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> None:
     """The intersection of the two cornerstone flow sets is exactly
-    AUTOREPERCUTIDO — the only flow that contributes to both sides on
+    INVERSION_SUJETO_PASIVO — the only flow that contributes to both sides on
     the same operation."""
     from aeat.domain.iva import (
         DEDUCIBLE_FLOW_DIRECTIONS,
         DEVENGADA_FLOW_DIRECTIONS,
     )
 
-    assert frozenset({IvaFlowDirection.AUTOREPERCUTIDO}) == DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS
+    assert frozenset({IvaFlowDirection.INVERSION_SUJETO_PASIVO}) == DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS
 
 
 def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None:
@@ -255,7 +255,7 @@ def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
 
 def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     """Modelo 303 cuota-devengada-total formula sums repercutido (3 rate
-    tiers) + autorepercutido — the same flows as DEVENGADA_FLOW_DIRECTIONS.
+    tiers) + INVERSION_SUJETO_PASIVO — the same flows as DEVENGADA_FLOW_DIRECTIONS.
     This test is a contract gate: if the substrate's devengada set ever
     changes, this test fires unless 303's formula updates in lockstep."""
     from aeat.domain.calculations.registry import load_registry_tree

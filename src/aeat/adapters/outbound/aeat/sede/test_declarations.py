@@ -26,8 +26,8 @@ from reportlab.pdfgen import canvas
 from aeat.adapters.outbound.aeat.browser import Profile, opened_browser_page, shared_playwright_runtime
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.application.filing import (
-    FilingDraftStatus,
     FilingOperatorProfile,
+    ModeloDraftStatus,
     build_draft,
     build_runtime_schema_provider,
     export_draft,
@@ -38,6 +38,7 @@ from aeat.domain.calculations.registry import (
     RegistryValidationError,
     calculate_registry_snapshot,
     parse_export_payload,
+    relation_source_requirements,
     resolve_export_layout,
 )
 from aeat.tests import FIXTURES_DIR
@@ -52,8 +53,10 @@ from ._declarations import (
     _parse_listbox,
     _parse_presented_at,
     _read_guard_policy_from_snapshot,
+    _select_authoritative_declaration,
     _select_combobox_value,
     _verify_submitted_file_context,
+    _with_derived_303_compensation_available_observation,
     registry_observation_from_filed_declaration,
     resolve_previous_filing_bindings_from_filed_declarations,
     resolve_relation_values_from_filed_declarations,
@@ -72,6 +75,40 @@ _SUBMITTED_FILE_100_2023_0A = _FIXTURE_ROOT / "submitted-files" / "modelo-100-20
 _MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"})
 
 
+def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period() -> None:
+    older = _declaration_row(
+        expediente_id="202430313521426G",
+        presented_at=datetime(2025, 3, 27, 17, 31, 56, tzinfo=UTC),
+    )
+    newer = _declaration_row(
+        expediente_id="202430313521428B",
+        presented_at=datetime(2025, 3, 28, 13, 4, 47, tzinfo=UTC),
+    )
+
+    selected = _select_authoritative_declaration(
+        (older, newer),
+        modelo="303",
+        ejercicio=2024,
+        period="3T",
+        context="previous-filing requirement",
+    )
+
+    assert selected.expediente_id == "202430313521428B"
+
+
+def _declaration_row(*, expediente_id: str, presented_at: datetime, estado: str = "ALTA") -> Declaracion:
+    return Declaracion(
+        modelo="303",
+        ejercicio=2024,
+        period="3T",
+        expediente_id=expediente_id,
+        estado=estado,
+        presented_at=presented_at,
+        justificante_link_text="Ver",
+        archive_link_text="Ver",
+    )
+
+
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
     return resources().modelos.authority.snapshot(modelo_id, filing_year=filing_year, period=period)
 
@@ -82,6 +119,113 @@ def _modelo_130_snapshot():
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
+
+
+def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
+    snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+        content_type="application/octet-stream",
+        byte_count=600,
+        sha256="0" * 64,
+        captured_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
+    )
+
+    observed = _observed_casillas_from_submitted_file(
+        snapshot=snapshot,
+        declaration=_declaration_row(
+            expediente_id="202430313521429A",
+            presented_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
+        ),
+        body=_modelo_303_page_03_payload(
+            casilla_110="00000000000000000",
+            casilla_78="00000000000000000",
+            casilla_87="00000000000000000",
+            casilla_69="N0000000000025802",
+            casilla_71="N0000000000025802",
+        ),
+        artefact=artefact,
+    )
+
+    assert {casilla.casilla_id: casilla.value for casilla in observed} == {
+        "110": "0",
+        "78": "0",
+        "87": "0",
+        "69": "-258.02",
+        "71": "-258.02",
+    }
+
+
+def test_modelo_303_submitted_file_fallback_refuses_invalid_page_record_footer() -> None:
+    snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+        content_type="application/octet-stream",
+        byte_count=1017,
+        sha256="0" * 64,
+        captured_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
+    )
+    body = bytearray(
+        _modelo_303_page_03_payload(
+            casilla_110="00000000000000000",
+            casilla_78="00000000000000000",
+            casilla_87="00000000000000000",
+            casilla_69="N0000000000025802",
+            casilla_71="N0000000000025802",
+        )
+    )
+    body[1005:1017] = b"</T30303001>"
+
+    with pytest.raises(SedeParseError, match="invalid page-03 footer"):
+        _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=_declaration_row(
+                expediente_id="202430313521429A",
+                presented_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
+            ),
+            body=bytes(body),
+            artefact=artefact,
+        )
+
+
+def test_modelo_303_filed_observation_derives_compensation_available() -> None:
+    observation = _filed_observation(
+        modelo="303",
+        ejercicio=2024,
+        period="4T",
+        casilla_values={"87": Decimal("0"), "69": Decimal("-258.02")},
+    )
+
+    derived = _with_derived_303_compensation_available_observation(observation)
+    registry_observation = registry_observation_from_filed_declaration(derived)
+
+    assert {casilla.casilla_id: casilla.value for casilla in derived.casillas}[
+        "iva.compensacion-disponible-fin-periodo"
+    ] == "258.02"
+    assert registry_observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("258.02")
+
+
+def _modelo_303_page_03_payload(
+    *,
+    casilla_110: str,
+    casilla_78: str,
+    casilla_87: str,
+    casilla_69: str,
+    casilla_71: str,
+) -> bytes:
+    page = list("<T30303000>" + (" " * (1017 - len("<T30303000>"))))
+    for position, raw in (
+        (255, casilla_110),
+        (272, casilla_78),
+        (289, casilla_87),
+        (323, casilla_69),
+        (374, casilla_71),
+    ):
+        page[position - 1 : position - 1 + len(raw)] = raw
+    page[1005:1017] = list("</T30303000>")
+    return "".join(page).encode("latin-1")
 
 
 def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: str) -> bytes:
@@ -106,12 +250,12 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
         }
     else:
         inputs = {
-            "01": Decimal("5"),
-            "02": Decimal("1201.00"),
-            "03": Decimal("228.19"),
-            "04": Decimal("0"),
-            "05": Decimal("7.50"),
-            "07": Decimal("12.25"),
+            "01-legacy": Decimal("5"),
+            "02-legacy": Decimal("1201.00"),
+            "03-legacy": Decimal("228.19"),
+            "04-legacy": Decimal("0"),
+            "05-legacy": Decimal("7.50"),
+            "07-legacy": Decimal("12.25"),
         }
         headers = {
             "declaration_type": "I",
@@ -129,7 +273,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
         ),
         inputs=inputs,
         schema_provider=provider,
-    ).model_copy(update={"status": FilingDraftStatus.APPROVED})
+    ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
     output = tmp_path / f"modelo-123-{filing_year}-{period}.txt"
 
     export_draft(
@@ -579,7 +723,7 @@ class TestSubmittedFileObservation:
             period="1T",
         )
         computed_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == "computed"}
-        assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS
+        assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {"saldo-negativo-fin-periodo"}
 
         calculated = calculate_registry_snapshot(
             snapshot,
@@ -591,6 +735,7 @@ class TestSubmittedFileObservation:
         assert {casilla_id: calculated.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS} == {
             casilla_id: observed_values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS
         }
+        assert calculated.values["saldo-negativo-fin-periodo"] == Decimal("0.00")
 
     def test_modelo_111_live_redacted_submitted_file_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
@@ -667,14 +812,14 @@ class TestSubmittedFileObservation:
                 "4T",
                 "modelo-123-2019-export-record",
                 {
-                    "01": Decimal("5"),
-                    "02": Decimal("1201.00"),
-                    "03": Decimal("228.19"),
-                    "04": Decimal("0.00"),
-                    "05": Decimal("7.50"),
-                    "06": Decimal("235.69"),
-                    "07": Decimal("12.25"),
-                    "08": Decimal("223.44"),
+                    "01-legacy": Decimal("5"),
+                    "02-legacy": Decimal("1201.00"),
+                    "03-legacy": Decimal("228.19"),
+                    "04-legacy": Decimal("0.00"),
+                    "05-legacy": Decimal("7.50"),
+                    "06-legacy": Decimal("235.69"),
+                    "07-legacy": Decimal("12.25"),
+                    "08-legacy": Decimal("223.44"),
                 },
             ),
         ),
@@ -794,9 +939,10 @@ class TestSubmittedFileObservation:
             sha256=hashlib.sha256(body).hexdigest(),
             captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
         )
+        provider = EphemeralMasterKeyProvider()
         store = FiledDeclaracionObservationStore(
             tmp_path / "observations",
-            master_key_provider=EphemeralMasterKeyProvider(),
+            master_key_provider=provider,
         )
         encrypted_artefact = store.persist_artefact(
             (declaration.modelo, declaration.ejercicio, declaration.period, declaration.expediente_id),
@@ -821,7 +967,6 @@ class TestSubmittedFileObservation:
             casillas=observed,
             extraction_coverage={"submitted_file": 1.0},
         )
-
         manifest_path = store.persist_observation(observation)
         loaded = store.load_observation(manifest_path)
 
@@ -987,9 +1132,10 @@ class TestFiledObservationBindings:
         source_casillas = selector["source_casillas"]
         assert isinstance(source_casillas, tuple)
         casilla_values = {str(casilla_id): Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
+        provider = EphemeralMasterKeyProvider()
         store = FiledDeclaracionObservationStore(
             tmp_path / "observations",
-            master_key_provider=EphemeralMasterKeyProvider(),
+            master_key_provider=provider,
         )
         observation = _filed_observation(
             modelo=str(selector["source_modelo"]),
@@ -1091,6 +1237,24 @@ class TestFiledObservationBindings:
 class TestFiledObservationRelations:
     """Verify filed observations can supply registry cross-model relations."""
 
+    def test_modelo_100_relation_fixture_covers_registry_source_requirements(self) -> None:
+        snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
+        observations = _renta_2025_relation_observations()
+        available = {
+            (observation.modelo, observation.ejercicio, observation.period, casilla.casilla_id)
+            for observation in observations
+            for casilla in observation.casillas
+        }
+        missing = [
+            (requirement.source_modelo, requirement.filing_year, period, requirement.source_output)
+            for requirement in relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
+            for period in requirement.periods
+            if (requirement.source_modelo, requirement.filing_year, period, requirement.source_output)
+            not in available
+        ]
+
+        assert not missing
+
     def test_modelo_100_relations_resolve_from_standardized_filed_observations(self) -> None:
         snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
         observations = _renta_2025_relation_observations()
@@ -1131,6 +1295,7 @@ class TestFiledObservationRelations:
             "renta-2025-rel-180-retenciones-anuales": Decimal("90"),
             "renta-2025-rel-190-retenciones-anuales": Decimal("178"),
             "renta-2025-rel-193-retenciones-anuales": Decimal("60"),
+            "renta-2025-rel-184-atribucion-actividades-economicas": Decimal("77"),
         }
         for relation_id, fixture_value in annual_copies.items():
             assert resolved[relation_id] == fixture_value, (
@@ -1390,6 +1555,14 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             ejercicio=2025,
             period="0A",
             casilla_values={"decl.retenciones-total": Decimal("60")},
+        )
+    )
+    observations.append(
+        _filed_observation(
+            modelo="184",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={"tipo2.renta-atribuible-importe": Decimal("77")},
         )
     )
     return tuple(observations)

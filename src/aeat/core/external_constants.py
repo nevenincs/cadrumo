@@ -15,7 +15,7 @@ from functools import lru_cache
 from importlib.resources import files
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class _Frozen(BaseModel):
@@ -50,6 +50,35 @@ class AeatSedePaths(_Frozen):
     iva_compensation_wallet: str
 
 
+class AeatClaveMovilSurface(_Frozen):
+    """Externally-defined Cl@ve Móvil page identifiers and shape markers."""
+
+    selector_access_url_template: str = Field(min_length=1)
+    selector_access_path_marker: str = Field(min_length=1)
+    dialogo_representacion_path_marker: str = Field(min_length=1)
+    obtener_clave_movil_path_marker: str = Field(min_length=1)
+    obtener_clave_movil_qr_path_marker: str = Field(min_length=1)
+    authorize_button_selector: str = Field(min_length=1)
+    non_qr_link_selector: str = Field(min_length=1)
+    nif_input_selector: str = Field(min_length=1)
+    dni_fecha_input_selector: str = Field(min_length=1)
+    dni_fecha_visible_selector: str = Field(min_length=1)
+    nie_soporte_input_selector: str = Field(min_length=1)
+    nie_soporte_visible_selector: str = Field(min_length=1)
+    continue_button_selector: str = Field(min_length=1)
+    continue_button_visible_selector: str = Field(min_length=1)
+    verification_code_selector: str = Field(min_length=1)
+    wait_text_markers: tuple[str, ...] = Field(min_length=1)
+    pending_petition_text_markers: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("wait_text_markers", "pending_petition_text_markers", mode="before")
+    @classmethod
+    def _markers_from_toml_arrays(cls, value: object) -> object:
+        if isinstance(value, list):
+            return tuple(value)
+        return value
+
+
 class AeatHelpPages(_Frozen):
     """Static help/landing pages rooted under the sede origin."""
 
@@ -71,6 +100,7 @@ class AeatSection(_Frozen):
 
     domains: AeatDomains
     sede_paths: AeatSedePaths
+    clave_movil: AeatClaveMovilSurface
     help_pages: AeatHelpPages
     oracles: AeatOracles
 

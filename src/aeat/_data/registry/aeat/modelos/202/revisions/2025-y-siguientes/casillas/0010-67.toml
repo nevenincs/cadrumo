@@ -4,6 +4,7 @@ number = "67"
 label = "Mod. 40.3 LIS — Correcciones por Impuesto Complementario (IC) — Aumentos"
 section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_3_correcciones_impuesto_complementario"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-page-01-casilla-67"]

@@ -1,7 +1,7 @@
-"""Divergence taxonomy for FilingDraft vs Justificante reconciliation.
+"""Divergence taxonomy for ModeloDraft vs Justificante reconciliation.
 
 Defines :class:`FilingDivergenceKind`, the closed set of concrete
-instance-level reasons a local :class:`aeat.domain.filing.FilingDraft`
+instance-level reasons a local :class:`aeat.domain.filing.ModeloDraft`
 and its parsed AEAT :class:`aeat.domain.justificante.Justificante` can
 disagree.
 
@@ -17,7 +17,7 @@ from enum import StrEnum
 
 
 class FilingDivergenceKind(StrEnum):
-    """Concrete divergence variants for a FilingDraft vs Justificante compare.
+    """Concrete divergence variants for a ModeloDraft vs Justificante compare.
 
     Each member identifies a single, mutually-exclusive reason why a
     local approved draft and the AEAT-side justificante can disagree.

@@ -24,8 +24,8 @@ from ..submission._protocols import ModeloDraftStatus
 APPROVAL_BASIS_VERSION = "review-basis-v1"
 
 
-class FilingValueKind(StrEnum):
-    """Provenance kind of a :class:`FilingValue`."""
+class ModeloValueKind(StrEnum):
+    """Provenance kind of a :class:`ModeloValue`."""
 
     LITERAL = "LITERAL"
     COMPUTED = "COMPUTED"
@@ -38,16 +38,16 @@ class FilingValueKind(StrEnum):
 # can carry. Pydantic will parse JSON values back into the right
 # Python type via this union (Decimal is preferred over float for
 # any monetary value).
-FilingScalar = Decimal | int | str | bool | date | None
+ModeloScalar = Decimal | int | str | bool | date | None
 
 
-class FilingValue(BaseModel):
-    """The typed value of one casilla on a :class:`FilingDraft`.
+class ModeloValue(BaseModel):
+    """The typed value of one casilla on a :class:`ModeloDraft`.
 
     Attributes:
         casilla_id: Stable casilla ID (e.g. ``"03"``).
         value: The scalar value carried by this casilla. ``None``
-            iff ``kind`` is :attr:`FilingValueKind.EMPTY`.
+            iff ``kind`` is :attr:`ModeloValueKind.EMPTY`.
         kind: Provenance kind — literal user input, computed,
             inherited from a previous draft, default from the
             casilla schema, or empty.
@@ -62,25 +62,25 @@ class FilingValue(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     casilla_id: str
-    value: FilingScalar
-    kind: FilingValueKind
+    value: ModeloScalar
+    kind: ModeloValueKind
     source: str
     formula_trace: tuple[str, ...] | None = None
 
 
-class FilingBindingValue(BaseModel):
-    """The typed value of one registry binding on a :class:`FilingDraft`."""
+class ModeloBindingValue(BaseModel):
+    """The typed value of one registry binding on a :class:`ModeloDraft`."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     binding_id: str
-    value: FilingScalar
-    kind: FilingValueKind
+    value: ModeloScalar
+    kind: ModeloValueKind
     source: str
     row_index: int | None = Field(default=None, ge=1)
 
 
-class FilingValidationFinding(BaseModel):
+class ModeloValidationFinding(BaseModel):
     """One finding produced by the validator.
 
     Attributes:
@@ -103,7 +103,7 @@ class FilingValidationFinding(BaseModel):
     references_rules: tuple[str, ...] = Field(default_factory=tuple)
 
 
-class FilingApprovalBasis(BaseModel):
+class ModeloApprovalBasis(BaseModel):
     """Persisted approval-basis digests for deterministic stale detection."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -116,7 +116,7 @@ class FilingApprovalBasis(BaseModel):
     schema_formula_fingerprint: str
 
 
-class FilingDraft(BaseModel):
+class ModeloDraft(BaseModel):
     """A typed, validated draft of one filing.
 
     The ``draft_id`` is a content-addressed hash of
@@ -146,9 +146,9 @@ class FilingDraft(BaseModel):
     # produce the casilla values.
     snapshot_ref: RegistrySnapshotRef | None = None
     status: ModeloDraftStatus
-    values: tuple[FilingValue, ...]
-    binding_values: tuple[FilingBindingValue, ...] = Field(default_factory=tuple)
-    findings: tuple[FilingValidationFinding, ...] = Field(default_factory=tuple)
+    values: tuple[ModeloValue, ...]
+    binding_values: tuple[ModeloBindingValue, ...] = Field(default_factory=tuple)
+    findings: tuple[ModeloValidationFinding, ...] = Field(default_factory=tuple)
     created_at: datetime
     updated_at: datetime
     schema_version: str
@@ -156,17 +156,17 @@ class FilingDraft(BaseModel):
     approved_at: datetime | None = None
     approved_by: str | None = None
     review_checksum: str | None = None
-    approval_basis: FilingApprovalBasis | None = None
+    approval_basis: ModeloApprovalBasis | None = None
 
 
-def compute_draft_id(
+def compute_modelo_draft_id(
     *,
     modelo: str,
     period: str,
     profile_tax_id: str,
     schema_version: str,
-    values: tuple[FilingValue, ...],
-    binding_values: tuple[FilingBindingValue, ...] = (),
+    values: tuple[ModeloValue, ...],
+    binding_values: tuple[ModeloBindingValue, ...] = (),
 ) -> str:
     """Compute the stable, content-addressed ``draft_id``.
 
@@ -176,7 +176,7 @@ def compute_draft_id(
         profile_tax_id: Taxpayer tax ID.
         schema_version: The casilla DB version this draft was
             built against.
-        values: The tuple of :class:`FilingValue` records to hash.
+        values: The tuple of :class:`ModeloValue` records to hash.
 
     Returns:
         A 16-character lowercase hex SHA-256 prefix.

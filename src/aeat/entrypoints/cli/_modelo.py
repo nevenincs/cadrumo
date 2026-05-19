@@ -1226,6 +1226,7 @@ def work_calculate(
     from ...application.modelo import (
         CalculationRegistryUnavailableError,
         Modelo100BorradorBindingError,
+        ModeloIvaWalletReconciliationBlocked,
     )
 
     casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
@@ -1270,6 +1271,7 @@ def work_calculate(
         WorkUnitMutationRefusedError,
         CalculationRegistryUnavailableError,
         Modelo100BorradorBindingError,
+        ModeloIvaWalletReconciliationBlocked,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
@@ -1388,7 +1390,7 @@ def _verification_report_payload(report: VerificationReport) -> dict[str, object
         "verification_report_id": report.verification_report_id,
         "calculation_revision_id": report.calculation_revision_id,
         "completeness_status": report.completeness_status.value,
-        "granted_verified_complete": report.granted_verified_complete,
+        "granted_verificado_completo": report.granted_verificado_completo,
         "resolved_casillas": list(report.resolved_casillas),
         "missing_required_casillas": list(report.missing_required_casillas),
         "run_at": report.run_at.isoformat(),
@@ -1412,7 +1414,7 @@ def _verification_report_lines(report: VerificationReport) -> list[str]:
         f"verification_report_id\t{report.verification_report_id}",
         f"calculation_revision_id\t{report.calculation_revision_id}",
         f"completeness_status\t{report.completeness_status.value}",
-        f"granted_verified_complete\t{str(report.granted_verified_complete).lower()}",
+        f"granted_verificado_completo\t{str(report.granted_verificado_completo).lower()}",
         f"run_at\t{report.run_at.isoformat()}",
         f"verified_by\t{report.verified_by}",
         f"resolved_casilla_count\t{len(report.resolved_casillas)}",
@@ -1483,7 +1485,7 @@ def work_verify(
     lines = ["operation\tmodelo.work.verify", *_verification_report_lines(report)]
     _emit(ctx, payload, lines)
 
-    if not report.granted_verified_complete:
+    if not report.granted_verificado_completo:
         raise typer.Exit(code=1)
 
 
@@ -1780,7 +1782,7 @@ def verification_report_list(
                 r.verification_report_id,
                 r.calculation_revision_id,
                 r.completeness_status.value,
-                str(r.granted_verified_complete).lower(),
+                str(r.granted_verificado_completo).lower(),
                 r.run_at.isoformat(),
                 r.verified_by,
             )
@@ -2437,14 +2439,14 @@ def modelo_export_verb(
         from ...domain.modelos._calculation_revision import CalculationRevisionState
 
         revisions = list_calculation_revisions(work_unit_id=work_unit_id)
-        # FILED is the canonical current answer; VERIFIED_COMPLETE
+        # FILED is the canonical current answer; VERIFICADO_COMPLETO
         # covers pre-file export. FILED_SUPERSEDED is intentionally
         # excluded from default-pick because exporting a superseded
         # revision risks the operator submitting an obsolete fichero;
         # operators that genuinely want a superseded revision must
         # pass --revision explicitly.
-        filed = [r for r in revisions if r.state is CalculationRevisionState.FILED]
-        verified = [r for r in revisions if r.state is CalculationRevisionState.VERIFIED_COMPLETE]
+        filed = [r for r in revisions if r.state is CalculationRevisionState.PRESENTADO]
+        verified = [r for r in revisions if r.state is CalculationRevisionState.VERIFICADO_COMPLETO]
         exportable = filed or verified
         if not exportable:
             raise typer.BadParameter(

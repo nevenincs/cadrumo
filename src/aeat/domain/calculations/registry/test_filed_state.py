@@ -82,10 +82,14 @@ def test_filed_state_comparison_satisfies_matching_computed_casillas() -> None:
 
 def test_filed_state_comparison_reports_value_drift() -> None:
     calculation = _modelo_130_calculation()
+    # casilla_values is a derived @property; mutate the typed
+    # `observations` tuple — the canonical storage — to drift one entry.
     observation = _filed_observation(calculation)
-    filed_values = dict(observation.casilla_values)
-    filed_values["19"] = filed_values["19"] + Decimal("0.01")
-    observation = observation.model_copy(update={"casilla_values": filed_values})
+    drifted_observations = tuple(
+        obs.model_copy(update={"value": obs.value + Decimal("0.01")}) if obs.casilla_id == "19" else obs
+        for obs in observation.observations
+    )
+    observation = observation.model_copy(update={"observations": drifted_observations})
 
     comparison = compare_calculation_to_filed_observation(
         calculation,
@@ -101,10 +105,11 @@ def test_filed_state_comparison_reports_value_drift() -> None:
 
 def test_filed_state_comparison_reports_missing_filed_casilla() -> None:
     calculation = _modelo_130_calculation()
+    # casilla_values is a derived @property; drop the underlying typed
+    # `observations` entry to simulate a missing filed casilla.
     observation = _filed_observation(calculation)
-    filed_values = dict(observation.casilla_values)
-    del filed_values["19"]
-    observation = observation.model_copy(update={"casilla_values": filed_values})
+    pruned_observations = tuple(obs for obs in observation.observations if obs.casilla_id != "19")
+    observation = observation.model_copy(update={"observations": pruned_observations})
 
     comparison = compare_calculation_to_filed_observation(
         calculation,
@@ -172,10 +177,14 @@ def test_filed_state_comparison_reports_composite_missing_and_drift() -> None:
     observation = _filed_observation(calculation)
     pruned_local = {casilla_id: value for casilla_id, value in calculation.values.items() if casilla_id != "03"}
     calculation = calculation.model_copy(update={"values": pruned_local})
-    filed_values = dict(observation.casilla_values)
-    del filed_values["04"]
-    filed_values["19"] = filed_values["19"] + Decimal("0.01")
-    observation = observation.model_copy(update={"casilla_values": filed_values})
+    # casilla_values is a derived @property; mutate the typed
+    # `observations` tuple to drop "04" and drift "19".
+    mutated_observations = tuple(
+        obs.model_copy(update={"value": obs.value + Decimal("0.01")}) if obs.casilla_id == "19" else obs
+        for obs in observation.observations
+        if obs.casilla_id != "04"
+    )
+    observation = observation.model_copy(update={"observations": mutated_observations})
 
     comparison = compare_calculation_to_filed_observation(
         calculation,

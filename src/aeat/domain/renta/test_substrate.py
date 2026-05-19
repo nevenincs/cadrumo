@@ -3,7 +3,7 @@
 Pins membership and round-trip semantics for :class:`RentaIncomeType`
 and :class:`EstimacionDirectaModalidad` so accidental additions or
 removals surface as test failures.  Mirrors the
-:mod:`aeat.domain.vat.test_categories` pattern.
+:mod:`aeat.domain.iva.test_categories` pattern.
 
 The former ``RentaCCAA`` enum has been removed; the canonical CCAA type is
 :class:`aeat.domain.profile.CCAA`.  Tests for that enum (including the

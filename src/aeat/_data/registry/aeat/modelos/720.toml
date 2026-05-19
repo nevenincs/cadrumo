@@ -60,6 +60,7 @@ number = "tipo-declaracion"
 label = "Tipo de declaracion (originaria / sustitutiva / complementaria)"
 section = ["declarante"]
 data_type = "text"
+semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-72-2013:art-2", "ley-58-2003:art-93"]

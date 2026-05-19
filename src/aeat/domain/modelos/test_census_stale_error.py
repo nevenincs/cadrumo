@@ -1,4 +1,4 @@
-"""Tests for CensusStaleRefusedError shape and registry binding."""
+"""Tests for CensoStaleRefusedError shape and registry binding."""
 
 from __future__ import annotations
 
@@ -6,19 +6,19 @@ import pytest
 
 from aeat.core.errors import AeatError
 from aeat.core.errors._registry import get_registered_error_code
-from aeat.domain.modelos._errors import CensusStaleRefusedError, ModeloError
+from aeat.domain.modelos._errors import CensoStaleRefusedError, ModeloError
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_census_stale_refused_is_a_modelo_error() -> None:
-    assert issubclass(CensusStaleRefusedError, ModeloError)
-    assert issubclass(CensusStaleRefusedError, AeatError)
+    assert issubclass(CensoStaleRefusedError, ModeloError)
+    assert issubclass(CensoStaleRefusedError, AeatError)
 
 
 def test_census_stale_refused_carries_registered_error_code() -> None:
-    code = get_registered_error_code(CensusStaleRefusedError)
+    code = get_registered_error_code(CensoStaleRefusedError)
 
     assert code.code == "REFUSED_MODELO_CENSUS_STALE"
     assert code.category.value == "REFUSED"
@@ -26,7 +26,7 @@ def test_census_stale_refused_carries_registered_error_code() -> None:
 
 
 def test_census_stale_refused_carries_context_through_init() -> None:
-    error = CensusStaleRefusedError(
+    error = CensoStaleRefusedError(
         "work unit wu-1 was produced before the latest census apply",
         context={"work_unit_id": "wu-1", "census_snapshot_id": "snap-xyz"},
     )

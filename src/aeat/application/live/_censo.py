@@ -1,6 +1,6 @@
 """Application-live persistence for captured Modelo 036 census snapshots.
 
-`CensusSnapshot` holds the AEAT-side census facts the operator's
+`CensoSnapshot` holds the AEAT-side census facts the operator's
 profile must mirror per the 2026-05-16 amendment to the
 modelo-036-037-foundation ADR. AEAT is the binding legal source of
 truth; the local profile is a cache that must be kept honest.
@@ -11,7 +11,7 @@ namespaced secure-object key, and a closed ACTIVE / SUPERSEDED /
 DISCARDED state machine. Re-fetch auto-supersedes the prior ACTIVE
 snapshot for the same profile.
 
-The CLI-facing `CensusSyncService` is the only caller; the
+The CLI-facing `CensoSyncService` is the only caller; the
 sede G313 adapter populates `census_facts` from the live
 Mis Datos Censales endpoint.
 """
@@ -27,13 +27,25 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...core.errors import AeatError
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SnapshotLifecycleState,
+    SnapshotNotFoundError,
     SnapshotService,
     derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
+
+
+class CensoSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
+    """Raised when a Modelo 036 censo snapshot lookup misses by id.
+
+    Inherits ``AeatError`` first so MRO routes ``__init__`` through the
+    structured constructor (accepts ``suggestion=`` / ``context=`` kwargs)
+    rather than :class:`KeyError`'s C-level constructor.
+    """
+
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -51,14 +63,7 @@ _CENSUS_SNAPSHOT_VERSION = 1
 type _CensusFactValue = str
 
 
-# CensusSnapshotState retained as a named alias so existing imports keep
-# working unchanged. The Census enum values already match the canonical
-# lifecycle vocabulary ("active"/"superseded"/"discarded") so we alias the
-# shared enum directly rather than maintain a duplicate StrEnum.
-CensusSnapshotState = SnapshotLifecycleState
-
-
-class CensusSnapshot(BaseModel):
+class CensoSnapshot(BaseModel):
     """Captured 036 census facts available to application consumers.
 
     `census_facts` is a flat mapping keyed by the dotted schema path
@@ -79,9 +84,9 @@ class CensusSnapshot(BaseModel):
         source_url: The G313 sede endpoint the snapshot was extracted
             from. Audited so operators can trace each capture back to
             its AEAT origin.
-        state: Lifecycle state from :class:`CensusSnapshotState`.
+        state: Lifecycle state from :class:`SnapshotLifecycleState`.
         census_facts: Flat mapping from dotted schema path to the
-            AEAT-side value. The CensusSyncService.compare verb
+            AEAT-side value. The CensoSyncService.compare verb
             walks this mapping against the local profile.
         superseded_by_snapshot_id: Pointer to the snapshot that
             replaced this one. Required when ``state is SUPERSEDED``;
@@ -105,7 +110,7 @@ class CensusSnapshot(BaseModel):
     discard_reason: str = Field(default="", max_length=500)
 
     @model_validator(mode="after")
-    def _enforce_state_payload(self) -> CensusSnapshot:
+    def _enforce_state_payload(self) -> CensoSnapshot:
         enforce_snapshot_state_invariants(
             state=self.state,
             has_supersession_pointer=self.superseded_by_snapshot_id is not None,
@@ -142,7 +147,7 @@ def derive_census_snapshot_id(
 
     Two structurally identical snapshots (same profile, same captured-
     at instant, same source, same fact values) produce the same id;
-    re-saving is then a no-op via :meth:`CensusSnapshotService.refresh`.
+    re-saving is then a no-op via :meth:`CensoSnapshotService.refresh`.
     """
 
     return derive_snapshot_id_from_json(
@@ -158,8 +163,8 @@ def derive_census_snapshot_id(
 def _snapshot_from_record(
     record: SecureObjectRecord,
     requested_snapshot_id: str | None = None,
-) -> CensusSnapshot:
-    envelope = Envelope[CensusSnapshot].model_validate_json(record.payload.decode("utf-8"))
+) -> CensoSnapshot:
+    envelope = Envelope[CensoSnapshot].model_validate_json(record.payload.decode("utf-8"))
     if envelope.classification is not SensitivityClass.IDENTITY:
         snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
         raise ClassificationError(
@@ -175,7 +180,7 @@ def _snapshot_from_record(
     return envelope.payload
 
 
-class CensusSnapshotRepository:
+class CensoSnapshotRepository:
     """Secure-DB repository for captured 036 census snapshots."""
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
@@ -194,7 +199,7 @@ class CensusSnapshotRepository:
             census_snapshot_object_key(self._bucket_id, snapshot_id),
         )
 
-    def load(self, snapshot_id: str) -> CensusSnapshot:
+    def load(self, snapshot_id: str) -> CensoSnapshot:
         record = self._objects.load(
             CENSUS_SNAPSHOT_NAMESPACE,
             census_snapshot_object_key(self._bucket_id, snapshot_id),
@@ -202,7 +207,7 @@ class CensusSnapshotRepository:
             max_supported_version=_CENSUS_SNAPSHOT_VERSION,
         )
         if record is None:
-            raise LiveApplicationInputError(
+            raise CensoSnapshotNotFoundError(
                 f"census snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
                 suggestion="aeat config profile census refresh",
             )
@@ -219,7 +224,7 @@ class CensusSnapshotRepository:
             )
         return snapshot
 
-    def list_snapshots(self) -> tuple[CensusSnapshot, ...]:
+    def list_snapshots(self) -> tuple[CensoSnapshot, ...]:
         snapshots = [
             snapshot
             for record in self._objects.list_records(
@@ -232,7 +237,7 @@ class CensusSnapshotRepository:
         ]
         return tuple(sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id)))
 
-    def resolve(self, snapshot_id: str) -> CensusSnapshot:
+    def resolve(self, snapshot_id: str) -> CensoSnapshot:
         trimmed_snapshot_id = snapshot_id.strip()
         if not trimmed_snapshot_id:
             raise LiveApplicationInputError("snapshot_id must not be blank")
@@ -243,24 +248,24 @@ class CensusSnapshotRepository:
             or snapshot.snapshot_id.startswith(trimmed_snapshot_id)
         ]
         if not matches:
-            raise LiveApplicationInputError(
+            raise CensoSnapshotNotFoundError(
                 f"census snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
                 suggestion="aeat config profile census refresh",
             )
         if len(matches) > 1:
-            raise LiveApplicationInputError(
+            raise CensoSnapshotNotFoundError(
                 f"census snapshot prefix {snapshot_id!r} is ambiguous",
                 suggestion="provide a longer snapshot id",
             )
         return matches[0]
 
-    def save(self, snapshot: CensusSnapshot) -> None:
+    def save(self, snapshot: CensoSnapshot) -> None:
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
                 f"census snapshot bucket_id={snapshot.bucket_id!r} "
                 f"does not match repository bucket {self._bucket_id!r}",
             )
-        envelope = Envelope[CensusSnapshot](
+        envelope = Envelope[CensoSnapshot](
             schema_version=_CENSUS_SNAPSHOT_VERSION,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.IDENTITY,
@@ -276,11 +281,11 @@ class CensusSnapshotRepository:
         )
 
 
-class CensusSnapshotService(SnapshotService[CensusSnapshot]):
+class CensoSnapshotService(SnapshotService[CensoSnapshot]):
     """Canonical backend service for bucket-scoped 036 census snapshots.
 
     Mirrors :class:`Borrador100SnapshotService`. The CLI's
-    `CensusSyncService.refresh_census` is the only caller of
+    `CensoSyncService.refresh_census` is the only caller of
     :meth:`capture`; `show_census` reads via :meth:`latest_active`
     and :meth:`resolve_snapshot`; `apply_census_to_profile` reads
     via :meth:`latest_active`.
@@ -296,9 +301,9 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
         self,
         *,
         bucket_id: str,
-        repository: CensusSnapshotRepository | None = None,
+        repository: CensoSnapshotRepository | None = None,
     ) -> None:
-        resolved_repository = repository or CensusSnapshotRepository(bucket_id=bucket_id)
+        resolved_repository = repository or CensoSnapshotRepository(bucket_id=bucket_id)
         super().__init__(bucket_id=bucket_id, repository=resolved_repository)
 
     # ---- public API (signatures unchanged for external callers) ----------
@@ -310,7 +315,7 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
         captured_at: datetime,
         source_url: str,
         census_facts: Mapping[str, _CensusFactValue],
-    ) -> CensusSnapshot:
+    ) -> CensoSnapshot:
         """Persist a new census snapshot and auto-supersede prior ACTIVE.
 
         Re-capturing structurally identical facts (same profile / time /
@@ -330,8 +335,8 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
         *,
         profile_id: str | None = None,
         state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
-    ) -> tuple[CensusSnapshot, ...]:
-        snapshots: tuple[CensusSnapshot, ...] = super().list_snapshots()
+    ) -> tuple[CensoSnapshot, ...]:
+        snapshots: tuple[CensoSnapshot, ...] = super().list_snapshots()
         if profile_id is not None:
             trimmed = profile_id.strip()
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.profile_id == trimmed)
@@ -339,7 +344,7 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.state is state)
         return snapshots
 
-    def latest_active(self, *, profile_id: str) -> CensusSnapshot | None:
+    def latest_active(self, *, profile_id: str) -> CensoSnapshot | None:
         snapshots = self.list_snapshots(profile_id=profile_id)
         if not snapshots:
             return None
@@ -351,7 +356,7 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
         snapshot_id: str,
         discarded_by: str,
         discard_reason: str = "",
-    ) -> CensusSnapshot:
+    ) -> CensoSnapshot:
         """Mark a snapshot as DISCARDED. Local-only; never contacts AEAT.
 
         Used when the operator explicitly retires a snapshot captured
@@ -378,7 +383,7 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
         self._repository.save(updated)
         return updated
 
-    # ---- SnapshotService[CensusSnapshot] hooks ---------------------------
+    # ---- SnapshotService[CensoSnapshot] hooks ---------------------------
 
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_census_snapshot_id(
@@ -388,8 +393,8 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
             census_facts=kwargs["census_facts"],
         )
 
-    def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> CensusSnapshot:
-        return CensusSnapshot(
+    def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> CensoSnapshot:
+        return CensoSnapshot(
             snapshot_id=snapshot_id,
             bucket_id=self._repository.bucket_id,
             profile_id=kwargs["profile_id"].strip(),
@@ -399,21 +404,21 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
             census_facts=dict(kwargs["census_facts"]),
         )
 
-    def _payload_axis_key(self, payload: CensusSnapshot) -> tuple[Any, ...]:
+    def _payload_axis_key(self, payload: CensoSnapshot) -> tuple[Any, ...]:
         return (payload.profile_id,)
 
-    def _payload_captured_at(self, payload: CensusSnapshot) -> datetime:
+    def _payload_captured_at(self, payload: CensoSnapshot) -> datetime:
         return payload.captured_at
 
-    def _payload_snapshot_id(self, payload: CensusSnapshot) -> str:
+    def _payload_snapshot_id(self, payload: CensoSnapshot) -> str:
         return payload.snapshot_id
 
-    def _payload_state(self, payload: CensusSnapshot) -> SnapshotLifecycleState:
+    def _payload_state(self, payload: CensoSnapshot) -> SnapshotLifecycleState:
         return payload.state
 
     def _demote_to_superseded(
-        self, payload: CensusSnapshot, *, superseded_by: str
-    ) -> CensusSnapshot:
+        self, payload: CensoSnapshot, *, superseded_by: str
+    ) -> CensoSnapshot:
         return payload.model_copy(
             update={
                 "state": SnapshotLifecycleState.SUPERSEDED,
@@ -424,10 +429,10 @@ class CensusSnapshotService(SnapshotService[CensusSnapshot]):
 
 __all__ = [
     "CENSUS_SNAPSHOT_NAMESPACE",
-    "CensusSnapshot",
-    "CensusSnapshotRepository",
-    "CensusSnapshotService",
-    "CensusSnapshotState",
+    "CensoSnapshot",
+    "CensoSnapshotNotFoundError",
+    "CensoSnapshotRepository",
+    "CensoSnapshotService",
     "census_snapshot_object_key",
     "derive_census_snapshot_id",
 ]

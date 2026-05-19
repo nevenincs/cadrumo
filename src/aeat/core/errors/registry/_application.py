@@ -339,7 +339,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="AUTH_SESSION_CORRUPT",
             category=ErrorCategory.AUTH,
             message_key="errors.auth.auth_session_corrupt",
-            default_suggestion="aeat config auth --provider certificate",
+            default_suggestion="aeat config auth test --provider certificate",
             retryable=False,
             runbook_id=None,
         ),
@@ -554,7 +554,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._reconcile.ReconciliationDeclarationSourceUnsupportedError",
+        "aeat.application.modelo._reconcile.ReconciliationDeclaracionSourceUnsupportedError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED",
             category=ErrorCategory.REFUSED,
@@ -570,7 +570,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_RECONCILIATION_CROSS_BUCKET",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.reconciliation_cross_bucket",
-            default_suggestion="aeat config profile use",
+            default_suggestion="aeat config profile switch NAME",
             retryable=False,
             runbook_id=None,
         ),
@@ -581,7 +581,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_export_cross_bucket",
-            default_suggestion="aeat config profile use",
+            default_suggestion="aeat config profile switch NAME",
             retryable=False,
             runbook_id=None,
         ),
@@ -653,7 +653,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._census_errors.CensusSyncError",
+        "aeat.application.user_profile._censo_errors.CensoSyncError",
         ErrorCode(
             code="FAIL_CENSUS_SYNC",
             category=ErrorCategory.FAIL,
@@ -664,7 +664,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._census_errors.CensusNotAvailableError",
+        "aeat.application.user_profile._censo_errors.CensoNotAvailableError",
         ErrorCode(
             code="REFUSED_CENSUS_NOT_AVAILABLE",
             category=ErrorCategory.REFUSED,
@@ -675,7 +675,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._census_errors.CensusFieldValidationError",
+        "aeat.application.user_profile._censo_errors.CensoFieldValidationError",
         ErrorCode(
             code="REFUSED_CENSUS_FIELD_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -686,12 +686,23 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._census_errors.CensusApplyConflictError",
+        "aeat.application.user_profile._censo_errors.CensoApplyConflictError",
         ErrorCode(
             code="REFUSED_CENSUS_APPLY_CONFLICT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.census_apply_conflict",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.user_profile._orchestration.ProfileAlreadyRegisteredError",
+        ErrorCode(
+            code="REFUSED_PROFILE_ALREADY_REGISTERED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_already_registered",
+            default_suggestion="aeat config profile switch NAME",
             retryable=False,
             runbook_id=None,
         ),

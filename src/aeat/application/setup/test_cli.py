@@ -16,6 +16,8 @@ def _env(tmp_path: Path) -> dict[str, str]:
     return {
         "AEAT_SECRET_STORE_BACKEND": "unsecured",
         "AEAT_ALLOW_UNENCRYPTED": "1",
+        "AEAT_DATABASE_URL": f"sqlite:///{(tmp_path / 'setup.db').as_posix()}",
+        "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
         "AEAT_RUNS_DIR": str(tmp_path / "runs"),
         "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
         "AEAT_INVOICES_DIR": str(tmp_path / "invoices"),
@@ -23,29 +25,32 @@ def _env(tmp_path: Path) -> dict[str, str]:
     }
 
 
-def test_setup_help_is_user_scaffold() -> None:
-    result = invoke_cached_cli(["config", "--help"])
+def test_setup_help_is_user_scaffold(tmp_path: Path) -> None:
+    result = invoke_cached_cli(["config", "--help"], env=_env(tmp_path))
 
-    assert result.exit_code == 0
-    assert "init" in result.output
-    assert "status" in result.output
+    assert result.exit_code == 0, result.output
+    assert "profile create" in result.output
+    assert "profile status" in result.output
     assert "profile" in result.output
     assert "auth" in result.output
+    assert ("config " + "init") not in result.output
     assert "env/.env" not in result.output
 
 
-def test_setup_profile_help_exposes_review_and_validation() -> None:
-    result = invoke_cached_cli(["config", "profile", "--help"])
+def test_setup_profile_help_exposes_review_and_validation(tmp_path: Path) -> None:
+    result = invoke_cached_cli(["config", "profile", "--help"], env=_env(tmp_path))
 
-    assert result.exit_code == 0
-    for command in ("set", "get", "unset", "status", "list"):
+    assert result.exit_code == 0, result.output
+    for command in ("create", "edit", "show", "switch", "delete", "status", "list"):
         assert command in result.output
+    assert "profile set" not in result.output
+    assert "profile get" not in result.output
 
 
-def test_setup_auth_help_exposes_access_lifecycle() -> None:
-    result = invoke_cached_cli(["config", "auth", "--help"])
+def test_setup_auth_help_exposes_access_lifecycle(tmp_path: Path) -> None:
+    result = invoke_cached_cli(["config", "auth", "--help"], env=_env(tmp_path))
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
     for command in ("providers", "configure", "status", "test", "clear"):
         assert command in result.output
 
@@ -57,10 +62,10 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
             "--format",
             "json",
             "config",
-            "init",
-            "--quiet",
-            "--name",
+            "profile",
+            "create",
             "operator",
+            "--quiet",
             "--activity",
             "design",
             "--tax-id",
@@ -84,11 +89,21 @@ def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
     assert missing.exit_code == 0, missing.output
 
     invoke_cached_cli(
-        ["config", "init", "--quiet", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
-        env=env,
-    )
-    invoke_cached_cli(
-        ["config", "profile", "set", "iva.regime", "general"],
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--name",
+            "operator",
+            "--activity",
+            "design",
+            "--tax-id",
+            "12345678Z",
+            "--iva-regime",
+            "GENERAL",
+        ],
         env=env,
     )
     certificate = tmp_path / "cert.p12"

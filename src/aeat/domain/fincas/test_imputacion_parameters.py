@@ -1,7 +1,7 @@
 """Tests asserting LIRPF art. 85 imputación parameters live in the registry.
 
 The rates and lookback must derive from ``registry/aeat/legal/irpf.toml``
-rather than from Python literals on :mod:`aeat.domain.rental._aggregates`.
+rather than from Python literals on :mod:`aeat.domain.fincas._aggregates`.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.core.resources import bundled_path
-from aeat.domain.rental._imputacion_parameters import (
+from aeat.domain.fincas._imputacion_parameters import (
     LirpfArt85ImputacionParameters,
     load_imputacion_parameters,
 )

@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ._errors import RegistryValidationError
-from ._relations import _derive_offset_source_period
+from ._relations import _derive_offset_source_anchor, _derive_offset_source_period
 from ._schema import RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -36,16 +36,29 @@ def test_quarterly_offset_resolves_previous_quarter() -> None:
     assert _derive_offset_source_period(relation, target_period="4T") == "3T"
 
 
-def test_quarterly_offset_returns_none_when_outside_year() -> None:
+def test_quarterly_offset_wraps_across_year_boundary() -> None:
+    """1T with offset=-1 wraps to 4T of the prior year (year_delta=-1).
+
+    IVA carry-forward semantics: Q4 of year N-1 is the legitimate source
+    period for Q1 of year N, so the resolver returns the wrapped period
+    along with a negative year delta rather than ``None``.
+    """
     relation = _relation(target_periods=("1T", "2T", "3T", "4T"), source_period_offset_from_target=-1)
-    assert _derive_offset_source_period(relation, target_period="1T") is None
+    assert _derive_offset_source_period(relation, target_period="1T") == "4T"
+    assert _derive_offset_source_anchor(relation, target_period="1T") == (-1, "4T")
 
 
 def test_pago_fraccionado_offset_resolves_previous_period() -> None:
-    relation = _relation(target_periods=("2P", "3P"), source_period_offset_from_target=-1)
+    """Modelo 202 pago-fraccionado periods 1P/2P/3P with offset=-1.
+
+    Within-year offsets produce the prior pago. 1P with offset=-1 wraps
+    to 3P of the prior year (year_delta=-1).
+    """
+    relation = _relation(target_periods=("1P", "2P", "3P"), source_period_offset_from_target=-1)
     assert _derive_offset_source_period(relation, target_period="2P") == "1P"
     assert _derive_offset_source_period(relation, target_period="3P") == "2P"
-    assert _derive_offset_source_period(relation, target_period="1P") is None
+    assert _derive_offset_source_period(relation, target_period="1P") == "3P"
+    assert _derive_offset_source_anchor(relation, target_period="1P") == (-1, "3P")
 
 
 def test_monthly_offset_resolves_previous_month() -> None:
@@ -54,9 +67,11 @@ def test_monthly_offset_resolves_previous_month() -> None:
     assert _derive_offset_source_period(relation, target_period="12") == "11"
 
 
-def test_monthly_offset_returns_none_when_outside_year() -> None:
+def test_monthly_offset_wraps_across_year_boundary() -> None:
+    """Month 01 with offset=-1 wraps to month 12 of the prior year."""
     relation = _relation(target_periods=("01",), source_period_offset_from_target=-1)
-    assert _derive_offset_source_period(relation, target_period="01") is None
+    assert _derive_offset_source_period(relation, target_period="01") == "12"
+    assert _derive_offset_source_anchor(relation, target_period="01") == (-1, "12")
 
 
 def test_source_periods_and_offset_mutually_exclusive() -> None:

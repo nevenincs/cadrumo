@@ -64,6 +64,23 @@ def test_wallet_match_selects_aeat_wallet_and_keeps_local_as_corroboration() -> 
     assert decision.blocked is False
 
 
+def test_wallet_without_local_history_is_authoritative_but_not_cross_verified() -> None:
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif="12345678Z",
+        target_year=2026,
+        target_period="2T",
+        wallet=_wallet(Decimal("1200")),
+        local_recurrence_amount=None,
+        decided_at=_NOW,
+    )
+
+    assert decision.selected_authority == "aeat_wallet"
+    assert decision.selected_amount == Decimal("1200")
+    assert decision.local_recurrence_amount is None
+    assert decision.divergence == "wallet_only"
+    assert decision.blocked is False
+
+
 def test_wallet_higher_than_local_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif="12345678Z",

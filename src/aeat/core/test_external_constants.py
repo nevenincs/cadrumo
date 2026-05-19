@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.core.config import Settings
 from aeat.core.external_constants import ExternalConstants, load_external_constants
@@ -57,6 +58,23 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
         paths.iva_compensation_wallet,
     ):
         assert value.startswith("/")
+
+
+def test_clave_movil_surface_constants_are_typed() -> None:
+    """Cl@ve Móvil URL fragments and selectors live in the external registry."""
+
+    surface = load_external_constants().aeat.clave_movil
+
+    assert "{target}" in surface.selector_access_url_template
+    assert surface.selector_access_path_marker
+    assert surface.dialogo_representacion_path_marker
+    assert surface.obtener_clave_movil_path_marker
+    assert surface.obtener_clave_movil_qr_path_marker
+    assert surface.authorize_button_selector.startswith("button")
+    assert surface.non_qr_link_selector.startswith("a[")
+    assert surface.verification_code_selector.startswith("#")
+    assert surface.wait_text_markers
+    assert surface.pending_petition_text_markers
 
 
 def test_renta_web_open_template_has_year_placeholder() -> None:
@@ -145,6 +163,15 @@ def test_auth_acquisition_lock_tunables_are_settings() -> None:
 
     assert settings.aeat_auth_clave_movil_lock_buffer_s == 90
     assert settings.aeat_auth_certificate_lock_ttl_s == 180
+
+
+def test_clave_movil_operator_wait_is_capped_at_two_minutes() -> None:
+    """Cl@ve Móvil approval waits fail fast enough for production retry loops."""
+
+    assert Settings().aeat_clave_movil_timeout_ms == 120_000
+
+    with pytest.raises(ValidationError):
+        Settings(aeat_clave_movil_timeout_ms=120_001)
 
 
 def test_logging_levels_are_tunable_settings() -> None:

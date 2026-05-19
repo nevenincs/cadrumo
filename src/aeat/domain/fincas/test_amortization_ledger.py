@@ -1,7 +1,7 @@
 """Unit tests for the LIRPF art. 23.1.f amortización 3 % ledger.
 
-Exercises :func:`aeat.domain.rental.compute_amortization_for_year` and
-:func:`aeat.domain.rental.computation_to_ledger_entry` across single-
+Exercises :func:`aeat.domain.fincas.compute_amortization_for_year` and
+:func:`aeat.domain.fincas.computation_to_ledger_entry` across single-
 year accruals, multi-year cumulative threading, partial / full clamp
 at the cost-basis cap, and the strict-mode overflow path.
 """
@@ -15,8 +15,8 @@ import pytest
 
 from . import (
     AmortizationLedgerCapExceededError,
-    RentalFinca,
-    RentalIncomeRecord,
+    Finca,
+    FincaRendimientoRecord,
     UseType,
     computation_to_ledger_entry,
     compute_amortization_for_year,
@@ -29,8 +29,8 @@ def _finca(
     *,
     coste_construccion: Decimal = Decimal("100000.00"),
     valor_catastral_construccion: Decimal = Decimal("80000.00"),
-) -> RentalFinca:
-    return RentalFinca(
+) -> Finca:
+    return Finca(
         id=1,
         identifier="amort-test",
         address="X",
@@ -43,8 +43,8 @@ def _finca(
     )
 
 
-def _income(period_year: int, dias_alquilados: int = 365) -> RentalIncomeRecord:
-    return RentalIncomeRecord(
+def _income(period_year: int, dias_alquilados: int = 365) -> FincaRendimientoRecord:
+    return FincaRendimientoRecord(
         contract_id=1,
         period_year=period_year,
         gross_rent_received=Decimal("12000.00"),

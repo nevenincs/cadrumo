@@ -32,7 +32,7 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> FilingHistory:
         )
         for i in range(n_entries)
     )
-    return FilingHistory(entries=entries)
+    return FilingHistory(modelo=ModeloIdentifier(modelo), entries=entries)
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
@@ -53,31 +53,31 @@ class TestSaveLoad:
     def test_round_trip(self) -> None:
         repo = FilingHistoryRepository()
         history = _make_history(modelo="130")
-        repo.save("130", history)
+        repo.save(history)
         loaded = FilingHistoryRepository().load("130")
         assert loaded == history
 
     def test_save_idempotent(self) -> None:
         repo = FilingHistoryRepository()
         history = _make_history(modelo="130")
-        repo.save("130", history)
-        repo.save("130", history)
+        repo.save(history)
+        repo.save(history)
         assert repo.list_modelos() == ("130",)
 
 
 class TestListIter:
     def test_list_modelos_sorted(self) -> None:
         repo = FilingHistoryRepository()
-        repo.save("303", _make_history(modelo="303"))
-        repo.save("130", _make_history(modelo="130"))
+        repo.save(_make_history(modelo="303"))
+        repo.save(_make_history(modelo="130"))
         assert repo.list_modelos() == ("130", "303")
 
     def test_iter_histories_yields_tuples(self) -> None:
         repo = FilingHistoryRepository()
         h130 = _make_history(modelo="130")
         h303 = _make_history(modelo="303")
-        repo.save("130", h130)
-        repo.save("303", h303)
+        repo.save(h130)
+        repo.save(h303)
         loaded = dict(repo.iter_histories())
         assert loaded == {"130": h130, "303": h303}
 
@@ -85,7 +85,7 @@ class TestListIter:
 class TestDelete:
     def test_delete_removes(self) -> None:
         repo = FilingHistoryRepository()
-        repo.save("130", _make_history(modelo="130"))
+        repo.save(_make_history(modelo="130"))
         assert repo.delete("130") is True
         assert repo.load("130") is None
 
@@ -97,7 +97,7 @@ class TestDelete:
 class TestClassificationGate:
     def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
         repo = FilingHistoryRepository()
-        repo.save("130", _make_history(modelo="130"))
+        repo.save(_make_history(modelo="130"))
         raw = _database_bytes(tmp_path)
         assert b"secure_objects" in raw
         assert b"2026Q1" not in raw

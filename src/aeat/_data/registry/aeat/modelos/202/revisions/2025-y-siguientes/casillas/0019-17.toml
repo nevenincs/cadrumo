@@ -4,6 +4,7 @@ number = "17"
 label = "Mod. 40.3 LIS B1 — Caso general — Porcentaje"
 section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
 data_type = "decimal"
+semantic_role = "is_pf_mod_40_3_b1_porcentaje"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-page-02-casilla-17"]

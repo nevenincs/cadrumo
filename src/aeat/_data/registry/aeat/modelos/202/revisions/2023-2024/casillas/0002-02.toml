@@ -4,6 +4,7 @@ number = "02"
 label = "Mod. 40.2 LIS — Resultado de la declaracion anterior (complementarias)"
 section = ["liquidacion", "modalidad_40_2_lis"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_2_resultado_declaracion_anterior"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-2023-2024-page-01-casilla-02"]

@@ -751,7 +751,7 @@ def resolve_invoice_binding_row_values(
     record with ``repeat = "binding_rows"`` can correlate field values across
     bindings on the same row. Returns a flat mapping keyed by
     ``(binding_id, row_index)``. Row indexes are one-based to match
-    ``FilingBindingValue.row_index``.
+    ``ModeloBindingValue.row_index``.
     """
 
     available = tuple(observations)

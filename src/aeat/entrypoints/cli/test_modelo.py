@@ -460,7 +460,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         filed_by="operator-A",
         notes=None,
         aeat_accepted=False,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id="JUST-2026-130-1T-XYZ789",
@@ -517,7 +517,7 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
         filed_by="operator-A",
         notes=None,
         aeat_accepted=False,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
     )
 
     payload = _filing_record_payload(record)
@@ -570,7 +570,7 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
         filed_by="operator-A",
         notes=None,
         aeat_accepted=False,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             reference_id="CSV-303-2026-Q1",

@@ -43,7 +43,7 @@ from ...application.workflow import WorkflowState, workflow_state_repository
 from ...domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
-    FilingObligation,
+    ModeloDeadline,
     HolidayJurisdiction,
     ObligationStatus,
     Recovery,
@@ -51,7 +51,7 @@ from ...domain.deadlines import (
     shift_deadline,
 )
 from ...domain.deadlines._festivos import DeadlineValidationError
-from ...domain.filing import FilingDraftRepository
+from ...domain.filing import ModeloDraftRepository
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ._errors import (
@@ -141,7 +141,7 @@ class OverviewCalendarRange(BaseModel):
 class OverviewCalendarEntry(BaseModel):
     """One ``(modelo, period)`` row in the calendar view.
 
-    Mirrors :class:`aeat.domain.deadlines.FilingObligation` fields the
+    Mirrors :class:`aeat.domain.deadlines.ModeloDeadline` fields the
     CLI table needs, plus the precomputed user state so renderers
     do not re-derive the mapping at every call site.
 
@@ -161,7 +161,7 @@ class OverviewCalendarEntry(BaseModel):
             via :func:`user_state_for` for the CLI's 4-column table.
         recovery: Resolved :class:`Recovery` payload when ``status`` is
             ``OVERDUE``; ``None`` otherwise. Carried through verbatim
-            from the underlying :class:`FilingObligation`.
+            from the underlying :class:`ModeloDeadline`.
     """
 
     model_config = _STRICT_FROZEN
@@ -305,7 +305,7 @@ class OverviewStatusReport(BaseModel):
 
 
 def _entry_intersects_range(
-    obligation: FilingObligation,
+    obligation: ModeloDeadline,
     calendar_range: OverviewCalendarRange,
 ) -> bool:
     """Return whether ``obligation``'s [opens_on, closes_on] intersects the range."""
@@ -478,7 +478,7 @@ def build_overview_status_report(
     state: WorkflowState | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    draft_repository: FilingDraftRepository | None = None,
+    draft_repository: ModeloDraftRepository | None = None,
     unreadable_rows: int | None = None,
 ) -> OverviewStatusReport:
     """Build the typed readiness report used by root and overview status."""
@@ -494,7 +494,7 @@ def build_overview_status_report(
     else:
         transactions = transaction_repository.load()
     invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
-    drafts = tuple((draft_repository or FilingDraftRepository()).iter_drafts())
+    drafts = tuple((draft_repository or ModeloDraftRepository()).iter_drafts())
     unreadable_total = secure_object_unreadable_total() if unreadable_rows is None else unreadable_rows
     from ..workflow._models import resolve_active_bucket_id
 

@@ -17,7 +17,7 @@ from ._testing_registry import build_registry_filing_draft, build_registry_filin
 
 
 class FilingTestProfile(BaseModel):
-    """A frozen :class:`aeat.application.filing.FilingProfile`-conforming record."""
+    """A frozen :class:`aeat.application.filing.ModeloProfile`-conforming record."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 

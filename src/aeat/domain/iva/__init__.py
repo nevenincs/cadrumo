@@ -13,7 +13,7 @@ The substrate exposes:
   helper :func:`resolve_catalogue`.
 * The 27-state :data:`IVA_RATE_TABLE` with a load-time non-overlap invariant
   that raises :class:`IvaRateOverlapError` on drift.
-* A full classification axis stack (:class:`IvaResidency` (used for both
+* A full classification axis stack (:class:`IvaTerritorialScope` (used for both
   issuer and customer roles), :class:`CustomerTaxStatus`,
   :class:`TransactionKind`, :class:`InvoiceKind`) plus the deterministic
   resolver :func:`classify_iva` returning :class:`IvaClassificationResult`.
@@ -30,7 +30,7 @@ from ._classification import (
     InvoiceKind,
     IvaClassificationResult,
     IvaInvoiceClassificationCriteria,
-    IvaResidency,
+    IvaTerritorialScope,
     TransactionKind,
     classify_iva,
 )
@@ -112,7 +112,7 @@ __all__ = [
     "InputClassification",
     "InvoiceKind",
     "IossFilerRole",
-    "IvaResidency",
+    "IvaTerritorialScope",
     "IvaFlowDirection",
     "IvaSettlementSide",
     "LivaArt161RecargoRates",

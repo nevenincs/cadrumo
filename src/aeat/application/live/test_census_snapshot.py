@@ -26,12 +26,12 @@ from aeat.adapters.persistence.storage.sql.engine import (
     create_engine_from_settings,
     dispose_engine,
 )
-from aeat.application.live._census import (
+from aeat.application.live._censo import (
     CENSUS_SNAPSHOT_NAMESPACE,
-    CensusSnapshot,
-    CensusSnapshotRepository,
-    CensusSnapshotService,
-    CensusSnapshotState,
+    CensoSnapshot,
+    CensoSnapshotRepository,
+    CensoSnapshotService,
+    SnapshotLifecycleState,
     census_snapshot_object_key,
     derive_census_snapshot_id,
 )
@@ -125,13 +125,13 @@ def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
         census_facts={},
     )
     with pytest.raises(LiveApplicationInputError, match=r"active.*supersession"):
-        CensusSnapshot(
+        CensoSnapshot(
             snapshot_id=snapshot_id,
             bucket_id="bucket-1",
             profile_id="operator",
             captured_at=captured_at,
             source_url="https://example/G313",
-            state=CensusSnapshotState.ACTIVE,
+            state=SnapshotLifecycleState.ACTIVE,
             superseded_by_snapshot_id="another-snapshot-id",
         )
 
@@ -147,13 +147,13 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
         census_facts={},
     )
     with pytest.raises(LiveApplicationInputError, match=r"superseded.*superseded_by"):
-        CensusSnapshot(
+        CensoSnapshot(
             snapshot_id=snapshot_id,
             bucket_id="bucket-1",
             profile_id="operator",
             captured_at=captured_at,
             source_url="https://example/G313",
-            state=CensusSnapshotState.SUPERSEDED,
+            state=SnapshotLifecycleState.SUPERSEDED,
         )
 
 
@@ -164,7 +164,7 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
     preserving both Decimal and str fact values intact."""
 
     bucket_id = "operator-bucket"
-    repo = CensusSnapshotRepository(bucket_id=bucket_id)
+    repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_census_snapshot_id(
@@ -173,13 +173,13 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
         census_facts=facts,
     )
-    original = CensusSnapshot(
+    original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
-        state=CensusSnapshotState.ACTIVE,
+        state=SnapshotLifecycleState.ACTIVE,
         census_facts=facts,
     )
     repo.save(original)
@@ -209,7 +209,7 @@ def test_capture_is_idempotent_for_structurally_identical_facts(
     snapshot_id is deterministic so the service returns the existing
     snapshot rather than persisting a duplicate."""
 
-    service = CensusSnapshotService(bucket_id="operator-bucket")
+    service = CensoSnapshotService(bucket_id="operator-bucket")
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
 
@@ -226,9 +226,9 @@ def test_capture_is_idempotent_for_structurally_identical_facts(
         census_facts=facts,
     )
     assert first.snapshot_id == second.snapshot_id
-    assert first.state is CensusSnapshotState.ACTIVE
+    assert first.state is SnapshotLifecycleState.ACTIVE
     # Both calls produce a single ACTIVE snapshot in the repo.
-    snapshots = service.list_snapshots(state=CensusSnapshotState.ACTIVE)
+    snapshots = service.list_snapshots(state=SnapshotLifecycleState.ACTIVE)
     assert len(snapshots) == 1
 
 
@@ -238,7 +238,7 @@ def test_capture_auto_supersedes_prior_active_for_same_profile(
     """A fresh capture for the same profile transitions the prior
     ACTIVE snapshot into SUPERSEDED with a successor pointer."""
 
-    service = CensusSnapshotService(bucket_id="operator-bucket")
+    service = CensoSnapshotService(bucket_id="operator-bucket")
     facts_v1 = _populated_facts()
     facts_v2 = dict(facts_v1)
     facts_v2["census.elected_withholding_pct"] = "7"
@@ -258,9 +258,9 @@ def test_capture_auto_supersedes_prior_active_for_same_profile(
 
     # v1 was superseded; v2 is the new ACTIVE.
     prior = service.resolve_snapshot(snapshot_v1.snapshot_id)
-    assert prior.state is CensusSnapshotState.SUPERSEDED
+    assert prior.state is SnapshotLifecycleState.SUPERSEDED
     assert prior.superseded_by_snapshot_id == snapshot_v2.snapshot_id
-    assert snapshot_v2.state is CensusSnapshotState.ACTIVE
+    assert snapshot_v2.state is SnapshotLifecycleState.ACTIVE
 
     # latest_active returns v2.
     latest = service.latest_active(profile_id="operator")
@@ -275,7 +275,7 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
     SUPERSEDED with a pointer to the newer ACTIVE — mirrors the
     Borrador100 out-of-order capture path."""
 
-    service = CensusSnapshotService(bucket_id="operator-bucket")
+    service = CensoSnapshotService(bucket_id="operator-bucket")
     facts_newer = _populated_facts()
     facts_older = dict(facts_newer)
     facts_older["census.elected_withholding_pct"] = "1"
@@ -293,7 +293,7 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
         census_facts=facts_older,
     )
 
-    assert older.state is CensusSnapshotState.SUPERSEDED
+    assert older.state is SnapshotLifecycleState.SUPERSEDED
     assert older.superseded_by_snapshot_id == newer.snapshot_id
     assert service.latest_active(profile_id="operator").snapshot_id == newer.snapshot_id
 
@@ -302,7 +302,7 @@ def test_supersession_scopes_to_profile_id(isolated_secure_store: None) -> None:
     """Captures for different profile_ids in the same bucket do NOT
     supersede each other (multi-profile bucket isolation)."""
 
-    service = CensusSnapshotService(bucket_id="shared-bucket")
+    service = CensoSnapshotService(bucket_id="shared-bucket")
     facts = _populated_facts()
 
     operator_a = service.capture(
@@ -319,10 +319,10 @@ def test_supersession_scopes_to_profile_id(isolated_secure_store: None) -> None:
     )
 
     # Both stay ACTIVE; neither references the other.
-    assert operator_a.state is CensusSnapshotState.ACTIVE
-    assert operator_b.state is CensusSnapshotState.ACTIVE
+    assert operator_a.state is SnapshotLifecycleState.ACTIVE
+    assert operator_b.state is SnapshotLifecycleState.ACTIVE
     refreshed_a = service.resolve_snapshot(operator_a.snapshot_id)
-    assert refreshed_a.state is CensusSnapshotState.ACTIVE
+    assert refreshed_a.state is SnapshotLifecycleState.ACTIVE
     assert refreshed_a.superseded_by_snapshot_id is None
 
 
@@ -332,7 +332,7 @@ def test_discard_marks_snapshot_discarded_with_audit(
     """The discard verb transitions a snapshot to DISCARDED with the
     operator label and timestamp captured for the audit trail."""
 
-    service = CensusSnapshotService(bucket_id="operator-bucket")
+    service = CensoSnapshotService(bucket_id="operator-bucket")
     captured = service.capture(
         profile_id="operator",
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
@@ -345,7 +345,7 @@ def test_discard_marks_snapshot_discarded_with_audit(
         discarded_by="operator",
         discard_reason="malformed elected_withholding_pct from sede",
     )
-    assert discarded.state is CensusSnapshotState.DISCARDED
+    assert discarded.state is SnapshotLifecycleState.DISCARDED
     assert discarded.discarded_by == "operator"
     assert "malformed" in discarded.discard_reason
     assert discarded.discarded_at is not None
@@ -371,7 +371,7 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
     after a save the service itself performs in the same memory image."""
 
     bucket_id = "operator-bucket"
-    repo = CensusSnapshotRepository(bucket_id=bucket_id)
+    repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_census_snapshot_id(
@@ -381,20 +381,20 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
         census_facts=facts,
     )
     successor_id = "f" * 64
-    original = CensusSnapshot(
+    original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        state=CensusSnapshotState.SUPERSEDED,
+        state=SnapshotLifecycleState.SUPERSEDED,
         census_facts=facts,
         superseded_by_snapshot_id=successor_id,
     )
     repo.save(original)
     loaded = repo.load(original.snapshot_id)
 
-    assert loaded.state is CensusSnapshotState.SUPERSEDED
+    assert loaded.state is SnapshotLifecycleState.SUPERSEDED
     assert loaded.superseded_by_snapshot_id == successor_id
 
 
@@ -407,7 +407,7 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
     at their default — the model_validator would raise on load."""
 
     bucket_id = "operator-bucket"
-    repo = CensusSnapshotRepository(bucket_id=bucket_id)
+    repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     discarded_at = datetime(2026, 5, 17, 14, 0, 0, tzinfo=UTC)
     facts = _populated_facts()
@@ -417,13 +417,13 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
         source_url="https://example/G313",
         census_facts=facts,
     )
-    original = CensusSnapshot(
+    original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        state=CensusSnapshotState.DISCARDED,
+        state=SnapshotLifecycleState.DISCARDED,
         census_facts=facts,
         discarded_at=discarded_at,
         discarded_by="operator",
@@ -432,7 +432,7 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
     repo.save(original)
     loaded = repo.load(original.snapshot_id)
 
-    assert loaded.state is CensusSnapshotState.DISCARDED
+    assert loaded.state is SnapshotLifecycleState.DISCARDED
     assert loaded.discarded_at == discarded_at
     assert loaded.discarded_by == "operator"
     assert "malformed" in loaded.discard_reason
@@ -456,7 +456,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
     )
 
     bucket_id = "operator-bucket"
-    repo = CensusSnapshotRepository(bucket_id=bucket_id)
+    repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
     snapshot_id = derive_census_snapshot_id(
@@ -466,13 +466,13 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
         census_facts=facts,
     )
     successor_id = "f" * 64
-    original = CensusSnapshot(
+    original = CensoSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        state=CensusSnapshotState.SUPERSEDED,
+        state=SnapshotLifecycleState.SUPERSEDED,
         census_facts=facts,
         superseded_by_snapshot_id=successor_id,
     )
@@ -481,7 +481,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
     # Round-trip through the same Envelope shape that the repository
     # uses, then drop ``superseded_by_snapshot_id`` — re-validating
     # must raise because the SUPERSEDED state requires a successor.
-    envelope = Envelope[CensusSnapshot](
+    envelope = Envelope[CensoSnapshot](
         schema_version=1,
         written_at=datetime.now(UTC),
         classification=SensitivityClass.IDENTITY,
@@ -491,4 +491,4 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
     raw["payload"]["superseded_by_snapshot_id"] = None
 
     with pytest.raises(ValidationError, match="superseded"):
-        Envelope[CensusSnapshot].model_validate(raw)
+        Envelope[CensoSnapshot].model_validate(raw)

@@ -3,8 +3,8 @@
 Closed catalogues that classify Renta (IRPF) substrate axes — income
 type, autonomous community of residence, estimación directa modality —
 are :class:`enum.StrEnum` subclasses. The pattern mirrors the
-:mod:`aeat.domain.vat` substrate (:class:`VATCategory`,
-:class:`EUMemberState`, :class:`VATRateKind`) so the two domains share a
+:mod:`aeat.domain.iva` substrate (:class:`IvaCategory`,
+:class:`EUMemberState`, :class:`IvaRateKind`) so the two domains share a
 single closed-membership convention for substrate axes.
 
 Per the calculation-truth-registry ADR, every Renta domain field that

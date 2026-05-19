@@ -107,7 +107,7 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
             transaction_date=date(2025, 6, 1),
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
+            flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base_amount=Decimal("25000"),
             iva_amount=Decimal("5250"),
         ),

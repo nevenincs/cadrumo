@@ -24,7 +24,7 @@ from aeat.adapters.persistence.storage import (
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.live._census import CensusSnapshotService
+from aeat.application.live._censo import CensoSnapshotService
 from aeat.entrypoints.cli._config import profile_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -84,7 +84,7 @@ def _capture_snapshot() -> str:
     active = resolve_active_bucket_id()
     assert active is not None, "active profile must be seeded before capture"
     bucket_id = state.profiles[active].bucket_id
-    service = CensusSnapshotService(bucket_id=bucket_id)
+    service = CensoSnapshotService(bucket_id=bucket_id)
     snapshot = service.capture(
         profile_id=active,
         captured_at=datetime.now(UTC),
@@ -225,7 +225,7 @@ def test_rejected_subverb_returns_nonzero(cli_runner: CliRunner) -> None:
 
 def test_compare_emits_json_payload_with_typed_rows() -> None:
     """The --format json branch on the root aeat CLI must render
-    CensusProfileComparison through model_dump(mode='json') cleanly."""
+    CensoProfileComparison through model_dump(mode='json') cleanly."""
 
     import json
 
@@ -245,7 +245,7 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
 
 
 def test_apply_emits_json_payload_with_written_paths() -> None:
-    """The --format json branch on apply must serialize CensusApplyResult
+    """The --format json branch on apply must serialize CensoApplyResult
     through model_dump(mode='json'); written_paths is a tuple that
     JSON renders as a list."""
 

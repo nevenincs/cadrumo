@@ -4,6 +4,7 @@ number = "115-134"
 label = "Referencia catastral del inmueble arrendado"
 section = ["perceptor", "inmueble"]
 data_type = "text"
+semantic_role = "payee_inmueble_referencia_catastral"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-referencia-catastral"]

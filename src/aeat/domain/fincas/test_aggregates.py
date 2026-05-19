@@ -18,19 +18,19 @@ from aeat.adapters.persistence.storage import (
 from aeat.adapters.persistence.storage.crypto._crypto import KEY_SIZE
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.core.config import Settings
-from aeat.domain.rental import (
+from aeat.domain.fincas import (
     ExpenseCategory,
-    RentalAmortizationLedgerRepository,
-    RentalContract,
-    RentalContractRepository,
-    RentalExpense,
-    RentalExpenseRepository,
-    RentalFinca,
-    RentalFincaRepository,
-    RentalIncomeRecord,
-    RentalIncomeRepository,
+    FincaAmortizacionLedgerRepository,
+    Arrendamiento,
+    ArrendamientoRepository,
+    FincaGasto,
+    FincaGastoRepository,
+    Finca,
+    FincaRepository,
+    FincaRendimientoRecord,
+    FincaRendimientoRepository,
     UseType,
-    compute_rental_aggregates,
+    compute_finca_aggregates,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -53,14 +53,14 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
     engine = _engine(tmp_path)
     try:
         with session_scope(engine) as session:
-            finca_repo = RentalFincaRepository(session)
-            contract_repo = RentalContractRepository(session)
-            income_repo = RentalIncomeRepository(session)
-            expense_repo = RentalExpenseRepository(session)
-            ledger_repo = RentalAmortizationLedgerRepository(session)
+            finca_repo = FincaRepository(session)
+            contract_repo = ArrendamientoRepository(session)
+            income_repo = FincaRendimientoRepository(session)
+            expense_repo = FincaGastoRepository(session)
+            ledger_repo = FincaAmortizacionLedgerRepository(session)
 
             let_finca = finca_repo.upsert(
-                RentalFinca(
+                Finca(
                     identifier="let-finca",
                     address="Calle Mayor 12, Madrid",
                     valor_catastral_total=Decimal("180000.00"),
@@ -74,7 +74,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                 ),
             )
             non_let_finca = finca_repo.upsert(
-                RentalFinca(
+                Finca(
                     identifier="non-let-finca",
                     address="Calle Serrano 1, Madrid",
                     valor_catastral_total=Decimal("100000.00"),
@@ -90,7 +90,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
             assert non_let_finca.id is not None
 
             contract = contract_repo.upsert(
-                RentalContract(
+                Arrendamiento(
                     finca_id=let_finca.id,
                     contract_celebration_date=date(2022, 9, 1),
                     tenant_count=1,
@@ -103,7 +103,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
             reparacion = Decimal("500.00")
             ibi = Decimal("500.00")
             income_repo.upsert(
-                RentalIncomeRecord(
+                FincaRendimientoRecord(
                     contract_id=contract.id,
                     period_year=2025,
                     gross_rent_received=gross_rent,
@@ -111,7 +111,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                 ),
             )
             expense_repo.add(
-                RentalExpense(
+                FincaGasto(
                     finca_id=let_finca.id,
                     period_year=2025,
                     category=ExpenseCategory.FINANCIACION_INTERESES,
@@ -119,7 +119,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                 ),
             )
             expense_repo.add(
-                RentalExpense(
+                FincaGasto(
                     finca_id=let_finca.id,
                     period_year=2025,
                     category=ExpenseCategory.CONSERVACION_REPARACION,
@@ -127,7 +127,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                 ),
             )
             expense_repo.add(
-                RentalExpense(
+                FincaGasto(
                     finca_id=let_finca.id,
                     period_year=2025,
                     category=ExpenseCategory.IBI_TRIBUTOS_NO_ESTATALES,
@@ -135,7 +135,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                 ),
             )
 
-            aggregates = compute_rental_aggregates(
+            aggregates = compute_finca_aggregates(
                 period_year=2025,
                 finca_repo=finca_repo,
                 contract_repo=contract_repo,

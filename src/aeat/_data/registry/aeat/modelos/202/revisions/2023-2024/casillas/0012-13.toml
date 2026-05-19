@@ -4,6 +4,7 @@ number = "13"
 label = "Mod. 40.3 LIS — Base imponible previa"
 section = ["liquidacion", "modalidad_40_3_lis", "base_imponible"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_3_base_imponible_previa"
 required = false
 input_kind = "computed"
 formula = "modelo-202-2023-2024-base-imponible-previa"

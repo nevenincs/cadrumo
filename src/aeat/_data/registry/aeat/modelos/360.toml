@@ -60,6 +60,7 @@ number = "estado-miembro"
 label = "Estado miembro de devolucion donde se soportaron las cuotas"
 section = ["declarante"]
 data_type = "text"
+semantic_role = "estado_miembro_devolucion"
 required = true
 input_kind = "informational"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]

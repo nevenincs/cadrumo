@@ -4,6 +4,7 @@ number = "2.devengo.cnae"
 label = "C.N.A.E. de la actividad principal"
 section = ["declarante", "devengo"]
 data_type = "text"
+semantic_role = "actividad_cnae"
 required = true
 input_kind = "informational"
 export_refs = ["modelo-232-2016-page-01-cnae"]

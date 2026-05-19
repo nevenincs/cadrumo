@@ -20,7 +20,7 @@ from aeat.application.workflow import (
     WorkflowStep,
     save_run,
 )
-from aeat.domain.deadlines import FilingObligation, ObligationStatus
+from aeat.domain.deadlines import ModeloDeadline, ObligationStatus
 from aeat.entrypoints.cli._modelo import work_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -45,8 +45,8 @@ def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 
 
-def _obligation() -> FilingObligation:
-    return FilingObligation(
+def _obligation() -> ModeloDeadline:
+    return ModeloDeadline(
         modelo="130",
         period="2026Q1",
         opens_on=date(2026, 4, 1),

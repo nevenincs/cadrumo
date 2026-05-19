@@ -85,7 +85,7 @@ def test_classification_record_contributes_to_both_sides_for_autorepercutido() -
     classification = IvaInvoiceClassification(
         category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         rate_kind=IvaRateKind.GENERAL,
-        flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
+        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         settlement_sides=frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}),
     )
     assert classification.contributes_to_devengada is True
@@ -116,13 +116,13 @@ def test_classification_record_is_frozen() -> None:
 
 def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejected() -> None:
     """Even if the IvaCategory says reverse-charge, the constructor
-    only accepts AUTOREPERCUTIDO when settlement_sides has both — the
+    only accepts INVERSION_SUJETO_PASIVO when settlement_sides has both — the
     cross-check is on (flow, sides), not on category."""
     with pytest.raises(ValueError, match="does not match flow_direction"):
         IvaInvoiceClassification(
             category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
             rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
+            flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             settlement_sides=frozenset({IvaSettlementSide.DEVENGADA}),  # missing deducible
         )
 

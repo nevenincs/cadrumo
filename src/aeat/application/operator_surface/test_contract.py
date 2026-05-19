@@ -85,7 +85,7 @@ def test_retired_surface_suggestions_capture_rejected_roots() -> None:
 
     assert setup is not None
     assert setup.replacement == "config"
-    assert setup.suggestion == "aeat config init"
+    assert setup.suggestion == "aeat config profile create NAME"
     assert retired_surface_suggestion("auth") is None
     assert invoice is not None
     assert invoice.replacement == "app ledger"
@@ -105,7 +105,7 @@ def test_require_accepted_root_uses_registered_application_error() -> None:
         require_accepted_root("setup")
 
     error = exc_info.value
-    assert error.suggestion == "aeat config init"
+    assert error.suggestion == "aeat config profile create NAME"
     assert error.reason == "setup and config are consolidated under the config root"
     assert get_registered_error_code(error).code == "REFUSED_OPERATOR_SURFACE_CONTRACT"
 
@@ -167,10 +167,13 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
 
     by_domain = {family.domain: family for family in contract.command_families}
 
-    assert by_domain[MountedCommandDomain.FIRST_RUN].root is RootSurfaceName.CONFIG
-    assert by_domain[MountedCommandDomain.FIRST_RUN].child == "init"
-    assert by_domain[MountedCommandDomain.FIRST_RUN].service_owner == "aeat.application.wizard"
-    assert by_domain[MountedCommandDomain.PROFILE].commands == ("list", "get", "set", "unset", "status")
+    assert MountedCommandDomain.FIRST_RUN not in by_domain
+    assert by_domain[MountedCommandDomain.PROFILE].root is RootSurfaceName.CONFIG
+    assert by_domain[MountedCommandDomain.PROFILE].child == "profile"
+    assert by_domain[MountedCommandDomain.PROFILE].service_owner == "aeat.application.user_profile"
+    assert {"create", "edit", "show", "switch", "delete", "status"}.issubset(
+        by_domain[MountedCommandDomain.PROFILE].commands
+    )
     assert by_domain[MountedCommandDomain.OVERVIEW].mutability is OperatorMutability.READ_ONLY
     assert by_domain[MountedCommandDomain.LEDGER].service_owner == "aeat.application.transactions"
     assert by_domain[MountedCommandDomain.REVIEW].service_owner == "aeat.application.review"
@@ -197,7 +200,8 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     app_text = render_help_text(app)
 
     assert "The CLI has exactly two roots: config and app." in root.paragraphs
-    assert "aeat config init" in root_text
+    assert "aeat config profile create NAME" in root_text
+    assert ("aeat config " + "init") not in root_text
     assert "aeat app ledger import" in root_text
     assert "aeat app live filed list" in root_text
     assert "aeat app live filed capture" in app_text
@@ -225,7 +229,7 @@ def test_root_landing_report_reads_profile_state_input_only() -> None:
     missing = build_root_landing_report(None)
     active = build_root_landing_report("operator")
 
-    assert missing.command == "aeat config init"
+    assert missing.command == "aeat config profile create NAME"
     assert missing.active_profile is None
     assert active.command == "aeat app overview status"
     assert active.active_profile == "operator"

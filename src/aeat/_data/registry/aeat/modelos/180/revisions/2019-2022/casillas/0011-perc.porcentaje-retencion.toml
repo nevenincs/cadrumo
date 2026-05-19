@@ -4,6 +4,7 @@ number = "93-96"
 label = "Porcentaje de retencion aplicado"
 section = ["perceptor", "renta"]
 data_type = "text"
+semantic_role = "porcentaje_retencion"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-180-perc-porcentaje-retencion"]

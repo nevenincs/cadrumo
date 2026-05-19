@@ -70,7 +70,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.FilingFixtureError",
+        "aeat.core.errors.ModeloFixtureError",
         ErrorCode(
             code="INTEGRITY_FILING_FIXTURE",
             category=ErrorCategory.INTEGRITY,

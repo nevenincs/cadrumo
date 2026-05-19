@@ -34,17 +34,17 @@ from ._errors import ModeloValidationError
 class WorkUnitState(StrEnum):
     """Closed enumeration of work-unit lifecycle states.
 
-    * ``DRAFT`` — default state at creation. The work unit
+    * ``BORRADOR`` — default state at creation. The work unit
       participates in default listings and accepts mutation
       (rename, future calculation revisions).
-    * ``DISCARDED`` — operator marked the work unit abandoned.
+    * ``DESCARTADO`` — operator marked the work unit abandoned.
       Excluded from default listings; mutations are rejected.
       Revision payloads remain in storage for audit; the work
       unit cannot be re-activated.
     """
 
-    DRAFT = "draft"
-    DISCARDED = "discarded"
+    BORRADOR = "borrador"
+    DESCARTADO = "descartado"
 
 
 _ActorLabel = Annotated[
@@ -156,7 +156,7 @@ class WorkUnit(BaseModel):
         created_at: Timezone-aware UTC timestamp at first creation.
         updated_at: Timezone-aware UTC timestamp at the most recent
             mutation. Equals ``created_at`` on a fresh work unit.
-        state: Lifecycle state — ``DRAFT`` by default, ``DISCARDED``
+        state: Lifecycle state — ``BORRADOR`` by default, ``DESCARTADO``
             once the operator marks the unit abandoned via the
             discard verb.
         discarded_at: Timezone-aware UTC timestamp set at discard
@@ -189,7 +189,7 @@ class WorkUnit(BaseModel):
     name: _DisplayName
     created_at: datetime
     updated_at: datetime
-    state: WorkUnitState = WorkUnitState.DRAFT
+    state: WorkUnitState = WorkUnitState.BORRADOR
     discarded_at: datetime | None = None
     discarded_by: _ActorLabel | None = None
     discard_reason: _DiscardReason | None = None
@@ -241,12 +241,12 @@ class WorkUnit(BaseModel):
             raise ModeloValidationError(
                 f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
             )
-        if self.state is WorkUnitState.DRAFT:
+        if self.state is WorkUnitState.BORRADOR:
             if self.discarded_at is not None or self.discarded_by is not None or self.discard_reason is not None:
                 raise ModeloValidationError(
                     "draft work unit must not carry discard metadata (discarded_at / discarded_by / discard_reason)"
                 )
-        elif self.state is WorkUnitState.DISCARDED:
+        elif self.state is WorkUnitState.DESCARTADO:
             if self.discarded_at is None or self.discarded_by is None:
                 raise ModeloValidationError("discarded work unit must carry discarded_at and discarded_by")
             if self.discarded_at < self.created_at:

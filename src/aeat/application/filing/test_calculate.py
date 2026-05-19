@@ -11,9 +11,9 @@ from pydantic import ValidationError
 
 from ...core.i18n import Translatable as tr
 from ...domain.filing import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
-    FilingValidationFinding,
+    ModeloValidationFinding,
 )
 from . import (
     DeclaracionCalculateNextAction,
@@ -35,10 +35,10 @@ def _finding_message(code: str) -> tr:
 def _make_draft(
     *,
     status: ModeloDraftStatus,
-    findings: tuple[FilingValidationFinding, ...] = (),
+    findings: tuple[ModeloValidationFinding, ...] = (),
     modelo: str = "130",
     period: str = "2026Q1",
-) -> FilingDraft:
+) -> ModeloDraft:
     draft = build_registry_filing_draft(
         modelo=modelo,
         period=period,
@@ -66,8 +66,8 @@ def _make_draft(
     )
 
 
-def _finding(severity: BaseSeverity, code: str) -> FilingValidationFinding:
-    return FilingValidationFinding(
+def _finding(severity: BaseSeverity, code: str) -> ModeloValidationFinding:
+    return ModeloValidationFinding(
         casilla_id=None,
         severity=severity,
         code=code,
@@ -76,7 +76,7 @@ def _finding(severity: BaseSeverity, code: str) -> FilingValidationFinding:
 
 
 def test_clean_validated_draft_routes_to_review() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.VALIDATED)
+    draft = _make_draft(status=ModeloDraftStatus.VALIDADO)
     summary = summarise_calculation(draft)
     assert summary.next_action is DeclaracionCalculateNextAction.REVIEW
     assert summary.blocker_count == 0
@@ -85,32 +85,32 @@ def test_clean_validated_draft_routes_to_review() -> None:
 
 
 def test_ready_to_submit_clean_draft_routes_to_approve() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.READY_TO_SUBMIT)
+    draft = _make_draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR)
     summary = summarise_calculation(draft)
     assert summary.next_action is DeclaracionCalculateNextAction.APPROVE
 
 
 def test_approved_draft_routes_to_export() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.APPROVED)
+    draft = _make_draft(status=ModeloDraftStatus.APROBADO)
     summary = summarise_calculation(draft)
     assert summary.next_action is DeclaracionCalculateNextAction.EXPORT
 
 
 def test_approval_stale_routes_to_refresh_approval() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.APPROVAL_STALE)
+    draft = _make_draft(status=ModeloDraftStatus.APROBACION_CADUCADA)
     summary = summarise_calculation(draft)
     assert summary.next_action is DeclaracionCalculateNextAction.REFRESH_APPROVAL
 
 
 def test_submitted_status_routes_to_amend() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.SUBMITTED)
+    draft = _make_draft(status=ModeloDraftStatus.PRESENTADA)
     summary = summarise_calculation(draft)
     assert summary.next_action is DeclaracionCalculateNextAction.AMEND
 
 
 def test_any_status_with_error_routes_to_resolve_blockers() -> None:
     draft = _make_draft(
-        status=ModeloDraftStatus.APPROVED,
+        status=ModeloDraftStatus.APROBADO,
         findings=(_finding(BaseSeverity.ERROR, "casilla-required-missing"),),
     )
     summary = summarise_calculation(draft, repair_hints=(_hint(),))
@@ -121,7 +121,7 @@ def test_any_status_with_error_routes_to_resolve_blockers() -> None:
 
 def test_summary_counts_findings_by_severity() -> None:
     draft = _make_draft(
-        status=ModeloDraftStatus.VALIDATED,
+        status=ModeloDraftStatus.VALIDADO,
         findings=(
             _finding(BaseSeverity.INFO, "i-1"),
             _finding(BaseSeverity.WARNING, "w-1"),
@@ -137,7 +137,7 @@ def test_summary_counts_findings_by_severity() -> None:
 
 def test_repair_hints_required_for_resolve_blockers() -> None:
     draft = _make_draft(
-        status=ModeloDraftStatus.VALIDATED,
+        status=ModeloDraftStatus.VALIDADO,
         findings=(_finding(BaseSeverity.ERROR, "blocker"),),
     )
     with pytest.raises(ValueError, match=r"repair_hints"):
@@ -145,19 +145,19 @@ def test_repair_hints_required_for_resolve_blockers() -> None:
 
 
 def test_repair_hints_rejected_outside_resolve_blockers() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.VALIDATED)
+    draft = _make_draft(status=ModeloDraftStatus.VALIDADO)
     with pytest.raises(ValueError, match=r"repair_hints"):
         summarise_calculation(draft, repair_hints=(_hint(),))
 
 
 def test_summary_is_frozen() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.VALIDATED)
+    draft = _make_draft(status=ModeloDraftStatus.VALIDADO)
     summary = summarise_calculation(draft)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         summary.blocker_count = 99
 
 
 def test_calculated_at_defaults_to_draft_updated_at() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.VALIDATED)
+    draft = _make_draft(status=ModeloDraftStatus.VALIDADO)
     summary = summarise_calculation(draft)
     assert summary.calculated_at == draft.updated_at

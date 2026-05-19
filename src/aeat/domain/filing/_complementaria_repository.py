@@ -16,7 +16,13 @@ from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_rep
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
-from ._amendment import FilingAmendment
+from ._amendment import (
+    BaseAmendment,
+    ModeloComplementaria,
+    ModeloSustitutiva,
+)
+
+type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
 _log = get_logger(__name__)
 
@@ -24,7 +30,7 @@ _AMENDMENT_ENVELOPE_VERSION = 1
 _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 
 
-class FilingAmendmentRepository:
+class ModeloAmendmentRepository:
     """Repository over encrypted SQL-backed filing amendments."""
 
     def __init__(self) -> None:
@@ -48,7 +54,7 @@ class FilingAmendmentRepository:
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / f"{amendment_id}.lock"
 
-    def load(self, amendment_id: str) -> FilingAmendment | None:
+    def load(self, amendment_id: str) -> ModeloAmendment | None:
         """Return the persisted amendment or ``None`` if absent."""
 
         safe_repository_id(amendment_id, context="amendment_id")
@@ -60,7 +66,7 @@ class FilingAmendmentRepository:
         )
         if record is None:
             return None
-        envelope = Envelope[FilingAmendment].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.AUDIT:
             raise ClassificationError(
                 f"filing amendment {amendment_id} has classification {envelope.classification}; "
@@ -73,11 +79,11 @@ class FilingAmendmentRepository:
             )
         return envelope.payload
 
-    def save(self, amendment: FilingAmendment) -> None:
+    def save(self, amendment: BaseAmendment) -> None:
         """Persist ``amendment`` in the encrypted database object store."""
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")
-        envelope = Envelope[FilingAmendment](
+        envelope = Envelope[BaseAmendment](
             schema_version=_AMENDMENT_ENVELOPE_VERSION,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.AUDIT,
@@ -91,7 +97,8 @@ class FilingAmendmentRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
-        _log.debug("saved filing amendment %s kind=%s", amendment.amendment_id, amendment.amendment_kind.value)
+        kind = getattr(amendment, "amendment_kind", None)
+        _log.debug("saved filing amendment %s kind=%s", amendment.amendment_id, kind)
 
     def delete(self, amendment_id: str) -> bool:
         """Remove the persisted amendment for ``amendment_id``."""
@@ -111,11 +118,11 @@ class FilingAmendmentRepository:
             expected_class=SensitivityClass.AUDIT,
             max_supported_version=_AMENDMENT_ENVELOPE_VERSION,
         ):
-            envelope = Envelope[FilingAmendment].model_validate_json(record.payload.decode("utf-8"))
+            envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
             ids.append(envelope.payload.amendment_id)
         return tuple(sorted(ids))
 
-    def iter_amendments(self) -> Iterator[FilingAmendment]:
+    def iter_amendments(self) -> Iterator[ModeloAmendment]:
         """Yield every persisted amendment, in lexicographic id order."""
 
         for amendment_id in self.list_amendment_ids():
@@ -127,5 +134,5 @@ class FilingAmendmentRepository:
 __all__ = [
     "ClassificationError",
     "EnvelopeVersionError",
-    "FilingAmendmentRepository",
+    "ModeloAmendmentRepository",
 ]

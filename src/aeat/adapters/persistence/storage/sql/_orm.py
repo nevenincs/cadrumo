@@ -173,7 +173,7 @@ def _enum_check(values: tuple[str, ...]) -> str:
     return "(" + ", ".join(repr(v) for v in values) + ")"
 
 
-class RentalFincaRow(Base):
+class FincaRow(Base):
     """Row in the ``rental_fincas`` table.
 
     Models one Spanish urban property. The address column is encrypted
@@ -227,7 +227,7 @@ class RentalFincaRow(Base):
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
 
-class RentalContractRow(Base):
+class ArrendamientoRow(Base):
     """Row in the ``rental_contracts`` table.
 
     Per-contract metadata used by the LIRPF art. 23.2 tier resolver.
@@ -238,7 +238,7 @@ class RentalContractRow(Base):
 
     Attributes:
         id: Surrogate integer primary key.
-        finca_id: Foreign key into :class:`RentalFincaRow`.
+        finca_id: Foreign key into :class:`FincaRow`.
         contract_celebration_date: Date the contract was signed.
         contract_termination_date: Date the contract terminated, when
             applicable.
@@ -306,10 +306,10 @@ class RentalContractRow(Base):
     lau_17_6_compliant: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
-    finca: Mapped[RentalFincaRow] = relationship("RentalFincaRow", lazy="joined")
+    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 
 
-class RentalIncomeRecordRow(Base):
+class FincaRendimientoRecordRow(Base):
     """Row in the ``rental_income_records`` table.
 
     Per-contract per-period gross-rent ledger. The
@@ -318,7 +318,7 @@ class RentalIncomeRecordRow(Base):
 
     Attributes:
         id: Surrogate integer primary key.
-        contract_id: Foreign key into :class:`RentalContractRow`.
+        contract_id: Foreign key into :class:`ArrendamientoRow`.
         period_year: Tax year the income belongs to.
         gross_rent_received: Gross rent received during the period.
         dias_alquilados: Days the property was actually rented during
@@ -349,10 +349,10 @@ class RentalIncomeRecordRow(Base):
     dias_alquilados: Mapped[int] = mapped_column(Integer, nullable=False)
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
-    contract: Mapped[RentalContractRow] = relationship("RentalContractRow", lazy="joined")
+    contract: Mapped[ArrendamientoRow] = relationship("ArrendamientoRow", lazy="joined")
 
 
-class RentalExpenseRow(Base):
+class FincaGastoRow(Base):
     """Row in the ``rental_expenses`` table.
 
     Per-finca per-period categorised expense surface for the LIRPF
@@ -360,7 +360,7 @@ class RentalExpenseRow(Base):
 
     Attributes:
         id: Surrogate integer primary key.
-        finca_id: Foreign key into :class:`RentalFincaRow`.
+        finca_id: Foreign key into :class:`FincaRow`.
         period_year: Tax year the expense belongs to.
         category: One of the closed expense categories
             (``FINANCIACION_INTERESES``, ``CONSERVACION_REPARACION``,
@@ -390,10 +390,10 @@ class RentalExpenseRow(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
-    finca: Mapped[RentalFincaRow] = relationship("RentalFincaRow", lazy="joined")
+    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 
 
-class RentalAmortizationLedgerRow(Base):
+class FincaAmortizacionLedgerRow(Base):
     """Row in the ``rental_amortization_ledger`` table.
 
     Per-finca per-period art. 23.1.f amortización 3 % accrual with
@@ -426,7 +426,7 @@ class RentalAmortizationLedgerRow(Base):
     )
     schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
 
-    finca: Mapped[RentalFincaRow] = relationship("RentalFincaRow", lazy="joined")
+    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 
 
 metadata = Base.metadata

@@ -10,7 +10,7 @@ from aeat.core.resources._repos import (
     RecargoBandsRepository,
     TopicCatalogueRepository,
     UserProfileSchemaRepository,
-    VatRateTableRepository,
+    IvaRateTableRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
@@ -53,8 +53,8 @@ def test_recargo_bands_singleton_loads_real_tuple() -> None:
     assert repo.singleton is result
 
 
-def test_vat_rate_table_singleton_loads_real_mapping() -> None:
-    repo = VatRateTableRepository()
+def test_iva_rate_table_singleton_loads_real_mapping() -> None:
+    repo = IvaRateTableRepository()
 
     result = repo.singleton
 

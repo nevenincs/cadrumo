@@ -429,6 +429,7 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
     parameters = (*mode_params, *question_params)
 
     def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
+        from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
         from ..workflow._persistence import workflow_state_repository
 
         raw_profile_name = kwargs.pop("profile_name")
@@ -469,7 +470,9 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
             answers = run_flow(flow, active, defaults=canonical)
 
         repository = workflow_state_repository()
-        repository.update(lambda state: persist_answers(flow, answers, state=state, profile_name=profile_name))
+        provider = get_master_key_provider()
+        with activate_master_key_provider(provider, fallback_bucket_id=profile_name):
+            repository.update(lambda state: persist_answers(flow, answers, state=state, profile_name=profile_name))
 
     typed = typing.cast(typing.Any, _command)
     typed.__signature__ = inspect.Signature(parameters=list(parameters))

@@ -6,7 +6,7 @@ must survive verbatim across the encrypted-storage boundary.
 
 Anti-tautology discipline: every defaultable field is set to a
 non-default value. ``status``
-is ACKNOWLEDGED (the most-constrained state — its model_validator
+is ACEPTADA (the most-constrained state — its model_validator
 requires both justificante_csv AND justificante_pdf_path), so the
 typed contract proves the boundary actually carries those values
 end-to-end.
@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 def _populated_filing() -> ModeloPresentado:
     """Build a ModeloPresentado with every defaultable field non-default.
 
-    Anti-tautology: status=ACKNOWLEDGED forces justificante_csv +
+    Anti-tautology: status=ACEPTADA forces justificante_csv +
     justificante_pdf_path to be populated; acknowledged_at also set.
     Two attempts so the tuple-of-attempts surface is exercised, with
     distinct status / error fields per attempt.
@@ -55,7 +55,7 @@ def _populated_filing() -> ModeloPresentado:
         modelo="303",
         period="2025Q1",
         profile_tax_id="12345678Z",
-        status=SubmissionStatus.ACKNOWLEDGED,
+        status=SubmissionStatus.ACEPTADA,
         justificante_csv="ABCD12345678EFGH",
         justificante_pdf_path=Path("justificantes/303-2025Q1-ABCD.pdf"),
         submitted_at=now - timedelta(minutes=5),
@@ -65,7 +65,7 @@ def _populated_filing() -> ModeloPresentado:
                 attempt_id=f"{submission_id}.1",
                 started_at=now - timedelta(minutes=10),
                 ended_at=now - timedelta(minutes=8),
-                status=SubmissionStatus.FAILED,
+                status=SubmissionStatus.FALLIDA,
                 error_code="TLS_HANDSHAKE_TIMEOUT",
                 error_message="connection to sede timed out",
                 browser_trace_path=Path("traces/attempt-1.zip"),
@@ -74,7 +74,7 @@ def _populated_filing() -> ModeloPresentado:
                 attempt_id=f"{submission_id}.2",
                 started_at=now - timedelta(minutes=5),
                 ended_at=now,
-                status=SubmissionStatus.ACKNOWLEDGED,
+                status=SubmissionStatus.ACEPTADA,
             ),
         ),
     )
@@ -109,14 +109,14 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(
             # with distinct statuses per attempt, and the typed Path
             # field (browser_trace_path) which serialises as str on
             # the wire and must reconstitute back to Path on load.
-            assert loaded.status is SubmissionStatus.ACKNOWLEDGED
+            assert loaded.status is SubmissionStatus.ACEPTADA
             assert loaded.justificante_csv == "ABCD12345678EFGH"
             assert loaded.justificante_pdf_path == Path("justificantes/303-2025Q1-ABCD.pdf")
             assert len(loaded.attempts) == 2
-            assert loaded.attempts[0].status is SubmissionStatus.FAILED
+            assert loaded.attempts[0].status is SubmissionStatus.FALLIDA
             assert loaded.attempts[0].error_code == "TLS_HANDSHAKE_TIMEOUT"
             assert loaded.attempts[0].browser_trace_path == Path("traces/attempt-1.zip")
-            assert loaded.attempts[1].status is SubmissionStatus.ACKNOWLEDGED
+            assert loaded.attempts[1].status is SubmissionStatus.ACEPTADA
             # The first-attempt-ended-before-submitted invariant survives.
             assert loaded.submitted_at < loaded.acknowledged_at  # type: ignore[operator]
         finally:
@@ -127,10 +127,10 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Anti-tautology proof: deleting ``justificante_csv`` on ACKNOWLEDGED must surface.
+    """Anti-tautology proof: deleting ``justificante_csv`` on ACEPTADA must surface.
 
     The :class:`ModeloPresentado` model_validator enforces that an
-    ACKNOWLEDGED submission carries both ``justificante_csv`` AND
+    ACEPTADA submission carries both ``justificante_csv`` AND
     ``justificante_pdf_path``. Surgically delete the CSV from the
     persisted JSON envelope; the load path must reject the rehydrated
     record via either a ValidationError or strict inequality.
@@ -175,7 +175,7 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
                 payload = envelope["payload"]
                 assert payload.get("justificante_csv"), (
                     "fixture must serialise justificante_csv onto the "
-                    "ACKNOWLEDGED record for this proof test to be meaningful"
+                    "ACEPTADA record for this proof test to be meaningful"
                 )
                 payload["justificante_csv"] = None
                 row.payload = _json.dumps(envelope).encode("utf-8")
@@ -190,7 +190,7 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
                     regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: deleting justificante_csv "
-                "from an ACKNOWLEDGED submission did NOT surface on load. "
+                "from an ACEPTADA submission did NOT surface on load. "
                 "The submission boundary is tautological and every "
                 "submission roundtrip in the suite is suspect."
             )

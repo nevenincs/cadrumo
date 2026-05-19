@@ -4,7 +4,7 @@ The CLI contract requires modelo calculation to
 print a compact summary table, blocker counts, warnings, and the next
 action — and shows repair hints instead of succeeding silently when the
 inputs are unresolved. The CLI cannot compute that summary by inspecting
-:class:`aeat.domain.filing.FilingDraft` ad-hoc: the next-action heuristic
+:class:`aeat.domain.filing.ModeloDraft` ad-hoc: the next-action heuristic
 is shared logic the application layer owns, and the typed record gives
 the renderers and tests a stable schema to target.
 
@@ -25,7 +25,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...domain.filing import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
 )
 from .errors import FilingCalculateError
@@ -72,7 +72,7 @@ class DeclaracionCalculateSummary(BaseModel):
     """Typed summary of a single modelo calculation run.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.FilingDraft` identity
+        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
             the summary was produced from.
         modelo: AEAT modelo identifier.
         period: Canonical period identifier (e.g. ``"2026Q1"``).
@@ -127,11 +127,11 @@ class DeclaracionCalculateSummary(BaseModel):
 
 _DOWNSTREAM_STATUSES: frozenset[ModeloDraftStatus] = frozenset(
     {
-        ModeloDraftStatus.SUBMITTED,
-        ModeloDraftStatus.ACKNOWLEDGED,
-        ModeloDraftStatus.REJECTED,
-        ModeloDraftStatus.AMENDED,
-        ModeloDraftStatus.CANCELLED,
+        ModeloDraftStatus.PRESENTADA,
+        ModeloDraftStatus.ACEPTADA,
+        ModeloDraftStatus.RECHAZADA,
+        ModeloDraftStatus.ENMENDADO,
+        ModeloDraftStatus.ANULADO,
     }
 )
 """Statuses where the draft has left the calculate/approve/export flow."""
@@ -147,17 +147,17 @@ def _next_action_for(
         return DeclaracionCalculateNextAction.RESOLVE_BLOCKERS
     if status in _DOWNSTREAM_STATUSES:
         return DeclaracionCalculateNextAction.AMEND
-    if status is ModeloDraftStatus.APPROVAL_STALE:
+    if status is ModeloDraftStatus.APROBACION_CADUCADA:
         return DeclaracionCalculateNextAction.REFRESH_APPROVAL
-    if status is ModeloDraftStatus.APPROVED:
+    if status is ModeloDraftStatus.APROBADO:
         return DeclaracionCalculateNextAction.EXPORT
-    if status is ModeloDraftStatus.READY_TO_SUBMIT:
+    if status is ModeloDraftStatus.LISTO_PARA_PRESENTAR:
         return DeclaracionCalculateNextAction.APPROVE
     return DeclaracionCalculateNextAction.REVIEW
 
 
 def summarise_calculation(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     repair_hints: tuple[str, ...] = (),
     narrative: str | None = None,

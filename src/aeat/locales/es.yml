@@ -7,56 +7,82 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: "La AEAT rechazó emitir una nueva solicitud push de Cl@ve Móvil porque una petición de autenticación anterior aún está pendiente en el servidor."
+        pending_petition_blocked: La AEAT rechazó emitir una nueva solicitud push
+          de Cl@ve Móvil porque una petición de autenticación anterior aún está pendiente
+          en el servidor.
       suggestions:
-        reject_pending_request: "Abre la app Cl@ve en tu móvil, rechaza todas las peticiones pendientes y vuelve a ejecutar `aeat config auth test` (o espera hasta 5 minutos a que la AEAT las cancele automáticamente)."
+        reject_pending_request: Abre la app Cl@ve en tu móvil, rechaza todas las peticiones
+          pendientes y vuelve a ejecutar `aeat config auth test` (o espera hasta 5
+          minutos a que la AEAT las cancele automáticamente).
     sede:
       groi:
         suggestions:
-          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado el formulario GROI.
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar
+            si la AEAT ha cambiado el formulario GROI.
       nif_iva:
         suggestions:
-          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado el formulario NIF-IVA.
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar
+            si la AEAT ha cambiado el formulario NIF-IVA.
       renta_web_open:
         suggestions:
-          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado la página Renta WEB Open.
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar
+            si la AEAT ha cambiado la página Renta WEB Open.
   google:
     calc_sheets:
       errors:
-        api_call_failed: "La llamada a Google {action} ha fallado."
-        api_call_refused: "La llamada a Google {action} fue rechazada (HTTP {status})."
-        api_target_not_found: "El destino de Google {action} no se encontró."
-        googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador de Google no puede acceder a la API.
+        api_call_failed: La llamada a Google {action} ha fallado.
+        api_call_refused: La llamada a Google {action} fue rechazada (HTTP {status}).
+        api_target_not_found: El destino de Google {action} no se encontró.
+        googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador
+          de Google no puede acceder a la API.
     oauth_flow:
       errors:
-        browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento OAuth en el navegador.
+        browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento
+          OAuth en el navegador.
         client_config_refused: La configuración del cliente Google OAuth fue rechazada.
-        email_claim_missing: El id_token de Google se verificó pero no incluye la reclamación email.
+        email_claim_missing: El id_token de Google se verificó pero no incluye la
+          reclamación email.
         endpoint_unreachable: El endpoint OAuth de Google no es accesible.
-        id_token_missing: Google no devolvió un id_token; el consentimiento OAuth no incluyó los ámbitos openid+email.
-        id_token_module_not_importable: El módulo id_token de google-auth no se puede importar.
+        id_token_missing: Google no devolvió un id_token; el consentimiento OAuth
+          no incluyó los ámbitos openid+email.
+        id_token_module_not_importable: El módulo id_token de google-auth no se puede
+          importar.
         id_token_verification_failed: La verificación del id_token de Google ha fallado.
-        loopback_bind_failed: El receptor OAuth loopback local no pudo asignar un puerto.
-        oauthlib_not_importable: google-auth-oauthlib no se puede importar; el flujo OAuth no puede iniciarse.
-        scope_missing: La pantalla de consentimiento de Google se cerró sin conceder todos los ámbitos requeridos.
-        unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos está en modo inseguro y el perfil activo lleva un identificador fiscal español real.
+        loopback_bind_failed: El receptor OAuth loopback local no pudo asignar un
+          puerto.
+        oauthlib_not_importable: google-auth-oauthlib no se puede importar; el flujo
+          OAuth no puede iniciarse.
+        scope_missing: La pantalla de consentimiento de Google se cerró sin conceder
+          todos los ámbitos requeridos.
+        unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos
+          está en modo inseguro y el perfil activo lleva un identificador fiscal español
+          real.
       suggestions:
-        close_loopback_port: Cierra la aplicación que esté ocupando un puerto loopback huérfano y vuelve a intentarlo.
-        open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento impresa.
-        use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o cambia el perfil activo a un identificador fiscal sintético de prueba.
+        close_loopback_port: Cierra la aplicación que esté ocupando un puerto loopback
+          huérfano y vuelve a intentarlo.
+        open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento
+          impresa.
+        use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o cambia
+          el perfil activo a un identificador fiscal sintético de prueba.
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
     refresh:
       errors:
-        google_auth_not_importable: La librería google-auth no se puede importar; la renovación de OAuth Google no puede continuar.
-        reauth_required: La credencial OAuth de Google está marcada como pendiente de reautenticación; la ruta de renovación automática está cerrada.
+        google_auth_not_importable: La librería google-auth no se puede importar;
+          la renovación de OAuth Google no puede continuar.
+        reauth_required: La credencial OAuth de Google está marcada como pendiente
+          de reautenticación; la ruta de renovación automática está cerrada.
         refresh_failed: La renovación de Google OAuth ha fallado.
-        refresh_refused: Google OAuth rechazó la solicitud de renovación; el refresh token ya no es válido.
+        refresh_refused: Google OAuth rechazó la solicitud de renovación; el refresh
+          token ya no es válido.
         token_endpoint_unreachable: El endpoint de token de Google OAuth no es accesible.
       suggestions:
-        check_network: Comprueba la conectividad de red con los endpoints OAuth de Google y vuelve a intentarlo.
-      testing_project_cap_warning: "El refresh token de Google OAuth se acerca al límite de 7 días del proyecto en modo Testing (quedan unas {hours_remaining}h); vuelve a ejecutar `aeat config google login` para prolongar la vida útil de la credencial."
+        check_network: Comprueba la conectividad de red con los endpoints OAuth de
+          Google y vuelve a intentarlo.
+      testing_project_cap_warning: El refresh token de Google OAuth se acerca al límite
+        de 7 días del proyecto en modo Testing (quedan unas {hours_remaining}h); vuelve
+        a ejecutar `aeat config google login` para prolongar la vida útil de la credencial.
 aggregation:
   iva_ledger:
     errors:
@@ -104,10 +130,22 @@ application:
           proceso en curso o deja expirar el bloqueo si ese proceso ha fallado.
         lock_held_suggestion: Ejecuta `aeat config auth status --format json` para
           inspeccionar el bloqueo de autenticación activo.
+    clave_movil:
+      health:
+        operator_completion_required: Preparado; requiere finalización de Cl@ve mediada
+          por el operador.
     operator:
       errors:
+        dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
+          resuelve a un bucket de perfil registrado. Ejecuta `aeat config profile list`
+          para inspeccionar los perfiles registrados y después `aeat config profile
+          switch NAME` o `aeat config profile create NAME`.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
+        unreadable_active_profile: El perfil activo '%{active_profile}' tiene un manifiesto
+          de bucket pero no tiene un registro de perfil legible (status=%{status}).
+          Ejecuta `aeat config repair profile --clear-active --yes` y después cambia
+          a un perfil válido o créalo antes de configurar autenticación.
     provider_impact:
       certificate_ready: La autenticación con certificado está lista. El operador
         mantiene el mismo flujo de presentación en la CLI para lecturas respaldadas
@@ -303,6 +341,12 @@ cli:
         list_help: Listar declaraciones presentadas sin descargar artefactos
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
+      iva_wallet:
+        app_help: cli.app.live.iva_wallet.app_help
+        capture_history_help: cli.app.live.iva_wallet.capture_history_help
+        history_help: cli.app.live.iva_wallet.history_help
+        pull_help: cli.app.live.iva_wallet.pull_help
+        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
       limit_help: Número máximo de filas a capturar
       modelo_help: Código de modelo
       notifications:
@@ -554,8 +598,8 @@ cli:
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hay perfil activo. Ejecuta `aeat config init` antes de
-        usar comandos de datos del perfil.
+      no_active_profile: No hay perfil activo. Ejecuta `aeat config profile create
+        NAME` antes de usar comandos de datos del perfil.
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: Periodo no reconocido
   config:
@@ -588,10 +632,15 @@ cli:
       clear_locks_help: Limpiar bloqueos de adquisición de autenticación
       clear_sessions_help: Limpiar sesiones AEAT persistidas
       configure_help: Configurar el proveedor de autenticación activo
+      diagnostics:
+        help: cli.config.auth.diagnostics.help
+        id_help: cli.config.auth.diagnostics.id_help
+        list_help: cli.config.auth.diagnostics.list_help
+        show_help: cli.config.auth.diagnostics.show_help
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
-      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config init'
-        antes de configurar la autenticación.
+      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config profile
+        create NAME' antes de configurar la autenticación.
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
@@ -615,8 +664,8 @@ cli:
         (p. ej. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config init --tax-id
-        <NIF>' primero.
+      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
+        NAME --tax-id <NIF>' primero.
       unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
         profile list'' para ver las claves disponibles.'
     get:
@@ -742,8 +791,8 @@ cli:
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
-      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
-        first.
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
+        <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
         year / period.
       preflight_modelo_help: Modelo code (e.g. 303).
@@ -753,7 +802,7 @@ cli:
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
-        profile remove %{name} --yes' para confirmar.
+        profile delete %{name} --yes' para confirmar.
       remove_yes_help: Confirma explícitamente la operación de retirada
       rename_display_name_help: Etiqueta visible para el operador; por defecto, la
         existente
@@ -786,6 +835,10 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
+      profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
+        cuando apunta a estado de perfil ilegible.
+      profile_help: Inspeccionar y reparar el puntero de perfil activo.
+      profile_requires_yes: Pasa --yes para limpiar el puntero de perfil activo.
       quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
         destructiva, requiere --yes)
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
@@ -799,6 +852,7 @@ cli:
         --yes para confirmar o pasa --dry-run para inspeccionar la huella.
       reset_state_yes_help: Confirmar explícitamente el reinicio del estado del flujo
         de trabajo
+      yes_help: Confirmar la reparación.
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
@@ -823,7 +877,8 @@ cli:
           tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
     status:
-      empty_profile: Sin perfil configurado. Ejecuta `aeat config init` para empezar.
+      empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
+        para empezar.
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
     unset:
@@ -845,23 +900,28 @@ cli:
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
-      auth_label: cli.diagnostics.repair.auth_label
-      checks_heading: cli.diagnostics.repair.checks_heading
-      detail_label: cli.diagnostics.repair.detail_label
-      logs_label: cli.diagnostics.repair.logs_label
-      next_label: cli.diagnostics.repair.next_label
-      note_label: cli.diagnostics.repair.note_label
-      overall_label: cli.diagnostics.repair.overall_label
-      profile_label: cli.diagnostics.repair.profile_label
-      python_label: cli.diagnostics.repair.python_label
-      version_label: cli.diagnostics.repair.version_label
+      auth_label: Autenticación
+      checks_heading: Comprobaciones
+      detail_label: Detalle
+      logs_label: Logs
+      next_label: Siguiente
+      note_label: Nota
+      overall_label: Estado
+      profile_label: Perfil
+      python_label: Python
+      version_label: Versión
     summary:
-      auth_no_session: cli.diagnostics.summary.auth_no_session
-      auth_none: cli.diagnostics.summary.auth_none
-      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      auth_no_session: El proveedor de autenticación %{provider} no tiene una sesión
+        lista
+      auth_none: La autenticación no está configurada
+      auth_session_ready: Sesión de autenticación lista para %{provider}
+      auth_state_unreadable: No se puede comprobar la preparación de autenticación
+        hasta que el estado seguro del flujo sea legible.
       profile_keys_set: cli.diagnostics.summary.profile_keys_set
       profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
-      profile_none: cli.diagnostics.summary.profile_none
+      profile_none: No hay perfil configurado
+      profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
+      profile_unreadable: 'No se puede leer el perfil: %{status}'
       registry_counts: cli.diagnostics.summary.registry_counts
       registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
       registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
@@ -869,7 +929,8 @@ cli:
       registry_unavailable: cli.diagnostics.summary.registry_unavailable
       secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
       secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
-      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable}
+        fila(s) legible(s)'
       state_backend_readable: cli.diagnostics.summary.state_backend_readable
       state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
       venv_in_sync: cli.diagnostics.summary.venv_in_sync
@@ -1170,18 +1231,18 @@ cli:
         diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
         diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
         first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
-        first_run_status: cli.operator_surface.help.config.first_run_status
+        first_run_edit: cli.operator_surface.help.config.first_run_edit
         footer: cli.operator_surface.help.config.footer
         heading: cli.operator_surface.help.config.heading
         paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
+        profile_census: cli.operator_surface.help.config.profile_census
         profile_delete: cli.operator_surface.help.config.profile_delete
         profile_duplicate: cli.operator_surface.help.config.profile_duplicate
         profile_list: cli.operator_surface.help.config.profile_list
-        profile_preflight: cli.operator_surface.help.config.profile_preflight
         profile_rename: cli.operator_surface.help.config.profile_rename
+        profile_show: cli.operator_surface.help.config.profile_show
+        profile_status: cli.operator_surface.help.config.profile_status
         profile_switch: cli.operator_surface.help.config.profile_switch
-        profile_validate: cli.operator_surface.help.config.profile_validate
-        profile_view: cli.operator_surface.help.config.profile_view
         section_authentication: cli.operator_surface.help.config.section_authentication
         section_diagnostics: cli.operator_surface.help.config.section_diagnostics
         section_first_run: cli.operator_surface.help.config.section_first_run
@@ -1270,8 +1331,8 @@ cli:
         contacta con AEAT.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
-      ''aeat config profile set <clave> <valor>'' o usa --allow-incomplete para ver
-      el calendario calculado bajo valores por defecto.'
+      ''aeat config profile edit NAME'' o usa --allow-incomplete para ver el calendario
+      calculado bajo valores por defecto.'
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
@@ -1299,8 +1360,8 @@ cli:
       next_landing_command: '  aeat --help - volver a la guia de comandos.'
       next_review_command: '  aeat app ledger review - revisar filas importadas.'
       profile_active: Estas trabajando en el perfil `%{profile}`.
-      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config init`
-        antes de importar datos.
+      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config profile
+        create NAME` antes de importar datos.
       storage_ok: El almacenamiento local cifrado se puede leer con la clave maestra
         actual.
       storage_warning: '%{count} fila(s) cifradas del almacenamiento local no se pueden
@@ -1443,7 +1504,7 @@ cli:
     app_help: 'Asistente de flujo fiscal español
 
 
-      Quickstart: aeat config init --tax-id NIF --activity ACTIVIDAD'
+      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVIDAD'
     app_help_help: Mostrar ayuda del flujo de app
     debug_help: Mostrar logs internos de depuración en stderr
     detail_help: Mostrar también el resumen detallado del registro
@@ -1462,8 +1523,8 @@ cli:
         filas importadas.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprobar el perfil
         activo antes del trabajo operativo.'
-      quick_start_setup_needed: '  1. `aeat config init` - crear primero tu perfil
-        fiscal local.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primero
+        tu perfil fiscal local.'
       quick_start_status: '  2. `aeat app overview status` - leer el estado actual
         del espacio y sus diagnosticos.'
       section_config: '  config - perfil, autenticación y diagnósticos'
@@ -1622,7 +1683,7 @@ topic:
   profile:
     body: El perfil local contiene tu identificación fiscal (NIF), actividad principal,
       régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat config profile set <clave> <valor>'.
+      Edítalo con 'aeat config profile edit NAME'.
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
@@ -1681,10 +1742,10 @@ wizard:
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
     unsupported_console: "No pude abrir el asistente guiado en esta ejecución.\nTodavía\
       \ no se ha guardado nada.\n\nPrueba otra vez el asistente desde una sesión de\
-      \ terminal interactiva:\n  aeat config init\n\nSi el estado del perfil puede\
-      \ estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\nPara\
-      \ descartar solo el estado local del perfil y empezar de nuevo:\n  aeat config\
-      \ reset --scope profile --yes"
+      \ terminal interactiva:\n  aeat config profile create NAME\n\nSi el estado del\
+      \ perfil puede estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\
+      \nPara descartar solo el estado local del perfil y empezar de nuevo:\n  aeat\
+      \ config reset --scope profile --yes"
   other:
     description: Other configuration options
     section:

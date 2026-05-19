@@ -4,6 +4,7 @@ number = "33"
 label = "Mod. 40.3 LIS — Minimo a ingresar (CN >= 10 millones euros)"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_3_minimo_a_ingresar"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-2019-2022-page-02-casilla-33"]

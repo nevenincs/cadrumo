@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...domain._identifiers import ModeloIdentifier
 
@@ -27,7 +27,17 @@ class FilingHistory(BaseModel):
 
     model_config = _STRICT_FROZEN
 
+    modelo: ModeloIdentifier
     entries: tuple[FilingHistoryEntry, ...]
+
+    @model_validator(mode="after")
+    def _entries_match_modelo(self) -> FilingHistory:
+        for entry in self.entries:
+            if entry.modelo != self.modelo:
+                raise ValueError(
+                    f"FilingHistory.modelo={self.modelo!r} disagrees with entry modelo={entry.modelo!r}",
+                )
+        return self
 
 
 __all__ = [

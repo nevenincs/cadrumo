@@ -14,11 +14,11 @@ from decimal import Decimal
 import pytest
 
 from . import (
-    IvaResidency,
+    IvaTerritorialScope,
     CustomerTaxStatus,
     EUMemberState,
     InvoiceKind,
-    IvaResidency,
+    IvaTerritorialScope,
     TransactionKind,
     IvaCategory,
     IvaInvoiceClassificationCriteria,
@@ -33,8 +33,8 @@ def _criteria(**overrides: object) -> IvaInvoiceClassificationCriteria:
     """Build a baseline ES-to-ES B2B goods ISSUED criteria with ``overrides`` applied."""
     base: dict[str, object] = {
         "transaction_date": date(2025, 6, 15),
-        "issuer_residency": IvaResidency.ES_MAINLAND,
-        "customer_residency": IvaResidency.ES_MAINLAND,
+        "issuer_residency": IvaTerritorialScope.ES_MAINLAND,
+        "customer_residency": IvaTerritorialScope.ES_MAINLAND,
         "customer_tax_status": CustomerTaxStatus.B2B_VAT_REGISTERED,
         "kind": TransactionKind.GOODS,
         "direction": InvoiceKind.ISSUED,
@@ -115,7 +115,7 @@ def test_r05_domestic_super_reduced_4() -> None:
 def test_r10_intra_community_supply_goods() -> None:
     result = classify_iva(
         _criteria(
-            customer_residency=IvaResidency.EU_MEMBER,
+            customer_residency=IvaTerritorialScope.EU_MEMBER,
             customer_member_state=EUMemberState.DE,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
@@ -128,9 +128,9 @@ def test_r10_intra_community_supply_goods() -> None:
 def test_r11_intra_community_acquisition_goods() -> None:
     result = classify_iva(
         _criteria(
-            issuer_residency=IvaResidency.EU_MEMBER,
+            issuer_residency=IvaTerritorialScope.EU_MEMBER,
             issuer_member_state=EUMemberState.DE,
-            customer_residency=IvaResidency.ES_MAINLAND,
+            customer_residency=IvaTerritorialScope.ES_MAINLAND,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.RECEIVED,
         )
@@ -142,7 +142,7 @@ def test_r11_intra_community_acquisition_goods() -> None:
 def test_r12_services_b2b_eu_outbound_is_not_subject_in_es() -> None:
     result = classify_iva(
         _criteria(
-            customer_residency=IvaResidency.EU_MEMBER,
+            customer_residency=IvaTerritorialScope.EU_MEMBER,
             customer_member_state=EUMemberState.FR,
             kind=TransactionKind.SERVICES_GENERAL,
             direction=InvoiceKind.ISSUED,
@@ -155,9 +155,9 @@ def test_r12_services_b2b_eu_outbound_is_not_subject_in_es() -> None:
 def test_r13_services_b2b_eu_inbound_reverse_charge() -> None:
     result = classify_iva(
         _criteria(
-            issuer_residency=IvaResidency.EU_MEMBER,
+            issuer_residency=IvaTerritorialScope.EU_MEMBER,
             issuer_member_state=EUMemberState.FR,
-            customer_residency=IvaResidency.ES_MAINLAND,
+            customer_residency=IvaTerritorialScope.ES_MAINLAND,
             kind=TransactionKind.SERVICES_GENERAL,
             direction=InvoiceKind.RECEIVED,
         )
@@ -169,7 +169,7 @@ def test_r13_services_b2b_eu_inbound_reverse_charge() -> None:
 def test_r14_digital_b2c_oss() -> None:
     result = classify_iva(
         _criteria(
-            customer_residency=IvaResidency.EU_MEMBER,
+            customer_residency=IvaTerritorialScope.EU_MEMBER,
             customer_member_state=EUMemberState.IT,
             customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
             kind=TransactionKind.SERVICES_DIGITAL_B2C_OSS,
@@ -183,7 +183,7 @@ def test_r14_digital_b2c_oss() -> None:
 def test_r20_export_goods() -> None:
     result = classify_iva(
         _criteria(
-            customer_residency=IvaResidency.THIRD_COUNTRY,
+            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
         )
@@ -195,8 +195,8 @@ def test_r20_export_goods() -> None:
 def test_r21_import_goods() -> None:
     result = classify_iva(
         _criteria(
-            issuer_residency=IvaResidency.THIRD_COUNTRY,
-            customer_residency=IvaResidency.ES_MAINLAND,
+            issuer_residency=IvaTerritorialScope.THIRD_COUNTRY,
+            customer_residency=IvaTerritorialScope.ES_MAINLAND,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.RECEIVED,
         )
@@ -207,7 +207,7 @@ def test_r21_import_goods() -> None:
 def test_r22_services_outbound_third_country() -> None:
     result = classify_iva(
         _criteria(
-            customer_residency=IvaResidency.THIRD_COUNTRY,
+            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
             kind=TransactionKind.SERVICES_GENERAL,
             direction=InvoiceKind.ISSUED,
         )
@@ -217,7 +217,7 @@ def test_r22_services_outbound_third_country() -> None:
 
 
 def test_r30_canarias_issuer_short_circuits_to_not_subject() -> None:
-    result = classify_iva(_criteria(issuer_residency=IvaResidency.ES_CANARIAS))
+    result = classify_iva(_criteria(issuer_residency=IvaTerritorialScope.ES_CANARIAS))
     assert result.category is IvaCategory.DOMESTIC_NOT_SUBJECT
     assert result.matched_rule_id == "R30_canarias_ceuta_melilla"
 
@@ -226,9 +226,9 @@ def test_r99_fallthrough_returns_unknown() -> None:
     """A non-matching THIRD_COUNTRY-to-EU pair has no rule ⇒ UNKNOWN."""
     result = classify_iva(
         _criteria(
-            issuer_residency=IvaResidency.EU_MEMBER,
+            issuer_residency=IvaTerritorialScope.EU_MEMBER,
             issuer_member_state=EUMemberState.DE,
-            customer_residency=IvaResidency.EU_MEMBER,
+            customer_residency=IvaTerritorialScope.EU_MEMBER,
             customer_member_state=EUMemberState.FR,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
@@ -253,8 +253,8 @@ def test_eu_member_residency_requires_member_state() -> None:
     with pytest.raises(ValueError, match=r"member_state|EU_MEMBER|residency"):
         IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaResidency.EU_MEMBER,
-            customer_residency=IvaResidency.ES_MAINLAND,
+            issuer_residency=IvaTerritorialScope.EU_MEMBER,
+            customer_residency=IvaTerritorialScope.ES_MAINLAND,
             customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.RECEIVED,
@@ -267,8 +267,8 @@ def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
     with pytest.raises(ValueError, match="rate_tier is required"):
         IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaResidency.ES_MAINLAND,
-            customer_residency=IvaResidency.ES_MAINLAND,
+            issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+            customer_residency=IvaTerritorialScope.ES_MAINLAND,
             customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
@@ -281,8 +281,8 @@ def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
     # Should NOT raise: construction RC routes to DOMESTIC_REVERSE_CHARGE.
     criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IvaResidency.ES_MAINLAND,
-        customer_residency=IvaResidency.ES_MAINLAND,
+        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+        customer_residency=IvaTerritorialScope.ES_MAINLAND,
         customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
         kind=TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
         direction=InvoiceKind.ISSUED,
@@ -296,8 +296,8 @@ def test_es_to_es_immovable_property_does_not_require_rate_tier() -> None:
     """Immovable property routes to DOMESTIC_EXEMPT (R04) — rate_tier not needed."""
     criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IvaResidency.ES_MAINLAND,
-        customer_residency=IvaResidency.ES_MAINLAND,
+        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+        customer_residency=IvaTerritorialScope.ES_MAINLAND,
         customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
         kind=TransactionKind.IMMOVABLE_PROPERTY,
         direction=InvoiceKind.ISSUED,
@@ -312,8 +312,8 @@ def test_cross_border_criteria_do_not_require_rate_tier() -> None:
     # Should NOT raise: ES->DE intra-community supply doesn't need rate_tier.
     criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IvaResidency.ES_MAINLAND,
-        customer_residency=IvaResidency.EU_MEMBER,
+        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+        customer_residency=IvaTerritorialScope.EU_MEMBER,
         customer_member_state=EUMemberState.DE,
         customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
         kind=TransactionKind.GOODS,
@@ -341,7 +341,7 @@ def test_classification_rate_resolution_returns_none_for_export() -> None:
     """Exports carry no domestic rate; rate is None."""
     result = classify_iva(
         _criteria(
-            customer_residency=IvaResidency.THIRD_COUNTRY,
+            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
         )

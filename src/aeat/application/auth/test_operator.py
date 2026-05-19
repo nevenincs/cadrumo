@@ -82,14 +82,14 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket() -> None
     :class:`AuthConfigureNoActiveBucketError` when no active profile
     bucket exists. The bucket-event-history ADR requires every event
     to be scoped to a bucket id; running provider configuration before
-    ``aeat config init`` activates a profile would either silently drop
+    ``aeat config profile create NAME`` activates a profile would either silently drop
     the audit event or require deferred replay. Surfacing the refusal
     at the application service keeps the bootstrap order explicit and
     leaves no audit hole."""
 
     from ._operator import AuthConfigureNoActiveBucketError
 
-    with pytest.raises(AuthConfigureNoActiveBucketError, match=r"aeat config init"):
+    with pytest.raises(AuthConfigureNoActiveBucketError, match=r"aeat config profile create NAME"):
         configure_operator_auth("certificate")
 
     catalogue = BucketEventHistoryRepository().load()

@@ -4,6 +4,7 @@ number = "03"
 label = "Mod. 40.2 LIS — A ingresar"
 section = ["liquidacion", "modalidad_40_2_lis"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_2_a_ingresar"
 required = false
 input_kind = "computed"
 formula = "modelo-202-2019-2022-modalidad-40-2-a-ingresar"

@@ -53,6 +53,7 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
@@ -69,6 +70,7 @@ def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
     monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
@@ -104,8 +106,7 @@ def _seed_profile(
     written through the profile lifecycle service.
 
     ``iva.regime`` defaults to ``GENERAL`` so the seeded profile
-    matches the operator's state after a quiet, no-override
-    ``aeat config init`` run.
+    matches the operator's state after a quiet profile-create run.
     """
 
     from aeat.application.user_profile._testing import register_minimal_profile
@@ -162,17 +163,20 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     )
     assert init_result.exit_code == 0, init_result.output
 
+    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.user_profile._orchestration import set_active_field
     from aeat.domain.user_profile import UserProfileFact
 
-    workflow_state_repository().update(
-        lambda current: set_active_field(
-            current, UserProfileFact(path="preferences.output_language", value="en")
+    provider = get_master_key_provider()
+    with activate_master_key_provider(provider):
+        workflow_state_repository().update(
+            lambda current: set_active_field(
+                current, UserProfileFact(path="preferences.output_language", value="en")
+            )
         )
-    )
 
-    refreshed = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
-    assert fact_value(refreshed, "preferences.output_language") == "en"
+        refreshed = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+        assert fact_value(refreshed, "preferences.output_language") == "en"
 
     status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
@@ -180,11 +184,12 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     assert status_payload["active_profile"] == "operator"
     assert status_payload["iva_regime"] == "GENERAL"
 
-    state = workflow_state_repository().load()
-    assert state.profiles["operator"].bucket_id == "operator"
-    stored = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
-    assert fact_value(stored, "identity.tax_id") == "00000000T"
-    assert fact_value(stored, "preferences.output_language") == "en"
+    with activate_master_key_provider(get_master_key_provider()):
+        state = workflow_state_repository().load()
+        assert state.active_profile_bucket_id() == "operator"
+        stored = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+        assert fact_value(stored, "identity.tax_id") == "00000000T"
+        assert fact_value(stored, "preferences.output_language") == "en"
 
     calendar_result = _invoke(
         [
@@ -192,8 +197,7 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
             "json",
             "app",
             "overview",
-            "status",
-            "--calendar",
+            "calendar",
             "--from",
             "2026-01-01",
             "--to",
@@ -203,9 +207,10 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     )
     assert calendar_result.exit_code == 0, calendar_result.output
     calendar_payload = json.loads(_json_output(calendar_result))
-    assert "iva.regime" in calendar_payload["calendar"]["completeness"]["explicitly_set_keys"]
+    assert "iva.regime" in calendar_payload["completeness"]["explicitly_set_keys"]
 
-    filing_profile = load_default_filing_profile()
+    with activate_master_key_provider(get_master_key_provider()):
+        filing_profile = load_default_filing_profile()
     assert filing_profile.tax_id == "00000000T"
 
 
@@ -239,7 +244,8 @@ def test_root_no_args_renders_help_successfully(monkeypatch: pytest.MonkeyPatch,
     result = _invoke([])
 
     assert result.exit_code == 0, result.output
-    assert "aeat config init" in result.output
+    assert "aeat config profile create NAME" in result.output
+    assert ("aeat config " + "init") not in result.output
     assert "aeat app overview status" in result.output
     assert "aeat app ledger import" in result.output
 
@@ -250,6 +256,7 @@ def test_retired_commands_are_not_registered() -> None:
         ["filing", "--help"],
         ["bootstrap", "--help"],
         ["repair", "--help"],
+        ["config", "init", "--help"],
         ["config", "doctor", "--help"],
         ["config", "doctor-logs", "--help"],
         ["config", "repair-logs", "--help"],
@@ -392,14 +399,14 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
     commands = [
         ["--help"],
         ["config", "--help"],
-        ["config", "init", "--help"],
+        ["config", "profile", "create", "--help"],
         ["config", "profile", "status", "--help"],
         ["config", "auth", "--help"],
         ["config", "auth", "providers", "--help"],
         ["config", "auth", "configure", "--help"],
         ["config", "profile", "--help"],
-        ["config", "profile", "set", "--help"],
-        ["config", "profile", "get", "--help"],
+        ["config", "profile", "edit", "--help"],
+        ["config", "profile", "show", "--help"],
         ["config", "repair", "--help"],
         ["config", "repair", "connectivity", "--help"],
         ["app", "--help"],
@@ -464,6 +471,20 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     tmp_path: Path,
 ) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
+    created = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+        ]
+    )
+    assert created.exit_code == 0, created.output
 
     configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
     unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
@@ -653,45 +674,50 @@ def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.
     assert "hashed_lookup.compute" not in overview.output
 
 
-def test_config_profile_set_requires_active_profile_with_typed_error(
+def test_config_profile_show_requires_active_profile_with_typed_error(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """``aeat config profile set`` rejects assignments when no profile is selected.
+    """``aeat config profile show`` rejects inspection when no profile is selected.
 
-    The set verb writes into the active profile bucket; with no
-    active profile, the operation is refused with a typed CLI usage
-    error referencing the bootstrap command they must run first.
+    The show verb reads the active profile bucket; with no active
+    profile, the operation is refused with a typed CLI usage error.
     """
 
     _isolate_user_cli(monkeypatch, tmp_path)
 
-    result = _invoke(["config", "profile", "set", "identity.tax_id", "12345678Z"])
+    result = _invoke(["config", "profile", "show"])
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
 
 
-def test_config_profile_set_iva_regime_round_trips_to_deadline_engine(
+def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Setting ``iva.regime GENERAL`` must reach the deadline engine as IVARegime.GENERAL.
-
-    Round-trip: ``aeat config profile set iva.regime GENERAL`` -> stored in
-    workflow state -> ``autonomo_profile_from_mapping`` ->
-    ``IVARegime.GENERAL``. The wizard's SELECT validator only accepts
-    the canonical uppercase token form.
-    """
+    """Profile creation must persist ``iva.regime`` for the deadline engine."""
     from aeat.application.user_profile._projections import projection_for_autonomo
     from aeat.application.workflow import workflow_state_repository
     from aeat.domain.deadlines import IVARegime
 
     _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="operator", activity="Servicios")
-
-    set_result = _invoke(["config", "profile", "set", "iva.regime", "GENERAL"])
-    assert set_result.exit_code == 0, set_result.output
+    created = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--iva-regime",
+            "GENERAL",
+        ]
+    )
+    assert created.exit_code == 0, created.output
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -700,30 +726,36 @@ def test_config_profile_set_iva_regime_round_trips_to_deadline_engine(
     assert profile.iva_regime is IVARegime.GENERAL
 
 
-def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
+def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_engine(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Boolean profile keys must survive the config-profile-set store and reach the engine.
-
-    The engine reads ``does_intracomunitario`` as a literal key. The
-    user-cli normaliser preserves the underscore form so the stored
-    record matches the engine lookup; this test pins the round-trip
-    through ``aeat config profile set``.
-    """
+    """Boolean profile flags must survive creation and reach the engine."""
     from aeat.application.user_profile._projections import projection_for_autonomo
     from aeat.application.workflow import workflow_state_repository
 
     _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="operator", activity="Servicios")
+    created = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--does-intracomunitario",
+        ]
+    )
+    assert created.exit_code == 0, created.output
 
-    set_result = _invoke(["config", "profile", "set", "iva.does_intracomunitario", "true"])
-    assert set_result.exit_code == 0, set_result.output
-
-    get_result = _invoke(["--format", "json", "config", "profile", "get", "iva.does_intracomunitario"])
-    assert get_result.exit_code == 0, get_result.output
-    get_payload = json.loads(_json_output(get_result))
-    assert get_payload["value"] == "true"
+    show_result = _invoke(["--format", "json", "config", "profile", "show"])
+    assert show_result.exit_code == 0, show_result.output
+    show_payload = json.loads(_json_output(show_result))
+    facts = {row["path"]: row["value"] for row in show_payload["facts"]}
+    assert facts["iva.does_intracomunitario"] == "true"
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()

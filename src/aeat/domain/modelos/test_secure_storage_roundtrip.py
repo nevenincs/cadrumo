@@ -73,7 +73,7 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
         updated_at=now,
         # Non-default lifecycle state so a save-drops-state regression
         # would surface as state mismatch on load (default is DRAFT).
-        state=WorkUnitState.DISCARDED,
+        state=WorkUnitState.DESCARTADO,
         # Discard metadata is required when state is DISCARDED;
         # populating it covers all three defaultable optional fields
         # at once.
@@ -122,7 +122,7 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
             assert loaded_unit.filing_year == 2025
             assert loaded_unit.period == "1T"
             assert loaded_unit.revision_id == "2025-y-siguientes"
-            assert loaded_unit.state is WorkUnitState.DISCARDED
+            assert loaded_unit.state is WorkUnitState.DESCARTADO
             assert loaded_unit.work_unit_id == work_unit.work_unit_id
             # Discard metadata survives the cycle; a regression that
             # dropped any of these three on save would leave them as
@@ -196,13 +196,13 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
                 envelope = _json.loads(row.payload.decode("utf-8"))
                 work_units = envelope["payload"]["work_units"]
                 unit_dict = work_units[work_unit.work_unit_id]
-                assert unit_dict["state"] == "discarded", (
-                    "fixture must serialise state as 'discarded' for this "
+                assert unit_dict["state"] == "descartado", (
+                    "fixture must serialise state as 'descartado' for this "
                     "proof test to be meaningful"
                 )
-                # Flip state back to draft while leaving discard metadata
-                # in place. The DRAFT invariant must trip on load.
-                unit_dict["state"] = "draft"
+                # Flip state back to borrador while leaving discard metadata
+                # in place. The BORRADOR invariant must trip on load.
+                unit_dict["state"] = "borrador"
                 row.payload = _json.dumps(envelope).encode("utf-8")
 
             regression_caught = False
@@ -212,7 +212,7 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: flipping state from "
-                "DISCARDED to DRAFT while retaining discard metadata did "
+                "DESCARTADO to BORRADOR while retaining discard metadata did "
                 "NOT surface on load. The work-unit catalogue boundary "
                 "is tautological and the lifecycle state machine is not "
                 "actually enforced post-persistence."

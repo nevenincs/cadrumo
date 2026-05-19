@@ -13,8 +13,9 @@ from types import MappingProxyType
 from pydantic import ValidationError
 
 from ...core.resources import bundled_path
-from ._schema import EUMemberState, IvaRateRecord, IvaRateKind
+from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
+
 
 def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
     """Load VAT rates from the committed registry file.
@@ -23,14 +24,14 @@ def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tupl
     `bundled_path` boundary stays the single resolution surface.
     """
 
-    target = path if path is not None else bundled_path("registry", "aeat", "vat", "rates.toml")
+    target = path if path is not None else bundled_path("registry", "aeat", "iva", "rates.toml")
     resolved = target.resolve()
     stat = resolved.stat()
-    return _load_vat_rate_table_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _load_iva_rate_table_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
 @lru_cache(maxsize=16)
-def _load_vat_rate_table_cached(
+def _load_iva_rate_table_cached(
     path: str,
     byte_count: int,
     modified_ns: int,

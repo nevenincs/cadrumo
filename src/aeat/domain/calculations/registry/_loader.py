@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import tomllib
 from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
@@ -41,6 +43,29 @@ _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     }
 )
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
+ModeloSourceLayout = Literal["single_file", "directory"]
+ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloRevisionSource:
+    """On-disk source for one modelo revision before schema validation."""
+
+    revision_id: str
+    layout: ModeloRevisionSourceLayout
+    path: Path
+    fragment_paths: tuple[Path, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloSource:
+    """On-disk source for one modelo before schema validation."""
+
+    modelo_id: str
+    layout: ModeloSourceLayout
+    path: Path
+    manifest_path: Path
+    revision_sources: tuple[ModeloRevisionSource, ...] = ()
 
 
 def _read_toml(path: Path) -> dict[str, object]:
@@ -147,6 +172,25 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
         for path in sorted(revisions_dir.rglob("*.toml")):
             fingerprints.append(_toml_fingerprint(path))
     return _load_modelo_directory_cached(str(resolved), tuple(fingerprints))
+
+
+def load_modelo_path(path: Path) -> ModeloDefinition:
+    """Load a modelo from either supported on-disk layout."""
+
+    resolved = path.resolve()
+    if resolved.is_file():
+        return load_modelo_file(resolved)
+    if resolved.is_dir():
+        return load_modelo_directory(resolved)
+    raise RegistryLoadError(f"{resolved}: modelo source does not exist")
+
+
+def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
+    """Load a modelo from a discovered source descriptor."""
+
+    if source.layout == "single_file":
+        return load_modelo_file(source.path)
+    return load_modelo_directory(source.path)
 
 
 @lru_cache(maxsize=64)
@@ -457,6 +501,98 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
     return _load_registry_tree_cached(str(resolved), fingerprints)
 
 
+def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
+    """Discover modelo source layouts under a ``modelos/`` directory.
+
+    This is the generic source-layout contract for the registry: callers
+    can reason about single-file modelos, directory-mode modelos,
+    per-revision files, and fragmented revision directories without
+    special-casing a modelo id.
+    """
+
+    resolved = modelos_dir.resolve()
+    sources: list[ModeloSource] = []
+    seen_modelo_ids: dict[str, ModeloSource] = {}
+    for path in sorted(resolved.glob("*.toml")):
+        modelo = load_modelo_file(path)
+        source = ModeloSource(
+            modelo_id=modelo.id,
+            layout="single_file",
+            path=path.resolve(),
+            manifest_path=path.resolve(),
+        )
+        _append_modelo_source(source, sources, seen_modelo_ids)
+    if resolved.is_dir():
+        for entry in sorted(resolved.iterdir()):
+            if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
+                continue
+            modelo = load_modelo_directory(entry)
+            source = ModeloSource(
+                modelo_id=modelo.id,
+                layout="directory",
+                path=entry.resolve(),
+                manifest_path=(entry / "manifest.toml").resolve(),
+                revision_sources=_discover_revision_sources(entry / "revisions"),
+            )
+            _append_modelo_source(source, sources, seen_modelo_ids)
+    return tuple(sources)
+
+
+def _append_modelo_source(
+    source: ModeloSource,
+    sources: list[ModeloSource],
+    seen_modelo_ids: dict[str, ModeloSource],
+) -> None:
+    previous = seen_modelo_ids.get(source.modelo_id)
+    if previous is not None:
+        raise RegistryLoadError(
+            f"{source.path}: modelo {source.modelo_id!r} also declared at {previous.path}; "
+            "remove one of the two layouts"
+        )
+    seen_modelo_ids[source.modelo_id] = source
+    sources.append(source)
+
+
+def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSource, ...]:
+    if not revisions_dir.is_dir():
+        return ()
+    sources: list[ModeloRevisionSource] = []
+    for path in sorted(revisions_dir.glob("*.toml")):
+        rev_data = _freeze_toml(_read_toml(path))
+        file_revisions = rev_data.get("revisions")
+        if not isinstance(file_revisions, dict) or not file_revisions:
+            raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
+        for revision_id in sorted(file_revisions):
+            if not isinstance(revision_id, str):
+                raise RegistryLoadError(f"{path}: revision key must be a string")
+            sources.append(
+                ModeloRevisionSource(
+                    revision_id=revision_id,
+                    layout="revision_file",
+                    path=path.resolve(),
+                    fragment_paths=(path.resolve(),),
+                )
+            )
+    for path in sorted(revisions_dir.iterdir()):
+        if not path.is_dir():
+            continue
+        revision_manifest = path / "revision.toml"
+        fragment_paths = (revision_manifest.resolve(),) if revision_manifest.is_file() else ()
+        fragment_paths = (
+            *fragment_paths,
+            *tuple(p.resolve() for p in sorted(path.rglob("*.toml")) if p != revision_manifest),
+        )
+        sources.append(
+            ModeloRevisionSource(
+                revision_id=path.name,
+                layout="fragment_directory",
+                path=path.resolve(),
+                fragment_paths=fragment_paths,
+            )
+        )
+    return tuple(sources)
+
+
 def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int, int], ...]:
     """Walk ``resolved`` and return ``(path, size, mtime)`` fingerprints for the lru_cache key.
 
@@ -532,27 +668,7 @@ def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, .
     loader cannot tell which layout is authoritative, so it raises
     instead of silently picking one.
     """
-    modelos: list[ModeloDefinition] = []
-    seen_modelo_ids: set[str] = set()
-    for path in sorted(modelos_dir.glob("*.toml")):
-        modelo = load_modelo_file(path)
-        if modelo.id in seen_modelo_ids:
-            raise RegistryLoadError(f"{path}: modelo {modelo.id!r} declared more than once")
-        seen_modelo_ids.add(modelo.id)
-        modelos.append(modelo)
-    if modelos_dir.is_dir():
-        for entry in sorted(modelos_dir.iterdir()):
-            if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
-                continue
-            modelo = load_modelo_directory(entry)
-            if modelo.id in seen_modelo_ids:
-                raise RegistryLoadError(
-                    f"{entry}: modelo {modelo.id!r} also declared as a single-file "
-                    f"modelos/{modelo.id}.toml; remove one of the two layouts"
-                )
-            seen_modelo_ids.add(modelo.id)
-            modelos.append(modelo)
-    return tuple(modelos)
+    return tuple(load_modelo_source(source) for source in discover_modelo_sources(modelos_dir))
 
 
 def _toml_fingerprint(path: Path) -> tuple[str, int, int]:

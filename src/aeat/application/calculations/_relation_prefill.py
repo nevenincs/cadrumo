@@ -33,7 +33,7 @@ from typing import Final
 
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
 from ...core.logging import get_logger
-from ...domain.calculations.registry._bindings import RegistryFilingObservation
+from ...domain.calculations.registry._bindings import RegistryModeloObservation
 from ...domain.calculations.registry._errors import RegistryValidationError
 from ...domain.calculations.registry._relations import (
     relation_source_requirements,
@@ -50,7 +50,7 @@ def _gather_observations_for_snapshot(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository,
-) -> tuple[RegistryFilingObservation, ...]:
+) -> tuple[RegistryModeloObservation, ...]:
     """Collect every observation a relation in `snapshot.revision` could need.
 
     Uses the registry relation requirement resolver to compute the set of
@@ -60,7 +60,7 @@ def _gather_observations_for_snapshot(
     in one pass.
     """
 
-    needed: dict[tuple[str, int, str], RegistryFilingObservation] = {}
+    needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
     requirements = relation_source_requirements(
         snapshot.revision,
         filing_year=snapshot.filing_year,

@@ -168,7 +168,7 @@ class DeadlineChecker(Protocol):
 
 
 @runtime_checkable
-class FilingProfile(Protocol):
+class ModeloProfile(Protocol):
     """The taxpayer profile a draft is built for.
 
     Only the attributes :mod:`aeat.application.filing` actually consumes are
@@ -189,5 +189,5 @@ class FilingProfile(Protocol):
 
 # A typed alias for the raw input mapping passed into builders.
 # Mapping not dict so callers may pass any read-only mapping.
-FilingInputs = Mapping[str, object]
+ModeloInputs = Mapping[str, object]
 """Read-only input mapping for casilla values handed to a filing builder."""

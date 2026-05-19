@@ -20,5 +20,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.application.filing.errors
    aeat.application.filing.runtime
    aeat.application.filing.testing

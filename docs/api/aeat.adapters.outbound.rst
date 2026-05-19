@@ -15,3 +15,4 @@ Subpackages
    aeat.adapters.outbound.aeat
    aeat.adapters.outbound.google
    aeat.adapters.outbound.llm
+   aeat.adapters.outbound.storage

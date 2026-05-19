@@ -26,7 +26,7 @@ from ...domain.transactions import (
     Transaction,
     TransactionDirection,
 )
-from ..filing import FilingValidationFinding
+from ..filing import ModeloValidationFinding
 from . import (
     FindingReviewItem,
     InvoiceReviewItem,
@@ -109,8 +109,8 @@ def _invoice() -> Invoice:
     )
 
 
-def _finding() -> FilingValidationFinding:
-    return FilingValidationFinding(
+def _finding() -> ModeloValidationFinding:
+    return ModeloValidationFinding(
         casilla_id="03",
         severity=BaseSeverity.ERROR,
         code="casilla-out-of-range",

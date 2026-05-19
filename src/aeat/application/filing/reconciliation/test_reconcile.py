@@ -1,4 +1,4 @@
-"""Tests for registry-gated FilingDraft to Justificante reconciliation."""
+"""Tests for registry-gated ModeloDraft to Justificante reconciliation."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.justificante import parse_justificante
-from ....domain.filing import FilingBuilderError, FilingDraft, ModeloDraftStatus
+from ....domain.filing import ModeloBuilderError, ModeloDraft, ModeloDraftStatus
 from ....domain.justificante import Justificante
 from ....tests import FIXTURES_DIR
 from .. import build_runtime_schema_provider
@@ -70,8 +70,8 @@ def _draft_for_130(
     *,
     period: str = "2024Q1",
     profile_tax_id: str = "Y4113523X",
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
-) -> FilingDraft:
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
+) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="130",
         period=period,
@@ -85,8 +85,8 @@ def _draft_for_111(
     *,
     period: str = "2026Q1",
     profile_tax_id: str = "Y4113523X",
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
-) -> FilingDraft:
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
+) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="111",
         period=period,
@@ -100,8 +100,8 @@ def _draft_for_123(
     *,
     period: str = "2026Q1",
     profile_tax_id: str = "Y4113523X",
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
-) -> FilingDraft:
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
+) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="123",
         period=period,
@@ -151,7 +151,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
         assert report.mismatches == ()
         assert report.justificante is not None
         assert report.justificante.csv == justificante.csv
@@ -167,7 +167,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
 
     def test_modelo_111_total_to_ingresar_is_projected_from_registry_casilla(self) -> None:
         draft = _draft_for_111()
@@ -181,7 +181,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
 
     def test_modelo_123_total_to_ingresar_is_projected_from_registry_casilla(self) -> None:
         draft = _draft_for_123()
@@ -195,7 +195,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
 
     def test_year_only_remote_period_does_not_match_quarterly_revision(self) -> None:
         justificante = _justificante("130", "2024-1T").model_copy(update={"period": "2024"})
@@ -206,7 +206,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.DIVERGENT
+        assert report.status is ReconciliationStatus.DIVERGENTE
         assert any(mismatch.kind is FilingDivergenceKind.PERIOD_MISMATCH for mismatch in report.mismatches)
 
 
@@ -230,7 +230,7 @@ class TestReconcileDivergent:
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
         kinds = tuple(m.kind for m in report.mismatches)
-        assert report.status is ReconciliationStatus.DIVERGENT
+        assert report.status is ReconciliationStatus.DIVERGENTE
         assert FilingDivergenceKind.MODELO_MISMATCH in kinds
 
     def test_tax_id_mismatch_surfaces(self) -> None:
@@ -240,7 +240,7 @@ class TestReconcileDivergent:
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
         kinds = tuple(m.kind for m in report.mismatches)
-        assert report.status is ReconciliationStatus.DIVERGENT
+        assert report.status is ReconciliationStatus.DIVERGENTE
         assert FilingDivergenceKind.TAX_ID_MISMATCH in kinds
 
     def test_tax_id_comparison_is_case_insensitive(self) -> None:
@@ -252,7 +252,7 @@ class TestReconcileDivergent:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
 
     def test_modelo_111_total_to_ingresar_drift_surfaces(self) -> None:
         draft = _draft_for_111()
@@ -266,7 +266,7 @@ class TestReconcileDivergent:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.DIVERGENT
+        assert report.status is ReconciliationStatus.DIVERGENTE
         assert any(mismatch.kind is FilingDivergenceKind.TOTAL_INGRESAR_MISMATCH for mismatch in report.mismatches)
 
 
@@ -274,11 +274,11 @@ class TestRegistryGate:
     def test_reconcile_requires_active_registry_snapshot(self) -> None:
         draft = _draft_for_130().model_copy(update={"schema_version": "registry:130:wrong-revision"})
 
-        with pytest.raises(FilingBuilderError, match="active registry snapshot"):
+        with pytest.raises(ModeloBuilderError, match="active registry snapshot"):
             reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)
 
     def test_reconcile_requires_period_declared_by_registry_snapshot(self) -> None:
         draft = _draft_for_130().model_copy(update={"period": "2024A"})
 
-        with pytest.raises(FilingBuilderError, match="draft period declared"):
+        with pytest.raises(ModeloBuilderError, match="draft period declared"):
             reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)

@@ -3,7 +3,7 @@
 Every CLI invocation runs `evaluate_idle(session, now, configured_minutes)`
 before granting access to the session. The configured value lives in
 the bucket manifest (`ManifestKdfParams` is plaintext; `idle_lock_minutes` is
-read by the `aeat config set idle-lock-minutes` verb). The default is
+read from the durable config profile. The default is
 15 minutes.
 
 The evaluator is a pure function over the session's idle deadline and

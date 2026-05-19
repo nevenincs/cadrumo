@@ -14,7 +14,7 @@ import pytest
 from ...domain.justificante import JustificanteParseError
 from ...tests import FIXTURES_DIR
 from . import (
-    FilingImportError,
+    ModeloImportError,
     import_filing_from_justificante,
 )
 from .runtime import build_runtime_schema_provider
@@ -42,12 +42,12 @@ class TestImportFromJustificante:
 
     def test_modelo_130_justificante_only_import_requires_binding_data(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        with pytest.raises(FilingImportError, match="previous_year_economic_activity_net_income"):
+        with pytest.raises(ModeloImportError, match="previous_year_economic_activity_net_income"):
             import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
     def test_unsupported_modelo_raises_import_error(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_100_2025A.pdf"
-        with pytest.raises(FilingImportError, match="modelo '100'"):
+        with pytest.raises(ModeloImportError, match="modelo '100'"):
             import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
     def test_year_only_period_rejected_for_quarterly_registry_revision(
@@ -57,7 +57,7 @@ class TestImportFromJustificante:
     ) -> None:
         pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
 
-        with pytest.raises(FilingImportError, match="period token '0A'"):
+        with pytest.raises(ModeloImportError, match="period token '0A'"):
             import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
     def test_missing_pdf_raises_parse_error(

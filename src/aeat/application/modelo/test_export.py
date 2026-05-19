@@ -117,8 +117,8 @@ def _seed_revision(
         state=state,
         created_at=now,
         updated_at=now,
-        verified_at=now if state is not CalculationRevisionState.DRAFT else None,
-        verified_by="operator" if state is not CalculationRevisionState.DRAFT else None,
+        verified_at=now if state is not CalculationRevisionState.BORRADOR else None,
+        verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -132,7 +132,7 @@ def test_export_refuses_when_no_active_bucket(
     """Without an active profile bucket the service cannot scope the
     MODELO_EXPORTED event and must refuse cleanly."""
 
-    with pytest.raises(ModeloExportNoActiveBucketError, match=r"aeat config init"):
+    with pytest.raises(ModeloExportNoActiveBucketError, match=r"aeat config profile create NAME"):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id="r" + "0" * 63,
@@ -175,7 +175,7 @@ def test_export_refuses_draft_revision(
     verified, not a work-in-progress."""
 
     bucket_id = _seed_profile()
-    _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.DRAFT)
+    _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
 
     with pytest.raises(CalculationRevisionStateError, match=r"verified-complete or filed"):
         export_modelo_revision(
@@ -201,7 +201,7 @@ def test_export_refuses_cross_bucket_revision(
     foreign_bucket_id = "other-bucket-7" * 4
     _, calc_rev_id = _seed_revision(
         bucket_id=foreign_bucket_id,
-        state=CalculationRevisionState.VERIFIED_COMPLETE,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
     )
 
     with pytest.raises(ModeloExportCrossBucketRefusedError, match=r"active profile bucket"):

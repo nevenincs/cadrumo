@@ -14,18 +14,18 @@ from typing import ClassVar
 from ...adapters.persistence.storage import SensitivityClass
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ._schema import FilingDraft
+from ._schema import ModeloDraft
 
 
-class FilingDraftRepository(SecureBoundRepository[FilingDraft]):
+class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     """Repository over encrypted SQL-backed filing drafts."""
 
     namespace: ClassVar[str] = "aeat.domain.filing.drafts"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.FINANCIAL
     schema_version: ClassVar[int] = 1
-    payload_type: ClassVar[type[FilingDraft]] = FilingDraft
+    payload_type: ClassVar[type[ModeloDraft]] = ModeloDraft
 
-    def extract_identifier(self, payload: FilingDraft) -> str:
+    def extract_identifier(self, payload: ModeloDraft) -> str:
         return payload.draft_id
 
     def list_draft_ids(self) -> tuple[str, ...]:
@@ -33,7 +33,7 @@ class FilingDraftRepository(SecureBoundRepository[FilingDraft]):
 
         return tuple(self.iter_ids())
 
-    def iter_drafts(self) -> Iterator[FilingDraft]:
+    def iter_drafts(self) -> Iterator[ModeloDraft]:
         """Yield every persisted draft, in lexicographic id order."""
 
         return self.iter_records()
@@ -42,5 +42,5 @@ class FilingDraftRepository(SecureBoundRepository[FilingDraft]):
 __all__ = [
     "ClassificationError",
     "EnvelopeVersionError",
-    "FilingDraftRepository",
+    "ModeloDraftRepository",
 ]

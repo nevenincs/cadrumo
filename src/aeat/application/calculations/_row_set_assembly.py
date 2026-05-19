@@ -5,7 +5,7 @@ The pull adapter captures Detalle-tab detail rows as a flat tuple of
 row-set's grouping key. To consume those rows in the local-store
 ingest path the codebase needs typed observations of the matching
 domain shape (``WithholdingObservation`` for modelo 190 / 193,
-``ForeignAssetObservation`` for modelo 720, etc.).
+``Modelo720RowObservation`` for modelo 720, etc.).
 
 The assemblers in this module bridge the two: they walk a row-set's
 cells, group them by ``row_index``, look up each cell's binding in
@@ -32,7 +32,7 @@ from pydantic import ValidationError
 
 from ...domain.calculations.registry._bindings import (
     AtributionMemberObservation,
-    ForeignAssetObservation,
+    Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
     WithholdingObservation,
@@ -73,7 +73,7 @@ _GROUPING_DISPATCH: Mapping[str, str] = {
 AssembledObservations = (
     tuple[str, tuple[WithholdingObservation, ...]]
     | tuple[str, tuple[RelatedPartyOperationObservation, ...]]
-    | tuple[str, tuple[ForeignAssetObservation, ...]]
+    | tuple[str, tuple[Modelo720RowObservation, ...]]
     | tuple[str, tuple[AtributionMemberObservation, ...]]
     | tuple[str, tuple[RefundOperationObservation, ...]]
 )
@@ -320,14 +320,14 @@ def assemble_foreign_asset_observations(
     revision: ModeloRevision,
     *,
     filing_year: int,
-) -> tuple[ForeignAssetObservation, ...]:
+) -> tuple[Modelo720RowObservation, ...]:
     """Reassemble per-asset observations from row-set cells (modelo 720)."""
 
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_acquisition_date = date(filing_year, 12, 31)
 
-    observations: list[ForeignAssetObservation] = []
+    observations: list[Modelo720RowObservation] = []
     for row_index in sorted(by_row):
         row = by_row[row_index]
         fields: dict[str, Decimal | str] = {}
@@ -338,7 +338,7 @@ def assemble_foreign_asset_observations(
             fields[field] = value if value is not None else ""
         try:
             observations.append(
-                ForeignAssetObservation(
+                Modelo720RowObservation(
                     source_id=f"detalle:per_foreign_asset:row-{row_index}",
                     asset_class_code=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
                     country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",

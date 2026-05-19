@@ -42,7 +42,7 @@ def cli_runner() -> CliRunner:
 def _seed(name: str = "default") -> None:
     from aeat.core.config import load_settings
     from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
-    from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, KdfParams
+    from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
     from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
     from datetime import datetime, UTC
 
@@ -55,7 +55,7 @@ def _seed(name: str = "default") -> None:
             label=name,
             created_at=datetime.now(UTC),
             last_unlocked_at=None,
-            kdf_params=KdfParams(
+            kdf_params=ManifestKdfParams(
                 algorithm="argon2id",
                 version=0x13,
                 memory_cost=19_456,

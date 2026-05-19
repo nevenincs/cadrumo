@@ -213,7 +213,7 @@ class ExternalFilingImportError(ModeloError):
 
 
 #: Legal anchors for the modelo workflow gate. The gate enforces
-#: that a Modelo declaration only transitions to VERIFIED_COMPLETE
+#: that a Modelo declaration only transitions to VERIFICADO_COMPLETO
 #: or FILED after the workflow engine ran auth + deadline-window +
 #: draft + preflight stages. The grounding spans:
 #:
@@ -351,7 +351,7 @@ class _RevisionDraftBuilder:
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        if draft.status is not ModeloDraftStatus.READY_TO_SUBMIT:
+        if draft.status is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
             return draft
         return approve_draft(
             draft,
@@ -525,7 +525,7 @@ def list_work_units(
         unit
         for unit in catalogue.values()
         if (bucket_id is None or unit.bucket_id == bucket_id)
-        and (include_discarded or unit.state is WorkUnitState.DRAFT)
+        and (include_discarded or unit.state is WorkUnitState.BORRADOR)
     )
     return tuple(
         sorted(
@@ -586,7 +586,7 @@ def rename_work_unit(
     existing = catalogue.get(work_unit_id)
     if existing is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if existing.state is WorkUnitState.DISCARDED:
+    if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(
             f"work unit {work_unit_id!r} is discarded; "
             "create a fresh work unit on the same modelo / year / period to continue"
@@ -647,7 +647,7 @@ def discard_work_unit(
     existing = catalogue.get(work_unit_id)
     if existing is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if existing.state is WorkUnitState.DISCARDED:
+    if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitAlreadyDiscardedError(
             f"work unit {work_unit_id!r} is already discarded "
             f"(by {existing.discarded_by!r} at {existing.discarded_at!s})"
@@ -655,7 +655,7 @@ def discard_work_unit(
     now = clock or datetime.now(UTC)
     discarded = existing.model_copy(
         update={
-            "state": WorkUnitState.DISCARDED,
+            "state": WorkUnitState.DESCARTADO,
             "discarded_at": now,
             "discarded_by": actor.strip(),
             "discard_reason": reason.strip() if reason else None,
@@ -711,7 +711,7 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
-class ModeloIvaWalletReconciliationBlocked(ModeloError):
+class ModeloIvaWalletReconciliationBlocked(ModeloError):  # noqa: N818
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
 
 
@@ -776,6 +776,8 @@ def calculate_modelo_revision(
     work_units = wu_repo.load()
     work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
+    if iva_compensation_decision is None:
+        iva_compensation_decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit)
 
     period_date = filing_period_date or period_end_date(
         filing_year=work_unit.filing_year,
@@ -865,7 +867,7 @@ def calculate_modelo_revision(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        state=CalculationRevisionState.DRAFT,
+        state=CalculationRevisionState.BORRADOR,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
         source_transaction_ids=source_transaction_ids,
@@ -943,7 +945,8 @@ def _apply_iva_compensation_decision_binding(
         )
     if decision.blocked:
         raise ModeloIvaWalletReconciliationBlocked(
-            f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}: {decision.reason}"
+            "IVA wallet reconciliation blocks automatic Modelo 303 calculation: "
+            f"{decision.divergence}: {decision.reason}"
         )
     if decision.selected_amount is None:
         raise ModeloIvaWalletReconciliationBlocked("IVA wallet reconciliation decision has no selected amount")
@@ -954,6 +957,36 @@ def _apply_iva_compensation_decision_binding(
             "caller binding for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
         )
     backend_binding_values[binding_id] = selected
+
+
+def _load_persisted_iva_compensation_decision_for_work_unit(work_unit: WorkUnit) -> object | None:
+    if work_unit.modelo != "303":
+        return None
+    taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
+    if taxpayer_nif is None:
+        return None
+    from ..calculations._observations_repository import IvaWalletDecisionRepository
+
+    return IvaWalletDecisionRepository().load_decision(
+        taxpayer_nif,
+        work_unit.filing_year,
+        work_unit.period,
+    )
+
+
+def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    value = record_to_path_values(record).get("identity.tax_id")
+    if value is None or not value.strip():
+        return None
+    return value.strip()
 
 
 def calculate_modelo_revision_from_bucket_aggregation(
@@ -985,7 +1018,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if work_unit.state is WorkUnitState.DISCARDED:
+    if work_unit.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
@@ -1145,14 +1178,14 @@ def get_calculation_revision(
     return revision
 
 
-def mark_revision_verified_complete(
+def mark_revision_verificado_completo(
     calculation_revision_id: str,
     *,
     actor: str,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
-    """Transition a draft revision to ``VERIFIED_COMPLETE``.
+    """Transition a draft revision to ``VERIFICADO_COMPLETO``.
 
     The revision must currently be in ``DRAFT`` state. After the
     transition the revision is immutable; subsequent calculation
@@ -1170,7 +1203,7 @@ def mark_revision_verified_complete(
     existing = catalogue.get(calculation_revision_id)
     if existing is None:
         raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
-    if existing.state is not CalculationRevisionState.DRAFT:
+    if existing.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete"
@@ -1178,7 +1211,7 @@ def mark_revision_verified_complete(
     now = clock or datetime.now(UTC)
     verified = existing.model_copy(
         update={
-            "state": CalculationRevisionState.VERIFIED_COMPLETE,
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
             "verified_at": now,
             "verified_by": actor.strip(),
             "updated_at": now,
@@ -1396,10 +1429,10 @@ def verify_modelo_revision(
        severity.
     4. Build a :class:`VerificationReport`. When zero blocking
        findings are present and the completeness status is
-       ``COMPLETE``, ``granted_verified_complete`` is ``True`` and
+       ``COMPLETE``, ``granted_verificado_completo`` is ``True`` and
        the calculation revision transitions DRAFT →
-       VERIFIED_COMPLETE.
-    5. If the report would grant ``VERIFIED_COMPLETE``, run the
+       VERIFICADO_COMPLETO.
+    5. If the report would grant ``VERIFICADO_COMPLETO``, run the
        WorkflowEngine-owned gate before mutating state.
     6. Persist the report in the verification-report catalogue.
        Failed attempts persist so the audit trail explains why a
@@ -1427,7 +1460,7 @@ def verify_modelo_revision(
     target = revisions.get(calculation_revision_id)
     if target is None:
         raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
-    if target.state is not CalculationRevisionState.DRAFT:
+    if target.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{target.state.value!r}; only DRAFT revisions can be verified"
@@ -1464,7 +1497,7 @@ def verify_modelo_revision(
         missing_required_casillas=tuple(missing_required),
         run_at=now,
         verified_by=actor.strip(),
-        granted_verified_complete=granted,
+        granted_verificado_completo=granted,
     )
 
     if granted:
@@ -1491,7 +1524,7 @@ def verify_modelo_revision(
     if granted:
         verified = target.model_copy(
             update={
-                "state": CalculationRevisionState.VERIFIED_COMPLETE,
+                "state": CalculationRevisionState.VERIFICADO_COMPLETO,
                 "verified_at": now,
                 "verified_by": actor.strip(),
                 "updated_at": now,
@@ -1626,7 +1659,7 @@ def _load_work_unit_for_calculation(work_units, *, work_unit_id: str):  # type: 
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if work_unit.state is WorkUnitState.DISCARDED:
+    if work_unit.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
     return work_unit
 
@@ -1727,7 +1760,7 @@ def file_modelo_revision(
     State transitions performed atomically (from the caller's
     perspective — each repository save is sequenced):
 
-    1. Verify the revision is in ``VERIFIED_COMPLETE`` state.
+    1. Verify the revision is in ``VERIFICADO_COMPLETO`` state.
     2. Run the workflow gate for the revision's modelo and period.
     3. Look up any existing current filing record for the same
        (bucket, modelo, year, period) tuple.
@@ -1738,7 +1771,7 @@ def file_modelo_revision(
           ``FILED`` to ``FILED_SUPERSEDED``.
     5. Create the new filing record with status ``CURRENT``.
     6. Transition the target calculation revision from
-       ``VERIFIED_COMPLETE`` to ``FILED``.
+       ``VERIFICADO_COMPLETO`` to ``FILED``.
     7. Advance the work unit's ``filed_calculation_revision_id``
        and ``current_filing_record_id`` pointers.
 
@@ -1746,7 +1779,7 @@ def file_modelo_revision(
         CalculationRevisionNotFoundError: When the revision id is
             absent.
         CalculationRevisionStateError: When the revision is not in
-            ``VERIFIED_COMPLETE`` state.
+            ``VERIFICADO_COMPLETO`` state.
         WorkUnitNotFoundError: When the revision's parent work
             unit cannot be loaded.
         ModeloWorkflowGateError: When the workflow/preflight gate
@@ -1762,10 +1795,10 @@ def file_modelo_revision(
     target = revisions.get(calculation_revision_id)
     if target is None:
         raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
-    if target.state is not CalculationRevisionState.VERIFIED_COMPLETE:
+    if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
-            f"{target.state.value!r}; only VERIFIED_COMPLETE revisions can be filed"
+            f"{target.state.value!r}; only VERIFICADO_COMPLETO revisions can be filed"
         )
 
     work_units = wu_repo.load()
@@ -1820,7 +1853,7 @@ def file_modelo_revision(
         filed_by=actor.strip(),
         notes=notes.strip() if notes else None,
         aeat_accepted=False,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
     )
 
     # 2. Supersede prior filing record if present.
@@ -1828,7 +1861,7 @@ def file_modelo_revision(
     if prior_current is not None:
         superseded_prior = prior_current.model_copy(
             update={
-                "status": ModeloRecordStatus.SUPERSEDED,
+                "status": ModeloRecordStatus.SUPERSEDIDO,
                 "superseded_at": now,
                 "superseded_by_filing_record_id": new_filing_id,
             }
@@ -1837,10 +1870,10 @@ def file_modelo_revision(
 
         # Transition prior filed calculation revision to FILED_SUPERSEDED.
         prior_revision = revisions.get(prior_current.calculation_revision_id)
-        if prior_revision is not None and prior_revision.state is CalculationRevisionState.FILED:
+        if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
             superseded_revision = prior_revision.model_copy(
                 update={
-                    "state": CalculationRevisionState.FILED_SUPERSEDED,
+                    "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
                     "superseded_at": now,
                     "updated_at": now,
                 }
@@ -1851,7 +1884,7 @@ def file_modelo_revision(
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
     filed_target = target.model_copy(
         update={
-            "state": CalculationRevisionState.FILED,
+            "state": CalculationRevisionState.PRESENTADO,
             "filed_at": now,
             "filed_by": actor.strip(),
             "updated_at": now,
@@ -1937,7 +1970,7 @@ def list_filing_records(
         record
         for record in catalogue.values()
         if (bucket_id is None or record.bucket_id == bucket_id)
-        and (include_superseded or record.status is ModeloRecordStatus.CURRENT)
+        and (include_superseded or record.status is ModeloRecordStatus.VIGENTE)
     )
     return tuple(
         sorted(
@@ -2024,7 +2057,7 @@ def amend_modelo_revision(
     3. Persist a new ``DRAFT`` calculation revision carrying
        ``amendment_kind``, ``amends_filing_record_id``, and the
        operator-supplied ``reason``.
-    4. Transition it through ``VERIFIED_COMPLETE`` (the verification
+    4. Transition it through ``VERIFICADO_COMPLETO`` (the verification
        contract for amendments is identity-equivalent to the
        calculate path because the registry-snapshot resolver still
        applies; here we mark it verified-complete directly because
@@ -2061,7 +2094,7 @@ def amend_modelo_revision(
             f"modelo amend path requires an imported AEAT-attested baseline. Use the "
             f"standard re-file path (calculate → verify → file) for locally-filed returns."
         )
-    if baseline.status is not ModeloRecordStatus.CURRENT:
+    if baseline.status is not ModeloRecordStatus.VIGENTE:
         raise AmendmentTargetStateError(
             f"filing record {from_filing_record_id!r} is in status {baseline.status.value!r}; "
             f"only CURRENT filings can be amended"
@@ -2110,7 +2143,7 @@ def amend_modelo_revision(
     amendment_draft = CalculationRevision(
         calculation_revision_id=new_revision_id,
         work_unit_id=baseline.work_unit_id,
-        state=CalculationRevisionState.DRAFT,
+        state=CalculationRevisionState.BORRADOR,
         inputs_snapshot=baseline_revision.inputs_snapshot,
         binding_overrides=baseline_revision.binding_overrides,
         source_transaction_ids=baseline_revision.source_transaction_ids,
@@ -2139,7 +2172,7 @@ def amend_modelo_revision(
     # Transition draft → verified-complete (operator opts in by calling amend).
     verified_amendment = amendment_draft.model_copy(
         update={
-            "state": CalculationRevisionState.VERIFIED_COMPLETE,
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
             "verified_at": now,
             "verified_by": actor.strip(),
             "updated_at": now,
@@ -2166,14 +2199,14 @@ def amend_modelo_revision(
         filed_by=actor.strip(),
         notes=None,
         aeat_accepted=False,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
         external_evidence=None,
         amends_filing_record_id=baseline.filing_record_id,
     )
 
     superseded_baseline = baseline.model_copy(
         update={
-            "status": ModeloRecordStatus.SUPERSEDED,
+            "status": ModeloRecordStatus.SUPERSEDIDO,
             "superseded_at": now,
             "superseded_by_filing_record_id": new_filing_id,
         }
@@ -2183,7 +2216,7 @@ def amend_modelo_revision(
 
     filed_amendment = verified_amendment.model_copy(
         update={
-            "state": CalculationRevisionState.FILED,
+            "state": CalculationRevisionState.PRESENTADO,
             "filed_at": now,
             "filed_by": actor.strip(),
             "updated_at": now,
@@ -2292,7 +2325,7 @@ def import_external_filing_evidence(
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
-    if work_unit.state is WorkUnitState.DISCARDED:
+    if work_unit.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
 
     _reject_unknown_import_casillas(
@@ -2323,7 +2356,7 @@ def import_external_filing_evidence(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        state=CalculationRevisionState.FILED,
+        state=CalculationRevisionState.PRESENTADO,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
         casilla_values=outputs,
@@ -2363,7 +2396,7 @@ def import_external_filing_evidence(
         filed_by=actor.strip(),
         notes=None,
         aeat_accepted=True,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=evidence_kind,
             reference_id=cleaned_reference,
@@ -2375,17 +2408,17 @@ def import_external_filing_evidence(
     if prior_current is not None:
         superseded_prior = prior_current.model_copy(
             update={
-                "status": ModeloRecordStatus.SUPERSEDED,
+                "status": ModeloRecordStatus.SUPERSEDIDO,
                 "superseded_at": now,
                 "superseded_by_filing_record_id": new_filing_id,
             }
         )
         updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
         prior_revision = revisions.get(prior_current.calculation_revision_id)
-        if prior_revision is not None and prior_revision.state is CalculationRevisionState.FILED:
+        if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
             superseded_revision = prior_revision.model_copy(
                 update={
-                    "state": CalculationRevisionState.FILED_SUPERSEDED,
+                    "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
                     "superseded_at": now,
                     "updated_at": now,
                 }
@@ -2443,9 +2476,9 @@ __all__ = [
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "ExternalFilingImportError",
-    "ModeloRecordNotFoundError",
     "ModeloAggregationBindingError",
     "ModeloIvaWalletReconciliationBlocked",
+    "ModeloRecordNotFoundError",
     "ModeloWorkflowGateError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
@@ -2466,7 +2499,7 @@ __all__ = [
     "list_filing_records",
     "list_verification_reports",
     "list_work_units",
-    "mark_revision_verified_complete",
+    "mark_revision_verificado_completo",
     "rename_work_unit",
     "verify_modelo_revision",
 ]

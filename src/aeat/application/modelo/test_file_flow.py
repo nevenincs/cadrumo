@@ -12,10 +12,10 @@ Coverage:
 * Two ``calculate`` invocations under one work unit produce two
   distinct ``CalculationRevision`` records (the "toilet-break"
   scenario) and emit a ``modelo.calculation.created`` event each.
-* ``mark_revision_verified_complete`` requires DRAFT state.
+* ``mark_revision_verificado_completo`` requires DRAFT state.
 * ``verify_modelo_revision`` reads real registry truth and emits
   ``modelo.verification.passed`` / ``modelo.verification.refused``.
-* ``file_modelo_revision`` requires VERIFIED_COMPLETE state and
+* ``file_modelo_revision`` requires VERIFICADO_COMPLETO state and
   emits ``modelo.filed`` (plus ``modelo.filed_superseded`` when a
   prior filing exists).
 * Filing advances the work unit's pointer fields atomically.
@@ -64,7 +64,7 @@ from aeat.application.modelo import (
     list_calculation_revisions,
     list_filing_records,
     list_verification_reports,
-    mark_revision_verified_complete,
+    mark_revision_verificado_completo,
     verify_modelo_revision,
 )
 from aeat.application.workflow import (
@@ -348,7 +348,7 @@ def _workflow_gate(
         auth_provider=provider,
         engine=WorkflowEngine(
             deadline_engine=DeadlineEngineAdapter(deadline_engine),
-            filing_draft_builder=_RevisionDraftBuilder(  # pyrefly: ignore[bad-argument-type]  # reason: _RevisionDraftBuilder is a duck-typed test fake whose .build() returns FilingDraft which structurally satisfies RegistryFilingDraftProtocol at runtime
+            filing_draft_builder=_RevisionDraftBuilder(  # pyrefly: ignore[bad-argument-type]  # reason: _RevisionDraftBuilder is a duck-typed test fake whose .build() returns ModeloDraft which structurally satisfies RegistryFilingDraftProtocol at runtime
                 work_unit=work_unit,
                 actor="operator-A",
                 clock=clock,
@@ -480,7 +480,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos) -> None
         first.calculation_revision_id,
         second.calculation_revision_id,
     }
-    assert all(r.state is CalculationRevisionState.DRAFT for r in revisions)
+    assert all(r.state is CalculationRevisionState.BORRADOR for r in revisions)
 
     # Current pointer follows most-recent calculate.
     refreshed_work_unit = get_work_unit(
@@ -541,17 +541,17 @@ def test_mark_verified_complete_requires_draft_state(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    verified = mark_revision_verified_complete(
+    verified = mark_revision_verificado_completo(
         revision.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    assert verified.state is CalculationRevisionState.VERIFIED_COMPLETE
+    assert verified.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
     # Second attempt against the now-verified revision must fail.
     with pytest.raises(CalculationRevisionStateError, match=r"state|verified|already|complete"):
-        mark_revision_verified_complete(
+        mark_revision_verificado_completo(
             revision.calculation_revision_id,
             actor="operator-A",
             calculation_repository=cr_repo,
@@ -606,7 +606,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
@@ -625,7 +625,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
         clock=_T3,
     )
 
-    assert filing.status is ModeloRecordStatus.CURRENT
+    assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
     assert filing.notes == "Q1 IVA"
     assert filing.filed_by == "operator-A"
@@ -635,7 +635,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision.state is CalculationRevisionState.FILED
+    assert refreshed_revision.state is CalculationRevisionState.PRESENTADO
     assert refreshed_revision.filed_at == _T3
     assert refreshed_revision.filed_by == "operator-A"
 
@@ -680,7 +680,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
@@ -707,7 +707,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision.state is CalculationRevisionState.VERIFIED_COMPLETE
+    assert refreshed_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert list_filing_records(filing_repository=fr_repo) == ()
     filed_events = bv_repo.load().for_bucket(
         work_unit.bucket_id,
@@ -755,7 +755,7 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision.state is CalculationRevisionState.DRAFT
+    assert refreshed_revision.state is CalculationRevisionState.BORRADOR
     assert (
         list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
@@ -794,7 +794,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision_one.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
@@ -822,7 +822,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T4,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision_two.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
@@ -842,19 +842,19 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     )
 
     # New filing is current.
-    assert filing_two.status is ModeloRecordStatus.CURRENT
+    assert filing_two.status is ModeloRecordStatus.VIGENTE
     refreshed_revision_two = get_calculation_revision(
         revision_two.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision_two.state is CalculationRevisionState.FILED
+    assert refreshed_revision_two.state is CalculationRevisionState.PRESENTADO
 
     # Prior filing is superseded; prior revision moved to FILED_SUPERSEDED.
     refreshed_filing_one = get_filing_record(
         filing_one.filing_record_id,
         filing_repository=fr_repo,
     )
-    assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDED
+    assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_filing_one.superseded_at == _T5
     assert refreshed_filing_one.superseded_by_filing_record_id == filing_two.filing_record_id
 
@@ -862,7 +862,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
         revision_one.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision_one.state is CalculationRevisionState.FILED_SUPERSEDED
+    assert refreshed_revision_one.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
     assert refreshed_revision_one.superseded_at == _T5
 
     # current_for resolves to the new filing only.
@@ -913,7 +913,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision_one.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
@@ -940,7 +940,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T4,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision_two.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
@@ -962,7 +962,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
         filing_repository=fr_repo,
     )
     assert len(default_listing) == 1
-    assert default_listing[0].status is ModeloRecordStatus.CURRENT
+    assert default_listing[0].status is ModeloRecordStatus.VIGENTE
 
     with_history = list_filing_records(
         include_superseded=True,
@@ -1059,7 +1059,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     """Real e2e: registry resolves modelo 180 (2024, 0A); every required
     manual casilla is supplied; the verifier persists a granted report
     in encrypted storage; the calculation revision transitions
-    DRAFT → VERIFIED_COMPLETE. No mocks, no in-memory fakes — the
+    DRAFT → VERIFICADO_COMPLETO. No mocks, no in-memory fakes — the
     SQL repository encrypts on save and decrypts on load."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
@@ -1092,7 +1092,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         clock=_T2,
     )
 
-    assert report.granted_verified_complete is True
+    assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
     assert report.findings == ()
     assert set(report.resolved_casillas) == set(required)
@@ -1102,7 +1102,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed.state is CalculationRevisionState.VERIFIED_COMPLETE
+    assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert refreshed.verified_at == _T2
     assert refreshed.verified_by == "operator-A"
 
@@ -1111,7 +1111,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         report.verification_report_id,
         verification_repository=vr_repo,
     )
-    assert persisted.granted_verified_complete is True
+    assert persisted.granted_verificado_completo is True
     assert persisted.completeness_status is VerificationCompletenessStatus.COMPLETE
 
 
@@ -1153,7 +1153,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         clock=_T2,
     )
 
-    assert report.granted_verified_complete is False
+    assert report.granted_verificado_completo is False
     assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
     assert any(
         f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
@@ -1167,13 +1167,13 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed.state is CalculationRevisionState.DRAFT
+    assert refreshed.state is CalculationRevisionState.BORRADOR
 
     persisted = get_verification_report(
         report.verification_report_id,
         verification_repository=vr_repo,
     )
-    assert persisted.granted_verified_complete is False
+    assert persisted.granted_verificado_completo is False
 
 
 def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
@@ -1221,7 +1221,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     revision = CalculationRevision(
         calculation_revision_id=rid,
         work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.DRAFT,
+        state=CalculationRevisionState.BORRADOR,
         inputs_snapshot=inputs,
         binding_overrides=overrides_map,
         casilla_values=casillas,
@@ -1241,7 +1241,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         clock=_T2,
     )
 
-    assert report.granted_verified_complete is False
+    assert report.granted_verificado_completo is False
     assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
     assert any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in report.findings)
 
@@ -1249,7 +1249,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed.state is CalculationRevisionState.DRAFT
+    assert refreshed.state is CalculationRevisionState.BORRADOR
 
 
 def test_verify_rejects_non_draft_revision_real_registry(repos) -> None:
@@ -1465,7 +1465,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T2,
     )
-    assert report.granted_verified_complete is False
+    assert report.granted_verificado_completo is False
 
     catalogue = bv_repo.load()
     refused = catalogue.for_bucket(
@@ -1497,7 +1497,7 @@ def test_file_emits_modelo_filed_event(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
@@ -1549,7 +1549,7 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision_one.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
@@ -1577,7 +1577,7 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
         bucket_event_repository=bv_repo,
         clock=_T4,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision_two.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,

@@ -88,6 +88,18 @@ class AuthProviderKindSetting(StrEnum):
     CLAVE_MOVIL = "clave_movil"
 
 
+def _default_clave_sede_access_url_template() -> str:
+    from .external_constants import load_external_constants
+
+    return load_external_constants().aeat.clave_movil.selector_access_url_template
+
+
+def _default_sede_expedientes_path() -> str:
+    from .external_constants import load_external_constants
+
+    return load_external_constants().aeat.sede_paths.expedientes_resumen
+
+
 class JustificanteParserBackendSetting(StrEnum):
     """Settings-shape selector for the justificante PDF parsing backend."""
 
@@ -511,10 +523,10 @@ class Settings(BaseSettings):
         description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
-    # ── VAT catalogue (aeat.domain.vat) ──────────────────────────────────
-    aeat_vat_catalogue_root: Path = Field(
-        default_factory=lambda: bundled_path("registry", "aeat", "vat"),
-        description="Root directory for the hand-reviewed VAT taxonomy catalogue",
+    # ── IVA catalogue (aeat.domain.iva) ──────────────────────────────────
+    aeat_iva_catalogue_root: Path = Field(
+        default_factory=lambda: bundled_path("registry", "aeat", "iva", "catalogues"),
+        description="Root directory for the hand-reviewed IVA taxonomy catalogue",
     )
 
     # ── Browser Automation ──────────────────────────────────────────────────
@@ -656,25 +668,24 @@ class Settings(BaseSettings):
         default=False,
         description=(
             "When true, the Cl@ve Móvil provider uses the non-QR fallback "
-            "(DNI/NIE + contraste) rather than the QR code. Still requires "
-            "the operator to approve the push notification on the Cl@ve app."
+            "(DNI/NIE + contraste) rather than the QR code. This still "
+            "requires operator-mediated completion in Cl@ve."
         ),
     )
     aeat_clave_movil_timeout_ms: int = Field(
-        default=300_000,
+        default=120_000,
         ge=30_000,
-        le=600_000,
+        le=120_000,
         description=(
             "Maximum time (milliseconds) the Cl@ve Móvil provider waits for "
-            "the operator to approve the push notification on their phone "
-            "before aborting. AEAT's own window is ~5 minutes; 300000 matches that."
+            "AEAT browser-side authentication completion "
+            "before aborting. Production runs must fail fast enough for an "
+            "operator to retry deliberately rather than leaving a pending "
+            "request dangling."
         ),
     )
     aeat_clave_sede_access_url_template: str = Field(
-        default=(
-            "https://sede.agenciatributaria.gob.es/static_files/common/html/"
-            "selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
-        ),
+        default_factory=_default_clave_sede_access_url_template,
         description=(
             "URL template for AEAT's auth-method selector page. `{target}` "
             "is replaced with the URL-encoded target path (e.g. "
@@ -682,7 +693,7 @@ class Settings(BaseSettings):
         ),
     )
     aeat_sede_expedientes_path: str = Field(
-        default="/wlpl/TEWV-CORE/ResumenVlt",
+        default_factory=_default_sede_expedientes_path,
         description=(
             "AEAT Sede path for 'Mis expedientes' — the default post-auth "
             "target used by Cl@ve Móvil login and the expedientes reader."
@@ -738,7 +749,7 @@ class Settings(BaseSettings):
     # ── Submission engine ───────────────────────────────────────────────────
     aeat_submissions_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "submissions",
-        description="Directory where SubmittedFiling JSON audit records are persisted",
+        description="Directory where ModeloPresentado JSON audit records are persisted",
     )
     aeat_submission_browser_trace_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "browser-traces",
@@ -775,7 +786,7 @@ class Settings(BaseSettings):
     aeat_draft_fail_on_warning: bool = Field(
         default=False,
         description=(
-            "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
+            "If true, build_draft raises ModeloValidationError when any WARNING- or ERROR-severity finding is produced"
         ),
     )
 
@@ -829,7 +840,7 @@ class Settings(BaseSettings):
     # ── Filing history ──────────────────────────────────────────────────────
     aeat_filing_history_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "filing-history",
-        description="Directory where the persisted FilingHistory JSON file lives",
+        description="Directory where the persisted ModeloHistory JSON file lives",
     )
     aeat_filing_history_cache_ttl_s: int = Field(
         default=900,
@@ -872,24 +883,21 @@ class Settings(BaseSettings):
             return self
         bucket_id = (self.aeat_active_profile or "").strip()
         if not bucket_id:
-            # Parse the TOML pointer file directly to avoid a circular
-            # Settings construction. The pointer is a one-line TOML
-            # document carrying ``bucket_id = "..."`` plus a
-            # ``schema_version`` int (see
-            # ``_bucket_pointer_io.write_pointer``).
-            import tomllib
-
-            pointer_file = self.aeat_local_storage_root / "active-profile"
+            # Delegate to the canonical pointer-file reader rather
+            # than re-implementing the TOML parse inline. The reader
+            # uses strict pydantic validation; this preserves the
+            # one-resolver invariant the disaster ADR Ruling 2
+            # mandates.
             try:
-                raw = pointer_file.read_text(encoding="utf-8")
-            except OSError:
-                raw = ""
-            if raw:
-                try:
-                    parsed = tomllib.loads(raw)
-                except tomllib.TOMLDecodeError:
-                    parsed = {}
-                bucket_id = str(parsed.get("bucket_id", "")).strip()
+                from ..application.workflow._bucket_pointer_io import (
+                    read_pointer,
+                )
+
+                pointer = read_pointer(self.aeat_local_storage_root)
+            except Exception:  # noqa: BLE001 - resolver failure leaves URL empty
+                pointer = None
+            if pointer is not None:
+                bucket_id = pointer.bucket_id.strip()
         if not bucket_id:
             return self
         bucket_db_path = (
@@ -1012,7 +1020,7 @@ class Settings(BaseSettings):
         "aeat_audit_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
-        "aeat_vat_catalogue_root",
+        "aeat_iva_catalogue_root",
         "aeat_certificate_path",
         "aeat_llm_cache_dir",
         "aeat_llm_usage_dir",

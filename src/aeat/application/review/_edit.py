@@ -26,7 +26,7 @@ at every edit-application call site.
 The orchestration that applies an :class:`EditSpec` to a stored
 :class:`aeat.domain.transactions.Transaction` /
 :class:`aeat.domain.invoices.Invoice` /
-:class:`aeat.domain.filing.FilingDraft` lives in the
+:class:`aeat.domain.filing.ModeloDraft` lives in the
 ``application/workflow`` state overlay.
 """
 

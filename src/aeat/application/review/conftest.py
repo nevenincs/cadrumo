@@ -2,7 +2,7 @@
 
 Every test in :mod:`aeat.application.review` that persists a draft
 through the ciphertext-at-rest
-:class:`aeat.domain.filing.FilingDraftRepository` needs an
+:class:`aeat.domain.filing.ModeloDraftRepository` needs an
 :class:`aeat.adapters.persistence.storage.EphemeralMasterKeyProvider`
 active for the duration of the test (via its context-manager
 interface).

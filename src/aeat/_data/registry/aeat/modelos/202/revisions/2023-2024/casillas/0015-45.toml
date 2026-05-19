@@ -4,6 +4,7 @@ number = "45"
 label = "Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Aumentos"
 section = ["liquidacion", "modalidad_40_3_lis", "reserva_nivelacion"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_3_reserva_nivelacion_aumentos"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-2023-2024-page-01-casilla-45"]

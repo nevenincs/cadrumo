@@ -15,5 +15,7 @@ Subpackages
    aeat.adapters
    aeat.application
    aeat.core
+   aeat.diagnostics
    aeat.domain
    aeat.entrypoints
+   aeat.locales

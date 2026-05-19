@@ -9,8 +9,8 @@ from typing import Annotated, Literal
 import typer
 
 from ...application.live import FiledDataListingRow, capture_filed_data, capture_source_filed_data, list_filed_data
-from ._common import _emit
 from ...core.i18n import tr
+from ._common import _emit
 
 _VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -107,10 +107,102 @@ def iva_wallet_pull_cmd(
             _metric_line("target_period", report.target_period),
             _metric_line("row_count", report.row_count),
             _metric_line("total_pending", report.total_pending),
+            _metric_line("selected_authority", report.selected_authority),
+            _metric_line("selected_amount", report.selected_amount),
+            _metric_line("local_recurrence_amount", report.local_recurrence_amount),
+            _metric_line("divergence", report.divergence),
+            _metric_line("blocked", report.blocked),
             _metric_line("captured_at", report.captured_at.isoformat()),
             _metric_line("observation_path", report.observation_path),
         ),
     )
+
+
+@iva_wallet_app.command(
+    "history",
+    help=tr(
+        "cli.app.live.iva_wallet.history_help",
+        default="List secure local IVA compensation history derived from filed Modelo 303 captures.",
+    ),
+)
+def iva_wallet_history_cmd(ctx: typer.Context) -> None:
+    """List the profile-local IVA compensation history without contacting AEAT."""
+
+    from ...application.live import list_iva_compensation_history
+
+    report = list_iva_compensation_history()
+    lines = [_metric_line("row_count", report.row_count)]
+    for row in report.rows:
+        lines.append(
+            _metric_line(
+                "row",
+                "\t".join(
+                    (
+                        str(row.year),
+                        row.period,
+                        row.status,
+                        f"prior={row.prior_pending_amount}",
+                        f"applied={row.applied_amount}",
+                        f"pending_later={row.pending_for_later_amount}",
+                        f"period_result={row.period_result_amount}",
+                        f"final_result={row.final_result_amount}",
+                        f"generated={row.generated_amount}",
+                        f"available_end={row.available_end_amount}",
+                    )
+                ),
+            )
+        )
+    _emit(ctx, report, lines)
+
+
+@iva_wallet_app.command(
+    "capture-history",
+    help=tr(
+        "cli.app.live.iva_wallet.capture_history_help",
+        default="Live-capture filed Modelo 303 history and persist secure IVA compensation state.",
+    ),
+)
+def iva_wallet_capture_history_cmd(
+    ctx: typer.Context,
+    year_from: Annotated[
+        int,
+        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
+    ],
+    year_to: Annotated[
+        int,
+        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
+    ],
+    output_root: Annotated[
+        Path,
+        typer.Option(
+            "--output-root",
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            help=tr("cli.app.live.output_root_help"),
+        ),
+    ] = Path("var/aeat/live/iva-compensation-history"),
+) -> None:
+    """Pull multi-year Modelo 303 filing history and verify secure reload."""
+
+    from ...application.live import capture_iva_compensation_history
+
+    report = asyncio.run(
+        capture_iva_compensation_history(
+            year_from=year_from,
+            year_to=year_to,
+            output_root=output_root,
+        )
+    )
+    lines = (
+        _metric_line("year_from", report.year_from),
+        _metric_line("year_to", report.year_to),
+        _metric_line("captured_count", report.captured_count),
+        _metric_line("calculation_observation_count", report.calculation_observation_count),
+        _metric_line("reloaded_history_count", report.reloaded_history_count),
+        _metric_line("output_root", report.output_root),
+    )
+    _emit(ctx, report, lines)
 
 
 @filed_app.command("list", help=tr("cli.app.live.filed.list_help"))
@@ -220,6 +312,8 @@ def filed_capture_cmd(
         (
             _metric_line("captured_count", report.captured_count),
             _metric_line("casilla_count", report.casilla_count),
+            _metric_line("calculation_observation_count", report.calculation_observation_count),
+            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
             _metric_line("observation_paths", ",".join(report.observation_paths)),
             _metric_line("artefact_refs", ",".join(report.artefact_refs)),
         ),
@@ -281,6 +375,8 @@ def filed_capture_sources_cmd(
         (
             _metric_line("captured_count", report.captured_count),
             _metric_line("casilla_count", report.casilla_count),
+            _metric_line("calculation_observation_count", report.calculation_observation_count),
+            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
             _metric_line("observation_paths", ",".join(report.observation_paths)),
             _metric_line("artefact_refs", ",".join(report.artefact_refs)),
         ),
@@ -305,7 +401,6 @@ app.add_typer(notifications_app, name="notifications")
 
 def _active_bucket_id() -> str:
     from ...application.workflow._models import active_bucket_id_or_raise
-    from ...application.workflow._persistence import workflow_state_repository
 
     try:
         return active_bucket_id_or_raise()
@@ -987,11 +1082,11 @@ def borrador_100_list(
         ),
     ] = "active",
 ) -> None:
-    from ...application.live import Borrador100SnapshotService, Borrador100SnapshotState
+    from ...application.live import Borrador100SnapshotService, SnapshotLifecycleState
 
     bucket_id = _active_bucket_id()
     try:
-        state_filter = None if state == "all" else Borrador100SnapshotState(state)
+        state_filter = None if state == "all" else SnapshotLifecycleState(state)
     except ValueError as exc:
         raise typer.BadParameter("state must be one of: active, superseded, discarded, all") from exc
     rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(
@@ -1109,6 +1204,8 @@ __all__ = [
     "filed_capture_sources_cmd",
     "filed_list_cmd",
     "iva_wallet_app",
+    "iva_wallet_capture_history_cmd",
+    "iva_wallet_history_cmd",
     "iva_wallet_pull_cmd",
     "portals_app",
     "portals_list",

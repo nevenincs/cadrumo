@@ -4,6 +4,7 @@ number = "216-255"
 label = "Complemento de domicilio del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
+semantic_role = "payee_inmueble_complemento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-complemento"]

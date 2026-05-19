@@ -4,6 +4,7 @@ number = "01"
 label = "Mod. 40.2 LIS — Base del pago fraccionado"
 section = ["liquidacion", "modalidad_40_2_lis"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_2_base_pago_fraccionado"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-page-01-casilla-01"]

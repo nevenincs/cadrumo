@@ -2,7 +2,7 @@
 calculation revision to a local AEAT-compatible file.
 
 `export_modelo_revision` accepts a calculation revision id, builds and
-approves a :class:`aeat.domain.filing.FilingDraft` from the revision's
+approves a :class:`aeat.domain.filing.ModeloDraft` from the revision's
 captured inputs, then writes a fichero-BOE-formatted artefact to the
 operator-supplied output path via the existing
 :func:`aeat.application.filing.export_draft` helper. A
@@ -36,7 +36,7 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.deadlines import AutonomoProfile
-from ...domain.filing import FilingExportError, FilingExportValidationError
+from ...domain.filing import ModeloExportError, ModeloExportValidationError
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._errors import ModeloError, ModeloExportError
@@ -82,7 +82,7 @@ class ModeloExportCommand(BaseModel):
 
     Attributes:
         calculation_revision_id: SHA-256 hex id of the calculation
-            revision to export. Must be in ``VERIFIED_COMPLETE`` or
+            revision to export. Must be in ``VERIFICADO_COMPLETO`` or
             ``FILED`` state.
         output_path: Absolute or working-directory-relative path to
             write the fichero-BOE artefact. Parent directories are
@@ -154,9 +154,9 @@ def _load_revision_for_export(
             f"no calculation revision with id={calculation_revision_id!r}",
         )
     if revision.state not in {
-        CalculationRevisionState.VERIFIED_COMPLETE,
-        CalculationRevisionState.FILED,
-        CalculationRevisionState.FILED_SUPERSEDED,
+        CalculationRevisionState.VERIFICADO_COMPLETO,
+        CalculationRevisionState.PRESENTADO,
+        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
     }:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -239,7 +239,7 @@ def export_modelo_revision(
             schema_provider=schema_provider,
             approved_at=now,
         )
-    except (FilingExportError, FilingExportValidationError) as exc:
+    except (ModeloExportError, ModeloExportValidationError) as exc:
         raise ModeloExportError(
             f"could not approve draft for calculation_revision_id="
             f"{command.calculation_revision_id!r}: {exc}",
@@ -254,7 +254,7 @@ def export_modelo_revision(
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
         receipt = export_draft(approved, output_path=tmp_output, headers=headers)
-    except (FilingExportError, FilingExportValidationError) as exc:
+    except (ModeloExportError, ModeloExportValidationError) as exc:
         if tmp_output.exists():
             tmp_output.unlink()
         raise ModeloExportError(

@@ -27,7 +27,7 @@ from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
-from ._errors import SedeNavigationError, SedeParseError
+from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
 if TYPE_CHECKING:
@@ -38,6 +38,7 @@ log = get_logger(__name__)
 
 _EXTERNAL = Settings.external_constants()
 _WALLET_URL = f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
+IVA_COMPENSATION_WALLET_URL = _WALLET_URL
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-iva-compensation-wallet-read",
     evidence_tier="official_source_guidance",
@@ -78,9 +79,24 @@ async def fetch_iva_compensation_wallet(
         try:
             page = await context.new_page()
             try:
-                await page.goto(_WALLET_URL, wait_until="domcontentloaded")
+                await browser_session.navigate(page, _WALLET_URL)
+                await page.wait_for_load_state("domcontentloaded")
             except PlaywrightError as exc:
                 raise SedeNavigationError(f"goto {_WALLET_URL!r} failed: {exc}") from exc
+            if is_aeat_wallet_auth_gate_redirect(page.url):
+                raise SedeNavigationError(
+                    "AEAT IVA compensation wallet rejected the authenticated session with 4033",
+                    failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+                    context={
+                        "landing_url": page.url,
+                        "expected_url": _WALLET_URL,
+                        "surface": "iva_compensation_wallet",
+                    },
+                    suggestion=(
+                        "Authenticate specifically for the IVA wallet surface or configure a certificate provider "
+                        "if AEAT requires certificate/DNIe for this taxpayer."
+                    ),
+                )
             html = await page.content()
             return parse_iva_compensation_wallet_html(
                 html,
@@ -94,7 +110,7 @@ async def fetch_iva_compensation_wallet(
         finally:
             try:
                 await context.close()
-            except Exception as exc:  # noqa: BLE001 - cleanup should not mask capture outcome
+            except Exception as exc:
                 log.debug("fetch_iva_compensation_wallet: context.close suppressed: %s", exc, exc_info=True)
     finally:
         await browser_session.close()
@@ -114,10 +130,12 @@ def parse_iva_compensation_wallet_html(
 
     soup = BeautifulSoup(html, "html.parser")
     rows: list[IvaCompensationWalletRow] = []
+    matched_wallet_table = False
     for table in soup.find_all("table"):
         header = _normalised_text(table.get_text(" "))
         if not all(token in header for token in _HEADER_TOKENS):
             continue
+        matched_wallet_table = True
         for tr in table.find_all("tr"):
             cells = [_normalised_text(cell.get_text(" ")) for cell in tr.find_all(["td", "th"])]
             if len(cells) < 5 or _looks_like_header(cells):
@@ -126,8 +144,11 @@ def parse_iva_compensation_wallet_html(
                 rows.append(_wallet_row_from_cells(cells))
             except SedeParseError:
                 raise
-            except Exception as exc:  # noqa: BLE001 - parser reports row context
+            except Exception as exc:
                 raise SedeParseError(f"could not parse IVA compensation wallet row {cells!r}: {exc}") from exc
+
+    if not matched_wallet_table:
+        raise SedeParseError("captured page does not contain a recognizable IVA compensation wallet table")
 
     total_pending = sum((row.pending_amount for row in rows), Decimal("0"))
     return IvaCompensationWalletObservation(
@@ -141,6 +162,17 @@ def parse_iva_compensation_wallet_html(
         captured_at=captured_at,
         raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
     )
+
+
+def is_aeat_wallet_auth_gate_redirect(current_url: str) -> bool:
+    """Return True when wallet navigation lands on AEAT's certificate/auth 4033 page."""
+
+    if not current_url:
+        return False
+    lowered = current_url.lower()
+    if "agenciatributaria.gob.es" not in lowered:
+        return False
+    return "erro4033" in lowered
 
 
 def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
@@ -197,6 +229,8 @@ def _assert_read_http(method: str, url: str) -> None:
 
 
 __all__ = [
+    "IVA_COMPENSATION_WALLET_URL",
     "fetch_iva_compensation_wallet",
+    "is_aeat_wallet_auth_gate_redirect",
     "parse_iva_compensation_wallet_html",
 ]

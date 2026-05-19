@@ -9,15 +9,15 @@ from __future__ import annotations
 from ...core.errors import AeatError
 
 
-class FilingDraftError(AeatError):
+class ModeloDraftError(AeatError):
     """Base class for every error raised inside :mod:`aeat.domain.filing`."""
 
 
-class FilingBuilderError(FilingDraftError):
+class ModeloBuilderError(ModeloDraftError):
     """Raised when builder selection or execution fails."""
 
 
-class FilingValidationError(FilingDraftError):
+class ModeloValidationError(ModeloDraftError):
     """Raised when validation surfaces a blocking finding.
 
     The validator itself never raises; this error is reserved for
@@ -25,25 +25,25 @@ class FilingValidationError(FilingDraftError):
     """
 
 
-class FilingComputationError(FilingDraftError):
+class ModeloComputationError(ModeloDraftError):
     """Raised when a builder cannot evaluate a formula casilla."""
 
 
-class FilingAmendmentError(FilingDraftError):
+class ModeloAmendmentError(ModeloDraftError):
     """Base class for every amendment-related filing error."""
 
 
-class FilingAmendmentValidationError(FilingAmendmentError):
+class ModeloAmendmentValidationError(ModeloAmendmentError):
     """Raised when an amendment violates legal or shape invariants."""
 
 
-class FilingImportError(FilingDraftError):
+class ModeloImportError(ModeloDraftError):
     """Raised when importing a filing from a justificante PDF fails."""
 
 
-class FilingExportError(FilingDraftError):
+class ModeloExportError(ModeloDraftError):
     """Raised when exporting a draft to an AEAT wire format fails."""
 
 
-class FilingExportValidationError(FilingExportError, ValueError):
+class ModeloExportValidationError(ModeloExportError, ValueError):
     """Raised on invalid export field values or layouts. Inherits from ValueError for Pydantic."""

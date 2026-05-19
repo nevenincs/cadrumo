@@ -18,14 +18,14 @@ from ._repos import (
     ApoderamientosRepository,
     CategoryProfileRepository,
     HolidayCalendarRepository,
+    IvaCatalogueRepository,
+    IvaRateTableRepository,
     LegalParameterRepository,
     ManualRepository,
     NormativeRepository,
     RecargoBandsRepository,
     TopicCatalogueRepository,
     UserProfileSchemaRepository,
-    VatCatalogueRepository,
-    VatRateTableRepository,
 )
 from ._repos.modelos import StaticModeloRepository
 
@@ -51,8 +51,8 @@ class ResourceRegistry:
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
     topics: TopicCatalogueRepository = field(default_factory=TopicCatalogueRepository)
     user_profile_schema: UserProfileSchemaRepository = field(default_factory=UserProfileSchemaRepository)
-    vat_catalogues: VatCatalogueRepository = field(default_factory=VatCatalogueRepository)
-    vat_rate_tables: VatRateTableRepository = field(default_factory=VatRateTableRepository)
+    iva_catalogues: IvaCatalogueRepository = field(default_factory=IvaCatalogueRepository)
+    iva_rate_tables: IvaRateTableRepository = field(default_factory=IvaRateTableRepository)
 
     def clear(self) -> None:
         """Clear every Repository's Identity Map."""
@@ -71,7 +71,7 @@ def resources() -> ResourceRegistry:
     Cached at first call. The factory reads Settings once at
     construction and threads operator-supplied roots through to
     the Repositories that honour an env-override seam
-    (manuals, normatives, vat catalogues). Tests that mutate
+    (manuals, normatives, iva catalogues). Tests that mutate
     Settings between cases call ``resources.cache_clear()`` to
     rebuild with the new values.
     """
@@ -82,5 +82,5 @@ def resources() -> ResourceRegistry:
     return ResourceRegistry(
         manuals=ManualRepository(root=settings.aeat_manuals_root),
         normatives=NormativeRepository(root=settings.aeat_normatives_root),
-        vat_catalogues=VatCatalogueRepository(root=settings.aeat_vat_catalogue_root),
+        iva_catalogues=IvaCatalogueRepository(root=settings.aeat_iva_catalogue_root),
     )

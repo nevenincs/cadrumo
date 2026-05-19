@@ -102,7 +102,7 @@ class IvaInvoiceClassification(BaseModel):
             ERRONEOUS_INVOICE, UNKNOWN).
         flow_direction: Substrate :class:`IvaFlowDirection` —
             REPERCUTIDO (output), SOPORTADO (input), or
-            AUTOREPERCUTIDO (self-assessed reverse charge).
+            INVERSION_SUJETO_PASIVO (self-assessed reverse charge).
         settlement_sides: Pre-computed frozen set of the
             :class:`IvaSettlementSide` cornerstones the line
             contributes to. Derived from ``flow_direction`` at
@@ -143,10 +143,10 @@ class IvaInvoiceClassification(BaseModel):
     def is_reverse_charge(self) -> bool:
         """Return ``True`` iff the line is self-assessed reverse charge.
 
-        AUTOREPERCUTIDO is the only flow that contributes to BOTH
+        INVERSION_SUJETO_PASIVO is the only flow that contributes to BOTH
         settlement sides on the same operation (LIVA art. 84.Uno.2).
         """
-        return self.flow_direction is IvaFlowDirection.AUTOREPERCUTIDO
+        return self.flow_direction is IvaFlowDirection.INVERSION_SUJETO_PASIVO
 
 
 def classify_invoice_line_for_iva(
