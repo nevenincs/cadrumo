@@ -1,0 +1,12 @@
+[[revisions."2021".bindings]]
+id = "renta-2021-profile-tax-residence-ccaa"
+source = "profile"
+selector = { profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
+aggregation = { op = "copy" }
+typed_enum = "CCAA"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-dr-100-2021-dictionary", "boe-modelo-100-2021-form"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "boe-modelo-100-2021-form"
+required_text = ["Modelo 100", "ejercicio 2021"]

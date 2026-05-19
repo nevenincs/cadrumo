@@ -1,0 +1,46 @@
+[[revisions."2025".constructs]]
+id = "renta-source-foundation"
+title = "Modelo 100 source, layout, and simulator evidence"
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "aeat-renta-2025-manual-parte1",
+    "aeat-renta-2025-manual-deducciones-autonomicas",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+    "aeat-renta-web-open",
+]
+workbook_parity_refs = ["modelo-100-2025-record-design-layout"]
+export_layouts = ["modelo-100-2025-xml-dictionary"]
+live_cross_references = ["modelo-100-renta-web-open", "modelo-100-filed-declarations-read"]
+application_links = [
+    "modelo-100-renta-web-open-cross-reference",
+    "modelo-100-export",
+    "modelo-100-filed-declarations-observation",
+    "modelo-100-calculation",
+    "modelo-100-verification",
+    "modelo-100-review",
+    "modelo-100-approval",
+    "modelo-100-reconciliation",
+    "modelo-100-workflow",
+]

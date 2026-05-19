@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0929"
+number = "0929"
+label = "Referencia catastral 1"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+data_type = "text"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

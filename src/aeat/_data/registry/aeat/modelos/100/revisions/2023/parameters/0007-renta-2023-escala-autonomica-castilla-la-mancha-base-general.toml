@@ -1,0 +1,50 @@
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-castilla-la-mancha-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "35200.00"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "60000.00"
+fixed_addition = "4362.75"
+marginal_rate = "0.185"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000.00"
+fixed_addition = "8950.75"
+marginal_rate = "0.225"
+valid_from = 2023-01-01
+valid_to = 2023-12-31

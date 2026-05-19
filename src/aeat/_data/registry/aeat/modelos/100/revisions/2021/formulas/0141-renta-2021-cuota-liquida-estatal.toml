@@ -1,0 +1,24 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-liquida-estatal"
+target = "0570"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+    { op = "negate", args = [{ casilla = "0549" }] },
+    { op = "negate", args = [{ casilla = "0550" }] },
+    { op = "negate", args = [{ casilla = "0552" }] },
+    { op = "negate", args = [{ casilla = "0554" }] },
+    { op = "negate", args = [{ casilla = "0556" }] },
+    { op = "negate", args = [{ casilla = "0558" }] },
+    { op = "negate", args = [{ casilla = "0560" }] },
+    { op = "negate", args = [{ casilla = "0562" }] },
+    { op = "negate", args = [{ casilla = "0565" }] },
+    { op = "negate", args = [{ casilla = "0567" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida estatal", "deducciones"]

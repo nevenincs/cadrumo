@@ -1,0 +1,7 @@
+[[revisions."2024".casillas]]
+id = "1857"
+number = "1857"
+label = "Cantidades satisfechas en el ejercicio 2024 pendientes de deducir en los 4 ejercicios siguientes"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

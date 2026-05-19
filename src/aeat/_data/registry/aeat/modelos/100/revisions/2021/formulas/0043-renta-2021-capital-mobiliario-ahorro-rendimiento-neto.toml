@@ -1,0 +1,14 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-ahorro-rendimiento-neto"
+target = "0038"
+expression = { op = "subtract", args = [
+        { casilla = "0036" },
+        { casilla = "0037" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]

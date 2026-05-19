@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1676"
+number = "1676"
+label = "Fecha del certificado de eficiencia energética anterior"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
