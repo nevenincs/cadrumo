@@ -492,6 +492,18 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2025.xlsx"
 review_status = "reviewed"
 
+[sources."aeat-dr-303-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
+sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
+bytes = 386926
+retrieved_at = 2026-05-06
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2026.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-modelo-303-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -836,6 +848,46 @@ required_text = [
     "Uno. En las declaraciones-liquidaciones correspondientes a cada uno de los períodos de liquidación, los sujetos pasivos ",
     "Dos. Las deducciones deberán efectuarse en función del destino previsible de los bienes y servicios adquiridos, sin perj",
     "No obstante, en los supuestos de destrucción o pérdida de los bienes adquiridos o importados, por causa no imputable al ",
+]
+
+[legal."ley-37-1992:art-115"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a115"
+document_id = "BOE-A-1992-28740"
+article = "115"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a115"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-19
+reviewed_by = "codex"
+notes = "Articulo 115 LIVA: supuestos generales de devolucion. Conecta el saldo a favor no hecho efectivo por compensacion del articulo 99 con la solicitud de devolucion al cierre del ultimo periodo de liquidacion del ano natural."
+required_text = [
+    "Supuestos generales de devolución",
+    "Los sujetos pasivos que no hayan podido hacer efectivas las deducciones originadas en un período de liquidación por el procedimiento previsto en el artículo 99",
+    "solicitar la devolución del saldo a su favor existente a 31 de diciembre de cada año",
+]
+
+[legal."ley-37-1992:art-116"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a116"
+document_id = "BOE-A-1992-28740"
+article = "116"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a116"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-19
+reviewed_by = "codex"
+notes = "Articulo 116 LIVA: solicitud de devoluciones al fin de cada periodo de liquidacion. Base legal de la devolucion periodica para sujetos pasivos que optan por el procedimiento reglamentario."
+required_text = [
+    "Solicitud de devoluciones al fin de cada período de liquidación",
+    "podrán optar por solicitar la devolución del saldo a su favor existente al término de cada período de liquidación",
+    "El período de liquidación de los sujetos pasivos que opten por este procedimiento coincidirá con el mes natural",
 ]
 
 [legal."ley-37-1992:art-102"]

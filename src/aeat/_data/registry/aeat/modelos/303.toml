@@ -44,7 +44,7 @@ source_refs = ["aeat-dr-303-2025"]
 
 [[revisions."2009-y-siguientes".verification_expectations]]
 id = "modelo-303-iva-chain-verification"
-computed_casillas = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general"]
+computed_casillas = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"
@@ -377,75 +377,143 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 # -----------------------------------------------------------------------------
-# Prior-quarter compensation chain (LIVA art. 99). When a quarter's resultado
-# is negative, the absolute value is carried forward as a deductible
-# compensación in the following quarter within the same ejercicio. The
-# "compensacion-disponible-fin-periodo" casilla exposes that carry-forward
-# value; the "compensacion-anteriores" casilla picks it up via a
-# previous_filing binding stamped by the resolver from the prior quarter.
-# Casilla 71 "Resultado" is the net (resultado-regimen-general less
-# compensacion-anteriores) that is paid or refunded.
+# Prior-quarter compensation chain (LIVA art. 99, refund context in arts. 115
+# and 116). The current AEAT record design exposes the prior-period balance as
+# [110], the amount applied in the current period as [78], the prior-period
+# remainder as [87] = [110] - [78], and the scoped final result as [69].
 # -----------------------------------------------------------------------------
 
 [[revisions."2009-y-siguientes".bindings]]
-id = "modelo-303-compensacion-anteriores"
+id = "modelo-303-compensacion-pendiente-anteriores"
 source = "previous_filing"
-selector = { source_modelo = "303", source_output = "iva.compensacion-disponible-fin-periodo" }
+selector = { source_modelo = "303", source_output = "iva.compensacion-disponible-fin-periodo", source_period_offset_from_target = -1 }
 aggregation = { op = "copy" }
-legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-modelo-303-procedure"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
+source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [[revisions."2009-y-siguientes".casillas]]
-id = "iva.compensacion-anteriores"
-number = "67"
-label = "Cuotas a compensar de periodos anteriores"
+id = "iva.compensacion-pendiente-periodos-anteriores"
+number = "110"
+label = "Cuotas a compensar pendientes de periodos anteriores"
 section = ["iva", "resultado"]
 data_type = "money"
 required = false
 input_kind = "bound"
-binding = "modelo-303-compensacion-anteriores"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-modelo-303-procedure"] }
-legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+binding = "modelo-303-compensacion-pendiente-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-303-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "iva.compensacion-aplicada-periodo"
+number = "78"
+label = "Cuotas a compensar de periodos anteriores aplicadas en este periodo"
+section = ["iva", "resultado"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-303-compensacion-aplicada-periodo"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-303-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "iva.compensacion-pendiente-periodos-posteriores"
+number = "87"
+label = "Cuotas a compensar de periodos previos pendientes para periodos posteriores"
+section = ["iva", "resultado"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-303-compensacion-pendiente-periodos-posteriores"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-303-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.resultado"
-number = "71"
-label = "Resultado del periodo (regimen general menos compensaciones anteriores)"
+number = "69"
+label = "Resultado de la autoliquidacion"
 section = ["iva", "resultado"]
 data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-303-iva-resultado"
-legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.compensacion-disponible-fin-periodo"
 number = "compensacion-disponible-fin-periodo"
-label = "Saldo a compensar en periodos posteriores (max 0, -resultado)"
+label = "Saldo de compensacion disponible para periodos posteriores"
 section = ["iva", "resultado"]
 data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-disponible-fin-periodo"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-modelo-303-procedure"] }
-legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-303-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "iva.compensacion-generada-periodo"
+number = "compensacion-generada-periodo"
+label = "Saldo a compensar generado en este periodo"
+section = ["iva", "resultado"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-303-compensacion-generada-periodo"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-303-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".formulas]]
+id = "modelo-303-compensacion-aplicada-periodo"
+target = "iva.compensacion-aplicada-periodo"
+expression = { op = "min", args = [
+    { casilla = "iva.compensacion-pendiente-periodos-anteriores" },
+    { op = "max", args = [
+        { literal = "0" },
+        { casilla = "iva.resultado-regimen-general" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[[revisions."2009-y-siguientes".formulas]]
+id = "modelo-303-compensacion-pendiente-periodos-posteriores"
+target = "iva.compensacion-pendiente-periodos-posteriores"
+expression = { op = "subtract", args = [
+    { casilla = "iva.compensacion-pendiente-periodos-anteriores" },
+    { casilla = "iva.compensacion-aplicada-periodo" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
 
 [[revisions."2009-y-siguientes".formulas]]
 id = "modelo-303-iva-resultado"
 target = "iva.resultado"
 expression = { op = "subtract", args = [
     { casilla = "iva.resultado-regimen-general" },
-    { casilla = "iva.compensacion-anteriores" },
+    { casilla = "iva.compensacion-aplicada-periodo" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".formulas.source_citations]]
@@ -455,12 +523,27 @@ required_text = ["modelo 303"]
 [[revisions."2009-y-siguientes".formulas]]
 id = "modelo-303-compensacion-disponible-fin-periodo"
 target = "iva.compensacion-disponible-fin-periodo"
+expression = { op = "add", args = [
+    { casilla = "iva.compensacion-pendiente-periodos-posteriores" },
+    { casilla = "iva.compensacion-generada-periodo" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[[revisions."2009-y-siguientes".formulas]]
+id = "modelo-303-compensacion-generada-periodo"
+target = "iva.compensacion-generada-periodo"
 expression = { op = "max", args = [
     { literal = "0" },
     { op = "negate", args = [{ casilla = "iva.resultado" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".formulas.source_citations]]
@@ -474,13 +557,13 @@ dependency_role = "direct_calculation"
 source_modelo = "303"
 source_revision_selector = { filing_year_delta = 0 }
 source_output = "iva.compensacion-disponible-fin-periodo"
-target_binding = "modelo-303-compensacion-anteriores"
+target_binding = "modelo-303-compensacion-pendiente-anteriores"
 period_alignment = { mode = "previous_quarter" }
 target_periods = ["2T", "3T", "4T"]
-source_periods = ["1T", "2T", "3T"]
+source_period_offset_from_target = -1
 aggregation = { op = "copy" }
-legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71"]
-source_refs = ["aeat-modelo-303-procedure"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".dependency_classifications]]
 id = "modelo-303-dep-self-prior-quarter"
@@ -488,8 +571,8 @@ source_modelo = "303"
 treatment = "factual_evidence"
 target_constructs = ["modelo-303-iva-autoliquidacion"]
 relation_refs = ["modelo-303-rel-self-compensacion-anteriores"]
-legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71"]
-source_refs = ["aeat-modelo-303-procedure"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "decl.ejercicio"
@@ -748,6 +831,10 @@ legal_refs = [
     "ley-37-1992:art-92",
     "rd-1624-1992:art-71",
     "ley-37-1992:art-99",
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
     "ley-37-1992:art-102",
     "ley-37-1992:art-104",
     "ley-37-1992:art-107",
@@ -769,8 +856,11 @@ casillas = [
     "iva.cuota-devengada-total",
     "iva.cuota-deducible-total",
     "iva.resultado-regimen-general",
-    "iva.compensacion-anteriores",
+    "iva.compensacion-pendiente-periodos-anteriores",
+    "iva.compensacion-aplicada-periodo",
+    "iva.compensacion-pendiente-periodos-posteriores",
     "iva.resultado",
+    "iva.compensacion-generada-periodo",
     "iva.compensacion-disponible-fin-periodo",
     "iva.prorrata-volumen-con-derecho",
     "iva.prorrata-volumen-total",
@@ -783,7 +873,10 @@ formulas = [
     "modelo-303-iva-cuota-devengada-total",
     "modelo-303-iva-cuota-deducible-total",
     "modelo-303-iva-resultado-regimen-general",
+    "modelo-303-compensacion-aplicada-periodo",
+    "modelo-303-compensacion-pendiente-periodos-posteriores",
     "modelo-303-iva-resultado",
+    "modelo-303-compensacion-generada-periodo",
     "modelo-303-compensacion-disponible-fin-periodo",
     "modelo-303-iva-prorrata-porcentaje",
 ]
@@ -793,7 +886,7 @@ bindings = [
     "modelo-303-iva-repercutido-super-reducido-cuota",
     "modelo-303-iva-soportado-interiores-cuota",
     "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
-    "modelo-303-compensacion-anteriores",
+    "modelo-303-compensacion-pendiente-anteriores",
 ]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
