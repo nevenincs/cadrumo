@@ -21,6 +21,7 @@ from ....application.operator_surface import build_help_document, render_help_te
 from ....application.wizard._catalogue import SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command
 from ....application.workflow._models import resolve_active_bucket_id
+from ....application.workflow._profile_bucket_scan import read_profile_bucket
 from ....core.logging import default_log_file_path
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
@@ -357,7 +358,7 @@ def config_profile_show(
     target = name or resolve_active_bucket_id()
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(target)
+    pointer = read_profile_bucket(target)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
@@ -412,7 +413,7 @@ def config_profile_delete(
         raise CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
     repository = _profile_state()
     state = repository.load()
-    pointer = state.profiles.get(name)
+    pointer = read_profile_bucket(name)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
@@ -448,10 +449,10 @@ def config_profile_duplicate(
 
     repository = _profile_state()
     state = repository.load()
-    pointer = state.profiles.get(source)
+    pointer = read_profile_bucket(source)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
-    if target in state.profiles:
+    if read_profile_bucket(target) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
@@ -467,12 +468,11 @@ def config_profile_duplicate(
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
 
-    def _register_target(current):
-        profiles = dict(current.profiles)
-        profiles[target] = ProfileBucketPointer(bucket_id=pointer.bucket_id)
-        return current.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
-
-    repository.update(_register_target)
+    # WorkflowState.profiles retired; the bucket manifest written by
+    # the lifecycle service registration is what makes the new
+    # profile appear in the manifest-scan computed mapping. Only the
+    # updated_at stamp needs to advance on the encrypted record.
+    repository.update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
     _emit(
         ctx,
         {
@@ -548,10 +548,10 @@ def config_profile_rename(
 
     repository = _profile_state()
     state = repository.load()
-    pointer = state.profiles.get(source)
+    pointer = read_profile_bucket(source)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
-    if target != source and target in state.profiles:
+    if target != source and read_profile_bucket(target) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
@@ -569,13 +569,10 @@ def config_profile_rename(
 
     was_active = resolve_active_bucket_id() == source
 
-    def _swap_pointer(current):
-        profiles = dict(current.profiles)
-        profiles.pop(source, None)
-        profiles[target] = ProfileBucketPointer(bucket_id=pointer.bucket_id)
-        return current.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
-
-    repository.update(_swap_pointer)
+    # WorkflowState.profiles retired; renaming the bucket directory on
+    # disk is what removes ``source`` and registers ``target`` in the
+    # manifest-scan view. Only the updated_at stamp needs to advance.
+    repository.update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
     if was_active:
         _write_active_profile_pointer(target)
     _emit(
@@ -621,7 +618,7 @@ def config_profile_export(
     target = name or resolve_active_bucket_id()
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(target)
+    pointer = read_profile_bucket(target)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
@@ -674,12 +671,12 @@ def config_profile_import(
     target_id = bundle.profile.profile_id
     repository = _profile_state()
     state = repository.load()
-    if target_id in state.profiles:
+    if read_profile_bucket(target_id) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id))
     active_bucket = resolve_active_bucket_id()
     if active_bucket is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    bucket_pointer = state.profiles.get(active_bucket)
+    bucket_pointer = read_profile_bucket(active_bucket)
     bucket_id = bucket_pointer.bucket_id if bucket_pointer is not None else active_bucket
     service = build_lifecycle_service(bucket_id=bucket_id)
     try:
@@ -687,12 +684,10 @@ def config_profile_import(
     except ProfileAlreadyExistsError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id)) from exc
 
-    def _register(current):
-        profiles = dict(current.profiles)
-        profiles[target_id] = ProfileBucketPointer(bucket_id=bucket_id)
-        return current.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
-
-    repository.update(_register)
+    # WorkflowState.profiles retired; the imported bucket's manifest
+    # is what registers the new profile in the manifest-scan view.
+    # Only the updated_at stamp needs to advance.
+    repository.update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
     _emit(
         ctx,
         {
@@ -958,7 +953,7 @@ def apoderado_status(ctx: typer.Context) -> None:
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[resolve_active_bucket_id() or ""]
+    pointer = read_profile_bucket(resolve_active_bucket_id() or "")
     svc = ApoderadoService()
     result = svc.status(bucket_id=pointer.bucket_id)
 
@@ -997,7 +992,7 @@ def apoderado_configure(
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[resolve_active_bucket_id() or ""]
+    pointer = read_profile_bucket(resolve_active_bucket_id() or "")
     svc = ApoderadoService()
     result = svc.configure(
         bucket_id=pointer.bucket_id,
@@ -1025,7 +1020,7 @@ def apoderado_clear(ctx: typer.Context) -> None:
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[resolve_active_bucket_id() or ""]
+    pointer = read_profile_bucket(resolve_active_bucket_id() or "")
     svc = ApoderadoService()
     cleared = svc.clear(bucket_id=pointer.bucket_id)
 
@@ -1046,7 +1041,7 @@ def apoderado_check(ctx: typer.Context) -> None:
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = state.profiles[resolve_active_bucket_id() or ""]
+    pointer = read_profile_bucket(resolve_active_bucket_id() or "")
     svc = ApoderadoService()
 
     try:

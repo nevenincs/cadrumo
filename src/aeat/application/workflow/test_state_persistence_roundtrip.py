@@ -48,10 +48,6 @@ def _populated_workflow_state() -> WorkflowState:
     now = datetime.now(UTC).replace(microsecond=0)
     return WorkflowState(
         auth=AuthState(),
-        profiles={
-            "profile-a": ProfileBucketPointer(bucket_id="b" * 32),
-            "profile-b": ProfileBucketPointer(bucket_id="c" * 32),
-        },
         declarations={
             "303:2025Q1": DeclarationPointer(
                 modelo="303",
@@ -103,11 +99,12 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
 
     Per-field witnesses pin the most fragile pieces:
 
-    * the two-entry profiles mapping (key+value preservation),
-    * the profiles map keying (the active-profile selector lives in
-      the precedence chain, not on the record),
     * the declarations mapping with its nested DeclarationPointer,
     * the bucket_events tuple with a non-empty audit record.
+
+    ``WorkflowState.profiles`` is no longer a persisted field; it is
+    a filesystem-manifest computed property, so this roundtrip does
+    not exercise it.
     """
 
     provider = EphemeralMasterKeyProvider()
@@ -133,8 +130,6 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
             loaded_normalised = loaded.model_copy(update={"updated_at": original.updated_at})
             assert loaded_normalised == original
             assert loaded.updated_at >= original.updated_at
-            assert set(loaded.profiles) == {"profile-a", "profile-b"}
-            assert loaded.profiles["profile-a"].bucket_id == "b" * 32
             assert "303:2025Q1" in loaded.declarations
             loaded_decl = loaded.declarations["303:2025Q1"]
             assert loaded_decl.draft_id == "d" * 64
@@ -175,7 +170,10 @@ def test_workflow_state_absent_load_returns_empty_state(tmp_path: Path) -> None:
             repo = WorkflowStateRepository()
             loaded = repo.load()
 
-            # Empty-default identity: no profiles, no declarations, empty event tuple.
+            # Empty-default identity: no declarations, empty event tuple.
+            # (profiles is a computed property scanning tmp_path/buckets,
+            # which has none provisioned in this test, so it also reads
+            # as empty.)
             assert loaded.profiles == {}
             assert loaded.declarations == {}
             assert loaded.bucket_events == ()

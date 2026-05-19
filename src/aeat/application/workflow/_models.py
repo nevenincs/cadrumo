@@ -134,22 +134,23 @@ class WorkflowState(BaseModel):
 
     Attributes:
         auth: Local AEAT access readiness state.
-        profiles: Profile-bucket pointers keyed by profile name. The
-            active profile is no longer stored on the record; it
-            resolves at read time via
-            :func:`resolve_active_bucket_id` from the precedence
-            chain (Settings override > plaintext pointer file).
         declarations: Filing draft pointers keyed by :func:`declaration_key`.
         invoice_reviews: Invoice review annotations keyed by ``invoice_id``.
         ledger_reviews: Ledger transaction review annotations keyed by
             ``transaction_id``.
         updated_at: UTC timestamp of the last write.
+
+    The historical ``profiles`` field has retired in favour of a
+    filesystem manifest scan; consumers access the same mapping shape
+    via the :attr:`profiles` computed property below, which scans
+    ``<aeat_local_storage_root>/buckets/*/manifest.toml`` on every
+    read. The active profile resolves via the precedence chain
+    (Settings override > plaintext pointer file).
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     auth: AuthState = Field(default_factory=AuthState)
-    profiles: dict[str, ProfileBucketPointer] = Field(default_factory=dict)
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
     invoice_reviews: dict[str, InvoiceReviewRecord] = Field(default_factory=dict)
     ledger_reviews: dict[str, LedgerReviewRecord] = Field(default_factory=dict)
