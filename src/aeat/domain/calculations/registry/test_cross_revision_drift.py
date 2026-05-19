@@ -20,6 +20,7 @@ from . import load_registry_tree
 from ._errors import RegistryValidationError
 from ._schema import CasillaDefinition
 from ._validate import (
+    RegistryValidator,
     _validate_cross_revision_casilla_consistency,
     validate_cross_revision_casilla_consistency,
 )
@@ -145,5 +146,18 @@ def test_cross_revision_validator_catches_real_committed_corpus_drift() -> None:
 
     message = str(exc_info.value)
     assert "cross-revision casilla drift detected" in message
-    assert "modelo 123 casilla '01'" in message
-    assert "label" in message
+    assert "cross-revision drift: modelo " in message
+    assert "canonical revision" in message
+    assert "divergences" in message
+
+
+def test_backend_registry_validation_enforces_committed_corpus_drift() -> None:
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
+
+    message = str(exc_info.value)
+    assert "registry validation failed" in message
+    assert "cross-revision drift: modelo " in message
+    assert "divergences" in message
