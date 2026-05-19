@@ -164,6 +164,30 @@ source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "boe-modelo-390-2009-form"
 required_text = ["modelo 390"]
 
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-compensacion-ultimo-periodo"
+source = "previous_filing"
+selector = { source_modelo = "303", filing_year_delta = 0, period = "4T", source_casillas = ["iva.compensacion-disponible-fin-periodo"] }
+aggregation = { op = "copy" }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+source = "previous_filing"
+selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T"], source_casillas = ["iva.compensacion-generada-periodo"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
 # -----------------------------------------------------------------------------
 # Bound casillas surfacing the 5 ledger_iva_aggregation bindings + the 3
 # previous_filing bindings as casilla values. Annual resumen mirrors the 303
@@ -268,6 +292,32 @@ input_kind = "bound"
 binding = "modelo-390-prev-303-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.compensacion-ultimo-periodo-97"
+number = "97"
+label = "Resultado declaracion-liquidacion ultimo periodo - A compensar"
+section = ["iva", "anual", "resultado_liquidaciones"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-compensacion-ultimo-periodo"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.compensacion-generada-ejercicio-no-97"
+number = "662"
+label = "Cuotas pendientes de compensacion generadas en el ejercicio y distintas de las incluidas en la casilla 97"
+section = ["iva", "anual", "resultado_liquidaciones"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2025"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
 
 # -----------------------------------------------------------------------------
 # Computed annual totals — same shape as Modelo 303 result-casillas, applied
@@ -597,7 +647,12 @@ legal_refs = [
     "ley-37-1992:art-90",
     "ley-37-1992:art-91",
     "ley-37-1992:art-92",
+    "ley-37-1992:art-99",
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
     "rd-1624-1992:art-71",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
 ]
 source_refs = [
     "aeat-dr-390-2025",
@@ -613,6 +668,8 @@ casillas = [
     "iva.anual.reconciliacion.devengada-303",
     "iva.anual.reconciliacion.deducible-303",
     "iva.anual.reconciliacion.resultado-303",
+    "iva.anual.compensacion-ultimo-periodo-97",
+    "iva.anual.compensacion-generada-ejercicio-no-97",
     "iva.anual.cuota-devengada-total",
     "iva.anual.cuota-deducible-total",
     "iva.anual.resultado-regimen-general",
@@ -633,6 +690,8 @@ bindings = [
     "modelo-390-prev-303-cuota-devengada-total",
     "modelo-390-prev-303-cuota-deducible-total",
     "modelo-390-prev-303-resultado-regimen-general",
+    "modelo-390-prev-303-compensacion-ultimo-periodo",
+    "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
 ]
 workbook_parity_refs = ["modelo-390-dr-2025"]
 live_cross_references = [

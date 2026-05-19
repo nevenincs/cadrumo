@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
@@ -133,9 +134,92 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
     }
 
 
-def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
-    from decimal import Decimal
+def test_modelo_390_declares_annual_compensation_result_fields() -> None:
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    bindings = {binding.id: binding for binding in revision.bindings}
 
+    assert casillas["iva.anual.compensacion-ultimo-periodo-97"].number == "97"
+    assert casillas["iva.anual.compensacion-generada-ejercicio-no-97"].number == "662"
+    assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].selector["period"] == "4T"
+    assert bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].selector["source_periods"] == (
+        "1T",
+        "2T",
+        "3T",
+    )
+
+
+def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations() -> None:
+    from aeat.domain.calculations.registry import (
+        CasillaObservation,
+        RegistryFilingObservation,
+        resolve_previous_filing_binding_values,
+    )
+
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    observations = (
+        RegistryFilingObservation(
+            modelo="303",
+            filing_year=2025,
+            period="1T",
+            observations=(
+                CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("100")),
+                CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("90")),
+                CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("10")),
+                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("10")),
+            ),
+        ),
+        RegistryFilingObservation(
+            modelo="303",
+            filing_year=2025,
+            period="2T",
+            observations=(
+                CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("200")),
+                CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("180")),
+                CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("20")),
+                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("20")),
+            ),
+        ),
+        RegistryFilingObservation(
+            modelo="303",
+            filing_year=2025,
+            period="3T",
+            observations=(
+                CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("300")),
+                CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("270")),
+                CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("30")),
+                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("30")),
+            ),
+        ),
+        RegistryFilingObservation(
+            modelo="303",
+            filing_year=2025,
+            period="4T",
+            observations=(
+                CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("400")),
+                CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("360")),
+                CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("40")),
+                CasillaObservation(casilla_id="iva.compensacion-disponible-fin-periodo", value=Decimal("400")),
+            ),
+        ),
+    )
+
+    resolved = resolve_previous_filing_binding_values(
+        revision,
+        observations,
+        filing_year=2025,
+        period="0A",
+    )
+
+    expected_ultimo_periodo = Decimal("400")
+    expected_generada_ejercicio = Decimal("60")
+    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == expected_ultimo_periodo
+    assert resolved["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == expected_generada_ejercicio
+
+
+def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
     from aeat.domain.calculations.registry import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
