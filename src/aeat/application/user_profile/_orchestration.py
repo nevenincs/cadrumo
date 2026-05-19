@@ -112,6 +112,16 @@ def _clear_active_profile_pointer() -> None:
         target.unlink()
 
 
+class ProfileAlreadyRegisteredError(ProfileNotFoundError):
+    """Raised when ``profile create`` targets a name that already has a manifest.
+
+    Inherits from ``ProfileNotFoundError`` so existing exception
+    handlers that catch the broader family also catch this case;
+    the CLI decorator translates it to a typed refusal that names
+    ``profile switch`` as the next action.
+    """
+
+
 def register_active_profile(
     state: WorkflowState,
     *,
@@ -121,21 +131,34 @@ def register_active_profile(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
-    """Register a new profile and make it the active one.
+    """Atomically register a new profile and make it the active one.
 
-    Atomically:
-    - Persists the new :class:`UserProfileRecord` via the lifecycle
-      service (which emits ``PROFILE_BUCKET_CREATED`` and, if facts
-      were supplied, ``PROFILE_VALUES_UPDATED``).
-    - Records the active profile pointer in
-      :attr:`WorkflowState.profiles` and selects it.
-    - Appends ``profile.created`` and ``profile.selected``
-      WorkflowEvents.
+    Five writes in sequence; failure at any step reverts the
+    bucket directory and manifest so the operator never sees a
+    half-created profile in ``profile list``:
+
+    1. Refuse-if-exists: the bucket manifest must NOT exist on
+       disk. Duplicate-name protection per the disaster ADR
+       Ruling 3.
+    2. Provision ``<root>/buckets/<id>/`` + manifest.
+    3. ``service.register`` writes the encrypted
+       :class:`UserProfileRecord` via the lifecycle service.
+    4. Append the workflow events.
+    5. Write the active-profile pointer file.
+
+    On failure at step 3-5 the bucket directory + manifest are
+    removed via the trash-rename pattern so a crashed create
+    never leaves a phantom profile in the manifest scan.
     """
 
+    _refuse_duplicate_profile(profile_id)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
     _ensure_profile_bucket_manifest(profile_id)
+    try:
+        service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
+    except Exception:
+        _rollback_profile_bucket(profile_id)
+        raise
     # WorkflowState.profiles is now computed at access time from a
     # filesystem manifest scan; provisioning the bucket directory +
     # writing its manifest is what makes the profile appear in the
@@ -152,6 +175,52 @@ def register_active_profile(
             )
     _write_active_profile_pointer(profile_id)
     return updated
+
+
+def _refuse_duplicate_profile(profile_id: str) -> None:
+    """Refuse a ``profile create`` when the manifest already exists.
+
+    The manifest-scan helper is the canonical "is this profile
+    registered?" oracle (disaster ADR Ruling 2). If the manifest is
+    already on disk the operator already has a profile with this
+    name; ``profile create`` must refuse rather than overwrite.
+    """
+
+    from ..workflow._profile_bucket_scan import read_profile_bucket
+
+    if read_profile_bucket(profile_id) is not None:
+        raise ProfileAlreadyRegisteredError(
+            f"profile {profile_id!r} already exists; "
+            "run `aeat config profile switch NAME` to activate it or "
+            "`aeat config profile delete NAME` first.",
+        )
+
+
+def _rollback_profile_bucket(profile_id: str) -> None:
+    """Trash-rename a half-created bucket directory after a failed register.
+
+    Atomic-create rollback (disaster ADR Ruling 3 step 4 / 5
+    rollback contract). The directory is renamed to a trash-prefix
+    sibling rather than recursively unlinked so a crashed rollback
+    leaves a recoverable on-disk trace. The follow-on cleanup is a
+    best-effort recursive delete.
+    """
+
+    import shutil
+
+    root = load_settings().aeat_local_storage_root
+    target = bucket_paths(root, profile_id).bucket_dir
+    if not target.exists():
+        return
+    trash = target.with_name(f".trash-{profile_id}-{secrets.token_hex(4)}")
+    try:
+        target.rename(trash)
+    except OSError:
+        return
+    try:
+        shutil.rmtree(trash, ignore_errors=True)
+    except Exception:  # noqa: BLE001 - rollback is best-effort
+        return
 
 
 def _ensure_profile_bucket_manifest(profile_id: str) -> None:

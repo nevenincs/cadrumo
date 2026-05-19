@@ -130,10 +130,22 @@ application:
           en curs o deixa expirar el bloqueig si aquest procés ha fallat.
         lock_held_suggestion: Executa `aeat config auth status --format json` per
           inspeccionar el bloqueig d'autenticació actiu.
+    clave_movil:
+      health:
+        operator_completion_required: Preparat; requereix finalització de Cl@ve mediada
+          per l'operador.
     operator:
       errors:
+        dangling_active_profile: El punter de perfil actiu '%{active_profile}' no
+          resol a un bucket de perfil registrat. Executa `aeat config profile list`
+          per inspeccionar els perfils registrats i després `aeat config profile switch
+          NAME` o `aeat config profile create NAME`.
         no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
           create NAME` abans de configurar l'autenticació.
+        unreadable_active_profile: El perfil actiu '%{active_profile}' té un manifest
+          de bucket però no té cap registre de perfil llegible (status=%{status}).
+          Executa `aeat config repair profile --clear-active --yes` i després canvia
+          a un perfil vàlid o crea'l abans de configurar l'autenticació.
     provider_impact:
       certificate_ready: L'autenticació amb certificat està a punt. L'operador manté
         el mateix flux de presentació a la CLI per a lectures recolzades per l'AEAT;
@@ -808,8 +820,10 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
-      profile_clear_active_help: cli.config.repair.profile_clear_active_help
-      profile_help: cli.config.repair.profile_help
+      profile_clear_active_help: Netejar un perfil actiu de fitxer-punter només quan
+        apunta a estat de perfil il·legible.
+      profile_help: Inspeccionar i reparar el punter de perfil actiu.
+      profile_requires_yes: Passa --yes per netejar el punter de perfil actiu.
       quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu;
         requereix --yes)
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
@@ -823,7 +837,7 @@ cli:
         amb --yes per confirmar o passa --dry-run per inspeccionar l'empremta.
       reset_state_yes_help: Confirmar explícitament el reinici de l'estat del flux
         de treball
-      yes_help: cli.config.repair.yes_help
+      yes_help: Confirmar la reparació.
     reset:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
@@ -871,23 +885,27 @@ cli:
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
-      auth_label: cli.diagnostics.repair.auth_label
-      checks_heading: cli.diagnostics.repair.checks_heading
-      detail_label: cli.diagnostics.repair.detail_label
-      logs_label: cli.diagnostics.repair.logs_label
-      next_label: cli.diagnostics.repair.next_label
-      note_label: cli.diagnostics.repair.note_label
-      overall_label: cli.diagnostics.repair.overall_label
-      profile_label: cli.diagnostics.repair.profile_label
-      python_label: cli.diagnostics.repair.python_label
-      version_label: cli.diagnostics.repair.version_label
+      auth_label: Autenticació
+      checks_heading: Comprovacions
+      detail_label: Detall
+      logs_label: Logs
+      next_label: Següent
+      note_label: Nota
+      overall_label: Estat
+      profile_label: Perfil
+      python_label: Python
+      version_label: Versió
     summary:
-      auth_no_session: cli.diagnostics.summary.auth_no_session
-      auth_none: cli.diagnostics.summary.auth_none
-      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      auth_no_session: El proveïdor d'autenticació %{provider} no té cap sessió preparada
+      auth_none: L'autenticació no està configurada
+      auth_session_ready: Sessió d'autenticació preparada per a %{provider}
+      auth_state_unreadable: No es pot comprovar la preparació d'autenticació fins
+        que l'estat segur del flux sigui llegible.
       profile_keys_set: cli.diagnostics.summary.profile_keys_set
       profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
-      profile_none: cli.diagnostics.summary.profile_none
+      profile_none: No hi ha cap perfil configurat
+      profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
+      profile_unreadable: 'No es pot llegir el perfil: %{status}'
       registry_counts: cli.diagnostics.summary.registry_counts
       registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
       registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
@@ -895,7 +913,8 @@ cli:
       registry_unavailable: cli.diagnostics.summary.registry_unavailable
       secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
       secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
-      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      secure_objects_unreadable: '%{unreadable} fila(es) il·legible(s), %{readable}
+        fila(es) llegible(s)'
       state_backend_readable: cli.diagnostics.summary.state_backend_readable
       state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
       venv_in_sync: cli.diagnostics.summary.venv_in_sync

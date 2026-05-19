@@ -125,10 +125,21 @@ application:
           vagy hagyd lejárni a zárat, ha a folyamat összeomlott.
         lock_held_suggestion: 'Az aktív hitelesítési zár állapotának megtekintéséhez
           futtasd: `aeat config auth status --format json`.'
+    clave_movil:
+      health:
+        operator_completion_required: Kész; kezelői Cl@ve befejezést igényel.
     operator:
       errors:
+        dangling_active_profile: Az aktív profil mutatója ('%{active_profile}') nem
+          regisztrált profil bucketre mutat. Futtasd az `aeat config profile list`
+          parancsot a regisztrált profilok megtekintéséhez, majd az `aeat config profile
+          switch NAME` vagy `aeat config profile create NAME` parancsot.
         no_active_bucket: Nincs aktív profil; futtasd a `aeat config profile create
           NAME` parancsot a hitelesítés beállítása előtt.
+        unreadable_active_profile: Az aktív profil ('%{active_profile}') bucket manifesttel
+          rendelkezik, de nincs olvasható profilrekordja (status=%{status}). Futtasd
+          az `aeat config repair profile --clear-active --yes` parancsot, majd válts
+          érvényes profilra vagy hozz létre egyet a hitelesítés beállítása előtt.
     provider_impact:
       certificate_ready: A tanúsítványos hitelesítés kész. A kezelő ugyanazt a CLI
         benyújtási folyamatot használja az AEAT által támogatott olvasásokhoz; minden
@@ -795,8 +806,10 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
-      profile_clear_active_help: cli.config.repair.profile_clear_active_help
-      profile_help: cli.config.repair.profile_help
+      profile_clear_active_help: Mutatófájlból származó aktív profil törlése csak
+        akkor, ha olvashatatlan profilállapotra mutat.
+      profile_help: Az aktív profilmutató vizsgálata és javítása.
+      profile_requires_yes: Add meg a --yes kapcsolót az aktív profilmutató törléséhez.
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
         --yes szükséges)
       quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
@@ -808,7 +821,7 @@ cli:
       reset_state_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
         a megerősítéshez, vagy adj --dry-run paramétert az ujjlenyomat megtekintéséhez.
       reset_state_yes_help: A munkafolyamat-állapot visszaállítás kifejezett megerősítése
-      yes_help: cli.config.repair.yes_help
+      yes_help: Javítás megerősítése.
     reset:
       help: Operátor által megadott konfigurációs hatókörök visszaállítása
       invalid_scope: 'Érvénytelen hatókör: %{scope}. Az érvényes hatókörök: %{valid}.'
@@ -857,23 +870,27 @@ cli:
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
-      auth_label: cli.diagnostics.repair.auth_label
-      checks_heading: cli.diagnostics.repair.checks_heading
-      detail_label: cli.diagnostics.repair.detail_label
-      logs_label: cli.diagnostics.repair.logs_label
-      next_label: cli.diagnostics.repair.next_label
-      note_label: cli.diagnostics.repair.note_label
-      overall_label: cli.diagnostics.repair.overall_label
-      profile_label: cli.diagnostics.repair.profile_label
-      python_label: cli.diagnostics.repair.python_label
-      version_label: cli.diagnostics.repair.version_label
+      auth_label: Hitelesítés
+      checks_heading: Ellenőrzések
+      detail_label: Részlet
+      logs_label: Naplók
+      next_label: Következő
+      note_label: Megjegyzés
+      overall_label: Állapot
+      profile_label: Profil
+      python_label: Python
+      version_label: Verzió
     summary:
-      auth_no_session: cli.diagnostics.summary.auth_no_session
-      auth_none: cli.diagnostics.summary.auth_none
-      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete
+      auth_none: A hitelesítés nincs beállítva
+      auth_session_ready: A hitelesítési munkamenet kész ehhez: %{provider}
+      auth_state_unreadable: A hitelesítési készenlét nem ellenőrizhető, amíg a biztonságos
+        workflow állapot nem olvasható.
       profile_keys_set: cli.diagnostics.summary.profile_keys_set
       profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
-      profile_none: cli.diagnostics.summary.profile_none
+      profile_none: Nincs beállított profil
+      profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
+      profile_unreadable: 'A profil nem olvasható: %{status}'
       registry_counts: cli.diagnostics.summary.registry_counts
       registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
       registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
@@ -881,7 +898,8 @@ cli:
       registry_unavailable: cli.diagnostics.summary.registry_unavailable
       secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
       secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
-      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      secure_objects_unreadable: '%{unreadable} olvashatatlan sor, %{readable} olvasható
+        sor'
       state_backend_readable: cli.diagnostics.summary.state_backend_readable
       state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
       venv_in_sync: cli.diagnostics.summary.venv_in_sync
