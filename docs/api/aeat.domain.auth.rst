@@ -1,7 +1,7 @@
-aeat.core.errors package
+aeat.domain.auth package
 ========================
 
-.. automodule:: aeat.core.errors
+.. automodule:: aeat.domain.auth
    :members:
    :show-inheritance:
    :undoc-members:
@@ -12,4 +12,4 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   aeat.core.errors.registry
+   aeat.domain.auth.apoderamientos

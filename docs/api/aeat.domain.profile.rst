@@ -22,3 +22,4 @@ Submodules
    :maxdepth: 4
 
    aeat.domain.profile.errors
+   aeat.domain.profile.family

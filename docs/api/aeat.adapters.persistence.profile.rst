@@ -14,4 +14,3 @@ Submodules
 
    aeat.adapters.persistence.profile.assets
    aeat.adapters.persistence.profile.inventory
-   aeat.adapters.persistence.profile.tax_residence
