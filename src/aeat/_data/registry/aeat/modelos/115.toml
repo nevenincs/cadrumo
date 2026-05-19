@@ -75,6 +75,7 @@ number = "03"
 label = "Retenciones e ingresos a cuenta"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
 required = false
 input_kind = "computed"
 formula = "modelo-115-retenciones"
