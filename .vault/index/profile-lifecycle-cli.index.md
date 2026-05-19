@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-cli'
-date: '2026-05-18'
+date: '2026-05-19'
 related:
   - '[[2026-05-16-profile-lifecycle-cli-P01-S01]]'
   - '[[2026-05-16-profile-lifecycle-cli-P01-S02]]'
@@ -25,6 +25,7 @@ related:
   - '[[2026-05-18-profile-lifecycle-cli-adr]]'
   - '[[2026-05-18-profile-lifecycle-cli-audit]]'
   - '[[2026-05-18-profile-lifecycle-cli-plan]]'
+  - '[[2026-05-19-profile-lifecycle-cli-reference]]'
 ---
 
 # `profile-lifecycle-cli` feature index
@@ -62,6 +63,10 @@ Auto-generated index of all documents tagged with `#profile-lifecycle-cli`.
 
 - `2026-05-16-profile-lifecycle-cli-plan` - `profile-lifecycle-cli` plan
 - `2026-05-18-profile-lifecycle-cli-plan` - `profile-lifecycle-cli` cascade closure plan
+
+### reference
+
+- `2026-05-19-profile-lifecycle-cli-reference` - `profile-lifecycle-cli` reference: feature surface gate
 
 ### research
 
