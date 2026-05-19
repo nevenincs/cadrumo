@@ -528,7 +528,7 @@ The following enum classes carry filing/draft/submission/modelo-record lifecycle
 | `SubmissionStatus` | `src/aeat/domain/submission/_models.py` | `PENDING`, `IN_PROGRESS`, `SUBMITTED`, `ACKNOWLEDGED`, `REJECTED`, `FAILED` |
 | `ModeloDraftStatus` | `src/aeat/domain/submission/_protocols.py` | `DRAFT`, `VALIDATED`, `READY_TO_SUBMIT`, `APPROVED`, `APPROVAL_STALE`, `SUBMITTED`, `ACKNOWLEDGED`, `REJECTED`, `AMENDED`, `CANCELLED` |
 | `ModeloRecordStatus` | `src/aeat/domain/modelos/_filing_record.py` | `CURRENT`, `SUPERSEDED` |
-| `CalculationRevisionState` | `src/aeat/domain/modelos/_calculation_revision.py` | `DRAFT`, `FILED`, `FILED_SUPERSEDED`, `DISCARDED` |
+| `CalculationRevisionState` | `src/aeat/domain/modelos/_calculation_revision.py` | `DRAFT`, `VERIFIED_COMPLETE`, `FILED`, `FILED_SUPERSEDED`, `DISCARDED` |
 | `WorkUnitState` | `src/aeat/domain/modelos/_work_unit.py` | `DRAFT`, `DISCARDED` |
 | `ReconciliationStatus` | `src/aeat/application/filing/reconciliation/_schema.py` | `MATCH`, `DIVERGENT` |
 
@@ -571,7 +571,7 @@ The following enums encode internal-tool or persistence lifecycle states, not AE
 | Enum class | Current values | Recommended Spanish values | Rationale |
 | --- | --- | --- | --- |
 | `ModeloRecordStatus` | `CURRENT`, `SUPERSEDED` | `VIGENTE`, `SUPERSEDIDO` | `VIGENTE` is the AEAT-adjacent term for a currently active registration/declaration (e.g., AEAT uses `vigente` for active census registrations in RD 1065/2007 RGAGI). `SUPERSEDIDO` is a direct Spanish past-participle for the supersession concept; no closer AEAT term exists for this persistence-internal state. |
-| `CalculationRevisionState` | `DRAFT`, `FILED`, `FILED_SUPERSEDED`, `DISCARDED` | `BORRADOR`, `PRESENTADO`, `PRESENTADO_SUPERSEDIDO`, `DESCARTADO` | `PRESENTADO` mirrors `PRESENTADA` (the submission act); `DESCARTADO` is the operator-discard concept, cf. LGT Art. 73 settlement discretion. `BORRADOR` per Ley 35/2006 Art. 98. |
+| `CalculationRevisionState` | `DRAFT`, `VERIFIED_COMPLETE`, `FILED`, `FILED_SUPERSEDED`, `DISCARDED` | `BORRADOR`, `VERIFICADO_COMPLETO`, `PRESENTADO`, `PRESENTADO_SUPERSEDIDO`, `DESCARTADO` | `PRESENTADO` mirrors `PRESENTADA` (the submission act); `DESCARTADO` is the operator-discard concept, cf. LGT Art. 73 settlement discretion. `BORRADOR` per Ley 35/2006 Art. 98. `VERIFICADO_COMPLETO` is the post-verification, pre-presentation gate — the revision has passed every required-input + blocking-finding check and is locked for filing. Past-participle agreement (`verificado y completo`) matches Spanish adjective convention for compound state labels. Amendment: this 5th member was added to the enum in commit `a4cd19901` (2026-05-13, between this ADR's initial draft and the W04.P10 rename pass) and was missed by the original A7.4 table; recovered + renamed under task #51. |
 | `WorkUnitState` | `DRAFT`, `DISCARDED` | `BORRADOR`, `DESCARTADO` | Same rationale as `CalculationRevisionState`. |
 | `ReconciliationStatus` | `MATCH`, `DIVERGENT` | `COINCIDE`, `DIVERGENTE` | Tool-internal reconciliation labels. `COINCIDE` and `DIVERGENTE` are unambiguous Spanish equivalents with no statutory loading. |
 

@@ -15,7 +15,7 @@ Lifecycle states:
 * ``BORRADOR`` — newly calculated; mutable in the sense that
   re-running ``calculate`` creates a new revision rather than
   editing this one. Multiple borradores can coexist.
-* ``VERIFIED_COMPLETE`` — ``verify`` ran cleanly: all required
+* ``VERIFICADO_COMPLETO`` — ``verify`` ran cleanly: all required
   casillas resolved, zero blocking findings, source trace
   persisted. The revision is immutable from this point on; any
   recalculation produces a fresh borrador instead.
@@ -55,7 +55,7 @@ class CalculationRevisionState(StrEnum):
     """Closed enumeration of calculation-revision lifecycle states."""
 
     BORRADOR = "borrador"
-    VERIFIED_COMPLETE = "verified_complete"
+    VERIFICADO_COMPLETO = "verificado_completo"
     PRESENTADO = "presentado"
     PRESENTADO_SUPERSEDIDO = "presentado_supersedido"
     DESCARTADO = "descartado"
@@ -176,7 +176,7 @@ class CalculationRevision(BaseModel):
         updated_at: UTC timestamp of the most recent state transition.
             Equals ``created_at`` on a fresh draft.
         verified_at: UTC timestamp at which the revision transitioned
-            to ``VERIFIED_COMPLETE``. ``None`` for non-verified
+            to ``VERIFICADO_COMPLETO``. ``None`` for non-verified
             revisions.
         verified_by: Actor label captured at verification time.
             ``None`` for non-verified revisions.
@@ -255,7 +255,7 @@ class CalculationRevision(BaseModel):
                 "discarded_by",
                 "discard_reason",
             )
-        elif self.state is CalculationRevisionState.VERIFIED_COMPLETE:
+        elif self.state is CalculationRevisionState.VERIFICADO_COMPLETO:
             self._require_set("verified_at", "verified_by")
             self._require_none(
                 "filed_at", "filed_by", "superseded_at", "discarded_at", "discarded_by", "discard_reason"

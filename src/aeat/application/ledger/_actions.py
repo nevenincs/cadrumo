@@ -127,7 +127,7 @@ _LEDGER_EXPORT_FIELDNAMES = (
 )
 _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
     {
-        CalculationRevisionState.VERIFIED_COMPLETE,
+        CalculationRevisionState.VERIFICADO_COMPLETO,
         CalculationRevisionState.PRESENTADO,
         CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
     }

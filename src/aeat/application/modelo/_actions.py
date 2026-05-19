@@ -213,7 +213,7 @@ class ExternalFilingImportError(ModeloError):
 
 
 #: Legal anchors for the modelo workflow gate. The gate enforces
-#: that a Modelo declaration only transitions to VERIFIED_COMPLETE
+#: that a Modelo declaration only transitions to VERIFICADO_COMPLETO
 #: or FILED after the workflow engine ran auth + deadline-window +
 #: draft + preflight stages. The grounding spans:
 #:
@@ -1185,7 +1185,7 @@ def mark_revision_verified_complete(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
-    """Transition a draft revision to ``VERIFIED_COMPLETE``.
+    """Transition a draft revision to ``VERIFICADO_COMPLETO``.
 
     The revision must currently be in ``DRAFT`` state. After the
     transition the revision is immutable; subsequent calculation
@@ -1211,7 +1211,7 @@ def mark_revision_verified_complete(
     now = clock or datetime.now(UTC)
     verified = existing.model_copy(
         update={
-            "state": CalculationRevisionState.VERIFIED_COMPLETE,
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
             "verified_at": now,
             "verified_by": actor.strip(),
             "updated_at": now,
@@ -1431,8 +1431,8 @@ def verify_modelo_revision(
        findings are present and the completeness status is
        ``COMPLETE``, ``granted_verified_complete`` is ``True`` and
        the calculation revision transitions DRAFT →
-       VERIFIED_COMPLETE.
-    5. If the report would grant ``VERIFIED_COMPLETE``, run the
+       VERIFICADO_COMPLETO.
+    5. If the report would grant ``VERIFICADO_COMPLETO``, run the
        WorkflowEngine-owned gate before mutating state.
     6. Persist the report in the verification-report catalogue.
        Failed attempts persist so the audit trail explains why a
@@ -1524,7 +1524,7 @@ def verify_modelo_revision(
     if granted:
         verified = target.model_copy(
             update={
-                "state": CalculationRevisionState.VERIFIED_COMPLETE,
+                "state": CalculationRevisionState.VERIFICADO_COMPLETO,
                 "verified_at": now,
                 "verified_by": actor.strip(),
                 "updated_at": now,
@@ -1760,7 +1760,7 @@ def file_modelo_revision(
     State transitions performed atomically (from the caller's
     perspective — each repository save is sequenced):
 
-    1. Verify the revision is in ``VERIFIED_COMPLETE`` state.
+    1. Verify the revision is in ``VERIFICADO_COMPLETO`` state.
     2. Run the workflow gate for the revision's modelo and period.
     3. Look up any existing current filing record for the same
        (bucket, modelo, year, period) tuple.
@@ -1771,7 +1771,7 @@ def file_modelo_revision(
           ``FILED`` to ``FILED_SUPERSEDED``.
     5. Create the new filing record with status ``CURRENT``.
     6. Transition the target calculation revision from
-       ``VERIFIED_COMPLETE`` to ``FILED``.
+       ``VERIFICADO_COMPLETO`` to ``FILED``.
     7. Advance the work unit's ``filed_calculation_revision_id``
        and ``current_filing_record_id`` pointers.
 
@@ -1779,7 +1779,7 @@ def file_modelo_revision(
         CalculationRevisionNotFoundError: When the revision id is
             absent.
         CalculationRevisionStateError: When the revision is not in
-            ``VERIFIED_COMPLETE`` state.
+            ``VERIFICADO_COMPLETO`` state.
         WorkUnitNotFoundError: When the revision's parent work
             unit cannot be loaded.
         ModeloWorkflowGateError: When the workflow/preflight gate
@@ -1795,10 +1795,10 @@ def file_modelo_revision(
     target = revisions.get(calculation_revision_id)
     if target is None:
         raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
-    if target.state is not CalculationRevisionState.VERIFIED_COMPLETE:
+    if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
-            f"{target.state.value!r}; only VERIFIED_COMPLETE revisions can be filed"
+            f"{target.state.value!r}; only VERIFICADO_COMPLETO revisions can be filed"
         )
 
     work_units = wu_repo.load()
@@ -2057,7 +2057,7 @@ def amend_modelo_revision(
     3. Persist a new ``DRAFT`` calculation revision carrying
        ``amendment_kind``, ``amends_filing_record_id``, and the
        operator-supplied ``reason``.
-    4. Transition it through ``VERIFIED_COMPLETE`` (the verification
+    4. Transition it through ``VERIFICADO_COMPLETO`` (the verification
        contract for amendments is identity-equivalent to the
        calculate path because the registry-snapshot resolver still
        applies; here we mark it verified-complete directly because
@@ -2172,7 +2172,7 @@ def amend_modelo_revision(
     # Transition draft → verified-complete (operator opts in by calling amend).
     verified_amendment = amendment_draft.model_copy(
         update={
-            "state": CalculationRevisionState.VERIFIED_COMPLETE,
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
             "verified_at": now,
             "verified_by": actor.strip(),
             "updated_at": now,

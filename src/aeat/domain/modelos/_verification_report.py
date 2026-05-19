@@ -52,7 +52,7 @@ class VerificationCompletenessStatus(StrEnum):
     """Top-level verdict from one verification run.
 
     * ``COMPLETE`` — every required input resolved, zero blocking
-      findings. The revision transitions to ``VERIFIED_COMPLETE``.
+      findings. The revision transitions to ``VERIFICADO_COMPLETO``.
     * ``INCOMPLETE`` — required inputs missing or unresolved
       casillas remain. Soft refusal: operator can act on the
       missing-inputs list.

@@ -82,7 +82,7 @@ class ModeloExportCommand(BaseModel):
 
     Attributes:
         calculation_revision_id: SHA-256 hex id of the calculation
-            revision to export. Must be in ``VERIFIED_COMPLETE`` or
+            revision to export. Must be in ``VERIFICADO_COMPLETO`` or
             ``FILED`` state.
         output_path: Absolute or working-directory-relative path to
             write the fichero-BOE artefact. Parent directories are
@@ -154,7 +154,7 @@ def _load_revision_for_export(
             f"no calculation revision with id={calculation_revision_id!r}",
         )
     if revision.state not in {
-        CalculationRevisionState.VERIFIED_COMPLETE,
+        CalculationRevisionState.VERIFICADO_COMPLETO,
         CalculationRevisionState.PRESENTADO,
         CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
     }:

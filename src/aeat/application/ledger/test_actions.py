@@ -185,7 +185,7 @@ def _persist_verified_revision_citing_transaction(engine: Engine, *, transaction
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        state=CalculationRevisionState.VERIFIED_COMPLETE,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
         inputs_snapshot={"01": "1"},
         binding_overrides={},
         source_transaction_ids=(transaction_id,),
