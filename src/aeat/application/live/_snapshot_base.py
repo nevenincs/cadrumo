@@ -212,7 +212,18 @@ class SnapshotService(ABC, Generic[TPayload]):
 
     # ---- template methods --------------------------------------------------
 
-    def capture(self, **kwargs: Any) -> TPayload:
+    def _capture_with_lifecycle(self, **kwargs: Any) -> TPayload:
+        """Template method: subclasses expose a typed ``capture`` wrapper.
+
+        Phase 1 deviation from the proposal: the proposal placed ``capture``
+        directly on the base with ``**kwargs``. That forces every concrete
+        subclass to either accept ``**kwargs`` (losing type safety on
+        operator-visible signatures) or override ``capture`` with a narrower
+        signature (LSP-violating). Renaming the base hook resolves the
+        Liskov conflict while preserving the operator-facing keyword-only
+        signatures on each service.
+        """
+
         snapshot_id = self._derive_snapshot_id(**kwargs)
         if self._repository.exists(snapshot_id):
             return self._repository.load(snapshot_id)
@@ -298,7 +309,7 @@ class StatelessSnapshotService(ABC, Generic[TPayload]):
     @abstractmethod
     def _build_payload(self, *, snapshot_id: str, **kwargs: Any) -> TPayload: ...
 
-    def capture(self, **kwargs: Any) -> TPayload:
+    def _capture_stateless(self, **kwargs: Any) -> TPayload:
         snapshot_id = self._derive_snapshot_id(**kwargs)
         if self._repository.exists(snapshot_id):
             return self._repository.load(snapshot_id)

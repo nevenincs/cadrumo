@@ -254,7 +254,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
 
     # ---- public API (signatures unchanged for external callers) ----------
 
-    def capture(  # type: ignore[override]
+    def capture(
         self,
         *,
         filing_year: int,
@@ -263,7 +263,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
         source_url: str,
         binding_values: Mapping[str, _BorradorValue],
     ) -> Borrador100Snapshot:
-        return super().capture(
+        return self._capture_with_lifecycle(
             filing_year=filing_year,
             period=period,
             captured_at=captured_at,
@@ -277,7 +277,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
         filing_year: int | None = None,
         state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
     ) -> tuple[Borrador100Snapshot, ...]:
-        snapshots = super().list_snapshots()
+        snapshots: tuple[Borrador100Snapshot, ...] = super().list_snapshots()
         if filing_year is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.filing_year == filing_year)
         if state is not None:
