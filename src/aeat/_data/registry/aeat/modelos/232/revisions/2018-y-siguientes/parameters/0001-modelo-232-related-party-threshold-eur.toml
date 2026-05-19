@@ -1,0 +1,15 @@
+[[revisions."2018-y-siguientes".parameters]]
+id = "modelo-232-related-party-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-634-2015:art-13"]
+source_refs = ["aeat-modelo-232-procedure"]
+
+[[revisions."2018-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-232-procedure"
+required_text = ["operaciones vinculadas"]
+
+[[revisions."2018-y-siguientes".parameters.values]]
+value = "100000.00"
+date_axis = "filing_period"
+valid_from = 2018-01-01

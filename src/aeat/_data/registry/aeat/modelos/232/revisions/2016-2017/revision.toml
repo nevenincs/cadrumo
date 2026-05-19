@@ -1,0 +1,19 @@
+[revisions."2016-2017"]
+label = "Modelo 232 ejercicios 2016-2017 (Orden HFP/816/2017 v13)"
+valid_from = 2016-01-01
+valid_to = 2017-12-31
+period_selector = { years = [2016, 2017], periods = ["0A"] }
+legal_refs = [
+    "ley-27-2014:art-18",
+    "rd-634-2015:art-13",
+    "orden-hfp-816-2017:art-1",
+    "orden-hfp-816-2017:art-2",
+    "orden-hfp-816-2017:art-3",
+    "ley-27-2014:art-19",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-232-2016",
+    "aeat-modelo-232-procedure",
+    "boe-modelo-232-2017-form",
+]
