@@ -8,7 +8,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import Settings
-from ...core.i18n import tr as render_translation
+from ...core.i18n import tr
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError
@@ -193,7 +193,7 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
 
 
 def _render_summary(value: str) -> str:
-    rendered = render_translation(value)
+    rendered = tr(value)
     return rendered or value
 
 
