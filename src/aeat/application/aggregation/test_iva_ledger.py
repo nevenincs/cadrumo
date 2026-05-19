@@ -27,7 +27,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.vat import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
+from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from . import (
     AggregationValidationError,
     IvaLedgerAggregationIssueReason,
