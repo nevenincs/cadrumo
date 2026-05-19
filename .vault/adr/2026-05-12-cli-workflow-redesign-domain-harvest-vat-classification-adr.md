@@ -21,6 +21,11 @@ related:
 
 # `cli-workflow-redesign` adr: `domain harvest VAT classification` | (**status:** `accepted`)
 
+> **PARTIALLY-SUPERSEDED 2026-05-19**: The Value-Added Tax direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers, VATClassification and VATClassificationCriteria consolidate into IvaInvoiceClassification, and domain/vat/_classification.py migrates into domain/iva/_classification.py. The CLI verb app-ledger-classify, the application wrapper aeat.application.ledger.classify_ledger_transaction, the JSON output contract, the persistence boundary, and the rejected-shapes list remain in force; only the classification symbol names and module path rename per the canonical rename ledger.
+> See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
+> rename ledger and Spanish-stem terminology authority.
+
+
 ## CLI Backend Boundary
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.

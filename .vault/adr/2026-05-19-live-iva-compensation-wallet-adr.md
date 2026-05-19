@@ -12,6 +12,11 @@ related:
 
 # `live-iva-compensation-wallet` adr: `AEAT wallet as primary IVA compensation authority` | (**status:** `accepted`)
 
+> **Updated 2026-05-19**: Tax-domain identifier mentions in this ADR follow the Spanish-stem terminology authority. The wallet-adapter design (IvaCompensationWalletObservation, IvaCompensationReconciliationDecision, read-only Clave Movil flow, application-level reconciliation layer, blocking-decision contract, and live-write prohibition) is already Spanish-stem aligned and unaffected.
+> See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
+> rename ledger and Spanish-stem terminology authority.
+
+
 ## Problem Statement
 
 The Modelo 303 compensation-chain remediation can calculate a prior balance from
