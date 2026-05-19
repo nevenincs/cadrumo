@@ -30,7 +30,7 @@ Unify minor colliding and shadowed identifiers under unique canonical names, ens
 Resolve import shadows and exception-catching bugs across WorkUnitNotFoundError, CCAA, and ModeloRepository.
 
 - [x] `W01.P01.S01` - Consolidate WorkUnitNotFoundError to actions.py and raise it in reconcile.py; `src/aeat/application/modelo/_reconcile.py`.
-- [ ] `W01.P01.S02` - Rename calendar-specific CCAA enum to CalendarCCAA to prevent collision with profile CCAA; `src/aeat/domain/deadlines/_festivos.py`.
+- [x] `W01.P01.S02` - Rename calendar-specific CCAA enum to CalendarCCAA to prevent collision with profile CCAA; `src/aeat/domain/deadlines/_festivos.py`.
 - [ ] `W01.P01.S03` - Rename read-only static ModeloRepository facade to StaticModeloRepository; `src/aeat/core/resources/_repos/modelos.py`.
 
 ## Wave `W02` - Boilerplate Consolidation
