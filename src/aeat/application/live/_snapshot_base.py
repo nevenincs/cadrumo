@@ -21,10 +21,12 @@ Design notes:
   ``_build_active_payload`` to express their domain axis and construction
   contract; everything else (state transitions, repository orchestration) is
   shared.
-* ``StatelessSnapshotService`` is provided for append-only services
-  (Expedientes, Notifications) that have no state machine. It deliberately
-  omits supersession helpers. Phase 1 does not migrate any stateless service;
-  the class is shipped now so Phase 2/3 can adopt it without re-extracting.
+* ``StatelessSnapshotService`` is the append-only base for services
+  (Expedientes, Notifications) with no state machine. It accepts
+  ``bucket_id`` per call and constructs a fresh repository for the call
+  from an injected ``repository_factory`` — the natural shape for
+  services whose public verbs are themselves multi-bucket. Supersession
+  and discard helpers are deliberately absent.
 """
 
 from __future__ import annotations
@@ -32,8 +34,10 @@ from __future__ import annotations
 import hashlib
 import json
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
+from pathlib import Path
 from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
 
 from pydantic import BaseModel
@@ -302,44 +306,183 @@ class SnapshotService(ABC, Generic[TPayload]):
 
 
 class StatelessSnapshotService(ABC, Generic[TPayload]):
-    """Append-only base for snapshot services without a state machine.
+    """Append-only base for stateless snapshot services with per-call buckets.
 
-    Phase 1 does not migrate any stateless service; the class is provided so
-    Expedientes/Notifications can adopt it in Phase 3 without re-extracting
-    the abstraction. Stateless services preserve chronological history
-    without supersession or discard semantics.
+    Subclasses inject a ``repository_factory`` that returns a fresh
+    :class:`SnapshotRepository` for a given bucket id; each public verb
+    accepts ``bucket_id`` and materialises the repository on demand. The
+    per-bucket repository is responsible for storage layout and bucket
+    isolation; the base provides the shared dedup, list, and resolve
+    logic.
+
+    Subclasses implement two hooks: ``_derive_snapshot_id`` and
+    ``_build_payload``. ``_build_payload`` receives the resolved
+    ``bucket_id`` so payload models can record it on the persisted
+    record.
     """
 
-    def __init__(self, *, bucket_id: str, repository: SnapshotRepository[TPayload]) -> None:
+    def __init__(
+        self,
+        *,
+        repository_factory: Callable[[str], SnapshotRepository[TPayload]],
+    ) -> None:
+        self._repository_factory = repository_factory
+
+    def _repository_for(self, bucket_id: str) -> SnapshotRepository[TPayload]:
+        repository = self._repository_factory(bucket_id)
         if repository.bucket_id != bucket_id.strip():
             raise LiveApplicationInputError(
-                f"snapshot service bucket_id={bucket_id!r} does not match repository bucket "
-                f"{repository.bucket_id!r}"
+                f"snapshot repository for bucket_id={bucket_id!r} reported "
+                f"bucket {repository.bucket_id!r}"
             )
-        self._repository: SnapshotRepository[TPayload] = repository
+        return repository
 
     @abstractmethod
     def _derive_snapshot_id(self, **kwargs: Any) -> str: ...
 
     @abstractmethod
-    def _build_payload(self, *, snapshot_id: str, **kwargs: Any) -> TPayload: ...
+    def _build_payload(
+        self, *, snapshot_id: str, bucket_id: str, **kwargs: Any
+    ) -> TPayload: ...
 
-    def _capture_stateless(self, **kwargs: Any) -> TPayload:
+    def _capture_stateless(self, *, bucket_id: str, **kwargs: Any) -> TPayload:
+        repository = self._repository_for(bucket_id)
         snapshot_id = self._derive_snapshot_id(**kwargs)
-        if self._repository.exists(snapshot_id):
-            return self._repository.load(snapshot_id)
-        payload = self._build_payload(snapshot_id=snapshot_id, **kwargs)
-        self._repository.save(payload)
+        if repository.exists(snapshot_id):
+            return repository.load(snapshot_id)
+        payload = self._build_payload(
+            snapshot_id=snapshot_id, bucket_id=repository.bucket_id, **kwargs
+        )
+        repository.save(payload)
         return payload
 
-    def list_snapshots(self) -> tuple[TPayload, ...]:
-        return self._repository.list_snapshots()
+    def list_snapshots(self, *, bucket_id: str) -> tuple[TPayload, ...]:
+        return self._repository_for(bucket_id).list_snapshots()
 
-    def resolve_snapshot(self, snapshot_id: str) -> TPayload:
-        return self._repository.resolve(snapshot_id)
+    def resolve_snapshot(self, *, bucket_id: str, snapshot_id: str) -> TPayload:
+        return self._repository_for(bucket_id).resolve(snapshot_id)
+
+
+class JsonlSnapshotRepository(Generic[TPayload]):
+    """Generic file-backed JSONL snapshot repository for one bucket.
+
+    Structurally satisfies :class:`SnapshotRepository` so any stateless
+    file-backed live service can adopt it without rewriting load/list/
+    resolve/save. Storage layout is one JSONL file per bucket; callers
+    inject the payload model class, the per-bucket storage-path resolver,
+    and the not-found error factory so per-service exception class
+    identities and CLI suggestion strings are preserved.
+
+    The payload model must expose ``snapshot_id`` and ``bucket_id``
+    attributes (every persisted live snapshot model in this codebase
+    does); the repository validates the payload's ``bucket_id`` against
+    the repository's bucket on save.
+    """
+
+    def __init__(
+        self,
+        *,
+        bucket_id: str,
+        payload_model: type[TPayload],
+        storage_path: Callable[[str], Path],
+        not_found_factory: Callable[[str], Exception],
+        ambiguous_prefix_factory: Callable[[str, tuple[str, ...]], Exception],
+        domain_label: str,
+    ) -> None:
+        trimmed = bucket_id.strip()
+        if not trimmed:
+            raise LiveApplicationInputError("bucket_id must not be blank")
+        self._bucket_id = trimmed
+        self._payload_model = payload_model
+        self._storage_path = storage_path
+        self._not_found_factory = not_found_factory
+        self._ambiguous_prefix_factory = ambiguous_prefix_factory
+        self._domain_label = domain_label
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    def _read_all(self) -> list[TPayload]:
+        path = self._storage_path(self._bucket_id)
+        if not path.exists():
+            return []
+        return [
+            self._payload_model.model_validate_json(line)
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    def _write_all(self, snapshots: list[TPayload]) -> None:
+        path = self._storage_path(self._bucket_id)
+        payload = "\n".join(s.model_dump_json() for s in snapshots)
+        if payload:
+            payload += "\n"
+        path.write_text(payload, encoding="utf-8")
+
+    def exists(self, snapshot_id: str) -> bool:
+        return any(_snapshot_id_of(s) == snapshot_id for s in self._read_all())
+
+    def load(self, snapshot_id: str) -> TPayload:
+        for snapshot in self._read_all():
+            if _snapshot_id_of(snapshot) == snapshot_id:
+                return snapshot
+        raise self._not_found_factory(snapshot_id)
+
+    def list_snapshots(self) -> tuple[TPayload, ...]:
+        return tuple(self._read_all())
+
+    def resolve(self, snapshot_id: str) -> TPayload:
+        matches = [
+            s
+            for s in self._read_all()
+            if _snapshot_id_of(s) == snapshot_id or _snapshot_id_of(s).startswith(snapshot_id)
+        ]
+        if not matches:
+            raise self._not_found_factory(snapshot_id)
+        if len(matches) > 1:
+            full_ids = tuple(sorted(_snapshot_id_of(s) for s in matches))
+            raise self._ambiguous_prefix_factory(snapshot_id, full_ids)
+        return matches[0]
+
+    def save(self, snapshot: TPayload) -> None:
+        snapshot_bucket = _bucket_id_of(snapshot)
+        if snapshot_bucket != self._bucket_id:
+            raise LiveApplicationInputError(
+                f"{self._domain_label} snapshot bucket_id={snapshot_bucket!r} "
+                f"does not match repository bucket {self._bucket_id!r}"
+            )
+        snapshot_id = _snapshot_id_of(snapshot)
+        snapshots = self._read_all()
+        for index, existing in enumerate(snapshots):
+            if _snapshot_id_of(existing) == snapshot_id:
+                snapshots[index] = snapshot
+                self._write_all(snapshots)
+                return
+        snapshots.append(snapshot)
+        self._write_all(snapshots)
+
+
+def _snapshot_id_of(payload: BaseModel) -> str:
+    snapshot_id = getattr(payload, "snapshot_id", None)
+    if not isinstance(snapshot_id, str):
+        raise LiveApplicationInputError(
+            f"payload {type(payload).__name__} has no string snapshot_id attribute"
+        )
+    return snapshot_id
+
+
+def _bucket_id_of(payload: BaseModel) -> str:
+    bucket_id = getattr(payload, "bucket_id", None)
+    if not isinstance(bucket_id, str):
+        raise LiveApplicationInputError(
+            f"payload {type(payload).__name__} has no string bucket_id attribute"
+        )
+    return bucket_id
 
 
 __all__ = [
+    "JsonlSnapshotRepository",
     "SnapshotLifecycleState",
     "SnapshotNotFoundError",
     "SnapshotRepository",
