@@ -11,7 +11,7 @@ from __future__ import annotations
 from ...core.errors import AeatError
 
 __all__ = [
-    "CensusRatioMismatchError",
+    "CensoRatioMismatchError",
     "UsageRatioError",
     "UsageRatioPersistenceError",
     "UsageRatioValidationError",
@@ -43,7 +43,7 @@ class UsageRatioValidationError(UsageRatioError, ValueError):
     """
 
 
-class CensusRatioMismatchError(UsageRatioError):
+class CensoRatioMismatchError(UsageRatioError):
     """Raised when a persisted HOME_OFFICE ratio disagrees with the census.
 
     Surfaced by

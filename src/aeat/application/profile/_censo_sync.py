@@ -1,6 +1,6 @@
 """Operator-facing 036 census-sync service.
 
-`CensusSyncService` exposes the four-verb surface the CLI mounts under
+`CensoSyncService` exposes the four-verb surface the CLI mounts under
 ``aeat config profile census {refresh, show, compare, apply}``. AEAT is
 the binding legal source of truth per the 2026-05-16 amendment to the
 modelo-036-037-foundation ADR; this service is the only path that
@@ -9,7 +9,7 @@ operator's profile.
 
 The service composes:
 
-* :class:`aeat.application.live._census.CensusSnapshotService` for
+* :class:`aeat.application.live._censo.CensoSnapshotService` for
   bucket-scoped snapshot persistence,
 * :class:`aeat.application.user_profile._repository.UserProfileLifecycleRepository`
   for reading/writing the profile,
@@ -20,7 +20,7 @@ The sede G313 live fetch is injected as a ``fact_source`` callable so
 the same service body backs both the production sede adapter and
 test scaffolding without conditional code paths. The dependent-
 stamping walker (mark CalculationRevision / WorkUnit / FilingDraft /
-FilingRecord as CENSUS_STALE on apply) is the P05 follow-on; this
+ModeloRecord as CENSUS_STALE on apply) is the P05 follow-on; this
 service emits ``CENSUS_APPLIED`` so the walker can hook in via that
 event without further coupling.
 """
@@ -36,14 +36,14 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...domain.user_profile._values import UserProfileFact, UserProfileRecord
-from ..live._census import (
-    CensusSnapshot,
-    CensusSnapshotService,
+from ..live._censo import (
+    CensoSnapshot,
+    CensoSnapshotService,
 )
 from ..user_profile._repository import UserProfileLifecycleRepository
-from ._census_errors import (
-    CensusApplyConflictError,
-    CensusNotAvailableError,
+from ._censo_errors import (
+    CensoApplyConflictError,
+    CensoNotAvailableError,
 )
 
 
@@ -53,7 +53,7 @@ CENSUS_SOURCE_TAG: Final = "aeat_census_read"
 """``UserProfileFact.source`` value stamped on every census-derived fact."""
 
 
-class CensusComparisonStatus(StrEnum):
+class CensoComparisonStatus(StrEnum):
     """Per-field comparison outcome between snapshot and profile.
 
     Attributes:
@@ -70,18 +70,18 @@ class CensusComparisonStatus(StrEnum):
     CENSUS_ONLY = "census_only"
 
 
-class CensusFieldComparison(BaseModel):
-    """One field-by-field row of a :class:`CensusProfileComparison`."""
+class CensoFieldComparison(BaseModel):
+    """One field-by-field row of a :class:`CensoProfileComparison`."""
 
     model_config = _STRICT_FROZEN
 
     path: str = Field(min_length=1, max_length=128)
     census_value: str | None
     profile_value: str | None
-    status: CensusComparisonStatus
+    status: CensoComparisonStatus
 
 
-class CensusProfileComparison(BaseModel):
+class CensoProfileComparison(BaseModel):
     """Result of ``census compare``: full field-by-field diff payload."""
 
     model_config = _STRICT_FROZEN
@@ -89,22 +89,22 @@ class CensusProfileComparison(BaseModel):
     snapshot_id: str = Field(min_length=1)
     profile_id: str = Field(min_length=1)
     captured_at: datetime
-    rows: tuple[CensusFieldComparison, ...] = Field(default_factory=tuple)
+    rows: tuple[CensoFieldComparison, ...] = Field(default_factory=tuple)
 
     @property
-    def diverging(self) -> tuple[CensusFieldComparison, ...]:
-        return tuple(row for row in self.rows if row.status is CensusComparisonStatus.DIVERGES)
+    def diverging(self) -> tuple[CensoFieldComparison, ...]:
+        return tuple(row for row in self.rows if row.status is CensoComparisonStatus.DIVERGES)
 
     @property
-    def census_only(self) -> tuple[CensusFieldComparison, ...]:
-        return tuple(row for row in self.rows if row.status is CensusComparisonStatus.CENSUS_ONLY)
+    def census_only(self) -> tuple[CensoFieldComparison, ...]:
+        return tuple(row for row in self.rows if row.status is CensoComparisonStatus.CENSUS_ONLY)
 
     @property
-    def profile_only(self) -> tuple[CensusFieldComparison, ...]:
-        return tuple(row for row in self.rows if row.status is CensusComparisonStatus.PROFILE_ONLY)
+    def profile_only(self) -> tuple[CensoFieldComparison, ...]:
+        return tuple(row for row in self.rows if row.status is CensoComparisonStatus.PROFILE_ONLY)
 
 
-class CensusApplyResult(BaseModel):
+class CensoApplyResult(BaseModel):
     """Result of ``census apply``: which facts landed on the profile."""
 
     model_config = _STRICT_FROZEN
@@ -116,7 +116,7 @@ class CensusApplyResult(BaseModel):
     seeded_home_office_categories: tuple[str, ...] = Field(default_factory=tuple)
 
 
-CensusFactSource = Callable[[], Mapping[str, str]]
+CensoFactSource = Callable[[], Mapping[str, str]]
 """Callable returning the AEAT-side census facts for one refresh.
 
 In production this is wired to the sede G313 adapter; in tests it is
@@ -125,7 +125,7 @@ sede-agnostic so the same body covers both call paths.
 """
 
 
-class CensusSyncService:
+class CensoSyncService:
     """Four-verb operator-facing service over census snapshots.
 
     ``refresh`` captures a new snapshot from AEAT, ``show`` returns
@@ -139,13 +139,13 @@ class CensusSyncService:
         self,
         *,
         bucket_id: str,
-        snapshots: CensusSnapshotService | None = None,
+        snapshots: CensoSnapshotService | None = None,
         profiles: UserProfileLifecycleRepository | None = None,
     ) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise ValueError("bucket_id must not be blank")
-        self._snapshots = snapshots or CensusSnapshotService(bucket_id=self._bucket_id)
+        self._snapshots = snapshots or CensoSnapshotService(bucket_id=self._bucket_id)
         self._profiles = profiles or UserProfileLifecycleRepository(bucket_id=self._bucket_id)
 
     @property
@@ -157,11 +157,11 @@ class CensusSyncService:
         *,
         profile_id: str,
         source_url: str,
-        fact_source: CensusFactSource,
-    ) -> CensusSnapshot:
+        fact_source: CensoFactSource,
+    ) -> CensoSnapshot:
         """Fetch fresh census facts and capture them as the new ACTIVE snapshot.
 
-        Raises :exc:`CensusNotAvailableError` when ``fact_source``
+        Raises :exc:`CensoNotAvailableError` when ``fact_source``
         returns an empty mapping — AEAT publishes no census for the
         operator's NIF, so the caller should re-run after enrolment
         (or confirm the certificate is registered against the NIF).
@@ -169,7 +169,7 @@ class CensusSyncService:
 
         facts = dict(fact_source())
         if not facts:
-            raise CensusNotAvailableError(
+            raise CensoNotAvailableError(
                 f"sede returned no parseable census for profile {profile_id!r}",
             )
         return self._snapshots.capture(
@@ -183,22 +183,22 @@ class CensusSyncService:
         self,
         *,
         profile_id: str,
-    ) -> CensusSnapshot:
+    ) -> CensoSnapshot:
         """Drive the live G313 Playwright fetch and persist the snapshot.
 
         Acquires (or refreshes) an authenticated :class:`AeatSession`,
         navigates to the documented G313 launcher, parses the response
-        into a :class:`CensusFactSet`, projects it into the dotted
+        into a :class:`CensoFactSet`, projects it into the dotted
         snapshot mapping, and captures via :meth:`refresh_census`.
 
         Raises:
-            :exc:`CensusNotAvailableError`: when AEAT publishes no
-                census for the operator's NIF (empty CensusFactSet).
+            :exc:`CensoNotAvailableError`: when AEAT publishes no
+                census for the operator's NIF (empty CensoFactSet).
             Any auth-layer or sede-layer error: propagated for the CLI
                 handler to surface.
         """
 
-        from ...adapters.outbound.aeat.sede._census_live import (
+        from ...adapters.outbound.aeat.sede._censo_live import (
             G313_LAUNCHER_URL,
             census_fact_set_to_mapping,
             fetch_g313_census,
@@ -216,7 +216,7 @@ class CensusSyncService:
         fact_set = await fetch_g313_census(result.session, settings=settings)
         facts = census_fact_set_to_mapping(fact_set)
         if not facts:
-            raise CensusNotAvailableError(
+            raise CensoNotAvailableError(
                 f"sede G313 returned no parseable census for profile {profile_id!r}; "
                 "confirm your certificate / cl@ve is registered against this NIF",
             )
@@ -232,14 +232,14 @@ class CensusSyncService:
         *,
         profile_id: str,
         snapshot_id: str | None = None,
-    ) -> CensusSnapshot:
+    ) -> CensoSnapshot:
         """Return one snapshot — the latest ACTIVE by default."""
 
         if snapshot_id is not None:
             return self._snapshots.resolve_snapshot(snapshot_id)
         active = self._snapshots.latest_active(profile_id=profile_id)
         if active is None:
-            raise CensusNotAvailableError(
+            raise CensoNotAvailableError(
                 f"no census snapshot captured for profile {profile_id!r}",
             )
         return active
@@ -249,10 +249,10 @@ class CensusSyncService:
         *,
         profile_id: str,
         snapshot_id: str | None = None,
-    ) -> CensusProfileComparison:
+    ) -> CensoProfileComparison:
         """Compare the active (or named) snapshot to the current profile.
 
-        Returns a :class:`CensusProfileComparison` with one row per
+        Returns a :class:`CensoProfileComparison` with one row per
         census-tracked path, classified into matches / diverges /
         profile_only / census_only.
         """
@@ -261,7 +261,7 @@ class CensusSyncService:
         profile = self._load_profile_or_empty(profile_id)
         profile_facts = _profile_facts_by_path(profile)
         rows = _compare(snapshot.census_facts, profile_facts)
-        return CensusProfileComparison(
+        return CensoProfileComparison(
             snapshot_id=snapshot.snapshot_id,
             profile_id=profile_id.strip(),
             captured_at=snapshot.captured_at,
@@ -273,7 +273,7 @@ class CensusSyncService:
         *,
         profile_id: str,
         snapshot_id: str | None = None,
-    ) -> CensusApplyResult:
+    ) -> CensoApplyResult:
         """Stamp the snapshot facts onto the profile, replacing prior ``aeat_census_read`` facts.
 
         Every census fact lands as a :class:`UserProfileFact` with
@@ -286,13 +286,13 @@ class CensusSyncService:
         for surfacing ``CENSUS_APPLIED`` on the bucket-event-history
         catalogue so the stale-cascade walker can react.
 
-        Raises :exc:`CensusApplyConflictError` when the profile is
+        Raises :exc:`CensoApplyConflictError` when the profile is
         absent — there is nothing to stamp facts onto.
         """
 
         snapshot = self.show_census(profile_id=profile_id, snapshot_id=snapshot_id)
         if not self._profiles.exists(profile_id):
-            raise CensusApplyConflictError(
+            raise CensoApplyConflictError(
                 f"profile {profile_id!r} does not exist; create it before applying census",
             )
         profile = self._profiles.load(profile_id)
@@ -317,7 +317,7 @@ class CensusSyncService:
                 unchanged.append(path)
             else:
                 written.append(path)
-        return CensusApplyResult(
+        return CensoApplyResult(
             snapshot_id=snapshot.snapshot_id,
             profile_id=profile_id.strip(),
             written_paths=tuple(written),
@@ -326,7 +326,7 @@ class CensusSyncService:
         )
 
     def _seed_home_office_usage_ratios_from_snapshot(
-        self, snapshot: CensusSnapshot,
+        self, snapshot: CensoSnapshot,
     ) -> tuple[str, ...]:
         """Compute HOME_OFFICE per-category ratios from the snapshot's
         vivienda_office facts and persist them into the usage-ratios
@@ -412,7 +412,7 @@ def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:
     """Flatten a profile's facts into a path → string-value mapping.
 
     Census comparison is string-based because the snapshot side is
-    string-only (see :class:`aeat.application.live._census`); the
+    string-only (see :class:`aeat.application.live._censo`); the
     profile's typed values are coerced via ``str()`` for the diff.
     """
 
@@ -432,24 +432,24 @@ def _coerce_to_str(value: object) -> str:
 def _compare(
     census_facts: Mapping[str, str],
     profile_facts: Mapping[str, str],
-) -> tuple[CensusFieldComparison, ...]:
+) -> tuple[CensoFieldComparison, ...]:
     paths = sorted(set(census_facts) | set(profile_facts))
-    rows: list[CensusFieldComparison] = []
+    rows: list[CensoFieldComparison] = []
     for path in paths:
         census_value = census_facts.get(path)
         profile_value = profile_facts.get(path)
         if census_value is not None and profile_value is not None:
             status = (
-                CensusComparisonStatus.MATCHES
+                CensoComparisonStatus.MATCHES
                 if census_value == profile_value
-                else CensusComparisonStatus.DIVERGES
+                else CensoComparisonStatus.DIVERGES
             )
         elif census_value is not None:
-            status = CensusComparisonStatus.CENSUS_ONLY
+            status = CensoComparisonStatus.CENSUS_ONLY
         else:
-            status = CensusComparisonStatus.PROFILE_ONLY
+            status = CensoComparisonStatus.PROFILE_ONLY
         rows.append(
-            CensusFieldComparison(
+            CensoFieldComparison(
                 path=path,
                 census_value=census_value,
                 profile_value=profile_value,
@@ -461,10 +461,10 @@ def _compare(
 
 __all__ = [
     "CENSUS_SOURCE_TAG",
-    "CensusApplyResult",
-    "CensusComparisonStatus",
-    "CensusFactSource",
-    "CensusFieldComparison",
-    "CensusProfileComparison",
-    "CensusSyncService",
+    "CensoApplyResult",
+    "CensoComparisonStatus",
+    "CensoFactSource",
+    "CensoFieldComparison",
+    "CensoProfileComparison",
+    "CensoSyncService",
 ]

@@ -10,11 +10,11 @@ from __future__ import annotations
 from ...core.errors import AeatError
 
 
-class CensusSyncError(AeatError):
+class CensoSyncError(AeatError):
     """Base for every 036 census-sync application failure."""
 
 
-class CensusNotAvailableError(CensusSyncError):
+class CensoNotAvailableError(CensoSyncError):
     """Raised when the sede G313 endpoint returns no parseable census.
 
     Typical cause: the operator is not yet enrolled in IAE (no alta
@@ -26,7 +26,7 @@ class CensusNotAvailableError(CensusSyncError):
     """
 
 
-class CensusFieldValidationError(CensusSyncError):
+class CensoFieldValidationError(CensoSyncError):
     """Raised when sede G313 returns a value the schema cannot accept.
 
     Examples: an unknown ``establecimiento_type`` enum, a withholding
@@ -37,7 +37,7 @@ class CensusFieldValidationError(CensusSyncError):
     """
 
 
-class CensusApplyConflictError(CensusSyncError):
+class CensoApplyConflictError(CensoSyncError):
     """Raised when ``apply`` aborts because a dependent's state cannot
     be safely stamped.
 
@@ -51,8 +51,8 @@ class CensusApplyConflictError(CensusSyncError):
 
 
 __all__ = [
-    "CensusApplyConflictError",
-    "CensusFieldValidationError",
-    "CensusNotAvailableError",
-    "CensusSyncError",
+    "CensoApplyConflictError",
+    "CensoFieldValidationError",
+    "CensoNotAvailableError",
+    "CensoSyncError",
 ]

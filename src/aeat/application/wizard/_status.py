@@ -14,8 +14,8 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from ...core.i18n import tr
 from ...domain.deadlines._models import (
     AutonomoProfile,
-    FilingEnrollment,
-    FilingIVAProfile,
+    ModeloEnrollment,
+    ModeloIVAProfile,
     IVARegime,
 )
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
@@ -188,12 +188,12 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
         does_intracomunitario=typed.does_intracomunitario,
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
-        iva=FilingIVAProfile(
+        iva=ModeloIVAProfile(
             roi_enrolled=typed.iva_roi_enrolled,
             oss_enrolled=typed.iva_oss_enrolled,
             intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
         ),
-        enrollment=FilingEnrollment(
+        enrollment=ModeloEnrollment(
             large_company=typed.enrollment_large_company,
             public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
         ),

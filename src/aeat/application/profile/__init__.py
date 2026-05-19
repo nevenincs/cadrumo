@@ -8,32 +8,32 @@ the persistence + projection boundary while this module exposes the
 operator workflows that compose it.
 """
 
-from ._census_errors import (
-    CensusApplyConflictError,
-    CensusFieldValidationError,
-    CensusNotAvailableError,
-    CensusSyncError,
+from ._censo_errors import (
+    CensoApplyConflictError,
+    CensoFieldValidationError,
+    CensoNotAvailableError,
+    CensoSyncError,
 )
-from ._census_sync import (
+from ._censo_sync import (
     CENSUS_SOURCE_TAG,
-    CensusApplyResult,
-    CensusComparisonStatus,
-    CensusFactSource,
-    CensusFieldComparison,
-    CensusProfileComparison,
-    CensusSyncService,
+    CensoApplyResult,
+    CensoComparisonStatus,
+    CensoFieldComparison,
+    CensoProfileComparison,
+    CensoSyncService,
+    CensoFactSource,
 )
 
 __all__ = [
     "CENSUS_SOURCE_TAG",
-    "CensusApplyConflictError",
-    "CensusApplyResult",
-    "CensusComparisonStatus",
-    "CensusFactSource",
-    "CensusFieldComparison",
-    "CensusFieldValidationError",
-    "CensusNotAvailableError",
-    "CensusProfileComparison",
-    "CensusSyncError",
-    "CensusSyncService",
+    "CensoApplyConflictError",
+    "CensoApplyResult",
+    "CensoComparisonStatus",
+    "CensoFieldComparison",
+    "CensoFieldValidationError",
+    "CensoNotAvailableError",
+    "CensoProfileComparison",
+    "CensoSyncError",
+    "CensoSyncService",
+    "CensoFactSource",
 ]

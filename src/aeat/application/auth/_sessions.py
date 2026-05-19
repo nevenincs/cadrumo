@@ -7,9 +7,9 @@ import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SkipValidation, ValidationError
 
 from ...adapters.outbound.aeat.auth import _session_store
 from ...core.errors import AeatError
@@ -63,8 +63,8 @@ class AuthenticatedAeatSessionResult(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     provider_kind: AuthProviderKind
-    session: AeatSession
-    assertion: AeatLoginAssertion
+    session: SkipValidation[Any]
+    assertion: SkipValidation[Any]
     reused_persisted_session: bool
     acquired_lock: AuthAcquisitionLockRecord | None = None
     reset_lock: AuthAcquisitionLockStatus | None = None

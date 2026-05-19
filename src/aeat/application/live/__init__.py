@@ -3,37 +3,48 @@
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.sede import (
-    Declaration,
-    FiledDeclarationObservationStore,
+    Declaracion,
+    FiledDeclaracionObservation,
+    FiledDeclaracionObservationStore,
     IvaCompensationWalletObservation,
+    SedeParseError,
     capture_previous_filing_observations,
     capture_relation_source_observations,
     fetch_iva_compensation_wallet,
     open_declarations_register,
+    registry_observation_from_filed_declaration,
     shared_playwright,
 )
 from ...application.auth import ensure_authenticated_aeat_session
-from ...application.calculations import reconcile_modelo_303_iva_compensation
+from ...application.calculations import (
+    CalculationObservationRepository,
+    observation_key,
+    reconcile_modelo_303_iva_compensation,
+)
 from ...core.access_gate import AeatAccessGate
 from ...core.config import Settings, load_settings
 from ...core.resources import bundled_path, resources
+from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     Borrador100SnapshotService,
-    Borrador100SnapshotState,
+    BorradorSnapshotNotFoundError,
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
 )
+from ._censo import CensoSnapshotNotFoundError
 from ._errors import LiveApplicationError, LiveApplicationInputError
+from ._snapshot_base import SnapshotLifecycleState
 
 
 class FiledDataCaptureReport(BaseModel):
@@ -48,6 +59,8 @@ class FiledDataCaptureReport(BaseModel):
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     casilla_count: int
+    calculation_observation_count: int
+    calculation_observation_keys: tuple[str, ...]
 
 
 class SourceFiledDataCaptureReport(BaseModel):
@@ -63,6 +76,8 @@ class SourceFiledDataCaptureReport(BaseModel):
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     casilla_count: int
+    calculation_observation_count: int
+    calculation_observation_keys: tuple[str, ...]
 
 
 class IvaWalletCaptureReport(BaseModel):
@@ -114,12 +129,12 @@ class FiledDataListingReport(BaseModel):
 
 
 def select_declarations_for_capture(
-    declarations: tuple[Declaration, ...],
+    declarations: tuple[Declaracion, ...],
     *,
     period: str | None = None,
     expediente_id: str | None = None,
     limit: int | None = None,
-) -> tuple[Declaration, ...]:
+) -> tuple[Declaracion, ...]:
     """Select filed-declaration rows for capture from one register query."""
 
     selected = declarations
@@ -134,7 +149,7 @@ def select_declarations_for_capture(
     return selected
 
 
-def filed_data_listing_row(declaration: Declaration) -> FiledDataListingRow:
+def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
     """Map one AEAT declaration-register row into the application report shape."""
 
     return FiledDataListingRow(
@@ -199,9 +214,10 @@ async def capture_filed_data(
     """Capture filed-declaration artefacts through the active AEAT session."""
 
     session, _settings = await _active_verified_session()
-    store = FiledDeclarationObservationStore(output_root)
+    store = FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
+    observations_for_calculation: list[FiledDeclaracionObservation] = []
     casilla_count = 0
 
     async with (
@@ -227,7 +243,7 @@ async def capture_filed_data(
                 artefact_sink=store.persist_artefact,
             )
             manifest_path = store.persist_observation(observation)
-            observation_paths.append(manifest_path.relative_to(output_root).as_posix())
+            observation_paths.append(_capture_report_path(manifest_path, output_root=output_root))
             artefact_refs.extend(
                 storage_ref
                 for artefact in observation.artefacts
@@ -235,6 +251,9 @@ async def capture_filed_data(
                 if storage_ref is not None
             )
             casilla_count += len(observation.casillas)
+            observations_for_calculation.append(observation)
+
+    calculation_observation_keys = _persist_latest_filed_calculation_observations(tuple(observations_for_calculation))
 
     return FiledDataCaptureReport(
         output_root=str(output_root),
@@ -244,6 +263,8 @@ async def capture_filed_data(
         observation_paths=tuple(observation_paths),
         artefact_refs=tuple(artefact_refs),
         casilla_count=casilla_count,
+        calculation_observation_count=len(calculation_observation_keys),
+        calculation_observation_keys=tuple(calculation_observation_keys),
     )
 
 
@@ -273,9 +294,10 @@ async def capture_source_filed_data(
         filing_year=year,
         period=period,
     )
-    store = FiledDeclarationObservationStore(output_root)
+    store = FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
+    observations_for_calculation: list[FiledDeclaracionObservation] = []
     casilla_count = 0
     seen: set[tuple[str, int, str, str]] = set()
 
@@ -307,7 +329,7 @@ async def capture_source_filed_data(
             continue
         seen.add(key)
         manifest_path = store.persist_observation(observation)
-        observation_paths.append(manifest_path.relative_to(output_root).as_posix())
+        observation_paths.append(_capture_report_path(manifest_path, output_root=output_root))
         artefact_refs.extend(
             storage_ref
             for artefact in observation.artefacts
@@ -315,6 +337,9 @@ async def capture_source_filed_data(
             if storage_ref is not None
         )
         casilla_count += len(observation.casillas)
+        observations_for_calculation.append(observation)
+
+    calculation_observation_keys = _persist_latest_filed_calculation_observations(tuple(observations_for_calculation))
 
     return SourceFiledDataCaptureReport(
         output_root=str(output_root),
@@ -325,7 +350,100 @@ async def capture_source_filed_data(
         observation_paths=tuple(observation_paths),
         artefact_refs=tuple(artefact_refs),
         casilla_count=casilla_count,
+        calculation_observation_count=len(calculation_observation_keys),
+        calculation_observation_keys=tuple(calculation_observation_keys),
     )
+
+
+def _capture_report_path(path: Path, *, output_root: Path) -> str:
+    try:
+        return path.relative_to(output_root).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def persist_filed_calculation_observation(
+    observation: FiledDeclaracionObservation,
+    *,
+    repository: CalculationObservationRepository | None = None,
+) -> str:
+    """Promote one AEAT filed-declaration observation into calculation history."""
+
+    registry_observation = registry_observation_from_filed_declaration(observation)
+    registry_observation = _with_derived_303_compensation_available(registry_observation)
+    repo = repository if repository is not None else CalculationObservationRepository()
+    repo.save(
+        registry_observation,
+        source_kind="aeat_sede_justificante",
+        captured_at=observation.presented_at,
+    )
+    return observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
+
+
+def _persist_latest_filed_calculation_observations(
+    observations: tuple[FiledDeclaracionObservation, ...],
+) -> tuple[str, ...]:
+    """Persist only the latest captured observation per modelo/year/period."""
+
+    latest: dict[tuple[str, int, str], FiledDeclaracionObservation] = {}
+    for observation in observations:
+        key = (observation.modelo, observation.ejercicio, observation.period)
+        current = latest.get(key)
+        if current is None or (observation.presented_at, observation.expediente_id) > (
+            current.presented_at,
+            current.expediente_id,
+        ):
+            latest[key] = observation
+    return tuple(
+        key
+        for _key, observation in sorted(latest.items())
+        for key in _persist_filed_calculation_observation_if_extractable(observation)
+    )
+
+
+def _persist_filed_calculation_observation_if_extractable(
+    observation: FiledDeclaracionObservation,
+) -> tuple[str, ...]:
+    try:
+        return (persist_filed_calculation_observation(observation),)
+    except SedeParseError:
+        return ()
+
+
+def _with_derived_303_compensation_available(
+    observation: RegistryModeloObservation,
+) -> RegistryModeloObservation:
+    """Add the internal Modelo 303 carry-forward value from official filed casillas."""
+
+    if observation.modelo != "303":
+        return observation
+    target_id = "iva.compensacion-disponible-fin-periodo"
+    if target_id in observation.casilla_values:
+        return observation
+    posterior = observation.casilla_values.get("87")
+    resultado = observation.casilla_values.get("69")
+    if posterior is None or resultado is None:
+        return observation
+
+    generated = max(Decimal("0"), -resultado)
+    available = posterior + generated
+    snapshot = resources().modelos.authority.snapshot(
+        "303",
+        filing_year=observation.filing_year,
+        period=observation.period,
+    )
+    casilla = next(item for item in snapshot.revision.casillas if item.id == target_id)
+    formula = next(item for item in snapshot.revision.formulas if item.target == target_id)
+    derived = CasillaObservation(
+        casilla_id=target_id,
+        value=available,
+        formula_id=formula.id,
+        operand_refs=("87", "69"),
+        operand_values=(posterior, resultado),
+        legal_refs=tuple(casilla.legal_refs),
+        source_refs=tuple(casilla.source_refs),
+    )
+    return observation.model_copy(update={"observations": (*observation.observations, derived)})
 
 
 async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
@@ -411,7 +529,7 @@ async def capture_iva_compensation_wallet(
         settings=settings,
     )
     store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-wallet"
-    store = FiledDeclarationObservationStore(store_root)
+    store = FiledDeclaracionObservationStore(store_root)
     path = store.persist_iva_wallet_observation(observation)
     snapshot = resources().modelos.authority.snapshot("303", filing_year=target_year, period=target_period)
     reconciliation = reconcile_modelo_303_iva_compensation(
@@ -454,13 +572,15 @@ __all__ = [
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
     "Borrador100SnapshotService",
-    "Borrador100SnapshotState",
+    "BorradorSnapshotNotFoundError",
+    "CensoSnapshotNotFoundError",
     "FiledDataCaptureReport",
     "FiledDataListingReport",
     "FiledDataListingRow",
     "IvaWalletCaptureReport",
     "LiveApplicationError",
     "LiveApplicationInputError",
+    "SnapshotLifecycleState",
     "SourceFiledDataCaptureReport",
     "borrador_100_snapshot_object_key",
     "capture_filed_data",
@@ -470,5 +590,6 @@ __all__ = [
     "derive_borrador_100_snapshot_id",
     "filed_data_listing_row",
     "list_filed_data",
+    "persist_filed_calculation_observation",
     "select_declarations_for_capture",
 ]

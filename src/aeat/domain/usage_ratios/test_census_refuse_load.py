@@ -25,7 +25,7 @@ from aeat.adapters.persistence.storage import (
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.domain.categories import SpendingCategory
 from aeat.domain.usage_ratios import (
-    CensusRatioMismatchError,
+    CensoRatioMismatchError,
     UsageRatioProfile,
     load_usage_ratios_with_census_guard,
     save_usage_ratios,
@@ -78,7 +78,7 @@ def test_refuses_when_census_unset_but_home_office_override_persisted() -> None:
         bucket_id="b1",
     )
 
-    with pytest.raises(CensusRatioMismatchError) as exc:
+    with pytest.raises(CensoRatioMismatchError) as exc:
         load_usage_ratios_with_census_guard(
             bucket_id="b1",
             raw_afectacion_ratio=None,
@@ -93,7 +93,7 @@ def test_refuses_on_mismatch_between_persisted_and_census_derived() -> None:
         bucket_id="b1",
     )
 
-    with pytest.raises(CensusRatioMismatchError) as exc:
+    with pytest.raises(CensoRatioMismatchError) as exc:
         load_usage_ratios_with_census_guard(
             bucket_id="b1",
             raw_afectacion_ratio=Decimal("0.20"),

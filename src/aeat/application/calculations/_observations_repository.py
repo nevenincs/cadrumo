@@ -1,6 +1,6 @@
 """Encrypted persistence for past-filing casilla observations.
 
-Stores `RegistryFilingObservation` records — `(modelo, filing_year,
+Stores `RegistryModeloObservation` records — `(modelo, filing_year,
 period, casilla_values)` — as encrypted audit envelopes in the
 `SecureObjectRepository`. The records are the substrate the
 multi-year resolver consults so annual modelos can roll up prior
@@ -38,7 +38,7 @@ from ...adapters.persistence.storage.errors import (
     EnvelopeVersionError,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...domain.calculations.registry._bindings import RegistryFilingObservation
+from ...domain.calculations.registry._bindings import RegistryModeloObservation
 from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 
 _OBSERVATION_NAMESPACE: Final[str] = "aeat.calculations.observations"
@@ -48,7 +48,7 @@ _IVA_WALLET_DECISION_ENVELOPE_VERSION: Final[int] = 1
 
 
 class _ObservationEnvelopePayload(BaseModel):
-    """Serialisable wrapper around a `RegistryFilingObservation`.
+    """Serialisable wrapper around a `RegistryModeloObservation`.
 
     The runtime model lives in `_bindings.py` and is itself frozen
     pydantic v2 with `extra="forbid"`. We wrap it to keep the
@@ -60,7 +60,7 @@ class _ObservationEnvelopePayload(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    observation: RegistryFilingObservation
+    observation: RegistryModeloObservation
     captured_at: datetime
     source_kind: str = Field(
         min_length=1,
@@ -147,7 +147,7 @@ class CalculationObservationRepository:
 
     def save(
         self,
-        observation: RegistryFilingObservation,
+        observation: RegistryModeloObservation,
         *,
         source_kind: str,
         captured_at: datetime | None = None,

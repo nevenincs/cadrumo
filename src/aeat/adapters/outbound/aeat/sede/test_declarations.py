@@ -26,8 +26,8 @@ from reportlab.pdfgen import canvas
 from aeat.adapters.outbound.aeat.browser import Profile, opened_browser_page, shared_playwright_runtime
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.application.filing import (
-    FilingDraftStatus,
     FilingOperatorProfile,
+    ModeloDraftStatus,
     build_draft,
     build_runtime_schema_provider,
     export_draft,
@@ -52,6 +52,7 @@ from ._declarations import (
     _parse_listbox,
     _parse_presented_at,
     _read_guard_policy_from_snapshot,
+    _select_authoritative_declaration,
     _select_combobox_value,
     _verify_submitted_file_context,
     registry_observation_from_filed_declaration,
@@ -70,6 +71,40 @@ _SUBMITTED_FILE_130_2026_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-130-20
 _SUBMITTED_FILE_111_2025_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
 _SUBMITTED_FILE_100_2023_0A = _FIXTURE_ROOT / "submitted-files" / "modelo-100-2023-0A-redacted.xml"
 _MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"})
+
+
+def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period() -> None:
+    older = _declaration_row(
+        expediente_id="202430313521426G",
+        presented_at=datetime(2025, 3, 27, 17, 31, 56, tzinfo=UTC),
+    )
+    newer = _declaration_row(
+        expediente_id="202430313521428B",
+        presented_at=datetime(2025, 3, 28, 13, 4, 47, tzinfo=UTC),
+    )
+
+    selected = _select_authoritative_declaration(
+        (older, newer),
+        modelo="303",
+        ejercicio=2024,
+        period="3T",
+        context="previous-filing requirement",
+    )
+
+    assert selected.expediente_id == "202430313521428B"
+
+
+def _declaration_row(*, expediente_id: str, presented_at: datetime, estado: str = "ALTA") -> Declaracion:
+    return Declaracion(
+        modelo="303",
+        ejercicio=2024,
+        period="3T",
+        expediente_id=expediente_id,
+        estado=estado,
+        presented_at=presented_at,
+        justificante_link_text="Ver",
+        archive_link_text="Ver",
+    )
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
@@ -129,7 +164,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
         ),
         inputs=inputs,
         schema_provider=provider,
-    ).model_copy(update={"status": FilingDraftStatus.APPROVED})
+    ).model_copy(update={"status": ModeloDraftStatus.APPROVED})
     output = tmp_path / f"modelo-123-{filing_year}-{period}.txt"
 
     export_draft(

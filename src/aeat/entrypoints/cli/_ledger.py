@@ -1473,7 +1473,7 @@ def _resolve_business_pct_with_census(
 
 
     from ...application.ledger._ratios import census_business_pct_for
-    from ...application.profile import CensusSyncService
+    from ...application.profile import CensoSyncService
     from ...domain.categories import SpendingCategory
 
     if operator_supplied is not None:
@@ -1484,7 +1484,7 @@ def _resolve_business_pct_with_census(
         category_enum = SpendingCategory(category_id.strip())
     except ValueError:
         return operator_supplied
-    sync_service = CensusSyncService(bucket_id=bucket_id)
+    sync_service = CensoSyncService(bucket_id=bucket_id)
     raw_afectacion: Decimal | None = sync_service.bound_raw_afectacion_ratio(profile_id=active_profile)
     if raw_afectacion is None:
         return operator_supplied
@@ -1571,9 +1571,9 @@ def _resolve_category(raw: str):
     ),
 )
 def ratios_list(ctx: typer.Context) -> None:
-    from ...application.profile import CensusSyncService
+    from ...application.profile import CensoSyncService
     from ...domain.usage_ratios import (
-        CensusRatioMismatchError,
+        CensoRatioMismatchError,
         load_usage_ratios,
         load_usage_ratios_with_census_guard,
     )
@@ -1581,7 +1581,7 @@ def ratios_list(ctx: typer.Context) -> None:
     bucket_id, profile_id = _ratios_bucket_and_profile()
     raw_afectacion = None
     if profile_id is not None:
-        raw_afectacion = CensusSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(
+        raw_afectacion = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(
             profile_id=profile_id,
         )
     census_mismatch: str | None = None
@@ -1590,7 +1590,7 @@ def ratios_list(ctx: typer.Context) -> None:
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion,
         )
-    except CensusRatioMismatchError as exc:
+    except CensoRatioMismatchError as exc:
         # The operator should still see what's persisted; we surface the
         # divergence as a typed warning row but never hide the rows.
         census_mismatch = str(exc)
@@ -1622,7 +1622,7 @@ def ratios_set(
     ),
 ) -> None:
     from ...application.ledger._ratios import census_override_warning
-    from ...application.profile import CensusSyncService
+    from ...application.profile import CensoSyncService
     from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
 
     category_enum = _resolve_category(category)
@@ -1640,7 +1640,7 @@ def ratios_set(
         new=parsed,
     )
     if profile_id is not None:
-        sync_service = CensusSyncService(bucket_id=bucket_id)
+        sync_service = CensoSyncService(bucket_id=bucket_id)
         raw_afectacion = sync_service.bound_raw_afectacion_ratio(profile_id=profile_id)
         warning = census_override_warning(
             category=category_enum,

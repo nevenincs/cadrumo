@@ -9,8 +9,8 @@ from typing import Annotated, Literal
 import typer
 
 from ...application.live import FiledDataListingRow, capture_filed_data, capture_source_filed_data, list_filed_data
-from ._common import _emit
 from ...core.i18n import tr
+from ._common import _emit
 
 _VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -220,6 +220,8 @@ def filed_capture_cmd(
         (
             _metric_line("captured_count", report.captured_count),
             _metric_line("casilla_count", report.casilla_count),
+            _metric_line("calculation_observation_count", report.calculation_observation_count),
+            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
             _metric_line("observation_paths", ",".join(report.observation_paths)),
             _metric_line("artefact_refs", ",".join(report.artefact_refs)),
         ),
@@ -281,6 +283,8 @@ def filed_capture_sources_cmd(
         (
             _metric_line("captured_count", report.captured_count),
             _metric_line("casilla_count", report.casilla_count),
+            _metric_line("calculation_observation_count", report.calculation_observation_count),
+            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
             _metric_line("observation_paths", ",".join(report.observation_paths)),
             _metric_line("artefact_refs", ",".join(report.artefact_refs)),
         ),
@@ -305,7 +309,6 @@ app.add_typer(notifications_app, name="notifications")
 
 def _active_bucket_id() -> str:
     from ...application.workflow._models import active_bucket_id_or_raise
-    from ...application.workflow._persistence import workflow_state_repository
 
     try:
         return active_bucket_id_or_raise()
@@ -987,11 +990,11 @@ def borrador_100_list(
         ),
     ] = "active",
 ) -> None:
-    from ...application.live import Borrador100SnapshotService, Borrador100SnapshotState
+    from ...application.live import Borrador100SnapshotService, SnapshotLifecycleState
 
     bucket_id = _active_bucket_id()
     try:
-        state_filter = None if state == "all" else Borrador100SnapshotState(state)
+        state_filter = None if state == "all" else SnapshotLifecycleState(state)
     except ValueError as exc:
         raise typer.BadParameter("state must be one of: active, superseded, discarded, all") from exc
     rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(

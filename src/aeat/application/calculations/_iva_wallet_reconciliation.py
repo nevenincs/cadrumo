@@ -24,6 +24,7 @@ _MODELO_303_IVA_COMPENSATION_BINDING_ID: Final[str] = "modelo-303-compensacion-p
 type IvaCompensationAuthority = Literal["aeat_wallet", "taxpayer_override", "local_recurrence", "missing"]
 type IvaCompensationDivergence = Literal[
     "match",
+    "wallet_only",
     "wallet_higher",
     "wallet_lower",
     "wallet_missing",
@@ -279,6 +280,27 @@ def reconcile_iva_compensation_wallet(
             blocked=True,
             stale_wallet=False,
             reason="AEAT wallet and local recurrence diverge; review is required before automatic output.",
+            wallet_captured_at=wallet_captured_at,
+            decided_at=when,
+        )
+
+    if local_recurrence_amount is None:
+        return IvaCompensationReconciliationDecision(
+            taxpayer_nif=taxpayer_nif,
+            target_year=target_year,
+            target_period=target_period,
+            selected_authority="aeat_wallet",
+            selected_amount=wallet_amount,
+            wallet_amount=wallet_amount,
+            local_recurrence_amount=None,
+            override_amount=None,
+            divergence="wallet_only",
+            blocked=False,
+            stale_wallet=False,
+            reason=(
+                "Using latest valid AEAT wallet observation for Modelo 303 prior compensation; "
+                "no local prior-filing recurrence was available for cross-check."
+            ),
             wallet_captured_at=wallet_captured_at,
             decided_at=when,
         )

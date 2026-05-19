@@ -144,11 +144,11 @@ def _capture_census_with_vivienda_office(office_m2: str, total_m2: str) -> None:
 
     from datetime import UTC, datetime
 
-    from aeat.application.live._census import CensusSnapshotService
+    from aeat.application.live._censo import CensoSnapshotService
 
     state = workflow_state_repository().load()
     bucket_id = state.profiles[resolve_active_bucket_id() or ""].bucket_id
-    service = CensusSnapshotService(bucket_id=bucket_id)
+    service = CensoSnapshotService(bucket_id=bucket_id)
     service.capture(
         profile_id=resolve_active_bucket_id(),
         captured_at=datetime.now(UTC),
