@@ -129,9 +129,12 @@ def register_active_profile(
 
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
-    profiles = dict(state.profiles)
-    profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
-    updated = state.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
+    # WorkflowState.profiles is now computed at access time from a
+    # filesystem manifest scan; provisioning the bucket directory +
+    # writing its manifest is what makes the profile appear in the
+    # scan. No state mutation needed beyond the event log and the
+    # active-profile pointer file.
+    updated = state.model_copy(update={"updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
     updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
     if facts:
@@ -160,9 +163,10 @@ def select_profile(
 
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.read(profile_id)  # raises ProfileNotFoundError if missing
-    profiles = dict(state.profiles)
-    profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
-    updated = state.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
+    # WorkflowState.profiles is now computed at access time from a
+    # filesystem manifest scan; the bucket manifest already exists
+    # for any profile the service can read.
+    updated = state.model_copy(update={"updated_at": utc_now()})
     _write_active_profile_pointer(profile_id)
     return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
 

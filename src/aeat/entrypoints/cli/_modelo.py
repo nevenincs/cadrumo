@@ -160,11 +160,12 @@ def modelo_readiness(
     from ...domain.user_profile import ProfileNotFoundError
     from ._errors import CliRefusedBoundaryError
 
-    state = workflow_state_repository().load()
+    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+
     active = resolve_active_bucket_id()
     if active is None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(active)
+    pointer = read_profile_bucket(active)
     if pointer is None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)

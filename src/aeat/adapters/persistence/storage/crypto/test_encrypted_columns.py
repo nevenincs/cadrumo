@@ -3,8 +3,8 @@
 The tests run against a real in-memory SQLAlchemy session bound to
 a deliberately-isolated declarative base so we never touch the live
 ``aeat.adapters.persistence.storage._orm`` schema. The master key is supplied by an
-:class:`EphemeralMasterKeyProvider` injected via
-:func:`override_master_key_provider`.
+:class:`EphemeralMasterKeyProvider` whose ``__enter__`` activates a
+:class:`BucketSession` for the duration of the test.
 """
 
 from __future__ import annotations

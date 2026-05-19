@@ -27,6 +27,7 @@ from ..application.wizard._errors import WizardValidationError
 from ..application.wizard._widgets import validate_widget_answer
 from ..application.workflow._models import resolve_active_bucket_id
 from ..application.workflow._persistence import workflow_state_repository
+from ..application.workflow._profile_bucket_scan import read_profile_bucket
 from ..domain.profile import get_profile_key
 from ..domain.user_profile import ProfileNotFoundError, UserProfileFact
 
@@ -77,8 +78,7 @@ def register(app: typer.Typer) -> None:
         except KeyError as exc:
             raise typer.BadParameter(f"unknown profile key: {key}") from exc
         target = _resolve_target_profile(profile)
-        state = workflow_state_repository().load()
-        pointer = state.profiles.get(target)
+        pointer = read_profile_bucket(target)
         if pointer is None:
             raise typer.BadParameter(f"unknown profile: {target}")
         service = build_lifecycle_service(bucket_id=pointer.bucket_id)
@@ -117,8 +117,7 @@ def register(app: typer.Typer) -> None:
         updated = repository.update(lambda current: set_active_field(current, fact))
         record = updated.active_profile_record() if target == resolve_active_bucket_id() else None
         if record is None:
-            state = repository.load()
-            pointer = state.profiles.get(target)
+            pointer = read_profile_bucket(target)
             if pointer is None:
                 raise typer.BadParameter(f"unknown profile: {target}")
             service = build_lifecycle_service(bucket_id=pointer.bucket_id)

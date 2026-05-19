@@ -22,7 +22,6 @@ from datetime import UTC, datetime
 
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....application.user_profile._orchestration import build_lifecycle_service, fact_value
-from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import SecretStoreBackend, load_settings
 from ....domain.user_profile import ProfileNotFoundError
 from ._errors import (
@@ -69,8 +68,9 @@ def resolve_active_tax_id(profile: str) -> str:
     Used by the orchestrator to feed `check_unsecured_mode_safety`.
     """
 
-    state = workflow_state_repository().load()
-    pointer = state.profiles.get(profile)
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+
+    pointer = read_profile_bucket(profile)
     if pointer is None:
         return ""
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)

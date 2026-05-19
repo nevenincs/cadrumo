@@ -83,10 +83,11 @@ def persist_answers(
 
     from ...domain.user_profile import ProfileNotFoundError, UserProfileFact
     from ..workflow._models import resolve_active_bucket_id
+    from ..workflow._profile_bucket_scan import read_profile_bucket
 
     canonical = serialise_answers(flow, answers)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
-    pointer = state.profiles.get(profile_name)
+    pointer = read_profile_bucket(profile_name)
     if pointer is None or resolve_active_bucket_id() != profile_name:
         return register_active_profile(
             state,
