@@ -89,7 +89,14 @@ def _calculate_303_from_observations(
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
-    binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
+    binding_values = {
+        # Cold-start scenario: no prior 303 compensation balance carried
+        # in. Real chained-quarter flows would inject this from the
+        # previous quarter's calculation; the reconciliation fixture
+        # exercises each quarter in isolation.
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
+    }
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
