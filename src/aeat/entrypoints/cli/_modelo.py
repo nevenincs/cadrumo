@@ -1226,6 +1226,7 @@ def work_calculate(
     from ...application.modelo import (
         CalculationRegistryUnavailableError,
         Modelo100BorradorBindingError,
+        ModeloIvaWalletReconciliationBlocked,
     )
 
     casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
@@ -1270,6 +1271,7 @@ def work_calculate(
         WorkUnitMutationRefusedError,
         CalculationRegistryUnavailableError,
         Modelo100BorradorBindingError,
+        ModeloIvaWalletReconciliationBlocked,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
