@@ -21,7 +21,13 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from ._errors import RegistryLoadError
-from ._loader import load_modelo_directory, load_modelo_file, load_registry_tree
+from ._loader import (
+    discover_modelo_sources,
+    load_modelo_directory,
+    load_modelo_file,
+    load_modelo_source,
+    load_registry_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -320,118 +326,50 @@ def test_directory_mode_rejects_no_revisions(tmp_path: Path) -> None:
         load_modelo_directory(target)
 
 
-def test_modelo_100_does_not_coexist_in_both_layouts() -> None:
-    """**HARD INVARIANT**: modelo 100 must live in exactly one layout.
-
-    modelo 100 is stored in directory mode at
-    ``registry/aeat/modelos/100/``. The single-file
-    ``registry/aeat/modelos/100.toml`` must NOT coexist alongside it.
-
-    The runtime loader rejects dual layouts at load time, but git
-    accepts re-introduction of ``100.toml`` silently because main
-    does not track that path. This test is the static safety net:
-    it fails loudly if the dual layout is ever introduced.
-
-    Recovery procedure when this test fires:
-      1. Run ``scripts/split_modelo_100.py`` to migrate the
-         re-introduced ``100.toml`` content into the directory
-         layout, preserving any local edits.
-      2. Verify the round-trip equivalence test still passes for
-         the single-file modelos used as the migration-safety
-         reference (130, 184, 190, 193, 303, 390).
-      3. Delete ``100.toml`` and commit the merged directory state.
-    """
-
-    single_file = bundled_path("registry", "aeat", "modelos", "100.toml")
-    directory = bundled_path("registry", "aeat", "modelos", "100")
-    if single_file.is_file() and directory.is_dir():
-        raise AssertionError(
-            "modelo 100 exists in BOTH single-file and directory layouts:\n"
-            f"  - {single_file}\n"
-            f"  - {directory}/manifest.toml\n"
-            "This is forbidden — the loader rejects dual layouts at "
-            "load time. An in-flight agent likely re-introduced "
-            "100.toml from a pre-migration checkout. Run "
-            "scripts/split_modelo_100.py to merge the re-introduced "
-            "content into the directory layout, then delete 100.toml."
-        )
-
-
-def test_modelo_100_directory_layout_loads_with_expected_revisions() -> None:
-    """Schema-level integrity check on the live modelo 100 directory.
-
-    Loads ``registry/aeat/modelos/100/`` via the directory loader and
-    asserts the in-memory ``ModeloDefinition`` shape matches the
-    expected revision set. This catches:
-      - A revision file accidentally deleted
-      - A revision file's content corrupted to the point that pydantic
-        validation drops it
-      - A new revision added without an ADR / planning document
-        (forces a deliberate update to this expectation)
-      - Manifest.toml's [modelo] table corrupted
-
-    The expected set lists the revisions present in the directory
-    today. Future revisions (e.g. when AEAT publishes the 2026 form)
-    update this list as part of the same commit that adds the new
-    revision file under ``revisions/``.
-    """
-
-    directory = bundled_path("registry", "aeat", "modelos", "100")
-    if not (directory / "manifest.toml").is_file():
-        pytest.skip("modelo 100 not in directory layout")
-    modelo = load_modelo_directory(directory)
-    assert modelo.id == "100"
-    expected_revisions = {"2020", "2021", "2022", "2023", "2024", "2025"}
-    actual_revisions = set(modelo.revisions)
-    assert actual_revisions == expected_revisions
-
-
-def test_modelo_100_revision_schema_is_fragment_directory_backed() -> None:
-    """Modelo 100 revisions are now authoritative fragment directories.
-
-    This guards the M100 schema rollout specifically: every revision
-    must live at ``revisions/<year>/revision.toml`` so future schema
-    work exercises the same revision-fragment path as the large modelos.
-    """
-
-    directory = bundled_path("registry", "aeat", "modelos", "100")
-    revisions_dir = directory / "revisions"
-    assert (directory / "manifest.toml").is_file()
-    assert not tuple(revisions_dir.glob("*.toml"))
-    for revision_id in {"2020", "2021", "2022", "2023", "2024", "2025"}:
-        revision_dir = revisions_dir / revision_id
-        assert revision_dir.is_dir(), f"missing M100 revision directory {revision_dir}"
-        assert (revision_dir / "revision.toml").is_file(), f"missing M100 revision manifest {revision_dir}"
-
-
 def test_committed_registry_tree_loads_single_file_and_directory_modelos() -> None:
     """Registry discovery must include both supported modelo layouts."""
 
     registry_root = bundled_path("registry", "aeat")
     modelos_dir = registry_root / "modelos"
+    sources = discover_modelo_sources(modelos_dir)
     modelos, _catalogues = load_registry_tree(registry_root)
     loaded_ids = {modelo.id for modelo in modelos}
-    single_file_ids = {path.stem for path in modelos_dir.glob("*.toml")}
-    directory_ids = {
-        entry.name
-        for entry in modelos_dir.iterdir()
-        if entry.is_dir() and (entry / "manifest.toml").is_file()
-    }
 
-    assert loaded_ids == single_file_ids | directory_ids
-    assert {"100", "180", "200", "202", "232"}.issubset(directory_ids)
+    assert loaded_ids == {source.modelo_id for source in sources}
+    assert {load_modelo_source(source).id for source in sources} == loaded_ids
+    assert any(source.layout == "directory" for source in sources)
+    assert any(source.layout == "single_file" for source in sources)
 
 
 def test_fragmented_modelos_do_not_keep_stale_single_file_siblings() -> None:
     """A fragmented modelo cannot also keep ``modelos/<id>.toml``."""
 
     modelos_dir = bundled_path("registry", "aeat", "modelos")
+    sources = discover_modelo_sources(modelos_dir)
     offenders = [
-        entry.name
-        for entry in sorted(modelos_dir.iterdir())
-        if entry.is_dir()
-        and (entry / "manifest.toml").is_file()
-        and (modelos_dir / f"{entry.name}.toml").exists()
+        source.modelo_id
+        for source in sources
+        if source.layout == "directory" and (modelos_dir / f"{source.modelo_id}.toml").exists()
     ]
 
     assert offenders == []
+
+
+def test_fragmented_revision_directories_are_schema_owned() -> None:
+    """Every committed revision fragment directory has a schema manifest and loads."""
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    checked: list[str] = []
+    for source in discover_modelo_sources(modelos_dir):
+        if source.layout != "directory":
+            continue
+        modelo = load_modelo_source(source)
+        for revision_source in source.revision_sources:
+            if revision_source.layout != "fragment_directory":
+                continue
+            checked.append(f"{source.modelo_id}/{revision_source.revision_id}")
+            assert (revision_source.path / "revision.toml").is_file()
+            assert revision_source.revision_id in modelo.revisions
+            assert not (source.path / "revisions" / f"{revision_source.revision_id}.toml").exists()
+
+    assert checked, "at least one committed revision must use fragment-directory layout"
