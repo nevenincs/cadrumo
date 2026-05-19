@@ -37,7 +37,7 @@ from ._errors import LiveApplicationInputError
 from ._snapshot_base import SnapshotNotFoundError, StatelessSnapshotService
 
 
-class ExpedientesSnapshotNotFoundError(SnapshotNotFoundError, AeatError):
+class ExpedientesSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
     """Raised when an expedientes snapshot lookup misses by id."""
 
 
