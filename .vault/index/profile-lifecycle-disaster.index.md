@@ -10,6 +10,7 @@ related:
   - '[[2026-05-19-profile-lifecycle-disaster-axis-c-cli-bootstrap-research]]'
   - '[[2026-05-19-profile-lifecycle-disaster-axis-d-state-model-research]]'
   - '[[2026-05-19-profile-lifecycle-disaster-axis-e-failure-mode-research]]'
+  - '[[2026-05-19-profile-lifecycle-disaster-plan]]'
   - '[[2026-05-19-profile-lifecycle-disaster-research]]'
 ---
 
@@ -22,6 +23,10 @@ Auto-generated index of all documents tagged with `#profile-lifecycle-disaster`.
 ### adr
 
 - `2026-05-19-profile-lifecycle-disaster-adr` - `profile-lifecycle-disaster` adr: session-activation wiring, state-model collapse, atomic create | (**status:** `accepted`)
+
+### plan
+
+- `2026-05-19-profile-lifecycle-disaster-plan` - `profile-lifecycle-disaster` recovery plan
 
 ### research
 
