@@ -9,12 +9,12 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...vat import (
+from ...iva import (
     EUMemberState,
-    InvoiceDirection,
+    InvoiceKind,
+    IvaRateKind,
     OssIossRegime,
     TransactionKind,
-    VATRateKind,
 )
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
@@ -1013,7 +1013,7 @@ def _aggregate_invoice_binding(
 #
 # These bindings aggregate ledger lines whose VAT classification matches a
 # regime + destination Member State + rate tier + invoice direction selector.
-# The classification axes come from :mod:`aeat.domain.vat`; the binding source
+# The classification axes come from :mod:`aeat.domain.iva`; the binding source
 # is the registry's ledger-driven aggregation kind for Modelo 369.
 #
 # The selector keys are validated against the substrate's closed enums at
@@ -1042,7 +1042,7 @@ class OssIossLedgerObservation(BaseModel):
         rate_kind: Substrate rate tier (general / reduced / etc.).
         invoice_direction: Whether the autónomo issued or received
             the invoice.
-        transaction_kind: Substrate :class:`aeat.domain.vat.TransactionKind`
+        transaction_kind: Substrate :class:`aeat.domain.iva.TransactionKind`
             the line resolves to.
         base_amount: Taxable base in EUR.
         iva_amount: VAT amount in EUR (already applied at the
@@ -1055,8 +1055,8 @@ class OssIossLedgerObservation(BaseModel):
     transaction_date: date
     regime: OssIossRegime
     destination_member_state: EUMemberState
-    rate_kind: VATRateKind
-    invoice_direction: InvoiceDirection
+    rate_kind: IvaRateKind
+    invoice_direction: InvoiceKind
     transaction_kind: TransactionKind
     base_amount: Decimal
     iva_amount: Decimal
@@ -1075,8 +1075,8 @@ class _OssIossLedgerSelector(BaseModel):
 
     regime: OssIossRegime
     destination_member_state: EUMemberState
-    rate_kind: VATRateKind
-    invoice_direction: InvoiceDirection
+    rate_kind: IvaRateKind
+    invoice_direction: InvoiceKind
     transaction_kinds: tuple[TransactionKind, ...] = Field(min_length=1)
     fact: Literal["iva_amount_sum", "base_amount_sum"] = "iva_amount_sum"
 
@@ -1179,7 +1179,7 @@ def resolve_ledger_oss_aggregation_binding_values(
 # for the standard IVA modelos (303 autoliquidación trimestral, 322 grupos
 # individual, 353 grupos agregado, 309 no periódica, 390 resumen anual).
 # Aggregates ledger lines by the canonical IVA classification triple
-# (VATCategory + VATRateKind + IvaFlowDirection) introduced by the
+# (IvaCategory + IvaRateKind + IvaFlowDirection) introduced by the
 # IvaFlowDirection codification slice.
 #
 # OSS / IOSS bindings keep their dedicated source kind because they
@@ -1190,8 +1190,7 @@ def resolve_ledger_oss_aggregation_binding_values(
 # ---------------------------------------------------------------------------
 
 
-from ...vat import VATCategory
-from ...vat._flow import IvaFlowDirection
+from ...iva import IvaCategory, IvaFlowDirection
 
 
 class IvaLedgerObservation(BaseModel):
@@ -1205,9 +1204,9 @@ class IvaLedgerObservation(BaseModel):
     Attributes:
         ledger_id: Stable id of the source ledger line.
         transaction_date: When the supply takes place.
-        category: Substrate :class:`VATCategory` resolved by the
+        category: Substrate :class:`IvaCategory` resolved by the
             classifier.
-        rate_kind: Substrate :class:`VATRateKind` rate tier.
+        rate_kind: Substrate :class:`IvaRateKind` rate tier.
         flow_direction: Substrate :class:`IvaFlowDirection` (output /
             input / self-assessed reverse charge).
         base_amount: Taxable base in EUR.
@@ -1219,8 +1218,8 @@ class IvaLedgerObservation(BaseModel):
 
     ledger_id: str = Field(min_length=1, max_length=128)
     transaction_date: date
-    category: VATCategory
-    rate_kind: VATRateKind
+    category: IvaCategory
+    rate_kind: IvaRateKind
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
@@ -1239,21 +1238,21 @@ class _IvaLedgerSelector(BaseModel):
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
-    categories: tuple[VATCategory, ...] = Field(min_length=1)
-    rate_kinds: tuple[VATRateKind, ...] = Field(min_length=1)
+    categories: tuple[IvaCategory, ...] = Field(min_length=1)
+    rate_kinds: tuple[IvaRateKind, ...] = Field(min_length=1)
     flow_direction: IvaFlowDirection
     fact: Literal["iva_amount_sum", "base_amount_sum"] = "iva_amount_sum"
 
     @field_validator("categories", mode="after")
     @classmethod
-    def _categories_unique(cls, value: tuple[VATCategory, ...]) -> tuple[VATCategory, ...]:
+    def _categories_unique(cls, value: tuple[IvaCategory, ...]) -> tuple[IvaCategory, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("categories entries must be unique")
         return value
 
     @field_validator("rate_kinds", mode="after")
     @classmethod
-    def _rate_kinds_unique(cls, value: tuple[VATRateKind, ...]) -> tuple[VATRateKind, ...]:
+    def _rate_kinds_unique(cls, value: tuple[IvaRateKind, ...]) -> tuple[IvaRateKind, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("rate_kinds entries must be unique")
         return value
