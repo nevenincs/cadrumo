@@ -97,8 +97,13 @@ strictly inside adapter and persistence packages).
 - English equivalents currently in codebase: declaration, return,
   filing.
 - Primary source: Ley 58/2003, de 17 de diciembre, General Tributaria,
-  Articulo 119 (Declaraciones tributarias; BOE-A-2003-23186). Verified
-  at title and article cataloguing on boe.es.
+  Articulo 119 (Declaracion tributaria; BOE-A-2003-23186). Verified.
+- Verified verbatim title: "Articulo 119. Declaracion tributaria."
+  Verified verbatim opening: "Se considerara declaracion tributaria
+  todo documento presentado ante la Administracion tributaria donde se
+  reconozca o manifieste la realizacion de cualquier hecho relevante
+  para la aplicacion de los tributos." (boe.es consolidated text,
+  cross-checked via supercontable.com mirror, 2026-05-19.)
 - Semantic scope: Any document by which the taxpayer recognises or
   manifests the realisation of any hecho relevante for the application
   of a tribute. A declaracion may be informativa (no liquidation, e.g.
@@ -117,8 +122,13 @@ strictly inside adapter and persistence packages).
 - English equivalents currently in codebase: self_assessment,
   self_liquidation.
 - Primary source: Ley 58/2003 General Tributaria, Articulo 120
-  (Autoliquidaciones; BOE-A-2003-23186). Verified at article-level
-  cataloguing on boe.es.
+  (Autoliquidaciones; BOE-A-2003-23186). Verified.
+- Verified verbatim title: "Articulo 120. Autoliquidaciones."
+  Verified verbatim opening: "La autoliquidacion es el acto por el
+  cual el obligado tributario, en los casos previstos en las normas
+  reguladoras de cada tributo, determina por si mismo la deuda
+  tributaria que le corresponde." (boe.es consolidated text,
+  cross-checked via noticias.juridicas.com mirror, 2026-05-19.)
 - Semantic scope: A declaracion in which the obligado tributario, in
   addition to communicating the data necessary for the liquidation,
   also performs the operations of calificacion and quantification
@@ -139,10 +149,19 @@ strictly inside adapter and persistence packages).
 - Primary source: AEAT Sede Electronica generates the justificante de
   presentacion as the official electronic receipt of a successful
   submission, bearing the CSV (Codigo Seguro de Verificacion).
-  Underlying framework: Ley 40/2015 Articulo 27 on electronic
-  documents (BOE-A-2015-10566) and Real Decreto 1671/2009. Verified
-  via AEAT Sede pages and AEAT consulta de documentos electronicos
-  manuals.
+  Underlying framework: Ley 39/2015 LPAC Articulo 27 on validez y
+  eficacia de las copias realizadas por las Administraciones Publicas
+  (BOE-A-2015-10565), supplemented by Real Decreto 203/2021 on
+  actuacion administrativa por medios electronicos. Verified.
+- Verified verbatim title: "Articulo 27. Validez y eficacia de las
+  copias realizadas por las Administraciones Publicas." (Ley 39/2015
+  LPAC, BOE-A-2015-10565, boe.es consolidated text, 2026-05-19.)
+  Correction: prior draft cited Ley 40/2015 LRJSP (BOE-A-2015-10566);
+  Articulo 27 belongs to Ley 39/2015 LPAC (BOE-A-2015-10565). The
+  article governs authentic-copy validity (the legal substrate for
+  CSV-bearing justificantes); the direct CSV regime is articulated in
+  Ley 39/2015 Articulo 27.3 (authentic electronic copies) together
+  with Real Decreto 203/2021.
 - Semantic scope: The PDF artifact emitted by Sede Electronica
   immediately after an electronic presentation, containing the CSV,
   presentation timestamp, and identifying data of the modelo. It is
@@ -162,8 +181,13 @@ strictly inside adapter and persistence packages).
 - Canonical Spanish form: borrador.
 - English equivalents currently in codebase: draft, snapshot, prefill.
 - Primary source: Ley 35/2006 del IRPF, Articulo 98 (Borrador de
-  declaracion; BOE-A-2006-20764). Verified at article-level
-  cataloguing.
+  declaracion; BOE-A-2006-20764). Verified.
+- Verified verbatim title: "Articulo 98. Borrador de declaracion."
+  Verified verbatim opening: "La Administracion tributaria podra
+  poner a disposicion de los contribuyentes, a efectos meramente
+  informativos, un borrador de declaracion..." (boe.es consolidated
+  text, cross-checked via supercontable.com mirror, 2026-05-19.) The
+  article explicitly authorises the AEAT to provide the borrador.
 - Semantic scope: The pre-prepared IRPF draft declaration that AEAT
   makes available to taxpayers via Renta Web during the Renta campana.
   The borrador contains the AEAT view of the taxpayer renta data and
@@ -302,24 +326,31 @@ the Spanish-stems-win default:
 ## Verification status
 
 Verified against BOE consolidated texts (boe.es): Ley 37/1992 IVA;
-Ley 35/2006 IRPF; Ley 58/2003 LGT (title and article cataloguing);
-Ley 39/2015 LPAC Articulo 70; Real Decreto 1065/2007; Ley Hipotecaria
-Decreto 1946. Verified against AEAT Sede Electronica documentation:
-justificante de presentacion workflow; borrador / Renta Web
-tramitacion; modelo nomenclature catalogue.
+Ley 35/2006 IRPF (including Articulo 98 verbatim title and opening on
+borrador de declaracion); Ley 58/2003 LGT (including Articulo 119
+verbatim title "Declaracion tributaria" and Articulo 120 verbatim
+title "Autoliquidaciones", both with verbatim opening paragraphs);
+Ley 39/2015 LPAC Articulo 27 (Validez y eficacia de las copias
+realizadas por las Administraciones Publicas; BOE-A-2015-10565) and
+Articulo 70; Real Decreto 1065/2007; Ley Hipotecaria Decreto 1946.
+Verified against AEAT Sede Electronica documentation: justificante de
+presentacion workflow; borrador / Renta Web tramitacion; modelo
+nomenclature catalogue.
 
-UNVERIFIED items requiring user sign-off:
+Verification round 2 (2026-05-19) confirmed the four citations
+previously flagged for sign-off:
 
-- Exact verbatim text of LGT Articulo 119 and Articulo 120: article
-  cataloguing on boe.es is confirmed and the article topics
-  (declaraciones / autoliquidaciones) are correct, but the BOE
-  consolidated-text excerpt fetched in this verification pass did not
-  return the body of those specific articles. The verbatim statutory
-  wording should be re-confirmed against the BOE PDF before being
-  quoted in user-facing copy.
-- Ley 40/2015 Articulo 27 citation for the CSV / justificante legal
-  basis is a regulatory-framework reference, not a direct AEAT
-  publication quote; confirm scope before quoting in operator-facing
-  text.
-- Ley 35/2006 Articulo 98 verbatim text on borrador: cataloguing
-  confirmed but full article body not retrieved in this pass.
+- LGT Articulo 119 "Declaracion tributaria" verbatim title and
+  opening sentence captured.
+- LGT Articulo 120 "Autoliquidaciones" verbatim title and opening
+  sentence captured.
+- IRPF Articulo 98 "Borrador de declaracion" verbatim title and
+  opening sentence captured.
+- LPAC Articulo 27 "Validez y eficacia de las copias realizadas por
+  las Administraciones Publicas" verbatim title captured. Citation
+  corrected from Ley 40/2015 LRJSP (BOE-A-2015-10566) to Ley 39/2015
+  LPAC (BOE-A-2015-10565); Articulo 27 in Ley 40/2015 LRJSP is a
+  different article (Sistema de informacion administrativa) and is
+  not the CSV / authentic-copy basis.
+
+No UNVERIFIED items remain.
