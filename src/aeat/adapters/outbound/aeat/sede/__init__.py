@@ -7,10 +7,10 @@ Public API:
 
     from aeat.adapters.outbound.aeat.sede import (
         # Records
-        Declaration,
+        Declaracion,
         Expediente,
-        FiledDeclarationArtefact,
-        FiledDeclarationObservation,
+        FiledDeclaracionArtefact,
+        FiledDeclaracionObservation,
         JustificanteRef,
         NotificationsSnapshot,
         ObservedCasillaValue,
@@ -67,8 +67,8 @@ Navigation flow:
 from __future__ import annotations
 
 from ._declarations import (
-    Declaration,
-    DeclarationsRegisterSession,
+    Declaracion,
+    DeclaracionesRegisterSession,
     capture_declaration,
     capture_filed_declaration_observation,
     capture_previous_filing_observations,
@@ -99,7 +99,7 @@ from ._notifications import (
     parse_notifications_query,
     parse_notifications_summary,
 )
-from ._observation_store import FiledDeclarationObservationStore
+from ._observation_store import FiledDeclaracionObservationStore
 from ._parse import parse_expediente_detail, parse_resumen_tree
 from ._renta_web_open import (
     RentaWebOpenSedeDriver,
@@ -108,8 +108,8 @@ from ._renta_web_open import (
 )
 from ._schema import (
     Expediente,
-    FiledDeclarationArtefact,
-    FiledDeclarationObservation,
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
     JustificanteRef,
@@ -124,13 +124,13 @@ from ._walker import (
 )
 
 __all__ = [
-    "Declaration",
-    "DeclarationsRegisterSession",
+    "Declaracion",
+    "DeclaracionesRegisterSession",
     "Expediente",
     "ExpedienteNotFoundError",
-    "FiledDeclarationArtefact",
-    "FiledDeclarationObservation",
-    "FiledDeclarationObservationStore",
+    "FiledDeclaracionArtefact",
+    "FiledDeclaracionObservation",
+    "FiledDeclaracionObservationStore",
     "IvaCompensationWalletObservation",
     "IvaCompensationWalletRow",
     "JustificanteFetchError",

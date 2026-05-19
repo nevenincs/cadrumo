@@ -11,7 +11,7 @@ from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClas
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....persistence.storage.sql import SecureObjectRepository
 from ._errors import ExpedienteNotFoundError, SedeValidationError
-from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation, IvaCompensationWalletObservation
+from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
 _ARTEFACT_CLASSIFICATION = SensitivityClass.FINANCIAL
@@ -23,7 +23,7 @@ _IVA_WALLET_OBSERVATION_NAMESPACE = "aeat.outbound.aeat.sede.iva_compensation_wa
 _STORAGE_REF_PREFIX = "secure-object:financial:"
 
 
-class FiledDeclarationObservationStore:
+class FiledDeclaracionObservationStore:
     """Persist captured AEAT filed data through the encrypted SQL backend."""
 
     def __init__(self, root: Path, *, master_key_provider: MasterKeyProvider | None = None) -> None:
@@ -33,9 +33,9 @@ class FiledDeclarationObservationStore:
     def persist_artefact(
         self,
         observation_key: tuple[str, int, str, str],
-        artefact: FiledDeclarationArtefact,
+        artefact: FiledDeclaracionArtefact,
         body: bytes,
-    ) -> FiledDeclarationArtefact:
+    ) -> FiledDeclaracionArtefact:
         """Persist one captured artefact and return metadata with its storage reference."""
 
         if not artefact.storage_ref and not body:
@@ -71,7 +71,7 @@ class FiledDeclarationObservationStore:
             raise ExpedienteNotFoundError(f"filed-declaration artefact not found: {digest}")
         return record.payload
 
-    def persist_observation(self, observation: FiledDeclarationObservation) -> Path:
+    def persist_observation(self, observation: FiledDeclaracionObservation) -> Path:
         """Persist a normalized observation manifest and return its logical object path."""
 
         object_key = self._observation_key(
@@ -80,7 +80,7 @@ class FiledDeclarationObservationStore:
             observation.period,
             observation.expediente_id,
         )
-        envelope = Envelope[FiledDeclarationObservation](
+        envelope = Envelope[FiledDeclaracionObservation](
             schema_version=_OBSERVATION_ENVELOPE_VERSION,
             written_at=datetime.now(UTC),
             classification=_OBSERVATION_CLASSIFICATION,
@@ -96,7 +96,7 @@ class FiledDeclarationObservationStore:
         )
         return _logical_path(_OBSERVATION_NAMESPACE, object_key)
 
-    def load_observation(self, path: Path) -> FiledDeclarationObservation:
+    def load_observation(self, path: Path) -> FiledDeclaracionObservation:
         """Load and decrypt a normalized filed-declaration observation."""
 
         object_key = Path(path).name
@@ -108,7 +108,7 @@ class FiledDeclarationObservationStore:
         )
         if record is None:
             raise ExpedienteNotFoundError(f"filed-declaration observation not found: {object_key}")
-        envelope = Envelope[FiledDeclarationObservation].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[FiledDeclaracionObservation].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not _OBSERVATION_CLASSIFICATION:
             raise ClassificationError(
                 f"filed-declaration observation {object_key} has classification {envelope.classification}; "
@@ -228,4 +228,4 @@ def _parse_storage_ref(storage_ref: str) -> str:
     return storage_ref.removeprefix(_STORAGE_REF_PREFIX)
 
 
-__all__ = ["FiledDeclarationObservationStore"]
+__all__ = ["FiledDeclaracionObservationStore"]
