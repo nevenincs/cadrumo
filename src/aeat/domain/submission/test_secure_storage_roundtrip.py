@@ -1,6 +1,6 @@
 """Strict roundtrip across the encrypted SubmissionRepository boundary.
 
-``SubmissionRepository`` persists :class:`SubmittedFiling` records at
+``SubmissionRepository`` persists :class:`ModeloPresentado` records at
 ``SensitivityClass.AUDIT`` — historical attested-filing records that
 must survive verbatim across the encrypted-storage boundary.
 
@@ -29,7 +29,7 @@ from ...core.config import Settings
 from ._models import (
     SubmissionAttempt,
     SubmissionStatus,
-    SubmittedFiling,
+    ModeloPresentado,
     make_submission_id,
 )
 from ._repository import SubmissionRepository
@@ -37,8 +37,8 @@ from ._repository import SubmissionRepository
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-def _populated_filing() -> SubmittedFiling:
-    """Build a SubmittedFiling with every defaultable field non-default.
+def _populated_filing() -> ModeloPresentado:
+    """Build a ModeloPresentado with every defaultable field non-default.
 
     Anti-tautology: status=ACKNOWLEDGED forces justificante_csv +
     justificante_pdf_path to be populated; acknowledged_at also set.
@@ -49,7 +49,7 @@ def _populated_filing() -> SubmittedFiling:
     now = datetime.now(UTC).replace(microsecond=0)
     draft_id = "d" * 64
     submission_id = make_submission_id(draft_id, attempt_ordinal=2)
-    return SubmittedFiling(
+    return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="303",
@@ -84,7 +84,7 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A populated SubmittedFiling roundtrips strictly across AUDIT-class storage."""
+    """A populated ModeloPresentado roundtrips strictly across AUDIT-class storage."""
 
     provider = EphemeralMasterKeyProvider()
     with provider:
@@ -129,7 +129,7 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
 ) -> None:
     """Anti-tautology proof: deleting ``justificante_csv`` on ACKNOWLEDGED must surface.
 
-    The :class:`SubmittedFiling` model_validator enforces that an
+    The :class:`ModeloPresentado` model_validator enforces that an
     ACKNOWLEDGED submission carries both ``justificante_csv`` AND
     ``justificante_pdf_path``. Surgically delete the CSV from the
     persisted JSON envelope; the load path must reject the rehydrated

@@ -14,7 +14,7 @@ class ReconciliationError(AeatError):
     """Base error for reconciliation between periodic filings and annual summaries."""
 
 
-class DeclarationParseError(ReconciliationError):
+class DeclaracionParseError(ReconciliationError):
     """Raised when a filed declaration export cannot be parsed for reconciliation."""
 
 

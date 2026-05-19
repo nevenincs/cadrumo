@@ -2,7 +2,7 @@
 
 Exposes :class:`SubmissionEngine`, the only sanctioned surface for
 running preflight gates and reading historical
-:class:`aeat.domain.submission.SubmittedFiling` records persisted under
+:class:`aeat.domain.submission.ModeloPresentado` records persisted under
 the secure SQL object backend.
 
 AEAT remote writes and write-shaped portal walks are permanently
@@ -17,9 +17,9 @@ from ...adapters.persistence.storage.errors import StorageError
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ._errors import SubmissionError
-from ._models import SubmissionStatus, SubmittedFiling
+from ._models import SubmissionStatus, ModeloPresentado
 from ._preflight import Preflight
-from ._protocols import AuthProviderProbe, DeadlineWindowChecker, FilingDraftLike
+from ._protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike
 from ._repository import SubmissionRepository
 
 _logger = get_logger(__name__)
@@ -60,23 +60,23 @@ class SubmissionEngine:
             auth_provider=auth_provider,
         )
 
-    def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
+    def preflight(self, draft: ModeloDraftLike, *, today: date) -> None:
         """Run preflight gates without browser work or AEAT writes.
 
         Args:
-            draft: Draft conforming to :class:`FilingDraftLike`.
+            draft: Draft conforming to :class:`ModeloDraftLike`.
             today: Calendar date used to evaluate the AEAT filing window.
         """
         self._preflight.check(draft, today=today)
 
-    def load_submission(self, submission_id: str) -> SubmittedFiling:
-        """Load a historical :class:`SubmittedFiling` by id.
+    def load_submission(self, submission_id: str) -> ModeloPresentado:
+        """Load a historical :class:`ModeloPresentado` by id.
 
         Args:
             submission_id: Stable submission identifier.
 
         Returns:
-            The persisted :class:`SubmittedFiling` record.
+            The persisted :class:`ModeloPresentado` record.
 
         Raises:
             SubmissionError: If ``submission_id`` is malformed or no
@@ -106,7 +106,7 @@ class SubmissionEngine:
         *,
         modelo: str | None = None,
         status: SubmissionStatus | None = None,
-    ) -> tuple[SubmittedFiling, ...]:
+    ) -> tuple[ModeloPresentado, ...]:
         """Return historical persisted records, optionally filtered.
 
         Args:
@@ -116,11 +116,11 @@ class SubmissionEngine:
 
         Returns:
             A chronologically reverse-sorted tuple of
-            :class:`SubmittedFiling` records. Returns an empty tuple
+            :class:`ModeloPresentado` records. Returns an empty tuple
             when no submission objects exist.
         """
         repository = SubmissionRepository()
-        results: list[SubmittedFiling] = []
+        results: list[ModeloPresentado] = []
         for filing in repository.iter_submissions():
             if modelo is not None and filing.modelo != modelo:
                 continue

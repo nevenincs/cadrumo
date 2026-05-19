@@ -5,13 +5,13 @@ annual summaries, surfacing arithmetic and identity drift before submission.
 """
 
 from ._errors import (
-    DeclarationParseError,
+    DeclaracionParseError,
     ReconciliationDriftError,
     ReconciliationError,
 )
 
 __all__ = [
-    "DeclarationParseError",
+    "DeclaracionParseError",
     "ReconciliationDriftError",
     "ReconciliationError",
 ]

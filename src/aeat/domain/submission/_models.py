@@ -20,7 +20,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class SubmissionStatus(StrEnum):
-    """Lifecycle status of a :class:`SubmittedFiling`.
+    """Lifecycle status of a :class:`ModeloPresentado`.
 
     Values are retained for historical records imported from AEAT,
     even though live AEAT submission is now permanently forbidden.
@@ -76,7 +76,7 @@ class SubmissionAttempt(BaseModel):
         return self
 
 
-class SubmittedFiling(BaseModel):
+class ModeloPresentado(BaseModel):
     """The typed audit record for one historical filing.
 
     Attributes:
@@ -113,7 +113,7 @@ class SubmittedFiling(BaseModel):
     attempts: tuple[SubmissionAttempt, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _check_ack_consistency(self) -> SubmittedFiling:
+    def _check_ack_consistency(self) -> ModeloPresentado:
         """Enforce ``ACKNOWLEDGED`` ↔ justificante-present invariants."""
         if self.status is SubmissionStatus.ACKNOWLEDGED:
             if not self.justificante_csv or not self.justificante_pdf_path:
