@@ -137,7 +137,7 @@ class VerificationReport(BaseModel):
     missing_required_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
     run_at: datetime
     verified_by: _ActorLabel
-    granted_verified_complete: bool
+    granted_verificado_completo: bool
 
     @model_validator(mode="after")
     def _enforce_invariants(self) -> VerificationReport:
@@ -150,18 +150,18 @@ class VerificationReport(BaseModel):
             raise ModeloValidationError(
                 f"verification_report_id {self.verification_report_id!r} does not match the derived id {derived!r}"
             )
-        # granted_verified_complete is a True iff completeness_status is COMPLETE
+        # granted_verificado_completo is a True iff completeness_status is COMPLETE
         # AND no blocking findings exist.
         has_blocking = any(finding.severity is ModeloVerificationFindingSeverity.BLOCKING for finding in self.findings)
-        if self.granted_verified_complete:
+        if self.granted_verificado_completo:
             if self.completeness_status is not VerificationCompletenessStatus.COMPLETE:
-                raise ModeloValidationError("granted_verified_complete=True requires completeness_status=COMPLETE")
+                raise ModeloValidationError("granted_verificado_completo=True requires completeness_status=COMPLETE")
             if has_blocking:
-                raise ModeloValidationError("granted_verified_complete=True requires no blocking findings")
+                raise ModeloValidationError("granted_verificado_completo=True requires no blocking findings")
         else:
             if self.completeness_status is VerificationCompletenessStatus.COMPLETE and not has_blocking:
                 raise ModeloValidationError(
-                    "completeness_status=COMPLETE with no blocking findings must set granted_verified_complete=True"
+                    "completeness_status=COMPLETE with no blocking findings must set granted_verificado_completo=True"
                 )
         # Required-casilla sets must be disjoint from resolved.
         overlap = set(self.resolved_casillas) & set(self.missing_required_casillas)

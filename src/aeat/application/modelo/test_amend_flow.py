@@ -33,7 +33,7 @@ from aeat.application.modelo import (
     get_calculation_revision,
     get_filing_record,
     get_work_unit,
-    mark_revision_verified_complete,
+    mark_revision_verificado_completo,
 )
 from aeat.core.config import Settings
 from aeat.domain.buckets import (
@@ -195,7 +195,7 @@ def test_amend_refuses_without_external_evidence(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
