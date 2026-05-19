@@ -82,3 +82,42 @@ No rename may produce stem-stuttering. If the canonical stem already appears in 
 
 The rule generalises: a single canonical stem appears at most once per identifier, and the surrounding tokens are infrastructure suffixes from the English-exceptions list.
 
+
+### 4. Snapshot disambiguation
+
+Snapshot is a generic infrastructure suffix and stays English in every case EXCEPT where the entity is itself the AEAT-prepared Modelo draft. The semantic test is what entity is captured, not what suffix is used:
+
+- Snapshot stays as a generic state-capture suffix when the underlying entity is a Sede scrape, an AEAT remote-state cache, or a point-in-time snapshot of a domain record. Examples: CensusSnapshot (becomes CensoSnapshot for stem reasons, but retains Snapshot), ProfileSnapshot, RegistrySnapshot, AeatGateEnvSnapshot, ExpedienteSnapshot, NotificationSnapshot.
+- Borrador100Snapshot keeps the Borrador stem because the entity itself is the AEAT borrador (Ley 35/2006 Art. 98); Snapshot here is the generic cache-state suffix on top of the borrador entity. The composition Borrador100Snapshot is therefore correct and is NOT a stem stutter.
+
+The rule is therefore: rename the stem token within the identifier to its Spanish form (Census to Censo, Expediente already correct), but leave the Snapshot suffix in place.
+
+### 5. Renta vs Rental adjudication
+
+The Renta (IRPF base) vs Rental (English rental-property terminology) collision is the single largest blocked rename surface, covering the entire domain/rental package, the Rental*Row cluster in adapters/persistence/storage/sql/_orm.py, and the RentalAmortizationLedger family.
+
+Decision: rename domain/rental to domain/fincas.
+
+Justification:
+
+- The domain primary tax surface is rendimientos del capital inmobiliario, which AEAT settles per finca (registrable parcel) for Modelo 100 and Modelo 210. The unit of account is the finca, not the lease contract.
+- fincas is the BOE term per Ley Hipotecaria and the Catastro Inmobiliario (RDLeg 1/2004) and is also used for Modelo 347 arrendamientos and IBI municipal references. It is the broadest authoritative covering term.
+- alquiler (rental contract) is one possible status of a finca, not the canonical unit; restricting the domain to alquiler would exclude vacant fincas, owner-occupied fincas declared for imputed-renta purposes, and non-leased parcels feeding Modelo 100.
+- Operational status (is_rented, lease_active) becomes a field on the finca model, not a package name.
+
+Consequences of this adjudication:
+
+- The package path becomes src/aeat/domain/fincas/.
+- Identifiers rename per the canonical ledger below: RentalFinca to Finca, RentalContract to Arrendamiento, RentalIncome* to Finca* with the income/expense role expressed as a separate suffix, RentalAmortizationLedger to FincaAmortizationLedger.
+- Existing Renta* identifiers under domain/renta are unaffected; the IRPF income-base package stays domain/renta.
+- The SQL ORM Rental*Row cluster renames in lockstep with the domain package and is gated by a roundtrip-test pass.
+
+### 6. Supersession of the prior W03.P04 direction
+
+The prior code-duplication-sweep ADR proposed creating a VatClassification schema under domain/vat and absorbing IvaInvoiceClassification into it. That direction is reversed:
+
+- IvaInvoiceClassification is canonical.
+- VatClassification, VatRegulation, VATRateKind, the entire domain/vat package surface, the IssuerResidency / CustomerResidency pair, and InvoiceDirection migrate into domain/iva (or the existing IVA-bearing package, to be selected during plan retargeting).
+- _iva_ledger.py and _IvaLedgerSelector are the canonical ledger-aggregation surface.
+- The W03.P04 phase in the existing plan must be retargeted by the plan-authoring agent to consolidate VAT into IVA, not the reverse.
+
