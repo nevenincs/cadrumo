@@ -1,22 +1,20 @@
-"""Typed identity primitives for the operator profile and its storage slice.
+"""Typed identity primitive for the operator profile and its storage slice.
 
 A `ProfileName` is the operator-typed label for one identity (one NIF,
-one activity, one IVA regime, one language preference). A `BucketId`
-is the storage-layer identifier for the encrypted slice that holds
-one profile's persisted records. The profile-bucket lifecycle ADR
-mandates 1:1 cardinality between profile and bucket, so the two
-aliases are interchangeable at the boundary but carry different
-intent in code: `ProfileName` lives on operator-facing surfaces (CLI
-arguments, prompts, status emit), `BucketId` lives on storage-layer
-surfaces (manifest fields, secure-object indices, audit-event
-records).
+one activity, one IVA regime, one language preference). The same
+typed alias is reused on storage-layer surfaces (manifest fields,
+secure-object indices, audit-event records) because the profile-bucket
+lifecycle ADR mandates 1:1 cardinality between profile and bucket:
+operator-facing CLI arguments / prompts / status emit and storage-
+layer index entries name the same identifier, so introducing a
+second alias only added documentation surface without changing the
+constraint or the value.
 
-Both aliases preserve the historical secure-object index constraint
+The alias preserves the historical secure-object index constraint
 (strip whitespace, minimum length one, maximum length 128). Tighter
 validation (kebab-case, locale-safety, reserved-name refusal) is a
 deliberate future tightening; introducing it here would invalidate
-historical bucket-id values stored in encrypted indices and is out
-of scope for the introduction commit.
+historical values stored in encrypted indices and is out of scope.
 """
 
 from __future__ import annotations
@@ -29,10 +27,9 @@ ProfileName = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
-"""Operator-typed identifier for one profile."""
+"""Typed identifier for one profile. Used on operator-facing surfaces
+(CLI arguments, prompts, status emit) AND storage-layer surfaces
+(manifest fields, secure-object indices, audit-event records)."""
 
-BucketId = ProfileName
-"""Storage-layer identifier for the encrypted slice behind one profile."""
 
-
-__all__ = ["BucketId", "ProfileName"]
+__all__ = ["ProfileName"]
