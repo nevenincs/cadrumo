@@ -23,7 +23,7 @@ from ._amendment import (
     ModeloSustitutiva,
 )
 
-type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva | FilingAmendment
+type ModeloAmendment = FilingAmendment | ModeloComplementaria | ModeloSustitutiva
 
 _log = get_logger(__name__)
 
@@ -55,7 +55,7 @@ class ModeloAmendmentRepository:
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / f"{amendment_id}.lock"
 
-    def load(self, amendment_id: str) -> FilingAmendment | None:
+    def load(self, amendment_id: str) -> ModeloAmendment | None:
         """Return the persisted amendment or ``None`` if absent."""
 
         safe_repository_id(amendment_id, context="amendment_id")
@@ -67,7 +67,7 @@ class ModeloAmendmentRepository:
         )
         if record is None:
             return None
-        envelope = Envelope[FilingAmendment].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.AUDIT:
             raise ClassificationError(
                 f"filing amendment {amendment_id} has classification {envelope.classification}; "
@@ -119,11 +119,11 @@ class ModeloAmendmentRepository:
             expected_class=SensitivityClass.AUDIT,
             max_supported_version=_AMENDMENT_ENVELOPE_VERSION,
         ):
-            envelope = Envelope[FilingAmendment].model_validate_json(record.payload.decode("utf-8"))
+            envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
             ids.append(envelope.payload.amendment_id)
         return tuple(sorted(ids))
 
-    def iter_amendments(self) -> Iterator[FilingAmendment]:
+    def iter_amendments(self) -> Iterator[ModeloAmendment]:
         """Yield every persisted amendment, in lexicographic id order."""
 
         for amendment_id in self.list_amendment_ids():
