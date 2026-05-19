@@ -128,7 +128,11 @@ def _root(
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
     if version:
-        report = build_cli_version_report()
+        # Fast-path: bare `aeat --version` skips the registry load
+        # (disaster ADR Ruling 4 — registry validation must not run
+        # on the version surface). The `--detail` variant re-invokes
+        # with the registry summary populated.
+        report = build_cli_version_report(with_registry=detail)
         if detail:
             typer.echo(render_cli_version_text(report))
         else:
