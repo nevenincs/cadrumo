@@ -240,10 +240,10 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             RegistryScenarioExpectedOutput(
                 target="0224",
                 value=Decimal("98000.00"),
+                # es_normal binding = "0" selects the simplificada
+                # branch (0180 - 0223); active-branch operand provenance.
                 operand_refs=(
                     "renta-2025-modelo-100-estimacion-directa-es-normal",
-                    "0180",
-                    "0220",
                     "0180",
                     "0223",
                 ),
@@ -281,10 +281,9 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
             RegistryScenarioExpectedOutput(
                 target="0224",
                 value=Decimal("-400.00"),
+                # es_normal binding = "0" selects the simplificada branch.
                 operand_refs=(
                     "renta-2025-modelo-100-estimacion-directa-es-normal",
-                    "0180",
-                    "0220",
                     "0180",
                     "0223",
                 ),
