@@ -1,14 +1,14 @@
 """Strict roundtrip across the encrypted ModeloAmendmentRepository boundary.
 
-``ModeloAmendmentRepository`` persists :class:`FilingAmendment` records
-at ``SensitivityClass.AUDIT`` — corrective filings derived from a
-previously submitted filing.
+``ModeloAmendmentRepository`` persists :class:`ModeloComplementaria`
+and :class:`ModeloSustitutiva` records at ``SensitivityClass.AUDIT``
+— corrective filings derived from a previously submitted filing.
 
 Anti-tautology discipline: every defaultable field on the ModeloDraft
 inside the amendment carries a non-default value, every CasillaChange
 has a non-None ``old_value`` (real correction, not a fresh entry), and
-the amendment_kind is COMPLEMENTARIA which is the more constrained
-shape (additive amendment over a prior filing).
+the persisted variant is the LGT Art. 122.2 ``ModeloComplementaria``
+(additive amendment over a prior filing).
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from ..calculations.registry._schema import RegistrySnapshotRef
 from ._amendment import (
     AmendmentKind,
     CasillaChange,
-    FilingAmendment,
+    ModeloComplementaria,
     make_amendment_id,
 )
 from ._complementaria_repository import ModeloAmendmentRepository
@@ -40,7 +40,6 @@ from ._schema import (
     ModeloValue,
     ModeloValueKind,
 )
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -85,7 +84,7 @@ def _populated_amended_draft() -> ModeloDraft:
     )
 
 
-def _populated_amendment() -> FilingAmendment:
+def _populated_amendment() -> ModeloComplementaria:
     submission_id = "S-2025-001"
     delta = (
         CasillaChange(
@@ -102,7 +101,7 @@ def _populated_amendment() -> FilingAmendment:
         ),
     )
     now = datetime.now(UTC).replace(microsecond=0)
-    return FilingAmendment(
+    return ModeloComplementaria(
         amendment_id=make_amendment_id(
             submission_id=submission_id,
             amendment_kind=AmendmentKind.COMPLEMENTARIA,
@@ -112,7 +111,6 @@ def _populated_amendment() -> FilingAmendment:
         original_csv="ABCD12345678EFGH",
         original_model="303",
         original_period="2025Q1",
-        amendment_kind=AmendmentKind.COMPLEMENTARIA,
         delta=delta,
         amended_draft=_populated_amended_draft(),
         created_at=now,
@@ -123,7 +121,7 @@ def test_filing_amendment_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A FilingAmendment with delta + amended draft roundtrips strictly."""
+    """A ModeloComplementaria with delta + amended draft roundtrips strictly."""
 
     provider = EphemeralMasterKeyProvider()
     with provider:
@@ -166,7 +164,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 ) -> None:
     """Anti-tautology proof: emptying the delta tuple must surface on load.
 
-    :class:`FilingAmendment` enforces ``delta: CasillaDelta =
+    :class:`ModeloComplementaria` enforces ``delta: CasillaDelta =
     Field(min_length=1)`` — an amendment with no corrections is a
     semantically empty record that would silently invalidate the
     audit-trail purpose of the amendment catalogue. A persisted
@@ -225,7 +223,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
             regression_caught = False
             try:
                 repo.load(original.amendment_id)
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: emptying the delta tuple "

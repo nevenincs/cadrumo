@@ -22,11 +22,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 def _patch_secure_backend(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     dispose_engine()
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+    try:
+        yield
+    finally:
+        dispose_engine()
 
 
 def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_api(tmp_path) -> None:

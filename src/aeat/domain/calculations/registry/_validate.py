@@ -1011,6 +1011,7 @@ class RegistryValidator:
             self._validate_export_field(
                 failures,
                 prefix=prefix,
+                record=record,
                 field=field,
                 casillas=casillas,
                 bindings=bindings,
@@ -1059,6 +1060,7 @@ class RegistryValidator:
         failures: list[str],
         *,
         prefix: str,
+        record: ExportRecordDefinition,
         field: ExportFieldDefinition,
         casillas: set[str],
         bindings: set[str],
@@ -1077,6 +1079,13 @@ class RegistryValidator:
             failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}")
         if field.binding is not None and field.binding not in bindings:
             failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
+        if field.kind == "literal" and field.literal is not None and field.length is not None:
+            literal_length = len(field.literal.encode(record.encoding))
+            if literal_length > field.length:
+                failures.append(
+                    f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
+                    f"declared length {field.length}"
+                )
 
     def _validate_extraction_profile_section(
         self,
