@@ -43,6 +43,11 @@ class AuthConfigureResult(BaseModel):
 
     provider: str
     file: str = ""
+    active_profile: str = ""
+    profile_tax_id_present: bool = False
+    provider_identity_present: bool = False
+    identity_alignment: str = ""
+    next_action: str = ""
 
 
 class AuthStatusResult(BaseModel):
@@ -54,6 +59,13 @@ class AuthStatusResult(BaseModel):
     configured: bool = False
     authenticated: bool = False
     available: bool = False
+    active_profile: str = ""
+    active_profile_status: str = ""
+    active_profile_registered: bool = False
+    active_profile_record_present: bool = False
+    active_profile_next_action: str = ""
+    backend_configured: bool = False
+    backend_available: bool = False
     certificate_path: str = ""
     health_severity: str = ""
     health_summary: str = ""
@@ -87,6 +99,10 @@ class AuthConfigureNoActiveBucketError(AeatError):
     """
 
 
+class AuthConfigureDanglingActiveProfileError(ValueError):
+    """Raised when the active-profile pointer does not resolve to a registered bucket."""
+
+
 def configure_operator_auth(provider: str, *, certificate_path: Path | None = None) -> AuthConfigureResult:
     """Configure the active auth provider in workflow state.
 
@@ -116,15 +132,38 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         append_bucket_event,
         derive_bucket_event_id,
     )
+    from ..workflow._models import resolve_active_bucket_id
     from ..workflow._persistence import workflow_state_repository
+    from ..workflow._profile_health import assess_active_profile_health
 
     listing = _implemented_provider(provider)
 
-    state_repo = workflow_state_repository()
-    current_state = state_repo.load()
-    if current_state.active_profile_bucket_id() is None:
+    if resolve_active_bucket_id() is None:
         raise AuthConfigureNoActiveBucketError(
             tr("application.auth.operator.errors.no_active_bucket"),
+        )
+    state_repo = workflow_state_repository()
+    current_state = state_repo.load()
+    profile_health = assess_active_profile_health(current_state)
+    active_bucket_id = profile_health.active_profile
+    if active_bucket_id is None:
+        raise AuthConfigureNoActiveBucketError(
+            tr("application.auth.operator.errors.no_active_bucket"),
+        )
+    if profile_health.status == "dangling_pointer":
+        raise AuthConfigureDanglingActiveProfileError(
+            tr(
+                "application.auth.operator.errors.dangling_active_profile",
+                active_profile=active_bucket_id,
+            )
+        )
+    if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
+        raise AuthConfigureDanglingActiveProfileError(
+            tr(
+                "application.auth.operator.errors.unreadable_active_profile",
+                active_profile=active_bucket_id,
+                status=profile_health.status,
+            )
         )
 
     next_state = _append_bucket_event(
@@ -173,7 +212,11 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     catalogue_write = catalogue_repo.to_secure_object_write(next_catalogue)
     SecureObjectRepository().save_many((state_write, catalogue_write))
 
-    return AuthConfigureResult(provider=listing.id, file=str(certificate_path) if certificate_path is not None else "")
+    return _auth_configure_result(
+        state=next_state,
+        provider=listing.id,
+        certificate_path=certificate_path,
+    )
 
 
 def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
@@ -189,12 +232,86 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     requested_provider = provider.strip().lower() if provider is not None else None
     configured_provider = requested_provider or auth.provider or ""
     configured = bool(auth.provider) and (requested_provider is None or auth.provider == requested_provider)
+    backend_configured = False
+    backend_available = False
+    health_severity = ""
+    health_summary = ""
+    if configured_provider:
+        try:
+            backend = select_provider(AuthProviderKind(configured_provider), settings=Settings())
+            description = backend.describe()
+            backend_configured = description.configured
+            backend_available = description.available
+            health_severity = description.health_severity or ""
+            health_summary = description.health_summary or ""
+        except Exception:
+            backend_configured = False
+            backend_available = False
+    from ..workflow._profile_health import assess_active_profile_health
+
+    profile_health = assess_active_profile_health(state)
+    active_profile = profile_health.active_profile or ""
+
     return AuthStatusResult(
         provider=configured_provider,
         configured=configured,
         authenticated=configured and bool(auth.authenticated_at),
         available=configured and bool(auth.authenticated_at),
+        active_profile=active_profile,
+        active_profile_status=profile_health.status,
+        active_profile_registered=profile_health.registered_bucket,
+        active_profile_record_present=profile_health.profile_record_present,
+        active_profile_next_action=profile_health.next_action,
+        backend_configured=backend_configured,
+        backend_available=backend_available,
         certificate_path=auth.certificate_path or "",
+        health_severity=health_severity,
+        health_summary=health_summary,
+    )
+
+
+def _auth_configure_result(
+    *,
+    state: WorkflowState,
+    provider: str,
+    certificate_path: Path | None,
+) -> AuthConfigureResult:
+    """Build a redacted configuration result that exposes identity readiness."""
+
+    from ..user_profile._projections import record_to_path_values
+
+    active_profile = state.active_profile_bucket_id() or ""
+    record = state.active_profile_record()
+    values = record_to_path_values(record)
+    profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
+    settings = Settings()
+    provider_identity = ""
+    if provider == AuthProviderKind.CLAVE_MOVIL.value:
+        provider_identity = (settings.aeat_clave_movil_dni_nie or "").strip().upper()
+    alignment = "not_applicable"
+    if provider == AuthProviderKind.CLAVE_MOVIL.value:
+        if not profile_tax_id and not provider_identity:
+            alignment = "profile_tax_id_missing_and_clave_identity_missing"
+        elif not profile_tax_id:
+            alignment = "profile_tax_id_missing"
+        elif not provider_identity:
+            alignment = "clave_identity_missing"
+        elif profile_tax_id == provider_identity:
+            alignment = "matches"
+        else:
+            alignment = "mismatch"
+    return AuthConfigureResult(
+        provider=provider,
+        file=str(certificate_path) if certificate_path is not None else "",
+        active_profile=active_profile,
+        profile_tax_id_present=bool(profile_tax_id),
+        provider_identity_present=bool(provider_identity) if provider == AuthProviderKind.CLAVE_MOVIL.value else True,
+        identity_alignment=alignment,
+        next_action=(
+            "aeat config auth test --provider clave_movil"
+            if provider == AuthProviderKind.CLAVE_MOVIL.value
+            else f"aeat config auth test --provider {provider}"
+        ),
     )
 
 

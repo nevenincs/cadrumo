@@ -302,9 +302,9 @@ def _append_unready_draft_review_item(
     distinct review row prompting re-approval. Any other status is
     a no-op — those drafts are not in the review queue's purview.
     """
-    if draft.status in {ModeloDraftStatus.DRAFT, ModeloDraftStatus.VALIDATED}:
+    if draft.status in {ModeloDraftStatus.BORRADOR, ModeloDraftStatus.VALIDADO}:
         items.append(_to_placeholder_item(draft=draft, path_str=path_str))
-    elif draft.status is ModeloDraftStatus.APPROVAL_STALE:
+    elif draft.status is ModeloDraftStatus.APROBACION_CADUCADA:
         items.append(_to_stale_approval_item(draft=draft, path_str=path_str))
 
 

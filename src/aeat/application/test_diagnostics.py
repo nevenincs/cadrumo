@@ -320,34 +320,35 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     dispose_engine()
 
-    base = register_minimal_profile(
-        WorkflowState(),
-        profile_id="operator",
-        overrides={
-            "identity.tax_id": "00000000T",
-            "activities.description": "design",
-            "iva.regime": "GENERAL",
-        },
-    )
+    with EphemeralMasterKeyProvider():
+        base = register_minimal_profile(
+            WorkflowState(),
+            profile_id="operator",
+            overrides={
+                "identity.tax_id": "00000000T",
+                "activities.description": "design",
+                "iva.regime": "GENERAL",
+            },
+        )
 
-    no_provider = base
-    provider_only = update_auth(no_provider, provider="clave_movil")
-    fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
+        no_provider = base
+        provider_only = update_auth(no_provider, provider="clave_movil")
+        fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
-    from aeat.application.wizard._status import build_wizard_status
+        from aeat.application.wizard._status import build_wizard_status
 
-    for state in (no_provider, provider_only, fully_authenticated):
-        setup_report = build_wizard_status(state)
-        # The repair renderer reads the same login_ready field; this
-        # assertion pins both surfaces against the shared projection.
-        if state is no_provider:
-            assert setup_report.login_ready is False
-        elif state is provider_only:
-            assert setup_report.auth_provider == "clave_movil"
-            assert setup_report.login_ready is False
-        else:
-            assert setup_report.auth_provider == "clave_movil"
-            assert setup_report.login_ready is True
+        for state in (no_provider, provider_only, fully_authenticated):
+            setup_report = build_wizard_status(state)
+            # The repair renderer reads the same login_ready field; this
+            # assertion pins both surfaces against the shared projection.
+            if state is no_provider:
+                assert setup_report.login_ready is False
+            elif state is provider_only:
+                assert setup_report.auth_provider == "clave_movil"
+                assert setup_report.login_ready is False
+            else:
+                assert setup_report.auth_provider == "clave_movil"
+                assert setup_report.login_ready is True
 
 
 def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(

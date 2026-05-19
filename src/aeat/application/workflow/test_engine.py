@@ -82,7 +82,7 @@ class _ConcreteDraft:
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
     schema_version: str = field(default_factory=_registry_schema_version)
-    status: object = ModeloDraftStatus.APPROVED
+    status: object = ModeloDraftStatus.APROBADO
     values: Mapping[str, str] | Iterable[object] = field(default_factory=lambda: {"01": "1000"})
     findings: tuple[object, ...] = ()
 
@@ -459,7 +459,7 @@ class TestAbortReasons:
     def test_draft_has_errors_via_status(self) -> None:
         """Builder returning a merely validated draft aborts at BUILDING_DRAFT."""
         fx = _fixtures()
-        fx.draft = _ConcreteDraft(status=ModeloDraftStatus.VALIDATED)
+        fx.draft = _ConcreteDraft(status=ModeloDraftStatus.VALIDADO)
         fx.draft_builder.draft = fx.draft
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
@@ -499,7 +499,7 @@ class TestAbortReasons:
 
     def test_unapproved_ready_draft_fails_preflight(self) -> None:
         fx = _fixtures()
-        fx.draft = _ConcreteDraft(status=ModeloDraftStatus.READY_TO_SUBMIT)
+        fx.draft = _ConcreteDraft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR)
         fx.draft_builder.draft = fx.draft
         fx.submission_engine.preflight_exc = SubmissionPreflightError(
             "draft not approved for submission (status=READY_TO_SUBMIT)"

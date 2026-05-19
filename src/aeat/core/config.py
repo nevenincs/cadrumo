@@ -668,8 +668,8 @@ class Settings(BaseSettings):
         default=False,
         description=(
             "When true, the Cl@ve Móvil provider uses the non-QR fallback "
-            "(DNI/NIE + contraste) rather than the QR code. Still requires "
-            "the operator to approve the push notification on the Cl@ve app."
+            "(DNI/NIE + contraste) rather than the QR code. This still "
+            "requires operator-mediated completion in Cl@ve."
         ),
     )
     aeat_clave_movil_timeout_ms: int = Field(
@@ -678,7 +678,7 @@ class Settings(BaseSettings):
         le=120_000,
         description=(
             "Maximum time (milliseconds) the Cl@ve Móvil provider waits for "
-            "the operator to approve the push notification on their phone "
+            "AEAT browser-side authentication completion "
             "before aborting. Production runs must fail fast enough for an "
             "operator to retry deliberately rather than leaving a pending "
             "request dangling."
@@ -840,7 +840,7 @@ class Settings(BaseSettings):
     # ── Filing history ──────────────────────────────────────────────────────
     aeat_filing_history_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "filing-history",
-        description="Directory where the persisted FilingHistory JSON file lives",
+        description="Directory where the persisted ModeloHistory JSON file lives",
     )
     aeat_filing_history_cache_ttl_s: int = Field(
         default=900,
@@ -883,24 +883,21 @@ class Settings(BaseSettings):
             return self
         bucket_id = (self.aeat_active_profile or "").strip()
         if not bucket_id:
-            # Parse the TOML pointer file directly to avoid a circular
-            # Settings construction. The pointer is a one-line TOML
-            # document carrying ``bucket_id = "..."`` plus a
-            # ``schema_version`` int (see
-            # ``_bucket_pointer_io.write_pointer``).
-            import tomllib
-
-            pointer_file = self.aeat_local_storage_root / "active-profile"
+            # Delegate to the canonical pointer-file reader rather
+            # than re-implementing the TOML parse inline. The reader
+            # uses strict pydantic validation; this preserves the
+            # one-resolver invariant the disaster ADR Ruling 2
+            # mandates.
             try:
-                raw = pointer_file.read_text(encoding="utf-8")
-            except OSError:
-                raw = ""
-            if raw:
-                try:
-                    parsed = tomllib.loads(raw)
-                except tomllib.TOMLDecodeError:
-                    parsed = {}
-                bucket_id = str(parsed.get("bucket_id", "")).strip()
+                from ..application.workflow._bucket_pointer_io import (
+                    read_pointer,
+                )
+
+                pointer = read_pointer(self.aeat_local_storage_root)
+            except Exception:  # noqa: BLE001 - resolver failure leaves URL empty
+                pointer = None
+            if pointer is not None:
+                bucket_id = pointer.bucket_id.strip()
         if not bucket_id:
             return self
         bucket_db_path = (

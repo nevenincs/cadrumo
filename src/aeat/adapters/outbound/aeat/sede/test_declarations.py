@@ -273,7 +273,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
         ),
         inputs=inputs,
         schema_provider=provider,
-    ).model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
     output = tmp_path / f"modelo-123-{filing_year}-{period}.txt"
 
     export_draft(

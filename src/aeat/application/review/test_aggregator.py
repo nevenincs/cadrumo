@@ -149,7 +149,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         modelo="130",
         period="2026Q1",
         profile_tax_id="00000000T",
-        status=ModeloDraftStatus.DRAFT,
+        status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
                 casilla_id="03",
