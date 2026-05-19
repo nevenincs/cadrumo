@@ -36,7 +36,7 @@ from aeat.application.modelo import (
     get_filing_record,
     get_work_unit,
     import_external_filing_evidence,
-    mark_revision_verified_complete,
+    mark_revision_verificado_completo,
 )
 from aeat.core.config import Settings
 from aeat.domain.buckets import (
@@ -461,7 +461,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos) -> No
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verified_complete(
+    mark_revision_verificado_completo(
         revision.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,

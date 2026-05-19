@@ -72,10 +72,10 @@ def _populated_report() -> VerificationReport:
         missing_required_casillas=("iva.devengado",),
         run_at=now,
         verified_by=verified_by,
-        # Non-default lifecycle bit: granted_verified_complete defaults
+        # Non-default lifecycle bit: granted_verificado_completo defaults
         # to False naturally on BLOCKED reports, but we still pin the
         # explicit witness on the loaded side.
-        granted_verified_complete=False,
+        granted_verificado_completo=False,
     )
 
 
@@ -131,17 +131,17 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Anti-tautology proof: flipping granted_verified_complete on BLOCKED must surface.
+    """Anti-tautology proof: flipping granted_verificado_completo on BLOCKED must surface.
 
     :class:`VerificationReport` enforces three load-bearing invariants:
-    content-addressed id, the granted_verified_complete ↔
+    content-addressed id, the granted_verificado_completo ↔
     completeness_status pairing, and disjoint resolved / missing
     casilla sets. The most dangerous regression is a persisted
-    BLOCKED report whose granted_verified_complete silently flips to
+    BLOCKED report whose granted_verificado_completo silently flips to
     True — that would unlock filing on a calculation revision that
     failed verification.
 
-    Persists a BLOCKED report (granted_verified_complete=False with
+    Persists a BLOCKED report (granted_verificado_completo=False with
     a blocking finding), reaches into ``SecureObjectRow`` via
     ``session_scope``, surgically flips the boolean to True in the
     encrypted JSON envelope, and asserts the load path catches the
@@ -185,13 +185,13 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
                 envelope = _json.loads(row.payload.decode("utf-8"))
                 reports = envelope["payload"]["reports"]
                 report_dict = reports[report.verification_report_id]
-                assert report_dict.get("granted_verified_complete") is False, (
-                    "fixture must serialise granted_verified_complete=False "
+                assert report_dict.get("granted_verificado_completo") is False, (
+                    "fixture must serialise granted_verificado_completo=False "
                     "on the BLOCKED report for this proof test to be meaningful"
                 )
                 # Flip the grant flag to True. The BLOCKED + blocking-finding
                 # combination must trip the granted ↔ completeness invariant.
-                report_dict["granted_verified_complete"] = True
+                report_dict["granted_verificado_completo"] = True
                 row.payload = _json.dumps(envelope).encode("utf-8")
 
             regression_caught = False
@@ -201,7 +201,7 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: flipping "
-                "granted_verified_complete=True on a BLOCKED report with "
+                "granted_verificado_completo=True on a BLOCKED report with "
                 "blocking findings did NOT surface on load. The "
                 "verification report boundary is tautological and every "
                 "report roundtrip in the suite is suspect."

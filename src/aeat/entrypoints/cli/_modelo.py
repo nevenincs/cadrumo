@@ -1390,7 +1390,7 @@ def _verification_report_payload(report: VerificationReport) -> dict[str, object
         "verification_report_id": report.verification_report_id,
         "calculation_revision_id": report.calculation_revision_id,
         "completeness_status": report.completeness_status.value,
-        "granted_verified_complete": report.granted_verified_complete,
+        "granted_verificado_completo": report.granted_verificado_completo,
         "resolved_casillas": list(report.resolved_casillas),
         "missing_required_casillas": list(report.missing_required_casillas),
         "run_at": report.run_at.isoformat(),
@@ -1414,7 +1414,7 @@ def _verification_report_lines(report: VerificationReport) -> list[str]:
         f"verification_report_id\t{report.verification_report_id}",
         f"calculation_revision_id\t{report.calculation_revision_id}",
         f"completeness_status\t{report.completeness_status.value}",
-        f"granted_verified_complete\t{str(report.granted_verified_complete).lower()}",
+        f"granted_verificado_completo\t{str(report.granted_verificado_completo).lower()}",
         f"run_at\t{report.run_at.isoformat()}",
         f"verified_by\t{report.verified_by}",
         f"resolved_casilla_count\t{len(report.resolved_casillas)}",
@@ -1485,7 +1485,7 @@ def work_verify(
     lines = ["operation\tmodelo.work.verify", *_verification_report_lines(report)]
     _emit(ctx, payload, lines)
 
-    if not report.granted_verified_complete:
+    if not report.granted_verificado_completo:
         raise typer.Exit(code=1)
 
 
@@ -1782,7 +1782,7 @@ def verification_report_list(
                 r.verification_report_id,
                 r.calculation_revision_id,
                 r.completeness_status.value,
-                str(r.granted_verified_complete).lower(),
+                str(r.granted_verificado_completo).lower(),
                 r.run_at.isoformat(),
                 r.verified_by,
             )

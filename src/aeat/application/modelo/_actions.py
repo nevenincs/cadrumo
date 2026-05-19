@@ -1178,7 +1178,7 @@ def get_calculation_revision(
     return revision
 
 
-def mark_revision_verified_complete(
+def mark_revision_verificado_completo(
     calculation_revision_id: str,
     *,
     actor: str,
@@ -1429,7 +1429,7 @@ def verify_modelo_revision(
        severity.
     4. Build a :class:`VerificationReport`. When zero blocking
        findings are present and the completeness status is
-       ``COMPLETE``, ``granted_verified_complete`` is ``True`` and
+       ``COMPLETE``, ``granted_verificado_completo`` is ``True`` and
        the calculation revision transitions DRAFT →
        VERIFICADO_COMPLETO.
     5. If the report would grant ``VERIFICADO_COMPLETO``, run the
@@ -1497,7 +1497,7 @@ def verify_modelo_revision(
         missing_required_casillas=tuple(missing_required),
         run_at=now,
         verified_by=actor.strip(),
-        granted_verified_complete=granted,
+        granted_verificado_completo=granted,
     )
 
     if granted:
@@ -2499,7 +2499,7 @@ __all__ = [
     "list_filing_records",
     "list_verification_reports",
     "list_work_units",
-    "mark_revision_verified_complete",
+    "mark_revision_verificado_completo",
     "rename_work_unit",
     "verify_modelo_revision",
 ]

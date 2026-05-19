@@ -47,7 +47,7 @@ from ._actions import (
     list_filing_records,
     list_verification_reports,
     list_work_units,
-    mark_revision_verified_complete,
+    mark_revision_verificado_completo,
     rename_work_unit,
     verify_modelo_revision,
 )
@@ -101,7 +101,7 @@ __all__ = [
     "list_filing_records",
     "list_verification_reports",
     "list_work_units",
-    "mark_revision_verified_complete",
+    "mark_revision_verificado_completo",
     "rename_work_unit",
     "resolve_modelo_100_borrador_bindings",
     "verify_modelo_revision",

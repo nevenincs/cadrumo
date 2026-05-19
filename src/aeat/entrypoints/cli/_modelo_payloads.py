@@ -85,7 +85,7 @@ class VerificationReportPayload(OutputSchema):
     verification_report_id: str
     calculation_revision_id: str
     completeness_status: str
-    granted_verified_complete: bool
+    granted_verificado_completo: bool
     resolved_casillas: list[str]
     missing_required_casillas: list[str]
     run_at: str
@@ -247,7 +247,7 @@ class WorkVerifyResult(OutputSchema):
     verification_report_id: str
     calculation_revision_id: str
     completeness_status: str
-    granted_verified_complete: bool
+    granted_verificado_completo: bool
     resolved_casillas: list[str]
     missing_required_casillas: list[str]
     run_at: str
@@ -343,7 +343,7 @@ class VerificationReportShowResult(OutputSchema):
     verification_report_id: str
     calculation_revision_id: str
     completeness_status: str
-    granted_verified_complete: bool
+    granted_verificado_completo: bool
     resolved_casillas: list[str]
     missing_required_casillas: list[str]
     run_at: str
