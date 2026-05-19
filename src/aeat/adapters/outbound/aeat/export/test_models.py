@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 def _attempt(
     *,
-    status: SubmissionStatus = SubmissionStatus.SUBMITTED,
+    status: SubmissionStatus = SubmissionStatus.PRESENTADA,
 ) -> SubmissionAttempt:
     """Build a deterministic :class:`SubmissionAttempt` for fixture reuse."""
     return SubmissionAttempt(
@@ -66,7 +66,7 @@ class TestSubmissionAttempt:
                 attempt_id="a1",
                 started_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
                 ended_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
-                status=SubmissionStatus.SUBMITTED,
+                status=SubmissionStatus.PRESENTADA,
             )
 
     def test_status_must_be_known(self) -> None:
@@ -93,7 +93,7 @@ class TestModeloPresentado:
             modelo="130",
             period="2026Q1",
             profile_tax_id="X1234567L",
-            status=SubmissionStatus.SUBMITTED,
+            status=SubmissionStatus.PRESENTADA,
             submitted_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
             attempts=(_attempt(),),
         )
@@ -103,7 +103,7 @@ class TestModeloPresentado:
     def test_happy_path(self) -> None:
         """Assert the canonical baseline filing validates and exposes its attempts."""
         filing = self._filing()
-        assert filing.status is SubmissionStatus.SUBMITTED
+        assert filing.status is SubmissionStatus.PRESENTADA
         assert filing.attempts[0].attempt_id == "a1"
 
     def test_extra_fields_rejected(self) -> None:
@@ -132,7 +132,7 @@ class TestModeloPresentado:
         """Assert ``ACKNOWLEDGED`` status requires a ``justificante_csv`` + PDF path."""
         with pytest.raises(ValidationError, match=r"justificante|ACKNOWLEDGED"):
             self._filing(
-                status=SubmissionStatus.ACKNOWLEDGED,
+                status=SubmissionStatus.ACEPTADA,
                 acknowledged_at=datetime(2026, 4, 12, 10, 5, 0, tzinfo=UTC),
             )
 
@@ -140,7 +140,7 @@ class TestModeloPresentado:
         """Assert ``ACKNOWLEDGED`` status requires ``acknowledged_at``."""
         with pytest.raises(ValidationError, match=r"acknowledged_at|ACKNOWLEDGED"):
             self._filing(
-                status=SubmissionStatus.ACKNOWLEDGED,
+                status=SubmissionStatus.ACEPTADA,
                 justificante_csv="CSV123",
                 justificante_pdf_path=Path("var/j.pdf"),
             )
@@ -155,7 +155,7 @@ class TestModeloPresentado:
     def test_round_trip(self) -> None:
         """Assert a fully ``ACKNOWLEDGED`` filing round-trips through JSON serialisation."""
         filing = self._filing(
-            status=SubmissionStatus.ACKNOWLEDGED,
+            status=SubmissionStatus.ACEPTADA,
             justificante_csv="CSV-ACK-1",
             justificante_pdf_path=Path("var/submissions/j1.pdf"),
             acknowledged_at=datetime(2026, 4, 12, 10, 5, 0, tzinfo=UTC),

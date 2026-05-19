@@ -39,7 +39,7 @@ def _make_filing(
     *,
     draft_id: str = "draft-abc123",
     attempt_ordinal: int = 1,
-    status: SubmissionStatus = SubmissionStatus.SUBMITTED,
+    status: SubmissionStatus = SubmissionStatus.PRESENTADA,
 ) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     submission_id = make_submission_id(draft_id, attempt_ordinal)
