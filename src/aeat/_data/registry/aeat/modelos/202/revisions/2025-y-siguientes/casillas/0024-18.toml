@@ -4,6 +4,7 @@ number = "18"
 label = "Mod. 40.3 LIS B1 — Caso general — Resultado previo"
 section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_resultado_previo"
 required = false
 input_kind = "computed"
 formula = "modelo-202-resultado-previo-b1"

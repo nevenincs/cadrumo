@@ -4,6 +4,7 @@ number = "29"
 label = "Mod. 40.3 LIS — Volumen operaciones en Territorio Comun (%)"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "decimal"
+semantic_role = "is_pf_mod_40_3_volumen_territorio_comun_pct"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-2019-2022-page-02-casilla-29"]

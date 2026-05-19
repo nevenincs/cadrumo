@@ -4,6 +4,7 @@ number = "44"
 label = "Mod. 40.3 LIS — Remanente reserva de capitalizacion no aplicada por insuficiencia de base"
 section = ["liquidacion", "modalidad_40_3_lis", "base_imponible"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_3_remanente_reserva_capitalizacion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-page-01-casilla-44"]
