@@ -22,7 +22,6 @@ oracle still exposes planned operations and guard evaluation, but returns an
 from __future__ import annotations
 
 from collections.abc import Mapping
-from json import JSONDecodeError, loads
 from typing import Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
@@ -30,14 +29,14 @@ from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 from ....core.config import Settings
 from ._errors import RegistryValidationError
 from ._live_parity import (
+    BaseCheckerOracle,
     LiveParityCatalogue,
     OracleEnvironment,
     OracleSurfaceKind,
     ParityFieldComparison,
-    ParityResult,
-    assert_oracle_operations_allowed,
+    decode_replay_json_payload,
 )
-from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+from ._remote_state_guard import RemoteOperation
 
 ORACLE_ID = "aeat-nif-iva-checker"
 
@@ -120,12 +119,7 @@ class AeatNifIvaReplayDriver:
         expected: Mapping[str, object],
     ) -> AeatNifIvaObservation:
         del expected
-        try:
-            document = loads(payload.decode("utf-8"))
-        except (UnicodeDecodeError, JSONDecodeError) as exc:
-            raise RegistryValidationError("AEAT NIF-IVA replay payload must be UTF-8 JSON") from exc
-        if not isinstance(document, dict):
-            raise RegistryValidationError("AEAT NIF-IVA replay payload must be a JSON object")
+        document = decode_replay_json_payload(payload, surface_label="AEAT NIF-IVA replay")
         observed = document.get("observed")
         if not isinstance(observed, dict):
             raise RegistryValidationError("AEAT NIF-IVA replay payload must contain an observed object")
