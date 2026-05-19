@@ -34,17 +34,17 @@ from ...domain.transactions import Transaction, TransactionCatalogue
 _logger = get_logger(__name__)
 _REVIEW_STATUSES = frozenset(
     {
-        ModeloDraftStatus.APPROVED,
-        ModeloDraftStatus.APPROVAL_STALE,
+        ModeloDraftStatus.APROBADO,
+        ModeloDraftStatus.APROBACION_CADUCADA,
     }
 )
 _DOWNSTREAM_STATUSES = frozenset(
     {
-        ModeloDraftStatus.SUBMITTED,
-        ModeloDraftStatus.ACKNOWLEDGED,
-        ModeloDraftStatus.REJECTED,
-        ModeloDraftStatus.AMENDED,
-        ModeloDraftStatus.CANCELLED,
+        ModeloDraftStatus.PRESENTADA,
+        ModeloDraftStatus.ACEPTADA,
+        ModeloDraftStatus.RECHAZADA,
+        ModeloDraftStatus.ENMENDADO,
+        ModeloDraftStatus.ANULADO,
     }
 )
 
@@ -195,7 +195,7 @@ def approve_draft(
 
     Args:
         draft: The draft to approve. Must be
-            :attr:`ModeloDraftStatus.READY_TO_SUBMIT`.
+            :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
         approved_by: Operator identifier; rejected when blank after
             stripping.
         schema_provider: The active
@@ -210,14 +210,14 @@ def approve_draft(
     Raises:
         :exc:`aeat.domain.filing.ModeloDraftError`: When
             ``approved_by`` is blank or the draft is not in
-            :attr:`ModeloDraftStatus.READY_TO_SUBMIT`.
+            :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
     """
 
     normalized_approver = approved_by.strip()
     if not normalized_approver:
         raise ModeloDraftError("approved_by must not be blank")
 
-    if derive_validation_status(draft.findings) is not ModeloDraftStatus.READY_TO_SUBMIT:
+    if derive_validation_status(draft.findings) is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
         raise ModeloDraftError("only READY_TO_SUBMIT drafts may be approved")
     _require_registry_review_alignment(draft, schema_provider=schema_provider)
 
@@ -231,7 +231,7 @@ def approve_draft(
     )
     updated = draft.model_copy(
         update={
-            "status": ModeloDraftStatus.APPROVED,
+            "status": ModeloDraftStatus.APROBADO,
             "approved_at": timestamp,
             "approved_by": normalized_approver,
             "approval_basis": approval_basis,
@@ -296,7 +296,7 @@ def refresh_review_status(
     Downstream-status drafts (submitted / acknowledged / rejected /
     amended / cancelled) get any leftover approval metadata cleared
     so historical state cannot pretend to be current. APPROVED drafts
-    transition to :attr:`ModeloDraftStatus.APPROVAL_STALE` when
+    transition to :attr:`ModeloDraftStatus.APROBACION_CADUCADA` when
     :func:`approval_stale_reasons` returns a non-empty tuple.
 
     Args:
@@ -355,7 +355,7 @@ def refresh_review_status(
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
     )
-    next_status = ModeloDraftStatus.APPROVAL_STALE if reasons else ModeloDraftStatus.APPROVED
+    next_status = ModeloDraftStatus.APROBACION_CADUCADA if reasons else ModeloDraftStatus.APROBADO
     if draft.status is next_status:
         _logger.debug(
             "refresh: no transition needed draft_id=%s status=%s",
@@ -363,7 +363,7 @@ def refresh_review_status(
             draft.status.value,
         )
         return draft
-    if next_status is ModeloDraftStatus.APPROVAL_STALE:
+    if next_status is ModeloDraftStatus.APROBACION_CADUCADA:
         _logger.warning(
             "draft approval marked stale draft_id=%s modelo=%s period=%s reasons=%s",
             draft.draft_id,
@@ -432,7 +432,7 @@ def _require_registry_review_alignment(
     schema_provider: CasillaSchemaProvider,
 ) -> None:
     findings = ModeloValidator(schema_provider=schema_provider).validate(draft)
-    if derive_validation_status(findings) is ModeloDraftStatus.READY_TO_SUBMIT:
+    if derive_validation_status(findings) is ModeloDraftStatus.LISTO_PARA_PRESENTAR:
         return
     codes = tuple(finding.code for finding in findings)
     raise ModeloDraftError(f"draft does not match the registry review surface: {codes!r}")

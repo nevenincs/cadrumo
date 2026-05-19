@@ -117,8 +117,8 @@ def _seed_revision(
         state=state,
         created_at=now,
         updated_at=now,
-        verified_at=now if state is not CalculationRevisionState.DRAFT else None,
-        verified_by="operator" if state is not CalculationRevisionState.DRAFT else None,
+        verified_at=now if state is not CalculationRevisionState.BORRADOR else None,
+        verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -175,7 +175,7 @@ def test_export_refuses_draft_revision(
     verified, not a work-in-progress."""
 
     bucket_id = _seed_profile()
-    _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.DRAFT)
+    _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
 
     with pytest.raises(CalculationRevisionStateError, match=r"verified-complete or filed"):
         export_modelo_revision(

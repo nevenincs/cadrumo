@@ -155,8 +155,8 @@ def _load_revision_for_export(
         )
     if revision.state not in {
         CalculationRevisionState.VERIFIED_COMPLETE,
-        CalculationRevisionState.FILED,
-        CalculationRevisionState.FILED_SUPERSEDED,
+        CalculationRevisionState.PRESENTADO,
+        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
     }:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "

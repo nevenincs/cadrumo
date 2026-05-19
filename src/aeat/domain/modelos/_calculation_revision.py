@@ -12,20 +12,21 @@ revision.
 
 Lifecycle states:
 
-* ``DRAFT`` — newly calculated; mutable in the sense that
+* ``BORRADOR`` — newly calculated; mutable in the sense that
   re-running ``calculate`` creates a new revision rather than
-  editing this one. Multiple drafts can coexist.
+  editing this one. Multiple borradores can coexist.
 * ``VERIFIED_COMPLETE`` — ``verify`` ran cleanly: all required
   casillas resolved, zero blocking findings, source trace
   persisted. The revision is immutable from this point on; any
-  recalculation produces a fresh draft instead.
-* ``FILED`` — paired with a :class:`ModeloRecord`. The revision is
-  the current filed answer for its (bucket, modelo, year, period)
-  tuple. Exactly one filed revision per tuple at any time.
-* ``FILED_SUPERSEDED`` — a later verified revision was filed against
-  the same tuple. The revision and its filing record remain in the
-  audit trail.
-* ``DISCARDED`` — operator abandoned the revision before filing.
+  recalculation produces a fresh borrador instead.
+* ``PRESENTADO`` — paired with a :class:`ModeloRecord`. The revision
+  is the currently-effective filed answer for its (bucket, modelo,
+  year, period) tuple. Exactly one presentado revision per tuple at
+  any time.
+* ``PRESENTADO_SUPERSEDIDO`` — a later verified revision was filed
+  against the same tuple. The revision and its filing record remain
+  in the audit trail.
+* ``DESCARTADO`` — operator abandoned the revision before filing.
 
 Two CalculationRevisions can never share a ``calculation_revision_id``;
 the id is the SHA-256 of the inputs + binding overrides + computed
@@ -53,11 +54,11 @@ from ._errors import ModeloValidationError
 class CalculationRevisionState(StrEnum):
     """Closed enumeration of calculation-revision lifecycle states."""
 
-    DRAFT = "draft"
+    BORRADOR = "borrador"
     VERIFIED_COMPLETE = "verified_complete"
-    FILED = "filed"
-    FILED_SUPERSEDED = "filed_superseded"
-    DISCARDED = "discarded"
+    PRESENTADO = "presentado"
+    PRESENTADO_SUPERSEDIDO = "presentado_supersedido"
+    DESCARTADO = "descartado"
 
 
 class CalculationRevisionAmendmentKind(StrEnum):
@@ -185,9 +186,9 @@ class CalculationRevision(BaseModel):
             for non-filed revisions.
         superseded_at: UTC timestamp at which a later filed revision
             superseded this one. ``None`` unless ``state is
-            FILED_SUPERSEDED``.
+            PRESENTADO_SUPERSEDIDO``.
         discarded_at, discarded_by, discard_reason: audit metadata
-            captured when the revision is moved to ``DISCARDED``.
+            captured when the revision is moved to ``DESCARTADO``.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -243,7 +244,7 @@ class CalculationRevision(BaseModel):
                 f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
             )
         # State-specific audit-metadata invariants.
-        if self.state is CalculationRevisionState.DRAFT:
+        if self.state is CalculationRevisionState.BORRADOR:
             self._require_none(
                 "verified_at",
                 "verified_by",
@@ -259,13 +260,13 @@ class CalculationRevision(BaseModel):
             self._require_none(
                 "filed_at", "filed_by", "superseded_at", "discarded_at", "discarded_by", "discard_reason"
             )
-        elif self.state is CalculationRevisionState.FILED:
+        elif self.state is CalculationRevisionState.PRESENTADO:
             self._require_set("verified_at", "verified_by", "filed_at", "filed_by")
             self._require_none("superseded_at", "discarded_at", "discarded_by", "discard_reason")
-        elif self.state is CalculationRevisionState.FILED_SUPERSEDED:
+        elif self.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
             self._require_set("verified_at", "verified_by", "filed_at", "filed_by", "superseded_at")
             self._require_none("discarded_at", "discarded_by", "discard_reason")
-        elif self.state is CalculationRevisionState.DISCARDED:
+        elif self.state is CalculationRevisionState.DESCARTADO:
             self._require_set("discarded_at", "discarded_by")
             self._require_none("verified_at", "verified_by", "filed_at", "filed_by", "superseded_at")
         # Amendment-metadata invariants. ``amendment_kind``,

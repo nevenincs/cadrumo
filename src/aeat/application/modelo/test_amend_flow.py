@@ -143,7 +143,7 @@ def _seed_external_baseline(repos_tuple, *, casilla_values):
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.FILED,
+        state=CalculationRevisionState.PRESENTADO,
         inputs_snapshot=inputs,
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
@@ -168,7 +168,7 @@ def _seed_external_baseline(repos_tuple, *, casilla_values):
         filed_by="aeat-import",
         notes=None,
         aeat_accepted=True,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id="JUST-2024-303-1T-ABC123",
@@ -240,7 +240,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos) -> None:
             fr_repo.load(),
             baseline.model_copy(
                 update={
-                    "status": ModeloRecordStatus.SUPERSEDED,
+                    "status": ModeloRecordStatus.SUPERSEDIDO,
                     "superseded_at": _T3,
                     "superseded_by_filing_record_id": fake_successor,
                 }
@@ -307,7 +307,7 @@ def _drive_amend_creates_complementaria(repos) -> _AmendOutcome:  # type: ignore
 
 def test_amend_new_filing_is_current_complementaria_record(repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
-    assert outcome.new_filing.status is ModeloRecordStatus.CURRENT
+    assert outcome.new_filing.status is ModeloRecordStatus.VIGENTE
     assert outcome.new_filing.amends_filing_record_id == outcome.baseline.filing_record_id
     assert outcome.new_filing.external_evidence is None
 
@@ -322,7 +322,7 @@ def test_amend_baseline_is_superseded_by_new_filing(repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, _, fr_repo, _, _ = repos
     refreshed_baseline = get_filing_record(outcome.baseline.filing_record_id, filing_repository=fr_repo)
-    assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDED
+    assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_baseline.superseded_by_filing_record_id == outcome.new_filing.filing_record_id
 
 
@@ -332,7 +332,7 @@ def test_amend_new_revision_is_filed_complementaria(repos) -> None:
     new_revision = get_calculation_revision(
         outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
     )
-    assert new_revision.state is CalculationRevisionState.FILED
+    assert new_revision.state is CalculationRevisionState.PRESENTADO
     assert new_revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
     assert new_revision.amends_filing_record_id == outcome.baseline.filing_record_id
     assert new_revision.amendment_reason == "under-reported turnover discovered in audit"

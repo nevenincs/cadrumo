@@ -2445,7 +2445,7 @@ def modelo_export_verb(
         # revision risks the operator submitting an obsolete fichero;
         # operators that genuinely want a superseded revision must
         # pass --revision explicitly.
-        filed = [r for r in revisions if r.state is CalculationRevisionState.FILED]
+        filed = [r for r in revisions if r.state is CalculationRevisionState.PRESENTADO]
         verified = [r for r in revisions if r.state is CalculationRevisionState.VERIFIED_COMPLETE]
         exportable = filed or verified
         if not exportable:

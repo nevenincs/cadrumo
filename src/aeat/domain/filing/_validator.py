@@ -207,10 +207,10 @@ def apply_validation(
 
     Status promotion logic:
 
-    - Any ``ERROR`` → :attr:`ModeloDraftStatus.DRAFT` (still
+    - Any ``ERROR`` → :attr:`ModeloDraftStatus.BORRADOR` (still
       blocking).
-    - Any ``WARNING`` only → :attr:`ModeloDraftStatus.VALIDATED`.
-    - No findings → :attr:`ModeloDraftStatus.READY_TO_SUBMIT`.
+    - Any ``WARNING`` only → :attr:`ModeloDraftStatus.VALIDADO`.
+    - No findings → :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
     """
     new_status = derive_validation_status(findings)
     return draft.model_copy(
@@ -230,7 +230,7 @@ def derive_validation_status(
     has_error = any(f.severity is BaseSeverity.ERROR for f in findings)
     has_warning = any(f.severity is BaseSeverity.WARNING for f in findings)
     if has_error:
-        return ModeloDraftStatus.DRAFT
+        return ModeloDraftStatus.BORRADOR
     if has_warning:
-        return ModeloDraftStatus.VALIDATED
-    return ModeloDraftStatus.READY_TO_SUBMIT
+        return ModeloDraftStatus.VALIDADO
+    return ModeloDraftStatus.LISTO_PARA_PRESENTAR

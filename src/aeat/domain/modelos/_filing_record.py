@@ -65,15 +65,15 @@ _Notes = Annotated[
 class ModeloRecordStatus(StrEnum):
     """Closed enumeration of filing-record lifecycle states.
 
-    * ``CURRENT`` — the record is the current filed answer for its
-      (bucket, modelo, year, period) tuple.
-    * ``SUPERSEDED`` — a later filing replaced this one. The record
+    * ``VIGENTE`` — the record is the currently-effective filed answer
+      for its (bucket, modelo, year, period) tuple.
+    * ``SUPERSEDIDO`` — a later filing replaced this one. The record
       remains for audit; ``superseded_by_filing_record_id`` points
       at the successor.
     """
 
-    CURRENT = "current"
-    SUPERSEDED = "superseded"
+    VIGENTE = "vigente"
+    SUPERSEDIDO = "supersedido"
 
 
 class ExternalEvidenceKind(StrEnum):
@@ -155,7 +155,7 @@ class ModeloRecord(BaseModel):
     filed_by: _ActorLabel
     notes: _Notes | None = None
     aeat_accepted: bool = False
-    status: ModeloRecordStatus = ModeloRecordStatus.CURRENT
+    status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE
     superseded_at: datetime | None = None
     superseded_by_filing_record_id: _FilingRecordId | None = None
     external_evidence: ExternalEvidence | None = None
@@ -182,10 +182,10 @@ class ModeloRecord(BaseModel):
             raise ModeloValidationError(
                 f"filing_record_id {self.filing_record_id!r} does not match the derived id {derived!r}"
             )
-        if self.status is ModeloRecordStatus.CURRENT:
+        if self.status is ModeloRecordStatus.VIGENTE:
             if self.superseded_at is not None or self.superseded_by_filing_record_id is not None:
                 raise ModeloValidationError("current filing record must not carry supersession metadata")
-        elif self.status is ModeloRecordStatus.SUPERSEDED:
+        elif self.status is ModeloRecordStatus.SUPERSEDIDO:
             if self.superseded_at is None or self.superseded_by_filing_record_id is None:
                 raise ModeloValidationError(
                     "superseded filing record must carry superseded_at and superseded_by_filing_record_id"
@@ -214,7 +214,7 @@ class ModeloRecordCatalogue(BaseModel):
         # Exactly one CURRENT record per (bucket, modelo, year, period) tuple.
         currents: dict[tuple[str, str, int, str], str] = {}
         for record in self.records.values():
-            if record.status is not ModeloRecordStatus.CURRENT:
+            if record.status is not ModeloRecordStatus.VIGENTE:
                 continue
             current_key = (record.bucket_id, record.modelo, record.filing_year, record.period)
             if current_key in currents:
@@ -245,7 +245,7 @@ class ModeloRecordCatalogue(BaseModel):
         """
 
         for record in self.records.values():
-            if record.status is not ModeloRecordStatus.CURRENT:
+            if record.status is not ModeloRecordStatus.VIGENTE:
                 continue
             if (
                 record.bucket_id == bucket_id

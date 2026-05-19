@@ -18,12 +18,11 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._amendment import (
     BaseAmendment,
-    FilingAmendment,
     ModeloComplementaria,
     ModeloSustitutiva,
 )
 
-type ModeloAmendment = FilingAmendment | ModeloComplementaria | ModeloSustitutiva
+type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
 _log = get_logger(__name__)
 

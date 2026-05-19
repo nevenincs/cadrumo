@@ -64,7 +64,10 @@ def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
         parts = path.parts
         if len(parts) < 5 or parts[:3] != ("corpus", "aeat_official", "disenos_registro"):
             continue
-        modelo_dir = PROJECT_ROOT.joinpath(*parts[:4])
+        # corpus_path is stored relative to the bundled corpus root
+        # (src/aeat/_data/), so resolve via bundled_path rather than
+        # PROJECT_ROOT to find the on-disk manifest.
+        modelo_dir = bundled_path(*parts[:4])
         manifest_path = modelo_dir / "manifest.json"
         assert manifest_path.is_file(), f"{source.id} missing corpus manifest {manifest_path}"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -124,7 +127,10 @@ def test_renta_manual_sources_match_manifest() -> None:
 
     for root in manual_roots:
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
-        corpus_path = root.joinpath(manifest["relative_pdf_path"]).relative_to(PROJECT_ROOT).as_posix()
+        # corpus_path on registry sources is bundled-corpus-relative
+        # (i.e. begins with ``corpus/...``), so relativise against the
+        # bundle root rather than PROJECT_ROOT.
+        corpus_path = root.joinpath(manifest["relative_pdf_path"]).relative_to(bundled_path()).as_posix()
         source = sources_by_path.get(corpus_path)
 
         assert source is not None, f"Renta manual corpus artefact has no registry source: {corpus_path}"

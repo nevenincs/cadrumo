@@ -26,7 +26,7 @@ def build_registry_filing_draft(
     period: str,
     profile_tax_id: str = "Y0000001S",
     casilla_values: Mapping[str, ModeloScalar],
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
     filing_year: int = 2026,
 ) -> ModeloDraft:
     """Build a filing draft through the validated registry runtime path."""
@@ -43,7 +43,7 @@ def build_registry_filing_draft(
         inputs=casilla_values,
         schema_provider=schema_provider,
     )
-    if status is ModeloDraftStatus.APPROVED:
+    if status is ModeloDraftStatus.APROBADO:
         return approve_draft(
             draft,
             bucket_id="registry-test",
@@ -68,7 +68,7 @@ def build_registry_filing_draft_from_decimals(
     period: str,
     profile_tax_id: str = "Y0000001S",
     casilla_decimals: Mapping[str, str | Decimal],
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
     filing_year: int = 2026,
 ) -> ModeloDraft:
     """Coerce decimal strings before building through the registry runtime."""

@@ -220,7 +220,7 @@ def export_draft(
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
         raise ModeloExportError("declaration export requires a draft built from the active registry snapshot")
-    if draft.status is not ModeloDraftStatus.APPROVED:
+    if draft.status is not ModeloDraftStatus.APROBADO:
         raise ModeloExportError("declaration export requires an approved draft")
     if not subview.export_layout_ids:
         raise ModeloExportError(f"modelo {draft.modelo!r} registry snapshot declares no export layout")

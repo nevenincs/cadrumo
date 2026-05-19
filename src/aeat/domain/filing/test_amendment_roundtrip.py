@@ -60,7 +60,7 @@ def _populated_amended_draft() -> ModeloDraft:
             filing_year=2025,
             period="1T",
         ),
-        status=ModeloDraftStatus.DRAFT,
+        status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
                 casilla_id="iva.devengado",

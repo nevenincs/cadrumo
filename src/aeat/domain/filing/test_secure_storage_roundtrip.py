@@ -63,7 +63,7 @@ def _populated_draft() -> ModeloDraft:
             filing_year=2025,
             period="1T",
         ),
-        status=ModeloDraftStatus.DRAFT,
+        status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
                 casilla_id="iva.devengado",
@@ -204,7 +204,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
                     casilla_values=casilla_values,
                 ),
                 work_unit_id=work_unit_id,
-                state=CalculationRevisionState.DRAFT,
+                state=CalculationRevisionState.BORRADOR,
                 casilla_values=casilla_values,
                 observations=(observation,),
                 created_at=now,

@@ -70,7 +70,7 @@ def _draft_for_130(
     *,
     period: str = "2024Q1",
     profile_tax_id: str = "Y4113523X",
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="130",
@@ -85,7 +85,7 @@ def _draft_for_111(
     *,
     period: str = "2026Q1",
     profile_tax_id: str = "Y4113523X",
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="111",
@@ -100,7 +100,7 @@ def _draft_for_123(
     *,
     period: str = "2026Q1",
     profile_tax_id: str = "Y4113523X",
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="123",
@@ -151,7 +151,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
         assert report.mismatches == ()
         assert report.justificante is not None
         assert report.justificante.csv == justificante.csv
@@ -167,7 +167,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
 
     def test_modelo_111_total_to_ingresar_is_projected_from_registry_casilla(self) -> None:
         draft = _draft_for_111()
@@ -181,7 +181,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
 
     def test_modelo_123_total_to_ingresar_is_projected_from_registry_casilla(self) -> None:
         draft = _draft_for_123()
@@ -195,7 +195,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
 
     def test_year_only_remote_period_does_not_match_quarterly_revision(self) -> None:
         justificante = _justificante("130", "2024-1T").model_copy(update={"period": "2024"})
@@ -206,7 +206,7 @@ class TestReconcileMatch:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.DIVERGENT
+        assert report.status is ReconciliationStatus.DIVERGENTE
         assert any(mismatch.kind is FilingDivergenceKind.PERIOD_MISMATCH for mismatch in report.mismatches)
 
 
@@ -230,7 +230,7 @@ class TestReconcileDivergent:
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
         kinds = tuple(m.kind for m in report.mismatches)
-        assert report.status is ReconciliationStatus.DIVERGENT
+        assert report.status is ReconciliationStatus.DIVERGENTE
         assert FilingDivergenceKind.MODELO_MISMATCH in kinds
 
     def test_tax_id_mismatch_surfaces(self) -> None:
@@ -240,7 +240,7 @@ class TestReconcileDivergent:
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
         kinds = tuple(m.kind for m in report.mismatches)
-        assert report.status is ReconciliationStatus.DIVERGENT
+        assert report.status is ReconciliationStatus.DIVERGENTE
         assert FilingDivergenceKind.TAX_ID_MISMATCH in kinds
 
     def test_tax_id_comparison_is_case_insensitive(self) -> None:
@@ -252,7 +252,7 @@ class TestReconcileDivergent:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.MATCH
+        assert report.status is ReconciliationStatus.COINCIDE
 
     def test_modelo_111_total_to_ingresar_drift_surfaces(self) -> None:
         draft = _draft_for_111()
@@ -266,7 +266,7 @@ class TestReconcileDivergent:
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        assert report.status is ReconciliationStatus.DIVERGENT
+        assert report.status is ReconciliationStatus.DIVERGENTE
         assert any(mismatch.kind is FilingDivergenceKind.TOTAL_INGRESAR_MISMATCH for mismatch in report.mismatches)
 
 

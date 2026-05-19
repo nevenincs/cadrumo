@@ -127,11 +127,11 @@ class DeclaracionCalculateSummary(BaseModel):
 
 _DOWNSTREAM_STATUSES: frozenset[ModeloDraftStatus] = frozenset(
     {
-        ModeloDraftStatus.SUBMITTED,
-        ModeloDraftStatus.ACKNOWLEDGED,
-        ModeloDraftStatus.REJECTED,
-        ModeloDraftStatus.AMENDED,
-        ModeloDraftStatus.CANCELLED,
+        ModeloDraftStatus.PRESENTADA,
+        ModeloDraftStatus.ACEPTADA,
+        ModeloDraftStatus.RECHAZADA,
+        ModeloDraftStatus.ENMENDADO,
+        ModeloDraftStatus.ANULADO,
     }
 )
 """Statuses where the draft has left the calculate/approve/export flow."""
@@ -147,11 +147,11 @@ def _next_action_for(
         return DeclaracionCalculateNextAction.RESOLVE_BLOCKERS
     if status in _DOWNSTREAM_STATUSES:
         return DeclaracionCalculateNextAction.AMEND
-    if status is ModeloDraftStatus.APPROVAL_STALE:
+    if status is ModeloDraftStatus.APROBACION_CADUCADA:
         return DeclaracionCalculateNextAction.REFRESH_APPROVAL
-    if status is ModeloDraftStatus.APPROVED:
+    if status is ModeloDraftStatus.APROBADO:
         return DeclaracionCalculateNextAction.EXPORT
-    if status is ModeloDraftStatus.READY_TO_SUBMIT:
+    if status is ModeloDraftStatus.LISTO_PARA_PRESENTAR:
         return DeclaracionCalculateNextAction.APPROVE
     return DeclaracionCalculateNextAction.REVIEW
 

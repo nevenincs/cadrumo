@@ -81,7 +81,7 @@ def _approved_registry_draft():
         },
         schema_provider=_schema_provider(),
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _modelo_130_export_headers() -> dict[str, str]:
@@ -113,7 +113,7 @@ def _approved_modelo_131_registry_draft():
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _approved_modelo_131_registry_draft_without_direct_debit():
@@ -134,7 +134,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _approved_modelo_131_zero_payable_direct_debit_draft():
@@ -152,7 +152,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_prefix: str):
@@ -174,7 +174,7 @@ def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_pr
         },
         schema_provider=_schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _approved_modelo_131_historical_registry_draft():
@@ -199,7 +199,7 @@ def _approved_modelo_131_historical_registry_draft():
         },
         schema_provider=provider,
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _approved_modelo_111_registry_draft():
@@ -224,7 +224,7 @@ def _approved_modelo_111_registry_draft():
         },
         schema_provider=_schema_provider(modelos=("111",)),
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _modelo_111_export_headers() -> dict[str, str]:
@@ -252,7 +252,7 @@ def _approved_modelo_115_registry_draft():
         },
         schema_provider=_schema_provider(modelos=("115",)),
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _modelo_115_export_headers() -> dict[str, str]:
@@ -286,7 +286,7 @@ def _approved_modelo_123_registry_draft():
         },
         schema_provider=_schema_provider(modelos=("123",)),
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _modelo_123_export_headers() -> dict[str, str]:
@@ -317,7 +317,7 @@ def _approved_modelo_123_2019_registry_draft():
         },
         schema_provider=provider,
     )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def _modelo_123_2019_export_headers() -> dict[str, str]:

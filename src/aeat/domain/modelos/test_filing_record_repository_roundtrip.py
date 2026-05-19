@@ -82,7 +82,7 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         filed_by="aeat.cli.modelo.file",
         notes="initial 2T filing - withheld import IVA at 21%",
         aeat_accepted=True,
-        status=ModeloRecordStatus.SUPERSEDED,
+        status=ModeloRecordStatus.SUPERSEDIDO,
         superseded_at=current_filed_at,
         superseded_by_filing_record_id=current_id,
         external_evidence=ExternalEvidence(
@@ -103,7 +103,7 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         filed_by="aeat.cli.modelo.amend",
         notes="rectifying amendment - missing input IVA on invoice INV-2024-0145",
         aeat_accepted=True,
-        status=ModeloRecordStatus.CURRENT,
+        status=ModeloRecordStatus.VIGENTE,
         amends_filing_record_id=superseded_id,
     )
     return ModeloRecordCatalogue(records={superseded_id: superseded, current_id: current})
@@ -144,7 +144,7 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
 
             superseded = loaded.get(current.amends_filing_record_id)
             assert superseded is not None
-            assert superseded.status is ModeloRecordStatus.SUPERSEDED
+            assert superseded.status is ModeloRecordStatus.SUPERSEDIDO
             assert superseded.superseded_by_filing_record_id == current.filing_record_id
             assert superseded.superseded_at == current.filed_at
             # External-evidence carries the AEAT gate; pin it explicitly.
@@ -207,14 +207,14 @@ def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
                 records = envelope["payload"]["records"]
                 superseded_id = next(
                     rid for rid, rec in records.items()
-                    if rec["status"] == "superseded"
+                    if rec["status"] == "supersedido"
                 )
-                # Flip the SUPERSEDED record's status to CURRENT without
+                # Flip the SUPERSEDIDO record's status to VIGENTE without
                 # clearing its supersession metadata. The catalogue's
-                # model_validator runs the "exactly one CURRENT per tuple"
-                # check AND the per-record "CURRENT must not carry
+                # model_validator runs the "exactly one VIGENTE per tuple"
+                # check AND the per-record "VIGENTE must not carry
                 # supersession metadata" check; either invariant trips.
-                records[superseded_id]["status"] = "current"
+                records[superseded_id]["status"] = "vigente"
                 row.payload = _json.dumps(envelope).encode("utf-8")
 
             regression_caught = False
