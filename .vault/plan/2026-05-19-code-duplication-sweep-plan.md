@@ -175,14 +175,14 @@ Rename FilingRecord, FilingRecordStatus, FilingRecordCatalogue and friends to th
 
 Rename FilingObligation, FilingEnrollment, FilingIVAProfile under domain/deadlines, and FilingScheduleDefinition, RegistryFilingObservation, OracleFilingObservation, RegistryFilingObservationRequirement, _PreviousFilingSelector under domain/calculations/registry. These are cross-domain registry symbols; rename in coordinated commits with their importers.
 
-- [ ] `W04.P10.S90` - Rename FilingObligation to ModeloObligation; `src/aeat/domain/deadlines/_models.py`.
-- [ ] `W04.P10.S91` - Rename FilingEnrollment to ModeloEnrollment; `src/aeat/domain/deadlines/_models.py`.
-- [ ] `W04.P10.S92` - Rename FilingIVAProfile to ModeloIvaProfile; `src/aeat/domain/deadlines/_models.py`.
-- [ ] `W04.P10.S93` - Rename FilingScheduleDefinition to ModeloScheduleDefinition; `src/aeat/domain/calculations/registry/_schema.py`.
-- [ ] `W04.P10.S94` - Rename RegistryFilingObservation to RegistryModeloObservation; `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W04.P10.S95` - Rename OracleFilingObservation to OracleModeloObservation; `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W04.P10.S96` - Rename RegistryFilingObservationRequirement to RegistryModeloObservationRequirement; `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W04.P10.S97` - Rename _PreviousFilingSelector to _PreviousModeloSelector; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W04.P10.S90` - Rename FilingObligation to ModeloObligation; `src/aeat/domain/deadlines/_models.py`.
+- [x] `W04.P10.S91` - Rename FilingEnrollment to ModeloEnrollment; `src/aeat/domain/deadlines/_models.py`.
+- [x] `W04.P10.S92` - Rename FilingIVAProfile to ModeloIvaProfile; `src/aeat/domain/deadlines/_models.py`.
+- [x] `W04.P10.S93` - Rename FilingScheduleDefinition to ModeloScheduleDefinition; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `W04.P10.S94` - Rename RegistryFilingObservation to RegistryModeloObservation; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W04.P10.S95` - Rename OracleFilingObservation to OracleModeloObservation; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W04.P10.S96` - Rename RegistryFilingObservationRequirement to RegistryModeloObservationRequirement; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W04.P10.S97` - Rename _PreviousFilingSelector to _PreviousModeloSelector; `src/aeat/domain/calculations/registry/_bindings.py`.
 
 ### Phase `W04.P11` - Modelo Cluster: application/filing, application/modelo, application/workflow
 
