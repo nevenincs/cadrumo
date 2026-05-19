@@ -16,20 +16,22 @@ import pytest
 
 from ...adapters.persistence.storage.errors import ClassificationError
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ...domain.filing._amendment import (
-    AmendmentKind,
-    CasillaChange,
-    FilingAmendment,
-)
+from ...domain.filing._amendment import CasillaChange, ModeloComplementaria
 from ...domain.filing._complementaria_repository import (
     ModeloAmendmentRepository,
 )
-from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloValue, ModeloValueKind, compute_modelo_draft_id
+from ...domain.filing._schema import (
+    ModeloDraft,
+    ModeloDraftStatus,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _make_amendment(*, amendment_id: str = "amend-001") -> FilingAmendment:
+def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
     now = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     values = (
         ModeloValue(
@@ -56,13 +58,12 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> FilingAmendment:
         updated_at=now,
         schema_version="test-schema-v1",
     )
-    return FilingAmendment(
+    return ModeloComplementaria(
         amendment_id=amendment_id,
         submission_id="sub-abc",
         original_csv="CSV-ORIG-001",
         original_model="130",
         original_period="2026Q1",
-        amendment_kind=AmendmentKind.COMPLEMENTARIA,
         delta=(
             CasillaChange(
                 casilla_code="01",
@@ -140,7 +141,7 @@ class TestClassificationGate:
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         amendment = _make_amendment()
-        bad = Envelope[FilingAmendment](
+        bad = Envelope[ModeloComplementaria](
             schema_version=1,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.OPERATIONAL,
