@@ -434,3 +434,51 @@ enum keeps `issued` / `received`.
 | IvaResidency             | Suggested amendment | Rename -> IvaTerritorialScope                     |
 | IvaFlowDirection         | Suggested amendment | Rename AUTOREPERCUTIDO -> INVERSION_SUJETO_PASIVO |
 | InvoiceKind              | Confirmed correct   | Document SII-boundary Spanish-stem expectation    |
+
+## Verification addendum (2026-05-19): SII / facturacion boundary anchors
+
+Verbatim verification of the two advisory-cited anchors introduced in
+the IVA Cluster Statutory Sanity Check section. Both verified against
+boe.es consolidated texts on 2026-05-19. Promoted from advisory to
+verified.
+
+### Real Decreto 1619/2012 (reglamento de facturacion)
+
+- Identifier: BOE-A-2012-14696. Verified.
+- Verbatim official title: "Real Decreto 1619/2012, de 30 de
+  noviembre, por el que se aprueba el Reglamento por el que se
+  regulan las obligaciones de facturacion."
+- Articulo 2 verbatim title: "Obligacion de expedir factura."
+- Articulo 2 verbatim opening: "Los empresarios o profesionales estan
+  obligados a expedir factura y copia de esta por las entregas de
+  bienes y prestaciones de servicios que realicen en el desarrollo
+  de su actividad..."
+- Articulo 1 establishes the dual obligation verbatim: "Los
+  empresarios o profesionales estan obligados a expedir y entregar,
+  en su caso, factura u otros justificantes por las operaciones que
+  realicen en el desarrollo de su actividad empresarial o profesional,
+  asi como a conservar copia o matriz de aquellos. Igualmente, estan
+  obligados a conservar las facturas u otros justificantes recibidos
+  de otros empresarios o profesionales..."
+- Boundary terms locked: `factura expedida` (issued / outbound) vs.
+  `factura recibida` (received / inbound). These are the canonical
+  Spanish stems for the InvoiceKind enum's SII / libro-registro
+  boundary presentation.
+
+### Real Decreto 596/2016 (SII)
+
+- Identifier: BOE-A-2016-11575. Verified.
+- Verbatim official title: "Real Decreto 596/2016, de 2 de diciembre,
+  para la modernizacion, mejora e impulso del uso de medios
+  electronicos en la gestion del Impuesto sobre el Valor Anadido."
+- Modifies the Reglamento del IVA (RD 1624/1992) to instaurate the
+  Suministro Inmediato de Informacion (SII).
+- Articulo 63.3 verbatim opening: "En el libro registro de facturas
+  expedidas se inscribiran, una por una, las facturas expedidas..."
+- Articulo 64.4 verbatim opening: "En el libro registro de facturas
+  recibidas se anotaran, una por una, las facturas recibidas..."
+- Canonical libro-registro names locked: `Libro registro de facturas
+  expedidas` and `Libro registro de facturas recibidas`. These are
+  the verbatim Spanish names that an SII / libro-registro adapter
+  must surface at the boundary, while the internal InvoiceKind enum
+  retains `issued` / `received`.
