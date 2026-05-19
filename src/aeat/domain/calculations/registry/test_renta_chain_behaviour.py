@@ -49,8 +49,9 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0501": Decimal("0"),
         "0506": Decimal("0"),
         "0507": Decimal("0"),
-        "0511": Decimal("0"),
-        "0512": Decimal("0"),
+        # 0511 and 0512 are now computed via lookup_parameter against
+        # renta-2025-minimo-contribuyente-base-2025 (state and per-CCAA
+        # autonomic), and cannot be supplied as inputs.
         "0513": Decimal("0"),
         "0514": Decimal("0"),
         "0515": Decimal("0"),
@@ -123,19 +124,22 @@ def test_minimo_personal_y_familiar_aggregates_all_four_components_estatal() -> 
 
 
 def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_minimo() -> None:
-    """0521 = min(0505, 0519) — when mínimo > base liquidable, uses base liquidable."""
-    # 0521 should clip to 0505 (1000) since 0519 (5550) is larger
+    """0521 = min(0505, 0519) — when mínimo > base liquidable, uses base liquidable.
+
+    0511 (estatal mínimo contribuyente) is computed by the registry from the
+    LIRPF art. 57 parameter ``renta-2025-minimo-contribuyente-base-2025`` =
+    €5,550. The other contributing casillas (0513/0515/0517) default to 0
+    for a contributor with no age/discapacidad/descendientes mínimos, so
+    0519 = 5550. With 0505 = 1000 < 0519, 0521 must clip to 0505.
+    """
+    expected_minimo = Decimal("5550.00")
     scenario = _scenario_2025(
         "minimo-clip-to-base-liquidable",
-        overrides={
-            "0505": Decimal("1000.00"),
-            "0511": Decimal("2775.00"),
-            "0512": Decimal("2775.00"),
-        },
+        overrides={"0505": Decimal("1000.00")},
         expected=(
-            RegistryScenarioExpectedOutput(target="0519", value=Decimal("2775.00")),
+            RegistryScenarioExpectedOutput(target="0519", value=expected_minimo),
             RegistryScenarioExpectedOutput(target="0521", value=Decimal("1000.00"), operand_refs=("0505", "0519")),
-            # 0522 = min(0519 - 0521, 0510) = min(2775 - 1000, 0) = 0 (since 0510 = 0)
+            # 0522 = min(0519 - 0521, 0510) = min(5550 - 1000, 0) = 0 (0510 default 0)
             RegistryScenarioExpectedOutput(target="0522", value=Decimal("0.00")),
         ),
     )
