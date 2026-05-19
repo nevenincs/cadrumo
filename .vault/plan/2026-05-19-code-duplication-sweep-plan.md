@@ -248,16 +248,16 @@ Introduce a shared SnapshotService[TPayload] base class and a StatelessSnapshotS
 
 Rename domain/rental to domain/fincas and execute the coordinated SQL migration for the 11 schema-impact rows: RentalFinca to Finca, RentalContract to Arrendamiento, RentalIncomeRecord to FincaIncomeRecord, RentalExpense to FincaExpense, RentalAmortizationLedger to FincaAmortizationLedger, and each *Row equivalent under adapters/persistence/storage/sql/_orm.py. Income/Expense/Amortization stay English per project-lead adjudication. Strict roundtrip-test gate applies before and after the rename.
 
-- [ ] `W05.P15.S134` - Rename the domain package from domain/rental to domain/fincas and migrate every import site to the new path; `src/aeat/domain/fincas/__init__.py`.
-- [ ] `W05.P15.S135` - Rename RentalFinca to Finca in the domain models; `src/aeat/domain/fincas/_models.py`.
-- [ ] `W05.P15.S136` - Rename RentalFincaRow to FincaRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
-- [ ] `W05.P15.S137` - Rename RentalContract to Arrendamiento in the domain models; `src/aeat/domain/fincas/_models.py`.
-- [ ] `W05.P15.S138` - Rename RentalContractRow to ArrendamientoRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
-- [ ] `W05.P15.S139` - Rename RentalIncomeRecord to FincaIncomeRecord (Income kept English per project-lead adjudication); `src/aeat/domain/fincas/_models.py`.
-- [ ] `W05.P15.S140` - Rename RentalIncomeRecordRow to FincaIncomeRecordRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
-- [ ] `W05.P15.S141` - Rename RentalExpense to FincaExpense (Expense kept English per project-lead adjudication); `src/aeat/domain/fincas/_models.py`.
-- [ ] `W05.P15.S142` - Rename RentalExpenseRow to FincaExpenseRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
-- [ ] `W05.P15.S143` - Rename RentalAmortizationLedger to FincaAmortizationLedger (Amortization kept English per project-lead adjudication); `src/aeat/domain/fincas/_amortization_ledger.py`.
-- [ ] `W05.P15.S144` - Rename RentalAmortizationLedgerRow to FincaAmortizationLedgerRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
-- [ ] `W05.P15.S145` - Execute the strict roundtrip-test gate over the renamed Fincas SQL boundary with non-default optional fields populated and the anti-tautology mutation proof in place; `src/aeat/domain/fincas/test_fincas_roundtrip.py`.
-- [ ] `W05.P15.S146` - Migrate the FilingRepository and any rental-keyed repositories to the new Fincas table and column names with coordinated SecureObjectRepository roundtrip coverage; `src/aeat/adapters/persistence/storage/sql/_repositories.py`.
+- [x] `W05.P15.S134` - Rename the domain package from domain/rental to domain/fincas and migrate every import site to the new path; `src/aeat/domain/fincas/__init__.py`.
+- [x] `W05.P15.S135` - Rename RentalFinca to Finca in the domain models; `src/aeat/domain/fincas/_models.py`.
+- [x] `W05.P15.S136` - Rename RentalFincaRow to FincaRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
+- [x] `W05.P15.S137` - Rename RentalContract to Arrendamiento in the domain models; `src/aeat/domain/fincas/_models.py`.
+- [x] `W05.P15.S138` - Rename RentalContractRow to ArrendamientoRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
+- [x] `W05.P15.S139` - Rename RentalIncomeRecord to FincaIncomeRecord (Income kept English per project-lead adjudication); `src/aeat/domain/fincas/_models.py`.
+- [x] `W05.P15.S140` - Rename RentalIncomeRecordRow to FincaIncomeRecordRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
+- [x] `W05.P15.S141` - Rename RentalExpense to FincaExpense (Expense kept English per project-lead adjudication); `src/aeat/domain/fincas/_models.py`.
+- [x] `W05.P15.S142` - Rename RentalExpenseRow to FincaExpenseRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
+- [x] `W05.P15.S143` - Rename RentalAmortizationLedger to FincaAmortizationLedger (Amortization kept English per project-lead adjudication); `src/aeat/domain/fincas/_amortization_ledger.py`.
+- [x] `W05.P15.S144` - Rename RentalAmortizationLedgerRow to FincaAmortizationLedgerRow in the SQL ORM with coordinated SQL column-name migration; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
+- [x] `W05.P15.S145` - Execute the strict roundtrip-test gate over the renamed Fincas SQL boundary with non-default optional fields populated and the anti-tautology mutation proof in place; `src/aeat/domain/fincas/test_fincas_roundtrip.py`.
+- [x] `W05.P15.S146` - Migrate the FilingRepository and any rental-keyed repositories to the new Fincas table and column names with coordinated SecureObjectRepository roundtrip coverage; `src/aeat/adapters/persistence/storage/sql/_repositories.py`.
