@@ -4,6 +4,7 @@ number = "2.devengo.tipo"
 label = "Tipo de ejercicio (12 meses naturales / 12 meses 365 dias / inferior a 12 meses)"
 section = ["declarante", "devengo"]
 data_type = "integer"
+semantic_role = "tipo_ejercicio_232"
 required = false
 input_kind = "informational"
 export_refs = ["modelo-232-2016-page-01-tipo-ejercicio"]
