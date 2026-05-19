@@ -1110,3 +1110,5 @@ This section presents a detailed consolidation strategy for the 5 near-identical
 - Audit metadata standardization → document in base; allow subclass customization
 
 **Next Steps**: Draft consolidation ADR, implement Phase 1 PoC, validate test suite, coordinate Phases 2–4.
+
+Exception-audit remediation: outbound storage errors disambiguated with `Outbound` prefix on 2026-05-19 (`StorageError → OutboundStorageError` and all eight subclasses in `src/aeat/adapters/outbound/storage/_errors.py`, with importers in `_local.py`, `_google_drive.py`, `_factory.py`, `_protocol.py`, the storage test suite, `outbound/google/_calc_sheets_{pull,apply}.py`, `outbound/google/test_compute_from_pull.py`, `entrypoints/cli/_config/_google.py`, `core/errors/registry/_adapters.py`, and `tests/test_layout_import_smoke.py` updated in lock-step). Persistence-side `StorageError` in `aeat.adapters.persistence.storage.errors` remains canonical and untouched; developers catching either hierarchy can no longer accidentally shadow the other.
