@@ -4,6 +4,7 @@ number = "256-285"
 label = "Localidad del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
+semantic_role = "payee_inmueble_localidad"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-localidad"]
