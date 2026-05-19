@@ -1,10 +1,10 @@
-"""Strict roundtrip across the encrypted FilingAmendmentRepository boundary.
+"""Strict roundtrip across the encrypted ModeloAmendmentRepository boundary.
 
-``FilingAmendmentRepository`` persists :class:`FilingAmendment` records
+``ModeloAmendmentRepository`` persists :class:`FilingAmendment` records
 at ``SensitivityClass.AUDIT`` — corrective filings derived from a
 previously submitted filing.
 
-Anti-tautology discipline: every defaultable field on the FilingDraft
+Anti-tautology discipline: every defaultable field on the ModeloDraft
 inside the amendment carries a non-default value, every CasillaChange
 has a non-None ``old_value`` (real correction, not a fresh entry), and
 the amendment_kind is COMPLEMENTARIA which is the more constrained
@@ -33,23 +33,23 @@ from ._amendment import (
     FilingAmendment,
     make_amendment_id,
 )
-from ._complementaria_repository import FilingAmendmentRepository
+from ._complementaria_repository import ModeloAmendmentRepository
 from ._schema import (
-    FilingDraft,
-    FilingDraftStatus,
-    FilingValue,
-    FilingValueKind,
+    ModeloDraft,
+    ModeloDraftStatus,
+    ModeloValue,
+    ModeloValueKind,
 )
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-def _populated_amended_draft() -> FilingDraft:
-    """Build the FilingDraft embedded inside the amendment."""
+def _populated_amended_draft() -> ModeloDraft:
+    """Build the ModeloDraft embedded inside the amendment."""
 
     now = datetime.now(UTC).replace(microsecond=0)
-    return FilingDraft(
+    return ModeloDraft(
         draft_id="d" * 64,
         modelo="303",
         period="2025Q1",
@@ -61,18 +61,18 @@ def _populated_amended_draft() -> FilingDraft:
             filing_year=2025,
             period="1T",
         ),
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
         values=(
-            FilingValue(
+            ModeloValue(
                 casilla_id="iva.devengado",
                 value=Decimal("20500.00"),  # corrected upward by 500
-                kind=FilingValueKind.LITERAL,
+                kind=ModeloValueKind.LITERAL,
                 source="amended literal",
             ),
-            FilingValue(
+            ModeloValue(
                 casilla_id="iva.resultado",
                 value=Decimal("12845.67"),  # 500 higher than the original
-                kind=FilingValueKind.COMPUTED,
+                kind=ModeloValueKind.COMPUTED,
                 source="recomputed after iva.devengado correction",
                 formula_trace=("iva.devengado", "iva.deducible"),
             ),
@@ -137,7 +137,7 @@ def test_filing_amendment_survives_encrypted_storage_roundtrip(
             SecureObjectRepository(engine=engine)
 
             original = _populated_amendment()
-            repo = FilingAmendmentRepository()
+            repo = ModeloAmendmentRepository()
             repo.save(original)
             loaded = repo.load(original.amendment_id)
 
@@ -202,7 +202,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
         try:
             SecureObjectRepository(engine=engine)
             original = _populated_amendment()
-            repo = FilingAmendmentRepository()
+            repo = ModeloAmendmentRepository()
             repo.save(original)
 
             with session_scope(engine) as session:

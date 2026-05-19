@@ -643,7 +643,7 @@ class TestRotationLockTargetAlignment:
         tmp_path: Path,
         alice: EphemeralMasterKeyProvider,
     ) -> None:
-        # ``FilingDraftRepository`` locks
+        # ``ModeloDraftRepository`` locks
         # ``<store>/<draft_id>.lock`` (passed to exclusive_file_lock,
         # which appends another ``.lock`` to make the actual lock-
         # byte target ``<draft_id>.lock.lock``). The rotation must

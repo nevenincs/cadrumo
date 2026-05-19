@@ -1,4 +1,4 @@
-"""Reconstruct a :class:`FilingDraft` from an AEAT justificante PDF.
+"""Reconstruct a :class:`ModeloDraft` from an AEAT justificante PDF.
 
 The operator keeps the justificante PDF of a past filing on disk. This
 module parses the PDF via :mod:`aeat.adapters.inbound.justificante`,
@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 from ...adapters.inbound.justificante import parse_justificante
 from ...core.logging import get_logger
-from ...domain.filing import CasillaSchemaProvider, FilingBuilderError, FilingDraft, FilingImportError
+from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
 from ...domain.justificante import Justificante
 from .runtime import FilingOperatorProfile
 
@@ -72,7 +72,7 @@ class JustificanteImportResult:
             the operator knows which fields still need input.
     """
 
-    draft: FilingDraft
+    draft: ModeloDraft
     submission: ModeloPresentado
     warnings: tuple[str, ...]
 
@@ -97,7 +97,7 @@ def import_filing_from_justificante(
     Raises:
         JustificanteParseError: If the PDF cannot be parsed.
         JustificanteCsvNotFoundError: If the PDF has no CSV.
-        FilingImportError: If the modelo has no registered builder or
+        ModeloImportError: If the modelo has no registered builder or
             the printed period cannot be canonicalised.
     """
     justificante = parse_justificante(pdf_path)
@@ -124,8 +124,8 @@ def import_filing_from_justificante(
             inputs={},
             schema_provider=schema_provider,
         )
-    except FilingBuilderError as exc:
-        raise FilingImportError(f"cannot import modelo {justificante.modelo!r}: {exc}") from exc
+    except ModeloBuilderError as exc:
+        raise ModeloImportError(f"cannot import modelo {justificante.modelo!r}: {exc}") from exc
 
     submission = _build_submission_record(justificante=justificante, draft=draft)
     warnings: tuple[str, ...] = (_EMPTY_CASILLA_WARNING,)
@@ -166,12 +166,12 @@ def _normalise_period(
         The canonical period string.
 
     Raises:
-        FilingImportError: If the pair cannot be canonicalised.
+        ModeloImportError: If the pair cannot be canonicalised.
     """
     try:
         subview = schema_provider.get_subview(modelo)
-    except FilingBuilderError as exc:
-        raise FilingImportError(f"modelo {modelo!r} is not present in the calculation registry") from exc
+    except ModeloBuilderError as exc:
+        raise ModeloImportError(f"modelo {modelo!r} is not present in the calculation registry") from exc
     supported_periods = set(subview.period_selector_periods)
 
     if match := _CANONICAL_QUARTER_RE.match(raw_period):
@@ -197,11 +197,11 @@ def _normalise_period(
         )
 
     if ejercicio is None:
-        raise FilingImportError(
+        raise ModeloImportError(
             f"modelo {modelo}: justificante period {raw_period!r} requires an ejercicio to canonicalise"
         )
     if not re.fullmatch(r"\d{4}", ejercicio):
-        raise FilingImportError(f"modelo {modelo}: unexpected ejercicio {ejercicio!r}; want four-digit year")
+        raise ModeloImportError(f"modelo {modelo}: unexpected ejercicio {ejercicio!r}; want four-digit year")
 
     quarter_match = _QUARTER_RE.match(raw_period)
     if quarter_match is not None:
@@ -236,7 +236,7 @@ def _normalise_period(
             supported_periods=supported_periods,
         )
 
-    raise FilingImportError(f"modelo {modelo}: cannot canonicalise period {raw_period!r} for ejercicio {ejercicio!r}")
+    raise ModeloImportError(f"modelo {modelo}: cannot canonicalise period {raw_period!r} for ejercicio {ejercicio!r}")
 
 
 def _require_supported_period_token(
@@ -247,7 +247,7 @@ def _require_supported_period_token(
     supported_periods: set[str],
 ) -> str:
     if period_code not in supported_periods:
-        raise FilingImportError(
+        raise ModeloImportError(
             f"modelo {modelo}: period token {period_code!r} is not declared by the active registry revision"
         )
     return canonical
@@ -256,7 +256,7 @@ def _require_supported_period_token(
 def _build_submission_record(
     *,
     justificante: Justificante,
-    draft: FilingDraft,
+    draft: ModeloDraft,
 ) -> ModeloPresentado:
     """Build the companion :class:`ModeloPresentado` for an import.
 

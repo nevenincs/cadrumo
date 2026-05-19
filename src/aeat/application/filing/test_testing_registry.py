@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 import pytest
 from pydantic import ValidationError
 
-from ...domain.filing._schema import FilingDraft, ModeloDraftStatus, FilingValueKind
+from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloValueKind
 from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -35,7 +35,7 @@ def test_builds_frozen_draft_through_registry_runtime() -> None:
         casilla_values=_valid_inputs(),
     )
 
-    assert isinstance(draft, FilingDraft)
+    assert isinstance(draft, ModeloDraft)
     assert draft.schema_version.startswith("registry:130:")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         setattr(draft, "status", ModeloDraftStatus.DRAFT)  # noqa: B010 — exercise frozen-model __setattr__
@@ -89,8 +89,8 @@ def test_values_are_registry_projected_and_sorted() -> None:
 
     values = {value.casilla_id: value for value in draft.values}
     assert tuple(values) == tuple(sorted(values))
-    assert values["01"].kind is FilingValueKind.LITERAL
-    assert values["19"].kind is FilingValueKind.COMPUTED
+    assert values["01"].kind is ModeloValueKind.LITERAL
+    assert values["19"].kind is ModeloValueKind.COMPUTED
     assert values["19"].formula_trace == ("17", "18")
 
 

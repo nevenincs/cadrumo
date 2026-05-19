@@ -7,9 +7,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...domain.filing._schema import FilingDraft, ModeloDraftStatus, FilingScalar
+from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloScalar
 from ...domain.transactions import TransactionCatalogue
-from . import FilingBuilderError, approve_draft, build_draft, build_runtime_schema_provider
+from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,10 +25,10 @@ def build_registry_filing_draft(
     modelo: str,
     period: str,
     profile_tax_id: str = "Y0000001S",
-    casilla_values: Mapping[str, FilingScalar],
+    casilla_values: Mapping[str, ModeloScalar],
     status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
     filing_year: int = 2026,
-) -> FilingDraft:
+) -> ModeloDraft:
     """Build a filing draft through the validated registry runtime path."""
 
     runtime_period = _runtime_period(period, filing_year=filing_year)
@@ -70,10 +70,10 @@ def build_registry_filing_draft_from_decimals(
     casilla_decimals: Mapping[str, str | Decimal],
     status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
     filing_year: int = 2026,
-) -> FilingDraft:
+) -> ModeloDraft:
     """Coerce decimal strings before building through the registry runtime."""
 
-    coerced: dict[str, FilingScalar] = {}
+    coerced: dict[str, ModeloScalar] = {}
     for casilla_id, raw in casilla_decimals.items():
         coerced[casilla_id] = raw if isinstance(raw, Decimal) else Decimal(raw)
     return build_registry_filing_draft(
@@ -98,7 +98,7 @@ def _runtime_period(period: str, *, filing_year: int) -> str:
         return f"{filing_year}Q{match.group('quarter')}"
     if _ANNUAL_TOKEN_RE.fullmatch(period):
         return f"{filing_year}A"
-    raise FilingBuilderError(f"cannot map filing period {period!r} to a registry period")
+    raise ModeloBuilderError(f"cannot map filing period {period!r} to a registry period")
 
 
 __all__ = [

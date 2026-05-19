@@ -16,7 +16,14 @@ from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_rep
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
-from ._amendment import FilingAmendment
+from ._amendment import (
+    BaseAmendment,
+    FilingAmendment,
+    ModeloComplementaria,
+    ModeloSustitutiva,
+)
+
+type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva | FilingAmendment
 
 _log = get_logger(__name__)
 
@@ -24,7 +31,7 @@ _AMENDMENT_ENVELOPE_VERSION = 1
 _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 
 
-class FilingAmendmentRepository:
+class ModeloAmendmentRepository:
     """Repository over encrypted SQL-backed filing amendments."""
 
     def __init__(self) -> None:
@@ -73,11 +80,11 @@ class FilingAmendmentRepository:
             )
         return envelope.payload
 
-    def save(self, amendment: FilingAmendment) -> None:
+    def save(self, amendment: BaseAmendment) -> None:
         """Persist ``amendment`` in the encrypted database object store."""
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")
-        envelope = Envelope[FilingAmendment](
+        envelope = Envelope[BaseAmendment](
             schema_version=_AMENDMENT_ENVELOPE_VERSION,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.AUDIT,
@@ -91,7 +98,8 @@ class FilingAmendmentRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
-        _log.debug("saved filing amendment %s kind=%s", amendment.amendment_id, amendment.amendment_kind.value)
+        kind = getattr(amendment, "amendment_kind", None)
+        _log.debug("saved filing amendment %s kind=%s", amendment.amendment_id, kind)
 
     def delete(self, amendment_id: str) -> bool:
         """Remove the persisted amendment for ``amendment_id``."""
@@ -127,5 +135,5 @@ class FilingAmendmentRepository:
 __all__ = [
     "ClassificationError",
     "EnvelopeVersionError",
-    "FilingAmendmentRepository",
+    "ModeloAmendmentRepository",
 ]

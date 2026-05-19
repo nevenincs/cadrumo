@@ -1,4 +1,4 @@
-"""FilingDraft vs Justificante reconciler.
+"""ModeloDraft vs Justificante reconciler.
 
 Implements :func:`reconcile`, which produces a
 :class:`ReconciliationReport` describing whether the operator's local
@@ -24,7 +24,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Protocol
 
 from ....core.logging import get_logger
-from ....domain.filing import FilingBuilderError
+from ....domain.filing import ModeloBuilderError
 from ._kind import FilingDivergenceKind
 from ._schema import (
     FieldMismatch,
@@ -37,7 +37,7 @@ from ._schema import (
 _logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from ....domain.filing import FilingDraft
+    from ....domain.filing import ModeloDraft
     from ....domain.justificante import Justificante
 
 
@@ -71,7 +71,7 @@ _REMOTE_YEAR_RE: Final[re.Pattern[str]] = re.compile(r"^\d{4}$")
 
 
 def reconcile(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     justificante: Justificante | None,
     *,
     schema_provider: _RegistryReconciliationProvider,
@@ -82,11 +82,11 @@ def reconcile(
     Compares the narrow set of metadata fields present on a parsed
     :class:`aeat.domain.justificante.Justificante` against the
     corresponding fields on a local
-    :class:`aeat.domain.filing.FilingDraft`, classifying each
+    :class:`aeat.domain.filing.ModeloDraft`, classifying each
     disagreement using :class:`FilingDivergenceKind`.
 
     Args:
-        draft: Local approved :class:`aeat.domain.filing.FilingDraft`.
+        draft: Local approved :class:`aeat.domain.filing.ModeloDraft`.
         justificante: Parsed AEAT-side
             :class:`aeat.domain.justificante.Justificante`, or ``None``
             when the sede has no record of a matching submission yet.
@@ -259,7 +259,7 @@ class _DraftTotals:
         self.devolver = devolver
 
 
-def _derive_draft_totals(draft: FilingDraft, *, total_casillas: Mapping[str, str]) -> _DraftTotals:
+def _derive_draft_totals(draft: ModeloDraft, *, total_casillas: Mapping[str, str]) -> _DraftTotals:
     """Compute the draft's operator-visible ingresar / devolver figures.
 
     The registry declares which computed casillas carry the payable and
@@ -286,27 +286,27 @@ def _decimal_total(values: Mapping[str, object], casilla_id: str | None) -> Deci
     if value is None:
         return None
     if isinstance(value, bool):
-        raise FilingBuilderError(f"registry reconciliation total casilla {casilla_id!r} is not numeric")
+        raise ModeloBuilderError(f"registry reconciliation total casilla {casilla_id!r} is not numeric")
     if isinstance(value, Decimal):
         return value
     if isinstance(value, int):
         return Decimal(value)
-    raise FilingBuilderError(f"registry reconciliation total casilla {casilla_id!r} is not numeric")
+    raise ModeloBuilderError(f"registry reconciliation total casilla {casilla_id!r} is not numeric")
 
 
 def _require_registry_reconciliation_surface(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     schema_provider: _RegistryReconciliationProvider,
 ) -> _RegistryReconciliationSubview:
     subview = schema_provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
-        raise FilingBuilderError("reconciliation requires a draft built from the active registry snapshot")
+        raise ModeloBuilderError("reconciliation requires a draft built from the active registry snapshot")
     if not subview.verification_expectation_ids:
-        raise FilingBuilderError("reconciliation requires registry verification expectations")
+        raise ModeloBuilderError("reconciliation requires registry verification expectations")
     registry_token = _canonical_draft_period_token(draft.period)
     if registry_token not in subview.period_selector_periods:
-        raise FilingBuilderError("reconciliation requires a draft period declared by the active registry snapshot")
+        raise ModeloBuilderError("reconciliation requires a draft period declared by the active registry snapshot")
     return subview
 
 
@@ -379,7 +379,7 @@ def _canonical_draft_period_token(period: str) -> str:
         return "0A"
     if match := _CANONICAL_MONTH_RE.fullmatch(period):
         return match.group("month")
-    raise FilingBuilderError(f"cannot map draft period {period!r} to a registry period")
+    raise ModeloBuilderError(f"cannot map draft period {period!r} to a registry period")
 
 
 def _canonical_tax_id(value: str) -> str:
@@ -392,7 +392,7 @@ def _format_decimal(value: Decimal) -> str:
     return format(value, "f")
 
 
-def _narrative_not_yet_found(draft: FilingDraft) -> str:
+def _narrative_not_yet_found(draft: ModeloDraft) -> str:
     """Build the multilingual narrative for the NOT_YET_FOUND verdict."""
     es = (
         f"AEAT no tiene constancia del modelo {draft.modelo} del período "
@@ -401,14 +401,14 @@ def _narrative_not_yet_found(draft: FilingDraft) -> str:
     return es
 
 
-def _narrative_match(draft: FilingDraft, remote: JustificanteRefSummary) -> str:
+def _narrative_match(draft: ModeloDraft, remote: JustificanteRefSummary) -> str:
     """Build the multilingual narrative for the MATCH verdict."""
     es = f"Modelo {draft.modelo} {draft.period}: coincide con lo registrado en AEAT (CSV {remote.csv})."
     return es
 
 
 def _narrative_divergent(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     remote: JustificanteRefSummary,
     mismatches: list[FieldMismatch],
 ) -> str:

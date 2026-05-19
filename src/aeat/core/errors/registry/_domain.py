@@ -114,7 +114,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingAmendmentError",
+        "aeat.domain.filing._errors.ModeloAmendmentError",
         ErrorCode(
             code="ERROR_FILING_AMENDMENT",
             category=ErrorCategory.ERROR,
@@ -125,7 +125,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingAmendmentValidationError",
+        "aeat.domain.filing._errors.ModeloAmendmentValidationError",
         ErrorCode(
             code="INTEGRITY_FILING_AMENDMENT_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -136,7 +136,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingBuilderError",
+        "aeat.domain.filing._errors.ModeloBuilderError",
         ErrorCode(
             code="ERROR_FILING_BUILDER",
             category=ErrorCategory.ERROR,
@@ -147,7 +147,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingComputationError",
+        "aeat.domain.filing._errors.ModeloComputationError",
         ErrorCode(
             code="ERROR_FILING_COMPUTATION",
             category=ErrorCategory.ERROR,
@@ -158,7 +158,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingDraftError",
+        "aeat.domain.filing._errors.ModeloDraftError",
         ErrorCode(
             code="ERROR_FILING_DRAFT",
             category=ErrorCategory.ERROR,
@@ -169,7 +169,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingImportError",
+        "aeat.domain.filing._errors.ModeloImportError",
         ErrorCode(
             code="FAIL_FILING_IMPORT",
             category=ErrorCategory.FAIL,
@@ -180,7 +180,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingValidationError",
+        "aeat.domain.filing._errors.ModeloValidationError",
         ErrorCode(
             code="INTEGRITY_FILING_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -1271,7 +1271,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingExportError",
+        "aeat.domain.filing._errors.ModeloExportError",
         ErrorCode(
             code="ERROR_FILING_EXPORT",
             category=ErrorCategory.ERROR,
@@ -1282,7 +1282,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing._errors.FilingExportValidationError",
+        "aeat.domain.filing._errors.ModeloExportValidationError",
         ErrorCode(
             code="ERROR_FILING_EXPORT_VALIDATION",
             category=ErrorCategory.ERROR,

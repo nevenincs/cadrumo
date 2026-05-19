@@ -11,9 +11,9 @@ from pydantic import ValidationError
 
 from ...core.i18n import Translatable as tr
 from ...domain.filing import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
-    FilingValidationFinding,
+    ModeloValidationFinding,
 )
 from . import (
     DeclaracionCalculateNextAction,
@@ -35,10 +35,10 @@ def _finding_message(code: str) -> tr:
 def _make_draft(
     *,
     status: ModeloDraftStatus,
-    findings: tuple[FilingValidationFinding, ...] = (),
+    findings: tuple[ModeloValidationFinding, ...] = (),
     modelo: str = "130",
     period: str = "2026Q1",
-) -> FilingDraft:
+) -> ModeloDraft:
     draft = build_registry_filing_draft(
         modelo=modelo,
         period=period,
@@ -66,8 +66,8 @@ def _make_draft(
     )
 
 
-def _finding(severity: BaseSeverity, code: str) -> FilingValidationFinding:
-    return FilingValidationFinding(
+def _finding(severity: BaseSeverity, code: str) -> ModeloValidationFinding:
+    return ModeloValidationFinding(
         casilla_id=None,
         severity=severity,
         code=code,

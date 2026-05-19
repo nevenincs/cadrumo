@@ -1,4 +1,4 @@
-"""Strict pydantic v2 records for FilingDraft to Justificante reconciliation.
+"""Strict pydantic v2 records for ModeloDraft to Justificante reconciliation.
 
 Defines the closed set of record types consumed by :func:`reconcile`
 and surfaced in :class:`ReconciliationReport`. Every record is derived
@@ -32,7 +32,7 @@ _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
 
 
 class ReconciliationStatus(StrEnum):
-    """Operator-observable verdict of a FilingDraft vs Justificante compare.
+    """Operator-observable verdict of a ModeloDraft vs Justificante compare.
 
     Attributes:
         MATCH: Every compared field agreed within tolerance.
@@ -47,11 +47,11 @@ class ReconciliationStatus(StrEnum):
 
 
 class FilingDraftRef(BaseModel):
-    """Lightweight reference to the local FilingDraft side of a compare.
+    """Lightweight reference to the local ModeloDraft side of a compare.
 
     Attributes:
         draft_id: Stable identifier of the source
-            :class:`aeat.domain.filing.FilingDraft`.
+            :class:`aeat.domain.filing.ModeloDraft`.
         modelo: Modelo code copied verbatim from the draft.
         period: Period label copied verbatim from the draft.
         profile_tax_id: NIF / NIE recorded on the draft's profile.
@@ -124,7 +124,7 @@ class FieldMismatch(BaseModel):
 
 
 class ReconciliationReport(BaseModel):
-    """Operator-observable outcome of reconciling one FilingDraft.
+    """Operator-observable outcome of reconciling one ModeloDraft.
 
     Returned by :func:`reconcile` for every compare. The ``status``
     field is the primary verdict; ``mismatches`` carries the detailed

@@ -29,6 +29,7 @@ from ._iva_wallet_reconciliation import (
 from ._multi_year import MultiYearResolver, resolve_prior_year_observations
 from ._observations_repository import (
     CalculationObservationRepository,
+    IvaWalletDecisionRepository,
     iva_wallet_decision_key,
     observation_key,
 )
@@ -51,6 +52,7 @@ __all__ = [
     "IvaCompensationReconciliationDecision",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
+    "IvaWalletDecisionRepository",
     "MultiYearResolver",
     "PrefilledBinding",
     "assemble_atribucion_observations",

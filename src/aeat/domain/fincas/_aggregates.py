@@ -24,16 +24,16 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.logging import get_logger
 from ._amortization_ledger import compute_amortization_for_year
 from ._enums import UseType
-from ._errors import RentalAggregationError
+from ._errors import FincaAggregationError
 from ._expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from ._imputacion_parameters import load_imputacion_parameters
-from ._models import RentalContract, RentalFinca
+from ._models import Arrendamiento, Finca
 from ._repository import (
-    RentalAmortizationLedgerRepository,
-    RentalContractRepository,
-    RentalExpenseRepository,
-    RentalFincaRepository,
-    RentalIncomeRepository,
+    FincaAmortizacionLedgerRepository,
+    ArrendamientoRepository,
+    FincaGastoRepository,
+    FincaRepository,
+    FincaRendimientoRepository,
 )
 from ._tier_resolver import TierResolution, resolve_reduccion
 
@@ -72,7 +72,7 @@ class ContractTierAttribution(BaseModel):
     reduccion_amount: Decimal = Field(ge=Decimal("0"))
 
 
-class RentalAggregates(BaseModel):
+class FincaAggregates(BaseModel):
     """Derived rental aggregates plus audit attribution.
 
     Attributes:
@@ -100,38 +100,38 @@ class RentalAggregates(BaseModel):
     per_contract_tier: Mapping[int, ContractTierAttribution]
 
 
-def compute_rental_aggregates(
+def compute_finca_aggregates(
     *,
     period_year: int,
-    finca_repo: RentalFincaRepository,
-    contract_repo: RentalContractRepository,
-    income_repo: RentalIncomeRepository,
-    expense_repo: RentalExpenseRepository,
-    ledger_repo: RentalAmortizationLedgerRepository,
-) -> RentalAggregates:
+    finca_repo: FincaRepository,
+    contract_repo: ArrendamientoRepository,
+    income_repo: FincaRendimientoRepository,
+    expense_repo: FincaGastoRepository,
+    ledger_repo: FincaAmortizacionLedgerRepository,
+) -> FincaAggregates:
     """Aggregate factual rental amounts from the rental register.
 
     Args:
         period_year: Ejercicio whose rental amounts to compute.
-        finca_repo: Live :class:`RentalFincaRepository`.
-        contract_repo: Live :class:`RentalContractRepository`.
-        income_repo: Live :class:`RentalIncomeRepository`.
-        expense_repo: Live :class:`RentalExpenseRepository`.
-        ledger_repo: Live :class:`RentalAmortizationLedgerRepository`.
+        finca_repo: Live :class:`FincaRepository`.
+        contract_repo: Live :class:`ArrendamientoRepository`.
+        income_repo: Live :class:`FincaRendimientoRepository`.
+        expense_repo: Live :class:`FincaGastoRepository`.
+        ledger_repo: Live :class:`FincaAmortizacionLedgerRepository`.
 
     Returns:
-        :class:`RentalAggregates` carrying the derived rental totals
+        :class:`FincaAggregates` carrying the derived rental totals
         and attribution maps for audit traceability.
 
     Raises:
-        RentalAggregationError: When a contract references a missing
+        FincaAggregationError: When a contract references a missing
             finca, or when the ledger surfaces an inconsistent
             cumulative entry.
     """
     fincas = finca_repo.list_all()
     if not fincas:
         _log.debug("rental aggregates: no fincas registered for period %d; returning zero totals", period_year)
-        return RentalAggregates(
+        return FincaAggregates(
             period_year=period_year,
             ingresos_integros=Decimal("0.00"),
             gastos_deducibles=Decimal("0.00"),
@@ -142,7 +142,7 @@ def compute_rental_aggregates(
             per_contract_tier={},
         )
 
-    fincas_by_id: dict[int, RentalFinca] = {finca.id: finca for finca in fincas if finca.id is not None}
+    fincas_by_id: dict[int, Finca] = {finca.id: finca for finca in fincas if finca.id is not None}
 
     ingresos_integros = Decimal("0.00")
     gastos_deducibles = Decimal("0.00")
@@ -202,11 +202,11 @@ def compute_rental_aggregates(
     # Validate that every contract attribution references a known finca.
     for attrib in contract_tier.values():
         if attrib.finca_id not in fincas_by_id:
-            raise RentalAggregationError(
+            raise FincaAggregationError(
                 f"contract id={attrib.contract_id} references unknown finca id={attrib.finca_id}",
             )
 
-    aggregates = RentalAggregates(
+    aggregates = FincaAggregates(
         period_year=period_year,
         ingresos_integros=_round_to_cents(ingresos_integros),
         gastos_deducibles=_round_to_cents(gastos_deducibles),
@@ -231,7 +231,7 @@ def compute_rental_aggregates(
     return aggregates
 
 
-def _finca_is_active_for_period(finca: RentalFinca, period_year: int) -> bool:
+def _finca_is_active_for_period(finca: Finca, period_year: int) -> bool:
     """Whether the finca was held during ``period_year`` AND is in an
     arrendable use_type.
     """
@@ -243,23 +243,23 @@ def _finca_is_active_for_period(finca: RentalFinca, period_year: int) -> bool:
 
 
 def _aggregate_finca(
-    finca: RentalFinca,
+    finca: Finca,
     *,
     period_year: int,
-    contract_repo: RentalContractRepository,
-    income_repo: RentalIncomeRepository,
-    expense_repo: RentalExpenseRepository,
-    ledger_repo: RentalAmortizationLedgerRepository,
+    contract_repo: ArrendamientoRepository,
+    income_repo: FincaRendimientoRepository,
+    expense_repo: FincaGastoRepository,
+    ledger_repo: FincaAmortizacionLedgerRepository,
 ) -> tuple[Decimal, Decimal, Decimal, Decimal, list[ContractTierAttribution]]:
     """Compute (ingresos, gastos, amortization, reduccion_total,
     [per-contract attribution]) for one finca."""
     if finca.id is None:
-        raise RentalAggregationError("finca lacks persistent id")
+        raise FincaAggregationError("finca lacks persistent id")
     contracts = contract_repo.list_for_finca(finca.id)
     active_contracts = [c for c in contracts if _contract_is_active_for_period(c, period_year)]
     ingresos = Decimal("0.00")
     contract_attribs: list[ContractTierAttribution] = []
-    contract_to_income: dict[int, tuple[RentalContract, Decimal, int]] = {}
+    contract_to_income: dict[int, tuple[Arrendamiento, Decimal, int]] = {}
     for contract in active_contracts:
         if contract.id is None:
             continue
@@ -328,7 +328,7 @@ def _aggregate_finca(
     )
 
 
-def _contract_is_active_for_period(contract: RentalContract, period_year: int) -> bool:
+def _contract_is_active_for_period(contract: Arrendamiento, period_year: int) -> bool:
     if contract.contract_celebration_date.year > period_year:
         return False
     return contract.contract_termination_date is None or contract.contract_termination_date.year >= period_year
@@ -350,10 +350,10 @@ def _existing_carry_forward() -> tuple[CarryForwardEntry, ...]:
 
 def _compute_finca_amortization(
     *,
-    finca: RentalFinca,
+    finca: Finca,
     period_year: int,
     total_dias_alquilados: int,
-    ledger_repo: RentalAmortizationLedgerRepository,
+    ledger_repo: FincaAmortizacionLedgerRepository,
 ) -> Decimal:
     """Compute the per-finca amortización for ``period_year``, threading
     cumulative-through-prior-year from the ledger.
@@ -363,9 +363,9 @@ def _compute_finca_amortization(
     if total_dias_alquilados == 0:
         return Decimal("0.00")
     cumulative_prior = _cumulative_through_prior_year(ledger_repo, finca.id, period_year)
-    from ._models import RentalIncomeRecord
+    from ._models import FincaRendimientoRecord
 
-    amortization_input = RentalIncomeRecord(
+    amortization_input = FincaRendimientoRecord(
         contract_id=finca.id,
         period_year=period_year,
         gross_rent_received=Decimal("0.00"),
@@ -380,7 +380,7 @@ def _compute_finca_amortization(
 
 
 def _cumulative_through_prior_year(
-    ledger_repo: RentalAmortizationLedgerRepository,
+    ledger_repo: FincaAmortizacionLedgerRepository,
     finca_id: int,
     period_year: int,
 ) -> Decimal:
@@ -393,11 +393,11 @@ def _cumulative_through_prior_year(
 
 
 def _compute_imputacion(
-    finca: RentalFinca,
+    finca: Finca,
     *,
     period_year: int,
-    contract_repo: RentalContractRepository,
-    income_repo: RentalIncomeRepository,
+    contract_repo: ArrendamientoRepository,
+    income_repo: FincaRendimientoRepository,
 ) -> Decimal:
     """Compute LIRPF art. 85 imputación for a non-let finca.
 
@@ -434,6 +434,6 @@ def _compute_imputacion(
 __all__ = [
     "ContractTierAttribution",
     "FincaAttribution",
-    "RentalAggregates",
-    "compute_rental_aggregates",
+    "FincaAggregates",
+    "compute_finca_aggregates",
 ]

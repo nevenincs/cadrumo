@@ -65,7 +65,7 @@ class SecureBoundRepository(Generic[T]):
     schema_version: ClassVar[int]
     # ``payload_type`` is also a ClassVar in practice; declared as a
     # plain attribute so subclasses can write
-    # ``payload_type: ClassVar[type[FilingDraft]] = FilingDraft`` or just
+    # ``payload_type: ClassVar[type[ModeloDraft]] = ModeloDraft`` or just
     # assign the concrete class. Marked ClassVar here for clarity.
     payload_type: ClassVar[type[BaseModel]]
 

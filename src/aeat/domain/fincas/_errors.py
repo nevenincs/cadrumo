@@ -10,19 +10,19 @@ from __future__ import annotations
 from ...core.errors import AeatError
 
 
-class RentalRegisterError(AeatError):
+class FincaRegisterError(AeatError):
     """Base error for the rental-register subpackage."""
 
 
-class FincaNotFoundError(RentalRegisterError):
+class FincaNotFoundError(FincaRegisterError):
     """Raised when a referenced finca id is not present in the register."""
 
 
-class ContractNotFoundError(RentalRegisterError):
+class ContractNotFoundError(FincaRegisterError):
     """Raised when a referenced rental contract id is not present in the register."""
 
 
-class TierResolutionError(RentalRegisterError):
+class TierResolutionError(FincaRegisterError):
     """Raised when contract metadata is inconsistent and a tier cannot be resolved.
 
     Examples: ``tenant_min_age > tenant_max_age``,
@@ -31,7 +31,7 @@ class TierResolutionError(RentalRegisterError):
     """
 
 
-class AmortizationLedgerCapExceededError(RentalRegisterError):
+class AmortizationLedgerCapExceededError(FincaRegisterError):
     """Raised in strict mode when cumulative amortización would exceed the cap.
 
     Default ``compute_amortization_for_year`` clamps to the remaining
@@ -40,7 +40,7 @@ class AmortizationLedgerCapExceededError(RentalRegisterError):
     """
 
 
-class RentalAggregationError(RentalRegisterError):
+class FincaAggregationError(FincaRegisterError):
     """Raised when the rental register cannot produce coherent aggregates.
 
     Surface causes: contract referencing a non-existent finca; income
@@ -51,7 +51,7 @@ class RentalAggregationError(RentalRegisterError):
     """
 
 
-class RentalValidationError(RentalRegisterError, ValueError):
+class FincaValidationError(FincaRegisterError, ValueError):
     """Raised when rental records violate state or shape invariants.
 
     Inherits from ValueError to maintain compatibility with Pydantic
@@ -63,8 +63,8 @@ __all__ = [
     "AmortizationLedgerCapExceededError",
     "ContractNotFoundError",
     "FincaNotFoundError",
-    "RentalAggregationError",
-    "RentalRegisterError",
-    "RentalValidationError",
+    "FincaAggregationError",
+    "FincaRegisterError",
+    "FincaValidationError",
     "TierResolutionError",
 ]

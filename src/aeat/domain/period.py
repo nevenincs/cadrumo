@@ -16,7 +16,7 @@ registry-native period identifier (``"1T"`` … ``"4T"``, ``"01"`` … ``"12"``,
 
 This module centralises that parsing and the canonical period-end-date
 mapping each surface needs. Callers wrap :class:`ValueError` into their
-own domain error type (e.g. ``FilingBuilderError``,
+own domain error type (e.g. ``ModeloBuilderError``,
 ``RegistrySnapshotError``) at the boundary they own.
 
 The registry-introspection CLI's

@@ -112,7 +112,7 @@ required_text = ["modelo 390"]
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -247,7 +247,7 @@ source_refs = ["aeat-dr-390-2025"]
 id = "iva.anual.autorepercutido.intracomunitaria"
 number = "iva.anual.autorepercutido.intracomunitaria"
 label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias - anual"
-section = ["iva", "anual", "autorepercutido"]
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
 data_type = "money"
 required = false
 input_kind = "bound"

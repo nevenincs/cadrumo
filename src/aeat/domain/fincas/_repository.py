@@ -1,6 +1,6 @@
 """Typed repositories for the rental-register record types.
 
-Bridges between the public :mod:`aeat.domain.rental._models` records and the
+Bridges between the public :mod:`aeat.domain.fincas._models` records and the
 internal :mod:`aeat.adapters.persistence.storage._orm` mapper rows. Every method routes
 through ``Repository._flush_or_wrap`` so DB integrity violations
 surface as :class:`RepositoryError`.
@@ -22,11 +22,11 @@ from sqlalchemy.orm import Session
 from ...core.logging import get_logger
 from ._enums import ExpenseCategory, UseType
 from ._models import (
-    RentalAmortizationLedgerEntry,
-    RentalContract,
-    RentalExpense,
-    RentalFinca,
-    RentalIncomeRecord,
+    FincaAmortizacionLedgerEntry,
+    Arrendamiento,
+    FincaGasto,
+    Finca,
+    FincaRendimientoRecord,
 )
 
 if TYPE_CHECKING:  # pragma: no cover — type-only imports
@@ -44,20 +44,20 @@ def _flush_or_wrap(session: Session, kind: str) -> None:
         raise RepositoryError(f"integrity violation during {kind} operation: {exc.orig}") from exc
 
 
-class RentalFincaRepository:
-    """Repository for :class:`RentalFinca`."""
+class FincaRepository:
+    """Repository for :class:`Finca`."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def list_all(self) -> list[RentalFinca]:
+    def list_all(self) -> list[Finca]:
         """Return every record in the table, ordered by surrogate id."""
         from ...adapters.persistence.storage.sql import _orm
 
-        rows = self._session.execute(select(_orm.RentalFincaRow).order_by(_orm.RentalFincaRow.id)).scalars().all()
+        rows = self._session.execute(select(_orm.FincaRow).order_by(_orm.FincaRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
-    def get(self, record_id: int) -> RentalFinca:
+    def get(self, record_id: int) -> Finca:
         """Return the record with surrogate id ``record_id``.
 
         Raises:
@@ -66,39 +66,39 @@ class RentalFincaRepository:
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row = self._session.get(_orm.RentalFincaRow, record_id)
+        row = self._session.get(_orm.FincaRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_finca id={record_id} not found")
         return self._to_record(row)
 
-    def get_by_identifier(self, identifier: str) -> RentalFinca | None:
+    def get_by_identifier(self, identifier: str) -> Finca | None:
         """Return the record matching ``identifier``, or ``None`` if absent."""
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
-            select(_orm.RentalFincaRow).where(_orm.RentalFincaRow.identifier == identifier),
+            select(_orm.FincaRow).where(_orm.FincaRow.identifier == identifier),
         ).scalar_one_or_none()
         return None if row is None else self._to_record(row)
 
-    def upsert(self, record: RentalFinca) -> RentalFinca:
+    def upsert(self, record: Finca) -> Finca:
         """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row: _orm.RentalFincaRow | None = None
+        row: _orm.FincaRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.RentalFincaRow, record.id)
+            row = self._session.get(_orm.FincaRow, record.id)
             if row is None:
                 raise RepositoryError(f"rental_finca id={record.id} not found for update")
         else:
             row = self._session.execute(
-                select(_orm.RentalFincaRow).where(
-                    _orm.RentalFincaRow.identifier == record.identifier,
+                select(_orm.FincaRow).where(
+                    _orm.FincaRow.identifier == record.identifier,
                 ),
             ).scalar_one_or_none()
         if row is None:
             _log.debug("rental_finca: inserting new finca identifier=%s", record.identifier)
-            row = _orm.RentalFincaRow(
+            row = _orm.FincaRow(
                 identifier=record.identifier,
                 address=record.address,
                 valor_catastral_total=record.valor_catastral_total,
@@ -135,7 +135,7 @@ class RentalFincaRepository:
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row = self._session.get(_orm.RentalFincaRow, record_id)
+        row = self._session.get(_orm.FincaRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_finca id={record_id} not found")
         _log.debug("rental_finca: deleting id=%d", record_id)
@@ -143,7 +143,7 @@ class RentalFincaRepository:
         _flush_or_wrap(self._session, "rental_finca")
 
     @staticmethod
-    def _to_record(row: _orm.RentalFincaRow) -> RentalFinca:
+    def _to_record(row: _orm.FincaRow) -> Finca:
         from ...adapters.persistence.storage.errors import RepositoryError
 
         try:
@@ -158,7 +158,7 @@ class RentalFincaRepository:
             raise RepositoryError(
                 f"rental_finca id={row.id} has unknown use_type={row.use_type!r}",
             ) from exc
-        return RentalFinca(
+        return Finca(
             id=row.id,
             identifier=row.identifier,
             address=row.address,
@@ -175,35 +175,35 @@ class RentalFincaRepository:
         )
 
 
-class RentalContractRepository:
-    """Repository for :class:`RentalContract`."""
+class ArrendamientoRepository:
+    """Repository for :class:`Arrendamiento`."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def list_all(self) -> list[RentalContract]:
+    def list_all(self) -> list[Arrendamiento]:
         """Return every record in the table, ordered by surrogate id."""
         from ...adapters.persistence.storage.sql import _orm
 
-        rows = self._session.execute(select(_orm.RentalContractRow).order_by(_orm.RentalContractRow.id)).scalars().all()
+        rows = self._session.execute(select(_orm.ArrendamientoRow).order_by(_orm.ArrendamientoRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
-    def list_for_finca(self, finca_id: int) -> list[RentalContract]:
+    def list_for_finca(self, finca_id: int) -> list[Arrendamiento]:
         """Return every record attached to the supplied finca."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
             self._session.execute(
-                select(_orm.RentalContractRow)
-                .where(_orm.RentalContractRow.finca_id == finca_id)
-                .order_by(_orm.RentalContractRow.contract_celebration_date),
+                select(_orm.ArrendamientoRow)
+                .where(_orm.ArrendamientoRow.finca_id == finca_id)
+                .order_by(_orm.ArrendamientoRow.contract_celebration_date),
             )
             .scalars()
             .all()
         )
         return [self._to_record(row) for row in rows]
 
-    def get(self, record_id: int) -> RentalContract:
+    def get(self, record_id: int) -> Arrendamiento:
         """Return the record with surrogate id ``record_id``.
 
         Raises:
@@ -212,23 +212,23 @@ class RentalContractRepository:
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row = self._session.get(_orm.RentalContractRow, record_id)
+        row = self._session.get(_orm.ArrendamientoRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_contract id={record_id} not found")
         return self._to_record(row)
 
-    def upsert(self, record: RentalContract) -> RentalContract:
+    def upsert(self, record: Arrendamiento) -> Arrendamiento:
         """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row: _orm.RentalContractRow | None = None
+        row: _orm.ArrendamientoRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.RentalContractRow, record.id)
+            row = self._session.get(_orm.ArrendamientoRow, record.id)
             if row is None:
                 raise RepositoryError(f"rental_contract id={record.id} not found for update")
         if row is None:
-            row = _orm.RentalContractRow(**self._row_kwargs(record))
+            row = _orm.ArrendamientoRow(**self._row_kwargs(record))
             self._session.add(row)
         else:
             for attr, value in self._row_kwargs(record).items():
@@ -241,14 +241,14 @@ class RentalContractRepository:
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row = self._session.get(_orm.RentalContractRow, record_id)
+        row = self._session.get(_orm.ArrendamientoRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_contract id={record_id} not found")
         self._session.delete(row)
         _flush_or_wrap(self._session, "rental_contract")
 
     @staticmethod
-    def _row_kwargs(record: RentalContract) -> dict[str, object]:
+    def _row_kwargs(record: Arrendamiento) -> dict[str, object]:
         return {
             "finca_id": record.finca_id,
             "contract_celebration_date": record.contract_celebration_date,
@@ -271,8 +271,8 @@ class RentalContractRepository:
         }
 
     @staticmethod
-    def _to_record(row: _orm.RentalContractRow) -> RentalContract:
-        return RentalContract(
+    def _to_record(row: _orm.ArrendamientoRow) -> Arrendamiento:
+        return Arrendamiento(
             id=row.id,
             finca_id=row.finca_id,
             contract_celebration_date=row.contract_celebration_date,
@@ -295,21 +295,21 @@ class RentalContractRepository:
         )
 
 
-class RentalIncomeRepository:
-    """Repository for :class:`RentalIncomeRecord`."""
+class FincaRendimientoRepository:
+    """Repository for :class:`FincaRendimientoRecord`."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def list_for_period(self, period_year: int) -> list[RentalIncomeRecord]:
+    def list_for_period(self, period_year: int) -> list[FincaRendimientoRecord]:
         """Return every record whose period overlaps the supplied window."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
             self._session.execute(
-                select(_orm.RentalIncomeRecordRow)
-                .where(_orm.RentalIncomeRecordRow.period_year == period_year)
-                .order_by(_orm.RentalIncomeRecordRow.id),
+                select(_orm.FincaRendimientoRecordRow)
+                .where(_orm.FincaRendimientoRecordRow.period_year == period_year)
+                .order_by(_orm.FincaRendimientoRecordRow.id),
             )
             .scalars()
             .all()
@@ -320,37 +320,37 @@ class RentalIncomeRepository:
         self,
         contract_id: int,
         period_year: int,
-    ) -> RentalIncomeRecord | None:
+    ) -> FincaRendimientoRecord | None:
         """Return the record for ``contract_id`` matching ``period``, or ``None``."""
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
-            select(_orm.RentalIncomeRecordRow).where(
-                _orm.RentalIncomeRecordRow.contract_id == contract_id,
-                _orm.RentalIncomeRecordRow.period_year == period_year,
+            select(_orm.FincaRendimientoRecordRow).where(
+                _orm.FincaRendimientoRecordRow.contract_id == contract_id,
+                _orm.FincaRendimientoRecordRow.period_year == period_year,
             ),
         ).scalar_one_or_none()
         return None if row is None else self._to_record(row)
 
-    def upsert(self, record: RentalIncomeRecord) -> RentalIncomeRecord:
+    def upsert(self, record: FincaRendimientoRecord) -> FincaRendimientoRecord:
         """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row: _orm.RentalIncomeRecordRow | None = None
+        row: _orm.FincaRendimientoRecordRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.RentalIncomeRecordRow, record.id)
+            row = self._session.get(_orm.FincaRendimientoRecordRow, record.id)
             if row is None:
                 raise RepositoryError(f"rental_income_record id={record.id} not found for update")
         else:
             row = self._session.execute(
-                select(_orm.RentalIncomeRecordRow).where(
-                    _orm.RentalIncomeRecordRow.contract_id == record.contract_id,
-                    _orm.RentalIncomeRecordRow.period_year == record.period_year,
+                select(_orm.FincaRendimientoRecordRow).where(
+                    _orm.FincaRendimientoRecordRow.contract_id == record.contract_id,
+                    _orm.FincaRendimientoRecordRow.period_year == record.period_year,
                 ),
             ).scalar_one_or_none()
         if row is None:
-            row = _orm.RentalIncomeRecordRow(
+            row = _orm.FincaRendimientoRecordRow(
                 contract_id=record.contract_id,
                 period_year=record.period_year,
                 gross_rent_received=record.gross_rent_received,
@@ -370,15 +370,15 @@ class RentalIncomeRepository:
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row = self._session.get(_orm.RentalIncomeRecordRow, record_id)
+        row = self._session.get(_orm.FincaRendimientoRecordRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_income_record id={record_id} not found")
         self._session.delete(row)
         _flush_or_wrap(self._session, "rental_income_record")
 
     @staticmethod
-    def _to_record(row: _orm.RentalIncomeRecordRow) -> RentalIncomeRecord:
-        return RentalIncomeRecord(
+    def _to_record(row: _orm.FincaRendimientoRecordRow) -> FincaRendimientoRecord:
+        return FincaRendimientoRecord(
             id=row.id,
             contract_id=row.contract_id,
             period_year=row.period_year,
@@ -388,40 +388,40 @@ class RentalIncomeRepository:
         )
 
 
-class RentalExpenseRepository:
-    """Repository for :class:`RentalExpense`."""
+class FincaGastoRepository:
+    """Repository for :class:`FincaGasto`."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def list_for_finca_period(self, finca_id: int, period_year: int) -> list[RentalExpense]:
+    def list_for_finca_period(self, finca_id: int, period_year: int) -> list[FincaGasto]:
         """Return every record attached to ``finca_id`` within the period window."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
             self._session.execute(
-                select(_orm.RentalExpenseRow)
+                select(_orm.FincaGastoRow)
                 .where(
-                    _orm.RentalExpenseRow.finca_id == finca_id,
-                    _orm.RentalExpenseRow.period_year == period_year,
+                    _orm.FincaGastoRow.finca_id == finca_id,
+                    _orm.FincaGastoRow.period_year == period_year,
                 )
-                .order_by(_orm.RentalExpenseRow.id),
+                .order_by(_orm.FincaGastoRow.id),
             )
             .scalars()
             .all()
         )
         return [self._to_record(row) for row in rows]
 
-    def add(self, record: RentalExpense) -> RentalExpense:
+    def add(self, record: FincaGasto) -> FincaGasto:
         """Insert ``record`` into the underlying store and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
         if record.id is not None:
             raise RepositoryError(
-                "RentalExpenseRepository.add expects a record without an id; use upsert() to update an existing row",
+                "FincaGastoRepository.add expects a record without an id; use upsert() to update an existing row",
             )
-        row = _orm.RentalExpenseRow(
+        row = _orm.FincaGastoRow(
             finca_id=record.finca_id,
             period_year=record.period_year,
             category=record.category.value,
@@ -432,14 +432,14 @@ class RentalExpenseRepository:
         _flush_or_wrap(self._session, "rental_expense")
         return self._to_record(row)
 
-    def upsert(self, record: RentalExpense) -> RentalExpense:
+    def upsert(self, record: FincaGasto) -> FincaGasto:
         """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
         if record.id is None:
             return self.add(record)
-        row = self._session.get(_orm.RentalExpenseRow, record.id)
+        row = self._session.get(_orm.FincaGastoRow, record.id)
         if row is None:
             raise RepositoryError(f"rental_expense id={record.id} not found for update")
         row.finca_id = record.finca_id
@@ -455,14 +455,14 @@ class RentalExpenseRepository:
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row = self._session.get(_orm.RentalExpenseRow, record_id)
+        row = self._session.get(_orm.FincaGastoRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_expense id={record_id} not found")
         self._session.delete(row)
         _flush_or_wrap(self._session, "rental_expense")
 
     @staticmethod
-    def _to_record(row: _orm.RentalExpenseRow) -> RentalExpense:
+    def _to_record(row: _orm.FincaGastoRow) -> FincaGasto:
         from ...adapters.persistence.storage.errors import RepositoryError
 
         try:
@@ -477,7 +477,7 @@ class RentalExpenseRepository:
             raise RepositoryError(
                 f"rental_expense id={row.id} has unknown category={row.category!r}",
             ) from exc
-        return RentalExpense(
+        return FincaGasto(
             id=row.id,
             finca_id=row.finca_id,
             period_year=row.period_year,
@@ -487,21 +487,21 @@ class RentalExpenseRepository:
         )
 
 
-class RentalAmortizationLedgerRepository:
-    """Repository for :class:`RentalAmortizationLedgerEntry`."""
+class FincaAmortizacionLedgerRepository:
+    """Repository for :class:`FincaAmortizacionLedgerEntry`."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def list_for_finca(self, finca_id: int) -> list[RentalAmortizationLedgerEntry]:
+    def list_for_finca(self, finca_id: int) -> list[FincaAmortizacionLedgerEntry]:
         """Return every record attached to the supplied finca."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
             self._session.execute(
-                select(_orm.RentalAmortizationLedgerRow)
-                .where(_orm.RentalAmortizationLedgerRow.finca_id == finca_id)
-                .order_by(_orm.RentalAmortizationLedgerRow.period_year),
+                select(_orm.FincaAmortizacionLedgerRow)
+                .where(_orm.FincaAmortizacionLedgerRow.finca_id == finca_id)
+                .order_by(_orm.FincaAmortizacionLedgerRow.period_year),
             )
             .scalars()
             .all()
@@ -512,39 +512,39 @@ class RentalAmortizationLedgerRepository:
         self,
         finca_id: int,
         period_year: int,
-    ) -> RentalAmortizationLedgerEntry | None:
+    ) -> FincaAmortizacionLedgerEntry | None:
         """Return the record for ``finca_id`` matching ``period``, or ``None``."""
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
-            select(_orm.RentalAmortizationLedgerRow).where(
-                _orm.RentalAmortizationLedgerRow.finca_id == finca_id,
-                _orm.RentalAmortizationLedgerRow.period_year == period_year,
+            select(_orm.FincaAmortizacionLedgerRow).where(
+                _orm.FincaAmortizacionLedgerRow.finca_id == finca_id,
+                _orm.FincaAmortizacionLedgerRow.period_year == period_year,
             ),
         ).scalar_one_or_none()
         return None if row is None else self._to_record(row)
 
-    def upsert(self, record: RentalAmortizationLedgerEntry) -> RentalAmortizationLedgerEntry:
+    def upsert(self, record: FincaAmortizacionLedgerEntry) -> FincaAmortizacionLedgerEntry:
         """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row: _orm.RentalAmortizationLedgerRow | None = None
+        row: _orm.FincaAmortizacionLedgerRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.RentalAmortizationLedgerRow, record.id)
+            row = self._session.get(_orm.FincaAmortizacionLedgerRow, record.id)
             if row is None:
                 raise RepositoryError(
                     f"rental_amortization_ledger id={record.id} not found for update",
                 )
         else:
             row = self._session.execute(
-                select(_orm.RentalAmortizationLedgerRow).where(
-                    _orm.RentalAmortizationLedgerRow.finca_id == record.finca_id,
-                    _orm.RentalAmortizationLedgerRow.period_year == record.period_year,
+                select(_orm.FincaAmortizacionLedgerRow).where(
+                    _orm.FincaAmortizacionLedgerRow.finca_id == record.finca_id,
+                    _orm.FincaAmortizacionLedgerRow.period_year == record.period_year,
                 ),
             ).scalar_one_or_none()
         if row is None:
-            row = _orm.RentalAmortizationLedgerRow(
+            row = _orm.FincaAmortizacionLedgerRow(
                 finca_id=record.finca_id,
                 period_year=record.period_year,
                 dias_alquilados=record.dias_alquilados,
@@ -568,15 +568,15 @@ class RentalAmortizationLedgerRepository:
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
-        row = self._session.get(_orm.RentalAmortizationLedgerRow, record_id)
+        row = self._session.get(_orm.FincaAmortizacionLedgerRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_amortization_ledger id={record_id} not found")
         self._session.delete(row)
         _flush_or_wrap(self._session, "rental_amortization_ledger")
 
     @staticmethod
-    def _to_record(row: _orm.RentalAmortizationLedgerRow) -> RentalAmortizationLedgerEntry:
-        return RentalAmortizationLedgerEntry(
+    def _to_record(row: _orm.FincaAmortizacionLedgerRow) -> FincaAmortizacionLedgerEntry:
+        return FincaAmortizacionLedgerEntry(
             id=row.id,
             finca_id=row.finca_id,
             period_year=row.period_year,
@@ -589,9 +589,9 @@ class RentalAmortizationLedgerRepository:
 
 
 __all__ = [
-    "RentalAmortizationLedgerRepository",
-    "RentalContractRepository",
-    "RentalExpenseRepository",
-    "RentalFincaRepository",
-    "RentalIncomeRepository",
+    "FincaAmortizacionLedgerRepository",
+    "ArrendamientoRepository",
+    "FincaGastoRepository",
+    "FincaRepository",
+    "FincaRendimientoRepository",
 ]

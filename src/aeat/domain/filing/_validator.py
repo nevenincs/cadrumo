@@ -2,7 +2,7 @@
 
 The validator is intentionally pure: it consumes a draft + the
 casilla collection it was built against and returns a tuple of
-:class:`FilingValidationFinding` records. It never raises — strict
+:class:`ModeloValidationFinding` records. It never raises — strict
 behaviour is the caller's responsibility via
 ``fail_on_warning`` on :func:`build_draft`.
 """
@@ -21,17 +21,17 @@ from ._protocols import (
     DeadlineChecker,
 )
 from ._schema import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
-    FilingValidationFinding,
-    FilingValueKind,
+    ModeloValidationFinding,
+    ModeloValueKind,
 )
 
 _logger = get_logger(__name__)
 
 
-class FilingValidator:
-    """Apply cross-cutting validation rules to a :class:`FilingDraft`.
+class ModeloValidator:
+    """Apply cross-cutting validation rules to a :class:`ModeloDraft`.
 
     The validator depends on Protocols, not concrete subpackages,
     so alternative casilla, formula, or deadline implementations can
@@ -58,7 +58,7 @@ class FilingValidator:
         self._schema_provider = schema_provider
         self._deadline_checker = deadline_checker
 
-    def validate(self, draft: FilingDraft) -> tuple[FilingValidationFinding, ...]:
+    def validate(self, draft: ModeloDraft) -> tuple[ModeloValidationFinding, ...]:
         """Run every validation rule against ``draft``.
 
         Args:
@@ -68,7 +68,7 @@ class FilingValidator:
             A tuple of findings, possibly empty.
         """
         collection = self._schema_provider.get_collection(draft.modelo)
-        findings: list[FilingValidationFinding] = []
+        findings: list[ModeloValidationFinding] = []
         findings.extend(self._validate_schema_version(draft, collection))
         findings.extend(self._validate_required(draft, collection))
         findings.extend(self._validate_ranges(draft, collection))
@@ -88,12 +88,12 @@ class FilingValidator:
     # ── individual rules ─────────────────────────────────────────
 
     def _validate_schema_version(
-        self, draft: FilingDraft, collection: CasillaCollection
-    ) -> list[FilingValidationFinding]:
+        self, draft: ModeloDraft, collection: CasillaCollection
+    ) -> list[ModeloValidationFinding]:
         if draft.schema_version == collection.schema_version:
             return []
         return [
-            FilingValidationFinding(
+            ModeloValidationFinding(
                 casilla_id=None,
                 severity=BaseSeverity.WARNING,
                 code="filing-schema-version-mismatch",
@@ -102,16 +102,16 @@ class FilingValidator:
             )
         ]
 
-    def _validate_required(self, draft: FilingDraft, collection: CasillaCollection) -> list[FilingValidationFinding]:
+    def _validate_required(self, draft: ModeloDraft, collection: CasillaCollection) -> list[ModeloValidationFinding]:
         by_id = {v.casilla_id: v for v in draft.values}
-        out: list[FilingValidationFinding] = []
+        out: list[ModeloValidationFinding] = []
         for casilla in collection.all():
             if not casilla.required:
                 continue
             value = by_id.get(casilla.id)
-            if value is None or value.kind is FilingValueKind.EMPTY or value.value is None:
+            if value is None or value.kind is ModeloValueKind.EMPTY or value.value is None:
                 out.append(
-                    FilingValidationFinding(
+                    ModeloValidationFinding(
                         casilla_id=casilla.id,
                         severity=BaseSeverity.ERROR,
                         code="casilla-required-missing",
@@ -121,8 +121,8 @@ class FilingValidator:
                 )
         return out
 
-    def _validate_ranges(self, draft: FilingDraft, collection: CasillaCollection) -> list[FilingValidationFinding]:
-        out: list[FilingValidationFinding] = []
+    def _validate_ranges(self, draft: ModeloDraft, collection: CasillaCollection) -> list[ModeloValidationFinding]:
+        out: list[ModeloValidationFinding] = []
         for value in draft.values:
             casilla = collection.get(value.casilla_id)
             if casilla is None or value.value is None:
@@ -137,8 +137,8 @@ class FilingValidator:
         return out
 
     @staticmethod
-    def _range_finding(casilla_id: str, direction: str) -> FilingValidationFinding:
-        return FilingValidationFinding(
+    def _range_finding(casilla_id: str, direction: str) -> ModeloValidationFinding:
+        return ModeloValidationFinding(
             casilla_id=casilla_id,
             severity=BaseSeverity.ERROR,
             code="casilla-out-of-range",
@@ -147,9 +147,9 @@ class FilingValidator:
         )
 
     def _validate_formula_traces(
-        self, draft: FilingDraft, collection: CasillaCollection
-    ) -> list[FilingValidationFinding]:
-        out: list[FilingValidationFinding] = []
+        self, draft: ModeloDraft, collection: CasillaCollection
+    ) -> list[ModeloValidationFinding]:
+        out: list[ModeloValidationFinding] = []
         for value in draft.values:
             casilla = collection.get(value.casilla_id)
             if casilla is None:
@@ -164,7 +164,7 @@ class FilingValidator:
                 if value.formula_trace:
                     out.append(self._divergence(value.casilla_id))
                 continue
-            if value.kind is not FilingValueKind.COMPUTED:
+            if value.kind is not ModeloValueKind.COMPUTED:
                 out.append(self._divergence(value.casilla_id))
                 continue
             if value.formula_trace is None or set(value.formula_trace) != set(casilla.formula_inputs):
@@ -172,8 +172,8 @@ class FilingValidator:
         return out
 
     @staticmethod
-    def _divergence(casilla_id: str) -> FilingValidationFinding:
-        return FilingValidationFinding(
+    def _divergence(casilla_id: str) -> ModeloValidationFinding:
+        return ModeloValidationFinding(
             casilla_id=casilla_id,
             severity=BaseSeverity.ERROR,
             code="formula-divergence",
@@ -181,7 +181,7 @@ class FilingValidator:
             references_rules=(),
         )
 
-    def _validate_deadline(self, draft: FilingDraft) -> list[FilingValidationFinding]:
+    def _validate_deadline(self, draft: ModeloDraft) -> list[ModeloValidationFinding]:
         if self._deadline_checker is None:
             _logger.debug("deadline check skipped: no deadline_checker provided for modelo=%s", draft.modelo)
             return []
@@ -189,7 +189,7 @@ class FilingValidator:
         if not status.is_overdue:
             return []
         return [
-            FilingValidationFinding(
+            ModeloValidationFinding(
                 casilla_id=None,
                 severity=BaseSeverity.ERROR,
                 code="filing-deadline-missed",
@@ -200,9 +200,9 @@ class FilingValidator:
 
 
 def apply_validation(
-    draft: FilingDraft,
-    findings: tuple[FilingValidationFinding, ...],
-) -> FilingDraft:
+    draft: ModeloDraft,
+    findings: tuple[ModeloValidationFinding, ...],
+) -> ModeloDraft:
     """Return a copy of ``draft`` with ``findings`` and a fresh status.
 
     Status promotion logic:
@@ -223,7 +223,7 @@ def apply_validation(
 
 
 def derive_validation_status(
-    findings: tuple[FilingValidationFinding, ...],
+    findings: tuple[ModeloValidationFinding, ...],
 ) -> ModeloDraftStatus:
     """Return the machine validation status implied by ``findings``."""
 

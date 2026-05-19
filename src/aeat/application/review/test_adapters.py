@@ -40,11 +40,11 @@ from ...domain.transactions import (
 )
 from ...domain.transactions._repository import TransactionCatalogueRepository
 from ..filing import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
-    FilingValidationFinding,
-    FilingValue,
-    FilingValueKind,
+    ModeloValidationFinding,
+    ModeloValue,
+    ModeloValueKind,
 )
 from . import (
     FindingReviewItem,
@@ -334,17 +334,17 @@ def _draft(
     modelo: str = "130",
     period: str = "2026Q1",
     status: ModeloDraftStatus = ModeloDraftStatus.READY_TO_SUBMIT,
-    findings: tuple[FilingValidationFinding, ...] = (),
-) -> FilingDraft:
+    findings: tuple[ModeloValidationFinding, ...] = (),
+) -> ModeloDraft:
     values = (
-        FilingValue(
+        ModeloValue(
             casilla_id="03",
             value=Decimal("0"),
-            kind=FilingValueKind.LITERAL,
+            kind=ModeloValueKind.LITERAL,
             source="test",
         ),
     )
-    return FilingDraft(
+    return ModeloDraft(
         draft_id=draft_id,
         modelo=modelo,
         period=period,
@@ -358,12 +358,12 @@ def _draft(
     )
 
 
-def _write_draft(settings: Settings, draft: FilingDraft) -> Path:
-    """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
-    from ...domain.filing import FilingDraftRepository
+def _write_draft(settings: Settings, draft: ModeloDraft) -> Path:
+    """Persist ``draft`` through the ModeloDraftRepository (ciphertext-at-rest)."""
+    from ...domain.filing import ModeloDraftRepository
 
     del settings
-    repository = FilingDraftRepository()
+    repository = ModeloDraftRepository()
     repository.save(draft)
     return repository.envelope_path_for(draft.draft_id)
 
@@ -377,19 +377,19 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     _seed_active_profile()
     findings = (
-        FilingValidationFinding(
+        ModeloValidationFinding(
             casilla_id="03",
             severity=BaseSeverity.ERROR,
             code="casilla-out-of-range",
             message=_summary("range"),
         ),
-        FilingValidationFinding(
+        ModeloValidationFinding(
             casilla_id="04",
             severity=BaseSeverity.WARNING,
             code="casilla-required-missing",
             message=_summary("missing"),
         ),
-        FilingValidationFinding(
+        ModeloValidationFinding(
             casilla_id="05",
             severity=BaseSeverity.INFO,
             code="casilla-info-note",
@@ -454,7 +454,7 @@ def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> N
 def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    finding = FilingValidationFinding(
+    finding = ModeloValidationFinding(
         casilla_id="03",
         severity=BaseSeverity.ERROR,
         code="casilla-out-of-range",

@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
 from ...core.logging import get_logger
-from ...domain.filing import FilingDraft, FilingDraftRepository, FilingValueKind
+from ...domain.filing import ModeloDraft, ModeloDraftRepository, ModeloValueKind
 from ...domain.filing._amendment import (
     AmendmentKind,
     CasillaChange,
@@ -20,9 +20,11 @@ from ...domain.filing._amendment import (
     CasillaInputs,
     FilingAmendment,
     ModeloCode,
+    ModeloComplementaria,
+    ModeloSustitutiva,
     make_amendment_id,
 )
-from ...domain.filing._errors import FilingAmendmentError, FilingBuilderError
+from ...domain.filing._errors import ModeloAmendmentError, ModeloBuilderError
 from ...domain.filing._protocols import CasillaSchemaProvider
 
 _logger = get_logger(__name__)
@@ -43,13 +45,13 @@ def build_complementaria(
     updated_inputs: CasillaInputs,
     *,
     schema_provider: CasillaSchemaProvider,
-) -> FilingAmendment:
+) -> ModeloComplementaria:
     """Build and persist a complementaria from a submitted filing."""
 
     original_submission = _submitted_original(original)
     original_draft = _load_original_draft(original_submission.draft_id)
     if original_draft.modelo != original_submission.modelo or original_draft.period != original_submission.period:
-        raise FilingBuilderError("original submission and persisted draft disagree on modelo or period")
+        raise ModeloBuilderError("original submission and persisted draft disagree on modelo or period")
     _require_original_registry_snapshot(original_draft, schema_provider=schema_provider)
     merged_inputs = _merge_inputs(original_draft, updated_inputs)
     from . import build_draft
@@ -66,8 +68,8 @@ def build_complementaria(
     )
     delta = _delta(original_draft, amended_draft)
     if not delta:
-        raise FilingBuilderError("complementaria requires at least one changed casilla")
-    amendment = FilingAmendment(
+        raise ModeloBuilderError("complementaria requires at least one changed casilla")
+    amendment = ModeloComplementaria(
         amendment_id=make_amendment_id(
             submission_id=original_submission.submission_id,
             amendment_kind=AmendmentKind.COMPLEMENTARIA,
@@ -77,14 +79,13 @@ def build_complementaria(
         original_csv=original_submission.justificante_csv,
         original_model=original_submission.modelo,
         original_period=original_submission.period,
-        amendment_kind=AmendmentKind.COMPLEMENTARIA,
         delta=delta,
         amended_draft=amended_draft,
         created_at=amended_draft.created_at,
     )
-    from ...domain.filing._complementaria_repository import FilingAmendmentRepository
+    from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
 
-    FilingAmendmentRepository().save(amendment)
+    ModeloAmendmentRepository().save(amendment)
     _logger.info(
         "built complementaria amendment_id=%s submission_id=%s",
         amendment.amendment_id,
@@ -103,45 +104,45 @@ def _submitted_original(original: object) -> _SubmittedOriginal:
     required = ("submission_id", "draft_id", "modelo", "period", "profile_tax_id", "justificante_csv")
     missing = [name for name in required if not hasattr(original, name)]
     if missing:
-        raise FilingBuilderError(f"original submission is missing required fields: {missing!r}")
+        raise ModeloBuilderError(f"original submission is missing required fields: {missing!r}")
     if not isinstance(original, _SubmittedOriginal):
-        raise FilingBuilderError("original submission does not conform to the expected protocol shape")
+        raise ModeloBuilderError("original submission does not conform to the expected protocol shape")
     submitted: _SubmittedOriginal = original
     csv = submitted.justificante_csv
     if not isinstance(csv, str) or not csv.strip():
-        raise FilingBuilderError("original submission must include an official justificante CSV")
+        raise ModeloBuilderError("original submission must include an official justificante CSV")
     return submitted
 
 
-def _load_original_draft(draft_id: str) -> FilingDraft:
-    repository = FilingDraftRepository()
+def _load_original_draft(draft_id: str) -> ModeloDraft:
+    repository = ModeloDraftRepository()
     draft = repository.load(draft_id)
     if draft is None:
-        raise FilingBuilderError(f"original draft {draft_id!r} is not persisted")
+        raise ModeloBuilderError(f"original draft {draft_id!r} is not persisted")
     return draft
 
 
 def _require_original_registry_snapshot(
-    original_draft: FilingDraft,
+    original_draft: ModeloDraft,
     *,
     schema_provider: CasillaSchemaProvider,
 ) -> None:
     collection = schema_provider.get_collection(original_draft.modelo)
     if original_draft.schema_version != collection.schema_version:
-        raise FilingBuilderError("original draft was not built from the active registry snapshot")
+        raise ModeloBuilderError("original draft was not built from the active registry snapshot")
 
 
-def _merge_inputs(original_draft: FilingDraft, updated_inputs: CasillaInputs) -> dict[str, object]:
+def _merge_inputs(original_draft: ModeloDraft, updated_inputs: CasillaInputs) -> dict[str, object]:
     merged: dict[str, object] = {
         value.casilla_id: value.value
         for value in original_draft.values
-        if value.value is not None and value.kind is not FilingValueKind.COMPUTED
+        if value.value is not None and value.kind is not ModeloValueKind.COMPUTED
     }
     merged.update(updated_inputs)
     return merged
 
 
-def _delta(original_draft: FilingDraft, amended_draft: FilingDraft) -> CasillaDelta:
+def _delta(original_draft: ModeloDraft, amended_draft: ModeloDraft) -> CasillaDelta:
     original_values = {
         value.casilla_id: value.value for value in original_draft.values if isinstance(value.value, Decimal)
     }
@@ -165,25 +166,25 @@ def _delta(original_draft: FilingDraft, amended_draft: FilingDraft) -> CasillaDe
 
 def load_amendment(amendment_id: str) -> FilingAmendment:
     """Load a previously persisted amendment by id."""
-    from ...domain.filing._complementaria_repository import FilingAmendmentRepository
+    from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
 
-    repository = FilingAmendmentRepository()
+    repository = ModeloAmendmentRepository()
     try:
         repository.envelope_path_for(amendment_id)
     except ValueError as exc:
-        raise FilingAmendmentError(str(exc)) from exc
+        raise ModeloAmendmentError(str(exc)) from exc
     loaded = repository.load(amendment_id)
     if loaded is None:
-        raise FilingAmendmentError(f"no persisted amendment with id {amendment_id!r}")
+        raise ModeloAmendmentError(f"no persisted amendment with id {amendment_id!r}")
     _logger.debug("loaded amendment amendment_id=%s", amendment_id)
     return loaded
 
 
 def list_amendments(*, modelo: str | None = None) -> tuple[FilingAmendment, ...]:
     """Return every persisted amendment, optionally filtered by modelo."""
-    from ...domain.filing._complementaria_repository import FilingAmendmentRepository
+    from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
 
-    repository = FilingAmendmentRepository()
+    repository = ModeloAmendmentRepository()
     results = tuple(
         amendment for amendment in repository.iter_amendments() if modelo is None or amendment.original_model == modelo
     )
@@ -196,8 +197,9 @@ __all__ = [
     "CasillaChange",
     "CasillaDelta",
     "CasillaInputs",
-    "FilingAmendment",
     "ModeloCode",
+    "ModeloComplementaria",
+    "ModeloSustitutiva",
     "build_complementaria",
     "list_amendments",
     "load_amendment",

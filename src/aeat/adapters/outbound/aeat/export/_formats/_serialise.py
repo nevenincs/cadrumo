@@ -10,7 +10,7 @@ registry-backed filing layout supplies:
 - required header ``field_id`` values the draft MUST
   provide.
 
-The caller passes a :class:`aeat.application.filing.FilingDraft` plus
+The caller passes a :class:`aeat.application.filing.ModeloDraft` plus
 a ``headers`` mapping for metadata fields (identity, year, period,
 and so on). CRLF terminator ownership stays with this function; the
 per-field encoders in

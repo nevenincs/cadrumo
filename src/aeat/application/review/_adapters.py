@@ -32,9 +32,9 @@ from ...domain.transactions import (
     is_classified,
 )
 from ..filing import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
-    FilingValidationFinding,
+    ModeloValidationFinding,
 )
 from ._enums import ReviewSeverity
 from ._errors import ReviewSourceLoadError
@@ -239,7 +239,7 @@ def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str)
 def drafts_pending(
     settings: Settings,
     *,
-    drafts: tuple[tuple[Path, FilingDraft], ...] | None = None,
+    drafts: tuple[tuple[Path, ModeloDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
     """Return :class:`FindingReviewItem`s for findings + unready drafts.
 
@@ -266,7 +266,7 @@ def drafts_pending(
 
 
 def _draft_finding_review_items(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     path_str: str,
     seen: set[tuple[str, str, str]],
@@ -290,7 +290,7 @@ def _draft_finding_review_items(
 
 
 def _append_unready_draft_review_item(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     path_str: str,
     items: list[FindingReviewItem],
@@ -326,19 +326,19 @@ def _resolve_active_tax_id(settings: Settings) -> str | None:
     return fact_value(record, "identity.tax_id") or None
 
 
-def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
-    """Iterate every persisted draft via :class:`FilingDraftRepository`.
+def _load_drafts(settings: Settings) -> tuple[tuple[Path, ModeloDraft], ...]:
+    """Iterate every persisted draft via :class:`ModeloDraftRepository`.
 
     Drafts are ciphertext-at-rest only. The helper returns the secure
     backend's logical path marker alongside the typed payload so callers
     can identify the draft without consulting a plaintext draft
     directory.
     """
-    from ...domain.filing import FilingDraftRepository
+    from ...domain.filing import ModeloDraftRepository
 
     del settings
-    repository = FilingDraftRepository()
-    out: list[tuple[Path, FilingDraft]] = []
+    repository = ModeloDraftRepository()
+    out: list[tuple[Path, ModeloDraft]] = []
     for draft in repository.iter_drafts():
         out.append((repository.envelope_path_for(draft.draft_id), draft))
     return tuple(out)
@@ -355,9 +355,9 @@ def _classify_finding(severity: BaseSeverity) -> ReviewSeverity:
 
 def _to_finding_item(
     *,
-    draft: FilingDraft,
+    draft: ModeloDraft,
     path_str: str,
-    finding: FilingValidationFinding,
+    finding: ModeloValidationFinding,
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
     _first_translation(finding.message) or finding.code
@@ -376,7 +376,7 @@ def _to_finding_item(
     )
 
 
-def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
+def _to_placeholder_item(*, draft: ModeloDraft, path_str: str) -> FindingReviewItem:
     summary = tr("review.filing.draft_placeholder_summary")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:{draft.status.value}",
@@ -391,7 +391,7 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
     )
 
 
-def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
+def _to_stale_approval_item(*, draft: ModeloDraft, path_str: str) -> FindingReviewItem:
     """Emit a high-severity item for drafts whose stored approval is stale."""
     summary = tr("review.filing.stale_approval_summary")
     return FindingReviewItem(

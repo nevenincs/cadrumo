@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.filing import FilingBuilderError
+from ....domain.filing import ModeloBuilderError
 from ._reconcile import (
     _canonical_draft_period_token,
     _canonical_tax_id,
@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 # ---------------------------------------------------------------------------
-# _canonical_draft_period_token — map FilingDraft period → registry token
+# _canonical_draft_period_token — map ModeloDraft period → registry token
 # ---------------------------------------------------------------------------
 
 
@@ -61,19 +61,19 @@ def test_canonical_draft_period_token_passes_canonical_month_through() -> None:
 
 
 def test_canonical_draft_period_token_raises_on_unparseable_input() -> None:
-    with pytest.raises(FilingBuilderError, match="cannot map draft period"):
+    with pytest.raises(ModeloBuilderError, match="cannot map draft period"):
         _canonical_draft_period_token("not-a-period")
 
 
 def test_canonical_draft_period_token_raises_on_invalid_quarter_number() -> None:
     """Quarter regex only accepts 1-4; `2025Q5` falls through every branch."""
-    with pytest.raises(FilingBuilderError, match="cannot map draft period"):
+    with pytest.raises(ModeloBuilderError, match="cannot map draft period"):
         _canonical_draft_period_token("2025Q5")
 
 
 def test_canonical_draft_period_token_raises_on_invalid_month_number() -> None:
     """Month regex only accepts 01-12; `2025-13` falls through every branch."""
-    with pytest.raises(FilingBuilderError, match="cannot map draft period"):
+    with pytest.raises(ModeloBuilderError, match="cannot map draft period"):
         _canonical_draft_period_token("2025-13")
 
 

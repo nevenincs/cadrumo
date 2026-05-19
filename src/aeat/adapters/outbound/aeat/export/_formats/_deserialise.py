@@ -41,7 +41,7 @@ class ParsedRecord(BaseModel):
     Each field value is keyed by ``field_id``; currency fields also appear
     in :attr:`casilla_values` keyed by ``casilla_id`` for easy
     cross-reference against
-    :class:`aeat.application.filing.FilingDraft`.
+    :class:`aeat.application.filing.ModeloDraft`.
 
     Attributes:
         field_values: Every ``field_id`` mapped to its parsed value

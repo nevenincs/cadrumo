@@ -33,8 +33,8 @@ from ...domain.deadlines import (
 from ...domain.submission import SubmissionEngine, SubmissionPreflightError
 from ..filing import (
     CasillaSchemaProvider,
-    FilingDraft,
-    FilingProfile,
+    ModeloDraft,
+    ModeloProfile,
     build_draft,
 )
 from ._engine import WorkflowEngine
@@ -93,16 +93,16 @@ class FilingDraftBuilderAdapter:
         """Delegate to :func:`build_draft`.
 
         ``cast`` is used for ``profile`` because :class:`AutonomoProfile`
-        and :class:`aeat.application.filing.FilingProfile` are structurally
+        and :class:`aeat.application.filing.ModeloProfile` are structurally
         compatible (both expose ``tax_id``) but ``AutonomoProfile`` does not
         declare ``display_name`` and therefore does not satisfy the Protocol
         statically. At this adapter boundary the structural bridging is
         intentional.
         """
-        draft: FilingDraft = build_draft(
+        draft: ModeloDraft = build_draft(
             modelo=modelo,
             period=period,
-            profile=cast(FilingProfile, profile),
+            profile=cast(ModeloProfile, profile),
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,

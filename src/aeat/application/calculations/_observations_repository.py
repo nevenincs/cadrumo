@@ -23,8 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Final
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -33,18 +32,10 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.errors import (
-    ClassificationError,
-    EnvelopeVersionError,
-)
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.calculations.registry._bindings import RegistryModeloObservation
 from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
-
-_OBSERVATION_NAMESPACE: Final[str] = "aeat.calculations.observations"
-_OBSERVATION_ENVELOPE_VERSION: Final[int] = 1
-_IVA_WALLET_DECISION_NAMESPACE: Final[str] = "aeat.calculations.iva_wallet.reconciliation_decisions"
-_IVA_WALLET_DECISION_ENVELOPE_VERSION: Final[int] = 1
 
 
 class _ObservationEnvelopePayload(BaseModel):
@@ -102,20 +93,19 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: 
     return f"{taxpayer_nif}:{target_year}:{target_period}"
 
 
-class CalculationObservationRepository:
+class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelopePayload]):
     """Repository over encrypted SQL-backed past-filing observations."""
 
-    def __init__(self) -> None:
-        self._objects = SecureObjectRepository()
+    namespace: ClassVar[str] = "aeat.calculations.observations"
+    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
+    schema_version: ClassVar[int] = 1
+    payload_type: ClassVar[type[_ObservationEnvelopePayload]] = _ObservationEnvelopePayload
 
-    @property
-    def store_dir(self) -> Path:
-        return Path("db://secure_objects") / _OBSERVATION_NAMESPACE
+    def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
+        observation = payload.observation
+        return observation_key(observation.modelo, observation.filing_year, observation.period)
 
-    def envelope_path_for(self, modelo: str, filing_year: int, period: str) -> Path:
-        return self.store_dir / observation_key(modelo, filing_year, period)
-
-    def load(
+    def load(  # type: ignore[override]
         self,
         modelo: str,
         filing_year: int,
@@ -123,29 +113,9 @@ class CalculationObservationRepository:
     ) -> _ObservationEnvelopePayload | None:
         """Return the persisted observation for one (modelo, year, period) or None."""
 
-        key = observation_key(modelo, filing_year, period)
-        record = self._objects.load(
-            _OBSERVATION_NAMESPACE,
-            key,
-            expected_class=SensitivityClass.AUDIT,
-            max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
-        )
-        if record is None:
-            return None
-        envelope = Envelope[_ObservationEnvelopePayload].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not SensitivityClass.AUDIT:
-            raise ClassificationError(
-                f"observation {key} has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.AUDIT}",
-            )
-        if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
-            raise EnvelopeVersionError(
-                f"observation {key} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
-            )
-        return envelope.payload
+        return super().load(observation_key(modelo, filing_year, period))
 
-    def save(
+    def save(  # type: ignore[override]
         self,
         observation: RegistryModeloObservation,
         *,
@@ -160,20 +130,15 @@ class CalculationObservationRepository:
             captured_at=when,
             source_kind=source_kind,
         )
-        envelope = Envelope[_ObservationEnvelopePayload](
-            schema_version=_OBSERVATION_ENVELOPE_VERSION,
-            written_at=when,
-            classification=SensitivityClass.AUDIT,
-            payload=payload,
-        )
-        self._objects.save(
-            namespace=_OBSERVATION_NAMESPACE,
-            object_key=observation_key(observation.modelo, observation.filing_year, observation.period),
-            classification=SensitivityClass.AUDIT,
-            schema_version=_OBSERVATION_ENVELOPE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+        super().save(payload)
+
+    def delete(  # type: ignore[override]
+        self,
+        modelo: str,
+        filing_year: int,
+        period: str,
+    ) -> bool:
+        return super().delete(observation_key(modelo, filing_year, period))
 
     def iter_modelo(self, modelo: str) -> Iterator[_ObservationEnvelopePayload]:
         """Yield every persisted observation for `modelo` in unspecified order.
@@ -185,7 +150,7 @@ class CalculationObservationRepository:
         safe_repository_id(modelo, context="modelo")
         prefix = f"{modelo}:".encode()
         for raw_row in self._objects.iter_all_records_raw():
-            if raw_row.namespace != _OBSERVATION_NAMESPACE:
+            if raw_row.namespace != self.namespace:
                 continue
             object_key_bytes = (
                 raw_row.object_key if isinstance(raw_row.object_key, bytes) else str(raw_row.object_key).encode("utf-8")
@@ -196,41 +161,37 @@ class CalculationObservationRepository:
                 raw_row.payload if isinstance(raw_row.payload, bytes) else str(raw_row.payload).encode("utf-8")
             )
             envelope = Envelope[_ObservationEnvelopePayload].model_validate_json(payload_bytes.decode("utf-8"))
-            if envelope.classification is not SensitivityClass.AUDIT:
+            if envelope.classification is not self.sensitivity:
                 continue
-            if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+            if envelope.schema_version > self.schema_version:
                 continue
             yield envelope.payload
 
-    def delete(self, modelo: str, filing_year: int, period: str) -> bool:
-        return self._objects.delete(
-            _OBSERVATION_NAMESPACE,
-            observation_key(modelo, filing_year, period),
-        )
 
-    def save_iva_wallet_decision(
-        self,
-        decision: IvaCompensationReconciliationDecision,
-    ) -> None:
-        """Persist the latest IVA wallet reconciliation decision for a target period."""
+class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelopePayload]):
+    """Repository over encrypted SQL-backed IVA wallet reconciliation decisions.
 
-        payload = _IvaWalletDecisionEnvelopePayload(decision=decision)
-        envelope = Envelope[_IvaWalletDecisionEnvelopePayload](
-            schema_version=_IVA_WALLET_DECISION_ENVELOPE_VERSION,
-            written_at=decision.decided_at,
-            classification=SensitivityClass.AUDIT,
-            payload=payload,
-        )
-        self._objects.save(
-            namespace=_IVA_WALLET_DECISION_NAMESPACE,
-            object_key=iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period),
-            classification=SensitivityClass.AUDIT,
-            schema_version=_IVA_WALLET_DECISION_ENVELOPE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+    Holds one latest decision per `(taxpayer_nif, target_year, target_period)`
+    triple. Decisions are AUDIT-class — they record the resolved gap between
+    a taxpayer's local IVA compensation recurrence and the live AEAT wallet,
+    which downstream calculation chains consult.
+    """
 
-    def load_iva_wallet_decision(
+    namespace: ClassVar[str] = "aeat.calculations.iva_wallet.reconciliation_decisions"
+    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
+    schema_version: ClassVar[int] = 1
+    payload_type: ClassVar[type[_IvaWalletDecisionEnvelopePayload]] = _IvaWalletDecisionEnvelopePayload
+
+    def extract_identifier(self, payload: _IvaWalletDecisionEnvelopePayload) -> str:
+        decision = payload.decision
+        return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period)
+
+    def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:
+        """Persist `decision` keyed by its (nif, target_year, target_period) triple."""
+
+        super().save(_IvaWalletDecisionEnvelopePayload(decision=decision))
+
+    def load_decision(
         self,
         taxpayer_nif: str,
         target_year: int,
@@ -238,31 +199,13 @@ class CalculationObservationRepository:
     ) -> IvaCompensationReconciliationDecision | None:
         """Return the latest persisted IVA wallet reconciliation decision."""
 
-        key = iva_wallet_decision_key(taxpayer_nif, target_year, target_period)
-        record = self._objects.load(
-            _IVA_WALLET_DECISION_NAMESPACE,
-            key,
-            expected_class=SensitivityClass.AUDIT,
-            max_supported_version=_IVA_WALLET_DECISION_ENVELOPE_VERSION,
-        )
-        if record is None:
-            return None
-        envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not SensitivityClass.AUDIT:
-            raise ClassificationError(
-                f"IVA wallet decision {key} has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.AUDIT}",
-            )
-        if envelope.schema_version > _IVA_WALLET_DECISION_ENVELOPE_VERSION:
-            raise EnvelopeVersionError(
-                f"IVA wallet decision {key} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_IVA_WALLET_DECISION_ENVELOPE_VERSION}",
-            )
-        return envelope.payload.decision
+        payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
+        return payload.decision if payload is not None else None
 
 
 __all__ = [
     "CalculationObservationRepository",
+    "IvaWalletDecisionRepository",
     "iva_wallet_decision_key",
     "observation_key",
 ]

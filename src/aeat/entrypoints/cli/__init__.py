@@ -38,11 +38,10 @@ from ...application.operator_surface import (
 )
 from ...application.overview import build_overview_status_report
 from ...application.workflow import workflow_state_repository
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from . import _config
 from ._common import _FORMAT_TEXT, _emit
 from ._errors import decorate_typer_app, write_stderr
-from ...core.i18n import tr
 from ._log_levels import apply_to_root_logger, resolve_log_level
 from ._root_landing import render_cli_root_landing_lines
 
@@ -139,6 +138,7 @@ def _root(
         document = build_help_document("root")
         _emit(ctx, document, render_help_text(document).splitlines())
         raise typer.Exit()
+    _activate_active_bucket_session(ctx)
     if ctx.invoked_subcommand is None:
         if _app_import_error is not None:
             _emit_startup_import_error(_app_import_error)
@@ -153,6 +153,17 @@ def _root(
         overview_report = build_overview_status_report(state=workflow_state)
         _emit(ctx, overview_report, render_cli_root_landing_lines(landing))
         raise typer.Exit()
+
+
+def _activate_active_bucket_session(ctx: typer.Context) -> None:
+    """Activate the pointed-at bucket for this CLI process when one exists."""
+
+    from ...adapters.persistence.storage import get_master_key_provider
+    from ...application.workflow._models import resolve_active_bucket_id
+
+    if resolve_active_bucket_id() is None:
+        return
+    ctx.with_resource(get_master_key_provider())
 
 
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:

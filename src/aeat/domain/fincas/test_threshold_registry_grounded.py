@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 
 from aeat.domain.calculations.registry import read_parameter
-from aeat.domain.rental._tier_resolver import (
+from aeat.domain.fincas._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
     JOVEN_TENANT_AGE_MAX,
     JOVEN_TENANT_AGE_MIN,

@@ -23,7 +23,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ._enums import ExpenseCategory
-from ._models import RentalExpense
+from ._models import FincaGasto
 
 CARRY_FORWARD_MAX_YEARS: int = 4
 """LIRPF art. 23.1.a) párrafo segundo: ``en los cuatro años siguientes``."""
@@ -86,7 +86,7 @@ class GastosForYear(BaseModel):
 
 
 def compute_gastos_for_year(
-    expenses: Iterable[RentalExpense],
+    expenses: Iterable[FincaGasto],
     *,
     period_year: int,
     ingresos_for_period: Decimal,

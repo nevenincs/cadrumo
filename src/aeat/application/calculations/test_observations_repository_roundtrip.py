@@ -30,7 +30,7 @@ from ...domain.calculations.registry._bindings import (
     RegistryModeloObservation,
 )
 from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
-from ._observations_repository import CalculationObservationRepository
+from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -140,7 +140,9 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     from ...adapters.persistence.storage.sql._orm import SecureObjectRow
     from ...adapters.persistence.storage.sql.session import session_scope
-    from ._observations_repository import _OBSERVATION_NAMESPACE, observation_key
+    from ._observations_repository import observation_key
+
+    _OBSERVATION_NAMESPACE = CalculationObservationRepository.namespace
 
     provider = EphemeralMasterKeyProvider()
     with provider:
@@ -214,7 +216,7 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
-            repo = CalculationObservationRepository()
+            repo = IvaWalletDecisionRepository()
             decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
             decision = IvaCompensationReconciliationDecision(
                 taxpayer_nif="12345678Z",
@@ -233,8 +235,8 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
                 decided_at=decided_at,
             )
 
-            repo.save_iva_wallet_decision(decision)
-            loaded = repo.load_iva_wallet_decision("12345678Z", 2026, "2T")
+            repo.save_decision(decision)
+            loaded = repo.load_decision("12345678Z", 2026, "2T")
 
             assert loaded == decision
             assert loaded is not None

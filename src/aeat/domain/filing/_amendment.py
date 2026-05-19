@@ -1,14 +1,23 @@
 """Strict amendment domain records for :mod:`aeat.domain.filing`.
 
-Houses the immutable records that describe a filing amendment — the
-:class:`FilingAmendment` aggregate, its :class:`CasillaChange` delta
-entries, and the :class:`AmendmentKind` enum. The orchestration use
-case :func:`aeat.application.filing.build_complementaria` lives at
+Houses the immutable records that describe an AEAT amendment — the
+:class:`BaseAmendment` shared shape, the two legally distinct concrete
+variants :class:`ModeloComplementaria` (LGT Art. 122.2) and
+:class:`ModeloSustitutiva` (LGT Art. 122.1), the
+:class:`CasillaChange` delta entries, and the :class:`AmendmentKind`
+enum. The orchestration use case
+:func:`aeat.application.filing.build_complementaria` lives at
 :mod:`aeat.application.filing._complementaria`; this module contains
 only the typed shapes and the deterministic
 :func:`make_amendment_id` helper so the repository (also under
 :mod:`aeat.domain.filing`) can persist amendments without depending
 on the application layer.
+
+Per ADR Amendment A5: ``ModeloComplementaria`` and
+``ModeloSustitutiva`` are distinct concrete pydantic classes; callers
+operate on the discriminated union ``ModeloComplementaria |
+ModeloSustitutiva``. There is no umbrella alias — pick the variant
+that matches the LGT Art. 122 article you're filing under.
 """
 
 from __future__ import annotations
@@ -19,10 +28,11 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._schema import FilingDraft
+from ._schema import ModeloDraft
 
 type ModeloCode = str
 type CasillaInputs = Mapping[str, object]
@@ -51,8 +61,13 @@ class CasillaChange(BaseModel):
 type CasillaDelta = tuple[CasillaChange, ...]
 
 
-class FilingAmendment(BaseModel):
-    """Immutable amendment record derived from a previously submitted filing."""
+class BaseAmendment(BaseModel):
+    """Shared shape across the two LGT Art. 122 amendment variants.
+
+    Concrete subclasses fix the ``amendment_kind`` discriminator to a
+    single :class:`AmendmentKind` literal so callers select the variant
+    by class, not by enum value.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -61,10 +76,27 @@ class FilingAmendment(BaseModel):
     original_csv: str = Field(min_length=1)
     original_model: ModeloCode = Field(min_length=1)
     original_period: str = Field(min_length=1)
-    amendment_kind: AmendmentKind
     delta: CasillaDelta = Field(min_length=1)
-    amended_draft: FilingDraft
+    amended_draft: ModeloDraft
     created_at: datetime
+
+
+class FilingAmendment(BaseAmendment):
+    """Compatibility amendment record for persisted pre-variant envelopes."""
+
+    amendment_kind: AmendmentKind
+
+
+class ModeloComplementaria(BaseAmendment):
+    """LGT Art. 122.2 complementaria: corrects an already-presented filing."""
+
+    amendment_kind: Literal[AmendmentKind.COMPLEMENTARIA] = AmendmentKind.COMPLEMENTARIA
+
+
+class ModeloSustitutiva(BaseAmendment):
+    """LGT Art. 122.1 sustitutiva: replaces an already-presented filing in full."""
+
+    amendment_kind: Literal[AmendmentKind.SUSTITUTIVA] = AmendmentKind.SUSTITUTIVA
 
 
 def make_amendment_id(
@@ -85,10 +117,13 @@ def make_amendment_id(
 
 __all__ = [
     "AmendmentKind",
+    "BaseAmendment",
     "CasillaChange",
     "CasillaDelta",
     "CasillaInputs",
     "FilingAmendment",
     "ModeloCode",
+    "ModeloComplementaria",
+    "ModeloSustitutiva",
     "make_amendment_id",
 ]

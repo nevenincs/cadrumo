@@ -30,7 +30,7 @@ from ...core.config import Settings
 from ...core.errors import SiteHealthError
 from ...core.logging import get_logger
 from ...domain.deadlines import AutonomoProfile, ModeloDeadline, Schedule, next_deadline
-from ...domain.filing import FilingBuilderError
+from ...domain.filing import ModeloBuilderError
 from ...domain.submission import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ._errors import WorkflowAbortSignalError, WorkflowComponentError, WorkflowError
@@ -800,7 +800,7 @@ class WorkflowEngine:
             mismatches["profile_tax_id"] = f"{draft.profile_tax_id} != {profile.tax_id}"
         try:
             expected_schema_version = self._active_registry_schema_version(obligation)
-        except (FilingBuilderError, ValueError) as exc:
+        except (ModeloBuilderError, ValueError) as exc:
             mismatches["schema_version"] = f"{draft.schema_version}; active registry schema unavailable: {exc}"
         else:
             if draft.schema_version != expected_schema_version:

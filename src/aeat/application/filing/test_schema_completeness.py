@@ -6,7 +6,7 @@ import pytest
 
 from ...core.resources import resources
 from ...domain.calculations.registry import expression_casilla_refs
-from ...domain.filing import FilingBuilderError
+from ...domain.filing import ModeloBuilderError
 from .runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -48,8 +48,8 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
 def test_runtime_schema_provider_rejects_unknown_modelo() -> None:
     provider = build_runtime_schema_provider()
 
-    with pytest.raises(FilingBuilderError, match="not present in the calculation registry"):
+    with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
         provider.get_collection("999")
 
-    with pytest.raises(FilingBuilderError, match="not present in the calculation registry"):
+    with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
         provider.get_subview("999")

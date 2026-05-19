@@ -4,7 +4,7 @@ The CLI contract requires modelo calculation to
 print a compact summary table, blocker counts, warnings, and the next
 action — and shows repair hints instead of succeeding silently when the
 inputs are unresolved. The CLI cannot compute that summary by inspecting
-:class:`aeat.domain.filing.FilingDraft` ad-hoc: the next-action heuristic
+:class:`aeat.domain.filing.ModeloDraft` ad-hoc: the next-action heuristic
 is shared logic the application layer owns, and the typed record gives
 the renderers and tests a stable schema to target.
 
@@ -25,7 +25,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...domain.filing import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
 )
 from .errors import FilingCalculateError
@@ -72,7 +72,7 @@ class DeclaracionCalculateSummary(BaseModel):
     """Typed summary of a single modelo calculation run.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.FilingDraft` identity
+        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
             the summary was produced from.
         modelo: AEAT modelo identifier.
         period: Canonical period identifier (e.g. ``"2026Q1"``).
@@ -157,7 +157,7 @@ def _next_action_for(
 
 
 def summarise_calculation(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     repair_hints: tuple[str, ...] = (),
     narrative: str | None = None,

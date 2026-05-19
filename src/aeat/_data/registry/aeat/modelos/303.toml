@@ -109,10 +109,13 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
+# flow_direction "inversion_sujeto_pasivo" matches Ley 37/1992 Art. 84.Uno.2.º
+# ("inversión del sujeto pasivo"); the binding-id kebab segment is a stable
+# cross-revision reference and is not renamed alongside.
 [[revisions."2009-y-siguientes".bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
@@ -178,7 +181,7 @@ source_refs = ["aeat-dr-303-2025"]
 id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
 label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA art 84.Uno.2)"
-section = ["iva", "regimen_general", "autorepercutido"]
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 data_type = "money"
 required = false
 input_kind = "bound"
@@ -377,10 +380,12 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 # -----------------------------------------------------------------------------
-# Prior-quarter compensation chain (LIVA art. 99, refund context in arts. 115
-# and 116). The current AEAT record design exposes the prior-period balance as
-# [110], the amount applied in the current period as [78], the prior-period
-# remainder as [87] = [110] - [78], and the scoped final result as [69].
+# Prior-period compensation chain (LIVA art. 99, refund context in arts. 115
+# and 116). AEAT instructions describe [110] as quotas pending from previous
+# periods, not merely previous periods inside the same exercise. The current
+# record design exposes the prior-period balance as [110], the amount applied
+# in the current period as [78], the prior-period remainder as [87] = [110] -
+# [78], and the scoped final result as [69].
 # -----------------------------------------------------------------------------
 
 [[revisions."2009-y-siguientes".bindings]]
@@ -559,7 +564,7 @@ source_revision_selector = { filing_year_delta = 0 }
 source_output = "iva.compensacion-disponible-fin-periodo"
 target_binding = "modelo-303-compensacion-pendiente-anteriores"
 period_alignment = { mode = "previous_quarter" }
-target_periods = ["2T", "3T", "4T"]
+target_periods = ["1T", "2T", "3T", "4T"]
 source_period_offset_from_target = -1
 aggregation = { op = "copy" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]

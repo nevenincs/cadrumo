@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from ...domain.filing import FilingDraftError
+from ...domain.filing import ModeloDraftError
 
 
-class FilingApplicationError(FilingDraftError):
+class FilingApplicationError(ModeloDraftError):
     """Base class for every error raised in the filing application layer."""
 
 
