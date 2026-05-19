@@ -59,6 +59,20 @@ def autonomo_profile_from_mapping(
         padded["identity.tax_id"] = canonical["tax.id"]
     if "activity" in canonical and "activities.description" not in canonical:
         padded["activities.description"] = canonical["activity"]
+    # Bare boolean flag names map to their canonical wizard keys so the
+    # descriptor's project_answers picks them up.
+    for bare, canonical_key in (
+        ("has_employees", "withholding.has_employees"),
+        ("pays_professionals_with_retencion", "withholding.pays_professionals_with_retencion"),
+        ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
+        ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
+        ("does_intracomunitario", "iva.does_intracomunitario"),
+        ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
+        ("enrollment.large_company", "census.large_company"),
+        ("enrollment.public_administration_budget_gt_6000000", "census.public_administration_budget_gt_6000000"),
+    ):
+        if bare in canonical and canonical_key not in canonical:
+            padded[canonical_key] = canonical[bare]
 
     typed = project_answers(SETUP_FLOW, padded)
     if not isinstance(typed, SetupAnswers):
