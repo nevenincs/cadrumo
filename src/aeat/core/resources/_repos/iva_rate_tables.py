@@ -1,20 +1,20 @@
-"""VatRateTableRepository: singleton VAT rate table."""
+"""IvaRateTableRepository: singleton IVA rate table."""
 
 from __future__ import annotations
 
 from .._repository import Repository
 
 
-class VatRateTableRepository(Repository[object, type(None)]):
-    """Singleton-keyed repository for the bundled VAT rate table.
+class IvaRateTableRepository(Repository[object, type(None)]):
+    """Singleton-keyed repository for the bundled IVA rate table.
 
-    Wraps :func:`aeat.domain.vat._rates.load_vat_rate_table`.
+    Wraps :func:`aeat.domain.iva._rates.load_iva_rate_table`.
     """
 
     def _load(self, key: None) -> object:
-        from ....domain.vat._rates import load_vat_rate_table
+        from ....domain.iva._rates import load_iva_rate_table
 
-        return load_vat_rate_table()
+        return load_iva_rate_table()
 
     @property
     def singleton(self) -> object:

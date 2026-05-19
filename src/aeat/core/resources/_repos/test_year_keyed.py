@@ -8,7 +8,7 @@ from aeat.core.resources._errors import ResourceNotFoundError
 from aeat.core.resources._repos import (
     CategoryProfileRepository,
     HolidayCalendarRepository,
-    VatCatalogueRepository,
+    IvaCatalogueRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
@@ -44,8 +44,8 @@ def test_category_profile_loads_real_year() -> None:
     assert profiles_2025 is profiles_2025_again
 
 
-def test_vat_catalogue_loads_real_year() -> None:
-    repo = VatCatalogueRepository()
+def test_iva_catalogue_loads_real_year() -> None:
+    repo = IvaCatalogueRepository()
 
     catalogue = repo.get(2025)
     catalogue_again = repo.get(2025)
@@ -54,8 +54,8 @@ def test_vat_catalogue_loads_real_year() -> None:
     assert catalogue is catalogue_again
 
 
-def test_vat_catalogue_unknown_year_raises_resource_not_found() -> None:
-    repo = VatCatalogueRepository()
+def test_iva_catalogue_unknown_year_raises_resource_not_found() -> None:
+    repo = IvaCatalogueRepository()
 
     with pytest.raises(ResourceNotFoundError):
         repo.get(1801)

@@ -511,10 +511,10 @@ class Settings(BaseSettings):
         description="Root directory for the Spanish tax normatives JSON catalogue",
     )
 
-    # ── VAT catalogue (aeat.domain.vat) ──────────────────────────────────
-    aeat_vat_catalogue_root: Path = Field(
-        default_factory=lambda: bundled_path("registry", "aeat", "vat"),
-        description="Root directory for the hand-reviewed VAT taxonomy catalogue",
+    # ── IVA catalogue (aeat.domain.iva) ──────────────────────────────────
+    aeat_iva_catalogue_root: Path = Field(
+        default_factory=lambda: bundled_path("registry", "aeat", "iva", "catalogues"),
+        description="Root directory for the hand-reviewed IVA taxonomy catalogue",
     )
 
     # ── Browser Automation ──────────────────────────────────────────────────
@@ -661,13 +661,15 @@ class Settings(BaseSettings):
         ),
     )
     aeat_clave_movil_timeout_ms: int = Field(
-        default=300_000,
+        default=120_000,
         ge=30_000,
-        le=600_000,
+        le=120_000,
         description=(
             "Maximum time (milliseconds) the Cl@ve Móvil provider waits for "
             "the operator to approve the push notification on their phone "
-            "before aborting. AEAT's own window is ~5 minutes; 300000 matches that."
+            "before aborting. Production runs must fail fast enough for an "
+            "operator to retry deliberately rather than leaving a pending "
+            "request dangling."
         ),
     )
     aeat_clave_sede_access_url_template: str = Field(
@@ -738,7 +740,7 @@ class Settings(BaseSettings):
     # ── Submission engine ───────────────────────────────────────────────────
     aeat_submissions_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "submissions",
-        description="Directory where SubmittedFiling JSON audit records are persisted",
+        description="Directory where ModeloPresentado JSON audit records are persisted",
     )
     aeat_submission_browser_trace_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "browser-traces",
@@ -775,7 +777,7 @@ class Settings(BaseSettings):
     aeat_draft_fail_on_warning: bool = Field(
         default=False,
         description=(
-            "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
+            "If true, build_draft raises ModeloValidationError when any WARNING- or ERROR-severity finding is produced"
         ),
     )
 
@@ -1012,7 +1014,7 @@ class Settings(BaseSettings):
         "aeat_audit_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
-        "aeat_vat_catalogue_root",
+        "aeat_iva_catalogue_root",
         "aeat_certificate_path",
         "aeat_llm_cache_dir",
         "aeat_llm_usage_dir",
