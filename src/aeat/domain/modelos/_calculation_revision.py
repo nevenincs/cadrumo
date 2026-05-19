@@ -19,7 +19,7 @@ Lifecycle states:
   casillas resolved, zero blocking findings, source trace
   persisted. The revision is immutable from this point on; any
   recalculation produces a fresh draft instead.
-* ``FILED`` — paired with a :class:`FilingRecord`. The revision is
+* ``FILED`` — paired with a :class:`ModeloRecord`. The revision is
   the current filed answer for its (bucket, modelo, year, period)
   tuple. Exactly one filed revision per tuple at any time.
 * ``FILED_SUPERSEDED`` — a later verified revision was filed against

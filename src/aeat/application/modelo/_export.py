@@ -103,7 +103,7 @@ class ModeloExportResult(BaseModel):
     """Receipt produced by ``export_modelo_revision``.
 
     Composes the lower-level
-    :class:`aeat.application.filing.DeclarationExportResult` (already a
+    :class:`aeat.application.filing.DeclaracionExportResult` (already a
     byte-level receipt of the written file) with the work-unit-level
     identity the operator addresses.
 

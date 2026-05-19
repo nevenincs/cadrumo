@@ -16,7 +16,7 @@ import pytest
 from ....domain.submission._models import (
     SubmissionAttempt,
     SubmissionStatus,
-    SubmittedFiling,
+    SubmittedModelo,
     make_submission_id,
 )
 from ....domain.submission._repository import (
@@ -40,7 +40,7 @@ def _make_filing(
     draft_id: str = "draft-abc123",
     attempt_ordinal: int = 1,
     status: SubmissionStatus = SubmissionStatus.SUBMITTED,
-) -> SubmittedFiling:
+) -> SubmittedModelo:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     submission_id = make_submission_id(draft_id, attempt_ordinal)
     attempt = SubmissionAttempt(
@@ -49,7 +49,7 @@ def _make_filing(
         ended_at=submitted_at,
         status=status,
     )
-    return SubmittedFiling(
+    return SubmittedModelo(
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="130",
@@ -170,7 +170,7 @@ class TestClassificationGate:
         from . import Envelope, SensitivityClass
 
         filing = _make_filing()
-        bad = Envelope[SubmittedFiling](
+        bad = Envelope[SubmittedModelo](
             schema_version=1,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.OPERATIONAL,
