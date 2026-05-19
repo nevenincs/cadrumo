@@ -11,7 +11,7 @@ from __future__ import annotations
 from enum import StrEnum
 
 
-class RentaDeclarationType(StrEnum):
+class RentaDeclaracionType(StrEnum):
     """Modelo 100 ``TIPOTRIBUTACION`` values."""
 
     INDIVIDUAL = "1"
@@ -44,7 +44,7 @@ class RentaDisabilityGrade(StrEnum):
 
 
 __all__ = [
-    "RentaDeclarationType",
+    "RentaDeclaracionType",
     "RentaDisabilityGrade",
     "RentaMaritalStatus",
     "RentaSexCode",

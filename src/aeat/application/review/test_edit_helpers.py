@@ -24,7 +24,7 @@ Seven private helpers gate the per-scope ``--set`` edit specs:
 
 Previously exercised only indirectly through the per-spec
 :class:`LedgerEditSpec` / :class:`InvoiceEditSpec` /
-:class:`DeclarationEditSpec` integration tests. A regression in
+:class:`DeclaracionEditSpec` integration tests. A regression in
 the IVA-rate substrate gating (e.g. silently accepting a free-form
 ``7`` rate) would silently corrupt every operator's invoice edit
 audit trail without surfacing a typed error.

@@ -347,16 +347,12 @@ class RegistryValidator:
         # Hard-flip: required-role label patterns must declare the
         # canonical role on every matching casilla.
         failures.extend(_validate_required_role_declarations(modelo_tuple))
-        # Cross-revision drift detection: casillas sharing an id
-        # across revisions of a modelo must declare identical
-        # legally-bound fields (data_type / semantic_role /
-        # constraints). Per the AEAT registry design contract every
-        # revision's casilla id refers to the same legal concept.
-        # Currently emits warnings rather than failures because the
-        # corpus carries ~291 historical drift cases that need
-        # staged remediation; the warning surface gives visibility
-        # without blocking parallel-agent workflow. Flip to
-        # failures.extend(...) once the corpus is clean.
+        # Cross-revision drift detection: casillas sharing an id across
+        # revisions of a modelo should declare identical stable fields.
+        # This remains a warning at whole-registry validation because the
+        # committed corpus still carries known historical drift; callers
+        # that need a hard gate use
+        # validate_cross_revision_casilla_consistency.
         _emit_cross_revision_drift_warnings(modelo_tuple)
         _emit_semantic_role_typo_twin_warnings(modelo_tuple)
 
@@ -2436,7 +2432,7 @@ def _check_binding_selector_shapes(checker: _IdReferenceChecker, revision: Model
 class _RoleObservation:
     """One casilla's contribution to a semantic-role consistency check."""
 
-    __slots__ = ("modelo_id", "revision_id", "casilla_id", "data_type", "constraints", "label")
+    __slots__ = ("casilla_id", "constraints", "data_type", "label", "modelo_id", "revision_id")
 
     def __init__(
         self,
@@ -2637,71 +2633,29 @@ def collect_casillas_by_semantic_role(
     return {role: tuple(occs) for role, occs in grouped.items()}
 
 
-# Plan C cross-revision drift validator.
-#
-# AEAT modelo design contract: every casilla id has identical legal
-# responsibilities across every revision of a modelo. A casilla
-# named `0700` in M100/2020 and `0700` in M100/2025 must declare the
-# same label, section, data_type, and semantic_role. Diverging
-# declarations across revisions are either (a) a typo / authoring
-# mistake or (b) AEAT having repurposed the casilla number — both
-# require explicit handling, not silent acceptance.
-#
-# Fields checked for cross-revision equality:
-#   - label        (BOE-derived phrasing must match)
-#   - section      (location in the form must match)
-#   - data_type    (legal value type cannot drift)
-#   - semantic_role (canonical role must match)
-#   - constraints  (sign / range / pattern shape must match)
-#
-# Fields that are legitimately revision-specific and NOT compared:
-#   - formula      (computation may change as law evolves; the
-#                   casilla still holds the same legal concept)
-#   - binding      (data-source wiring may evolve)
-#   - export_refs  (BOE-page references shift across form versions)
-#   - legal_refs / source_refs (revision-specific authority chain)
-#   - required, input_kind (modeller authoring choices that don't
-#                   change the field's legal identity)
+_CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
+    "label",
+    "section",
+    "data_type",
+    "semantic_role",
+    "legal_refs",
+)
 
 
 def _cross_revision_signature(casilla: CasillaDefinition) -> tuple[object, ...]:
-    """Return the cross-revision legal-contract fingerprint for a casilla.
+    """Return the stable cross-revision fingerprint for a casilla."""
 
-    Strict legal-shape fields that MUST NOT drift across revisions:
+    return tuple(getattr(casilla, field) for field in _CROSS_REVISION_CASILLA_FIELDS)
 
-    - ``data_type``: the legal value type. Changing this would change
-      what kind of value the casilla holds, which is a regulatory
-      decision, not an authoring choice.
-    - ``semantic_role``: the cross-modelo identity binding. Drifting
-      the role across revisions means the same id refers to two
-      different roles, which the role validator already forbids
-      across modelos and must enforce across revisions too.
-    - ``constraints``: sign / range / pattern shape. The legal
-      contract on the value (non_negative, etc.) cannot drift.
 
-    Fields deliberately NOT in the signature, even though revisions
-    of the same casilla often share them:
+def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefinition]) -> None:
+    """Raise when a repeated casilla id drifts across revisions."""
 
-    - ``label``: BOE phrasing evolves between revisions (typo
-      corrections, clarifications, regional pluralisation, etc.).
-      Forcing identity here would block every legitimate AEAT-driven
-      relabelling.
-    - ``section``: forms reorganise across revisions; the underlying
-      legal concept is preserved by the casilla id and data_type
-      contract, not the section path.
-    - ``formula`` / ``binding``: computation and data-source wiring
-      can change with law and infrastructure.
-    - ``export_refs`` / ``legal_refs`` / ``source_refs``: revision-
-      specific authority chain.
-    - ``required`` / ``input_kind``: modeller authoring choices that
-      don't change the field's legal identity.
-    """
-
-    return (
-        casilla.data_type,
-        casilla.semantic_role,
-        _constraints_signature(casilla.constraints),
-    )
+    failures = _validate_cross_revision_casilla_consistency(modelos)
+    if failures:
+        raise RegistryValidationError(
+            "cross-revision casilla drift detected:\n" + "\n".join(f" - {failure}" for failure in failures)
+        )
 
 
 def _emit_cross_revision_drift_warnings(
@@ -2730,7 +2684,7 @@ def _validate_cross_revision_casilla_consistency(
     handle for a single legal concept within a modelo. Two
     declarations of casilla `0700` in M100 revisions 2024 and 2025
     must declare the same label, section, data_type, role, and
-    constraints. Divergence is an authoring or repurposing event
+    legal references. Divergence is an authoring or repurposing event
     that needs explicit handling (either deprecate-and-rename or
     reconcile-to-canonical-form), never silent acceptance.
     """
@@ -2751,15 +2705,19 @@ def _validate_cross_revision_casilla_consistency(
                 sig = _cross_revision_signature(casilla)
                 if sig == canonical_sig:
                     continue
-                # Detail the first diverging field for actionable feedback.
-                names = ("label", "section", "data_type", "semantic_role", "constraints")
-                diverging = next(
-                    (n for n, c, o in zip(names, canonical_sig, sig, strict=True) if c != o),
-                    "unknown",
+                divergences = tuple(
+                    (rev_id, field, (canonical_value, observed_value))
+                    for field, canonical_value, observed_value in zip(
+                        _CROSS_REVISION_CASILLA_FIELDS,
+                        canonical_sig,
+                        sig,
+                        strict=True,
+                    )
+                    if canonical_value != observed_value
                 )
                 failures.append(
                     f"cross-revision drift: modelo {modelo.id} casilla "
-                    f"{casilla_id!r} field {diverging!r} diverges between "
-                    f"revision {canonical_rev!r} and revision {rev_id!r}"
+                    f"{casilla_id!r} canonical revision {canonical_rev!r} "
+                    f"divergences {divergences!r}"
                 )
     return tuple(failures)

@@ -11,7 +11,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...domain.deadlines._models import IVARegime
-from ...domain.profile import RentaDeclarationType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
+from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
 from ...domain.profile._ccaa import CCAA
 
 
@@ -26,7 +26,7 @@ class SetupAnswers(BaseModel):
     surnames: str = ""
     activity: str = Field(min_length=1)
     address_postcode: str = ""
-    taxation_type: RentaDeclarationType | str = ""
+    taxation_type: RentaDeclaracionType | str = ""
     output_language: str = "es"
 
     # ── taxpayer biographic ──────────────────────────────────────────────
@@ -89,14 +89,14 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxation_type", mode="before")
     @classmethod
-    def _parse_taxation_type(cls, value: object) -> RentaDeclarationType | str:
+    def _parse_taxation_type(cls, value: object) -> RentaDeclaracionType | str:
         if value == "":
             return ""
-        if isinstance(value, RentaDeclarationType):
+        if isinstance(value, RentaDeclaracionType):
             return value
         if isinstance(value, str):
-            return RentaDeclarationType(value)
-        raise TypeError("taxation_type must be a RentaDeclarationType member, string token, or blank")
+            return RentaDeclaracionType(value)
+        raise TypeError("taxation_type must be a RentaDeclaracionType member, string token, or blank")
 
     @field_validator("taxpayer_sex", "spouse_sex", mode="before")
     @classmethod
@@ -152,7 +152,7 @@ class SetupAnswers(BaseModel):
 
     @model_validator(mode="after")
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
-        if self.taxation_type == RentaDeclarationType.JOINT and not self.spouse_tax_id:
+        if self.taxation_type == RentaDeclaracionType.JOINT and not self.spouse_tax_id:
             raise ValueError("spouse_tax_id is required when taxation_type is joint (taxation_type='2')")
         return self
 

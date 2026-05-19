@@ -3,12 +3,12 @@
 #
 # - art-119: tax declaration regime (any document presented to AEAT
 #   that acknowledges a tax-relevant fact). Frames the locked
-#   semantics of FilingRecord persistence.
+#   semantics of ModeloRecord persistence.
 # - art-120: autoliquidaciones (self-assessments). The substantive
 #   regime that Modelos 100, 130, 131, 303, 390, 111, 115, 123 and
 #   others operate under. Rectificación procedures live here.
 # - art-122: complementarias / sustitutivas (amending self-assessments).
-#   Grounds amend_modelo_revision behaviour and the FilingRecord
+#   Grounds amend_modelo_revision behaviour and the ModeloRecord
 #   SUPERSEDED state transition.
 
 [legal."ley-58-2003:art-93"]

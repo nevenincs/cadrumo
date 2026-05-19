@@ -6,8 +6,8 @@ import pytest
 
 from ...domain.invoices import InvoiceKind
 from ._filter import (
-    DeclarationReviewFilterSpec,
-    DeclarationReviewStatus,
+    DeclaracionReviewFilterSpec,
+    DeclaracionReviewStatus,
     FilterClause,
     FilterParseError,
     InvoiceReviewFilterSpec,
@@ -181,30 +181,30 @@ def test_invoice_spec_rejects_duplicate_key() -> None:
 
 
 # ---------------------------------------------------------------------
-# DeclarationReviewFilterSpec
+# DeclaracionReviewFilterSpec
 # ---------------------------------------------------------------------
 
 
 def test_declaration_spec_parses_status() -> None:
-    spec = DeclarationReviewFilterSpec.from_strings(["status=pending"])
-    assert spec.status is DeclarationReviewStatus.PENDING
+    spec = DeclaracionReviewFilterSpec.from_strings(["status=pending"])
+    assert spec.status is DeclaracionReviewStatus.PENDING
 
 
 def test_declaration_spec_supports_every_status_value() -> None:
-    for status in DeclarationReviewStatus:
-        spec = DeclarationReviewFilterSpec.from_strings([f"status={status.value}"])
+    for status in DeclaracionReviewStatus:
+        spec = DeclaracionReviewFilterSpec.from_strings([f"status={status.value}"])
         assert spec.status is status
 
 
 def test_declaration_spec_rejects_unknown_key() -> None:
     with pytest.raises(FilterParseError, match=r"unknown-key-declaration") as exc:
-        DeclarationReviewFilterSpec.from_strings(["period=2026-Q1"])
+        DeclaracionReviewFilterSpec.from_strings(["period=2026-Q1"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
 def test_declaration_spec_rejects_invalid_status() -> None:
     with pytest.raises(FilterParseError, match=r"invalid-value-declaration-status") as exc:
-        DeclarationReviewFilterSpec.from_strings(["status=fictional"])
+        DeclaracionReviewFilterSpec.from_strings(["status=fictional"])
     assert exc.value.reason == "invalid-value-declaration-status"
 
 
@@ -234,4 +234,4 @@ def test_invoice_spec_rejects_inconsistent_construction() -> None:
 
 def test_declaration_spec_rejects_inconsistent_construction() -> None:
     with pytest.raises(ValueError, match=r"clauses|status|inconsistent"):
-        DeclarationReviewFilterSpec(clauses=(), status=DeclarationReviewStatus.PENDING)
+        DeclaracionReviewFilterSpec(clauses=(), status=DeclaracionReviewStatus.PENDING)
