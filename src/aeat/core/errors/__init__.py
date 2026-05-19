@@ -84,8 +84,8 @@ class FixtureProvisioningError(AeatError):
     """
 
 
-class FilingFixtureError(AeatError):
-    """Raised when a synthetic filing-history fixture cannot be loaded.
+class ModeloFixtureError(AeatError):
+    """Raised when a synthetic modelo-history fixture cannot be loaded.
 
     Thrown by :mod:`aeat.application.filing.testing` when the fixtures directory cannot be
     resolved, a fixture file cannot be read, JSON decoding fails, or a
@@ -172,7 +172,7 @@ __all__ = [
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
-    "FilingFixtureError",
+    "ModeloFixtureError",
     "FixtureProvisioningError",
     "McpLaunchError",
     "SiteHealthError",
