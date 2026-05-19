@@ -245,10 +245,11 @@ def test_resolve_counterpart_binding_values_computes_rectification_delta_sum() -
 
 
 def test_resolve_counterpart_binding_values_rejects_unsupported_fact() -> None:
+    # The strict _InvoiceSelector pydantic model is the authoritative
+    # gate for fact values: its Literal field rejects unknown facts as
+    # a malformed selector before the resolver inspects the fact.
     revision = _revision(_with_selector(_binding("vat-349-declarante-importe-operaciones"), fact="not_a_fact"))
-    with pytest.raises(
-        RegistryValidationError, match=r"declares unsupported counterpart aggregation fact 'not_a_fact'"
-    ):
+    with pytest.raises(RegistryValidationError, match=r"has malformed invoice selector"):
         resolve_counterpart_binding_values(revision, ())
 
 
