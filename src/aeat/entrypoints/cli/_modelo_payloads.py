@@ -93,7 +93,7 @@ class VerificationReportPayload(OutputSchema):
     findings: list[FindingPayload]
 
 
-class FilingRecordPayload(OutputSchema):
+class ModeloRecordPayload(OutputSchema):
     """Filing record fields returned by file / filing-record commands."""
 
     filing_record_id: str
@@ -300,16 +300,16 @@ class WorkAmendResult(OutputSchema):
 
 
 @register_schema("modelo.filing_record.list")
-class FilingRecordListResult(OutputSchema):
+class ModeloRecordListResult(OutputSchema):
     operation: str = "modelo.filing_record.list"
     bucket_id_filter: str | None = None
     include_superseded: bool
     record_count: int
-    records: list[FilingRecordPayload]
+    records: list[ModeloRecordPayload]
 
 
 @register_schema("modelo.filing_record.show")
-class FilingRecordShowResult(OutputSchema):
+class ModeloRecordShowResult(OutputSchema):
     operation: str = "modelo.filing_record.show"
     filing_record_id: str
     work_unit_id: str
@@ -364,12 +364,12 @@ class FormulasResult(OutputSchema):
 
 __all__ = [
     "CalculationRevisionPayload",
-    "FilingRecordListResult",
-    "FilingRecordPayload",
-    "FilingRecordShowResult",
     "FindingPayload",
     "FormulaPayload",
     "FormulasResult",
+    "ModeloRecordListResult",
+    "ModeloRecordPayload",
+    "ModeloRecordShowResult",
     "ObservationPayload",
     "VerificationReportListResult",
     "VerificationReportPayload",

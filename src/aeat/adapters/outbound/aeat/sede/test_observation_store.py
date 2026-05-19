@@ -12,8 +12,8 @@ from pydantic import AnyHttpUrl
 
 from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql.engine import dispose_engine
-from ._observation_store import FiledDeclarationObservationStore
-from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation, ObservedCasillaValue
+from ._observation_store import FiledDeclaracionObservationStore
+from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -32,12 +32,12 @@ def _patch_secure_backend(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Iterator
 def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_api(tmp_path) -> None:
     root = tmp_path / "observations"
     provider = EphemeralMasterKeyProvider()
-    store = FiledDeclarationObservationStore(root, master_key_provider=provider)
+    store = FiledDeclaracionObservationStore(root, master_key_provider=provider)
     body = b"1302026-1T-submitted-file"
     artefact = _artefact(kind="submitted_file", body=body, content_type="text/plain")
 
     stored = store.persist_artefact(("130", 2026, "1T", "202610013522222A"), artefact, body)
-    observation = FiledDeclarationObservation(
+    observation = FiledDeclaracionObservation(
         modelo="130",
         ejercicio=2026,
         period="1T",
@@ -82,7 +82,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
 
 
 def test_store_rejects_artefact_body_that_does_not_match_metadata(tmp_path) -> None:
-    store = FiledDeclarationObservationStore(
+    store = FiledDeclaracionObservationStore(
         tmp_path / "observations",
         master_key_provider=EphemeralMasterKeyProvider(),
     )
@@ -97,8 +97,8 @@ def _artefact(
     kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"],
     body: bytes,
     content_type: str,
-) -> FiledDeclarationArtefact:
-    return FiledDeclarationArtefact(
+) -> FiledDeclaracionArtefact:
+    return FiledDeclaracionArtefact(
         kind=kind,
         source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
         content_type=content_type,

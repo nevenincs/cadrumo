@@ -1,13 +1,13 @@
-"""Strict roundtrip across the ``FiledDeclarationObservationStore`` boundary.
+"""Strict roundtrip across the ``FiledDeclaracionObservationStore`` boundary.
 
-Persists :class:`FiledDeclarationObservation` envelopes under the
+Persists :class:`FiledDeclaracionObservation` envelopes under the
 ``aeat.outbound.aeat.sede.filed_declaration.observations`` namespace and
 raw artefact bodies under
 ``aeat.outbound.aeat.sede.filed_declaration.artefacts``. Both sinks
 operate at ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates non-default values on every
-optional field on :class:`FiledDeclarationObservation`
+optional field on :class:`FiledDeclaracionObservation`
 (``casillas``, ``metadata``, ``extraction_coverage``,
 ``registry_snapshot_id``) plus the optional ``storage_ref`` on the
 artefact. A drift that silently dropped any of these on save would
@@ -29,10 +29,10 @@ from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql import SecureObjectRepository
 from ....persistence.storage.sql._orm import Base
 from ....persistence.storage.sql.engine import create_engine_from_settings
-from ._observation_store import FiledDeclarationObservationStore
+from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import (
-    FiledDeclarationArtefact,
-    FiledDeclarationObservation,
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
     ObservedCasillaValue,
@@ -41,8 +41,8 @@ from ._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-def _populated_observation(artefact: FiledDeclarationArtefact) -> FiledDeclarationObservation:
-    return FiledDeclarationObservation(
+def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
+    return FiledDeclaracionObservation(
         modelo="100",
         ejercicio=2023,
         period="0A",
@@ -82,10 +82,10 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
-            store = FiledDeclarationObservationStore(tmp_path / "sede-cache")
+            store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
 
             body = b"%PDF-1.7 sede declaration sample body for roundtrip witness"
-            artefact = FiledDeclarationArtefact(
+            artefact = FiledDeclaracionArtefact(
                 kind="declaration_pdf",
                 source_url=AnyHttpUrl("https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"),
                 content_type="application/pdf",
@@ -128,7 +128,7 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
 ) -> None:
     """Anti-tautology proof: stripping ``artefacts`` to empty must surface.
 
-    :class:`FiledDeclarationObservation` enforces
+    :class:`FiledDeclaracionObservation` enforces
     ``artefacts: tuple[..., ...] = Field(min_length=1)`` — every
     persisted observation MUST carry at least one artefact (the source
     PDF or register row that proves AEAT served it). A persisted
@@ -165,10 +165,10 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
-            store = FiledDeclarationObservationStore(tmp_path / "sede-cache")
+            store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
 
             body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
-            artefact = FiledDeclarationArtefact(
+            artefact = FiledDeclaracionArtefact(
                 kind="declaration_pdf",
                 source_url=AnyHttpUrl(
                     "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
@@ -231,7 +231,7 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
-            store = FiledDeclarationObservationStore(tmp_path / "sede-cache")
+            store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
             captured_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
             observation = IvaCompensationWalletObservation(
                 taxpayer_nif="12345678Z",

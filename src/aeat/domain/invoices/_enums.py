@@ -6,7 +6,7 @@ Defines :class:`InvoiceKind`, :class:`IvaRate`, and
 percentage backing each :class:`IvaRate` member.
 
 The percentage helper queries the centralized VAT substrate at
-:mod:`aeat.domain.vat` rather than carrying its own rate literals.
+:mod:`aeat.domain.iva` rather than carrying its own rate literals.
 :class:`IvaRate` keeps its closed-taxonomy role for invoice records;
 the legal-grade percentage value lives in
 ``registry/aeat/vat/rates.toml`` and is dated.
@@ -18,28 +18,16 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from ..vat import EUMemberState, VATRateKind, lookup_rate
-from ..vat.errors import VatRateNotFoundError
-
-
-class InvoiceKind(StrEnum):
-    """Direction of an invoice relative to the autónomo.
-
-    Attributes:
-        ISSUED: Invoice emitted by the autónomo to a customer.
-        RECEIVED: Invoice received by the autónomo from a supplier.
-    """
-
-    ISSUED = "ISSUED"
-    RECEIVED = "RECEIVED"
+from ..iva import EUMemberState, InvoiceKind, IvaRateKind, lookup_rate
+from ..iva.errors import IvaRateNotFoundError
 
 
 class IvaRate(StrEnum):
     """Closed taxonomy of Spanish VAT rate slots used on invoice lines.
 
-    The slot names map to substrate :class:`aeat.domain.vat.VATRateKind`
+    The slot names map to substrate :class:`aeat.domain.iva.IvaRateKind`
     tiers and the percentage backing each slot is resolved against
-    :func:`aeat.domain.vat.lookup_rate` for Spain at a given date. This
+    :func:`aeat.domain.iva.lookup_rate` for Spain at a given date. This
     module no longer stores rate percentages as Python literals; if the
     legal rate changes, the substrate's TOML registry is the single
     source of truth.
@@ -85,10 +73,10 @@ class PaymentStatus(StrEnum):
     CANCELLED = "CANCELLED"
 
 
-_IVA_RATE_TO_VAT_KIND: dict[IvaRate, VATRateKind] = {
-    IvaRate.RATE_4: VATRateKind.SUPER_REDUCED,
-    IvaRate.RATE_10: VATRateKind.REDUCED,
-    IvaRate.RATE_21: VATRateKind.GENERAL,
+_IVA_RATE_TO_VAT_KIND: dict[IvaRate, IvaRateKind] = {
+    IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
+    IvaRate.RATE_10: IvaRateKind.REDUCED,
+    IvaRate.RATE_21: IvaRateKind.GENERAL,
 }
 
 
@@ -97,7 +85,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
 
     Slot membership in :class:`IvaRate` is structural; the actual
     percentage is resolved against
-    :func:`aeat.domain.vat.lookup_rate` for Spain at ``on_date``. When
+    :func:`aeat.domain.iva.lookup_rate` for Spain at ``on_date``. When
     ``on_date`` is omitted the lookup uses today's date.
 
     Args:
@@ -112,7 +100,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
         :attr:`IvaRate.EXEMPT` and :attr:`IvaRate.NOT_SUBJECT`.
 
     Raises:
-        VatRateNotFoundError: If the substrate has no rate for the
+        IvaRateNotFoundError: If the substrate has no rate for the
             requested slot at ``on_date``. This indicates registry
             drift (e.g. asking for a rate before its
             ``effective_from`` window) and must be fixed by updating
@@ -133,6 +121,6 @@ __all__ = [
     "InvoiceKind",
     "IvaRate",
     "PaymentStatus",
-    "VatRateNotFoundError",
+    "IvaRateNotFoundError",
     "iva_rate_percentage",
 ]

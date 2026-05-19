@@ -1,19 +1,19 @@
 """Application-layer aggregation for IVA prorrata (LIVA arts. 101-103).
 
 This module sits between the bucket's persisted revenue records and the
-pure prorrata domain calculator in :mod:`aeat.domain.vat`. It takes a
+pure prorrata domain calculator in :mod:`aeat.domain.iva`. It takes a
 year's classified IVA operations, applies the LIVA art. 104 exclusions,
 sums the remaining amounts into the two prorrata pools (operations
 granting the right to deduct vs operations exempt without that right),
-and produces a :class:`~aeat.domain.vat.ProrrataInputs` value the
-:func:`~aeat.domain.vat.compute_prorrata_general` calculator consumes.
+and produces a :class:`~aeat.domain.iva.ProrrataInputs` value the
+:func:`~aeat.domain.iva.compute_prorrata_general` calculator consumes.
 
 The aggregator is a pure function: it does not touch the registry,
 persistence, or the CLI. The caller — typically the modelo 303 or 390
 binding provider — supplies a sequence of already-classified
 :class:`VatOperation` records sourced from the active bucket's
 collectible invoices and ledger transactions. The classification step
-itself happens upstream in :mod:`aeat.domain.vat._classification`; this
+itself happens upstream in :mod:`aeat.domain.iva._classification`; this
 module relies on the upstream decision and only routes amounts.
 
 Two high-level orchestrators wrap the aggregation:
@@ -30,7 +30,7 @@ Two high-level orchestrators wrap the aggregation:
   actuals, producing the regularisation entry that lands on the Q4
   Modelo 303 (casilla 44) and Modelo 390 (casilla 33).
 
-Both orchestrators emit :class:`~aeat.domain.vat.ProrrataResult` values
+Both orchestrators emit :class:`~aeat.domain.iva.ProrrataResult` values
 ready for consumption by the modelo binding providers.
 """
 

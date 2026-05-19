@@ -16,7 +16,7 @@ from textwrap import dedent
 
 import pytest
 
-from ._census import CensusFactSet, CensusParseError, parse_g313_html
+from ._censo import CensoFactSet, CensoParseError, parse_g313_html
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
@@ -46,7 +46,7 @@ _FULL_FIXTURE = dedent(
 def test_full_fixture_parses_into_typed_envelope() -> None:
     result = parse_g313_html(_FULL_FIXTURE)
 
-    assert isinstance(result, CensusFactSet)
+    assert isinstance(result, CensoFactSet)
     assert result.fiscal_address_cadastral_reference == "1234567AB1234S0001WX"
     assert result.fiscal_address_is_habitual_vivienda is True
     assert result.activity_start_date == date(2018, 3, 15)
@@ -72,7 +72,7 @@ def test_sparse_fixture_yields_none_for_missing_labels() -> None:
 def test_malformed_date_raises_typed_parse_error() -> None:
     bad = "<p>Fecha de alta de la actividad: 2018-03-15</p>"
 
-    with pytest.raises(CensusParseError) as exc:
+    with pytest.raises(CensoParseError) as exc:
         parse_g313_html(bad)
 
     assert exc.value.failure_mode == "live_navigation_failed"
@@ -82,7 +82,7 @@ def test_malformed_date_raises_typed_parse_error() -> None:
 def test_malformed_m2_raises_typed_parse_error() -> None:
     bad = "<p>Superficie total de la vivienda: ABC m²</p>"
 
-    with pytest.raises(CensusParseError) as exc:
+    with pytest.raises(CensoParseError) as exc:
         parse_g313_html(bad)
 
     assert "vivienda_office_total_m2" in str(exc.value)
@@ -91,7 +91,7 @@ def test_malformed_m2_raises_typed_parse_error() -> None:
 def test_malformed_cadastral_raises_typed_parse_error() -> None:
     bad = "<p>Referencia catastral: NOTACADASTRAL</p>"
 
-    with pytest.raises(CensusParseError) as exc:
+    with pytest.raises(CensoParseError) as exc:
         parse_g313_html(bad)
 
     assert "cadastral" in str(exc.value)

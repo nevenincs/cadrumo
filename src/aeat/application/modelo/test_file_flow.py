@@ -51,7 +51,7 @@ from aeat.application.filing import (
 from aeat.application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
-    FilingRecordNotFoundError,
+    ModeloRecordNotFoundError,
     ModeloWorkflowGateError,
     VerificationReportNotFoundError,
     calculate_modelo_revision,
@@ -81,8 +81,8 @@ from aeat.domain.buckets import (
 from aeat.domain.deadlines import AutonomoProfile, DeadlineEngine, IVARegime
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from aeat.domain.modelos._filing_record import FilingRecordStatus
-from aeat.domain.modelos._filing_repository import FilingRecordCatalogueRepository
+from aeat.domain.modelos._filing_record import ModeloRecordStatus
+from aeat.domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
@@ -155,7 +155,7 @@ def repos(tmp_path):
             objects = SecureObjectRepository(engine=engine)
             wu = WorkUnitCatalogueRepository(objects=objects)
             cr = CalculationRevisionCatalogueRepository(objects=objects)
-            fr = FilingRecordCatalogueRepository(objects=objects)
+            fr = ModeloRecordCatalogueRepository(objects=objects)
             vr = VerificationReportCatalogueRepository(objects=objects)
             bv = BucketEventHistoryRepository(objects=objects)
             yield wu, cr, fr, vr, bv
@@ -371,7 +371,7 @@ def _file_revision(
     notes: str | None = None,
     work_unit_repository: WorkUnitCatalogueRepository,
     calculation_repository: CalculationRevisionCatalogueRepository,
-    filing_repository: FilingRecordCatalogueRepository,
+    filing_repository: ModeloRecordCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
     clock: datetime,
     auth_provider: _AuthProvider | None = None,
@@ -589,7 +589,7 @@ def test_file_requires_verified_complete_state(repos) -> None:
 
 def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
     """The happy-path file flow: calculate → mark verified-complete
-    → file. After file: a FilingRecord exists, the revision is in
+    → file. After file: a ModeloRecord exists, the revision is in
     FILED state, the work unit's filed_calculation_revision_id and
     current_filing_record_id pointers point at the new IDs, and
     filing-record current_for(...) resolves to the new record."""
@@ -625,7 +625,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
         clock=_T3,
     )
 
-    assert filing.status is FilingRecordStatus.CURRENT
+    assert filing.status is ModeloRecordStatus.CURRENT
     assert filing.aeat_accepted is False
     assert filing.notes == "Q1 IVA"
     assert filing.filed_by == "operator-A"
@@ -842,7 +842,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     )
 
     # New filing is current.
-    assert filing_two.status is FilingRecordStatus.CURRENT
+    assert filing_two.status is ModeloRecordStatus.CURRENT
     refreshed_revision_two = get_calculation_revision(
         revision_two.calculation_revision_id,
         calculation_repository=cr_repo,
@@ -854,7 +854,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
         filing_one.filing_record_id,
         filing_repository=fr_repo,
     )
-    assert refreshed_filing_one.status is FilingRecordStatus.SUPERSEDED
+    assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDED
     assert refreshed_filing_one.superseded_at == _T5
     assert refreshed_filing_one.superseded_by_filing_record_id == filing_two.filing_record_id
 
@@ -962,7 +962,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
         filing_repository=fr_repo,
     )
     assert len(default_listing) == 1
-    assert default_listing[0].status is FilingRecordStatus.CURRENT
+    assert default_listing[0].status is ModeloRecordStatus.CURRENT
 
     with_history = list_filing_records(
         include_superseded=True,
@@ -1030,7 +1030,7 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
 
 def test_get_filing_record_raises_on_missing_id(repos) -> None:
     _, _, fr_repo, _, _ = repos
-    with pytest.raises(FilingRecordNotFoundError, match=r"filing|record|not|found"):
+    with pytest.raises(ModeloRecordNotFoundError, match=r"filing|record|not|found"):
         get_filing_record(
             "0" * 64,
             filing_repository=fr_repo,

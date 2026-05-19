@@ -72,8 +72,8 @@ from ._errors import (
     SedeValidationError,
 )
 from ._schema import (
-    FiledDeclarationArtefact,
-    FiledDeclarationObservation,
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
     JustificanteRef,
     ObservedCasillaValue,
     SedeCapture,
@@ -121,13 +121,13 @@ _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
     extra="forbid",
 )
 
-type FiledDeclarationArtefactSink = Callable[
-    [tuple[str, int, str, str], FiledDeclarationArtefact, bytes],
-    FiledDeclarationArtefact,
+type FiledDeclaracionArtefactSink = Callable[
+    [tuple[str, int, str, str], FiledDeclaracionArtefact, bytes],
+    FiledDeclaracionArtefact,
 ]
 
 
-class Declaration(BaseModel):
+class Declaracion(BaseModel):
     """One row from *Consultar declaraciones presentadas*.
 
     Attributes:
@@ -214,7 +214,7 @@ async def shared_playwright(
         yield pw
 
 
-class DeclarationsRegisterSession:
+class DeclaracionesRegisterSession:
     """Reusable read-only session for AEAT's filed-declarations register."""
 
     def __init__(self, session: AeatSession, page: Page, context: BrowserContext) -> None:
@@ -222,19 +222,19 @@ class DeclarationsRegisterSession:
         self._page = page
         self._context = context
 
-    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaration, ...]:
+    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
         """Return filed-declaration rows for one ``(modelo, ejercicio)`` query."""
 
         if not await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
             log.info(
-                "DeclarationsRegisterSession.walk: ejercicio unavailable modelo=%s ejercicio=%d",
+                "DeclaracionesRegisterSession.walk: ejercicio unavailable modelo=%s ejercicio=%d",
                 modelo,
                 ejercicio,
             )
             return ()
         results = _parse_listbox(await self._page.content(), modelo=modelo, ejercicio=ejercicio)
         log.info(
-            "DeclarationsRegisterSession.walk: found %d declaration(s) modelo=%s ejercicio=%d",
+            "DeclaracionesRegisterSession.walk: found %d declaration(s) modelo=%s ejercicio=%d",
             len(results),
             modelo,
             ejercicio,
@@ -243,11 +243,11 @@ class DeclarationsRegisterSession:
 
     async def capture_observation(
         self,
-        declaration: Declaration,
+        declaration: Declaracion,
         *,
         registry_snapshot: RegistrySnapshot | None = None,
-        artefact_sink: FiledDeclarationArtefactSink | None = None,
-    ) -> FiledDeclarationObservation:
+        artefact_sink: FiledDeclaracionArtefactSink | None = None,
+    ) -> FiledDeclaracionObservation:
         """Capture a normalized filed-declaration observation using the active page."""
 
         snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
@@ -283,14 +283,14 @@ async def open_declarations_register(
     *,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-) -> AsyncIterator[DeclarationsRegisterSession]:
+) -> AsyncIterator[DeclaracionesRegisterSession]:
     """Open one browser context for repeated filed-declaration register reads."""
 
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
         context,
     ):
-        yield DeclarationsRegisterSession(session, page, context)
+        yield DeclaracionesRegisterSession(session, page, context)
 
 
 @asynccontextmanager
@@ -368,7 +368,7 @@ async def walk_declarations_register(
     ejercicio: int,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-) -> tuple[Declaration, ...]:
+) -> tuple[Declaracion, ...]:
     """Drive the *Consultar declaraciones presentadas* form for one query.
 
     Args:
@@ -385,7 +385,7 @@ async def walk_declarations_register(
             and torn down per call.
 
     Returns:
-        Tuple of :class:`Declaration` records, one per filing row.
+        Tuple of :class:`Declaracion` records, one per filing row.
         Empty when AEAT returns "No se han encontrado resultados".
 
     Raises:
@@ -592,8 +592,8 @@ def _parse_listbox(
     *,
     modelo: str,
     ejercicio: int,
-) -> tuple[Declaration, ...]:
-    """Parse the post-Buscar listbox into typed Declaration records.
+) -> tuple[Declaracion, ...]:
+    """Parse the post-Buscar listbox into typed Declaracion records.
 
     The listbox columns, in order:
 
@@ -629,7 +629,7 @@ def _parse_listbox(
         raise SedeParseError("declaraciones response missing justificante column")
     items = listbox.find_all(class_=_has_class("z-listitem"))
 
-    rows: list[Declaration] = []
+    rows: list[Declaracion] = []
     for item in items:
         cells = item.find_all(class_=_has_class("z-listcell"))
         cell_texts = [cell.get_text(" ", strip=True) for cell in cells]
@@ -651,7 +651,7 @@ def _parse_listbox(
             raise SedeParseError(f"failed to parse presented_at {cell_texts[6]!r}: {exc}") from exc
 
         rows.append(
-            Declaration(
+            Declaracion(
                 modelo=modelo,
                 ejercicio=ejercicio,
                 period=cell_texts[4],
@@ -739,12 +739,12 @@ def _parse_presented_at(value: str) -> datetime:
 
 async def capture_declaration(
     session: AeatSession,
-    declaration: Declaration,
+    declaration: Declaracion,
     *,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
 ) -> SedeCapture:
-    """Fetch the raw justificante PDF behind a :class:`Declaration`.
+    """Fetch the raw justificante PDF behind a :class:`Declaracion`.
 
     Drives the declaraciones register the same way
     :func:`walk_declarations_register` does, locates the row whose
@@ -756,7 +756,7 @@ async def capture_declaration(
 
     Args:
         session: Authenticated AEAT session.
-        declaration: The Declaration row to capture, typically
+        declaration: The Declaracion row to capture, typically
             obtained from :func:`walk_declarations_register`.
         settings: Optional :class:`Settings` override.
         playwright: Optional pre-started Playwright instance
@@ -884,13 +884,13 @@ async def capture_declaration(
 
 async def capture_filed_declaration_observation(
     session: AeatSession,
-    declaration: Declaration,
+    declaration: Declaracion,
     *,
     registry_snapshot: RegistrySnapshot | None = None,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-    artefact_sink: FiledDeclarationArtefactSink | None = None,
-) -> FiledDeclarationObservation:
+    artefact_sink: FiledDeclaracionArtefactSink | None = None,
+) -> FiledDeclaracionObservation:
     """Capture normalized read-only evidence for one filed declaration.
 
     The observation begins with the register row and then captures every
@@ -936,14 +936,14 @@ async def capture_filed_declaration_observation(
 
 async def _capture_filed_declaration_observation_from_row(
     session: AeatSession,
-    declaration: Declaration,
+    declaration: Declaracion,
     *,
     row_locator,
     page: Page,
     context: BrowserContext,
     registry_snapshot: RegistrySnapshot | None,
-    artefact_sink: FiledDeclarationArtefactSink | None,
-) -> FiledDeclarationObservation:
+    artefact_sink: FiledDeclaracionArtefactSink | None,
+) -> FiledDeclaracionObservation:
     authenticated_identity = (session.identity_nif or "").strip()
     if not authenticated_identity:
         raise SedeNavigationError("AeatSession.identity_nif is empty; cannot bind live filing observation")
@@ -958,7 +958,7 @@ async def _capture_filed_declaration_observation_from_row(
     listing_url = AnyHttpUrl(f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}")
 
     register_row, register_row_body = _register_row_artefact(declaration, source_url=listing_url)
-    artefacts: list[FiledDeclarationArtefact] = [
+    artefacts: list[FiledDeclaracionArtefact] = [
         _store_artefact(
             artefact_sink,
             observation_key=observation_key,
@@ -1044,7 +1044,7 @@ async def _capture_filed_declaration_observation_from_row(
             f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data"
         )
 
-    return FiledDeclarationObservation(
+    return FiledDeclaracionObservation(
         modelo=declaration.modelo,
         ejercicio=declaration.ejercicio,
         period=declaration.period,
@@ -1071,11 +1071,11 @@ async def capture_previous_filing_observations(
     period: str,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-    artefact_sink: FiledDeclarationArtefactSink | None = None,
-) -> tuple[FiledDeclarationObservation, ...]:
+    artefact_sink: FiledDeclaracionArtefactSink | None = None,
+) -> tuple[FiledDeclaracionObservation, ...]:
     """Capture filed declarations required by registry previous-filing bindings."""
 
-    observations: list[FiledDeclarationObservation] = []
+    observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
         for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
             rows = await register.walk(modelo=requirement.modelo, ejercicio=requirement.filing_year)
@@ -1106,8 +1106,8 @@ async def capture_relation_source_observations(
     period: str,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-    artefact_sink: FiledDeclarationArtefactSink | None = None,
-) -> tuple[FiledDeclarationObservation, ...]:
+    artefact_sink: FiledDeclaracionArtefactSink | None = None,
+) -> tuple[FiledDeclaracionObservation, ...]:
     """Capture filed declarations required by registry cross-model relations."""
 
     required_outputs: dict[tuple[str, int, str], set[str]] = {}
@@ -1116,7 +1116,7 @@ async def capture_relation_source_observations(
             key = (requirement.source_modelo, requirement.filing_year, source_period)
             required_outputs.setdefault(key, set()).add(requirement.source_output)
 
-    observations: list[FiledDeclarationObservation] = []
+    observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
         for (modelo, source_year, source_period), source_outputs in sorted(required_outputs.items()):
             rows = await register.walk(modelo=modelo, ejercicio=source_year)
@@ -1139,10 +1139,10 @@ async def capture_relation_source_observations(
 
 
 def _register_row_artefact(
-    declaration: Declaration,
+    declaration: Declaracion,
     *,
     source_url: AnyHttpUrl,
-) -> tuple[FiledDeclarationArtefact, bytes]:
+) -> tuple[FiledDeclaracionArtefact, bytes]:
     payload = json.dumps(
         declaration.model_dump(mode="json"),
         ensure_ascii=True,
@@ -1151,7 +1151,7 @@ def _register_row_artefact(
     ).encode("utf-8")
     captured_at = datetime.now(UTC)
     return (
-        FiledDeclarationArtefact(
+        FiledDeclaracionArtefact(
             kind="register_row",
             source_url=source_url,
             content_type="application/json",
@@ -1164,18 +1164,18 @@ def _register_row_artefact(
 
 
 def _store_artefact(
-    artefact_sink: FiledDeclarationArtefactSink | None,
+    artefact_sink: FiledDeclaracionArtefactSink | None,
     *,
     observation_key: tuple[str, int, str, str],
-    artefact: FiledDeclarationArtefact,
+    artefact: FiledDeclaracionArtefact,
     body: bytes,
-) -> FiledDeclarationArtefact:
+) -> FiledDeclaracionArtefact:
     if artefact_sink is None:
         return artefact
     return artefact_sink(observation_key, artefact, body)
 
 
-def _registry_snapshot_for_declaration(declaration: Declaration) -> RegistrySnapshot:
+def _registry_snapshot_for_declaration(declaration: Declaracion) -> RegistrySnapshot:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next((candidate for candidate in modelos if candidate.id == declaration.modelo), None)
     if modelo is None:
@@ -1211,9 +1211,9 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
 def _observed_casillas_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
-    declaration: Declaration,
+    declaration: Declaracion,
     body: bytes,
-    artefact: FiledDeclarationArtefact,
+    artefact: FiledDeclaracionArtefact,
 ) -> tuple[ObservedCasillaValue, ...]:
     resolved = resolve_export_layout(snapshot)
     parsed = parse_export_payload(
@@ -1244,7 +1244,7 @@ def _observed_casillas_from_submitted_file(
 def _observed_casillas_from_declaration_pdf(
     *,
     snapshot: RegistrySnapshot,
-    declaration: Declaration,
+    declaration: Declaracion,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
     try:
@@ -1283,7 +1283,7 @@ def _verify_submitted_file_context(
     fields_by_id: Mapping[str, ExportFieldDefinition],
     parsed_fields: tuple[ParsedExportFieldValue, ...],
     *,
-    declaration: Declaration,
+    declaration: Declaracion,
 ) -> None:
     expected = {
         "modelo": declaration.modelo,
@@ -1302,7 +1302,7 @@ def _verify_submitted_file_context(
 
 
 def registry_observation_from_filed_declaration(
-    observation: FiledDeclarationObservation,
+    observation: FiledDeclaracionObservation,
 ) -> RegistryFilingObservation:
     """Convert a filed-declaration observation into registry binding input."""
 
@@ -1346,7 +1346,7 @@ def registry_observation_from_filed_declaration(
 
 def resolve_previous_filing_bindings_from_filed_declarations(
     revision: ModeloRevision,
-    observations: tuple[FiledDeclarationObservation, ...],
+    observations: tuple[FiledDeclaracionObservation, ...],
     *,
     filing_year: int,
     period: str,
@@ -1363,7 +1363,7 @@ def resolve_previous_filing_bindings_from_filed_declarations(
 
 def resolve_relation_values_from_filed_declarations(
     revision: ModeloRevision,
-    observations: tuple[FiledDeclarationObservation, ...],
+    observations: tuple[FiledDeclaracionObservation, ...],
     *,
     filing_year: int,
     period: str,
@@ -1382,11 +1382,11 @@ async def _capture_row_pdf_artefact(
     *,
     context: BrowserContext,
     row_locator,
-    declaration: Declaration,
+    declaration: Declaracion,
     cell_index: int,
     kind: Literal["justificante_pdf", "declaration_pdf"],
     read_policy: RemoteStateGuardPolicy,
-) -> tuple[FiledDeclarationArtefact, bytes]:
+) -> tuple[FiledDeclaracionArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with context.expect_page(timeout=_VER_CLICK_TIMEOUT_MS) as new_page_info:
@@ -1424,7 +1424,7 @@ async def _capture_row_pdf_artefact(
     if "pdf" not in content_type.lower():
         raise JustificanteFetchError(f"unexpected content-type {content_type!r} for CSV={csv!r}")
     return (
-        FiledDeclarationArtefact(
+        FiledDeclaracionArtefact(
             kind=kind,
             source_url=pdf_url,
             content_type=content_type,
@@ -1440,10 +1440,10 @@ async def _capture_submitted_file_artefact(
     *,
     page: Page,
     row_locator,
-    declaration: Declaration,
+    declaration: Declaracion,
     cell_index: int,
     read_policy: RemoteStateGuardPolicy,
-) -> tuple[FiledDeclarationArtefact, bytes]:
+) -> tuple[FiledDeclaracionArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with page.expect_download(timeout=_VER_CLICK_TIMEOUT_MS) as download_info:
@@ -1471,7 +1471,7 @@ async def _capture_submitted_file_artefact(
         source_url = str(AnyHttpUrl(f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}"))
     _assert_read_http("GET", source_url, policy=read_policy)
     return (
-        FiledDeclarationArtefact(
+        FiledDeclaracionArtefact(
             kind="submitted_file",
             source_url=AnyHttpUrl(source_url),
             content_type="application/octet-stream",
@@ -1553,8 +1553,8 @@ def _extract_csv_from_url(url: str) -> str:
 
 
 __all__ = [
-    "Declaration",
-    "DeclarationsRegisterSession",
+    "Declaracion",
+    "DeclaracionesRegisterSession",
     "capture_declaration",
     "capture_filed_declaration_observation",
     "capture_previous_filing_observations",

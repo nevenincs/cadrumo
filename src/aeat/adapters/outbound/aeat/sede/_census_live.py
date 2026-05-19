@@ -3,8 +3,8 @@
 Mirrors :mod:`_notifications` and :mod:`_declarations`: takes an
 authenticated :class:`AeatSession`, drives Playwright to the G313
 launcher, captures the page HTML, and runs the existing
-:func:`._census.parse_g313_html` parser to lift the response into a
-typed :class:`CensusFactSet`.
+:func:`._censo.parse_g313_html` parser to lift the response into a
+typed :class:`CensoFactSet`.
 
 The launcher procedure URL is the documented G313 entry point
 (``/Sede/procedimientoini/G313.shtml``). The session's storage state
@@ -13,7 +13,7 @@ the launcher redirects directly to the Mis Datos Censales data page
 instead of bouncing through the login surface. If the session is not
 valid for the operator's NIF (e.g. certificate not registered against
 the census), the page returns AEAT's standard 4033 / 403 error shape
-and the parser returns a :class:`CensusFactSet` with no fields
+and the parser returns a :class:`CensoFactSet` with no fields
 populated — the caller decides whether that is a refusal.
 """
 
@@ -28,7 +28,7 @@ from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
-from ._census import CensusFactSet, parse_g313_html
+from ._censo import CensoFactSet, parse_g313_html
 from ._errors import SedeNavigationError, SedeFailureMode
 
 if TYPE_CHECKING:
@@ -49,7 +49,7 @@ async def fetch_g313_census(
     session: AeatSession,
     *,
     settings: Settings | None = None,
-) -> CensusFactSet:
+) -> CensoFactSet:
     """Live-fetch the G313 page under the authenticated session.
 
     Args:
@@ -58,10 +58,10 @@ async def fetch_g313_census(
         settings: Optional :class:`Settings` override.
 
     Returns:
-        A :class:`CensusFactSet` parsed from the live HTML. May be
+        A :class:`CensoFactSet` parsed from the live HTML. May be
         empty (every field ``None``) when AEAT publishes no census
-        for the operator's NIF — the caller (CensusSyncService) raises
-        :class:`CensusNotAvailableError` on that path.
+        for the operator's NIF — the caller (CensoSyncService) raises
+        :class:`CensoNotAvailableError` on that path.
 
     Raises:
         SedeNavigationError: when the session has no persisted browser
@@ -105,8 +105,8 @@ async def fetch_g313_census(
         await browser_session.close()
 
 
-def census_fact_set_to_mapping(fact_set: CensusFactSet) -> Mapping[str, str]:
-    """Project a :class:`CensusFactSet` into the dotted-key mapping the
+def census_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:
+    """Project a :class:`CensoFactSet` into the dotted-key mapping the
     snapshot store accepts.
 
     Mirrors the ``model_selectors`` declarations in the schema so
@@ -143,7 +143,7 @@ def census_fact_set_to_mapping(fact_set: CensusFactSet) -> Mapping[str, str]:
     return dict(pairs)
 
 
-def _populated_count(fact_set: CensusFactSet) -> int:
+def _populated_count(fact_set: CensoFactSet) -> int:
     return sum(
         1
         for value in (

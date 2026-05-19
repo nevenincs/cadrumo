@@ -184,7 +184,7 @@ def validate_ratios_for_bucket(
     )
 
 
-class RatiosCensusOverrideWarning(BaseModel):
+class RatiosCensoOverrideWarning(BaseModel):
     """A non-fatal warning that the operator's per-category override
     deviates from the legally-binding census-derived value.
 
@@ -237,7 +237,7 @@ def census_override_warning(
     override_ratio: Decimal,
     raw_afectacion_ratio: Decimal,
     year: int = 2025,
-) -> RatiosCensusOverrideWarning | None:
+) -> RatiosCensoOverrideWarning | None:
     """Return a typed warning when an override deviates from the census.
 
     The check is silent for non-HOME_OFFICE categories: only the
@@ -247,7 +247,7 @@ def census_override_warning(
     helper computes the legally-effective ratio (raw afectación times
     the rule's ``statutory_multiplier``) and compares it against
     ``override_ratio`` for exact equality. A non-equal pair returns a
-    :class:`RatiosCensusOverrideWarning`; equal values (and
+    :class:`RatiosCensoOverrideWarning`; equal values (and
     non-home-office categories) return ``None``.
 
     Args:
@@ -259,7 +259,7 @@ def census_override_warning(
             derivation.
 
     Returns:
-        A :class:`RatiosCensusOverrideWarning` if a warning should be
+        A :class:`RatiosCensoOverrideWarning` if a warning should be
         emitted, otherwise ``None``.
     """
 
@@ -269,7 +269,7 @@ def census_override_warning(
     derived = effective_usage_ratio(rule, raw_afectacion_ratio)
     if derived == override_ratio:
         return None
-    return RatiosCensusOverrideWarning(
+    return RatiosCensoOverrideWarning(
         category=category,
         override_ratio=override_ratio,
         census_derived_ratio=derived,
@@ -279,7 +279,7 @@ def census_override_warning(
 
 __all__ = [
     "EligibleCategoryRow",
-    "RatiosCensusOverrideWarning",
+    "RatiosCensoOverrideWarning",
     "RatiosValidationFinding",
     "RatiosValidationReport",
     "census_business_pct_for",

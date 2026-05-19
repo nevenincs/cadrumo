@@ -4,7 +4,7 @@ This module sits between the bucket's persisted ledger lines and the
 Modelo 369 registry binding resolver. It accepts a sequence of
 substrate-classified ledger candidates, validates each line's persisted
 IVA amount against the destination Member State's published rate
-through :func:`aeat.domain.vat.lookup_rate`, and produces validated
+through :func:`aeat.domain.iva.lookup_rate`, and produces validated
 :class:`OssIossLedgerObservation` records the registry can aggregate.
 
 The wrapper is a pure function: it does not touch the registry,
@@ -43,10 +43,10 @@ from ...domain.calculations.registry import (
 )
 from ...domain.vat import (
     EUMemberState,
-    InvoiceDirection,
+    InvoiceKind,
     OssIossRegime,
     TransactionKind,
-    VATRateKind,
+    IvaRateKind,
     lookup_rate,
 )
 from ._errors import AggregationValidationError, t
@@ -79,7 +79,7 @@ class OssIossLedgerCandidate(BaseModel):
         invoice_direction: Whether the autónomo issued or received the
             invoice.
         transaction_kind: Substrate
-            :class:`aeat.domain.vat.TransactionKind` the line resolves
+            :class:`aeat.domain.iva.TransactionKind` the line resolves
             to.
         base_amount: Taxable base in EUR. Must be non-negative.
         iva_amount: VAT amount in EUR persisted on the ledger. Must
@@ -92,8 +92,8 @@ class OssIossLedgerCandidate(BaseModel):
     transaction_date: date
     regime: OssIossRegime
     destination_member_state: EUMemberState
-    rate_kind: VATRateKind
-    invoice_direction: InvoiceDirection
+    rate_kind: IvaRateKind
+    invoice_direction: InvoiceKind
     transaction_kind: TransactionKind
     base_amount: Decimal = Field(ge=Decimal("0"))
     iva_amount: Decimal = Field(ge=Decimal("0"))
@@ -119,7 +119,7 @@ def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
     amounts are persisted.
 
     Raises:
-        :exc:`aeat.domain.vat.VatRateNotFoundError`: If the substrate
+        :exc:`aeat.domain.iva.IvaRateNotFoundError`: If the substrate
             has no registered rate for the destination MS / rate tier
             at the supply date.
     """
@@ -156,7 +156,7 @@ def validate_oss_ioss_observation(
         :exc:`AggregationValidationError`: When the persisted IVA
             amount disagrees with the destination MS rate by more
             than the one-cent tolerance.
-        :exc:`aeat.domain.vat.VatRateNotFoundError`: When the
+        :exc:`aeat.domain.iva.IvaRateNotFoundError`: When the
             substrate has no registered rate for the destination MS
             and rate tier at the supply date.
     """
@@ -205,7 +205,7 @@ def validate_oss_ioss_observations(
         :exc:`AggregationValidationError`: If any candidate's
             persisted IVA disagrees with the destination MS rate by
             more than the tolerance.
-        :exc:`aeat.domain.vat.VatRateNotFoundError`: If the substrate
+        :exc:`aeat.domain.iva.IvaRateNotFoundError`: If the substrate
             has no registered rate for any candidate's destination /
             tier at its supply date.
     """

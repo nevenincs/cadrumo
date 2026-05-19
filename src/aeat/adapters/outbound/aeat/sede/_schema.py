@@ -9,8 +9,8 @@ part of the structural write-guard — the sede module is incapable
 of mutating AEAT state.
 
 Public surface: :class:`Expediente`, :class:`JustificanteRef`,
-:class:`SedeCapture`, :class:`FiledDeclarationArtefact`,
-:class:`ObservedCasillaValue`, :class:`FiledDeclarationObservation`.
+:class:`SedeCapture`, :class:`FiledDeclaracionArtefact`,
+:class:`ObservedCasillaValue`, :class:`FiledDeclaracionObservation`.
 """
 
 from __future__ import annotations
@@ -161,7 +161,7 @@ class SedeCapture(BaseModel):
     mode: Literal["read"] = "read"
 
 
-class FiledDeclarationArtefact(BaseModel):
+class FiledDeclaracionArtefact(BaseModel):
     """One immutable artefact captured from AEAT's filed-declaration surface.
 
     The artefact is evidence of what AEAT served during a read-only
@@ -239,7 +239,7 @@ class IvaCompensationWalletObservation(BaseModel):
     mode: Literal["read"] = "read"
 
 
-class FiledDeclarationObservation(BaseModel):
+class FiledDeclaracionObservation(BaseModel):
     """Normalized read-only observation of one filed AEAT declaration.
 
     A complete observation starts from the register row and may include
@@ -257,7 +257,7 @@ class FiledDeclarationObservation(BaseModel):
     status: str = Field(min_length=1, max_length=32)
     presented_at: datetime
     authenticated_identity: str = Field(min_length=1, max_length=32)
-    artefacts: tuple[FiledDeclarationArtefact, ...] = Field(min_length=1)
+    artefacts: tuple[FiledDeclaracionArtefact, ...] = Field(min_length=1)
     casillas: tuple[ObservedCasillaValue, ...] = ()
     metadata: dict[str, str] = Field(default_factory=dict)
     extraction_coverage: dict[str, float] = Field(default_factory=dict)
@@ -275,8 +275,8 @@ class FiledDeclarationObservation(BaseModel):
 
 __all__ = [
     "Expediente",
-    "FiledDeclarationArtefact",
-    "FiledDeclarationObservation",
+    "FiledDeclaracionArtefact",
+    "FiledDeclaracionObservation",
     "IvaCompensationWalletObservation",
     "IvaCompensationWalletRow",
     "JustificanteRef",

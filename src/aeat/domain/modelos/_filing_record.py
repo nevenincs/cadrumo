@@ -1,6 +1,6 @@
 """Filing-record store paired with filed calculation revisions.
 
-A :class:`FilingRecord` is the durable receipt of an internal filing
+A :class:`ModeloRecord` is the durable receipt of an internal filing
 event: at time T, actor A marked calculation revision R of work unit
 W as the current filed answer for (bucket, modelo, year, period).
 The filing record holds filing-event state (filed timestamp, actor,
@@ -62,7 +62,7 @@ _Notes = Annotated[
 ]
 
 
-class FilingRecordStatus(StrEnum):
+class ModeloRecordStatus(StrEnum):
     """Closed enumeration of filing-record lifecycle states.
 
     * ``CURRENT`` — the record is the current filed answer for its
@@ -139,7 +139,7 @@ def derive_filing_record_id(
     return hashlib.sha256(encoded).hexdigest()
 
 
-class FilingRecord(BaseModel):
+class ModeloRecord(BaseModel):
     """Durable receipt of one internal filing event."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -155,7 +155,7 @@ class FilingRecord(BaseModel):
     filed_by: _ActorLabel
     notes: _Notes | None = None
     aeat_accepted: bool = False
-    status: FilingRecordStatus = FilingRecordStatus.CURRENT
+    status: ModeloRecordStatus = ModeloRecordStatus.CURRENT
     superseded_at: datetime | None = None
     superseded_by_filing_record_id: _FilingRecordId | None = None
     external_evidence: ExternalEvidence | None = None
@@ -171,7 +171,7 @@ class FilingRecord(BaseModel):
         raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
 
     @model_validator(mode="after")
-    def _enforce_invariants(self) -> FilingRecord:
+    def _enforce_invariants(self) -> ModeloRecord:
         derived = derive_filing_record_id(
             work_unit_id=self.work_unit_id,
             calculation_revision_id=self.calculation_revision_id,
@@ -182,10 +182,10 @@ class FilingRecord(BaseModel):
             raise ModeloValidationError(
                 f"filing_record_id {self.filing_record_id!r} does not match the derived id {derived!r}"
             )
-        if self.status is FilingRecordStatus.CURRENT:
+        if self.status is ModeloRecordStatus.CURRENT:
             if self.superseded_at is not None or self.superseded_by_filing_record_id is not None:
                 raise ModeloValidationError("current filing record must not carry supersession metadata")
-        elif self.status is FilingRecordStatus.SUPERSEDED:
+        elif self.status is ModeloRecordStatus.SUPERSEDED:
             if self.superseded_at is None or self.superseded_by_filing_record_id is None:
                 raise ModeloValidationError(
                     "superseded filing record must carry superseded_at and superseded_by_filing_record_id"
@@ -197,15 +197,15 @@ class FilingRecord(BaseModel):
         return self
 
 
-class FilingRecordCatalogue(BaseModel):
+class ModeloRecordCatalogue(BaseModel):
     """Immutable catalogue of every filing record in storage."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    records: Mapping[str, FilingRecord] = Field(default_factory=dict)
+    records: Mapping[str, ModeloRecord] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def _enforce_keys_match(self) -> FilingRecordCatalogue:
+    def _enforce_keys_match(self) -> ModeloRecordCatalogue:
         for key, record in self.records.items():
             if key != record.filing_record_id:
                 raise ModeloValidationError(
@@ -214,7 +214,7 @@ class FilingRecordCatalogue(BaseModel):
         # Exactly one CURRENT record per (bucket, modelo, year, period) tuple.
         currents: dict[tuple[str, str, int, str], str] = {}
         for record in self.records.values():
-            if record.status is not FilingRecordStatus.CURRENT:
+            if record.status is not ModeloRecordStatus.CURRENT:
                 continue
             current_key = (record.bucket_id, record.modelo, record.filing_year, record.period)
             if current_key in currents:
@@ -225,7 +225,7 @@ class FilingRecordCatalogue(BaseModel):
             currents[current_key] = record.filing_record_id
         return self
 
-    def get(self, filing_record_id: str) -> FilingRecord | None:
+    def get(self, filing_record_id: str) -> ModeloRecord | None:
         return self.records.get(filing_record_id)
 
     def current_for(
@@ -235,7 +235,7 @@ class FilingRecordCatalogue(BaseModel):
         modelo: str,
         filing_year: int,
         period: str,
-    ) -> FilingRecord | None:
+    ) -> ModeloRecord | None:
         """Return the current (non-superseded) filing record for a tuple.
 
         Returns ``None`` when no filing has ever happened for the
@@ -245,7 +245,7 @@ class FilingRecordCatalogue(BaseModel):
         """
 
         for record in self.records.values():
-            if record.status is not FilingRecordStatus.CURRENT:
+            if record.status is not ModeloRecordStatus.CURRENT:
                 continue
             if (
                 record.bucket_id == bucket_id
@@ -263,7 +263,7 @@ class FilingRecordCatalogue(BaseModel):
         modelo: str,
         filing_year: int,
         period: str,
-    ) -> tuple[FilingRecord, ...]:
+    ) -> tuple[ModeloRecord, ...]:
         """Return every filing record for a tuple, ordered by filed_at."""
 
         matching = tuple(
@@ -279,14 +279,14 @@ class FilingRecordCatalogue(BaseModel):
     def values(self):
         return self.records.values()
 
-    def __iter__(self) -> Iterator[FilingRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[ModeloRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.records.values())
 
     def __len__(self) -> int:
         return len(self.records)
 
     def __contains__(self, key: object) -> bool:
-        if isinstance(key, FilingRecord):
+        if isinstance(key, ModeloRecord):
             return key.filing_record_id in self.records
         if isinstance(key, str):
             return key in self.records
@@ -296,8 +296,8 @@ class FilingRecordCatalogue(BaseModel):
 __all__ = [
     "ExternalEvidence",
     "ExternalEvidenceKind",
-    "FilingRecord",
-    "FilingRecordCatalogue",
-    "FilingRecordStatus",
+    "ModeloRecord",
+    "ModeloRecordCatalogue",
+    "ModeloRecordStatus",
     "derive_filing_record_id",
 ]

@@ -22,7 +22,7 @@ from ...application.modelo import (
     AmendmentTargetStateError,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
-    FilingRecordNotFoundError,
+    ModeloRecordNotFoundError,
     ModeloWorkflowGateError,
     VerificationReportNotFoundError,
     WorkUnitAlreadyDiscardedError,
@@ -49,7 +49,7 @@ from ...domain.calculations.registry._errors import RegistrySnapshotError, Regis
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
-from ...domain.modelos._filing_record import FilingRecord
+from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date, _profile_to_autonomo
@@ -1076,7 +1076,7 @@ def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
     return lines
 
 
-def _filing_record_payload(record: FilingRecord) -> dict[str, object]:
+def _filing_record_payload(record: ModeloRecord) -> dict[str, object]:
     external_evidence: dict[str, object] | None
     if record.external_evidence is None:
         external_evidence = None
@@ -1108,7 +1108,7 @@ def _filing_record_payload(record: FilingRecord) -> dict[str, object]:
     }
 
 
-def _filing_record_lines(record: FilingRecord) -> list[str]:
+def _filing_record_lines(record: ModeloRecord) -> list[str]:
     lines = [
         f"filing_record_id\t{record.filing_record_id}",
         f"work_unit_id\t{record.work_unit_id}",
@@ -1664,7 +1664,7 @@ def work_amend(
             actor=actor or _resolve_default_actor(),
         )
     except (
-        FilingRecordNotFoundError,
+        ModeloRecordNotFoundError,
         AmendmentEvidenceMissingError,
         AmendmentTargetStateError,
         CalculationRevisionNotFoundError,
@@ -1825,7 +1825,7 @@ def filing_record_show(
 
     try:
         record = get_filing_record(filing_record_id)
-    except FilingRecordNotFoundError as exc:
+    except ModeloRecordNotFoundError as exc:
         raise typer.BadParameter(str(exc)) from exc
 
     payload = {

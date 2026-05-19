@@ -427,8 +427,8 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
     from aeat.domain.modelos._filing_record import (
         ExternalEvidence,
         ExternalEvidenceKind,
-        FilingRecord,
-        FilingRecordStatus,
+        ModeloRecord,
+        ModeloRecordStatus,
         derive_filing_record_id,
     )
     from aeat.entrypoints.cli._modelo import _filing_record_payload
@@ -443,7 +443,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         filed_at=datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC),
         filed_by="aeat-import",
     )
-    record = FilingRecord(
+    record = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id=work_unit_id,
             calculation_revision_id=revision_id,
@@ -460,7 +460,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         filed_by="operator-A",
         notes=None,
         aeat_accepted=False,
-        status=FilingRecordStatus.CURRENT,
+        status=ModeloRecordStatus.CURRENT,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id="JUST-2026-130-1T-XYZ789",
@@ -491,8 +491,8 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
 
     from aeat.domain.modelos._codes import ModeloCode
     from aeat.domain.modelos._filing_record import (
-        FilingRecord,
-        FilingRecordStatus,
+        ModeloRecord,
+        ModeloRecordStatus,
         derive_filing_record_id,
     )
     from aeat.entrypoints.cli._modelo import _filing_record_payload
@@ -500,7 +500,7 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
     work_unit_id = "a" * 64
     revision_id = "c" * 64
     filed_at = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
-    record = FilingRecord(
+    record = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id=work_unit_id,
             calculation_revision_id=revision_id,
@@ -517,7 +517,7 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
         filed_by="operator-A",
         notes=None,
         aeat_accepted=False,
-        status=FilingRecordStatus.CURRENT,
+        status=ModeloRecordStatus.CURRENT,
     )
 
     payload = _filing_record_payload(record)
@@ -537,8 +537,8 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
     from aeat.domain.modelos._filing_record import (
         ExternalEvidence,
         ExternalEvidenceKind,
-        FilingRecord,
-        FilingRecordStatus,
+        ModeloRecord,
+        ModeloRecordStatus,
         derive_filing_record_id,
     )
     from aeat.entrypoints.cli._modelo import _filing_record_lines
@@ -553,7 +553,7 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
         filed_at=datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC),
         filed_by="aeat-import",
     )
-    record = FilingRecord(
+    record = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id=work_unit_id,
             calculation_revision_id=revision_id,
@@ -570,7 +570,7 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
         filed_by="operator-A",
         notes=None,
         aeat_accepted=False,
-        status=FilingRecordStatus.CURRENT,
+        status=ModeloRecordStatus.CURRENT,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             reference_id="CSV-303-2026-Q1",

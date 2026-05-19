@@ -50,12 +50,12 @@ from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
-    FilingRecord,
-    FilingRecordStatus,
+    ModeloRecord,
+    ModeloRecordStatus,
     derive_filing_record_id,
 )
 from ...domain.modelos._filing_repository import (
-    FilingRecordCatalogueRepository,
+    ModeloRecordCatalogueRepository,
     upsert_filing_record,
 )
 from ...domain.modelos._repository import (
@@ -181,7 +181,7 @@ class CalculationRevisionStateError(ModeloError):
     """
 
 
-class FilingRecordNotFoundError(ModeloError, KeyError):
+class ModeloRecordNotFoundError(ModeloError, KeyError):
     """Raised when a filing record lookup fails."""
 
 
@@ -218,7 +218,7 @@ class ExternalFilingImportError(ModeloError):
 #: draft + preflight stages. The grounding spans:
 #:
 #:   - ``ley-58-2003:art-119`` (declaracion tributaria — what a tax
-#:     declaration is, the locked semantics of FilingRecord
+#:     declaration is, the locked semantics of ModeloRecord
 #:     persistence)
 #:   - ``ley-58-2003:art-120`` (autoliquidaciones — the
 #:     self-assessment regime modelo file_modelo_revision performs,
@@ -1715,13 +1715,13 @@ def file_modelo_revision(
     notes: str | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    filing_repository: FilingRecordCatalogueRepository | None = None,
+    filing_repository: ModeloRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
     clock: datetime | None = None,
-) -> FilingRecord:
+) -> ModeloRecord:
     """File a verified-complete revision as the current filed answer.
 
     State transitions performed atomically (from the caller's
@@ -1755,7 +1755,7 @@ def file_modelo_revision(
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     revisions = cr_repo.load()
@@ -1808,7 +1808,7 @@ def file_modelo_revision(
     )
 
     # 1. Build new current filing record.
-    new_filing = FilingRecord(
+    new_filing = ModeloRecord(
         filing_record_id=new_filing_id,
         work_unit_id=target.work_unit_id,
         calculation_revision_id=calculation_revision_id,
@@ -1820,7 +1820,7 @@ def file_modelo_revision(
         filed_by=actor.strip(),
         notes=notes.strip() if notes else None,
         aeat_accepted=False,
-        status=FilingRecordStatus.CURRENT,
+        status=ModeloRecordStatus.CURRENT,
     )
 
     # 2. Supersede prior filing record if present.
@@ -1828,7 +1828,7 @@ def file_modelo_revision(
     if prior_current is not None:
         superseded_prior = prior_current.model_copy(
             update={
-                "status": FilingRecordStatus.SUPERSEDED,
+                "status": ModeloRecordStatus.SUPERSEDED,
                 "superseded_at": now,
                 "superseded_by_filing_record_id": new_filing_id,
             }
@@ -1922,8 +1922,8 @@ def list_filing_records(
     *,
     bucket_id: str | None = None,
     include_superseded: bool = False,
-    filing_repository: FilingRecordCatalogueRepository | None = None,
-) -> tuple[FilingRecord, ...]:
+    filing_repository: ModeloRecordCatalogueRepository | None = None,
+) -> tuple[ModeloRecord, ...]:
     """List filing records, optionally filtered to a bucket.
 
     Superseded records are excluded unless ``include_superseded``
@@ -1931,13 +1931,13 @@ def list_filing_records(
     modelo, period, filed_at)``.
     """
 
-    fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     catalogue = fr_repo.load()
     records = tuple(
         record
         for record in catalogue.values()
         if (bucket_id is None or record.bucket_id == bucket_id)
-        and (include_superseded or record.status is FilingRecordStatus.CURRENT)
+        and (include_superseded or record.status is ModeloRecordStatus.CURRENT)
     )
     return tuple(
         sorted(
@@ -1950,15 +1950,15 @@ def list_filing_records(
 def get_filing_record(
     filing_record_id: str,
     *,
-    filing_repository: FilingRecordCatalogueRepository | None = None,
-) -> FilingRecord:
+    filing_repository: ModeloRecordCatalogueRepository | None = None,
+) -> ModeloRecord:
     """Return one filing record by id, or raise."""
 
-    fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     catalogue = fr_repo.load()
     record = catalogue.get(filing_record_id)
     if record is None:
-        raise FilingRecordNotFoundError(f"no filing record with id={filing_record_id!r}")
+        raise ModeloRecordNotFoundError(f"no filing record with id={filing_record_id!r}")
     return record
 
 
@@ -2006,10 +2006,10 @@ def amend_modelo_revision(
     actor: str,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    filing_repository: FilingRecordCatalogueRepository | None = None,
+    filing_repository: ModeloRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
-) -> FilingRecord:
+) -> ModeloRecord:
     """Build and file an amendment over an externally-filed return.
 
     Pipeline:
@@ -2036,7 +2036,7 @@ def amend_modelo_revision(
        filing record to the baseline.
 
     Raises:
-        FilingRecordNotFoundError: When ``from_filing_record_id`` is
+        ModeloRecordNotFoundError: When ``from_filing_record_id`` is
             absent from the catalogue.
         AmendmentEvidenceMissingError: When the baseline record does
             not carry ``external_evidence``.
@@ -2048,20 +2048,20 @@ def amend_modelo_revision(
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     filing_catalogue = fr_repo.load()
     baseline = filing_catalogue.get(from_filing_record_id)
     if baseline is None:
-        raise FilingRecordNotFoundError(f"no filing record with id={from_filing_record_id!r}")
+        raise ModeloRecordNotFoundError(f"no filing record with id={from_filing_record_id!r}")
     if baseline.external_evidence is None:
         raise AmendmentEvidenceMissingError(
             f"filing record {from_filing_record_id!r} has no external_evidence; the "
             f"modelo amend path requires an imported AEAT-attested baseline. Use the "
             f"standard re-file path (calculate → verify → file) for locally-filed returns."
         )
-    if baseline.status is not FilingRecordStatus.CURRENT:
+    if baseline.status is not ModeloRecordStatus.CURRENT:
         raise AmendmentTargetStateError(
             f"filing record {from_filing_record_id!r} is in status {baseline.status.value!r}; "
             f"only CURRENT filings can be amended"
@@ -2154,7 +2154,7 @@ def amend_modelo_revision(
         filed_by=actor.strip(),
     )
 
-    new_filing = FilingRecord(
+    new_filing = ModeloRecord(
         filing_record_id=new_filing_id,
         work_unit_id=baseline.work_unit_id,
         calculation_revision_id=new_revision_id,
@@ -2166,14 +2166,14 @@ def amend_modelo_revision(
         filed_by=actor.strip(),
         notes=None,
         aeat_accepted=False,
-        status=FilingRecordStatus.CURRENT,
+        status=ModeloRecordStatus.CURRENT,
         external_evidence=None,
         amends_filing_record_id=baseline.filing_record_id,
     )
 
     superseded_baseline = baseline.model_copy(
         update={
-            "status": FilingRecordStatus.SUPERSEDED,
+            "status": ModeloRecordStatus.SUPERSEDED,
             "superseded_at": now,
             "superseded_by_filing_record_id": new_filing_id,
         }
@@ -2240,10 +2240,10 @@ def import_external_filing_evidence(
     actor: str = "aeat-import",
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    filing_repository: FilingRecordCatalogueRepository | None = None,
+    filing_repository: ModeloRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
-) -> FilingRecord:
+) -> ModeloRecord:
     """Persist an externally-filed return as a baseline filing record.
 
     This is the canonical entry point the import path (justificante
@@ -2275,7 +2275,7 @@ def import_external_filing_evidence(
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     if not casilla_values:
@@ -2351,7 +2351,7 @@ def import_external_filing_evidence(
         period=work_unit.period,
     )
 
-    new_filing = FilingRecord(
+    new_filing = ModeloRecord(
         filing_record_id=new_filing_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
@@ -2363,7 +2363,7 @@ def import_external_filing_evidence(
         filed_by=actor.strip(),
         notes=None,
         aeat_accepted=True,
-        status=FilingRecordStatus.CURRENT,
+        status=ModeloRecordStatus.CURRENT,
         external_evidence=ExternalEvidence(
             kind=evidence_kind,
             reference_id=cleaned_reference,
@@ -2375,7 +2375,7 @@ def import_external_filing_evidence(
     if prior_current is not None:
         superseded_prior = prior_current.model_copy(
             update={
-                "status": FilingRecordStatus.SUPERSEDED,
+                "status": ModeloRecordStatus.SUPERSEDED,
                 "superseded_at": now,
                 "superseded_by_filing_record_id": new_filing_id,
             }
@@ -2443,7 +2443,7 @@ __all__ = [
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "ExternalFilingImportError",
-    "FilingRecordNotFoundError",
+    "ModeloRecordNotFoundError",
     "ModeloAggregationBindingError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloWorkflowGateError",

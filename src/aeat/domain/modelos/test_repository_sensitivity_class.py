@@ -26,7 +26,7 @@ _REPOSITORY_SOURCES: tuple[tuple[str, Path], ...] = (
         PROJECT_ROOT / "src" / "aeat" / "domain" / "modelos" / "_calculation_repository.py",
     ),
     (
-        "FilingRecordCatalogueRepository",
+        "ModeloRecordCatalogueRepository",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "modelos" / "_filing_repository.py",
     ),
     (

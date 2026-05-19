@@ -33,7 +33,7 @@ class Modelo036TerminalStateError(Modelo036LifecycleError):
     """Raised when an operation is requested on a 036 record already in a terminal (baja) state."""
 
 
-class CensusStaleRefusedError(ModeloError):
+class CensoStaleRefusedError(ModeloError):
     """Raised when calculate / verify / file / build_draft / approve_draft / export_draft
     refuse because the operator applied a new census after the target entity was produced.
 
@@ -49,7 +49,7 @@ class CensusStaleRefusedError(ModeloError):
 
 
 __all__ = [
-    "CensusStaleRefusedError",
+    "CensoStaleRefusedError",
     "Modelo036LifecycleError",
     "Modelo036PriorAltaRequiredError",
     "Modelo036TerminalStateError",

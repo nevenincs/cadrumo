@@ -26,7 +26,7 @@ from aeat.domain.buckets import (
     BucketEventType,
 )
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._filing_repository import FilingRecordCatalogueRepository
+from aeat.domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
@@ -49,7 +49,7 @@ def repos(tmp_path: Path):
             yield (
                 WorkUnitCatalogueRepository(objects=objects),
                 CalculationRevisionCatalogueRepository(objects=objects),
-                FilingRecordCatalogueRepository(objects=objects),
+                ModeloRecordCatalogueRepository(objects=objects),
                 VerificationReportCatalogueRepository(objects=objects),
                 BucketEventHistoryRepository(objects=objects),
             )

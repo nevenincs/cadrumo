@@ -26,7 +26,7 @@ from ...domain.buckets import (
     BucketEventType,
 )
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._filing_repository import FilingRecordCatalogueRepository
+from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ._actions import WorkUnitNotFoundError
@@ -61,7 +61,7 @@ def assemble_work_unit_history(
     *,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    filing_repository: FilingRecordCatalogueRepository | None = None,
+    filing_repository: ModeloRecordCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
 ) -> WorkUnitHistory:
@@ -76,7 +76,7 @@ def assemble_work_unit_history(
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 

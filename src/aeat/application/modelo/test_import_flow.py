@@ -1,6 +1,6 @@
 """End-to-end tests for the external-filing import path.
 
-The import path is the production source of ``FilingRecord``
+The import path is the production source of ``ModeloRecord``
 records that carry ``external_evidence``. Operators (or import
 adapters: justificante PDF reader, AEAT CSV register importer,
 AEAT live capture) call ``import_external_filing_evidence`` with
@@ -53,10 +53,10 @@ from aeat.domain.modelos._calculation_revision import (
 )
 from aeat.domain.modelos._filing_record import (
     ExternalEvidenceKind,
-    FilingRecordStatus,
+    ModeloRecordStatus,
 )
 from aeat.domain.modelos._filing_repository import (
-    FilingRecordCatalogueRepository,
+    ModeloRecordCatalogueRepository,
 )
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_repository import (
@@ -89,7 +89,7 @@ def repos(tmp_path):
             objects = SecureObjectRepository(engine=engine)
             wu = WorkUnitCatalogueRepository(objects=objects)
             cr = CalculationRevisionCatalogueRepository(objects=objects)
-            fr = FilingRecordCatalogueRepository(objects=objects)
+            fr = ModeloRecordCatalogueRepository(objects=objects)
             vr = VerificationReportCatalogueRepository(objects=objects)
             bv = BucketEventHistoryRepository(objects=objects)
             yield wu, cr, fr, vr, bv
@@ -152,7 +152,7 @@ def _drive_import_persists_filing(repos) -> _ImportOutcome:  # type: ignore[no-u
 
 def test_import_filing_is_current_and_accepted(repos) -> None:  # type: ignore[no-untyped-def]
     outcome = _drive_import_persists_filing(repos)
-    assert outcome.filing.status is FilingRecordStatus.CURRENT
+    assert outcome.filing.status is ModeloRecordStatus.CURRENT
     assert outcome.filing.aeat_accepted is True
 
 
@@ -266,13 +266,13 @@ def test_import_supersedes_prior_current_filing(repos) -> None:
     )
 
     refreshed_first = get_filing_record(first.filing_record_id, filing_repository=fr_repo)
-    assert refreshed_first.status is FilingRecordStatus.SUPERSEDED
+    assert refreshed_first.status is ModeloRecordStatus.SUPERSEDED
     assert refreshed_first.superseded_by_filing_record_id == second.filing_record_id
 
     refreshed_first_revision = get_calculation_revision(first.calculation_revision_id, calculation_repository=cr_repo)
     assert refreshed_first_revision.state is CalculationRevisionState.FILED_SUPERSEDED
 
-    assert second.status is FilingRecordStatus.CURRENT
+    assert second.status is ModeloRecordStatus.CURRENT
     assert second.external_evidence is not None
     assert second.external_evidence.kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
 
@@ -323,7 +323,7 @@ def test_import_then_amend_unlocks_amendment_path(repos) -> None:
 
     assert amended.amends_filing_record_id == imported.filing_record_id
     refreshed_baseline = get_filing_record(imported.filing_record_id, filing_repository=fr_repo)
-    assert refreshed_baseline.status is FilingRecordStatus.SUPERSEDED
+    assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDED
     assert refreshed_baseline.superseded_by_filing_record_id == amended.filing_record_id
 
     # Chronological event chain: import → amend.

@@ -124,7 +124,7 @@ def test_invoice_counterparty_eu_member_state_returns_typed_enum_for_eu_country(
     EUMemberState through the typed accessor — downstream consumers
     (OSS / IOSS / intra-community routing) work against the closed enum
     rather than a raw 2-letter string."""
-    from aeat.domain.vat import EUMemberState
+    from aeat.domain.iva import EUMemberState
 
     invoice = _valid_invoice(
         counterparty_country="DE",
@@ -150,15 +150,15 @@ def test_invoice_counterparty_eu_member_state_returns_none_for_non_eu_country() 
 
 def test_invoice_iva_classification_for_line_returns_substrate_typed_record() -> None:
     """Invoice.iva_classification_for_line(line) returns the canonical
-    substrate-grounded triple (VATCategory + VATRateKind +
+    substrate-grounded triple (IvaCategory + IvaRateKind +
     IvaFlowDirection) bundled in IvaInvoiceClassification — the typed
     record downstream filing surfaces consume."""
     from aeat.domain.invoices import IvaInvoiceClassification
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         IvaFlowDirection,
         IvaSettlementSide,
-        VATCategory,
-        VATRateKind,
+        IvaCategory,
+        IvaRateKind,
     )
 
     line = _valid_line(iva_rate=IvaRate.RATE_21)
@@ -166,8 +166,8 @@ def test_invoice_iva_classification_for_line_returns_substrate_typed_record() ->
 
     classification = invoice.iva_classification_for_line(line)
     assert isinstance(classification, IvaInvoiceClassification)
-    assert classification.category is VATCategory.DOMESTIC_GENERAL_21
-    assert classification.rate_kind is VATRateKind.GENERAL
+    assert classification.category is IvaCategory.DOMESTIC_GENERAL_21
+    assert classification.rate_kind is IvaRateKind.GENERAL
     assert classification.flow_direction is IvaFlowDirection.REPERCUTIDO
     assert classification.settlement_sides == frozenset({IvaSettlementSide.DEVENGADA})
 
@@ -175,7 +175,7 @@ def test_invoice_iva_classification_for_line_returns_substrate_typed_record() ->
 def test_invoice_iva_classification_received_invoice_resolves_to_soportado() -> None:
     """A received invoice routes lines to SOPORTADO (input IVA / cuotas
     deducibles per LIVA art 92), regardless of rate slot."""
-    from aeat.domain.vat import IvaFlowDirection, IvaSettlementSide
+    from aeat.domain.iva import IvaFlowDirection, IvaSettlementSide
 
     line = _valid_line(iva_rate=IvaRate.RATE_10)
     invoice = _valid_invoice(
@@ -195,7 +195,7 @@ def test_invoice_counterparty_eu_member_state_handles_lowercase_input_via_upperc
     (validate_country_code). The eu_member_state accessor lowercases
     again for substrate enum lookup. Round-trip works regardless of
     input case."""
-    from aeat.domain.vat import EUMemberState
+    from aeat.domain.iva import EUMemberState
 
     invoice = _valid_invoice(
         counterparty_country="fr",  # input lowercase
@@ -206,18 +206,18 @@ def test_invoice_counterparty_eu_member_state_handles_lowercase_input_via_upperc
 
 
 def test_invoice_iva_category_is_typed_as_vat_category_substrate_enum() -> None:
-    """Invoice.iva_category is now strongly-typed VATCategory | None
+    """Invoice.iva_category is now strongly-typed IvaCategory | None
     instead of free-form str | None. Pydantic coerces string inputs
-    (the historical persistence shape) into VATCategory members and
+    (the historical persistence shape) into IvaCategory members and
     serializes them back to their string values, so existing
     serialization round-trips remain valid."""
-    from aeat.domain.vat import VATCategory
+    from aeat.domain.iva import IvaCategory
 
     invoice = _valid_invoice()
     # Default value is None
     assert invoice.iva_category is None
 
-    # String input coerces to VATCategory
+    # String input coerces to IvaCategory
     invoice = Invoice.model_validate(
         {
             "kind": InvoiceKind.ISSUED,
@@ -235,7 +235,7 @@ def test_invoice_iva_category_is_typed_as_vat_category_substrate_enum() -> None:
             "iva_category": "domestic_general_21",  # string input
         }
     )
-    assert invoice.iva_category is VATCategory.DOMESTIC_GENERAL_21
+    assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL_21
     # JSON round-trip preserves the enum value as its string form
     json_dump = invoice.model_dump(mode="json")
     assert json_dump["iva_category"] == "domestic_general_21"
@@ -243,8 +243,8 @@ def test_invoice_iva_category_is_typed_as_vat_category_substrate_enum() -> None:
 
 def test_invoice_iva_category_rejects_unknown_string() -> None:
     """An unknown iva_category string must fail validation now that the
-    field is typed against the closed VATCategory enum."""
-    with pytest.raises(ValidationError, match=r"VATCategory"):
+    field is typed against the closed IvaCategory enum."""
+    with pytest.raises(ValidationError, match=r"IvaCategory"):
         Invoice.model_validate(
             {
                 "kind": InvoiceKind.ISSUED,
@@ -268,11 +268,11 @@ def test_iva_rate_percentage_is_resolved_against_centralized_vat_substrate() -> 
     """iva_rate_percentage must derive its values from registry/aeat/vat/rates.toml.
 
     The helper carries no hardcoded ``RATE_21 -> 0.21`` literal; every
-    numeric slot is resolved against :func:`aeat.domain.vat.lookup_rate`
+    numeric slot is resolved against :func:`aeat.domain.iva.lookup_rate`
     for Spain at a given date.
     """
     from aeat.domain.invoices._enums import iva_rate_percentage
-    from aeat.domain.vat import EUMemberState, VATRateKind, lookup_rate
+    from aeat.domain.iva import EUMemberState, IvaRateKind, lookup_rate
 
     sample_date = date(2025, 6, 15)
 
@@ -281,9 +281,9 @@ def test_iva_rate_percentage_is_resolved_against_centralized_vat_substrate() -> 
     assert iva_rate_percentage(IvaRate.NOT_SUBJECT, on_date=sample_date) is None
 
     for slot, kind in [
-        (IvaRate.RATE_4, VATRateKind.SUPER_REDUCED),
-        (IvaRate.RATE_10, VATRateKind.REDUCED),
-        (IvaRate.RATE_21, VATRateKind.GENERAL),
+        (IvaRate.RATE_4, IvaRateKind.SUPER_REDUCED),
+        (IvaRate.RATE_10, IvaRateKind.REDUCED),
+        (IvaRate.RATE_21, IvaRateKind.GENERAL),
     ]:
         substrate_rate = lookup_rate(EUMemberState.ES, kind, sample_date)
         expected = substrate_rate.pct / Decimal("100")

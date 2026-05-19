@@ -9,19 +9,20 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._errors import ModeloError
-from ._filing_record import FilingRecord, FilingRecordCatalogue
+from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 
 _LOGGER = get_logger(__name__)
+# namespace string preserved across rename to avoid orphaning persisted envelopes
 _FILING_NAMESPACE = "aeat.domain.modelos.filing_records"
 _FILING_OBJECT_KEY = "catalogue"
 _FILING_CATALOGUE_VERSION = 1
 
 
-class FilingRecordPersistenceError(ModeloError):
+class ModeloRecordPersistenceError(ModeloError):
     """Raised when the filing-record catalogue cannot be persisted or loaded."""
 
 
-class FilingRecordCatalogueRepository:
+class ModeloRecordCatalogueRepository:
     """Read / write the filing-record catalogue in encrypted storage."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -30,7 +31,7 @@ class FilingRecordCatalogueRepository:
     def exists(self) -> bool:
         return self._objects.exists(_FILING_NAMESPACE, _FILING_OBJECT_KEY)
 
-    def load(self) -> FilingRecordCatalogue:
+    def load(self) -> ModeloRecordCatalogue:
         try:
             record = self._objects.load(
                 _FILING_NAMESPACE,
@@ -40,25 +41,25 @@ class FilingRecordCatalogueRepository:
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
             _LOGGER.error("filing-record catalogue integrity error", exc_info=True)
-            raise FilingRecordPersistenceError(
+            raise ModeloRecordPersistenceError(
                 f"filing-record catalogue integrity error: {type(exc).__name__}: {exc}"
             ) from exc
         if record is None:
-            return FilingRecordCatalogue()
-        envelope = Envelope[FilingRecordCatalogue].model_validate_json(record.payload.decode("utf-8"))
+            return ModeloRecordCatalogue()
+        envelope = Envelope[ModeloRecordCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
-            raise FilingRecordPersistenceError(
+            raise ModeloRecordPersistenceError(
                 f"filing-record catalogue has classification {envelope.classification}; FINANCIAL expected"
             )
         if envelope.schema_version > _FILING_CATALOGUE_VERSION:
-            raise FilingRecordPersistenceError(
+            raise ModeloRecordPersistenceError(
                 f"filing-record catalogue is at version {envelope.schema_version}; "
                 f"consumer supports up to {_FILING_CATALOGUE_VERSION}"
             )
         return envelope.payload
 
-    def save(self, catalogue: FilingRecordCatalogue) -> None:
-        envelope = Envelope[FilingRecordCatalogue](
+    def save(self, catalogue: ModeloRecordCatalogue) -> None:
+        envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.FINANCIAL,
@@ -74,15 +75,15 @@ class FilingRecordCatalogueRepository:
         )
 
 
-def upsert_filing_record(catalogue: FilingRecordCatalogue, record: FilingRecord) -> FilingRecordCatalogue:
+def upsert_filing_record(catalogue: ModeloRecordCatalogue, record: ModeloRecord) -> ModeloRecordCatalogue:
     """Return a new catalogue with ``record`` inserted or replaced."""
     mapping = dict(catalogue.records)
     mapping[record.filing_record_id] = record
-    return FilingRecordCatalogue(records=mapping)
+    return ModeloRecordCatalogue(records=mapping)
 
 
 __all__ = [
-    "FilingRecordCatalogueRepository",
-    "FilingRecordPersistenceError",
+    "ModeloRecordCatalogueRepository",
+    "ModeloRecordPersistenceError",
     "upsert_filing_record",
 ]
