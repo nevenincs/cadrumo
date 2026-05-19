@@ -117,6 +117,46 @@ required_text = [
     "El período de liquidación coincidirá con el trimestre natural",
 ]
 
+[legal."rd-1624-1992:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-29.html#a29"
+document_id = "BOE-A-1992-28925"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a29"
+published_at = 1992-12-31
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-19
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 29: forma de las devoluciones de oficio vinculadas al articulo 115 LIVA."
+required_text = [
+    "Devoluciones de oficio",
+    "se realizarán por transferencia bancaria",
+    "artículo 115 de la Ley del Impuesto",
+]
+
+[legal."rd-1624-1992:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-30.html#a30"
+document_id = "BOE-A-1992-28925"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a30"
+published_at = 1992-12-31
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-19
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 30: registro de devolucion mensual y limites para solicitar devolucion en periodos distintos del ultimo periodo anual."
+required_text = [
+    "Devoluciones al término de cada período de liquidación",
+    "deberán estar inscritos en el registro de devolución mensual",
+    "no iniciarán el procedimiento de devolución",
+]
+
 [legal."rd-1624-1992:art-30-bis"]
 evidence_tier = "legal_authority"
 authority = "boe"

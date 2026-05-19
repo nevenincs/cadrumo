@@ -111,6 +111,18 @@ def test_previous_filing_selector_accepts_singular_source_output_shape() -> None
     assert validate_binding_selector_shape(binding) == []
 
 
+def test_previous_filing_selector_accepts_singular_source_output_with_period_offset() -> None:
+    binding = _binding(
+        source="previous_filing",
+        selector={
+            "source_modelo": "303",
+            "source_output": "iva.compensacion-disponible-fin-periodo",
+            "source_period_offset_from_target": -1,
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
 def test_previous_filing_selector_rejects_both_source_shapes() -> None:
     """Declaring source_output AND source_casillas in the same selector fails.
 
