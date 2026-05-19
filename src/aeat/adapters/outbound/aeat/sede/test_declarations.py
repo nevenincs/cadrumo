@@ -43,7 +43,7 @@ from aeat.domain.calculations.registry import (
 from aeat.tests import FIXTURES_DIR
 
 from ._declarations import (
-    Declaration,
+    Declaracion,
     _assert_read_browser_action,
     _assert_read_http,
     _extract_csv_from_url,
@@ -59,8 +59,8 @@ from ._declarations import (
     resolve_relation_values_from_filed_declarations,
 )
 from ._errors import SedeParseError
-from ._observation_store import FiledDeclarationObservationStore
-from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation, ObservedCasillaValue
+from ._observation_store import FiledDeclaracionObservationStore
+from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -181,9 +181,9 @@ def _filed_observation(
     casilla_values: Mapping[str, Decimal | str],
     source_artefact_kind: Literal["submitted_file", "declaration_pdf", "justificante_pdf"] = "submitted_file",
     extraction_coverage: dict[str, float] | None = None,
-) -> FiledDeclarationObservation:
+) -> FiledDeclaracionObservation:
     coverage = dict(extraction_coverage) if extraction_coverage is not None else {str(source_artefact_kind): 1.0}
-    return FiledDeclarationObservation(
+    return FiledDeclaracionObservation(
         modelo=modelo,
         ejercicio=ejercicio,
         period=period,
@@ -192,7 +192,7 @@ def _filed_observation(
         presented_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(
-            FiledDeclarationArtefact(
+            FiledDeclaracionArtefact(
                 kind="submitted_file",
                 source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
                 content_type="application/octet-stream",
@@ -216,7 +216,7 @@ def _filed_observation(
 
 
 class TestParseListbox:
-    """Verify :func:`_parse_listbox` extracts typed Declaration rows from the post-Buscar HTML."""
+    """Verify :func:`_parse_listbox` extracts typed Declaracion rows from the post-Buscar HTML."""
 
     def test_modelo_100_2022_parses_one_row(self) -> None:
         """Assert the Modelo 100 / 2022 fixture parses to a single fully-populated row."""
@@ -449,7 +449,7 @@ class TestSubmittedFileContext:
         snapshot = _modelo_130_snapshot()
         resolved = resolve_export_layout(snapshot)
         parsed = parse_export_payload(resolved.layout, _submitted_file_payload())
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
             period="2T",
@@ -470,7 +470,7 @@ class TestSubmittedFileObservation:
     def test_redacted_submitted_file_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_130_snapshot()
         body = _submitted_file_payload()
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
             period="1T",
@@ -480,7 +480,7 @@ class TestSubmittedFileObservation:
             justificante_link_text="Ver",
             archive_link_text="Ver",
         )
-        artefact = FiledDeclarationArtefact(
+        artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
             source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
             content_type="application/octet-stream",
@@ -521,7 +521,7 @@ class TestSubmittedFileObservation:
     def test_modelo_130_redacted_submitted_file_matches_registry_calculation(self) -> None:
         snapshot = _modelo_130_snapshot()
         body = _submitted_file_payload()
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
             period="1T",
@@ -531,7 +531,7 @@ class TestSubmittedFileObservation:
             justificante_link_text="Ver",
             archive_link_text="Ver",
         )
-        artefact = FiledDeclarationArtefact(
+        artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
             source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
             content_type="application/octet-stream",
@@ -596,7 +596,7 @@ class TestSubmittedFileObservation:
         snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
         profile = snapshot.extraction_profiles["modelo-111-export-record"]
         body = _submitted_file_payload(_SUBMITTED_FILE_111_2025_1T)
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="111",
             ejercicio=2025,
             period="1T",
@@ -606,7 +606,7 @@ class TestSubmittedFileObservation:
             justificante_link_text="Ver",
             archive_link_text="Ver",
         )
-        artefact = FiledDeclarationArtefact(
+        artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
             source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
             content_type="application/octet-stream",
@@ -690,7 +690,7 @@ class TestSubmittedFileObservation:
         snapshot = _modelo_snapshot("123", filing_year=filing_year, period=period)
         profile = snapshot.extraction_profiles[profile_id]
         body = _exported_modelo_123_payload(tmp_path, filing_year=filing_year, period=period)
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="123",
             ejercicio=filing_year,
             period=period,
@@ -700,7 +700,7 @@ class TestSubmittedFileObservation:
             justificante_link_text="Ver",
             archive_link_text="Ver",
         )
-        artefact = FiledDeclarationArtefact(
+        artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
             source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
             content_type="application/octet-stream",
@@ -715,7 +715,7 @@ class TestSubmittedFileObservation:
             body=body,
             artefact=artefact,
         )
-        observation = FiledDeclarationObservation(
+        observation = FiledDeclaracionObservation(
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
             period=declaration.period,
@@ -736,7 +736,7 @@ class TestSubmittedFileObservation:
     def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("100", filing_year=2023, period="0A")
         body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="100",
             ejercicio=2023,
             period="0A",
@@ -746,7 +746,7 @@ class TestSubmittedFileObservation:
             justificante_link_text="Ver",
             archive_link_text="Ver",
         )
-        artefact = FiledDeclarationArtefact(
+        artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
             source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
             content_type="application/xml",
@@ -776,7 +776,7 @@ class TestSubmittedFileObservation:
     def test_modelo_100_redacted_xml_observation_roundtrips_through_encrypted_store(self, tmp_path: Path) -> None:
         snapshot = _modelo_snapshot("100", filing_year=2023, period="0A")
         body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="100",
             ejercicio=2023,
             period="0A",
@@ -786,7 +786,7 @@ class TestSubmittedFileObservation:
             justificante_link_text="Ver",
             archive_link_text="Ver",
         )
-        artefact = FiledDeclarationArtefact(
+        artefact = FiledDeclaracionArtefact(
             kind="submitted_file",
             source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
             content_type="application/xml",
@@ -794,7 +794,7 @@ class TestSubmittedFileObservation:
             sha256=hashlib.sha256(body).hexdigest(),
             captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
         )
-        store = FiledDeclarationObservationStore(
+        store = FiledDeclaracionObservationStore(
             tmp_path / "observations",
             master_key_provider=EphemeralMasterKeyProvider(),
         )
@@ -809,7 +809,7 @@ class TestSubmittedFileObservation:
             body=body,
             artefact=encrypted_artefact,
         )
-        observation = FiledDeclarationObservation(
+        observation = FiledDeclaracionObservation(
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
             period=declaration.period,
@@ -840,7 +840,7 @@ class TestDeclarationPdfObservation:
             casilla_id: Decimal(index).quantize(Decimal("0.01"))
             for index, casilla_id in enumerate(profile.target_casillas, start=1)
         }
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
             period="1T",
@@ -866,7 +866,7 @@ class TestDeclarationPdfObservation:
             casilla_id: Decimal(index).quantize(Decimal("0.01"))
             for index, casilla_id in enumerate(profile.target_casillas, start=1)
         }
-        declaration = Declaration(
+        declaration = Declaracion(
             modelo="111",
             ejercicio=2025,
             period="1T",
@@ -987,7 +987,7 @@ class TestFiledObservationBindings:
         source_casillas = selector["source_casillas"]
         assert isinstance(source_casillas, tuple)
         casilla_values = {str(casilla_id): Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
-        store = FiledDeclarationObservationStore(
+        store = FiledDeclaracionObservationStore(
             tmp_path / "observations",
             master_key_provider=EphemeralMasterKeyProvider(),
         )
@@ -1274,8 +1274,8 @@ class TestFiledObservationRelations:
             )
 
 
-def _renta_2025_relation_observations() -> tuple[FiledDeclarationObservation, ...]:
-    observations: list[FiledDeclarationObservation] = []
+def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ...]:
+    observations: list[FiledDeclaracionObservation] = []
     observations.extend(
         _filed_observation(
             modelo="111",
