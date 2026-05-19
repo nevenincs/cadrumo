@@ -677,6 +677,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.errors.SessionExpiredError",
+        ErrorCode(
+            code="REFUSED_STORAGE_SESSION_EXPIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_session_expired",
+            default_suggestion="aeat config profile switch NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.errors.SecretStoreError",
         ErrorCode(
             code="FAIL_STORAGE_SECRET_STORE",

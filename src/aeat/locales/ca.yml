@@ -1464,10 +1464,6 @@ cli:
     app_help_help: Mostrar ajuda del flux d'app
     debug_help: Mostrar logs interns de depuració a stderr
     detail_help: Also show the detailed registry summary
-    errors:
-      no_active_profile: 'No hi ha cap perfil actiu. Executa `aeat config profile
-        create NOM` per crear el teu primer perfil, o `aeat config profile switch
-        NOM` per activar-ne un d''existent.'
     format_help: Format de sortida per als resultats de l'ordre
     help_help: Mostrar ajuda orientada al flux de treball
     landing:
