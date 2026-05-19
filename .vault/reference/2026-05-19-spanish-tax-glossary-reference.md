@@ -482,3 +482,157 @@ verified.
   the verbatim Spanish names that an SII / libro-registro adapter
   must surface at the boundary, while the internal InvoiceKind enum
   retains `issued` / `received`.
+
+## Modelo Cluster Statutory Sanity Check (2026-05-19)
+
+Forward-looking sanity check of the W04 Modelo cluster (P08-P13)
+ADR-proposed renames against verified BOE citations. Read-only
+advisory; no code edits performed. Intended to inform coder
+dispatches before the renames land.
+
+### FilingDraft -> ModeloDraft - suggested amendment
+
+ADR Section 1 declares `borrador` authoritative for the AEAT-prepared
+Modelo 100 draft per Ley 35/2006 IRPF Articulo 98. The proposed
+`ModeloDraft` is a generic "draft of a modelo" — a local in-progress
+work-product the user assembles, not the AEAT-served pre-filled
+borrador. These are two distinct artefacts and the codebase must
+not collapse them.
+
+Recommendation:
+- Keep `ModeloDraft` for the generic local-draft entity (user
+  assembles, validates, exports). This is structurally correct.
+- Add an explicit ADR carve-out that `ModeloDraft` is NOT the
+  AEAT-served borrador. Borrador stems remain reserved for entities
+  where the data origin is AEAT Renta Web (Modelo 100 / borrador
+  100 ingestion path). Document the semantic test: who supplies the
+  draft contents (taxpayer-side -> ModeloDraft; AEAT-side ->
+  Borrador*).
+- Confirm there is no Modelo 100-borrador entity hiding under any
+  `FilingDraft*` symbol that should migrate to `Borrador100*`
+  instead of `ModeloDraft*`.
+
+Statutory anchors: Ley 35/2006 IRPF Articulo 98 (Borrador de
+declaracion); BOE-A-2006-20764. Already verbatim-verified.
+
+### FilingRecord -> ModeloRecord - confirmed correct (consolidation pending)
+
+`Record` is a generic infrastructure suffix retained in English per
+ADR Section 4 (Record / Repository / Snapshot exceptions). Composing
+`Modelo` + `Record` is the canonical pattern (cf. ModeloRepository,
+BorradorSnapshot). No statutory imprecision.
+
+Footnote 1 in the ADR ledger correctly flags the open consolidation
+question between the domain pydantic record (`FilingRecord`) and the
+persistence SQL row (already named `ModeloRecord` in
+`src/aeat/adapters/persistence/storage/sql/records.py`). Statutory
+basis does not pick one shape over the other; project lead
+adjudication required on:
+- collapse to one type (single ModeloRecord crossing the boundary), or
+- domain pydantic `ModeloRecord` + persistence row `ModeloRow`
+  (matching the `ModeloRow` already present in `_orm.py`).
+
+The naming itself is statutorily defensible either way.
+
+### FilingObligation -> ModeloObligation - suggested amendment
+
+LGT Articulo 17 (BOE-A-2003-23186, verbatim verified 2026-05-19)
+defines `la relacion juridico-tributaria` as "el conjunto de
+obligaciones y deberes, derechos y potestades originados por la
+aplicacion de los tributos". The statutory term is `obligacion
+tributaria` (or `obligacion formal` for non-pecuniary duties per
+Art. 29). `Modelo + Obligation` is a structural mismatch: the
+modelo is the form that satisfies the obligation, not the obligation
+itself.
+
+Two refinement options worth considering before the rename lands:
+
+1. Preferred: rename to `ModeloDeadline` or `ModeloFilingDeadline`
+   if the entity captures the deadline / enrollment view of a
+   modelo (the surrounding file path is
+   `src/aeat/domain/deadlines/_models.py`, which supports this
+   reading — these look like deadline / enrollment records, not
+   abstract LGT obligations).
+2. Alternative: keep ModeloObligation if the entity genuinely
+   models the per-modelo slice of the broader LGT obligation, but
+   add an inline comment anchoring it to LGT Articulo 17 and
+   Articulo 29 (obligaciones tributarias formales).
+
+Statutory anchors: Ley 58/2003 LGT Articulo 17 (relacion
+juridico-tributaria; verbatim verified 2026-05-19); Articulo 29
+(obligaciones tributarias formales). BOE-A-2003-23186.
+
+### FilingAmendment -> ModeloAmendment - suggested amendment
+
+LGT Articulo 122 (BOE-A-2003-23186, verbatim verified 2026-05-19)
+verbatim title: "Declaraciones, autoliquidaciones y comunicaciones
+complementarias o sustitutivas." First sentence opens: "Las
+declaraciones, autoliquidaciones y comunicaciones de datos
+complementarias o sustitutivas se presentaran..." The statute names
+two distinct amendment kinds:
+
+- `complementaria` — additional / supplementary filing that adds to
+  the original.
+- `sustitutiva` — substitute filing that replaces the original in
+  full.
+
+`ModeloAmendment` flattens this binary distinction. The statutorily
+precise stems are `complementaria` and `sustitutiva` — these are
+verbatim BOE terms taxpayers and AEAT both use.
+
+Recommendation:
+- Preferred: replace `ModeloAmendment` with two concrete types or a
+  discriminated union: `ModeloComplementaria` and `ModeloSustitutiva`
+  (or a `ModeloAmendment` umbrella whose `kind` discriminator is
+  `complementaria | sustitutiva`).
+- Acceptable fallback: keep `ModeloAmendment` as the umbrella type
+  but ensure the `kind` field uses the verbatim statutory values
+  `"complementaria"` / `"sustitutiva"` (not English `"supplementary"`
+  / `"substitute"`).
+
+`ModeloAmendmentError` follows the same logic — naming the error
+class is structurally OK because errors live in the English-infra
+exceptions list.
+
+Statutory anchors: Ley 58/2003 LGT Articulo 122 (declaraciones,
+autoliquidaciones y comunicaciones complementarias o sustitutivas).
+BOE-A-2003-23186.
+
+### SubmittedFiling -> SubmittedModelo - suggested amendment
+
+`Submitted` is an English past-participle. The AEAT canonical
+status verb is `presentar` / `presentado`. The justificante de
+presentacion (verified 2026-05-19, Ley 39/2015 LPAC Articulo 27
+anchor in this glossary) uses `presentacion` verbatim, and the AEAT
+Sede Electronica surface labels submission state as `Presentada`
+across Modelos 100 / 303 / 130 / 720 / 036 status pages.
+
+Recommendation:
+- Preferred: rename to `ModeloPresentado` (Spanish past-participle
+  matching AEAT status nomenclature) or `PresentedModelo` if the
+  English-prefix pattern is preferred for grammatical reasons.
+- Acceptable: keep `SubmittedModelo` if `Submitted` is treated as a
+  generic English-infra status adjective, but the ADR's
+  Spanish-stems-win posture argues for `Presentado`.
+
+Note: a parallel state machine likely needs `Borrador` (draft) ->
+`EnRevision` / `Aprobado` (approved) -> `Presentado` (submitted) ->
+`Aceptado` / `Rechazado` (accepted / rejected by AEAT). If the
+codebase already has English state names elsewhere, harmonise as
+part of the state-machine review rather than only this one symbol.
+
+Statutory anchors: Ley 39/2015 LPAC Articulo 27 (validez y eficacia
+de las copias / justificante de presentacion; verbatim verified).
+AEAT Sede Electronica Modelo-status nomenclature
+(`Borrador` / `Pendiente de presentar` / `Presentada` /
+`Aceptada` / `Rechazada`).
+
+### Summary
+
+| ADR Proposal      | Verdict             | Action                                                                                  |
+| :---------------- | :------------------ | :-------------------------------------------------------------------------------------- |
+| ModeloDraft       | Suggested amendment | Keep, but add ADR carve-out separating from Borrador (AEAT-supplied Modelo 100 draft)   |
+| ModeloRecord      | Confirmed correct   | None (pending project-lead consolidation decision per Footnote 1)                       |
+| ModeloObligation  | Suggested amendment | Rename to ModeloDeadline (if deadline/enrollment scope) or anchor to LGT Art. 17/29     |
+| ModeloAmendment   | Suggested amendment | Split into ModeloComplementaria / ModeloSustitutiva (LGT Art. 122 verbatim terms)       |
+| SubmittedModelo   | Suggested amendment | Rename to ModeloPresentado (AEAT Sede `Presentada` status verbatim)                     |
