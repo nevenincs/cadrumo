@@ -1240,6 +1240,25 @@ class BracketEntry(RegistryModel):
         return self
 
 
+def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) -> bool:
+    """Return True when two adjacent brackets share a valid_from window and overlap.
+
+    The pre-sorted iteration walks ``(valid_from, lower_bound)``
+    order so two brackets only need to be compared when they share
+    the ``valid_from`` key. Overlap is defined against a closed-
+    open interval: ``prev.upper_bound`` is exclusive, so
+    ``current.lower_bound`` reaching strictly below it is the
+    violation. A ``prev.upper_bound`` of ``None`` (open-ended)
+    short-circuits to "no overlap" — the open right edge is the
+    caller's escape hatch.
+    """
+    if prev.valid_from != current.valid_from:
+        return False
+    if prev.upper_bound is None:
+        return False
+    return current.lower_bound < prev.upper_bound
+
+
 class ParameterDefinition(RegistryModel):
     id: ParameterId
     data_type: Literal["decimal", "money", "integer", "ratio", "text", "boolean", "bracket_table"]
@@ -1254,31 +1273,44 @@ class ParameterDefinition(RegistryModel):
     @model_validator(mode="after")
     def _validate_bracket_table(self) -> ParameterDefinition:
         if self.data_type == "bracket_table":
-            if not self.brackets:
-                raise RegistryValidationError(f"parameter {self.id!r} declares bracket_table but has no brackets")
-            if self.values:
-                raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
-            if self.bracket_axis is None:
-                raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
-            sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
-            for prev, current in pairwise(sorted_brackets):
-                if (
-                    prev.valid_from == current.valid_from
-                    and prev.upper_bound is not None
-                    and current.lower_bound < prev.upper_bound
-                ):
-                    raise RegistryValidationError(
-                        f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
-                        f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
-                    )
+            self._validate_bracket_table_shape()
         else:
-            if self.brackets:
-                raise RegistryValidationError(
-                    f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
-                )
-            if self.bracket_axis is not None:
-                raise RegistryValidationError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
+            self._validate_non_bracket_table_shape()
         return self
+
+    def _validate_bracket_table_shape(self) -> None:
+        """Verify a bracket_table parameter has brackets, no values, an axis, and no overlaps.
+
+        Four contracts:
+        * non-empty ``brackets`` tuple
+        * no ``values`` (dated scalar map is mutually exclusive)
+        * ``bracket_axis`` declared
+        * no two brackets sharing the same ``valid_from`` window
+          overlap on their ``lower_bound`` / ``upper_bound``
+          interval (closed-open)
+        """
+        if not self.brackets:
+            raise RegistryValidationError(f"parameter {self.id!r} declares bracket_table but has no brackets")
+        if self.values:
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
+        if self.bracket_axis is None:
+            raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
+        sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
+        for prev, current in pairwise(sorted_brackets):
+            if _brackets_overlap_in_same_window(prev, current):
+                raise RegistryValidationError(
+                    f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
+                    f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
+                )
+
+    def _validate_non_bracket_table_shape(self) -> None:
+        """Reject brackets / bracket_axis on a non-bracket_table parameter."""
+        if self.brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
+            )
+        if self.bracket_axis is not None:
+            raise RegistryValidationError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
 
 
 class DataBindingDefinition(RegistryModel):
