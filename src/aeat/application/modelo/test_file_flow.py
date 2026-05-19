@@ -15,7 +15,7 @@ Coverage:
 * ``mark_revision_verified_complete`` requires DRAFT state.
 * ``verify_modelo_revision`` reads real registry truth and emits
   ``modelo.verification.passed`` / ``modelo.verification.refused``.
-* ``file_modelo_revision`` requires VERIFIED_COMPLETE state and
+* ``file_modelo_revision`` requires VERIFICADO_COMPLETO state and
   emits ``modelo.filed`` (plus ``modelo.filed_superseded`` when a
   prior filing exists).
 * Filing advances the work unit's pointer fields atomically.
@@ -547,7 +547,7 @@ def test_mark_verified_complete_requires_draft_state(repos) -> None:
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    assert verified.state is CalculationRevisionState.VERIFIED_COMPLETE
+    assert verified.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
     # Second attempt against the now-verified revision must fail.
     with pytest.raises(CalculationRevisionStateError, match=r"state|verified|already|complete"):
@@ -707,7 +707,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision.state is CalculationRevisionState.VERIFIED_COMPLETE
+    assert refreshed_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert list_filing_records(filing_repository=fr_repo) == ()
     filed_events = bv_repo.load().for_bucket(
         work_unit.bucket_id,
@@ -1059,7 +1059,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     """Real e2e: registry resolves modelo 180 (2024, 0A); every required
     manual casilla is supplied; the verifier persists a granted report
     in encrypted storage; the calculation revision transitions
-    DRAFT → VERIFIED_COMPLETE. No mocks, no in-memory fakes — the
+    DRAFT → VERIFICADO_COMPLETO. No mocks, no in-memory fakes — the
     SQL repository encrypts on save and decrypts on load."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
@@ -1102,7 +1102,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed.state is CalculationRevisionState.VERIFIED_COMPLETE
+    assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert refreshed.verified_at == _T2
     assert refreshed.verified_by == "operator-A"
 

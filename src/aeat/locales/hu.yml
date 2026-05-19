@@ -883,7 +883,7 @@ cli:
     summary:
       auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete
       auth_none: A hitelesítés nincs beállítva
-      auth_session_ready: A hitelesítési munkamenet kész ehhez: %{provider}
+      auth_session_ready: 'A hitelesítési munkamenet kész ehhez: %{provider}'
       auth_state_unreadable: A hitelesítési készenlét nem ellenőrizhető, amíg a biztonságos
         workflow állapot nem olvasható.
       profile_keys_set: cli.diagnostics.summary.profile_keys_set

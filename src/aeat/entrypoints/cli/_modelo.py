@@ -2439,14 +2439,14 @@ def modelo_export_verb(
         from ...domain.modelos._calculation_revision import CalculationRevisionState
 
         revisions = list_calculation_revisions(work_unit_id=work_unit_id)
-        # FILED is the canonical current answer; VERIFIED_COMPLETE
+        # FILED is the canonical current answer; VERIFICADO_COMPLETO
         # covers pre-file export. FILED_SUPERSEDED is intentionally
         # excluded from default-pick because exporting a superseded
         # revision risks the operator submitting an obsolete fichero;
         # operators that genuinely want a superseded revision must
         # pass --revision explicitly.
         filed = [r for r in revisions if r.state is CalculationRevisionState.PRESENTADO]
-        verified = [r for r in revisions if r.state is CalculationRevisionState.VERIFIED_COMPLETE]
+        verified = [r for r in revisions if r.state is CalculationRevisionState.VERIFICADO_COMPLETO]
         exportable = filed or verified
         if not exportable:
             raise typer.BadParameter(

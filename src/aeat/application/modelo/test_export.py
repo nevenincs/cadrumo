@@ -201,7 +201,7 @@ def test_export_refuses_cross_bucket_revision(
     foreign_bucket_id = "other-bucket-7" * 4
     _, calc_rev_id = _seed_revision(
         bucket_id=foreign_bucket_id,
-        state=CalculationRevisionState.VERIFIED_COMPLETE,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
     )
 
     with pytest.raises(ModeloExportCrossBucketRefusedError, match=r"active profile bucket"):
