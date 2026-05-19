@@ -14,6 +14,7 @@ related:
   - '[[2026-05-19-schema-hardening-iban-deprecation]]'
   - '[[2026-05-19-schema-hardening-plan]]'
   - '[[2026-05-19-schema-hardening-role-rollout-strategy]]'
+  - '[[2026-05-19-schema-hardening-role-taxonomy]]'
   - '[[2026-05-20-schema-hardening-plan]]'
 ---
 
@@ -40,6 +41,10 @@ Auto-generated index of all documents tagged with `#schema-hardening`.
 - `2026-05-18-schema-hardening-plan` - `schema-hardening` Plan A: `data_type` Literal extension plan
 - `2026-05-19-schema-hardening-plan` - `schema-hardening` Plan B: `CasillaConstraints` expansion plan
 - `2026-05-20-schema-hardening-plan` - `schema-hardening` Plan C: inline `semantic_role` validator plan
+
+### reference
+
+- `2026-05-19-schema-hardening-role-taxonomy` - `schema-hardening` reference: canonical semantic_role taxonomy
 
 ### research
 
