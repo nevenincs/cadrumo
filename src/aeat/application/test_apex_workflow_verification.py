@@ -33,7 +33,7 @@ def test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestio
     assert require_accepted_root("app").name.value == "app"
 
     for retired, suggestion in {
-        "setup": "aeat config init",
+        "setup": "aeat config profile create NAME",
         "archive": "aeat config bucket",
         "invoice": "aeat app ledger",
         "declaration": "aeat app modelo",

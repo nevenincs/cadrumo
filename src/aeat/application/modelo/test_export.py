@@ -132,7 +132,7 @@ def test_export_refuses_when_no_active_bucket(
     """Without an active profile bucket the service cannot scope the
     MODELO_EXPORTED event and must refuse cleanly."""
 
-    with pytest.raises(ModeloExportNoActiveBucketError, match=r"aeat config init"):
+    with pytest.raises(ModeloExportNoActiveBucketError, match=r"aeat config profile create NAME"):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id="r" + "0" * 63,

@@ -12,7 +12,7 @@ Tax-ID-shaped questions (any question whose id matches ``tax-id`` or
 ends with ``-tax-id``) route through
 :func:`aeat.core.identity.validate_identity` so the Spanish NIF / NIE
 / CIF checksum is enforced at every write surface: interactive,
-``--quiet`` flag, and ``config set tax.id`` mutations.
+``--quiet`` flag, and profile wizard mutations.
 """
 
 from __future__ import annotations

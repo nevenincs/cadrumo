@@ -31,7 +31,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         purpose="profile lifecycle, bucket lifecycle, first-run state, auth, diagnostics, and durable configuration",
         owns_storage_maintenance=True,
         owns_operational_workflow=False,
-        required_children=("init", "profile", "auth", "repair"),
+        required_children=("profile", "auth", "repair"),
     ),
     RootSurface(
         name=RootSurfaceName.APP,
@@ -47,85 +47,112 @@ RETIRED_OPERATOR_SURFACES: tuple[RetiredOperatorSurface, ...] = (
         name="setup",
         replacement="config",
         suggestion="aeat config profile create NAME",
-        reason=tr("cli.operator_surface.retired.setup_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.setup_reason",
+            default="setup and config are consolidated under the config root",
+        ),
     ),
     RetiredOperatorSurface(
         name="archive",
         replacement="config bucket",
         suggestion="aeat config bucket",
-        reason=tr("cli.operator_surface.retired.archive_reason"),
+        reason=tr("cli.operator_surface.retired.archive_reason", default="archive is consolidated under config bucket"),
     ),
     RetiredOperatorSurface(
         name="data",
         replacement="app ledger",
         suggestion="aeat app ledger",
-        reason=tr("cli.operator_surface.retired.data_reason"),
+        reason=tr("cli.operator_surface.retired.data_reason", default="data work is consolidated under app ledger"),
     ),
     RetiredOperatorSurface(
         name="filing",
         replacement="app modelo",
         suggestion="aeat app modelo",
-        reason=tr("cli.operator_surface.retired.filing_reason"),
+        reason=tr("cli.operator_surface.retired.filing_reason", default="filing work is consolidated under app modelo"),
     ),
     RetiredOperatorSurface(
         name="financial",
         replacement="app ledger",
         suggestion="aeat app ledger",
-        reason=tr("cli.operator_surface.retired.financial_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.financial_reason",
+            default="financial work is consolidated under app ledger",
+        ),
     ),
     RetiredOperatorSurface(
         name="invoice",
         replacement="app ledger",
         suggestion="aeat app ledger",
-        reason=tr("cli.operator_surface.retired.invoice_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.invoice_reason",
+            default="invoice work is consolidated under app ledger",
+        ),
     ),
     RetiredOperatorSurface(
         name="declaration",
         replacement="app modelo",
         suggestion="aeat app modelo",
-        reason=tr("cli.operator_surface.retired.declaration_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.declaration_reason",
+            default="declaration work is consolidated under app modelo",
+        ),
     ),
     RetiredOperatorSurface(
         name="sanitize",
         replacement="app ledger",
         suggestion="aeat app ledger check",
-        reason=tr("cli.operator_surface.retired.sanitize_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.sanitize_reason",
+            default="ledger checks are exposed under app ledger check",
+        ),
     ),
     RetiredOperatorSurface(
         name="llm",
         replacement=None,
         suggestion="aeat app ledger classify",
-        reason=tr("cli.operator_surface.retired.llm_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.llm_reason",
+            default="classification is exposed under app ledger classify",
+        ),
     ),
     RetiredOperatorSurface(
         name="topic",
         replacement="app registry",
         suggestion="aeat app registry citations",
-        reason=tr("cli.operator_surface.retired.topic_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.topic_reason",
+            default="topic lookup is consolidated under app registry citations",
+        ),
     ),
     RetiredOperatorSurface(
         name="submit",
         replacement=None,
         suggestion=None,
-        reason=tr("cli.operator_surface.retired.submit_reason"),
+        reason=tr("cli.operator_surface.retired.submit_reason", default="live submission is permanently disabled"),
     ),
     RetiredOperatorSurface(
         name="presentation",
         replacement="app modelo export",
         suggestion="aeat app modelo export",
-        reason=tr("cli.operator_surface.retired.presentation_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.presentation_reason",
+            default="exports belong to app modelo export",
+        ),
     ),
     RetiredOperatorSurface(
         name="preflight",
         replacement="app modelo verify",
         suggestion="aeat app modelo verify",
-        reason=tr("cli.operator_surface.retired.preflight_reason"),
+        reason=tr("cli.operator_surface.retired.preflight_reason", default="preflight belongs to modelo verification"),
     ),
     RetiredOperatorSurface(
         name="workflow",
         replacement="app modelo",
         suggestion="aeat app modelo",
-        reason=tr("cli.operator_surface.retired.workflow_reason"),
+        reason=tr(
+            "cli.operator_surface.retired.workflow_reason",
+            default="workflow operations are consolidated under app modelo",
+        ),
     ),
 )
 
@@ -145,21 +172,26 @@ SOURCE_KIND_ALIASES: tuple[SourceKindAlias, ...] = (
 
 MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
-        domain=MountedCommandDomain.FIRST_RUN,
-        root=RootSurfaceName.CONFIG,
-        child="init",
-        operator_question="create or refresh the local profile bucket and first-run configuration",
-        service_owner="aeat.application.wizard",
-        commands=("init",),
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
         domain=MountedCommandDomain.PROFILE,
         root=RootSurfaceName.CONFIG,
         child="profile",
-        operator_question="inspect and edit the active profile values used by backend workflows",
+        operator_question="create, inspect, switch, edit, and export profile buckets used by backend workflows",
         service_owner="aeat.application.user_profile",
-        commands=("list", "get", "set", "unset", "status"),
+        commands=(
+            "create",
+            "edit",
+            "list",
+            "switch",
+            "show",
+            "delete",
+            "duplicate",
+            "rename",
+            "export",
+            "import",
+            "logout",
+            "status",
+            "census",
+        ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -168,7 +200,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="auth",
         operator_question="configure and inspect local authentication state for read-only AEAT access",
         service_owner="aeat.application.auth",
-        commands=("providers", "configure", "status", "test", "clear"),
+        commands=("providers", "configure", "status", "test", "clear", "apoderado", "diagnostics"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -177,7 +209,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="repair",
         operator_question="diagnose local configuration, logs, connectivity, and secure-object integrity",
         service_owner="aeat.application.diagnostics",
-        commands=("connectivity", "integrity", "list", "quarantine", "reset-state", "logs"),
+        commands=("connectivity", "integrity", "quarantine", "reset-state", "logs"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -195,7 +227,31 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="ledger",
         operator_question="ingest and review ledger transactions in the active bucket",
         service_owner="aeat.application.transactions",
-        commands=("import", "review", "edit"),
+        commands=(
+            "add",
+            "update",
+            "classify",
+            "allocate",
+            "attach",
+            "archive",
+            "stash",
+            "remove",
+            "reset",
+            "split",
+            "merge",
+            "link",
+            "check",
+            "preflight",
+            "history",
+            "export",
+            "list",
+            "view",
+            "status",
+            "track",
+            "import",
+            "review",
+            "ratios",
+        ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -231,7 +287,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="review",
         operator_question="inspect read-only cross-domain items that need operator attention",
         service_owner="aeat.application.review",
-        commands=("queue", "show"),
+        commands=("queue", "view"),
         mutability=OperatorMutability.READ_ONLY,
     ),
 )
@@ -328,7 +384,14 @@ def require_accepted_root(name: str) -> RootSurface:
             return root
     retired = retired_surface_suggestion(normalized)
     suggestion = retired.suggestion if retired is not None else "aeat --help"
-    reason = retired.reason if retired is not None else tr("cli.operator_surface.errors.accepted_roots_only")
+    reason = (
+        retired.reason
+        if retired is not None
+        else tr(
+            "cli.operator_surface.errors.accepted_roots_only",
+            default="accepted operator roots are config and app",
+        )
+    )
     raise OperatorSurfaceContractError(normalized or name, reason=reason, suggestion=suggestion)
 
 

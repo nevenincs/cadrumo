@@ -468,6 +468,7 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
             status="warn",
             summary=tr(
                 "cli.diagnostics.summary.profile_missing_keys",
+                default="Profile is missing required keys: %{keys}",
                 keys=", ".join(report.missing_required),
             ),
             next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
@@ -477,6 +478,7 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
         status="ok",
         summary=tr(
             "cli.diagnostics.summary.profile_keys_set",
+            default="Profile keys set: %{present}/%{total}",
             present=report.profile_present_keys,
             total=report.profile_total_keys,
         ),
@@ -489,7 +491,7 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="auth.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.auth_none"),
-            next_action="aeat config auth setup",
+            next_action="aeat config auth configure --provider certificate --file PATH",
         )
     if not report.login_ready:
         return DiagnosticCheck(
@@ -497,15 +499,17 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             status="warn",
             summary=tr(
                 "cli.diagnostics.summary.auth_no_session",
+                default="Authentication provider %{provider} has no ready session",
                 provider=report.auth_provider,
             ),
-            next_action="aeat config auth setup",
+            next_action="aeat config auth test --provider certificate",
         )
     return DiagnosticCheck(
         name="auth.readiness",
         status="ok",
         summary=tr(
             "cli.diagnostics.summary.auth_session_ready",
+            default="Authentication provider %{provider} has a ready session",
             provider=report.auth_provider,
         ),
     )

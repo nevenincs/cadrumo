@@ -14,9 +14,9 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from ...core.i18n import tr
 from ...domain.deadlines._models import (
     AutonomoProfile,
+    IVARegime,
     ModeloEnrollment,
     ModeloIVAProfile,
-    IVARegime,
 )
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile._projections import record_to_path_values
@@ -127,13 +127,13 @@ def _next_wizard_action(
     if not has_profile:
         return "aeat config profile create NAME"
     if missing_required:
-        return f"aeat config set {missing_required[0]} VALUE"
+        return "aeat config profile edit NAME"
     if missing_enrolment:
-        return f"aeat config set {missing_enrolment[0]} GENERAL"
+        return "aeat config profile edit NAME"
     if not auth_provider:
-        return "aeat config auth --provider certificate --file PATH"
+        return "aeat config auth configure --provider certificate --file PATH"
     if not login_ready:
-        return "aeat config auth --provider certificate"
+        return "aeat config auth test --provider certificate"
     return "aeat app overview status"
 
 

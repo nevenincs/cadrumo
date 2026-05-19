@@ -13,10 +13,15 @@ lives.
 
 from __future__ import annotations
 
+import secrets
 from collections.abc import Iterable
-from datetime import date
+from datetime import UTC, date, datetime
 
+from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
+from ...adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, write_manifest
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.config import load_settings
 from ...core.i18n import tr
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -130,6 +135,7 @@ def register_active_profile(
 
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
+    _ensure_profile_bucket_manifest(profile_id)
     # WorkflowState.profiles is now computed at access time from a
     # filesystem manifest scan; provisioning the bucket directory +
     # writing its manifest is what makes the profile appear in the
@@ -146,6 +152,38 @@ def register_active_profile(
             )
     _write_active_profile_pointer(profile_id)
     return updated
+
+
+def _ensure_profile_bucket_manifest(profile_id: str) -> None:
+    """Ensure manifest-scan profile discovery can see the profile bucket."""
+
+    root = load_settings().aeat_local_storage_root
+    try:
+        paths = provision_bucket_directory(root, profile_id)
+    except FileExistsError:
+        paths = bucket_paths(root, profile_id)
+    if manifest_path(paths).is_file():
+        return
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=profile_id,
+            label=profile_id,
+            created_at=datetime.now(UTC),
+            last_unlocked_at=None,
+            kdf_params=ManifestKdfParams(
+                algorithm="argon2id",
+                version=0x13,
+                memory_cost=19_456,
+                time_cost=2,
+                parallelism=1,
+                salt=secrets.token_bytes(16),
+                output_length=32,
+            ),
+            recovery_enrolled=False,
+            schema_version=1,
+        ),
+    )
 
 
 def select_profile(

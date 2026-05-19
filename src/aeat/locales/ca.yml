@@ -541,7 +541,7 @@ cli:
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config init` abans
+      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config profile create NAME` abans
         d'usar ordres de dades del perfil.
       period_empty: El periode fiscal no pot estar buit
       period_unrecognised: Període no reconegut
@@ -577,7 +577,7 @@ cli:
       configure_help: Configurar el proveïdor d'autenticació actiu
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
-      no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config init'
+      no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config profile create NAME'
         abans de configurar l'autenticació.
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
       providers_help: Llistar proveïdors d'autenticació suportats
@@ -603,7 +603,7 @@ cli:
         (p. ex. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
-      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config init --tax-id
+      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create NAME --tax-id
         <NIF>' primer.
       unknown_key: 'Clau de configuració desconeguda: %{name}. Executa ''aeat config
         profile list'' per veure les claus disponibles.'
@@ -728,7 +728,7 @@ cli:
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
-      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id <NIF>`
         first.
       preflight_help: Report whether the active profile is ready for one modelo /
         year / period.
@@ -739,7 +739,7 @@ cli:
       remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
-        profile remove %{name} --yes' per confirmar.
+        profile delete %{name} --yes' per confirmar.
       remove_yes_help: Confirma explícitament l''operació de retirada
       rename_display_name_help: Etiqueta visible per a l'operador; per defecte, l'existent
       rename_help: Canvia el nom d'un perfil i mou el punter actiu automàticament
@@ -808,7 +808,7 @@ cli:
           de treball.'
         saved: Perfil '%{profile_name}' desat.
     status:
-      empty_profile: Cap perfil configurat. Executa `aeat config init` per començar.
+      empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME` per començar.
       help: Mostrar l'estat del perfil de configuració actiu
       next_step: 'Següent pas: `aeat app overview status`'
     unset:
@@ -1254,7 +1254,7 @@ cli:
         amb AEAT.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
-      ''aeat config profile set <clau> <valor>'' o useu --allow-incomplete per veure
+      ''aeat config profile edit NAME'' o useu --allow-incomplete per veure
       el calendari calculat amb valors per defecte.'
     drafts: Esborranys
     explain:
@@ -1419,7 +1419,7 @@ cli:
     app_help: 'Assistent per preparar declaracions tributàries espanyoles
 
 
-      Quickstart: aeat config init --tax-id NIF --activity ACTIVITAT'
+      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVITAT'
     app_help_help: Mostrar ajuda del flux d'app
     debug_help: Mostrar logs interns de depuració a stderr
     detail_help: Also show the detailed registry summary
@@ -1438,7 +1438,7 @@ cli:
         files importades.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprovar el perfil
         actiu abans del treball operatiu.'
-      quick_start_setup_needed: '  1. `aeat config init` - crear primer el perfil
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primer el perfil
         fiscal local.'
       quick_start_status: '  2. `aeat app overview status` - llegir l''estat actual
         de l''espai i els diagnostics.'
@@ -1597,7 +1597,7 @@ topic:
   profile:
     body: El perfil local conté la teva identificació fiscal (NIF), activitat principal,
       règim IVA / IRPF i enrolaments opcionals (SII, Verifactu, intracomunitari).
-      Edita'l amb 'aeat config profile set <clau> <valor>'.
+      Edita'l amb 'aeat config profile edit NAME'.
     title: Perfil del contribuent
   providers:
     body: Proveïdors d'autenticació suportats; cadascun té requeriments diferents.
@@ -1656,7 +1656,7 @@ wizard:
     select_without_choices: Question %{prompt_key} declares no select options.
     unsupported_console: "La configuració guiada no ha pogut obrir una pregunta interactiva\
       \ en aquesta execució.\nEncara no s'ha desat res.\n\nTorna a provar-la des d'una\
-      \ sessió de terminal interactiva:\n  aeat config init\n\nSi l'estat del perfil\
+      \ sessió de terminal interactiva:\n  aeat config profile create NAME\n\nSi l'estat del perfil\
       \ pot estar obsolet o corrupte, revisa'l primer:\n  aeat config repair\n\nPer\
       \ descartar només l'estat local del perfil i començar de nou:\n  aeat config\
       \ reset --scope profile --yes"

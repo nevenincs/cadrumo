@@ -528,7 +528,7 @@ cli:
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
-      no_active_profile: Nincs aktív profil. Futtasd az `aeat config init` parancsot
+      no_active_profile: Nincs aktív profil. Futtasd az `aeat config profile create NAME` parancsot
         a profilhoz kötött adatparancsok előtt.
       period_empty: Az adózási időszak nem lehet üres
       period_unrecognised: Ismeretlen időszak
@@ -565,7 +565,7 @@ cli:
       configure_help: Az aktív hitelesítési szolgáltató beállítása
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
       help: Az aktív hitelesítési szolgáltató beállítása
-      no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config init' parancsot
+      no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config profile create NAME' parancsot
         a hitelesítés beállítása előtt.
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
       providers_help: Támogatott hitelesítési szolgáltatók listázása
@@ -590,7 +590,7 @@ cli:
         eseményekre (pl. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
-      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config init
+      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config profile create NAME
         --tax-id <NIF>' parancsot.
       unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config profile
         list'' listázza az érvényes kulcsokat.'
@@ -713,7 +713,7 @@ cli:
       import_missing_bundle: 'Nem található profilcsomag itt: %{path}'
       import_path_help: A profil JSON-csomagjának útvonala
       logout_help: Léptesd ki az aktív profilt a helyi mutató törlésével
-      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id <NIF>`
         first.
       preflight_help: Report whether the active profile is ready for one modelo /
         year / period.
@@ -725,7 +725,7 @@ cli:
         megmaradnak)
       remove_name_help: A sírkövezendő profil azonosítója
       remove_requires_yes: A törlés destruktív művelet. Futtasd újra 'aeat config
-        profile remove %{name} --yes' megerősítéshez.
+        profile delete %{name} --yes' megerősítéshez.
       remove_yes_help: A sírkövezés művelet kifejezett megerősítése
       rename_display_name_help: Operátornak látható címke; alapértelmezés szerint
         a meglévő
@@ -795,7 +795,7 @@ cli:
           ellenőrzéséhez.'
         saved: A(z) '%{profile_name}' profil mentve.
     status:
-      empty_profile: Nincs konfigurált profil. Kezdéshez futtasd az `aeat config init`
+      empty_profile: Nincs konfigurált profil. Kezdéshez futtasd az `aeat config profile create NAME`
         parancsot.
       help: Az aktív konfigurációs profil készenlétének megjelenítése
       next_step: 'Következő lépés: `aeat app overview status`'
@@ -1240,7 +1240,7 @@ cli:
         kapcsolódik az AEAT-hoz.
       to_help: A naptárablak záró dátuma, inkluzív (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
-      Futtasd: ''aeat config profile set <kulcs> <érték>'' vagy add meg --allow-incomplete
+      Futtasd: ''aeat config profile edit NAME'' vagy add meg --allow-incomplete
       a naptár alapértelmezett értékekkel történő számításához.'
     drafts: Tervezetek
     explain:
@@ -1269,7 +1269,7 @@ cli:
       next_review_command: '  aeat app ledger review - importalt sorok ellenorzese.'
       profile_active: A(z) `%{profile}` profilon dolgozol.
       profile_missing: Nincs aktiv profil beallitva. Adatok importalasa elott futtasd
-        az `aeat config init` parancsot.
+        az `aeat config profile create NAME` parancsot.
       storage_ok: A helyi titkositott tarolo olvashato az aktualis mesterkulccsal.
       storage_warning: '%{count} titkositott helyi tarolosor nem olvashato az aktualis
         mesterkulccsal. Ezek nem a banki kivonat sorai; uj tranzakciokat importalhatsz,
@@ -1406,7 +1406,7 @@ cli:
     app_help: 'Spanyol adóbevallási segéd
 
 
-      Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'
+      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVITY'
     app_help_help: Show app workflow help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
@@ -1425,7 +1425,7 @@ cli:
         es osztalyozasa.'
       quick_start_setup_done: '  1. `aeat config profile status` - aktiv profil ellenorzese
         az operativ munka elott.'
-      quick_start_setup_needed: '  1. `aeat config init` - eloszor hozd letre a helyi
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - eloszor hozd letre a helyi
         adozasi profilt.'
       quick_start_status: '  2. `aeat app overview status` - aktualis munkaterulet-allapot
         es diagnosztika olvasasa.'
@@ -1585,7 +1585,7 @@ topic:
   profile:
     body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet,
       ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario).
-      Szerkeszd: ''aeat config profile set <kulcs> <érték>''.'
+      Szerkeszd: ''aeat config profile edit NAME''.'
     title: Adózói profil
   providers:
     body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei
@@ -1644,7 +1644,7 @@ wizard:
     select_without_choices: Question %{prompt_key} declares no select options.
     unsupported_console: "A vezetett beállítás nem tudott interaktív kérdést megnyitni\
       \ ebben a futásban.\nMég semmi nincs mentve.\n\nPróbáld újra interaktív terminálból:\n\
-      \  aeat config init\n\nHa a profilállapot elavult vagy sérült lehet, először\
+      \  aeat config profile create NAME\n\nHa a profilállapot elavult vagy sérült lehet, először\
       \ vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot eldobásához\
       \ és újrakezdéshez:\n  aeat config reset --scope profile --yes"
   other:

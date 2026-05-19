@@ -135,25 +135,25 @@ def test_profile_check_no_active_profile_returns_warn_with_setup_next_action() -
 
     assert result.name == "profile.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>"
+    assert result.next_action == "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
 
 
 def test_profile_check_missing_required_keys_returns_warn_with_canonical_next_action() -> None:
     """When the profile exists but isn't ready, the diagnostic
-    row carries the canonical ``aeat config init`` literal so
+    row carries the canonical profile-create literal so
     every operator surface points at the same recovery command.
     """
     report = _wizard_status(
         profile_ready=False,
         missing_required=("tax_id", "ccaa"),
-        next_action="aeat config set tax.id NIF",
+        next_action="aeat config profile edit NAME",
     )
 
     result = _profile_check(report)
 
     assert result.name == "profile.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>"
+    assert result.next_action == "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
     assert "tax_id" in result.summary
     assert "ccaa" in result.summary
 
@@ -182,7 +182,7 @@ def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_t
         active_profile="operator",
         profile_ready=False,
         missing_required=("tax_id",),
-        next_action="aeat config set tax.id NIF",
+        next_action="aeat config profile edit NAME",
     )
 
     result = _profile_check(report)
@@ -197,14 +197,14 @@ def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_t
 
 def test_auth_check_no_provider_returns_warn_with_auth_setup_next_action() -> None:
     """auth_provider is the empty string → no provider configured →
-    ``auth.readiness`` warn row pointing at ``aeat config auth setup``."""
+    ``auth.readiness`` warn row pointing at auth configure."""
     report = _wizard_status(auth_provider="", login_ready=False)
 
     result = _auth_check(report)
 
     assert result.name == "auth.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config auth setup"
+    assert result.next_action == "aeat config auth configure --provider certificate --file PATH"
 
 
 def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
@@ -215,7 +215,7 @@ def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
     assert result.name == "auth.readiness"
     assert result.status == "warn"
     assert "certificate" in result.summary
-    assert result.next_action == "aeat config auth setup"
+    assert result.next_action == "aeat config auth test --provider certificate"
 
 
 def test_auth_check_happy_path_returns_ok_with_provider_session_summary() -> None:

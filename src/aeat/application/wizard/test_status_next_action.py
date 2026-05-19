@@ -32,13 +32,13 @@ def test_next_wizard_action_returns_setup_command_when_no_profile() -> None:
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config init --profile NAME"
+        == "aeat config profile create NAME"
     )
 
 
-def test_next_wizard_action_returns_set_required_command_when_missing_required() -> None:
+def test_next_wizard_action_returns_profile_edit_command_when_missing_required() -> None:
     """When the profile exists but a required field is missing, the
-    operator is pointed at the matching ``aeat config set <field> VALUE``."""
+    operator is pointed at the profile edit wizard."""
     assert (
         _next_wizard_action(
             has_profile=True,
@@ -47,13 +47,12 @@ def test_next_wizard_action_returns_set_required_command_when_missing_required()
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config set nif VALUE"
+        == "aeat config profile edit NAME"
     )
 
 
-def test_next_wizard_action_names_first_missing_required_field_only() -> None:
-    """The dispatcher picks ``missing_required[0]`` even when several
-    fields are absent — operators address one at a time."""
+def test_next_wizard_action_collapses_multiple_missing_required_fields_to_profile_edit() -> None:
+    """The dispatcher sends incomplete profiles through the profile edit wizard."""
     assert (
         _next_wizard_action(
             has_profile=True,
@@ -62,14 +61,14 @@ def test_next_wizard_action_names_first_missing_required_field_only() -> None:
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config set nif VALUE"
+        == "aeat config profile edit NAME"
     )
 
 
-def test_next_wizard_action_returns_set_enrolment_command_when_missing_enrolment() -> None:
+def test_next_wizard_action_returns_profile_edit_command_when_missing_enrolment() -> None:
     """`missing_required=()` is the gate for the enrolment branch; once
     every required field is set, the dispatcher moves to the
-    ``aeat config set <enrolment> GENERAL`` suggestion."""
+    profile edit wizard."""
     assert (
         _next_wizard_action(
             has_profile=True,
@@ -78,7 +77,7 @@ def test_next_wizard_action_returns_set_enrolment_command_when_missing_enrolment
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config set iva GENERAL"
+        == "aeat config profile edit NAME"
     )
 
 
@@ -93,7 +92,7 @@ def test_next_wizard_action_returns_auth_setup_command_when_no_auth_provider() -
             auth_provider="",
             login_ready=False,
         )
-        == "aeat config auth --provider certificate --file PATH"
+        == "aeat config auth configure --provider certificate --file PATH"
     )
 
 
@@ -109,7 +108,7 @@ def test_next_wizard_action_returns_auth_login_command_when_not_login_ready() ->
             auth_provider="certificate",
             login_ready=False,
         )
-        == "aeat config auth --provider certificate"
+        == "aeat config auth test --provider certificate"
     )
 
 
@@ -139,8 +138,8 @@ def test_next_wizard_action_missing_required_wins_precedence_over_missing_enrolm
         login_ready=True,
     )
 
-    assert "nif" in suggestion
-    assert "iva" not in suggestion
+    assert suggestion == "aeat config profile edit NAME"
+    assert "auth" not in suggestion
 
 
 def test_next_wizard_action_missing_enrolment_wins_precedence_over_auth() -> None:
@@ -155,5 +154,5 @@ def test_next_wizard_action_missing_enrolment_wins_precedence_over_auth() -> Non
         login_ready=False,
     )
 
-    assert "iva" in suggestion
+    assert suggestion == "aeat config profile edit NAME"
     assert "auth" not in suggestion

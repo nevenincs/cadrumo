@@ -106,5 +106,5 @@ def test_questionary_prompter_translates_no_console_error() -> None:
         with pytest.raises(WizardUnsupportedConsoleError) as raised:
             prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
     message = str(raised.value)
-    assert "aeat config init" in message
+    assert "aeat config profile create NAME" in message
     assert "No console screen buffer attached" not in message
