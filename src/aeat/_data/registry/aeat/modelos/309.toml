@@ -142,6 +142,7 @@ number = "ejercicio"
 label = "Ejercicio al que se refiere la declaracion"
 section = ["declarante"]
 data_type = "year"
+semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]

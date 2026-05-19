@@ -44,6 +44,7 @@ number = "ejercicio"
 label = "Ejercicio al que se refiere la declaracion"
 section = ["declarante"]
 data_type = "year"
+semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]

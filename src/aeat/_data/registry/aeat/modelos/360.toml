@@ -48,6 +48,7 @@ number = "ejercicio"
 label = "Ejercicio al que se refiere la solicitud"
 section = ["declarante"]
 data_type = "year"
+semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]

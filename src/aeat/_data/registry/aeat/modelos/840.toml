@@ -51,6 +51,7 @@ number = "ejercicio"
 label = "Ejercicio fiscal al que se refiere la declaracion"
 section = ["declarante"]
 data_type = "year"
+semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
