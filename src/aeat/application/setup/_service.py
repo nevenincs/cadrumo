@@ -11,7 +11,10 @@ from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, w
 from ...core.config import load_settings
 from ...domain.user_profile import UserProfileFact
 from ..auth import AuthProviderReservedError, configure_operator_auth
-from ..user_profile._orchestration import register_active_profile
+from ..user_profile._orchestration import (
+    _write_active_profile_pointer,
+    register_active_profile,
+)
 from ..workflow._persistence import workflow_state_repository
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
 
@@ -97,14 +100,26 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
     if command.output_language is not None:
         facts.append(UserProfileFact(path="preferences.output_language", value=command.output_language))
 
-    repository = workflow_state_repository()
-
     # 1. Provision the per-bucket on-disk directory tree + manifest
     #    (idempotent on re-runs; the salt is captured once at first
-    #    provision and never regenerated).
+    #    provision and never regenerated). Must run before any
+    #    SQLAlchemy engine opens so the bucket's ``db/`` directory
+    #    exists when ``create_engine`` first writes its journal file.
     _provision_bucket_directory_idempotent(bucket_id=command.profile_name)
 
-    # 2. Create profile and bucket atomically
+    # 2. Write the active-profile pointer file BEFORE constructing the
+    #    workflow-state repository. ``Settings.aeat_database_url`` is
+    #    computed from the active-profile pointer chain; the
+    #    repository's SecureObjectRepository factory opens the per-
+    #    bucket engine eagerly. Writing the pointer here makes the
+    #    resolution succeed on the first ``load_settings()`` inside
+    #    the engine path. ``register_active_profile`` re-writes the
+    #    pointer idempotently at the tail of its work.
+    _write_active_profile_pointer(command.profile_name)
+
+    repository = workflow_state_repository()
+
+    # 3. Create profile and bucket atomically
     repository.update(
         lambda state: register_active_profile(
             state,
