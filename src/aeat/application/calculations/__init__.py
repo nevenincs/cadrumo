@@ -18,6 +18,12 @@ from ._binding_prefill import (
     PrefilledBinding,
     resolve_bindings_from_local_store,
 )
+from ._iva_compensation_history import (
+    IvaCompensationHistoryRepository,
+    IvaCompensationPeriodState,
+    iva_compensation_period_key,
+    iva_compensation_state_from_filed_observation,
+)
 from ._iva_wallet_reconciliation import (
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
@@ -48,7 +54,9 @@ __all__ = [
     "AssembledObservations",
     "BindingPrefillReport",
     "CalculationObservationRepository",
+    "IvaCompensationHistoryRepository",
     "IvaCompensationOverride",
+    "IvaCompensationPeriodState",
     "IvaCompensationReconciliationDecision",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
@@ -61,6 +69,8 @@ __all__ = [
     "assemble_refund_observations",
     "assemble_related_party_observations",
     "assemble_withholding_observations",
+    "iva_compensation_period_key",
+    "iva_compensation_state_from_filed_observation",
     "iva_wallet_decision_key",
     "observation_key",
     "reconcile_iva_compensation_wallet",

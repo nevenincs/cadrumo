@@ -711,7 +711,7 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
-class ModeloIvaWalletReconciliationBlocked(ModeloError):
+class ModeloIvaWalletReconciliationBlocked(ModeloError):  # noqa: N818
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
 
 
@@ -776,6 +776,8 @@ def calculate_modelo_revision(
     work_units = wu_repo.load()
     work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
+    if iva_compensation_decision is None:
+        iva_compensation_decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit)
 
     period_date = filing_period_date or period_end_date(
         filing_year=work_unit.filing_year,
@@ -943,7 +945,8 @@ def _apply_iva_compensation_decision_binding(
         )
     if decision.blocked:
         raise ModeloIvaWalletReconciliationBlocked(
-            f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}: {decision.reason}"
+            "IVA wallet reconciliation blocks automatic Modelo 303 calculation: "
+            f"{decision.divergence}: {decision.reason}"
         )
     if decision.selected_amount is None:
         raise ModeloIvaWalletReconciliationBlocked("IVA wallet reconciliation decision has no selected amount")
@@ -954,6 +957,36 @@ def _apply_iva_compensation_decision_binding(
             "caller binding for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
         )
     backend_binding_values[binding_id] = selected
+
+
+def _load_persisted_iva_compensation_decision_for_work_unit(work_unit: WorkUnit) -> object | None:
+    if work_unit.modelo != "303":
+        return None
+    taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
+    if taxpayer_nif is None:
+        return None
+    from ..calculations._observations_repository import IvaWalletDecisionRepository
+
+    return IvaWalletDecisionRepository().load_decision(
+        taxpayer_nif,
+        work_unit.filing_year,
+        work_unit.period,
+    )
+
+
+def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    value = record_to_path_values(record).get("identity.tax_id")
+    if value is None or not value.strip():
+        return None
+    return value.strip()
 
 
 def calculate_modelo_revision_from_bucket_aggregation(
@@ -2443,9 +2476,9 @@ __all__ = [
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "ExternalFilingImportError",
-    "ModeloRecordNotFoundError",
     "ModeloAggregationBindingError",
     "ModeloIvaWalletReconciliationBlocked",
+    "ModeloRecordNotFoundError",
     "ModeloWorkflowGateError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",

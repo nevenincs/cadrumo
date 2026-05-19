@@ -590,6 +590,41 @@ def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path:
     assert not output_root.exists()
 
 
+def test_capture_iva_history_cli_requires_live_gate_before_local_writes(tmp_path: Path) -> None:
+    now = datetime.now(UTC)
+    _seed_session(
+        tmp_path,
+        AuthProviderKind.CLAVE_MOVIL,
+        authenticated_at=now - timedelta(hours=2),
+        idle_deadline=now - timedelta(minutes=1),
+    )
+    output_root = tmp_path / "iva-history"
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "live",
+            "iva-wallet",
+            "capture-history",
+            "--from-year",
+            "2024",
+            "--to-year",
+            "2025",
+            "--output-root",
+            str(output_root),
+        ],
+        env={
+            "AEAT_TOKEN_DIR": str(tmp_path),
+            "AEAT_ACTIVE_PROFILE": "default",
+            "AEAT_OUTPUT_LANGUAGE": "en",
+        },
+    )
+
+    assert result.exit_code != 0
+    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1" in result.output
+    assert not output_root.exists()
+
+
 def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     _seed_session(

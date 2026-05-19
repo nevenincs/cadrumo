@@ -1287,7 +1287,11 @@ def _observed_casillas_from_submitted_file(
 
 
 _MODELO_303_PAGE_03_TAG = "<T30303000>"
+_MODELO_303_PAGE_03_END_TAG = "</T30303000>"
+_MODELO_303_PAGE_03_RECORD_LENGTH = 1017
 _MODELO_303_PAGE_03_MONEY_FIELDS: Final[Mapping[str, tuple[int, int]]] = {
+    "110": (255, 17),
+    "78": (272, 17),
     "87": (289, 17),
     "69": (323, 17),
     "71": (374, 17),
@@ -1305,7 +1309,15 @@ def _observed_modelo_303_casillas_from_submitted_file(
     page_start = text.find(_MODELO_303_PAGE_03_TAG)
     if page_start < 0:
         raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has no page-03 record")
-    page = text[page_start:]
+    page = text[page_start : page_start + _MODELO_303_PAGE_03_RECORD_LENGTH]
+    if len(page) != _MODELO_303_PAGE_03_RECORD_LENGTH:
+        raise SedeParseError(
+            f"submitted Modelo 303 file for {declaration.expediente_id!r} has truncated page-03 record"
+        )
+    if not page.startswith(_MODELO_303_PAGE_03_TAG):
+        raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has invalid page-03 header")
+    if page[1005:1017] != _MODELO_303_PAGE_03_END_TAG:
+        raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has invalid page-03 footer")
     observations: list[ObservedCasillaValue] = []
     for casilla_id, (position, width) in _MODELO_303_PAGE_03_MONEY_FIELDS.items():
         raw = page[position - 1 : position - 1 + width]

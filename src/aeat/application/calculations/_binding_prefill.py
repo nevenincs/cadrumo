@@ -30,12 +30,15 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.resources import resources
 from ...domain.calculations.registry._bindings import (
+    CasillaObservation,
     RegistryModeloObservation,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
 from ...domain.calculations.registry._schema import RegistrySnapshot
+from ._iva_compensation_history import IvaCompensationHistoryRepository, IvaCompensationPeriodState
 from ._observations_repository import CalculationObservationRepository
 
 
@@ -94,6 +97,7 @@ def _gather_observations(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository,
+    iva_history_repository: IvaCompensationHistoryRepository | None = None,
 ) -> tuple[RegistryModeloObservation, ...]:
     """Walk every previous_filing binding in the revision and pull
     matching observations from the local store.
@@ -106,12 +110,70 @@ def _gather_observations(
         period=snapshot.period,
     ):
         payload = repository.load(requirement.modelo, requirement.filing_year, requirement.period)
-        if payload is None:
+        if payload is not None:
+            obs = payload.observation
+        elif requirement.modelo == "303" and iva_history_repository is not None:
+            state = iva_history_repository.load_period(requirement.filing_year, requirement.period)
+            if state is None:
+                continue
+            obs = _observation_from_iva_compensation_history(state)
+        else:
             continue
-        obs = payload.observation
         key = (obs.modelo, obs.filing_year, obs.period)
         needed.setdefault(key, obs)
     return tuple(needed.values())
+
+
+def _observation_from_iva_compensation_history(
+    state: IvaCompensationPeriodState,
+) -> RegistryModeloObservation:
+    """Project secure IVA compensation history into the registry resolver contract."""
+
+    snapshot = resources().modelos.authority.snapshot(
+        "303",
+        filing_year=state.filing_year,
+        period=state.period,
+    )
+    casillas = {item.id: item for item in snapshot.revision.casillas}
+    formulas = {item.target: item for item in snapshot.revision.formulas}
+
+    def observed(casilla_id: str, value: Decimal | None) -> tuple[CasillaObservation, ...]:
+        if value is None:
+            return ()
+        casilla = casillas.get(casilla_id)
+        formula = formulas.get(casilla_id)
+        operand_refs: tuple[str, ...] = ()
+        operand_values: tuple[Decimal, ...] = ()
+        if casilla_id == "iva.compensacion-disponible-fin-periodo" and (
+            state.pending_for_later_amount is not None and state.period_result_amount is not None
+        ):
+            operand_refs = ("87", "69")
+            operand_values = (state.pending_for_later_amount, state.period_result_amount)
+        return (
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=value,
+                formula_id=formula.id if formula is not None else None,
+                operand_refs=operand_refs,
+                operand_values=operand_values,
+                legal_refs=tuple(casilla.legal_refs) if casilla is not None else (),
+                source_refs=tuple(casilla.source_refs) if casilla is not None else (),
+            ),
+        )
+
+    return RegistryModeloObservation(
+        modelo="303",
+        filing_year=state.filing_year,
+        period=state.period,
+        observations=(
+            *observed("110", state.prior_pending_amount),
+            *observed("78", state.applied_amount),
+            *observed("87", state.pending_for_later_amount),
+            *observed("69", state.period_result_amount),
+            *observed("71", state.final_result_amount),
+            *observed("iva.compensacion-disponible-fin-periodo", state.available_end_amount),
+        ),
+    )
 
 
 def _requirements_by_binding(
@@ -136,6 +198,7 @@ def resolve_bindings_from_local_store(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository | None = None,
+    iva_history_repository: IvaCompensationHistoryRepository | None = None,
     captured_at: datetime | None = None,
 ) -> BindingPrefillReport:
     """Resolve every `previous_filing` binding the revision declares
@@ -153,25 +216,19 @@ def resolve_bindings_from_local_store(
     """
 
     repo = repository if repository is not None else CalculationObservationRepository()
+    iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
     when = captured_at if captured_at is not None else datetime.now(UTC)
-    observations = _gather_observations(snapshot, repository=repo)
+    observations = _gather_observations(snapshot, repository=repo, iva_history_repository=iva_repo)
 
     if not observations:
         return BindingPrefillReport(prefilled=(), binding_values={})
 
-    try:
-        resolved_map = resolve_previous_filing_binding_values(
-            snapshot.revision,
-            observations,
-            filing_year=snapshot.filing_year,
-            period=snapshot.period,
-        )
-    except Exception:
-        # Defensive downgrade — partial coverage of source filings
-        # can leave a binding unresolvable. Returning an empty
-        # report mirrors the relation-prefill behaviour: caller
-        # decides whether to refuse or proceed with blanks.
-        return BindingPrefillReport(prefilled=(), binding_values={})
+    resolved_map = resolve_previous_filing_binding_values(
+        snapshot.revision,
+        observations,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
 
     prefilled: list[PrefilledBinding] = []
     binding_index = {binding.id: binding for binding in snapshot.revision.bindings}

@@ -24,12 +24,14 @@ from aeat.application.modelo import (
     calculate_modelo_revision,
     create_work_unit,
 )
+from aeat.application.user_profile import UserProfileLifecycleRepository
 from aeat.core.config import override_settings
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
 from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
+from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -141,6 +143,18 @@ def _work_unit_repositories():
         WorkUnitCatalogueRepository(),
         CalculationRevisionCatalogueRepository(),
         BucketEventHistoryRepository(),
+    )
+
+
+def _store_operator_profile() -> None:
+    UserProfileLifecycleRepository(bucket_id="operator").save(
+        UserProfileRecord(
+            profile_id="operator",
+            display_name="Operator",
+            facts=(UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),),
+            created_at=_DECIDED_AT,
+            updated_at=_DECIDED_AT,
+        )
     )
 
 
@@ -300,6 +314,47 @@ def test_wallet_divergence_blocks_real_modelo_303_engine_before_persisting_revis
                 casilla_inputs={},
                 binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=report.decision,
+                filing_period_date=date(2026, 6, 30),
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+                clock=_DECIDED_AT,
+            )
+        assert len(calc_repo.load()) == 0
+
+
+def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        _store_operator_profile()
+        observation_repo = CalculationObservationRepository()
+        _store_prior_303_compensation(observation_repo, amount=Decimal("800.00"))
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD)
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_NIF,
+            wallet=_wallet_observation(pending=Decimal("1200.00")),
+            repository=observation_repo,
+            decided_at=_DECIDED_AT,
+        )
+        assert report.decision.blocked is True
+
+        work_repo, calc_repo, event_repo = _work_unit_repositories()
+        work_unit = create_work_unit(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=_TARGET_YEAR,
+            period=_TARGET_PERIOD,
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_DECIDED_AT,
+        )
+
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values=_modelo_303_engine_inputs(),
                 filing_period_date=date(2026, 6, 30),
                 work_unit_repository=work_repo,
                 calculation_repository=calc_repo,
