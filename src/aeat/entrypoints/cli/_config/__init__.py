@@ -25,7 +25,6 @@ from ....core.logging import default_log_file_path
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 from ....core.i18n import tr
-from ._payloads import ProfileFactSetResult, ProfileFactUnsetResult
 
 _wizard_init_command = build_wizard_command(SETUP_FLOW)
 
@@ -257,197 +256,6 @@ def config_list(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("get", help=tr("cli.config.get.help"))
-def config_get(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.config.get.key_help"))) -> None:
-    """Return one profile key's current value."""
-
-    from ....application.user_profile._orchestration import fact_value
-    from ....domain.profile import get_profile_key
-
-    try:
-        get_profile_key(key)
-    except KeyError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
-    state = _profile_state().load()
-    record = state.active_profile_record()
-    value = fact_value(record, key) or ""
-    payload = {"key": key, "value": value}
-    _emit(ctx, payload, (f"{key}\t{value or '<unset>'}",))
-
-
-def _question_for_profile_key(profile_key: str):
-    """Return the descriptor's question for ``profile_key``, or ``None``."""
-
-    from ....application.wizard._catalogue import WIZARD_FLOWS
-
-    for flow in WIZARD_FLOWS:
-        for section in flow.sections:
-            for question in section.questions:
-                if question.profile_key == profile_key:
-                    return question
-    return None
-
-
-@profile_app.command("set", help=tr("cli.config.set.help"))
-def config_set(
-    ctx: typer.Context,
-    key: str = typer.Argument(..., help=tr("cli.config.set.key_help")),
-    value: str = typer.Argument(..., help=tr("cli.config.set.value_help")),
-) -> None:
-    """Write one profile key value, validated through the wizard descriptor."""
-
-    from ....application.user_profile._orchestration import fact_value, set_active_field
-    from ....application.wizard._errors import WizardValidationError
-    from ....application.wizard._widgets import validate_widget_answer
-    from ....domain.profile import get_profile_key
-    from ....domain.user_profile import UserProfileFact
-
-    try:
-        registered = get_profile_key(key)
-    except KeyError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
-    canonical_key = registered.key
-    question = _question_for_profile_key(canonical_key)
-    if question is not None:
-        try:
-            value = validate_widget_answer(question, value)
-        except WizardValidationError as exc:
-            choices = ", ".join(choice.value for choice in question.choices)
-            translated = exc.translated_message or tr("cli.config.errors.invalid_value", name=key, value=value)
-            message = f"{translated} ({choices})" if choices else translated
-            raise CliRefusedBoundaryError(message) from exc
-
-    repository = _profile_state()
-    if resolve_active_bucket_id() is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    fact = UserProfileFact(path=canonical_key, value=value)
-    updated = repository.update(lambda current: set_active_field(current, fact))
-    record = updated.active_profile_record()
-    stored_value = fact_value(record, canonical_key) or ""
-    payload = ProfileFactSetResult(key=canonical_key, value=stored_value)
-    _emit(ctx, payload.model_dump(mode="json"), (f"{canonical_key}\t{stored_value}",))
-
-
-@profile_app.command("unset", help=tr("cli.config.unset.help"))
-def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.config.unset.key_help"))) -> None:
-    """Clear one profile key value through the shared application backend."""
-
-    from ....application.user_profile._orchestration import set_active_field
-    from ....domain.profile import get_profile_key
-    from ....domain.user_profile import UserProfileFact
-
-    try:
-        get_profile_key(key)
-    except KeyError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
-    repository = _profile_state()
-    if resolve_active_bucket_id() is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    fact = UserProfileFact(path=key, value=None)
-    repository.update(lambda current: set_active_field(current, fact))
-    payload = ProfileFactUnsetResult(key=key)
-    _emit(ctx, payload.model_dump(mode="json"), (f"{key}\t<unset>",))
-
-
-@profile_app.command(
-    "validate", help=tr("cli.config.profile.validate_help", default="Validate the active profile against the schema.")
-)
-def config_profile_validate(ctx: typer.Context) -> None:
-    """Run the canonical ProfileValidationService over the active profile."""
-
-    from ....application.user_profile._orchestration import build_lifecycle_service
-    from ....domain.user_profile import ProfileNotFoundError
-
-    state = _profile_state().load()
-    if resolve_active_bucket_id() is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(resolve_active_bucket_id() or "")
-    if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
-    try:
-        record = service.read(resolve_active_bucket_id() or "")
-    except ProfileNotFoundError as exc:
-        active = resolve_active_bucket_id() or ""
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=active)) from exc
-    report = service._validator.validate_record(record)
-    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
-    payload = report.model_dump(mode="json")
-    payload["valid"] = not blocking
-    lines = [
-        f"profile_id\t{record.profile_id}",
-        f"schema_version\t{report.schema_version}",
-        f"valid\t{not blocking}",
-        f"issues\t{len(report.issues)}",
-    ]
-    for issue in report.issues:
-        lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
-    _emit(ctx, payload, lines)
-
-
-@profile_app.command(
-    "preflight",
-    help=tr(
-        "cli.config.profile.preflight_help",
-        default="Report whether the active profile is ready for one modelo / year / period.",
-    ),
-)
-def config_profile_preflight(
-    ctx: typer.Context,
-    modelo: str = typer.Option(
-        ..., "--modelo", help=tr("cli.config.profile.preflight_modelo_help", default="Modelo code (e.g. 303).")
-    ),
-    revision_id: str = typer.Option(
-        ..., "--revision-id", help=tr("cli.config.profile.preflight_revision_help", default="Registry revision id.")
-    ),
-    filing_year: int = typer.Option(
-        ..., "--year", help=tr("cli.config.profile.preflight_year_help", default="Filing year.")
-    ),
-    period: str = typer.Option(
-        ..., "--period", help=tr("cli.config.profile.preflight_period_help", default="Period token (e.g. Q1, annual).")
-    ),
-) -> None:
-    """Wrap ProfilePreflightService over the active profile for one modelo target."""
-
-    from ....application.user_profile._orchestration import _shared_schema, build_lifecycle_service
-    from ....application.user_profile._preflight import ProfilePreflightService
-    from ....domain.user_profile import ProfileNotFoundError
-
-    state = _profile_state().load()
-    if resolve_active_bucket_id() is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = state.profiles.get(resolve_active_bucket_id() or "")
-    if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
-    try:
-        record = service.read(resolve_active_bucket_id() or "")
-    except ProfileNotFoundError as exc:
-        active = resolve_active_bucket_id() or ""
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=active)) from exc
-    preflight = ProfilePreflightService(schema=_shared_schema())
-    report = preflight.report(
-        record=record,
-        modelo=modelo,
-        revision_id=revision_id,
-        filing_year=filing_year,
-        period=period,
-    )
-    payload = report.model_dump(mode="json")
-    lines = [
-        f"profile_id\t{record.profile_id}",
-        f"modelo\t{modelo}",
-        f"revision_id\t{revision_id}",
-        f"filing_year\t{filing_year}",
-        f"period\t{period}",
-        f"ready\t{report.ready}",
-        f"missing\t{len(report.missing)}",
-    ]
-    for requirement in report.missing:
-        lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
-    _emit(ctx, payload, lines)
-
-
 @profile_app.command("switch", help=tr("cli.config.profile.switch_help"))
 def config_profile_switch(
     ctx: typer.Context,
@@ -533,7 +341,13 @@ def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
 ) -> None:
-    """View one profile's facts (defaults to the active profile)."""
+    """View one profile's facts (defaults to the active profile).
+
+    Emits a readiness header line carrying the validation outcome of the
+    canonical ProfileValidationService. When blocking issues exist, the
+    command exits with code 2 after rendering the report so operators
+    discover the failure on stdout and via the shell exit status.
+    """
 
     from ....application.user_profile._orchestration import build_lifecycle_service
     from ....application.user_profile._projections import record_to_path_values
@@ -551,20 +365,32 @@ def config_profile_show(
         record = service.read(target)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target)) from exc
+    report = service._validator.validate_record(record)
+    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     values = record_to_path_values(record)
     payload = {
         "profile_id": record.profile_id,
         "display_name": record.display_name,
         "status": record.status.value,
+        "valid": not blocking,
+        "schema_version": report.schema_version,
+        "issues": [issue.model_dump(mode="json") for issue in report.issues],
         "facts": [{"path": path, "value": value} for path, value in sorted(values.items())],
     }
-    lines = [
-        f"profile_id\t{record.profile_id}",
-        f"display_name\t{record.display_name}",
-        f"status\t{record.status.value}",
-    ]
+    lines: list[str] = []
+    if blocking:
+        lines.append(f"readiness\tblocked\tissues={len(blocking)}")
+    else:
+        lines.append(f"readiness\tready\tissues={len(report.issues)}")
+    lines.append(f"profile_id\t{record.profile_id}")
+    lines.append(f"display_name\t{record.display_name}")
+    lines.append(f"status\t{record.status.value}")
+    for issue in report.issues:
+        lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
     lines.extend(f"{path}\t{value}" for path, value in sorted(values.items()))
     _emit(ctx, payload, lines)
+    if blocking:
+        raise typer.Exit(code=2)
 
 
 @profile_app.command("delete", help=tr("cli.config.profile.delete_help"))
