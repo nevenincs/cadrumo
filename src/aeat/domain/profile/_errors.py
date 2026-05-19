@@ -24,8 +24,8 @@ class TaxResidenceProfileError(AeatError):
 class ProfileNotConfiguredError(TaxResidenceProfileError):
     """Raised when RENTA verification needs a tax-residence profile.
 
-    Attached to a ``suggestion`` pointing the operator at
-    ``aeat profile set tax-region <ccaa>``.
+    Attached to a ``suggestion`` pointing the operator at the profile
+    edit wizard.
     """
 
     def __init__(self) -> None:
@@ -33,7 +33,7 @@ class ProfileNotConfiguredError(TaxResidenceProfileError):
         super().__init__(
             "No tax-residence profile is configured for RENTA.",
             translated_message="profile.errors.not_configured",
-            suggestion="aeat profile set tax-region <ccaa>",
+            suggestion="aeat config profile edit NAME --tax-residence-ccaa <ccaa>",
         )
 
 

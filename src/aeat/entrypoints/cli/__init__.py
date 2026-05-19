@@ -159,10 +159,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     """Activate the pointed-at bucket for this CLI process when one exists."""
 
     from ...adapters.persistence.storage import get_master_key_provider
-    from ...application.workflow._models import resolve_active_bucket_id
 
-    if resolve_active_bucket_id() is None:
-        return
     ctx.with_resource(get_master_key_provider())
 
 

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.operator_surface import build_help_document
 from aeat.application.user_profile._testing import register_minimal_profile
@@ -20,11 +21,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def _isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     dispose_engine()
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'help.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
+    with EphemeralMasterKeyProvider():
+        yield
+    dispose_engine()
 
 
 def _invoke(args: list[str]):
@@ -38,6 +43,7 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
             "AEAT_SECRET_STORE_BACKEND": "unsecured",
             "AEAT_ALLOW_UNENCRYPTED": "1",
             "AEAT_DATABASE_URL": f"sqlite:///{(tmp_path / 'console.db').as_posix()}",
+            "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "AEAT_TOKEN_DIR": str(tmp_path / "tokens"),
             "AEAT_RUNS_DIR": str(tmp_path / "runs"),
             "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
@@ -58,6 +64,7 @@ def _command_path_for_help_probe(command: str) -> list[str] | None:
 
 def test_root_help_uses_curated_two_root_shape() -> None:
     result = _invoke(["--help"])
+    retired_init = "aeat config " + "init"
 
     assert result.exit_code == 0, result.output
     assert "The CLI has exactly two roots: config and app." in result.output
@@ -65,7 +72,8 @@ def test_root_help_uses_curated_two_root_shape() -> None:
     assert "Daily ledger work" in result.output
     assert "Modelo lifecycle" in result.output
     assert "Common mistypes" not in result.output
-    assert "aeat config init" in result.output
+    assert "aeat config profile create NAME" in result.output
+    assert retired_init not in result.output
     assert "aeat app overview status" in result.output
     assert "aeat app live filed list" in result.output
     assert "aeat config bucket" not in result.output
@@ -74,10 +82,14 @@ def test_root_help_uses_curated_two_root_shape() -> None:
 def test_config_and_app_help_use_curated_subtree_shape() -> None:
     config = _invoke(["config", "--help"])
     app_result = _invoke(["app", "--help"])
+    retired_init = "aeat config " + "init"
 
     assert config.exit_code == 0, config.output
     assert "aeat config - profile, auth, diagnostics" in config.output
-    assert "aeat config profile set KEY VALUE" in config.output
+    assert "aeat config profile create NAME" in config.output
+    assert "aeat config profile show [NAME]" in config.output
+    assert ("aeat config profile " + "view [NAME]") not in config.output
+    assert retired_init not in config.output
     assert "Run aeat --help for the full overview." in config.output
 
     assert app_result.exit_code == 0, app_result.output
@@ -109,7 +121,8 @@ def test_bare_invocation_reports_profile_state_without_cli_only_storage() -> Non
     overview = _invoke(["app", "overview", "status"])
 
     assert missing.exit_code == 0, missing.output
-    assert "aeat config init" in missing.output
+    assert "aeat config profile create NAME" in missing.output
+    assert ("aeat config " + "init") not in missing.output
     assert "aeat app overview status" in missing.output
     assert "aeat app ledger import" in missing.output
 
@@ -141,7 +154,8 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
 
     combined_output = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 0, combined_output
-    assert "aeat config init" in result.stdout
+    assert "aeat config profile create NAME" in result.stdout
+    assert ("aeat config " + "init") not in result.stdout
     assert "aeat app overview status" in result.stdout
     assert "aeat app ledger import" in result.stdout
     assert "aeat config repair" in result.stdout
@@ -151,12 +165,12 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
     assert "unreadable_rows" not in combined_output
 
 
-def test_installed_console_config_init_fails_fast_without_prompt_host(tmp_path: Path) -> None:
+def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_path: Path) -> None:
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None
 
     result = subprocess.run(
-        [aeat_exe, "config", "init"],
+        [aeat_exe, "config", "profile", "create", "operator"],
         cwd=Path.cwd(),
         env=_console_env(tmp_path),
         capture_output=True,
@@ -168,10 +182,10 @@ def test_installed_console_config_init_fails_fast_without_prompt_host(tmp_path: 
 
     combined_output = f"{result.stdout}\n{result.stderr}"
     assert result.returncode != 0, combined_output
-    assert "aeat config init" in combined_output
+    assert "aeat config profile create NAME" in combined_output
     assert "aeat config repair" in combined_output
     assert "aeat config reset --scope profile --yes" in combined_output
-    assert "aeat config init --quiet --tax-id 12345678Z --activity" not in combined_output
+    assert ("aeat config " + "init") not in combined_output
     assert "1/9" not in combined_output
     assert "REFUSED" not in combined_output
     assert "Traceback" not in combined_output

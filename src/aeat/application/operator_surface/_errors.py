@@ -13,6 +13,7 @@ class OperatorSurfaceContractError(AeatError):
         super().__init__(
             tr(
                 "cli.operator_surface.errors.contract_not_accepted",
+                default="operator surface contract rejected %{surface}: %{reason}",
                 surface=repr(surface),
                 reason=reason,
             ),

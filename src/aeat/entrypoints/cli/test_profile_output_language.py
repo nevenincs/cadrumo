@@ -29,6 +29,7 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-language.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
     dispose_engine()
 
@@ -47,16 +48,20 @@ def _seed_profile() -> None:
     )
 
 
-def test_config_init_writes_profile_output_language(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_config_profile_create_writes_profile_output_language(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from aeat.adapters.persistence.storage import get_master_key_provider
     from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.core.i18n import output_language
 
     _isolate(monkeypatch, tmp_path)
 
     init_result = _invoke(
         [
             "config",
-            "init",
+            "profile",
+            "create",
+            "default",
             "--quiet",
             "--tax-id",
             "00000000T",
@@ -66,76 +71,105 @@ def test_config_init_writes_profile_output_language(monkeypatch: pytest.MonkeyPa
             "en",
         ]
     )
-    get_result = _invoke(["--format", "json", "config", "profile", "get", "preferences.output_language"])
+    show_result = _invoke(["--format", "json", "config", "profile", "show", "default"])
 
     assert init_result.exit_code == 0, init_result.output
-    assert get_result.exit_code == 0, get_result.output
-    assert json.loads(_json_output(get_result))["value"] == "en"
-    state = workflow_state_repository().load()
-    record = state.active_profile_record()
-    assert record is not None
-    from aeat.application.user_profile._orchestration import fact_value
+    assert show_result.exit_code == 0, show_result.output
+    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["facts"]}
+    assert facts["preferences.output_language"] == "en"
+    with get_master_key_provider():
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        assert record is not None
+        from aeat.application.user_profile._orchestration import fact_value
 
-    assert fact_value(record, "preferences.output_language") == "en"
-    assert ("profile.created", "default", "default") in [
-        (event.action, event.bucket_id, event.object_id) for event in state.bucket_events
-    ]
-    assert any(
-        event.action == "profile.values.updated"
-        and event.bucket_id == "default"
-        and event.object_id is not None
-        and event.object_id.startswith("keys:")
-        for event in state.bucket_events
-    )
-    assert output_language() == "en"
+        assert fact_value(record, "preferences.output_language") == "en"
+        assert ("profile.created", "default", "default") in [
+            (event.action, event.bucket_id, event.object_id) for event in state.bucket_events
+        ]
+        assert any(
+            event.action == "profile.values.updated"
+            and event.bucket_id == "default"
+            and event.object_id is not None
+            and event.object_id.startswith("keys:")
+            for event in state.bucket_events
+        )
 
 
-def test_config_profile_set_validates_profile_output_language(
+def test_config_profile_create_validates_profile_output_language(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    from aeat.adapters.persistence.storage import get_master_key_provider
     from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.core.i18n import output_language
 
     _isolate(monkeypatch, tmp_path)
-    _seed_profile()
+    valid_result = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "default",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--output-language",
+            "ca",
+        ]
+    )
+    show_result = _invoke(["--format", "json", "config", "profile", "show", "default"])
+    invalid_result = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "invalid",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--output-language",
+            "zz",
+        ]
+    )
 
-    set_result = _invoke(["config", "profile", "set", "preferences.output_language", "ca"])
-    get_result = _invoke(["--format", "json", "config", "profile", "get", "preferences.output_language"])
-    invalid_result = _invoke(["config", "profile", "set", "preferences.output_language", "zz"])
+    assert valid_result.exit_code == 0, valid_result.output
+    assert show_result.exit_code == 0, show_result.output
+    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["facts"]}
+    assert facts["preferences.output_language"] == "ca"
+    with get_master_key_provider():
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        assert record is not None
+        from aeat.application.user_profile._orchestration import fact_value
 
-    assert set_result.exit_code == 0, set_result.output
-    assert get_result.exit_code == 0, get_result.output
-    assert json.loads(_json_output(get_result))["value"] == "ca"
-    state = workflow_state_repository().load()
-    record = state.active_profile_record()
-    assert record is not None
-    from aeat.application.user_profile._orchestration import fact_value
-
-    assert fact_value(record, "preferences.output_language") == "ca"
-    assert output_language() == "ca"
-    assert invalid_result.exit_code != 0
-    assert "zz" in invalid_result.output
-    assert "Traceback" not in invalid_result.output
-    reloaded = workflow_state_repository().load().active_profile_record()
-    assert reloaded is not None
-    assert fact_value(reloaded, "preferences.output_language") == "ca"
+        assert fact_value(record, "preferences.output_language") == "ca"
+        assert invalid_result.exit_code != 0
+        assert "zz" in invalid_result.output
+        assert "Traceback" not in invalid_result.output
+        reloaded = workflow_state_repository().load().active_profile_record()
+        assert reloaded is not None
+        assert fact_value(reloaded, "preferences.output_language") == "ca"
 
 
 def test_global_language_flag_overrides_profile_for_invocation(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    from aeat.adapters.persistence.storage import get_master_key_provider
     from aeat.application.user_profile._orchestration import set_active_field
     from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.core.i18n import output_language
     from aeat.domain.user_profile import UserProfileFact
 
     _isolate(monkeypatch, tmp_path)
-    _seed_profile()
-    workflow_state_repository().update(
-        lambda state: set_active_field(state, UserProfileFact(path="preferences.output_language", value="ca"))
-    )
+    with get_master_key_provider():
+        _seed_profile()
+        workflow_state_repository().update(
+            lambda state: set_active_field(state, UserProfileFact(path="preferences.output_language", value="ca"))
+        )
 
     result = _invoke(["--language", "en", "--format", "json"])
 
@@ -147,4 +181,10 @@ def test_global_language_flag_overrides_profile_for_invocation(
     # directly by test_render_override.py in core/i18n.
     assert result.exit_code == 0, result.output
     # The profile language survives the invocation untouched.
-    assert output_language() == "ca"
+    with get_master_key_provider():
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        assert record is not None
+        from aeat.application.user_profile._orchestration import fact_value
+
+        assert fact_value(record, "preferences.output_language") == "ca"

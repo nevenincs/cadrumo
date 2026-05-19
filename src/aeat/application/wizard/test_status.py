@@ -32,13 +32,15 @@ def _isolated_secure_bucket_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
 
+    from ...adapters.persistence.storage import EphemeralMasterKeyProvider
     from ...adapters.persistence.storage.sql.engine import dispose_engine
 
     dispose_engine()
-    try:
-        yield
-    finally:
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def test_empty_state_yields_no_active_profile_report() -> None:
@@ -65,10 +67,10 @@ def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
     assert report.missing_enrolment == ()
 
 
-def test_next_action_for_empty_state_directs_to_aeat_config_init() -> None:
+def test_next_action_for_empty_state_directs_to_profile_create() -> None:
     state = WorkflowState()
     report = build_wizard_status(state)
-    assert report.next_action == "aeat config init --profile NAME"
+    assert report.next_action == "aeat config profile create NAME"
 
 
 def test_report_is_strict_frozen_pydantic_v2() -> None:
@@ -93,8 +95,9 @@ def test_report_is_strict_frozen_pydantic_v2() -> None:
 
 def test_load_active_autonomo_profile_raises_wizard_status_error_when_no_profile() -> None:
     state = WorkflowState()
-    with pytest.raises(WizardStatusError, match=r"profile|active|autonomo"):
+    with pytest.raises(WizardStatusError) as exc_info:
         load_active_autonomo_profile(state)
+    assert exc_info.value.context["workflow_state"] == "no_active_profile"
 
 
 def test_load_active_autonomo_profile_returns_autonomo_record_for_minimal_profile() -> None:

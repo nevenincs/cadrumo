@@ -554,7 +554,7 @@ cli:
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hay perfil activo. Ejecuta `aeat config init` antes de
+      no_active_profile: No hay perfil activo. Ejecuta `aeat config profile create NAME` antes de
         usar comandos de datos del perfil.
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: Periodo no reconocido
@@ -590,7 +590,7 @@ cli:
       configure_help: Configurar el proveedor de autenticación activo
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
-      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config init'
+      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config profile create NAME'
         antes de configurar la autenticación.
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
@@ -615,7 +615,7 @@ cli:
         (p. ej. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config init --tax-id
+      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create NAME --tax-id
         <NIF>' primero.
       unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
         profile list'' para ver las claves disponibles.'
@@ -742,7 +742,7 @@ cli:
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
-      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id <NIF>`
         first.
       preflight_help: Report whether the active profile is ready for one modelo /
         year / period.
@@ -753,7 +753,7 @@ cli:
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
-        profile remove %{name} --yes' para confirmar.
+        profile delete %{name} --yes' para confirmar.
       remove_yes_help: Confirma explícitamente la operación de retirada
       rename_display_name_help: Etiqueta visible para el operador; por defecto, la
         existente
@@ -823,7 +823,7 @@ cli:
           tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
     status:
-      empty_profile: Sin perfil configurado. Ejecuta `aeat config init` para empezar.
+      empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME` para empezar.
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
     unset:
@@ -1270,7 +1270,7 @@ cli:
         contacta con AEAT.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
-      ''aeat config profile set <clave> <valor>'' o usa --allow-incomplete para ver
+      ''aeat config profile edit NAME'' o usa --allow-incomplete para ver
       el calendario calculado bajo valores por defecto.'
     drafts: Borradores
     explain:
@@ -1299,7 +1299,7 @@ cli:
       next_landing_command: '  aeat --help - volver a la guia de comandos.'
       next_review_command: '  aeat app ledger review - revisar filas importadas.'
       profile_active: Estas trabajando en el perfil `%{profile}`.
-      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config init`
+      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config profile create NAME`
         antes de importar datos.
       storage_ok: El almacenamiento local cifrado se puede leer con la clave maestra
         actual.
@@ -1443,7 +1443,7 @@ cli:
     app_help: 'Asistente de flujo fiscal español
 
 
-      Quickstart: aeat config init --tax-id NIF --activity ACTIVIDAD'
+      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVIDAD'
     app_help_help: Mostrar ayuda del flujo de app
     debug_help: Mostrar logs internos de depuración en stderr
     detail_help: Mostrar también el resumen detallado del registro
@@ -1462,7 +1462,7 @@ cli:
         filas importadas.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprobar el perfil
         activo antes del trabajo operativo.'
-      quick_start_setup_needed: '  1. `aeat config init` - crear primero tu perfil
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primero tu perfil
         fiscal local.'
       quick_start_status: '  2. `aeat app overview status` - leer el estado actual
         del espacio y sus diagnosticos.'
@@ -1622,7 +1622,7 @@ topic:
   profile:
     body: El perfil local contiene tu identificación fiscal (NIF), actividad principal,
       régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat config profile set <clave> <valor>'.
+      Edítalo con 'aeat config profile edit NAME'.
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
@@ -1681,7 +1681,7 @@ wizard:
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
     unsupported_console: "No pude abrir el asistente guiado en esta ejecución.\nTodavía\
       \ no se ha guardado nada.\n\nPrueba otra vez el asistente desde una sesión de\
-      \ terminal interactiva:\n  aeat config init\n\nSi el estado del perfil puede\
+      \ terminal interactiva:\n  aeat config profile create NAME\n\nSi el estado del perfil puede\
       \ estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\nPara\
       \ descartar solo el estado local del perfil y empezar de nuevo:\n  aeat config\
       \ reset --scope profile --yes"

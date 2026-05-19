@@ -59,10 +59,19 @@ def render_root_landing_text(report: RootLandingReport) -> str:
 def _root_help() -> HelpDocument:
     return HelpDocument(
         surface=HelpSurface.ROOT,
-        heading=tr("cli.operator_surface.help.root.heading"),
+        heading=tr(
+            "cli.operator_surface.help.root.heading",
+            default="aeat - local-first Spanish tax workflow",
+        ),
         paragraphs=(
-            tr("cli.operator_surface.help.root.paragraph_two_roots"),
-            tr("cli.operator_surface.help.root.paragraph_type_help"),
+            tr(
+                "cli.operator_surface.help.root.paragraph_two_roots",
+                default="The CLI has exactly two roots: config and app.",
+            ),
+            tr(
+                "cli.operator_surface.help.root.paragraph_type_help",
+                default="Use config for local state and app for tax work.",
+            ),
         ),
         sections=(
             HelpSection(
@@ -186,15 +195,26 @@ def _root_help() -> HelpDocument:
                 ),
             ),
         ),
-        footer=tr("cli.operator_surface.help.root.footer"),
+        footer=tr(
+            "cli.operator_surface.help.root.footer",
+            default="Run aeat config --help or aeat app --help for subtree commands.",
+        ),
     )
 
 
 def _config_help() -> HelpDocument:
     return HelpDocument(
         surface=HelpSurface.CONFIG,
-        heading=tr("cli.operator_surface.help.config.heading"),
-        paragraphs=(tr("cli.operator_surface.help.config.paragraph_durable_state"),),
+        heading=tr(
+            "cli.operator_surface.help.config.heading",
+            default="aeat config - profile, auth, diagnostics",
+        ),
+        paragraphs=(
+            tr(
+                "cli.operator_surface.help.config.paragraph_durable_state",
+                default="Config commands manage local durable state.",
+            ),
+        ),
         sections=(
             HelpSection(
                 title=tr("cli.operator_surface.help.config.section_first_run"),
@@ -204,8 +224,8 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.first_run_bootstrap"),
                     ),
                     HelpEntry(
-                        command="aeat config profile status",
-                        description=tr("cli.operator_surface.help.config.first_run_status"),
+                        command="aeat config profile edit NAME",
+                        description=tr("cli.operator_surface.help.config.first_run_edit"),
                     ),
                 ),
             ),
@@ -238,16 +258,16 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.profile_list"),
                     ),
                     HelpEntry(
-                        command="aeat config profile view [NAME]",
-                        description=tr("cli.operator_surface.help.config.profile_view"),
+                        command="aeat config profile show [NAME]",
+                        description=tr("cli.operator_surface.help.config.profile_show"),
                     ),
                     HelpEntry(
-                        command="aeat config profile validate",
-                        description=tr("cli.operator_surface.help.config.profile_validate"),
+                        command="aeat config profile status",
+                        description=tr("cli.operator_surface.help.config.profile_status"),
                     ),
                     HelpEntry(
-                        command="aeat config profile preflight",
-                        description=tr("cli.operator_surface.help.config.profile_preflight"),
+                        command="aeat config profile census",
+                        description=tr("cli.operator_surface.help.config.profile_census"),
                     ),
                 ),
             ),
@@ -298,15 +318,20 @@ def _config_help() -> HelpDocument:
                 ),
             ),
         ),
-        footer=tr("cli.operator_surface.help.config.footer"),
+        footer=tr("cli.operator_surface.help.config.footer", default="Run aeat --help for the full overview."),
     )
 
 
 def _app_help() -> HelpDocument:
     return HelpDocument(
         surface=HelpSurface.APP,
-        heading=tr("cli.operator_surface.help.app.heading"),
-        paragraphs=(tr("cli.operator_surface.help.app.paragraph_operational_workflow"),),
+        heading=tr("cli.operator_surface.help.app.heading", default="aeat app - operational tax work"),
+        paragraphs=(
+            tr(
+                "cli.operator_surface.help.app.paragraph_operational_workflow",
+                default="App commands operate on the active profile bucket.",
+            ),
+        ),
         sections=(
             HelpSection(
                 title=tr("cli.operator_surface.help.app.section_overview"),
@@ -438,7 +463,7 @@ def _app_help() -> HelpDocument:
                 ),
             ),
         ),
-        footer=tr("cli.operator_surface.help.app.footer"),
+        footer=tr("cli.operator_surface.help.app.footer", default="Run aeat --help for the full overview."),
     )
 
 

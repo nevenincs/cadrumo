@@ -73,15 +73,17 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
 
     config_children = mounted["config"]
     app_children = mounted["app"]
-    assert {"init", "profile", "auth", "repair"}.issubset(config_children)
+    assert {"profile", "auth", "repair"}.issubset(config_children)
+    assert "init" not in config_children
     assert {"overview", "ledger", "modelo", "registry", "review"}.issubset(app_children)
 
 
-def test_config_init_mounts_existing_setup_wizard_flow() -> None:
+def test_config_profile_create_mounts_existing_setup_wizard_flow() -> None:
     """First-run configuration is the wizard flow, not a parallel interface."""
 
-    init_command = next(command for command in _config.app.registered_commands if command.name == "init")
-    callback = init_command.callback
+    profile_group = next(group.typer_instance for group in _config.app.registered_groups if group.name == "profile")
+    create_command = next(command for command in profile_group.registered_commands if command.name == "create")
+    callback = create_command.callback
     assert callback is not None
     wrapped = getattr(callback, "__wrapped__", callback)
     assert getattr(wrapped, "__wizard_flow__", None) is SETUP_FLOW
@@ -96,6 +98,7 @@ def test_rejected_aliases_do_not_reach_apex_workflow_services() -> None:
         ["app", "invoice", "--help"],
         ["app", "declaration", "--help"],
         ["app", "archive", "--help"],
+        ["config", "init", "--help"],
         ["config", "set", "--help"],
         ["config", "status", "--help"],
     ):
@@ -127,7 +130,7 @@ def _drive_apex_workflow_round_trip(backend: Path) -> _ApexWorkflowOutcome:
 
     Five logical phases:
 
-    1. `config init` — register operator profile with --accept-defaults.
+    1. `config profile create` — register operator profile with --accept-defaults.
     2. `config profile status` — verify the wizard persisted every
        required profile fact.
     3. `config auth configure/status/test --provider certificate` —
