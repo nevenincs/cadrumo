@@ -4,6 +4,7 @@ number = "40"
 label = "Mod. 40.3 LIS B1 — Compensacion de cuotas negativas (cooperativas)"
 section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
 data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_compensacion_cuotas_neg_coop"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-2019-2022-page-01-casilla-40"]
