@@ -284,7 +284,7 @@ def _build_runtime_schema_provider_cached(
 
 
 def _registry_tree_fingerprint(root: Path) -> tuple[tuple[str, int, int], ...]:
-    paths = sorted((root / "legal").glob("*.toml")) + sorted((root / "modelos").glob("*.toml"))
+    paths = sorted((root / "legal").rglob("*.toml")) + sorted((root / "modelos").rglob("*.toml"))
     fingerprint: list[tuple[str, int, int]] = []
     for path in paths:
         stat = path.stat()

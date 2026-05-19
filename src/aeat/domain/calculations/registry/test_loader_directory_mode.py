@@ -133,6 +133,155 @@ def test_directory_mode_rejects_duplicate_revision_ids_across_files(tmp_path: Pa
         load_modelo_directory(target)
 
 
+def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None:
+    """A ``revisions/<id>/`` fragment tree compiles to the same object shape."""
+
+    single_file = tmp_path / "999.toml"
+    single_file.write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "0001"
+number = "1"
+label = "Base"
+section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "latin-1"
+line_ending = "crlf"
+required = true
+""".lstrip(),
+        encoding="utf-8",
+    )
+    expected = load_modelo_file(single_file)
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "casillas").mkdir(parents=True)
+    (target / "revisions" / "2025" / "export").mkdir()
+    (target / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "casillas" / "liquidacion.toml").write_text(
+        """
+[[revisions."2025".casillas]]
+id = "0001"
+number = "1"
+label = "Base"
+section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export" / "manifest.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export" / "record-001.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "latin-1"
+line_ending = "crlf"
+required = true
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+def test_directory_mode_rejects_fragment_revision_id_mismatch(tmp_path: Path) -> None:
+    """Fragments under ``revisions/<id>/`` must declare the same revision id."""
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025").mkdir(parents=True)
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "x"\n', encoding="utf-8")
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        '[revisions."2024"]\nvalid_from = 2024-01-01\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="expected '2025'"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_fragment_scalar_redeclaration(tmp_path: Path) -> None:
+    """A fragmented revision has one owner for each scalar revision field."""
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025").mkdir(parents=True)
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "x"\n', encoding="utf-8")
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        '[revisions."2025"]\nlabel = "one"\n',
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "extra.toml").write_text(
+        '[revisions."2025"]\nlabel = "two"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="redeclares scalar field 'label'"):
+        load_modelo_directory(target)
+
+
 def test_directory_mode_rejects_missing_manifest(tmp_path: Path) -> None:
     """Directory-mode requires manifest.toml at the root of the modelo dir."""
 
