@@ -522,3 +522,105 @@ Stem authority: censo per RD 1065/2007 RGAGI.
 
 The module path src/aeat/application/live/_census.py and the outbound module src/aeat/adapters/outbound/aeat/sede/_census.py also rename to _censo.py in lockstep with the contained symbols.
 
+#### IVA cluster (VAT to IVA, reversing prior ADR)
+
+Stem authority: iva per Ley 37/1992 IVA.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| VatClassification | src/aeat/domain/vat/_classification.py | merge into IvaInvoiceClassification; VatClassification deleted | W03.P04 (retargeted) |
+| VatRegulation | src/aeat/domain/vat/_classification.py | IvaRegulation (consolidate with existing IvaRegulation if present) | W03.P04 |
+| VATRateKind | src/aeat/domain/vat/_schema.py | IvaRateKind (consolidate with existing) | W03.P04 |
+| VATCatalogue | src/aeat/domain/vat/_schema.py | IvaCatalogue | W03.P04 |
+| VatLedgerSelector | src/aeat/domain/vat/_flow.py | _IvaLedgerSelector (already exists; reconcile) | W03.P04 |
+| IssuerResidency | src/aeat/domain/vat/_classification.py | IvaIssuerResidency (or consolidate into single IvaResidency enum; see footnote 3) | W03.P04 |
+| CustomerResidency | src/aeat/domain/vat/_classification.py | IvaCustomerResidency | W03.P04 |
+| InvoiceDirection | src/aeat/domain/vat/_classification.py | consolidate with InvoiceKind into a single InvoiceKind enum; remove InvoiceDirection | W03.P04 |
+| IvaFlowDirection | src/aeat/domain/vat/_flow.py | retain as-is (REPERCUTIDO/SOPORTADO/AUTOREPERCUTIDO is IVA-specific; not the same axis as InvoiceKind) | n/a |
+| Package path src/aeat/domain/vat/ | n/a | rename to src/aeat/domain/iva/ | W03.P04 (retargeted) |
+
+Footnote 3: IssuerResidency and CustomerResidency carry identical 5-value sets (ES_MAINLAND, ES_CANARIAS, ES_CEUTA_MELILLA, EU_MEMBER, THIRD_COUNTRY). Project lead to confirm whether they collapse into a single IvaResidency enum used in two field roles, or stay as two parallel enums under Spanish names.
+
+#### Fincas cluster (Renta/Rental adjudicated above)
+
+Stem authority: finca per Ley Hipotecaria + RDLeg 1/2004 Catastro.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| Package path src/aeat/domain/rental/ | n/a | rename to src/aeat/domain/fincas/ | schema-impact |
+| RentalFinca | src/aeat/domain/rental/_models.py | Finca | schema-impact |
+| RentalFincaRow | src/aeat/adapters/persistence/storage/sql/_orm.py | FincaRow | schema-impact |
+| RentalContract | src/aeat/domain/rental/_models.py | Arrendamiento | schema-impact |
+| RentalContractRow | src/aeat/adapters/persistence/storage/sql/_orm.py | ArrendamientoRow | schema-impact |
+| RentalIncomeRecord | src/aeat/domain/rental/_models.py | FincaIncomeRecord (or FincaRendimientoRecord; see open question) | schema-impact |
+| RentalIncomeRecordRow | src/aeat/adapters/persistence/storage/sql/_orm.py | FincaIncomeRecordRow | schema-impact |
+| RentalExpense | src/aeat/domain/rental/_models.py | FincaExpense (or FincaGasto; see open question) | schema-impact |
+| RentalExpenseRow | src/aeat/adapters/persistence/storage/sql/_orm.py | FincaExpenseRow | schema-impact |
+| RentalAmortizationLedger | src/aeat/domain/rental/_amortization_ledger.py | FincaAmortizationLedger (verify Amortization vs Amortizacion; see open question) | schema-impact |
+| RentalAmortizationLedgerRow | src/aeat/adapters/persistence/storage/sql/_orm.py | FincaAmortizationLedgerRow | schema-impact |
+
+### 8. Items explicitly retained (no rename)
+
+The following identifiers, although flagged in the raw inventory, remain unchanged under this ADR:
+
+- Snapshot family used as generic state-capture (ProfileSnapshot, RegistrySnapshot, AeatGateEnvSnapshot, RegistrySnapshotRef, RegistrySnapshotError, ProfileSnapshotPolicy, ProfileSnapshotHashMismatchError, ProfileSnapshotNotFoundError, UserProfileSnapshot). Snapshot is generic infra.
+- All *Repository, *Row, *Record, *Service, *Factory, *Validator, *Observation, *Protocol, *Error, *Selector, *Catalogue, *Store, *Adapter, *Driver, *Oracle, *Result, *Payload, *Ref suffixes. Generic infra.
+- NIF, CIF, NIE, IBAN, SWIFT, BIC. International identifiers.
+- Decimal, datetime, primitive types. Python primitives.
+- Justificante* family (already Spanish-stem; only the surrounding suffixes are English-infra).
+- Borrador* family except the duplicate BorradorPrefillEntry and Borrador100Snapshot collision in _borrador.py (those are handled by the original ADR W03.P05 phase as deletion of the legacy module, not as renames).
+
+## Rationale
+
+The Spanish-stems-win mandate has a single dominant rationale: every canonical stem carries a precise statutory definition (LGT article, modelo OM, RD, Ley) whose English back-translation either loses scope, collides with international tax-system terminology, or conflates artifacts that AEAT keeps separate. The glossary reference documents each loss in detail. Codifying the stems in identifiers preserves the statutory contract at every layer of the codebase.
+
+The English-exceptions list is grounded in the same principle from the opposite direction. International identifiers (NIF, IBAN, SWIFT) are language-neutral by treaty. Python primitives are not domain terms. Infrastructure suffixes (Snapshot, Repository, Row) name generic roles that compose with the Spanish stem without translating the role itself. Translating those suffixes produces stem-stuttering or loses the role portability across packages.
+
+The snapshot disambiguation rule resolves the most-confused single case in the inventory: Borrador100Snapshot is not a stem stutter because Borrador is the entity (the AEAT-prepared draft per Ley 35/2006 Art. 98) and Snapshot is the generic cache-state suffix. This composition is the canonical pattern: Spanish-stem entity plus English infra suffix.
+
+The Renta-vs-Rental adjudication chooses fincas because the unit of account in the AEAT tax surfaces this domain feeds (Modelo 100 rendimientos del capital inmobiliario, Modelo 210 IRNR rentas inmobiliarias, Modelo 347 arrendamientos, IBI) is the finca, not the lease contract. Lease state becomes a field on the finca, not a package.
+
+The reversal of the prior W03.P04 direction (VAT to IVA, not IVA to VAT) closes the only remaining contradiction between the prior ADR and the project-lead mandate.
+
+## Consequences
+
+### Schema-impact migrations
+
+Approximately 51 rows in the canonical ledger touch persisted schemas:
+
+- The Modelo* cluster includes FilingRecord to ModeloRecord consolidation across pydantic and SQL surfaces. Coordinated rename and SQL migration required, gated by the standard roundtrip-test pattern.
+- The Censo* cluster renames affect CensoSnapshot and the _census_* module paths; storage-bucket scoping must be preserved.
+- The entire Fincas* cluster (former Rental*Row) is a single coordinated SQL migration. The standard anti-tautology proof applies: build a populated Finca record with non-default optional fields, roundtrip through real SecureObjectRepository and SQL adapters, assert strict equality.
+
+### Public-API renames
+
+Approximately 54 rows are public-API renames (CLI payloads, outbound Sede contract symbols, registry entrypoints). Because the project mandate is factory-direct with no shims, these renames are coordinated cuts: every callsite renames in the same commit, no deprecation aliases. Coding agents must use the no-shim refactoring pattern.
+
+### Parent-ADR-supersession ripple
+
+The prior code-duplication-sweep ADR is superseded by this ADR specifically on the W03.P04 IVA/VAT direction and on the broader terminology question. Other ADRs in the vault that reference the original direction (VAT-wins, English-form-canonical) may need amendment. The ADR Specialist has not traced those references in this pass; the project manager should commission a follow-up vault-curate sweep to identify and either supersede or annotate each downstream ADR.
+
+### Plan retargeting
+
+The existing code-duplication-sweep plan W03.P04 phase (Consolidate Value-Added Tax (VAT vs IVA)) reads: Create canonical Value-Added Tax classification schema under domain/vat package -- this direction is reversed. Plan-authoring agent must rewrite W03.P04 to:
+
+- Create canonical IVA classification schema under domain/iva (or place under the existing IVA-bearing package).
+- Consolidate VatClassification and domain/vat symbols into IvaInvoiceClassification and domain/iva.
+- Delete domain/vat after migration.
+
+The remaining waves (W01 minor symbol segregations, W02 boilerplate consolidation, W03.P05 borrador deduplication) are unaffected and can proceed.
+
+### Tooling and gate impact
+
+- Linters and type-checkers will surface every rename automatically.
+- The roundtrip-discipline gate (real adapters, strict pydantic equality, anti-tautology proof) is the single most important enforcement surface for the schema-impact rows.
+- The locale CLI must be rerun after public-API renames to refresh any operator-facing strings that reference English stems.
+
+### Open questions deferred to project manager
+
+- FilingRecord to ModeloRecord collision footnote 1: confirm whether domain pydantic and SQL row collapse into one type or split as ModeloRecord (domain) + ModeloRow (SQL).
+- DraftStatus and FilingDraftStatus consolidation footnote 2: confirm single ModeloDraftStatus enum across filing and submission domains.
+- IssuerResidency and CustomerResidency footnote 3: collapse to a single IvaResidency enum used in two field roles, or keep two parallel enums under Spanish names.
+- Within the Fincas cluster, whether Income, Expense, Amortization retain English (generic accounting infra) or take Spanish forms (Rendimiento, Gasto, Amortizacion). The current ledger defaults to English retention pending project lead confirmation.
+- BorradorObservation and DeclaracionObservation already follow the canonical pattern (Spanish stem + English Observation suffix) and are not renamed; confirm this is intentional and not subject to a future consistency follow-up.
+- Whether downstream ADRs that referenced the original VAT-wins direction need supersession or annotation; commission a vault-curate sweep.
