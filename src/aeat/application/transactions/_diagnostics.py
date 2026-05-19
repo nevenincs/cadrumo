@@ -28,6 +28,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 
 
@@ -40,25 +41,12 @@ class LedgerImportDiagnosticKind(StrEnum):
     PARSER = "parser"
 
 
-class LedgerImportDiagnosticSeverity(StrEnum):
-    """Severity of a single :class:`LedgerImportDiagnostic`.
-
-    Used to group rendered output and decide whether to
-    short-circuit the import. ``WARNING`` is informational only;
-    ``ERROR`` blocks ingestion of the affected row(s).
-    """
-
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-
-
 class LedgerImportDiagnostic(BaseModel):
     """One typed diagnostic emitted by the ledger import use-case.
 
     Attributes:
         kind: Closed :class:`LedgerImportDiagnosticKind`.
-        severity: :class:`LedgerImportDiagnosticSeverity`.
+        severity: :class:`BaseSeverity`.
         message: A strictly-typed :class:`Translatable` key.
         source_path: Optional pointer at the source artefact the
             diagnostic refers to (input file, provider name, etc.).
@@ -73,7 +61,7 @@ class LedgerImportDiagnostic(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     kind: LedgerImportDiagnosticKind
-    severity: LedgerImportDiagnosticSeverity
+    severity: BaseSeverity
     message: tr
     source_path: Path | None = None
     source_locator: str | None = Field(default=None, max_length=256)
@@ -107,7 +95,7 @@ class LedgerImportDiagnostic(BaseModel):
 def build_ledger_import_diagnostic(
     *,
     kind: LedgerImportDiagnosticKind,
-    severity: LedgerImportDiagnosticSeverity,
+    severity: BaseSeverity,
     message: tr,
     source_path: Path | None = None,
     source_locator: str | None = None,
@@ -131,6 +119,5 @@ def build_ledger_import_diagnostic(
 __all__ = [
     "LedgerImportDiagnostic",
     "LedgerImportDiagnosticKind",
-    "LedgerImportDiagnosticSeverity",
     "build_ledger_import_diagnostic",
 ]

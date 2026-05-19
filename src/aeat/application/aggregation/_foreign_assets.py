@@ -57,7 +57,7 @@ class ForeignAssetClass(StrEnum):
     VIRTUAL_CURRENCY = "moneda_virtual"  # clave M
 
 
-class ForeignAssetObservation(BaseModel):
+class ForeignAssetIngestObservation(BaseModel):
     """One asset observation for a Modelo 720 aggregator pass."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -167,7 +167,7 @@ def declarable_class(aggregation: ForeignAssetsAggregation, *, asset_class: Fore
 
 
 def aggregate_foreign_assets_720(
-    observations: tuple[ForeignAssetObservation, ...],
+    observations: tuple[ForeignAssetIngestObservation, ...],
     *,
     period: str,
 ) -> ForeignAssetsAggregation:
@@ -181,7 +181,7 @@ def aggregate_foreign_assets_720(
     :func:`declarable_class` to filter rollups before binding to
     Modelo 720 casillas.
     """
-    grouped: dict[tuple[str, ForeignAssetClass], list[ForeignAssetObservation]] = {}
+    grouped: dict[tuple[str, ForeignAssetClass], list[ForeignAssetIngestObservation]] = {}
     for obs in observations:
         grouped.setdefault((obs.source_kind, obs.asset_class), []).append(obs)
     rollups: list[ForeignAssetClassRollup] = []
@@ -217,7 +217,7 @@ __all__ = [
     "THRESHOLD_720_EUR_PER_CLASS",
     "ForeignAssetClass",
     "ForeignAssetClassRollup",
-    "ForeignAssetObservation",
+    "ForeignAssetIngestObservation",
     "ForeignAssetsAggregation",
     "aggregate_foreign_assets_720",
     "declarable_asset_classes_720",

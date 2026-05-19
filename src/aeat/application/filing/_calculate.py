@@ -18,6 +18,7 @@ summary consumed by renderers::
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from datetime import datetime
 from enum import StrEnum
 
@@ -25,8 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...domain.filing import (
     FilingDraft,
-    FilingDraftStatus,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
 )
 from .errors import FilingCalculateError
 
@@ -34,7 +34,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
 
 
-class DeclarationCalculateNextAction(StrEnum):
+class DeclaracionCalculateNextAction(StrEnum):
     """Closed catalogue of next operator actions surfaced after calculate.
 
     The CLI uses this to render the "next action" line of the bare
@@ -42,7 +42,7 @@ class DeclarationCalculateNextAction(StrEnum):
 
     Attributes:
         RESOLVE_BLOCKERS: One or more validation findings at
-            :attr:`FilingFindingSeverity.ERROR` block forward motion.
+            :attr:`BaseSeverity.ERROR` block forward motion.
             The operator must edit inputs or fix the upstream catalogue
             before any review/approve/export step.
         REVIEW: The draft validated cleanly (or only carries
@@ -68,7 +68,7 @@ class DeclarationCalculateNextAction(StrEnum):
     AMEND = "amend"
 
 
-class DeclarationCalculateSummary(BaseModel):
+class DeclaracionCalculateSummary(BaseModel):
     """Typed summary of a single modelo calculation run.
 
     Attributes:
@@ -76,18 +76,18 @@ class DeclarationCalculateSummary(BaseModel):
             the summary was produced from.
         modelo: AEAT modelo identifier.
         period: Canonical period identifier (e.g. ``"2026Q1"``).
-        status: The draft's :class:`FilingDraftStatus` after validation.
+        status: The draft's :class:`ModeloDraftStatus` after validation.
         blocker_count: Number of findings at
-            :attr:`FilingFindingSeverity.ERROR`. Always ``>= 0``.
+            :attr:`BaseSeverity.ERROR`. Always ``>= 0``.
         warning_count: Number of findings at
-            :attr:`FilingFindingSeverity.WARNING`. Always ``>= 0``.
+            :attr:`BaseSeverity.WARNING`. Always ``>= 0``.
         info_count: Number of findings at
-            :attr:`FilingFindingSeverity.INFO`. Always ``>= 0``.
-        next_action: Closed :class:`DeclarationCalculateNextAction`.
+            :attr:`BaseSeverity.INFO`. Always ``>= 0``.
+        next_action: Closed :class:`DeclaracionCalculateNextAction`.
             Derived deterministically from ``status`` and the finding
             mix.
         repair_hints: Translation keys surfaced when ``next_action``
-            is :attr:`DeclarationCalculateNextAction.RESOLVE_BLOCKERS`;
+            is :attr:`DeclaracionCalculateNextAction.RESOLVE_BLOCKERS`;
             empty otherwise. The CLI renders them under the summary
             line so the operator never sees a silent ERROR.
         narrative: Translation key for summary line.
@@ -99,24 +99,24 @@ class DeclarationCalculateSummary(BaseModel):
     draft_id: str = Field(min_length=1, max_length=128)
     modelo: str = Field(min_length=1, max_length=8)
     period: str = Field(min_length=1, max_length=16)
-    status: FilingDraftStatus
+    status: ModeloDraftStatus
     blocker_count: int = Field(ge=0)
     warning_count: int = Field(ge=0)
     info_count: int = Field(ge=0)
-    next_action: DeclarationCalculateNextAction
+    next_action: DeclaracionCalculateNextAction
     repair_hints: tuple[str, ...] = ()
     narrative: str
     calculated_at: datetime
 
     @model_validator(mode="after")
-    def _enforce_repair_hint_invariant(self) -> DeclarationCalculateSummary:
+    def _enforce_repair_hint_invariant(self) -> DeclaracionCalculateSummary:
         """Repair hints accompany the RESOLVE_BLOCKERS verdict only.
 
         The CLI renders ``repair_hints`` as a remediation block. Surfacing
         them on a non-blocker verdict would mislead the operator — and
         omitting them on a blocker verdict would yield a silent success.
         """
-        if self.next_action is DeclarationCalculateNextAction.RESOLVE_BLOCKERS:
+        if self.next_action is DeclaracionCalculateNextAction.RESOLVE_BLOCKERS:
             if not self.repair_hints:
                 raise FilingCalculateError("repair_hints must be non-empty when next_action is RESOLVE_BLOCKERS")
         else:
@@ -125,35 +125,35 @@ class DeclarationCalculateSummary(BaseModel):
         return self
 
 
-_DOWNSTREAM_STATUSES: frozenset[FilingDraftStatus] = frozenset(
+_DOWNSTREAM_STATUSES: frozenset[ModeloDraftStatus] = frozenset(
     {
-        FilingDraftStatus.SUBMITTED,
-        FilingDraftStatus.ACKNOWLEDGED,
-        FilingDraftStatus.REJECTED,
-        FilingDraftStatus.AMENDED,
-        FilingDraftStatus.CANCELLED,
+        ModeloDraftStatus.SUBMITTED,
+        ModeloDraftStatus.ACKNOWLEDGED,
+        ModeloDraftStatus.REJECTED,
+        ModeloDraftStatus.AMENDED,
+        ModeloDraftStatus.CANCELLED,
     }
 )
 """Statuses where the draft has left the calculate/approve/export flow."""
 
 
 def _next_action_for(
-    status: FilingDraftStatus,
+    status: ModeloDraftStatus,
     *,
     blocker_count: int,
-) -> DeclarationCalculateNextAction:
+) -> DeclaracionCalculateNextAction:
     """Map ``(status, blocker_count)`` to the deterministic next action."""
     if blocker_count > 0:
-        return DeclarationCalculateNextAction.RESOLVE_BLOCKERS
+        return DeclaracionCalculateNextAction.RESOLVE_BLOCKERS
     if status in _DOWNSTREAM_STATUSES:
-        return DeclarationCalculateNextAction.AMEND
-    if status is FilingDraftStatus.APPROVAL_STALE:
-        return DeclarationCalculateNextAction.REFRESH_APPROVAL
-    if status is FilingDraftStatus.APPROVED:
-        return DeclarationCalculateNextAction.EXPORT
-    if status is FilingDraftStatus.READY_TO_SUBMIT:
-        return DeclarationCalculateNextAction.APPROVE
-    return DeclarationCalculateNextAction.REVIEW
+        return DeclaracionCalculateNextAction.AMEND
+    if status is ModeloDraftStatus.APPROVAL_STALE:
+        return DeclaracionCalculateNextAction.REFRESH_APPROVAL
+    if status is ModeloDraftStatus.APPROVED:
+        return DeclaracionCalculateNextAction.EXPORT
+    if status is ModeloDraftStatus.READY_TO_SUBMIT:
+        return DeclaracionCalculateNextAction.APPROVE
+    return DeclaracionCalculateNextAction.REVIEW
 
 
 def summarise_calculation(
@@ -162,8 +162,8 @@ def summarise_calculation(
     repair_hints: tuple[str, ...] = (),
     narrative: str | None = None,
     calculated_at: datetime | None = None,
-) -> DeclarationCalculateSummary:
-    """Build a :class:`DeclarationCalculateSummary` from a validated draft.
+) -> DeclaracionCalculateSummary:
+    """Build a :class:`DeclaracionCalculateSummary` from a validated draft.
 
     Args:
         draft: The freshly built draft returned by
@@ -181,32 +181,32 @@ def summarise_calculation(
             ``updated_at``.
 
     Returns:
-        A frozen :class:`DeclarationCalculateSummary`.
+        A frozen :class:`DeclaracionCalculateSummary`.
 
     Raises:
         FilingCalculateError: When ``repair_hints`` violates the
             ``RESOLVE_BLOCKERS`` invariant.
     """
-    counts: dict[FilingFindingSeverity, int] = {
-        FilingFindingSeverity.INFO: 0,
-        FilingFindingSeverity.WARNING: 0,
-        FilingFindingSeverity.ERROR: 0,
+    counts: dict[BaseSeverity, int] = {
+        BaseSeverity.INFO: 0,
+        BaseSeverity.WARNING: 0,
+        BaseSeverity.ERROR: 0,
     }
     for finding in draft.findings:
         counts[finding.severity] += 1
 
-    next_action = _next_action_for(draft.status, blocker_count=counts[FilingFindingSeverity.ERROR])
+    next_action = _next_action_for(draft.status, blocker_count=counts[BaseSeverity.ERROR])
     resolved_narrative = narrative if narrative is not None else "filing.calculate.default_narrative"
     resolved_at = calculated_at if calculated_at is not None else draft.updated_at
 
-    return DeclarationCalculateSummary(
+    return DeclaracionCalculateSummary(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
         status=draft.status,
-        blocker_count=counts[FilingFindingSeverity.ERROR],
-        warning_count=counts[FilingFindingSeverity.WARNING],
-        info_count=counts[FilingFindingSeverity.INFO],
+        blocker_count=counts[BaseSeverity.ERROR],
+        warning_count=counts[BaseSeverity.WARNING],
+        info_count=counts[BaseSeverity.INFO],
         next_action=next_action,
         repair_hints=repair_hints,
         narrative=resolved_narrative,
@@ -215,7 +215,7 @@ def summarise_calculation(
 
 
 __all__ = [
-    "DeclarationCalculateNextAction",
-    "DeclarationCalculateSummary",
+    "DeclaracionCalculateNextAction",
+    "DeclaracionCalculateSummary",
     "summarise_calculation",
 ]

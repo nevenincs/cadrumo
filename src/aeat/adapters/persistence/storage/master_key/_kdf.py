@@ -4,8 +4,9 @@ The substrate derives every passphrase-bound key-encryption key via
 Argon2id at the OWASP 2024 baseline parameters declared by
 `KdfParams.default()`. The on-disk manifest carries
 the parameter set the bucket was enrolled under so a future cost-bump is
-non-breaking; this helper consumes whatever `KdfParams` the manifest
-supplies and routes it through the existing `argon2-cffi` dependency.
+non-breaking; this helper consumes whatever `ManifestKdfParams` the
+manifest supplies and routes it through the existing `argon2-cffi`
+dependency.
 
 The helper is a thin typed wrapper. It does not maintain caches or
 module-global state; the unlock pipeline owns the resulting bytes
@@ -16,7 +17,7 @@ from __future__ import annotations
 
 from argon2.low_level import Type, hash_secret_raw
 
-from ..bucket._manifest import KdfParams as ManifestKdfParams
+from ..bucket._manifest import ManifestKdfParams
 
 _OUTPUT_BYTES = 32
 

@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.filing import FilingDraftStatus, FilingValue, FilingValueKind
-from ...domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+from ...domain.filing import ModeloDraftStatus, FilingValue, FilingValueKind
+from ...domain.submission import SubmissionAttempt, SubmissionStatus, ModeloPresentado
 from . import (
     FilingAmendmentError,
     FilingBuilderError,
@@ -70,9 +70,9 @@ def _submitted_filing(
     *,
     submission_id: str = "sub-1",
     justificante_csv: str | None = None,
-) -> SubmittedFiling:
+) -> ModeloPresentado:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
-    return SubmittedFiling(
+    return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft.draft_id,
         modelo=draft.modelo,
@@ -110,7 +110,7 @@ def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> FilingDraf
         modelo=modelo,
         period=period,
         profile_tax_id="00000000T",
-        status=FilingDraftStatus.SUBMITTED,
+        status=ModeloDraftStatus.SUBMITTED,
         values=values,
         created_at=now,
         updated_at=now,

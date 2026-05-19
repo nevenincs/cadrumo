@@ -9,7 +9,7 @@ import pytest
 
 from aeat.core.resources import bundled_path
 
-from ._bindings import CasillaObservation, RegistryFilingObservation
+from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._filed_state import compare_calculation_to_filed_observation
 from ._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
@@ -54,8 +54,8 @@ def _modelo_130_calculation() -> RegistryCalculationResult:
     )
 
 
-def _filed_observation(calculation: RegistryCalculationResult) -> RegistryFilingObservation:
-    return RegistryFilingObservation(
+def _filed_observation(calculation: RegistryCalculationResult) -> RegistryModeloObservation:
+    return RegistryModeloObservation(
         modelo="130",
         filing_year=2026,
         period="1T",

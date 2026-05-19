@@ -2,7 +2,7 @@
 
 Generic counterpart to ledger_oss_aggregation for the standard IVA
 modelos (303, 322, 353, 309, 390). Aggregates ledger lines by the
-canonical IVA classification triple (VATCategory, VATRateKind,
+canonical IVA classification triple (IvaCategory, IvaRateKind,
 IvaFlowDirection).
 """
 
@@ -22,7 +22,7 @@ from aeat.domain.calculations.registry import (
     IvaLedgerObservation,
     ModeloRevision,
     RegistryCalculationResult,
-    RegistryFilingObservation,
+    RegistryModeloObservation,
     RegistryValidationError,
     calculate_registry_snapshot,
     resolve_bound_casilla_inputs,
@@ -30,10 +30,10 @@ from aeat.domain.calculations.registry import (
     resolve_previous_filing_binding_values,
     validate_ledger_iva_aggregation_binding_definition,
 )
-from aeat.domain.vat import (
+from aeat.domain.iva import (
     IvaFlowDirection,
-    VATCategory,
-    VATRateKind,
+    IvaCategory,
+    IvaRateKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -61,8 +61,8 @@ def _observation(
     *,
     ledger_id: str = "ledger-1",
     txn_date: date = date(2025, 6, 15),
-    category: VATCategory = VATCategory.DOMESTIC_GENERAL_21,
-    rate_kind: VATRateKind = VATRateKind.GENERAL,
+    category: IvaCategory = IvaCategory.DOMESTIC_GENERAL_21,
+    rate_kind: IvaRateKind = IvaRateKind.GENERAL,
     flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
     base: Decimal = Decimal("1000"),
     iva: Decimal = Decimal("210"),
@@ -117,7 +117,7 @@ def _calculate_390_from_observations_and_303_filings(
     previous_filing_values = resolve_previous_filing_binding_values(
         snapshot.revision,
         (
-            RegistryFilingObservation(
+            RegistryModeloObservation(
                 modelo="303",
                 filing_year=filing_year,
                 period=period,
@@ -212,12 +212,12 @@ def test_resolve_filters_by_flow_direction_autorepercutido() -> None:
     revision = _revision_with_bindings(_binding("modelo-303-iva-autorepercutido-intracomunitaria-cuota"))
     observations = [
         _observation(
-            category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             flow=IvaFlowDirection.AUTOREPERCUTIDO,
             iva=Decimal("42"),
         ),
         _observation(
-            category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("99"),
         ),
@@ -231,20 +231,20 @@ def test_resolve_filters_by_category_set() -> None:
     observations whose category is in the tuple count, others don't."""
     observations = [
         _observation(
-            category=VATCategory.DOMESTIC_GENERAL_21,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("210"),
         ),
         _observation(
-            category=VATCategory.DOMESTIC_REDUCED_10,
-            rate_kind=VATRateKind.REDUCED,
+            category=IvaCategory.DOMESTIC_REDUCED_10,
+            rate_kind=IvaRateKind.REDUCED,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("100"),
         ),
         _observation(
-            category=VATCategory.RECARGO_EQUIVALENCIA,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.RECARGO_EQUIVALENCIA,
+            rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("999"),
         ),
@@ -283,7 +283,7 @@ def test_resolve_supports_base_amount_sum_fact() -> None:
 
 def test_resolve_returns_zero_when_no_observation_matches() -> None:
     revision = _revision_with_bindings(_binding())
-    observations = [_observation(category=VATCategory.RECARGO_EQUIVALENCIA, iva=Decimal("999"))]
+    observations = [_observation(category=IvaCategory.RECARGO_EQUIVALENCIA, iva=Decimal("999"))]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("0")}
 
@@ -328,8 +328,8 @@ def test_modelo_390_annual_iva_totals_reconcile_with_four_registry_calculated_mo
             _observation(
                 ledger_id="q3-output-reduced",
                 txn_date=date(2025, 8, 12),
-                category=VATCategory.DOMESTIC_REDUCED_10,
-                rate_kind=VATRateKind.REDUCED,
+                category=IvaCategory.DOMESTIC_REDUCED_10,
+                rate_kind=IvaRateKind.REDUCED,
                 iva=Decimal("50.00"),
             ),
         ),
@@ -337,7 +337,7 @@ def test_modelo_390_annual_iva_totals_reconcile_with_four_registry_calculated_mo
             _observation(
                 ledger_id="q4-output-reverse-charge",
                 txn_date=date(2025, 11, 4),
-                category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
                 flow=IvaFlowDirection.AUTOREPERCUTIDO,
                 iva=Decimal("84.00"),
             ),

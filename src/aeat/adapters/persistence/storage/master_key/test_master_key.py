@@ -151,7 +151,7 @@ class TestFileFallbackProvider:
     def test_wrong_passphrase_raises(self, tmp_path: Path) -> None:
         FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "right",
+            passphrase_callback=lambda: "right-passphrase",
         ).get_master_key()
 
         FileFallbackMasterKeyProvider._reset_for_tests()
@@ -165,14 +165,14 @@ class TestFileFallbackProvider:
         with pytest.raises(MasterKeyPassphraseMismatchError):
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
-                passphrase_callback=lambda: "wrong",
+                passphrase_callback=lambda: "wrong-passphrase",
             ).get_master_key()
 
     def test_wrong_passphrase_inherits_from_master_key_unavailable(self, tmp_path: Path) -> None:
         """Pre-existing `pytest.raises(MasterKeyUnavailableError)` catchers continue to work via inheritance."""
         FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "right",
+            passphrase_callback=lambda: "right-passphrase",
         ).get_master_key()
 
         FileFallbackMasterKeyProvider._reset_for_tests()
@@ -181,7 +181,7 @@ class TestFileFallbackProvider:
         with pytest.raises(MasterKeyUnavailableError):
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
-                passphrase_callback=lambda: "wrong",
+                passphrase_callback=lambda: "wrong-passphrase",
             ).get_master_key()
 
     def test_passphrase_via_env_var(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -200,7 +200,7 @@ class TestFileFallbackProvider:
     def test_kdf_params_are_human_readable(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "x",
+            passphrase_callback=lambda: "test-passphrase",
         )
         provider.get_master_key()
         params_text = (tmp_path / "secrets" / "master.kdf").read_text(encoding="utf-8")
@@ -216,7 +216,7 @@ class TestFileFallbackProvider:
         """The persisted master.key MUST not contain the plaintext key bytes."""
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "x",
+            passphrase_callback=lambda: "test-passphrase",
         )
         plaintext_key = provider.get_master_key()
         wrapped = base64.b64decode(
@@ -228,7 +228,7 @@ class TestFileFallbackProvider:
     def test_tampered_master_key_file_raises(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "x",
+            passphrase_callback=lambda: "test-passphrase",
         )
         provider.get_master_key()
         master_key_path = tmp_path / "secrets" / "master.key"
@@ -241,13 +241,13 @@ class TestFileFallbackProvider:
         with pytest.raises(MasterKeyUnavailableError):
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
-                passphrase_callback=lambda: "x",
+                passphrase_callback=lambda: "test-passphrase",
             ).get_master_key()
 
     def test_satisfies_protocol(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "x",
+            passphrase_callback=lambda: "test-passphrase",
         )
         assert isinstance(provider, MasterKeyProvider)
 
@@ -457,7 +457,7 @@ class TestSecurityHardening:
         """The wrapped master key + KDF params + salt land mode 0o600 on POSIX."""
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "x",
+            passphrase_callback=lambda: "test-passphrase",
         )
         provider.get_master_key()
         for name in ("master.key", "master.kdf", "salt"):
@@ -509,7 +509,7 @@ class TestFactory:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = get_master_key_provider(
             settings_override=settings,
-            passphrase_callback=lambda: "x",
+            passphrase_callback=lambda: "test-passphrase",
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
         assert len(provider.get_master_key()) == KEY_SIZE
@@ -558,7 +558,7 @@ class TestFactory:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
-            passphrase_callback=lambda: "x",
+            passphrase_callback=lambda: "test-passphrase",
             keyring_client=client,
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
@@ -588,7 +588,7 @@ class TestFactory:
         with pytest.raises(MasterKeyKeychainLockedError, match="auto-mode refuses"):
             get_master_key_provider(
                 settings_override=settings,
-                passphrase_callback=lambda: "x",
+                passphrase_callback=lambda: "test-passphrase",
                 keyring_client=client,
             )
 

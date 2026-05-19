@@ -11,7 +11,7 @@ from aeat.core.resources import bundled_path
 
 from . import (
     CasillaObservation,
-    RegistryFilingObservation,
+    RegistryModeloObservation,
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
@@ -118,7 +118,7 @@ def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -
             else:
                 expected_perceptions += value
     observations = tuple(
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="111",
             filing_year=2025,
             period=period,

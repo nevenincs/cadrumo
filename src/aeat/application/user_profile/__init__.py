@@ -18,11 +18,11 @@ secure-storage adapters that consume these records.
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.errors import BaseSeverity
 from ...domain.user_profile import (
     ProfileFactValue,
     UserProfileFact,
@@ -162,20 +162,12 @@ class ProfileListResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class ProfileValidationSeverity(StrEnum):
-    """Severity levels emitted by `ProfileValidationService`."""
-
-    ERROR = "error"
-    WARNING = "warning"
-    INFO = "info"
-
-
 class ProfileValidationIssue(BaseModel):
     """One validation finding raised against a profile snapshot."""
 
     model_config = _STRICT_FROZEN
 
-    severity: ProfileValidationSeverity
+    severity: BaseSeverity
     code: str = Field(min_length=1, max_length=64)
     path: str | None = None
     message: str = Field(min_length=1, max_length=512)
@@ -333,7 +325,6 @@ __all__ = [
     "ProfileValidationIssue",
     "ProfileValidationReport",
     "ProfileValidationService",
-    "ProfileValidationSeverity",
     "RegisterProfileCommand",
     "RemoveProfileCommand",
     "RenameProfileCommand",

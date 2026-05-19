@@ -7,11 +7,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from . import (
     LedgerImportDiagnostic,
     LedgerImportDiagnosticKind,
-    LedgerImportDiagnosticSeverity,
     build_ledger_import_diagnostic,
 )
 
@@ -32,20 +32,20 @@ def test_kind_enum_carries_cli_values() -> None:
 
 
 def test_severity_enum_orders_info_warning_error() -> None:
-    assert {item.value for item in LedgerImportDiagnosticSeverity} == {"info", "warning", "error"}
+    assert {item.value for item in BaseSeverity} == {"info", "warning", "error"}
 
 
 def test_factory_round_trips_canonical_fields() -> None:
     diag = build_ledger_import_diagnostic(
         kind=LedgerImportDiagnosticKind.GAP,
-        severity=LedgerImportDiagnosticSeverity.WARNING,
+        severity=BaseSeverity.WARNING,
         message=_message(),
         source_path=_SOURCE_PATH,
         source_locator="period=2026-03",
         affected_transaction_ids=("aa" * 32,),
     )
     assert diag.kind is LedgerImportDiagnosticKind.GAP
-    assert diag.severity is LedgerImportDiagnosticSeverity.WARNING
+    assert diag.severity is BaseSeverity.WARNING
     assert diag.message
     assert diag.source_path == _SOURCE_PATH
     assert diag.source_locator == "period=2026-03"
@@ -56,7 +56,7 @@ def test_diagnostic_rejects_message_without_authoritative_spanish() -> None:
     with pytest.raises(ValueError, match=r"message|authoritative|Spanish|spanish"):
         build_ledger_import_diagnostic(
             kind=LedgerImportDiagnosticKind.PARSER,
-            severity=LedgerImportDiagnosticSeverity.ERROR,
+            severity=BaseSeverity.ERROR,
             message=tr("translation"),
         )
 
@@ -65,7 +65,7 @@ def test_diagnostic_rejects_blank_source_locator() -> None:
     with pytest.raises(ValueError, match=r"source_locator|blank|empty|whitespace"):
         build_ledger_import_diagnostic(
             kind=LedgerImportDiagnosticKind.PARSER,
-            severity=LedgerImportDiagnosticSeverity.ERROR,
+            severity=BaseSeverity.ERROR,
             message=_message(),
             source_locator="   ",
         )
@@ -74,11 +74,11 @@ def test_diagnostic_rejects_blank_source_locator() -> None:
 def test_diagnostic_is_frozen() -> None:
     diag = build_ledger_import_diagnostic(
         kind=LedgerImportDiagnosticKind.DUPLICATE,
-        severity=LedgerImportDiagnosticSeverity.INFO,
+        severity=BaseSeverity.INFO,
         message=_message(),
     )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(diag, "severity", LedgerImportDiagnosticSeverity.ERROR)  # noqa: B010 — exercise frozen-model __setattr__
+        setattr(diag, "severity", BaseSeverity.ERROR)  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_diagnostic_rejects_unknown_kind() -> None:

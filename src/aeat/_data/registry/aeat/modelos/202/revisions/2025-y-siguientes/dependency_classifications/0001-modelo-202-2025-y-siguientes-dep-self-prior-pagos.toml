@@ -1,0 +1,8 @@
+[[revisions.2025-y-siguientes.dependency_classifications]]
+id = "modelo-202-2025-y-siguientes-dep-self-prior-pagos"
+source_modelo = "202"
+treatment = "factual_evidence"
+target_constructs = ["modelo-202-foundation"]
+relation_refs = ["modelo-202-2025-y-siguientes-rel-self-pagos-2p", "modelo-202-2025-y-siguientes-rel-self-pagos-3p"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]

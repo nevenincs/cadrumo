@@ -20,7 +20,7 @@ from ._counterpart import (
     aggregate_counterpart_349,
 )
 from ._errors import AggregationUnsupportedModeloError, t
-from ._foreign_assets import ForeignAssetObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
+from ._foreign_assets import ForeignAssetIngestObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
 from ._retenciones import (
     RetencionesAggregation,
     RetencionObservation,
@@ -157,7 +157,7 @@ class PerModeloAggregationCommand(BaseModel):
     period: str = Field(min_length=1, max_length=16)
     retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
     counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)
-    foreign_asset_observations: tuple[ForeignAssetObservation, ...] = Field(default_factory=tuple)
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
     def _only_matching_observation_family_is_populated(self) -> PerModeloAggregationCommand:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 import os
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -34,8 +35,7 @@ from ...domain.transactions import (
 from ...domain.transactions._repository import TransactionCatalogueRepository
 from ..filing import (
     FilingDraft,
-    FilingDraftStatus,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
     FilingValidationFinding,
     FilingValue,
     FilingValueKind,
@@ -140,7 +140,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
 
     finding = FilingValidationFinding(
         casilla_id="03",
-        severity=FilingFindingSeverity.ERROR,
+        severity=BaseSeverity.ERROR,
         code="casilla-out-of-range",
         message=_summary("range"),
     )
@@ -149,7 +149,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         modelo="130",
         period="2026Q1",
         profile_tax_id="00000000T",
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
         values=(
             FilingValue(
                 casilla_id="03",

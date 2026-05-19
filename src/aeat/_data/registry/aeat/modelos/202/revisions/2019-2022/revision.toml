@@ -1,0 +1,7 @@
+[revisions.2019-2022]
+label = "Modelo 202 ejercicios 2019 a 2022 (DR202v52.xlsx, Orden HAC/941/2018)"
+valid_from = 2019-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2019, year_to = 2022, periods = ["1P", "2P", "3P"] }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]

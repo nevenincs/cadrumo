@@ -9,6 +9,7 @@ behaviour is the caller's responsibility via
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -21,8 +22,7 @@ from ._protocols import (
 )
 from ._schema import (
     FilingDraft,
-    FilingDraftStatus,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
     FilingValidationFinding,
     FilingValueKind,
 )
@@ -75,7 +75,7 @@ class FilingValidator:
         findings.extend(self._validate_formula_traces(draft, collection))
         findings.extend(self._validate_deadline(draft))
         result = tuple(findings)
-        errors = sum(1 for f in result if f.severity is FilingFindingSeverity.ERROR)
+        errors = sum(1 for f in result if f.severity is BaseSeverity.ERROR)
         _logger.debug(
             "validated draft modelo=%s period=%s errors=%d total_findings=%d",
             draft.modelo,
@@ -95,7 +95,7 @@ class FilingValidator:
         return [
             FilingValidationFinding(
                 casilla_id=None,
-                severity=FilingFindingSeverity.WARNING,
+                severity=BaseSeverity.WARNING,
                 code="filing-schema-version-mismatch",
                 message=tr("filing.validation.schema_mismatch"),
                 references_rules=(),
@@ -113,7 +113,7 @@ class FilingValidator:
                 out.append(
                     FilingValidationFinding(
                         casilla_id=casilla.id,
-                        severity=FilingFindingSeverity.ERROR,
+                        severity=BaseSeverity.ERROR,
                         code="casilla-required-missing",
                         message=tr("filing.validation.required_missing"),
                         references_rules=(),
@@ -140,7 +140,7 @@ class FilingValidator:
     def _range_finding(casilla_id: str, direction: str) -> FilingValidationFinding:
         return FilingValidationFinding(
             casilla_id=casilla_id,
-            severity=FilingFindingSeverity.ERROR,
+            severity=BaseSeverity.ERROR,
             code="casilla-out-of-range",
             message=tr("filing.validation.out_of_range"),
             references_rules=(),
@@ -175,7 +175,7 @@ class FilingValidator:
     def _divergence(casilla_id: str) -> FilingValidationFinding:
         return FilingValidationFinding(
             casilla_id=casilla_id,
-            severity=FilingFindingSeverity.ERROR,
+            severity=BaseSeverity.ERROR,
             code="formula-divergence",
             message=tr("filing.validation.formula_divergence"),
             references_rules=(),
@@ -191,7 +191,7 @@ class FilingValidator:
         return [
             FilingValidationFinding(
                 casilla_id=None,
-                severity=FilingFindingSeverity.ERROR,
+                severity=BaseSeverity.ERROR,
                 code="filing-deadline-missed",
                 message=tr("filing.validation.deadline_missed"),
                 references_rules=(),
@@ -207,10 +207,10 @@ def apply_validation(
 
     Status promotion logic:
 
-    - Any ``ERROR`` → :attr:`FilingDraftStatus.DRAFT` (still
+    - Any ``ERROR`` → :attr:`ModeloDraftStatus.DRAFT` (still
       blocking).
-    - Any ``WARNING`` only → :attr:`FilingDraftStatus.VALIDATED`.
-    - No findings → :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
+    - Any ``WARNING`` only → :attr:`ModeloDraftStatus.VALIDATED`.
+    - No findings → :attr:`ModeloDraftStatus.READY_TO_SUBMIT`.
     """
     new_status = derive_validation_status(findings)
     return draft.model_copy(
@@ -224,13 +224,13 @@ def apply_validation(
 
 def derive_validation_status(
     findings: tuple[FilingValidationFinding, ...],
-) -> FilingDraftStatus:
+) -> ModeloDraftStatus:
     """Return the machine validation status implied by ``findings``."""
 
-    has_error = any(f.severity is FilingFindingSeverity.ERROR for f in findings)
-    has_warning = any(f.severity is FilingFindingSeverity.WARNING for f in findings)
+    has_error = any(f.severity is BaseSeverity.ERROR for f in findings)
+    has_warning = any(f.severity is BaseSeverity.WARNING for f in findings)
     if has_error:
-        return FilingDraftStatus.DRAFT
+        return ModeloDraftStatus.DRAFT
     if has_warning:
-        return FilingDraftStatus.VALIDATED
-    return FilingDraftStatus.READY_TO_SUBMIT
+        return ModeloDraftStatus.VALIDATED
+    return ModeloDraftStatus.READY_TO_SUBMIT

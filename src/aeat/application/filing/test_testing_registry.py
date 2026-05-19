@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 import pytest
 from pydantic import ValidationError
 
-from ...domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValueKind
+from ...domain.filing._schema import FilingDraft, ModeloDraftStatus, FilingValueKind
 from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -38,7 +38,7 @@ def test_builds_frozen_draft_through_registry_runtime() -> None:
     assert isinstance(draft, FilingDraft)
     assert draft.schema_version.startswith("registry:130:")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(draft, "status", FilingDraftStatus.DRAFT)  # noqa: B010 — exercise frozen-model __setattr__
+        setattr(draft, "status", ModeloDraftStatus.DRAFT)  # noqa: B010 — exercise frozen-model __setattr__
 
 
 def test_approved_status_uses_application_approval_path() -> None:
@@ -48,7 +48,7 @@ def test_approved_status_uses_application_approval_path() -> None:
         casilla_values=_valid_inputs(),
     )
 
-    assert draft.status is FilingDraftStatus.APPROVED
+    assert draft.status is ModeloDraftStatus.APPROVED
     assert draft.approved_at is not None
     assert draft.approved_by == "registry"
     assert draft.approval_basis is not None
@@ -60,10 +60,10 @@ def test_non_approved_status_clears_approval_fields() -> None:
         modelo="130",
         period="1T",
         casilla_values=_valid_inputs(),
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
     )
 
-    assert draft.status is FilingDraftStatus.DRAFT
+    assert draft.status is ModeloDraftStatus.DRAFT
     assert draft.approved_at is None
     assert draft.approved_by is None
     assert draft.approval_basis is None
@@ -84,7 +84,7 @@ def test_values_are_registry_projected_and_sorted() -> None:
         modelo="130",
         period="1T",
         casilla_values=_valid_inputs(ingresos=Decimal("12000")),
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -114,7 +114,7 @@ def test_decimal_string_inputs_are_coerced_before_registry_build() -> None:
         modelo="130",
         period="1T",
         casilla_decimals={key: str(value) for key, value in _valid_inputs().items()},
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -126,7 +126,7 @@ def test_decimal_passthrough() -> None:
         modelo="130",
         period="1T",
         casilla_decimals=_valid_inputs(ingresos=Decimal("100.50")),
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
     )
 
     values = {value.casilla_id: value for value in draft.values}

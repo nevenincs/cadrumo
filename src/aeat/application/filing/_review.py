@@ -25,7 +25,7 @@ from ...domain.filing import (
     FilingApprovalBasis,
     FilingDraft,
     FilingDraftError,
-    FilingDraftStatus,
+    ModeloDraftStatus,
     FilingValidator,
     derive_validation_status,
 )
@@ -34,17 +34,17 @@ from ...domain.transactions import Transaction, TransactionCatalogue
 _logger = get_logger(__name__)
 _REVIEW_STATUSES = frozenset(
     {
-        FilingDraftStatus.APPROVED,
-        FilingDraftStatus.APPROVAL_STALE,
+        ModeloDraftStatus.APPROVED,
+        ModeloDraftStatus.APPROVAL_STALE,
     }
 )
 _DOWNSTREAM_STATUSES = frozenset(
     {
-        FilingDraftStatus.SUBMITTED,
-        FilingDraftStatus.ACKNOWLEDGED,
-        FilingDraftStatus.REJECTED,
-        FilingDraftStatus.AMENDED,
-        FilingDraftStatus.CANCELLED,
+        ModeloDraftStatus.SUBMITTED,
+        ModeloDraftStatus.ACKNOWLEDGED,
+        ModeloDraftStatus.REJECTED,
+        ModeloDraftStatus.AMENDED,
+        ModeloDraftStatus.CANCELLED,
     }
 )
 
@@ -195,7 +195,7 @@ def approve_draft(
 
     Args:
         draft: The draft to approve. Must be
-            :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
+            :attr:`ModeloDraftStatus.READY_TO_SUBMIT`.
         approved_by: Operator identifier; rejected when blank after
             stripping.
         schema_provider: The active
@@ -210,14 +210,14 @@ def approve_draft(
     Raises:
         :exc:`aeat.domain.filing.FilingDraftError`: When
             ``approved_by`` is blank or the draft is not in
-            :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
+            :attr:`ModeloDraftStatus.READY_TO_SUBMIT`.
     """
 
     normalized_approver = approved_by.strip()
     if not normalized_approver:
         raise FilingDraftError("approved_by must not be blank")
 
-    if derive_validation_status(draft.findings) is not FilingDraftStatus.READY_TO_SUBMIT:
+    if derive_validation_status(draft.findings) is not ModeloDraftStatus.READY_TO_SUBMIT:
         raise FilingDraftError("only READY_TO_SUBMIT drafts may be approved")
     _require_registry_review_alignment(draft, schema_provider=schema_provider)
 
@@ -231,7 +231,7 @@ def approve_draft(
     )
     updated = draft.model_copy(
         update={
-            "status": FilingDraftStatus.APPROVED,
+            "status": ModeloDraftStatus.APPROVED,
             "approved_at": timestamp,
             "approved_by": normalized_approver,
             "approval_basis": approval_basis,
@@ -296,7 +296,7 @@ def refresh_review_status(
     Downstream-status drafts (submitted / acknowledged / rejected /
     amended / cancelled) get any leftover approval metadata cleared
     so historical state cannot pretend to be current. APPROVED drafts
-    transition to :attr:`FilingDraftStatus.APPROVAL_STALE` when
+    transition to :attr:`ModeloDraftStatus.APPROVAL_STALE` when
     :func:`approval_stale_reasons` returns a non-empty tuple.
 
     Args:
@@ -355,7 +355,7 @@ def refresh_review_status(
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
     )
-    next_status = FilingDraftStatus.APPROVAL_STALE if reasons else FilingDraftStatus.APPROVED
+    next_status = ModeloDraftStatus.APPROVAL_STALE if reasons else ModeloDraftStatus.APPROVED
     if draft.status is next_status:
         _logger.debug(
             "refresh: no transition needed draft_id=%s status=%s",
@@ -363,7 +363,7 @@ def refresh_review_status(
             draft.status.value,
         )
         return draft
-    if next_status is FilingDraftStatus.APPROVAL_STALE:
+    if next_status is ModeloDraftStatus.APPROVAL_STALE:
         _logger.warning(
             "draft approval marked stale draft_id=%s modelo=%s period=%s reasons=%s",
             draft.draft_id,
@@ -432,7 +432,7 @@ def _require_registry_review_alignment(
     schema_provider: CasillaSchemaProvider,
 ) -> None:
     findings = FilingValidator(schema_provider=schema_provider).validate(draft)
-    if derive_validation_status(findings) is FilingDraftStatus.READY_TO_SUBMIT:
+    if derive_validation_status(findings) is ModeloDraftStatus.READY_TO_SUBMIT:
         return
     codes = tuple(finding.code for finding in findings)
     raise FilingDraftError(f"draft does not match the registry review surface: {codes!r}")

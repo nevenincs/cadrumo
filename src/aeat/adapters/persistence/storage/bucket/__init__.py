@@ -20,7 +20,7 @@ from ._export_header import ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from ._lockfile import acquire_lock, lock_path, release_lock
-from ._manifest import BucketManifest, KdfParams
+from ._manifest import BucketManifest, ManifestKdfParams
 from ._manifest_io import manifest_path, read_manifest, write_manifest
 
 __all__ = [
@@ -31,7 +31,7 @@ __all__ = [
     "BucketManifest",
     "BucketPaths",
     "ExportArchiveHeader",
-    "KdfParams",
+    "ManifestKdfParams",
     "NoActiveBucketError",
     "RecoveryUnavailableError",
     "RecoveryVerificationError",

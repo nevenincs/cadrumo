@@ -160,11 +160,13 @@ from ._registry import (
     resolve_output_language,
     scrub_error_context,
 )
+from ._severity import BaseSeverity
 
 __all__ = [
     "ERROR_REGISTRY",
     "AeatError",
     "AeatObservabilityError",
+    "BaseSeverity",
     "CoreError",
     "CoreValidationError",
     "ErrorCategory",

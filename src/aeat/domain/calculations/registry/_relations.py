@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._bindings import RegistryFilingObservation
+from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._schema import ModeloRevision, RelationDefinition
 
@@ -56,13 +56,15 @@ def relation_source_requirements(
             raise RegistryValidationError(
                 f"relation {relation.id!r} source modelo {relation.source_modelo!r} has no dependency classification"
             )
-        source_year = _relation_source_year(relation, filing_year=filing_year)
         if relation.source_period_offset_from_target is not None:
-            derived = _derive_offset_source_period(relation, target_period=period)
+            derived = _derive_offset_source_anchor(relation, target_period=period)
             if derived is None:
                 continue
-            source_periods = (derived,)
+            period_year_delta, source_period = derived
+            source_year = _relation_source_year(relation, filing_year=filing_year) + period_year_delta
+            source_periods = (source_period,)
         else:
+            source_year = _relation_source_year(relation, filing_year=filing_year)
             source_periods = relation.source_periods or (period,)
         key = (
             relation.source_modelo,
@@ -138,7 +140,7 @@ def resolve_relation_values(
 
 def resolve_relation_values_from_observations(
     revision: ModeloRevision,
-    observations: Iterable[RegistryFilingObservation],
+    observations: Iterable[RegistryModeloObservation],
     *,
     filing_year: int,
     period: str,
@@ -223,28 +225,31 @@ _ORDINAL_TO_PAGO_FRACCIONADO: dict[int, str] = {
 
 
 def _derive_offset_source_period(relation: RelationDefinition, *, target_period: str) -> str | None:
+    anchor = _derive_offset_source_anchor(relation, target_period=target_period)
+    return None if anchor is None else anchor[1]
+
+
+def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period: str) -> tuple[int, str] | None:
     """Apply ``source_period_offset_from_target`` to a target period code.
 
     Supports quarterly period codes (``1T``..``4T``), pago-fraccionado period
     codes used by modelo 202 (``1P``..``3P``), and zero-padded monthly codes
-    (``01``..``12``). Returns ``None`` when the offset would land outside the
-    canonical period span (e.g. ``1T`` with offset ``-1``).
+    (``01``..``12``). Offsets wrap across calendar-year boundaries and return
+    the period plus the relative year delta.
     """
 
     offset = relation.source_period_offset_from_target
     if offset is None:
         return None
     if target_period in _QUARTERLY_PERIOD_ORDINAL:
-        ordinal = _QUARTERLY_PERIOD_ORDINAL[target_period] + offset
-        return _ORDINAL_TO_QUARTERLY.get(ordinal)
+        year_delta, zero_based = divmod(_QUARTERLY_PERIOD_ORDINAL[target_period] - 1 + offset, 4)
+        return year_delta, _ORDINAL_TO_QUARTERLY[zero_based + 1]
     if target_period in _PAGO_FRACCIONADO_PERIOD_ORDINAL:
-        ordinal = _PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] + offset
-        return _ORDINAL_TO_PAGO_FRACCIONADO.get(ordinal)
+        year_delta, zero_based = divmod(_PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] - 1 + offset, 3)
+        return year_delta, _ORDINAL_TO_PAGO_FRACCIONADO[zero_based + 1]
     if len(target_period) == 2 and target_period.isdigit():
-        ordinal = int(target_period) + offset
-        if 1 <= ordinal <= 12:
-            return f"{ordinal:02d}"
-        return None
+        year_delta, zero_based = divmod(int(target_period) - 1 + offset, 12)
+        return year_delta, f"{zero_based + 1:02d}"
     raise RegistryValidationError(
         f"relation {relation.id!r} source_period_offset_from_target cannot interpret target period {target_period!r}"
     )
@@ -252,7 +257,7 @@ def _derive_offset_source_period(relation: RelationDefinition, *, target_period:
 
 def _observed_requirement_values(
     requirement: RegistryRelationSourceRequirement,
-    observations: tuple[RegistryFilingObservation, ...],
+    observations: tuple[RegistryModeloObservation, ...],
 ) -> tuple[Decimal, ...]:
     values: list[Decimal] = []
     for source_period in requirement.periods:

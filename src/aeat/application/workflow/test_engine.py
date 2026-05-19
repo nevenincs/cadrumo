@@ -19,6 +19,7 @@ Playwright walkers without falsifying their record shape.
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -33,9 +34,8 @@ from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.browser._site_health import SiteHealthState
 from ...adapters.outbound.aeat.browser._site_health_parsers import evaluate_response
 from ...adapters.outbound.aeat.export import (
-    DraftStatus,
-    FilingFinding,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
+    ModeloFinding,
 )
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, RemoteNotification
 from ...application.auth import AuthProviderDescription, AuthProviderKind
@@ -43,7 +43,7 @@ from ...core.config import Settings
 from ...core.errors import SiteHealthError
 from ...domain.deadlines import (
     AutonomoProfile,
-    FilingObligation,
+    ModeloDeadline,
     IVARegime,
     ObligationStatus,
     Schedule,
@@ -82,14 +82,14 @@ class _ConcreteDraft:
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
     schema_version: str = field(default_factory=_registry_schema_version)
-    status: object = DraftStatus.APPROVED
+    status: object = ModeloDraftStatus.APPROVED
     values: Mapping[str, str] | Iterable[object] = field(default_factory=lambda: {"01": "1000"})
     findings: tuple[object, ...] = ()
 
 
 @dataclass
 class _ConcreteDeadlineEngine:
-    obligation: FilingObligation | None
+    obligation: ModeloDeadline | None
     profile: AutonomoProfile
     raise_exc: BaseException | None = None
 
@@ -235,10 +235,10 @@ def _obligation(
     modelo: str = "130",
     period: str = "2026Q1",
     closes_on: date | None = None,
-) -> FilingObligation:
+) -> ModeloDeadline:
     closes_on = closes_on or date(2026, 4, 20)
     opens_on = closes_on - timedelta(days=30)
-    return FilingObligation(
+    return ModeloDeadline(
         modelo=modelo,
         period=period,
         opens_on=opens_on,
@@ -254,7 +254,7 @@ class _Fixtures:
     """A healthy-happy-path bundle that individual tests can tweak."""
 
     profile: AutonomoProfile
-    obligation: FilingObligation
+    obligation: ModeloDeadline
     draft: _ConcreteDraft
     deadline_engine: _ConcreteDeadlineEngine
     draft_builder: _ConcreteDraftBuilder
@@ -459,7 +459,7 @@ class TestAbortReasons:
     def test_draft_has_errors_via_status(self) -> None:
         """Builder returning a merely validated draft aborts at BUILDING_DRAFT."""
         fx = _fixtures()
-        fx.draft = _ConcreteDraft(status=DraftStatus.VALIDATED)
+        fx.draft = _ConcreteDraft(status=ModeloDraftStatus.VALIDATED)
         fx.draft_builder.draft = fx.draft
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
@@ -499,7 +499,7 @@ class TestAbortReasons:
 
     def test_unapproved_ready_draft_fails_preflight(self) -> None:
         fx = _fixtures()
-        fx.draft = _ConcreteDraft(status=DraftStatus.READY_TO_SUBMIT)
+        fx.draft = _ConcreteDraft(status=ModeloDraftStatus.READY_TO_SUBMIT)
         fx.draft_builder.draft = fx.draft
         fx.submission_engine.preflight_exc = SubmissionPreflightError(
             "draft not approved for submission (status=READY_TO_SUBMIT)"
@@ -512,8 +512,8 @@ class TestAbortReasons:
         fx = _fixtures()
         fx.draft = _ConcreteDraft(
             findings=(
-                FilingFinding(
-                    severity=FilingFindingSeverity.ERROR,
+                ModeloFinding(
+                    severity=BaseSeverity.ERROR,
                     message="translation",
                 ),
             ),

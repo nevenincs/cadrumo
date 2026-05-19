@@ -134,10 +134,10 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         IvaFlowDirection,
-        VATCategory,
-        VATRateKind,
+        IvaCategory,
+        IvaRateKind,
     )
 
     modelo, _ = _load_modelo_322()
@@ -146,8 +146,8 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
         IvaLedgerObservation(
             ledger_id="rep-1",
             transaction_date=date(2025, 6, 1),
-            category=VATCategory.DOMESTIC_GENERAL_21,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("5000"),
             iva_amount=Decimal("1050"),
@@ -155,8 +155,8 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
         IvaLedgerObservation(
             ledger_id="sop-1",
             transaction_date=date(2025, 6, 5),
-            category=VATCategory.DOMESTIC_GENERAL_21,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("2000"),
             iva_amount=Decimal("420"),

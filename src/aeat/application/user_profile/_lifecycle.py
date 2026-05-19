@@ -10,6 +10,7 @@ aggregates or touch the secure repository directly.
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 import hashlib
 from collections.abc import Iterable
 from datetime import date, datetime
@@ -38,7 +39,6 @@ from . import (
     ProfileLifecycleResult,
     ProfileListing,
     ProfileListResult,
-    ProfileValidationSeverity,
     RegisterProfileCommand,
     RemoveProfileCommand,
     RenameProfileCommand,
@@ -270,7 +270,7 @@ class ProfileLifecycleService:
 
     def _reject_invalid(self, profile_id: str, facts: Iterable[UserProfileFact]) -> None:
         report = self._validator.validate_facts(profile_id, facts)
-        blocking = [issue for issue in report.issues if issue.severity is ProfileValidationSeverity.ERROR]
+        blocking = [issue for issue in report.issues if issue.severity is BaseSeverity.ERROR]
         if blocking:
             codes = ", ".join(sorted({issue.code for issue in blocking}))
             raise ProfileSchemaValidationError(

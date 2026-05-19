@@ -1,6 +1,6 @@
 """Error hierarchy for the borrador parser.
 
-Specialises :class:`aeat.adapters.inbound.pdf._errors.PdfFilingImportError`
+Specialises :class:`aeat.adapters.inbound.pdf._errors.PdfModeloImportError`
 with Modelo 100 specific exceptions raised by
 :func:`aeat.adapters.inbound.borrador.parse_borrador` and the helpers in
 :mod:`aeat.adapters.inbound.borrador._detect`.
@@ -8,10 +8,10 @@ with Modelo 100 specific exceptions raised by
 
 from __future__ import annotations
 
-from ..pdf._errors import PdfFilingImportError
+from ..pdf._errors import PdfModeloImportError
 
 
-class BorradorParseError(PdfFilingImportError):
+class BorradorParseError(PdfModeloImportError):
     """Raised when a Modelo 100 PDF cannot be parsed into a filing record.
 
     Base class for every domain-specific failure raised by the borrador

@@ -11,13 +11,13 @@ Public symbols:
 
 - :class:`ExtractedCasilla` — one casilla ID + printed value tuple produced
   by any PDF-class extractor.
-- :class:`PdfFilingImportError` — base exception for every PDF-import
+- :class:`PdfModeloImportError` — base exception for every PDF-import
   parsing error.
 """
 
 from __future__ import annotations
 
-from ._errors import PdfFilingImportError
+from ._errors import PdfModeloImportError
 from ._label_regex import (
     SPANISH_AMOUNT_GROUP,
     LabelHit,
@@ -30,7 +30,7 @@ __all__ = [
     "SPANISH_AMOUNT_GROUP",
     "ExtractedCasilla",
     "LabelHit",
-    "PdfFilingImportError",
+    "PdfModeloImportError",
     "apply_label_regex",
     "parse_spanish_decimal",
 ]

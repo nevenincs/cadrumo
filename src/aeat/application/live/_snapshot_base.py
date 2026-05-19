@@ -8,9 +8,8 @@ services).
 Design notes:
 
 * ``SnapshotLifecycleState`` carries the three operator-visible states all
-  stateful snapshot services share. Domain-specific enums may continue to exist
-  as aliases (Borrador100SnapshotState aliases this enum) to preserve their
-  public name on import surfaces.
+  stateful snapshot services share. Every stateful service binds payload
+  ``state`` directly to this enum.
 * ``SnapshotRepository`` is a Protocol — not an abstract class — so concrete
   per-service repositories (which need to bind a specific TPayload model and a
   domain-specific object-key prefix) do not need to inherit from it. The

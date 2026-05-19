@@ -167,7 +167,7 @@ def test_previous_filing_selector_rejects_unknown_key() -> None:
     failures = validate_binding_selector_shape(binding)
     assert failures, "extra key on previous_filing selector must be flagged"
     assert "bad-previous-filing" in failures[0]
-    assert "_PreviousFilingSelector" in failures[0]
+    assert "_PreviousModeloSelector" in failures[0]
 
 
 def test_withholding_selector_accepts_well_shaped_selector() -> None:

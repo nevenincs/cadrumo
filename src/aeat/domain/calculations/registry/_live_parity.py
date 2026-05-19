@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 __all__ = [
     "BaseCheckerOracle",
     "CrossReferenceApplicability",
-    "CrossReferenceApplicabilityDeclaration",
+    "CrossReferenceApplicabilityDeclaracion",
     "LiveParityCatalogue",
     "LiveParityOracle",
     "OracleEnvironment",
@@ -514,7 +514,7 @@ def audit_oracle_bindings(
     return tuple(failures)
 
 
-class CrossReferenceApplicabilityDeclaration(_ParityModel):
+class CrossReferenceApplicabilityDeclaracion(_ParityModel):
     """A registry-declared applicability shape for one cross-reference.
 
     The model is a structural read of the registry data — the audit
@@ -533,7 +533,7 @@ class CrossReferenceApplicabilityDeclaration(_ParityModel):
 
 def collect_applicability_declarations(
     modelos: Iterable[ModeloDefinition],
-) -> tuple[CrossReferenceApplicabilityDeclaration, ...]:
+) -> tuple[CrossReferenceApplicabilityDeclaracion, ...]:
     """Surface every cross-reference that declares applicability predicates.
 
     Pure registry-data introspection: never reads profile facts, never
@@ -543,14 +543,14 @@ def collect_applicability_declarations(
     audit output.
     """
 
-    declarations: list[CrossReferenceApplicabilityDeclaration] = []
+    declarations: list[CrossReferenceApplicabilityDeclaracion] = []
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for cross_reference in revision.live_cross_references:
                 if not cross_reference.applicability_predicates:
                     continue
                 declarations.append(
-                    CrossReferenceApplicabilityDeclaration(
+                    CrossReferenceApplicabilityDeclaracion(
                         modelo_id=modelo.id,
                         revision_id=revision.id,
                         cross_reference_id=cross_reference.id,

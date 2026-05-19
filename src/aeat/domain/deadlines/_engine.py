@@ -13,9 +13,9 @@ from pathlib import Path
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ..calculations.registry import (
-    DeadlineApplicabilityCondition,
     DeadlineWindowDefinition,
     ModeloRevision,
+    ProfilePredicateDefinition,
     RegistryError,
     ValidatedRegistryAuthority,
     applicable_filing_schedules,
@@ -24,7 +24,7 @@ from ..calculations.registry import (
 from ._errors import DeadlineValidationError, ScheduleComputationError
 from ._models import (
     AutonomoProfile,
-    FilingObligation,
+    ModeloDeadline,
     ObligationStatus,
     Recovery,
     Schedule,
@@ -94,7 +94,7 @@ class DeadlineEngine:
 
     Attributes:
         due_soon_days: Window before
-            :attr:`aeat.domain.deadlines.FilingObligation.closes_on` that
+            :attr:`aeat.domain.deadlines.ModeloDeadline.closes_on` that
             flags :attr:`aeat.domain.deadlines.ObligationStatus.DUE_SOON`
             (default 14).
     """
@@ -163,7 +163,7 @@ class DeadlineEngine:
         """
         reference_today = today or date.today()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
-        obligations: list[FilingObligation] = []
+        obligations: list[ModeloDeadline] = []
         for modelo, revision, window in self._deadline_windows(year):
             obligation = self._obligation_for_window(
                 profile=profile,
@@ -196,8 +196,8 @@ class DeadlineEngine:
         revision: ModeloRevision,
         window: DeadlineWindowDefinition,
         reference_today: date,
-    ) -> FilingObligation | None:
-        """Project one (modelo, revision, window) tuple into a :class:`FilingObligation`, or ``None``.
+    ) -> ModeloDeadline | None:
+        """Project one (modelo, revision, window) tuple into a :class:`ModeloDeadline`, or ``None``.
 
         Returns ``None`` when the window does not apply to this
         profile — either the revision has filing schedules and none
@@ -230,7 +230,7 @@ class DeadlineEngine:
         ):
             return None
         obligation_status = _classify(window.closes_on, reference_today, self.due_soon_days)
-        return FilingObligation(
+        return ModeloDeadline(
             modelo=modelo,
             period=window.period,
             opens_on=window.opens_on,
@@ -303,7 +303,7 @@ class DeadlineEngine:
     @staticmethod
     def _evaluate_conditions(
         profile: AutonomoProfile,
-        conditions: tuple[DeadlineApplicabilityCondition, ...],
+        conditions: tuple[ProfilePredicateDefinition, ...],
         *,
         mode: str,
     ) -> str | None:
@@ -361,7 +361,7 @@ def _window_registry_period(window: DeadlineWindowDefinition) -> str:
     return window.period
 
 
-def next_deadline(schedule: Schedule, today: date | None = None) -> FilingObligation | None:
+def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadline | None:
     """Return the next obligation in ``schedule`` that has not yet closed.
 
     Pure function. Returns ``None`` if every obligation in the schedule
@@ -372,7 +372,7 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> FilingObliga
         today: Reference date. Defaults to ``date.today()``.
 
     Returns:
-        The earliest non-overdue :class:`FilingObligation`, or ``None``
+        The earliest non-overdue :class:`ModeloDeadline`, or ``None``
         if no such obligation exists.
     """
     reference_today = today or date.today()

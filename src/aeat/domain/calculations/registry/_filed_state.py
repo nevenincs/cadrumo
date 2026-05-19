@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ._bindings import RegistryFilingObservation
+from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
 
@@ -55,7 +55,7 @@ class RegistryFiledStateComparison(BaseModel):
 
 def compare_calculation_to_filed_observation(
     calculation: RegistryCalculationResult,
-    observation: RegistryFilingObservation,
+    observation: RegistryModeloObservation,
     *,
     required_casillas: Iterable[str],
 ) -> RegistryFiledStateComparison:

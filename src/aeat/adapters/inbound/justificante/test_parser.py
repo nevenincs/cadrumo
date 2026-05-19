@@ -194,9 +194,9 @@ class TestJustificanteErrorRehome:
     """#305 — JustificanteError inherits the shared PDF-import root."""
 
     def test_justificante_error_is_pdf_filing_import_error(self) -> None:
-        from aeat.adapters.inbound.pdf import PdfFilingImportError
+        from aeat.adapters.inbound.pdf import PdfModeloImportError
 
-        assert issubclass(JustificanteError, PdfFilingImportError)
+        assert issubclass(JustificanteError, PdfModeloImportError)
 
     def test_justificante_error_still_aeat_error(self) -> None:
         from aeat.core.errors import AeatError

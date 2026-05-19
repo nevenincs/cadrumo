@@ -3,7 +3,7 @@
 The operator keeps the justificante PDF of a past filing on disk. This
 module parses the PDF via :mod:`aeat.adapters.inbound.justificante`,
 materialises an empty draft scaffold (every casilla ``EMPTY``) via the
-registered builder for the modelo, and co-produces a ``SubmittedFiling``
+registered builder for the modelo, and co-produces a ``ModeloPresentado``
 record so the import is usable as the baseline for amendment flows.
 
 No AEAT certificate authentication or network call is involved — the
@@ -28,7 +28,7 @@ from ...domain.justificante import Justificante
 from .runtime import FilingOperatorProfile
 
 if TYPE_CHECKING:
-    from ...domain.submission import SubmittedFiling
+    from ...domain.submission import ModeloPresentado
 
 _logger = get_logger(__name__)
 
@@ -59,13 +59,13 @@ class JustificanteImportResult:
 
     The container is deliberately a frozen dataclass rather than a
     pydantic model because it wraps two already-validated pydantic
-    records and defers the ``SubmittedFiling`` type to runtime (the
+    records and defers the ``ModeloPresentado`` type to runtime (the
     ``aeat.adapters.outbound.aeat.export`` package itself imports :mod:`aeat.application.filing`, so
-    pulling ``SubmittedFiling`` in at module scope would cycle).
+    pulling ``ModeloPresentado`` in at module scope would cycle).
 
     Attributes:
         draft: The freshly built scaffold with every casilla empty.
-        submission: The companion :class:`aeat.domain.submission.SubmittedFiling`
+        submission: The companion :class:`aeat.domain.submission.ModeloPresentado`
             that lets the amendment engine treat the imported draft as a
             baseline.
         warnings: Multilingual advisory messages. The CLI renders these so
@@ -73,7 +73,7 @@ class JustificanteImportResult:
     """
 
     draft: FilingDraft
-    submission: SubmittedFiling
+    submission: ModeloPresentado
     warnings: tuple[str, ...]
 
 
@@ -257,14 +257,14 @@ def _build_submission_record(
     *,
     justificante: Justificante,
     draft: FilingDraft,
-) -> SubmittedFiling:
-    """Build the companion :class:`SubmittedFiling` for an import.
+) -> ModeloPresentado:
+    """Build the companion :class:`ModeloPresentado` for an import.
 
     The ``submission_id`` hashes the CSV and the draft id together so it
     stays stable across re-imports of the same PDF and remains distinct
     from locally-created attempt ids.
     """
-    from ...domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+    from ...domain.submission import SubmissionAttempt, SubmissionStatus, ModeloPresentado
 
     submitted_at = justificante.presented_at.replace(tzinfo=_MADRID_TZ).astimezone(UTC)
     submission_id = hashlib.sha256(f"{justificante.csv}:{draft.draft_id}".encode()).hexdigest()[:16]
@@ -274,7 +274,7 @@ def _build_submission_record(
         ended_at=submitted_at,
         status=SubmissionStatus.SUBMITTED,
     )
-    return SubmittedFiling(
+    return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft.draft_id,
         modelo=draft.modelo,

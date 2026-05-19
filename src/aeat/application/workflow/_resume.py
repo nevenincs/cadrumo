@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...domain.deadlines import FilingObligation
+from ...domain.deadlines import ModeloDeadline
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
 from ._persistence import load_run
@@ -56,7 +56,7 @@ class WorkflowResumeContext(BaseModel):
     resumed_from_run_id: str = Field(min_length=16, max_length=16)
     modelo: str = Field(min_length=1, max_length=8)
     period: str = Field(min_length=1, max_length=16)
-    obligation: FilingObligation
+    obligation: ModeloDeadline
     aborted_reason: WorkflowAbortReason
 
 

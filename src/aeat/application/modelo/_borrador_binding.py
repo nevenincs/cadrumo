@@ -24,7 +24,7 @@ from ...domain.modelos._errors import ModeloError
 from ..live import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
-    Borrador100SnapshotState,
+    SnapshotLifecycleState,
     LiveApplicationInputError,
 )
 
@@ -125,7 +125,7 @@ def resolve_modelo_100_borrador_bindings(
         period=command.period,
         snapshot=snapshot,
     )
-    if snapshot.state is not Borrador100SnapshotState.ACTIVE:
+    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise Modelo100BorradorBindingError(
             tr("application.modelo.borrador_binding.errors.snapshot_not_active"),
             suggestion="aeat app live borrador 100 list",

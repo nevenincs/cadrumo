@@ -3,7 +3,7 @@
 Verifies the strictness invariants of
 :class:`aeat.domain.deadlines.AutonomoProfile` (extra fields,
 immutability, strict bool/enum coercion), the date-ordering
-invariants of :class:`aeat.domain.deadlines.FilingObligation`, and
+invariants of :class:`aeat.domain.deadlines.ModeloDeadline`, and
 that :class:`aeat.domain.deadlines.Schedule` survives a JSON round
 trip.
 """
@@ -17,9 +17,9 @@ from pydantic import ValidationError
 
 from . import (
     AutonomoProfile,
-    FilingEnrollment,
-    FilingIVAProfile,
-    FilingObligation,
+    ModeloEnrollment,
+    ModeloIVAProfile,
+    ModeloDeadline,
     IVARegime,
     ObligationStatus,
     Schedule,
@@ -124,20 +124,20 @@ class TestAutonomoProfile:
         assert profile.has_employees is True
         assert profile.pays_rent_with_retencion is True
         assert profile.does_intracomunitario is True
-        assert profile.iva == FilingIVAProfile(
+        assert profile.iva == ModeloIVAProfile(
             roi_enrolled=True,
             oss_enrolled=False,
             intracommunity_operations_exceed_50000_eur=True,
         )
-        assert profile.enrollment == FilingEnrollment(large_company=True)
+        assert profile.enrollment == ModeloEnrollment(large_company=True)
 
 
-class TestFilingObligation:
-    """Window-order and field invariants for :class:`FilingObligation`."""
+class TestModeloDeadline:
+    """Window-order and field invariants for :class:`ModeloDeadline`."""
 
     def test_opens_after_closes_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"opens_on .* is after closes_on"):
-            FilingObligation(
+            ModeloDeadline(
                 modelo="303",
                 period="2026Q1",
                 opens_on=date(2026, 4, 21),
@@ -149,7 +149,7 @@ class TestFilingObligation:
 
     def test_payment_after_closes_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"payment_cutoff_on .* is after closes_on"):
-            FilingObligation(
+            ModeloDeadline(
                 modelo="303",
                 period="2026Q1",
                 opens_on=date(2026, 4, 1),
@@ -164,7 +164,7 @@ class TestScheduleRoundTrip:
     """Pydantic v2 JSON round-trip preserves the full schedule shape."""
 
     def test_round_trip_equality(self) -> None:
-        obligation = FilingObligation(
+        obligation = ModeloDeadline(
             modelo="303",
             period="2026Q1",
             opens_on=date(2026, 4, 1),

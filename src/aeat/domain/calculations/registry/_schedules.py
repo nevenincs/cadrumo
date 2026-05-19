@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ._errors import RegistryValidationError
-from ._schema import FilingScheduleDefinition, ModeloRevision, ProfilePredicateDefinition
+from ._schema import ModeloScheduleDefinition, ModeloRevision, ProfilePredicateDefinition
 
 __all__ = [
     "applicable_filing_schedules",
@@ -19,10 +19,10 @@ def applicable_filing_schedules(
     profile_facts: Mapping[str, object] | object,
     *,
     period: str | None = None,
-) -> tuple[FilingScheduleDefinition, ...]:
+) -> tuple[ModeloScheduleDefinition, ...]:
     """Return filing schedules whose profile predicates match the supplied facts."""
 
-    matched: list[FilingScheduleDefinition] = []
+    matched: list[ModeloScheduleDefinition] = []
     for schedule in revision.filing_schedules:
         if period is not None and period not in schedule.periods:
             continue

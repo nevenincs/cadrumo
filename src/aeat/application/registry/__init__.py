@@ -9,7 +9,7 @@ from typing import NamedTuple, get_args
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.outbound.aeat.sede import (
-    FiledDeclarationObservationStore,
+    FiledDeclaracionObservationStore,
     registry_observation_from_filed_declaration,
 )
 from ...adapters.persistence.storage import MasterKeyProvider
@@ -34,7 +34,7 @@ from ...domain.calculations.registry._filed_state import (
 )
 from ...domain.calculations.registry._groi_oracle import GroiOracle
 from ...domain.calculations.registry._live_parity import (
-    CrossReferenceApplicabilityDeclaration,
+    CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,
     OracleEnvironment,
     audit_registry_oracle_bindings,
@@ -161,7 +161,7 @@ class RegistryOracleAuditReport(BaseModel):
     registered_oracle_ids: tuple[str, ...]
     failure_count: int
     failures: tuple[str, ...]
-    applicability_declarations: tuple[CrossReferenceApplicabilityDeclaration, ...]
+    applicability_declarations: tuple[CrossReferenceApplicabilityDeclaracion, ...]
     orphan_oracle_ids: tuple[str, ...]
 
 
@@ -494,7 +494,7 @@ def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
 
 
 def _load_filed_observation(path: Path, *, master_key_provider: MasterKeyProvider | None = None):
-    return FiledDeclarationObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(path)
+    return FiledDeclaracionObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(path)
 
 
 __all__ = [

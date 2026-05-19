@@ -15,7 +15,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from ._errors import ProfileError
-from ._models import AutonomoProfile, FilingEnrollment, FilingIVAProfile, IVARegime
+from ._models import AutonomoProfile, ModeloEnrollment, ModeloIVAProfile, IVARegime
 
 
 def autonomo_profile_from_mapping(
@@ -79,12 +79,12 @@ def autonomo_profile_from_mapping(
         does_intracomunitario=typed.does_intracomunitario,
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
-        iva=FilingIVAProfile(
+        iva=ModeloIVAProfile(
             roi_enrolled=typed.iva_roi_enrolled,
             oss_enrolled=typed.iva_oss_enrolled,
             intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
         ),
-        enrollment=FilingEnrollment(
+        enrollment=ModeloEnrollment(
             large_company=typed.enrollment_large_company,
             public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
         ),

@@ -13,13 +13,14 @@ Safety invariants enforced by this module:
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING, NoReturn
 
 from ...adapters.outbound.aeat import sede as _sede
 from ...adapters.outbound.aeat.auth import CertificateHealthSeverity
-from ...adapters.outbound.aeat.export import DraftStatus, FilingFindingSeverity
+from ...adapters.outbound.aeat.export import ModeloDraftStatus
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot
 from ...application.auth import describe_provider_operator_impact
 
@@ -28,13 +29,13 @@ if TYPE_CHECKING:
 from ...core.config import Settings
 from ...core.errors import SiteHealthError
 from ...core.logging import get_logger
-from ...domain.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
+from ...domain.deadlines import AutonomoProfile, ModeloDeadline, Schedule, next_deadline
 from ...domain.filing import FilingBuilderError
 from ...domain.submission import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ._errors import WorkflowAbortSignalError, WorkflowComponentError, WorkflowError
 from ._models import (
-    DeclarationPointer,
+    DeclaracionPointer,
     SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowResult,
@@ -226,7 +227,7 @@ class WorkflowEngine:
         self._run_started_at: datetime | None = None
         self._run_target_modelo: str | None = None
         self._run_target_period: str | None = None
-        self._run_obligation: FilingObligation | None = None
+        self._run_obligation: ModeloDeadline | None = None
 
     # ------------------------------------------------------------------ public
 
@@ -327,7 +328,7 @@ class WorkflowEngine:
         self._run_obligation = None
 
         steps: list[WorkflowStep] = []
-        obligation: FilingObligation | None = None
+        obligation: ModeloDeadline | None = None
         draft: RegistryFilingDraftProtocol | None = None
         final_stage: WorkflowStage = WorkflowStage.ABORTED
         aborted_reason: WorkflowAbortReason | None = None
@@ -461,7 +462,7 @@ class WorkflowEngine:
         target_period: str | None,
         today: date,
         steps: list[WorkflowStep],
-    ) -> FilingObligation:
+    ) -> ModeloDeadline:
         """Stage 3 — compute the target obligation.
 
         Aborts with ``NO_PENDING_OBLIGATION`` when the schedule is
@@ -487,7 +488,7 @@ class WorkflowEngine:
                 steps=steps,
             )
 
-        obligation: FilingObligation | None
+        obligation: ModeloDeadline | None
         if target_modelo is not None and target_period is not None:
             matches = [o for o in schedule.obligations if o.modelo == target_modelo and o.period == target_period]
             obligation = matches[0] if matches else None
@@ -557,7 +558,7 @@ class WorkflowEngine:
         self,
         *,
         profile: AutonomoProfile,
-        obligation: FilingObligation,
+        obligation: ModeloDeadline,
         steps: list[WorkflowStep],
     ) -> None:
         """Stage 4 — probe the notifications inbox for blocking requerimientos.
@@ -634,7 +635,7 @@ class WorkflowEngine:
         self,
         *,
         profile: AutonomoProfile,
-        obligation: FilingObligation,
+        obligation: ModeloDeadline,
         fail_on_warning: bool,
         steps: list[WorkflowStep],
     ) -> RegistryFilingDraftProtocol:
@@ -748,8 +749,8 @@ class WorkflowEngine:
             steps=steps,
         )
         ready_statuses = {
-            DraftStatus.READY_TO_SUBMIT.value,
-            DraftStatus.APPROVED.value,
+            ModeloDraftStatus.READY_TO_SUBMIT.value,
+            ModeloDraftStatus.APPROVED.value,
         }
         if _enum_value(draft.status) not in ready_statuses:
             status_value = _enum_value(draft.status)
@@ -785,7 +786,7 @@ class WorkflowEngine:
         self,
         *,
         draft: RegistryFilingDraftProtocol,
-        obligation: FilingObligation,
+        obligation: ModeloDeadline,
         profile: AutonomoProfile,
         started: datetime,
         steps: list[WorkflowStep],
@@ -823,7 +824,7 @@ class WorkflowEngine:
             summary=summary,
         )
 
-    def _active_registry_schema_version(self, obligation: FilingObligation) -> str:
+    def _active_registry_schema_version(self, obligation: ModeloDeadline) -> str:
         filing_year, registry_period = _registry_period_token(obligation.period)
         provider = build_runtime_schema_provider(
             filing_year=filing_year,
@@ -841,7 +842,7 @@ class WorkflowEngine:
         """Stage 6 — re-scan the built draft for ERROR-severity findings."""
         started = _utcnow()
         error_findings = tuple(
-            f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == FilingFindingSeverity.ERROR
+            f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == BaseSeverity.ERROR
         )
         if error_findings:
             errors_summary = _summary_text(f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s)")
@@ -1133,14 +1134,14 @@ def update_declaration_pointer(
 ) -> WorkflowState:
     """Return a copy of ``state`` with an updated declaration pointer.
 
-    Upserts a :class:`DeclarationPointer` into the ``declarations``
+    Upserts a :class:`DeclaracionPointer` into the ``declarations``
     registry. If a pointer already exists for the key, its fields are
     updated with the supplied values.
     """
     key = declaration_key(modelo, period)
     current = state.declarations.get(key)
     if current is None:
-        updated = DeclarationPointer(
+        updated = DeclaracionPointer(
             modelo=modelo,
             period=period,
             draft_id=draft_id,

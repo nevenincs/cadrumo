@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede._declarations import Declaration
+from aeat.adapters.outbound.aeat.sede._declarations import Declaracion
 from aeat.application.live._expedientes import (
     ExpedientesCapture,
     ExpedientesService,
@@ -31,8 +31,8 @@ def _declaration(
     expediente_id: str = "12345678901234567890",
     estado: str = "ALTA",
     presented_at: datetime | None = None,
-) -> Declaration:
-    return Declaration(
+) -> Declaracion:
+    return Declaracion(
         modelo=modelo,
         ejercicio=ejercicio,
         period=period,
@@ -44,7 +44,7 @@ def _declaration(
 
 def _capture(
     *,
-    declarations: tuple[Declaration, ...] = (),
+    declarations: tuple[Declaracion, ...] = (),
     captured_at: datetime | None = None,
 ) -> ExpedientesCapture:
     return ExpedientesCapture(
@@ -164,5 +164,5 @@ class TestNoWriteSurface:
     def test_capture_mode_is_read_only_marker(self) -> None:
         cap = _capture(declarations=(_declaration(),))
         assert cap.mode == "read"
-        # The Declaration adapter model also carries mode='read'.
+        # The Declaracion adapter model also carries mode='read'.
         assert cap.declarations[0].mode == "read"

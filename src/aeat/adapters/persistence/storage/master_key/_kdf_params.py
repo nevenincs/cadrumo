@@ -41,7 +41,7 @@ class KdfParams(BaseModel):
     """OWASP-baseline Argon2id parameters with strict validation.
 
     Distinct from the manifest-side
-    :class:`aeat.adapters.persistence.storage.bucket._manifest.KdfParams`
+    :class:`aeat.adapters.persistence.storage.bucket._manifest.ManifestKdfParams`
     record: that record carries whatever parameter set the bucket was
     enrolled under (so a future cost-bump is non-breaking); this record
     pins the parameter window the substrate accepts for new enrolments

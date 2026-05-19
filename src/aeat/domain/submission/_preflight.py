@@ -1,7 +1,7 @@
 """Preflight gating for the filing submission engine.
 
 ``Preflight`` runs four ordered gates against a
-:class:`aeat.domain.submission._protocols.FilingDraftLike` before any
+:class:`aeat.domain.submission._protocols.ModeloDraftLike` before any
 browser work begins. Every failure raises
 :class:`SubmissionPreflightError`; the happy path is silent.
 """
@@ -17,8 +17,8 @@ from ._protocols import (
     AuthProviderDescriptionLike,
     AuthProviderProbe,
     DeadlineWindowChecker,
-    DraftStatus,
-    FilingDraftLike,
+    ModeloDraftStatus,
+    ModeloDraftLike,
 )
 
 _logger = get_logger(__name__)
@@ -67,11 +67,11 @@ def _describe_provider_operator_impact(description: AuthProviderDescriptionLike)
 
 
 class Preflight:
-    """Four-gate validator for a :class:`FilingDraftLike`.
+    """Four-gate validator for a :class:`ModeloDraftLike`.
 
     Gates run in order:
 
-    1. Draft status is :attr:`DraftStatus.APPROVED`.
+    1. Draft status is :attr:`ModeloDraftStatus.APPROVED`.
     2. No ``ERROR``-severity entries in ``draft.findings``.
     3. Deadline window is open via
        :meth:`DeadlineWindowChecker.is_window_open`.
@@ -100,11 +100,11 @@ class Preflight:
         self.deadline_checker = deadline_checker
         self.auth_provider = auth_provider
 
-    def check(self, draft: FilingDraftLike, *, today: date) -> None:
+    def check(self, draft: ModeloDraftLike, *, today: date) -> None:
         """Run the four preflight gates against ``draft``.
 
         Args:
-            draft: The :class:`FilingDraftLike` to validate.
+            draft: The :class:`ModeloDraftLike` to validate.
             today: Reference date for the deadline-window gate.
 
         Raises:
@@ -119,14 +119,14 @@ class Preflight:
         )
 
         status_value = _enum_value(draft.status)
-        if status_value != DraftStatus.APPROVED.value:
+        if status_value != ModeloDraftStatus.APPROVED.value:
             _logger.debug("preflight gate-1 fail: draft status=%s", draft.status)
-            if status_value == DraftStatus.APPROVAL_STALE.value:
+            if status_value == ModeloDraftStatus.APPROVAL_STALE.value:
                 raise SubmissionPreflightError("draft approval is stale; review and approve the draft again")
             raise SubmissionPreflightError(f"draft not approved for submission (status={status_value})")
         _logger.debug("preflight gate-1 ok: draft is approved")
 
-        error_findings = tuple(f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == "ERROR")
+        error_findings = tuple(f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == "error")
         if error_findings:
             _logger.debug(
                 "preflight gate-2 fail: %d error-severity findings",

@@ -20,7 +20,7 @@ from typing import get_type_hints
 
 import pytest
 
-from ...filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
+from ...filing._schema import FilingDraft, ModeloDraftStatus, FilingValue, FilingValueKind
 from ...modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -28,8 +28,8 @@ from ...modelos._calculation_revision import (
 )
 from ._bindings import (
     CasillaObservation,
-    OracleFilingObservation,
-    RegistryFilingObservation,
+    OracleModeloObservation,
+    RegistryModeloObservation,
 )
 from ._schema import LiveCrossReferenceDecision
 
@@ -70,7 +70,7 @@ def test_casilla_observation_full_roundtrip() -> None:
 
 
 def test_registry_filing_observation_preserves_observation_tuple() -> None:
-    """``RegistryFilingObservation.observations`` is the canonical typed envelope.
+    """``RegistryModeloObservation.observations`` is the canonical typed envelope.
 
     A round-trip must preserve every typed ``CasillaObservation`` in the
     tuple. Any boundary that dropped the typed envelope and serialized only
@@ -79,7 +79,7 @@ def test_registry_filing_observation_preserves_observation_tuple() -> None:
     ``source_refs``.
     """
 
-    original = RegistryFilingObservation(
+    original = RegistryModeloObservation(
         modelo="303",
         filing_year=2025,
         period="1T",
@@ -105,7 +105,7 @@ def test_registry_filing_observation_preserves_observation_tuple() -> None:
         ),
     )
 
-    roundtripped = RegistryFilingObservation.model_validate_json(
+    roundtripped = RegistryModeloObservation.model_validate_json(
         original.model_dump_json(),
     )
 
@@ -201,7 +201,7 @@ def test_filing_draft_full_roundtrip() -> None:
         modelo="303",
         period="2025Q1",
         profile_tax_id="12345678Z",
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
         values=(
             FilingValue(
                 casilla_id="iva.devengado",
@@ -264,7 +264,7 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
         modelo="303",
         period="2025Q1",
         profile_tax_id="12345678Z",
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
         values=(),
         binding_values=(),
         findings=(),
@@ -301,7 +301,7 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
         snapshot_ref=ref,
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
         values=(),
         binding_values=(),
         findings=(),
@@ -364,10 +364,10 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
 
 
 def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
-    """``OracleFilingObservation`` marks oracle-originated values as a distinct subtype.
+    """``OracleModeloObservation`` marks oracle-originated values as a distinct subtype.
 
-    The parent :class:`RegistryFilingObservation` carries locally-computed
-    casilla values. The :class:`OracleFilingObservation` subtype attaches
+    The parent :class:`RegistryModeloObservation` carries locally-computed
+    casilla values. The :class:`OracleModeloObservation` subtype attaches
     an ``oracle_id`` field linking the observation to the cross-reference
     decision that produced it. Both the subtype attribution and the
     ``oracle_id`` linkage must survive strict JSON round-trip.
@@ -380,7 +380,7 @@ def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
         legal_refs=("LIVA.art-21",),
         source_refs=("AEAT.IVA.2025",),
     )
-    original = OracleFilingObservation(
+    original = OracleModeloObservation(
         modelo="303",
         filing_year=2025,
         period="1T",
@@ -388,18 +388,18 @@ def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
         oracle_id="aeat-oracle.iva.q1",
     )
 
-    roundtripped = OracleFilingObservation.model_validate_json(
+    roundtripped = OracleModeloObservation.model_validate_json(
         original.model_dump_json(),
     )
 
     assert roundtripped == original
     assert roundtripped.oracle_id == "aeat-oracle.iva.q1"
     assert roundtripped.observations == (obs,)
-    # OracleFilingObservation IS a RegistryFilingObservation; the
+    # OracleModeloObservation IS a RegistryModeloObservation; the
     # type distinction must be preserved structurally even though
     # both have the same JSON shape on the wire.
-    assert isinstance(roundtripped, OracleFilingObservation)
-    assert isinstance(roundtripped, RegistryFilingObservation)
+    assert isinstance(roundtripped, OracleModeloObservation)
+    assert isinstance(roundtripped, RegistryModeloObservation)
 
 
 def test_workflow_step_details_typed_envelope_roundtrip() -> None:

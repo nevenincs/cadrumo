@@ -97,7 +97,7 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.vat import IvaFlowDirection, VATCategory, VATRateKind
+    from aeat.domain.iva import IvaFlowDirection, IvaCategory, IvaRateKind
 
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2004-y-siguientes"]
@@ -105,8 +105,8 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
         IvaLedgerObservation(
             ledger_id="vehicle-acquisition",
             transaction_date=date(2025, 6, 1),
-            category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
             base_amount=Decimal("25000"),
             iva_amount=Decimal("5250"),
@@ -114,8 +114,8 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
         IvaLedgerObservation(
             ledger_id="recargo-devolucion",
             transaction_date=date(2025, 6, 5),
-            category=VATCategory.RECARGO_EQUIVALENCIA,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.RECARGO_EQUIVALENCIA,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("100"),
             iva_amount=Decimal("21"),

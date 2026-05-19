@@ -10,7 +10,7 @@ import pytest
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...domain.deadlines import FilingObligation, ObligationStatus
+from ...domain.deadlines import ModeloDeadline, ObligationStatus
 from . import (
     WorkflowAbortReason,
     WorkflowError,
@@ -40,8 +40,8 @@ def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> It
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 
 
-def _obligation(modelo: str = "130", period: str = "2026Q1") -> FilingObligation:
-    return FilingObligation(
+def _obligation(modelo: str = "130", period: str = "2026Q1") -> ModeloDeadline:
+    return ModeloDeadline(
         modelo=modelo,
         period=period,
         opens_on=date(2026, 4, 1),
@@ -55,7 +55,7 @@ def _aborted_result(
     *,
     run_id: str,
     reason: WorkflowAbortReason,
-    obligation: FilingObligation | None,
+    obligation: ModeloDeadline | None,
 ) -> WorkflowResult:
     step = WorkflowStep(
         stage=WorkflowStage.BUILDING_DRAFT,

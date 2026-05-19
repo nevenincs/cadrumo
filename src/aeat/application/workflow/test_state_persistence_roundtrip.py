@@ -20,7 +20,7 @@ from ...core.config import Settings
 from ..auth._models import AuthState
 from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
 from ._models import (
-    DeclarationPointer,
+    DeclaracionPointer,
     WorkflowEvent,
     WorkflowState,
 )
@@ -36,7 +36,7 @@ def _populated_workflow_state() -> WorkflowState:
 
     * an AuthState with non-default values
     * two profile bucket pointers (the keyed mapping must round-trip)
-    * a declarations mapping with one DeclarationPointer
+    * a declarations mapping with one DeclaracionPointer
     * a tuple of WorkflowEvent entries (append-only audit log)
 
     The active-profile selector lives in the precedence chain
@@ -48,7 +48,7 @@ def _populated_workflow_state() -> WorkflowState:
     return WorkflowState(
         auth=AuthState(),
         declarations={
-            "303:2025Q1": DeclarationPointer(
+            "303:2025Q1": DeclaracionPointer(
                 modelo="303",
                 period="2025Q1",
                 draft_id="d" * 64,
@@ -98,7 +98,7 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
 
     Per-field witnesses pin the most fragile pieces:
 
-    * the declarations mapping with its nested DeclarationPointer,
+    * the declarations mapping with its nested DeclaracionPointer,
     * the bucket_events tuple with a non-empty audit record.
 
     ``WorkflowState.profiles`` is no longer a persisted field; it is

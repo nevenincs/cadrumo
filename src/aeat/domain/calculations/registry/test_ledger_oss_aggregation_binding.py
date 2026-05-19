@@ -23,12 +23,12 @@ from aeat.domain.calculations.registry import (
     resolve_ledger_oss_aggregation_binding_values,
     validate_ledger_oss_aggregation_binding_definition,
 )
-from aeat.domain.vat import (
+from aeat.domain.iva import (
     EUMemberState,
-    InvoiceDirection,
+    InvoiceKind,
     OssIossRegime,
     TransactionKind,
-    VATRateKind,
+    IvaRateKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -58,8 +58,8 @@ def _observation(
     txn_date: date = date(2025, 6, 15),
     regime: OssIossRegime = OssIossRegime.UNION_SCHEME,
     destination: EUMemberState = EUMemberState.DE,
-    rate_kind: VATRateKind = VATRateKind.GENERAL,
-    direction: InvoiceDirection = InvoiceDirection.ISSUED,
+    rate_kind: IvaRateKind = IvaRateKind.GENERAL,
+    direction: InvoiceKind = InvoiceKind.ISSUED,
     kind: TransactionKind = TransactionKind.OSS_UNION_SERVICES,
     base: Decimal = Decimal("100"),
     iva: Decimal = Decimal("19"),
@@ -172,8 +172,8 @@ def test_resolve_filters_observations_by_regime() -> None:
 def test_resolve_filters_observations_by_rate_kind() -> None:
     revision = _revision_with_bindings(_binding())
     observations = [
-        _observation(rate_kind=VATRateKind.GENERAL, iva=Decimal("19")),
-        _observation(rate_kind=VATRateKind.REDUCED, iva=Decimal("100")),
+        _observation(rate_kind=IvaRateKind.GENERAL, iva=Decimal("19")),
+        _observation(rate_kind=IvaRateKind.REDUCED, iva=Decimal("100")),
     ]
     result = resolve_ledger_oss_aggregation_binding_values(revision, observations)
     assert result == {"modelo-369-union-de-services-21pct": Decimal("19")}
@@ -182,8 +182,8 @@ def test_resolve_filters_observations_by_rate_kind() -> None:
 def test_resolve_filters_observations_by_invoice_direction() -> None:
     revision = _revision_with_bindings(_binding())
     observations = [
-        _observation(direction=InvoiceDirection.ISSUED, iva=Decimal("19")),
-        _observation(direction=InvoiceDirection.RECEIVED, iva=Decimal("100")),
+        _observation(direction=InvoiceKind.ISSUED, iva=Decimal("19")),
+        _observation(direction=InvoiceKind.RECEIVED, iva=Decimal("100")),
     ]
     result = resolve_ledger_oss_aggregation_binding_values(revision, observations)
     assert result == {"modelo-369-union-de-services-21pct": Decimal("19")}

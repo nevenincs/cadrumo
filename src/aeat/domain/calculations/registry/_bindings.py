@@ -37,8 +37,8 @@ __all__ = [
     "InvoiceObservationRequirement",
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
-    "RegistryFilingObservation",
-    "RegistryFilingObservationRequirement",
+    "RegistryModeloObservation",
+    "RegistryModeloObservationRequirement",
     "RentaExpenseObservationProtocol",
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
@@ -99,7 +99,7 @@ class CasillaObservation(BaseModel):
         return value
 
 
-class RegistryFilingObservation(BaseModel):
+class RegistryModeloObservation(BaseModel):
     """Observed casilla values from a filed declaration.
 
     Storage is ``observations`` — a typed tuple of :class:`CasillaObservation`
@@ -127,10 +127,10 @@ class RegistryFilingObservation(BaseModel):
         return {obs.casilla_id: obs.value for obs in self.observations}
 
 
-class OracleFilingObservation(RegistryFilingObservation):
+class OracleModeloObservation(RegistryModeloObservation):
     """Observed casilla values whose source is a live AEAT oracle adapter.
 
-    A subtype of :class:`RegistryFilingObservation` that marks the
+    A subtype of :class:`RegistryModeloObservation` that marks the
     observation tuple as oracle-originated rather than locally computed.
     The ``oracle_id`` field anchors the observation to the
     ``LiveCrossReferenceDecision`` that produced it, so the application
@@ -145,7 +145,7 @@ class OracleFilingObservation(RegistryFilingObservation):
     oracle_id: str = Field(min_length=1, max_length=128)
 
 
-class RegistryFilingObservationRequirement(BaseModel):
+class RegistryModeloObservationRequirement(BaseModel):
     """Filed declaration required by one or more registry bindings."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -198,7 +198,7 @@ def previous_filing_observation_requirements(
     *,
     filing_year: int,
     period: str,
-) -> tuple[RegistryFilingObservationRequirement, ...]:
+) -> tuple[RegistryModeloObservationRequirement, ...]:
     """Return filed declarations needed by previous-filing bindings."""
 
     grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
@@ -211,14 +211,14 @@ def previous_filing_observation_requirements(
             # NOT generate direct observation requirements.
             continue
         selector = _previous_filing_selector(binding)
-        expected_year = filing_year + selector.filing_year_delta
-        for required_period in selector.required_periods_for_target(period):
+        for period_year_delta, required_period in selector.required_period_anchors_for_target(period):
+            expected_year = filing_year + selector.filing_year_delta + period_year_delta
             key = (selector.source_modelo, expected_year, required_period)
             bucket = grouped.setdefault(key, {"binding_ids": set(), "source_casillas": set()})
             bucket["binding_ids"].add(binding.id)
             bucket["source_casillas"].update(_previous_filing_source_ids(selector))
     return tuple(
-        RegistryFilingObservationRequirement(
+        RegistryModeloObservationRequirement(
             modelo=modelo,
             filing_year=expected_year,
             period=required_period,
@@ -231,7 +231,7 @@ def previous_filing_observation_requirements(
 
 def resolve_previous_filing_binding_values(
     revision: ModeloRevision,
-    observations: Iterable[RegistryFilingObservation],
+    observations: Iterable[RegistryModeloObservation],
     *,
     filing_year: int,
     period: str,
@@ -250,12 +250,12 @@ def resolve_previous_filing_binding_values(
             # source_casillas error.
             continue
         selector = _previous_filing_selector(binding)
-        expected_year = filing_year + selector.filing_year_delta
         values = []
-        required_periods = selector.required_periods_for_target(period)
-        if not required_periods:
+        required_anchors = selector.required_period_anchors_for_target(period)
+        if not required_anchors:
             continue
-        for required_period in required_periods:
+        for period_year_delta, required_period in required_anchors:
+            expected_year = filing_year + selector.filing_year_delta + period_year_delta
             matches = tuple(
                 observation
                 for observation in available
@@ -293,7 +293,7 @@ def _selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
     return {k: v for k, v in selector.items() if k != "source"}
 
 
-class _PreviousFilingSelector(BaseModel):
+class _PreviousModeloSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     source_modelo: str = Field(min_length=1, max_length=8)
@@ -326,9 +326,12 @@ class _PreviousFilingSelector(BaseModel):
         return self.source_periods
 
     def required_periods_for_target(self, target_period: str) -> tuple[str, ...]:
+        return tuple(period for _year_delta, period in self.required_period_anchors_for_target(target_period))
+
+    def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
         if self.source_period_offset_from_target is None:
-            return self.required_periods
-        derived = _derive_offset_source_period(self.source_period_offset_from_target, target_period=target_period)
+            return tuple((0, period) for period in self.required_periods)
+        derived = _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period)
         if derived is None:
             return ()
         return (derived,)
@@ -348,7 +351,7 @@ class _PreviousFilingSelector(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_period_selector(self) -> _PreviousFilingSelector:
+    def _validate_period_selector(self) -> _PreviousModeloSelector:
         if self.source_period_offset_from_target is not None:
             if self.period is not None or self.source_periods:
                 raise RegistryValidationError(
@@ -359,17 +362,16 @@ class _PreviousFilingSelector(BaseModel):
                 raise RegistryValidationError("previous-filing source_period_offset_from_target must be non-zero")
         if self.period is not None and self.source_periods:
             raise RegistryValidationError("previous-filing selector must use period or source_periods, not both")
-        if self.period is None and not self.source_periods:
+        if self.period is None and not self.source_periods and self.source_casillas:
             # Direct-value-copy bindings (singular source_output)
             # frequently omit the period anchor because the relation
             # carries the period contract; only enforce period on the
             # plural source_casillas shape.
-            if self.source_casillas:
-                raise RegistryValidationError("previous-filing selector must declare period or source_periods")
+            raise RegistryValidationError("previous-filing selector must declare period or source_periods")
         return self
 
     @model_validator(mode="after")
-    def _validate_source_spec(self) -> _PreviousFilingSelector:
+    def _validate_source_spec(self) -> _PreviousModeloSelector:
         # Three legal shapes:
         # (a) ``source_casillas`` only — direct aggregation over
         #     declared casillas on the source filing.
@@ -391,9 +393,9 @@ class _PreviousFilingSelector(BaseModel):
         return self
 
 
-def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousFilingSelector:
+def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousModeloSelector:
     try:
-        return _PreviousFilingSelector.model_validate(_selector_as_dict(binding))
+        return _PreviousModeloSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
 
@@ -421,7 +423,7 @@ def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
     return any(key in selector for key in ("period", "source_periods", "source_period_offset_from_target"))
 
 
-def _previous_filing_source_ids(selector: _PreviousFilingSelector) -> tuple[str, ...]:
+def _previous_filing_source_ids(selector: _PreviousModeloSelector) -> tuple[str, ...]:
     if selector.source_casillas:
         return selector.source_casillas
     if selector.source_output is not None:
@@ -438,17 +440,20 @@ _ORDINAL_TO_PAGO_FRACCIONADO: dict[int, str] = {
 
 
 def _derive_offset_source_period(offset: int, *, target_period: str) -> str | None:
+    anchor = _derive_offset_source_anchor(offset, target_period=target_period)
+    return None if anchor is None else anchor[1]
+
+
+def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[int, str] | None:
     if target_period in _QUARTERLY_PERIOD_ORDINAL:
-        ordinal = _QUARTERLY_PERIOD_ORDINAL[target_period] + offset
-        return _ORDINAL_TO_QUARTERLY.get(ordinal)
+        year_delta, zero_based = divmod(_QUARTERLY_PERIOD_ORDINAL[target_period] - 1 + offset, 4)
+        return year_delta, _ORDINAL_TO_QUARTERLY[zero_based + 1]
     if target_period in _PAGO_FRACCIONADO_PERIOD_ORDINAL:
-        ordinal = _PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] + offset
-        return _ORDINAL_TO_PAGO_FRACCIONADO.get(ordinal)
+        year_delta, zero_based = divmod(_PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] - 1 + offset, 3)
+        return year_delta, _ORDINAL_TO_PAGO_FRACCIONADO[zero_based + 1]
     if len(target_period) == 2 and target_period.isdigit():
-        ordinal = int(target_period) + offset
-        if 1 <= ordinal <= 12:
-            return f"{ordinal:02d}"
-        return None
+        year_delta, zero_based = divmod(int(target_period) - 1 + offset, 12)
+        return year_delta, f"{zero_based + 1:02d}"
     raise RegistryValidationError(
         "previous-filing source_period_offset_from_target cannot interpret "
         f"target period {target_period!r}"
@@ -2138,7 +2143,7 @@ _ForeignAssetRowField = Literal[
 ]
 
 
-class ForeignAssetObservation(BaseModel):
+class Modelo720RowObservation(BaseModel):
     """One foreign asset for modelo 720."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -2197,7 +2202,7 @@ def _validated_foreign_asset_selector(binding: DataBindingDefinition) -> _Foreig
 
 def resolve_foreign_asset_binding_row_values(
     revision: ModeloRevision,
-    observations: Iterable[ForeignAssetObservation],
+    observations: Iterable[Modelo720RowObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
     """Resolve row-producer foreign-asset bindings into per-row indexed values."""
 
@@ -2231,7 +2236,7 @@ def resolve_foreign_asset_binding_row_values(
 
 
 def _build_foreign_asset_rows(
-    observations: tuple[ForeignAssetObservation, ...],
+    observations: tuple[Modelo720RowObservation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     rows: list[Mapping[str, Decimal | str]] = []
     for obs in sorted(
@@ -2624,7 +2629,6 @@ class _ManualInputSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_manual_input_shape(self) -> _ManualInputSelector:
-        casilla_shape_keys = {"casilla"}
         record_shape_keys = _MANUAL_INPUT_RECORD_SHAPE_KEYS
         has_casilla = self.casilla is not None
         has_record_shape = any(
@@ -2648,11 +2652,10 @@ class _ManualInputSelector(BaseModel):
         # Boolean casilla shape always pairs the data_type with explicit
         # true_value / false_value strings so the on-wire encoding is
         # deterministic.
-        if has_casilla and self.data_type == "boolean":
-            if self.true_value is None or self.false_value is None:
-                raise RegistryValidationError(
-                    "manual_input boolean-casilla selector must declare true_value and false_value"
-                )
+        if has_casilla and self.data_type == "boolean" and (self.true_value is None or self.false_value is None):
+            raise RegistryValidationError(
+                "manual_input boolean-casilla selector must declare true_value and false_value"
+            )
         return self
 
 
@@ -2678,7 +2681,7 @@ def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelect
 
 
 _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
-    "previous_filing": _PreviousFilingSelector,
+    "previous_filing": _PreviousModeloSelector,
     "invoice": _InvoiceSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
@@ -2756,4 +2759,3 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
                 f"counterpart invariants violated: {exc}"
             ]
     return []
-    return resolved

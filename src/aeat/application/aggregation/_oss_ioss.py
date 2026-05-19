@@ -41,12 +41,12 @@ from ...domain.calculations.registry import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
 )
-from ...domain.vat import (
+from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
+    IvaRateKind,
     OssIossRegime,
     TransactionKind,
-    IvaRateKind,
     lookup_rate,
 )
 from ._errors import AggregationValidationError, t

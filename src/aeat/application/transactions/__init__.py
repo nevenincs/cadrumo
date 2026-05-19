@@ -12,7 +12,6 @@ from __future__ import annotations
 from ._diagnostics import (
     LedgerImportDiagnostic,
     LedgerImportDiagnosticKind,
-    LedgerImportDiagnosticSeverity,
     build_ledger_import_diagnostic,
 )
 from ._import import LedgerImportResult, import_ledger_with_diagnostics
@@ -20,7 +19,6 @@ from ._import import LedgerImportResult, import_ledger_with_diagnostics
 __all__ = [
     "LedgerImportDiagnostic",
     "LedgerImportDiagnosticKind",
-    "LedgerImportDiagnosticSeverity",
     "LedgerImportResult",
     "build_ledger_import_diagnostic",
     "import_ledger_with_diagnostics",

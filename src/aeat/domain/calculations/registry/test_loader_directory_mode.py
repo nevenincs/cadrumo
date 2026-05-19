@@ -21,7 +21,7 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from ._errors import RegistryLoadError
-from ._loader import load_modelo_directory, load_modelo_file
+from ._loader import load_modelo_directory, load_modelo_file, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -130,6 +130,25 @@ def test_directory_mode_rejects_duplicate_revision_ids_across_files(tmp_path: Pa
     (target / "revisions" / "a.toml").write_text(rev_text, encoding="utf-8")
     (target / "revisions" / "b.toml").write_text(rev_text, encoding="utf-8")
     with pytest.raises(RegistryLoadError, match="already declared in another revisions"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_duplicate_revision_id_across_file_and_fragment_dir(tmp_path: Path) -> None:
+    """A revision id cannot be owned by both ``revisions/<id>.toml`` and ``revisions/<id>/``."""
+
+    target = tmp_path / "duplicate_rev_file_and_dir"
+    target.mkdir()
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "test"\n', encoding="utf-8")
+    revisions_dir = target / "revisions"
+    revisions_dir.mkdir()
+    (revisions_dir / "2025.toml").write_text('[revisions."2025"]\nvalid_from = 2025-01-01\n', encoding="utf-8")
+    (revisions_dir / "2025").mkdir()
+    (revisions_dir / "2025" / "revision.toml").write_text(
+        '[revisions."2025"]\nvalid_from = 2025-01-01\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="already declared"):
         load_modelo_directory(target)
 
 
@@ -365,3 +384,54 @@ def test_modelo_100_directory_layout_loads_with_expected_revisions() -> None:
     expected_revisions = {"2020", "2021", "2022", "2023", "2024", "2025"}
     actual_revisions = set(modelo.revisions)
     assert actual_revisions == expected_revisions
+
+
+def test_modelo_100_revision_schema_is_fragment_directory_backed() -> None:
+    """Modelo 100 revisions are now authoritative fragment directories.
+
+    This guards the M100 schema rollout specifically: every revision
+    must live at ``revisions/<year>/revision.toml`` so future schema
+    work exercises the same revision-fragment path as the large modelos.
+    """
+
+    directory = bundled_path("registry", "aeat", "modelos", "100")
+    revisions_dir = directory / "revisions"
+    assert (directory / "manifest.toml").is_file()
+    assert not tuple(revisions_dir.glob("*.toml"))
+    for revision_id in {"2020", "2021", "2022", "2023", "2024", "2025"}:
+        revision_dir = revisions_dir / revision_id
+        assert revision_dir.is_dir(), f"missing M100 revision directory {revision_dir}"
+        assert (revision_dir / "revision.toml").is_file(), f"missing M100 revision manifest {revision_dir}"
+
+
+def test_committed_registry_tree_loads_single_file_and_directory_modelos() -> None:
+    """Registry discovery must include both supported modelo layouts."""
+
+    registry_root = bundled_path("registry", "aeat")
+    modelos_dir = registry_root / "modelos"
+    modelos, _catalogues = load_registry_tree(registry_root)
+    loaded_ids = {modelo.id for modelo in modelos}
+    single_file_ids = {path.stem for path in modelos_dir.glob("*.toml")}
+    directory_ids = {
+        entry.name
+        for entry in modelos_dir.iterdir()
+        if entry.is_dir() and (entry / "manifest.toml").is_file()
+    }
+
+    assert loaded_ids == single_file_ids | directory_ids
+    assert {"100", "180", "200", "202", "232"}.issubset(directory_ids)
+
+
+def test_fragmented_modelos_do_not_keep_stale_single_file_siblings() -> None:
+    """A fragmented modelo cannot also keep ``modelos/<id>.toml``."""
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    offenders = [
+        entry.name
+        for entry in sorted(modelos_dir.iterdir())
+        if entry.is_dir()
+        and (entry / "manifest.toml").is_file()
+        and (modelos_dir / f"{entry.name}.toml").exists()
+    ]
+
+    assert offenders == []

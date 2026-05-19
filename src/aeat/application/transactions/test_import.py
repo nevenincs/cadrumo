@@ -27,6 +27,7 @@ tautologies.
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -44,7 +45,6 @@ from ...domain.transactions import (
 from ...domain.transactions._models import derive_transaction_id
 from ._diagnostics import (
     LedgerImportDiagnosticKind,
-    LedgerImportDiagnosticSeverity,
 )
 from ._import import import_ledger_with_diagnostics
 
@@ -104,7 +104,7 @@ def test_import_empty_batch_emits_parser_warning_and_zero_counts() -> None:
     assert len(result.diagnostics) == 1
     only = result.diagnostics[0]
     assert only.kind is LedgerImportDiagnosticKind.PARSER
-    assert only.severity is LedgerImportDiagnosticSeverity.WARNING
+    assert only.severity is BaseSeverity.WARNING
 
 
 def test_import_empty_batch_short_circuits_before_original_file_check(tmp_path: Path) -> None:
@@ -166,7 +166,7 @@ def test_import_duplicate_within_file_emits_duplicate_warning() -> None:
     assert result.skipped_count == 1
     duplicate_diagnostics = [d for d in result.diagnostics if d.kind is LedgerImportDiagnosticKind.DUPLICATE]
     assert len(duplicate_diagnostics) == 1
-    assert duplicate_diagnostics[0].severity is LedgerImportDiagnosticSeverity.WARNING
+    assert duplicate_diagnostics[0].severity is BaseSeverity.WARNING
 
 
 def test_import_duplicate_against_catalogue_emits_duplicate_info() -> None:
@@ -188,7 +188,7 @@ def test_import_duplicate_against_catalogue_emits_duplicate_info() -> None:
     assert result.skipped_count == 1
     duplicate_diagnostics = [d for d in result.diagnostics if d.kind is LedgerImportDiagnosticKind.DUPLICATE]
     assert len(duplicate_diagnostics) == 1
-    assert duplicate_diagnostics[0].severity is LedgerImportDiagnosticSeverity.INFO
+    assert duplicate_diagnostics[0].severity is BaseSeverity.INFO
 
 
 def test_import_duplicate_diagnostic_carries_affected_transaction_id() -> None:
@@ -247,7 +247,7 @@ def test_import_36_day_gap_emits_single_gap_warning() -> None:
 
     gap_diagnostics = [d for d in result.diagnostics if d.kind is LedgerImportDiagnosticKind.GAP]
     assert len(gap_diagnostics) == 1
-    assert gap_diagnostics[0].severity is LedgerImportDiagnosticSeverity.WARNING
+    assert gap_diagnostics[0].severity is BaseSeverity.WARNING
 
 
 def test_import_multiple_gaps_emit_only_one_diagnostic() -> None:
@@ -306,7 +306,7 @@ def test_import_original_source_present_emits_original_file_info(tmp_path: Path)
 
     original_diagnostics = [d for d in result.diagnostics if d.kind is LedgerImportDiagnosticKind.ORIGINAL_FILE]
     assert len(original_diagnostics) == 1
-    assert original_diagnostics[0].severity is LedgerImportDiagnosticSeverity.INFO
+    assert original_diagnostics[0].severity is BaseSeverity.INFO
     assert original_diagnostics[0].source_path == original
 
 

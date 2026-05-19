@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
@@ -35,8 +36,7 @@ from ...domain.filing import (
     FilingComputationError,
     FilingDraft,
     FilingDraftError,
-    FilingDraftStatus,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
     FilingImportError,
     FilingInputs,
     FilingProfile,
@@ -59,16 +59,16 @@ from ...domain.period import (
     period_end_date,
 )
 from ._calculate import (
-    DeclarationCalculateNextAction,
-    DeclarationCalculateSummary,
+    DeclaracionCalculateNextAction,
+    DeclaracionCalculateSummary,
     summarise_calculation,
 )
 from ._complementaria import build_complementaria, list_amendments, load_amendment
 from ._export import (
-    DeclarationExportFormat,
-    DeclarationExportResult,
-    DeclarationVerifyResult,
-    DeclarationVerifyVerdict,
+    DeclaracionExportFormat,
+    DeclaracionExportResult,
+    DeclaracionVerifyResult,
+    DeclaracionVerifyVerdict,
     export_draft,
     verify_export,
 )
@@ -205,7 +205,7 @@ def build_draft(
         profile_tax_id=profile.tax_id,
         subject_tax_id=profile.tax_id,
         snapshot_ref=snapshot_ref,
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
         values=value_tuple,
         binding_values=binding_value_tuple,
         created_at=created_at,
@@ -412,9 +412,9 @@ def validate_draft(
 
 
 _SEVERITY_RANK: dict[str, int] = {
-    FilingFindingSeverity.INFO: 0,
-    FilingFindingSeverity.WARNING: 1,
-    FilingFindingSeverity.ERROR: 2,
+    BaseSeverity.INFO: 0,
+    BaseSeverity.WARNING: 1,
+    BaseSeverity.ERROR: 2,
 }
 
 
@@ -440,8 +440,8 @@ def iter_findings(
             severity name.
     """
     try:
-        threshold = _SEVERITY_RANK[FilingFindingSeverity(severity_at_least)]
-    except ValueError as exc:
+        threshold = _SEVERITY_RANK[BaseSeverity[severity_at_least]]
+    except KeyError as exc:
         raise FilingCalculateError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
     for finding in draft.findings:
         if _SEVERITY_RANK[finding.severity] >= threshold:
@@ -464,12 +464,12 @@ __all__ = [
     "CasillaSchemaProvider",
     "DeadlineChecker",
     "DeadlineStatus",
-    "DeclarationCalculateNextAction",
-    "DeclarationCalculateSummary",
-    "DeclarationExportFormat",
-    "DeclarationExportResult",
-    "DeclarationVerifyResult",
-    "DeclarationVerifyVerdict",
+    "DeclaracionCalculateNextAction",
+    "DeclaracionCalculateSummary",
+    "DeclaracionExportFormat",
+    "DeclaracionExportResult",
+    "DeclaracionVerifyResult",
+    "DeclaracionVerifyVerdict",
     "FilingAmendment",
     "FilingAmendmentError",
     "FilingAmendmentValidationError",
@@ -482,8 +482,7 @@ __all__ = [
     "FilingComputationError",
     "FilingDraft",
     "FilingDraftError",
-    "FilingDraftStatus",
-    "FilingFindingSeverity",
+    "ModeloDraftStatus",
     "FilingHistory",
     "FilingHistoryEntry",
     "FilingImportError",

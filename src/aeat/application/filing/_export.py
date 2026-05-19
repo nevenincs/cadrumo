@@ -43,7 +43,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.filing import (
     FilingDraft,
-    FilingDraftStatus,
+    ModeloDraftStatus,
     FilingExportError,
     FilingExportValidationError,
 )
@@ -59,7 +59,7 @@ _SHA256_HEX_LENGTH = 64
 """Length of a hex-encoded SHA-256 digest used by export receipts."""
 
 
-class DeclarationExportFormat(StrEnum):
+class DeclaracionExportFormat(StrEnum):
     """Closed catalogue of AEAT export formats.
 
     Attributes:
@@ -71,7 +71,7 @@ class DeclarationExportFormat(StrEnum):
     FICHERO_BOE = "fichero-boe"
 
 
-class DeclarationVerifyVerdict(StrEnum):
+class DeclaracionVerifyVerdict(StrEnum):
     """Closed verdict the verify command surfaces to the operator.
 
     Attributes:
@@ -88,7 +88,7 @@ class DeclarationVerifyVerdict(StrEnum):
     MISSING = "missing"
 
 
-class DeclarationExportResult(BaseModel):
+class DeclaracionExportResult(BaseModel):
     """Receipt produced by exporting an approved draft to disk.
 
     The record is the structured-data return value of the
@@ -103,12 +103,12 @@ class DeclarationExportResult(BaseModel):
         modelo: AEAT modelo identifier.
         period: Canonical period identifier (e.g. ``"2026Q1"``).
         format: The on-disk wire format (closed
-            :class:`DeclarationExportFormat`).
+            :class:`DeclaracionExportFormat`).
         output_path: Absolute path the file was written to.
         byte_size: Size of the written content in bytes; matches
             ``output_path.stat().st_size`` at write time.
         file_sha256: Hex-encoded SHA-256 digest of the written bytes.
-            Used by :class:`DeclarationVerifyResult` to anchor the
+            Used by :class:`DeclaracionVerifyResult` to anchor the
             file-vs-draft comparison.
         exported_at: UTC timestamp of when the file was written.
         narrative: Translation key for operator-facing summary.
@@ -119,7 +119,7 @@ class DeclarationExportResult(BaseModel):
     draft_id: str = Field(min_length=1, max_length=128)
     modelo: str = Field(min_length=1, max_length=8)
     period: str = Field(min_length=1, max_length=16)
-    format: DeclarationExportFormat
+    format: DeclaracionExportFormat
     output_path: Path
     byte_size: int = Field(ge=0)
     file_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
@@ -139,7 +139,7 @@ class DeclarationExportResult(BaseModel):
         return value
 
 
-class DeclarationVerifyResult(BaseModel):
+class DeclaracionVerifyResult(BaseModel):
     """Verdict produced by verifying an exported file against an approved draft.
 
     The verify command re-reads the file the export command wrote and
@@ -151,7 +151,7 @@ class DeclarationVerifyResult(BaseModel):
         draft_id: The :class:`aeat.domain.filing.FilingDraft` identity
             the file was compared against.
         file_path: Absolute path of the file that was verified.
-        verdict: Closed :class:`DeclarationVerifyVerdict`.
+        verdict: Closed :class:`DeclaracionVerifyVerdict`.
         mismatched_casillas: Tuple of casilla identifiers whose value
             in the file differs from the approved draft. Empty when
             ``verdict is MATCH``; populated when ``verdict is DRIFT``;
@@ -173,7 +173,7 @@ class DeclarationVerifyResult(BaseModel):
 
     draft_id: str = Field(min_length=1, max_length=128)
     file_path: Path
-    verdict: DeclarationVerifyVerdict
+    verdict: DeclaracionVerifyVerdict
     mismatched_casillas: tuple[str, ...] = ()
     unchecked_casillas: tuple[str, ...] = ()
     file_sha256: str | None = Field(default=None)
@@ -194,7 +194,7 @@ class DeclarationVerifyResult(BaseModel):
     @field_validator("file_sha256")
     @classmethod
     def _validate_sha256_hex(cls, value: str | None) -> str | None:
-        """Match :class:`DeclarationExportResult` digest hygiene when present."""
+        """Match :class:`DeclaracionExportResult` digest hygiene when present."""
         if value is None:
             return None
         if len(value) != _SHA256_HEX_LENGTH:
@@ -214,13 +214,13 @@ def export_draft(
     output_path: Path,
     headers: dict[str, str],
     schema_provider: RegistrySchemaProvider | None = None,
-) -> DeclarationExportResult:
+) -> DeclaracionExportResult:
     """Write an approved draft to a fichero-BOE file and return a receipt."""
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
         raise FilingExportError("declaration export requires a draft built from the active registry snapshot")
-    if draft.status is not FilingDraftStatus.APPROVED:
+    if draft.status is not ModeloDraftStatus.APPROVED:
         raise FilingExportError("declaration export requires an approved draft")
     if not subview.export_layout_ids:
         raise FilingExportError(f"modelo {draft.modelo!r} registry snapshot declares no export layout")
@@ -228,11 +228,11 @@ def export_draft(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(payload)
     digest = hashlib.sha256(payload).hexdigest()
-    return DeclarationExportResult(
+    return DeclaracionExportResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
-        format=DeclarationExportFormat.FICHERO_BOE,
+        format=DeclaracionExportFormat.FICHERO_BOE,
         output_path=output_path,
         byte_size=len(payload),
         file_sha256=digest,
@@ -246,7 +246,7 @@ def verify_export(
     *,
     file_path: Path,
     schema_provider: RegistrySchemaProvider | None = None,
-) -> DeclarationVerifyResult:
+) -> DeclaracionVerifyResult:
     """Verify an exported file against an approved draft and return a verdict."""
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
@@ -254,19 +254,19 @@ def verify_export(
         raise FilingExportError("declaration verify requires a draft built from the active registry snapshot")
     if not subview.export_layout_ids:
         digest = sha256_file(file_path) if file_path.exists() else None
-        return DeclarationVerifyResult(
+        return DeclaracionVerifyResult(
             draft_id=draft.draft_id,
             file_path=file_path,
-            verdict=DeclarationVerifyVerdict.MISSING,
+            verdict=DeclaracionVerifyVerdict.MISSING,
             file_sha256=digest,
             verified_at=datetime.now(tz=UTC),
             narrative="filing.export.missing_registry_layout",
         )
     if not file_path.exists():
-        return DeclarationVerifyResult(
+        return DeclaracionVerifyResult(
             draft_id=draft.draft_id,
             file_path=file_path,
-            verdict=DeclarationVerifyVerdict.MISSING,
+            verdict=DeclaracionVerifyVerdict.MISSING,
             verified_at=datetime.now(tz=UTC),
             narrative="filing.export.missing_file",
         )
@@ -276,18 +276,18 @@ def verify_export(
         mismatched = _mismatched_casillas(subview.export_layouts[0], draft=draft, payload=payload)
     except RegistryValidationError:
         _logger.warning("declaration export verification could not parse %s", file_path, exc_info=True)
-        return DeclarationVerifyResult(
+        return DeclaracionVerifyResult(
             draft_id=draft.draft_id,
             file_path=file_path,
-            verdict=DeclarationVerifyVerdict.MISSING,
+            verdict=DeclaracionVerifyVerdict.MISSING,
             file_sha256=digest,
             verified_at=datetime.now(tz=UTC),
             narrative="filing.export.malformed_file",
         )
-    return DeclarationVerifyResult(
+    return DeclaracionVerifyResult(
         draft_id=draft.draft_id,
         file_path=file_path,
-        verdict=DeclarationVerifyVerdict.MATCH if not mismatched else DeclarationVerifyVerdict.DRIFT,
+        verdict=DeclaracionVerifyVerdict.MATCH if not mismatched else DeclaracionVerifyVerdict.DRIFT,
         mismatched_casillas=mismatched,
         file_sha256=digest,
         verified_at=datetime.now(tz=UTC),
@@ -583,10 +583,10 @@ def _period_parts(period: str) -> tuple[str, str]:
 
 
 __all__ = [
-    "DeclarationExportFormat",
-    "DeclarationExportResult",
-    "DeclarationVerifyResult",
-    "DeclarationVerifyVerdict",
+    "DeclaracionExportFormat",
+    "DeclaracionExportResult",
+    "DeclaracionVerifyResult",
+    "DeclaracionVerifyVerdict",
     "export_draft",
     "verify_export",
 ]

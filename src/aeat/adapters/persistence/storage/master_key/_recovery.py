@@ -35,7 +35,6 @@ from __future__ import annotations
 import base64
 import hashlib
 import secrets
-from importlib import resources
 from pathlib import Path
 from typing import Final
 
@@ -116,8 +115,7 @@ def _load_wordlist() -> tuple[str, ...]:
     Read at import time so the per-call cost is the dict lookup, not
     the file read. The wordlist is small (~13 KB) and immutable.
     """
-    package = resources.files(__package__)
-    path = package.joinpath("_bip39_wordlist.txt")
+    path = Path(__file__).with_name("_bip39_wordlist.txt")
     text = path.read_text(encoding="ascii")
     words = tuple(line.strip() for line in text.splitlines() if line.strip())
     if len(words) != 2048:

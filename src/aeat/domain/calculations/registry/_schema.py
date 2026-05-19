@@ -1109,10 +1109,6 @@ class DependencyClassificationDefinition(RegistryModel):
         return self
 
 
-class DeadlineApplicabilityCondition(ProfilePredicateDefinition):
-    pass
-
-
 class DeadlineWindowDefinition(RegistryModel):
     id: DeadlineWindowId
     filing_year: int = Field(ge=1900, le=2999)
@@ -1122,7 +1118,7 @@ class DeadlineWindowDefinition(RegistryModel):
     closes_on: date
     payment_cutoff_on: date | None = None
     applicability_condition_mode: Literal["all", "any"] = "all"
-    applicability_conditions: tuple[DeadlineApplicabilityCondition, ...] = ()
+    applicability_conditions: tuple[ProfilePredicateDefinition, ...] = ()
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -1137,7 +1133,7 @@ class DeadlineWindowDefinition(RegistryModel):
         return self
 
 
-class FilingScheduleDefinition(RegistryModel):
+class ModeloScheduleDefinition(RegistryModel):
     id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_.-]+$")
     period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
     periods: tuple[str, ...] = Field(min_length=1)
@@ -1154,7 +1150,7 @@ class FilingScheduleDefinition(RegistryModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_schedule(self) -> FilingScheduleDefinition:
+    def _validate_schedule(self) -> ModeloScheduleDefinition:
         if self.profile_condition_mode == "any" and not self.profile_conditions:
             raise RegistryValidationError(f"filing schedule {self.id!r} any-mode requires profile conditions")
         return self
@@ -1762,7 +1758,7 @@ class ModeloRevision(RegistryModel):
     verification_expectations: tuple[VerificationExpectationDefinition, ...] = ()
     application_links: tuple[ApplicationLinkDefinition, ...] = ()
     deadline_windows: tuple[DeadlineWindowDefinition, ...] = ()
-    filing_schedules: tuple[FilingScheduleDefinition, ...] = ()
+    filing_schedules: tuple[ModeloScheduleDefinition, ...] = ()
     support_removal_decisions: tuple[SupportRemovalDecisionDefinition, ...] = ()
     constructs: tuple[ConstructDefinition, ...] = ()
     dependency_classifications: tuple[DependencyClassificationDefinition, ...] = ()
@@ -1817,7 +1813,7 @@ class RegistrySnapshot(RegistryModel):
     # "baja"; M308 "AD-HOC"; M115 etc.). The 32-char ceiling is generous
     # enough for descriptive future event names without becoming a free-text
     # field — the matching constraint is enforced upstream in
-    # PeriodSelector + FilingScheduleDefinition (which validate against
+    # PeriodSelector + ModeloScheduleDefinition (which validate against
     # each modelo's declared periods).
     #
     # Audit note on the layered max_length contract across the codebase:
@@ -1847,7 +1843,7 @@ class RegistrySnapshot(RegistryModel):
     verification_expectations: Mapping[VerificationExpectationId, VerificationExpectationDefinition]
     application_links: Mapping[ApplicationLinkId, ApplicationLinkDefinition]
     deadline_windows: Mapping[DeadlineWindowId, DeadlineWindowDefinition]
-    filing_schedules: Mapping[str, FilingScheduleDefinition]
+    filing_schedules: Mapping[str, ModeloScheduleDefinition]
     support_removal_decisions: Mapping[SupportRemovalDecisionId, SupportRemovalDecisionDefinition]
     constructs: Mapping[ConstructId, ConstructDefinition]
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]

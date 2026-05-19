@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from ._layout import bucket_paths
-from ._manifest import BucketManifest, KdfParams
+from ._manifest import BucketManifest, ManifestKdfParams
 from ._manifest_io import read_manifest, write_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -42,7 +42,7 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
         label="Test Operator Bucket",
         created_at=now,
         last_unlocked_at=now,
-        kdf_params=KdfParams(
+        kdf_params=ManifestKdfParams(
             algorithm="argon2id",
             version=2,
             memory_cost=65536,
@@ -59,7 +59,7 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
 def test_bucket_manifest_round_trips_strictly_via_toml(tmp_path: Path) -> None:
     """write_manifest -> disk -> read_manifest yields the original manifest unchanged.
 
-    Every field of the manifest, including the nested KdfParams salt
+    Every field of the manifest, including the nested ManifestKdfParams salt
     bytes, the UTC-tagged datetimes, and the boolean
     ``recovery_enrolled`` flag, must come back identical. The
     assertion uses strict pydantic equality so a single dropped

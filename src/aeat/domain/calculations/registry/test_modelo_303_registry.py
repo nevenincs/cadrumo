@@ -167,10 +167,10 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
+        IvaCategory,
         IvaFlowDirection,
-        VATCategory,
-        VATRateKind,
+        IvaRateKind,
     )
 
     modelo, _ = _load_modelo_303()
@@ -180,8 +180,8 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="rep-general-1",
             transaction_date=date(2025, 6, 1),
-            category=VATCategory.DOMESTIC_GENERAL_21,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("1000"),
             iva_amount=Decimal("210"),
@@ -189,8 +189,8 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="rep-reducido-1",
             transaction_date=date(2025, 6, 3),
-            category=VATCategory.DOMESTIC_REDUCED_10,
-            rate_kind=VATRateKind.REDUCED,
+            category=IvaCategory.DOMESTIC_REDUCED_10,
+            rate_kind=IvaRateKind.REDUCED,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("200"),
             iva_amount=Decimal("20"),
@@ -198,8 +198,8 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="rep-super-1",
             transaction_date=date(2025, 6, 4),
-            category=VATCategory.DOMESTIC_SUPER_REDUCED_4,
-            rate_kind=VATRateKind.SUPER_REDUCED,
+            category=IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            rate_kind=IvaRateKind.SUPER_REDUCED,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("100"),
             iva_amount=Decimal("4"),
@@ -207,8 +207,8 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="sop-interior-1",
             transaction_date=date(2025, 6, 5),
-            category=VATCategory.DOMESTIC_GENERAL_21,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("300"),
             iva_amount=Decimal("63"),
@@ -216,8 +216,8 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="auto-ica-1",
             transaction_date=date(2025, 6, 6),
-            category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
             base_amount=Decimal("400"),
             iva_amount=Decimal("84"),
@@ -257,7 +257,7 @@ def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> 
     assert casillas["iva.compensacion-aplicada-periodo"].number == "78"
     assert casillas["iva.compensacion-pendiente-periodos-posteriores"].number == "87"
     assert casillas["iva.resultado"].number == "69"
-    assert relation.target_periods == ("2T", "3T", "4T")
+    assert relation.target_periods == ("1T", "2T", "3T", "4T")
     assert relation.source_period_offset_from_target == -1
     assert relation.source_periods == ()
     assert relation.target_binding == "modelo-303-compensacion-pendiente-anteriores"
@@ -266,7 +266,7 @@ def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> 
 def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_output() -> None:
     from aeat.domain.calculations.registry import (
         CasillaObservation,
-        RegistryFilingObservation,
+        RegistryModeloObservation,
         materialize_relation_binding_values,
         previous_filing_observation_requirements,
         relation_source_requirements,
@@ -277,7 +277,7 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_o
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
     observations = (
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="303",
             filing_year=2025,
             period="1T",
@@ -319,17 +319,60 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_o
     ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
 
 
-def test_modelo_303_first_quarter_has_no_previous_quarter_compensation_requirement() -> None:
+def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter() -> None:
     from aeat.domain.calculations.registry import (
+        CasillaObservation,
+        RegistryModeloObservation,
+        materialize_relation_binding_values,
         previous_filing_observation_requirements,
+        relation_source_requirements,
         resolve_previous_filing_binding_values,
+        resolve_relation_values_from_observations,
     )
 
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
+    observations = (
+        RegistryModeloObservation(
+            modelo="303",
+            filing_year=2025,
+            period="4T",
+            observations=(
+                CasillaObservation(
+                    casilla_id="iva.compensacion-disponible-fin-periodo",
+                    value=Decimal("450.00"),
+                ),
+            ),
+        ),
+    )
 
-    assert previous_filing_observation_requirements(revision, filing_year=2025, period="1T") == ()
-    assert resolve_previous_filing_binding_values(revision, (), filing_year=2025, period="1T") == {}
+    binding_requirements = previous_filing_observation_requirements(revision, filing_year=2026, period="1T")
+    assert [(item.filing_year, item.period, item.source_casillas) for item in binding_requirements] == [
+        (2025, "4T", ("iva.compensacion-disponible-fin-periodo",))
+    ]
+
+    relation_requirements = relation_source_requirements(revision, filing_year=2026, period="1T")
+    assert [(item.filing_year, item.periods, item.source_output) for item in relation_requirements] == [
+        (2025, ("4T",), "iva.compensacion-disponible-fin-periodo")
+    ]
+
+    assert resolve_previous_filing_binding_values(
+        revision,
+        observations,
+        filing_year=2026,
+        period="1T",
+    ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
+    assert resolve_relation_values_from_observations(
+        revision,
+        observations,
+        filing_year=2026,
+        period="1T",
+    ) == {"modelo-303-rel-self-compensacion-anteriores": Decimal("450.00")}
+    assert materialize_relation_binding_values(
+        revision,
+        {"modelo-303-rel-self-compensacion-anteriores": Decimal("450.00")},
+        period="1T",
+    ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
 
 
 def test_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:

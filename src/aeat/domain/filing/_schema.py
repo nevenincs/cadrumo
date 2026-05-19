@@ -7,6 +7,7 @@ records the rest of the project pins against — keep them stable.
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 import hashlib
 import json
 from datetime import date, datetime
@@ -18,29 +19,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
 from ..calculations.registry._schema import RegistrySnapshotRef
-from ..submission import FilingFindingSeverity
+from ..submission._protocols import ModeloDraftStatus
 
 APPROVAL_BASIS_VERSION = "review-basis-v1"
-
-
-class FilingDraftStatus(StrEnum):
-    """Lifecycle status of a :class:`FilingDraft`.
-
-    Drafts still build and validate up to ``READY_TO_SUBMIT``. Review adds
-    the local approval states ``APPROVED`` and ``APPROVAL_STALE`` without
-    introducing any write-path coupling.
-    """
-
-    DRAFT = "DRAFT"
-    VALIDATED = "VALIDATED"
-    READY_TO_SUBMIT = "READY_TO_SUBMIT"
-    APPROVED = "APPROVED"
-    APPROVAL_STALE = "APPROVAL_STALE"
-    SUBMITTED = "SUBMITTED"
-    ACKNOWLEDGED = "ACKNOWLEDGED"
-    REJECTED = "REJECTED"
-    AMENDED = "AMENDED"
-    CANCELLED = "CANCELLED"
 
 
 class FilingValueKind(StrEnum):
@@ -116,7 +97,7 @@ class FilingValidationFinding(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     casilla_id: str | None
-    severity: FilingFindingSeverity
+    severity: BaseSeverity
     code: str
     message: tr
     references_rules: tuple[str, ...] = Field(default_factory=tuple)
@@ -164,7 +145,7 @@ class FilingDraft(BaseModel):
     # newly built drafts populate this from the snapshot used to
     # produce the casilla values.
     snapshot_ref: RegistrySnapshotRef | None = None
-    status: FilingDraftStatus
+    status: ModeloDraftStatus
     values: tuple[FilingValue, ...]
     binding_values: tuple[FilingBindingValue, ...] = Field(default_factory=tuple)
     findings: tuple[FilingValidationFinding, ...] = Field(default_factory=tuple)

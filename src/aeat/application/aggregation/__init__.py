@@ -23,7 +23,7 @@ from ._errors import (
 from ._foreign_assets import (
     ForeignAssetClass,
     ForeignAssetClassRollup,
-    ForeignAssetObservation,
+    ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
     aggregate_foreign_assets_720,
     declarable_asset_classes_720,
@@ -109,7 +109,7 @@ __all__ = [
     "CounterpartObservation",
     "ForeignAssetClass",
     "ForeignAssetClassRollup",
-    "ForeignAssetObservation",
+    "ForeignAssetIngestObservation",
     "ForeignAssetsAggregation",
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",

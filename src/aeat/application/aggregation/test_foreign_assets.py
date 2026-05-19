@@ -10,7 +10,7 @@ from aeat.application.aggregation._foreign_assets import (
     THRESHOLD_720_EUR_PER_CLASS,
     ForeignAssetClass,
     ForeignAssetClassRollup,
-    ForeignAssetObservation,
+    ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
     aggregate_foreign_assets_720,
     declarable_class,
@@ -29,8 +29,8 @@ def _obs(
     source_id: str = "tx-001",
     held: bool = True,
     acquisition: str = "2023-01-15",
-) -> ForeignAssetObservation:
-    return ForeignAssetObservation(
+) -> ForeignAssetIngestObservation:
+    return ForeignAssetIngestObservation(
         source_kind=source_kind,
         source_object_id=source_id,
         asset_class=asset_class,

@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...domain.filing._schema import FilingDraft, FilingDraftStatus, FilingScalar
+from ...domain.filing._schema import FilingDraft, ModeloDraftStatus, FilingScalar
 from ...domain.transactions import TransactionCatalogue
 from . import FilingBuilderError, approve_draft, build_draft, build_runtime_schema_provider
 
@@ -26,7 +26,7 @@ def build_registry_filing_draft(
     period: str,
     profile_tax_id: str = "Y0000001S",
     casilla_values: Mapping[str, FilingScalar],
-    status: FilingDraftStatus = FilingDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
     filing_year: int = 2026,
 ) -> FilingDraft:
     """Build a filing draft through the validated registry runtime path."""
@@ -43,7 +43,7 @@ def build_registry_filing_draft(
         inputs=casilla_values,
         schema_provider=schema_provider,
     )
-    if status is FilingDraftStatus.APPROVED:
+    if status is ModeloDraftStatus.APPROVED:
         return approve_draft(
             draft,
             bucket_id="registry-test",
@@ -68,7 +68,7 @@ def build_registry_filing_draft_from_decimals(
     period: str,
     profile_tax_id: str = "Y0000001S",
     casilla_decimals: Mapping[str, str | Decimal],
-    status: FilingDraftStatus = FilingDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
     filing_year: int = 2026,
 ) -> FilingDraft:
     """Coerce decimal strings before building through the registry runtime."""

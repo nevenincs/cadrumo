@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .....core.errors import BaseSeverity
 from dataclasses import dataclass, field
 from datetime import date
 from typing import TYPE_CHECKING
@@ -13,12 +14,10 @@ import pytest
 
 from .....application.auth import AuthProviderDescription, AuthProviderKind
 from .....domain.submission import SubmissionPreflightError
-from .....domain.submission._protocols import FilingFindingSeverity as DomainSubmissionFindingSeverity
 from . import (
-    DraftStatus,
-    FilingDraftLike,
-    FilingFinding,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
+    ModeloDraftLike,
+    ModeloFinding,
     Preflight,
 )
 
@@ -26,16 +25,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 @dataclass
-class _Draft(FilingDraftLike):
-    """Protocol-conforming test double for :class:`FilingDraftLike`."""
+class _Draft(ModeloDraftLike):
+    """Protocol-conforming test double for :class:`ModeloDraftLike`."""
 
     draft_id: str = "draft-1"
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: DraftStatus = DraftStatus.APPROVED
+    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED
     values: dict[str, str] = field(default_factory=dict)
-    findings: tuple[FilingFinding, ...] = ()
+    findings: tuple[ModeloFinding, ...] = ()
 
 
 class _AlwaysOpenChecker:
@@ -76,10 +75,6 @@ class _FailingAuthProvider:
 _TODAY = date(2026, 4, 10)
 
 
-def test_preflight_uses_canonical_filing_finding_severity() -> None:
-    assert FilingFindingSeverity is DomainSubmissionFindingSeverity
-
-
 def _preflight(*, checker: DeadlineWindowChecker | None = None, cert: AuthProviderProbe | None = None) -> Preflight:
     return Preflight(
         deadline_checker=checker or _AlwaysOpenChecker(),
@@ -95,20 +90,20 @@ class TestPreflightGates:
 
     def test_gate_1_draft_not_approved(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="not approved"):
-            _preflight().check(_Draft(status=DraftStatus.DRAFT), today=_TODAY)
+            _preflight().check(_Draft(status=ModeloDraftStatus.DRAFT), today=_TODAY)
 
     def test_gate_1_ready_but_unapproved_blocks(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="not approved"):
-            _preflight().check(_Draft(status=DraftStatus.READY_TO_SUBMIT), today=_TODAY)
+            _preflight().check(_Draft(status=ModeloDraftStatus.READY_TO_SUBMIT), today=_TODAY)
 
     def test_gate_1_stale_approval_blocks(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="stale"):
-            _preflight().check(_Draft(status=DraftStatus.APPROVAL_STALE), today=_TODAY)
+            _preflight().check(_Draft(status=ModeloDraftStatus.APPROVAL_STALE), today=_TODAY)
 
     def test_gate_2_error_finding_blocks(self) -> None:
         findings = (
-            FilingFinding(
-                severity=FilingFindingSeverity.ERROR,
+            ModeloFinding(
+                severity=BaseSeverity.ERROR,
                 message="export.test_preflight.message_868279",
             ),
         )
@@ -117,12 +112,12 @@ class TestPreflightGates:
 
     def test_gate_2_warning_does_not_block(self) -> None:
         findings = (
-            FilingFinding(
-                severity=FilingFindingSeverity.WARNING,
+            ModeloFinding(
+                severity=BaseSeverity.WARNING,
                 message="export.test_preflight.message_620739",
             ),
         )
-        assert findings[0].severity == FilingFindingSeverity.WARNING
+        assert findings[0].severity == BaseSeverity.WARNING
         result = _preflight().check(_Draft(findings=findings), today=_TODAY)
         assert result is None
 

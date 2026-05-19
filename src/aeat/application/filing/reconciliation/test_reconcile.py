@@ -9,7 +9,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.justificante import parse_justificante
-from ....domain.filing import FilingBuilderError, FilingDraft, FilingDraftStatus
+from ....domain.filing import FilingBuilderError, FilingDraft, ModeloDraftStatus
 from ....domain.justificante import Justificante
 from ....tests import FIXTURES_DIR
 from .. import build_runtime_schema_provider
@@ -70,7 +70,7 @@ def _draft_for_130(
     *,
     period: str = "2024Q1",
     profile_tax_id: str = "Y4113523X",
-    status: FilingDraftStatus = FilingDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
 ) -> FilingDraft:
     return build_registry_filing_draft(
         modelo="130",
@@ -85,7 +85,7 @@ def _draft_for_111(
     *,
     period: str = "2026Q1",
     profile_tax_id: str = "Y4113523X",
-    status: FilingDraftStatus = FilingDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
 ) -> FilingDraft:
     return build_registry_filing_draft(
         modelo="111",
@@ -100,7 +100,7 @@ def _draft_for_123(
     *,
     period: str = "2026Q1",
     profile_tax_id: str = "Y4113523X",
-    status: FilingDraftStatus = FilingDraftStatus.APPROVED,
+    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
 ) -> FilingDraft:
     return build_registry_filing_draft(
         modelo="123",

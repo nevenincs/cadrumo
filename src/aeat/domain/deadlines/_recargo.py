@@ -13,7 +13,7 @@ changes without touching engine code. Two functions are exposed:
 
 The deadline engine calls :func:`build_recovery_for_overdue` to
 populate the :class:`Recovery` field on every OVERDUE
-:class:`FilingObligation`.
+:class:`ModeloDeadline`.
 """
 
 from __future__ import annotations
