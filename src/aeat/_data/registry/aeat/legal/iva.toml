@@ -501,7 +501,7 @@ sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
 bytes = 386926
 retrieved_at = 2026-05-06
 applies_from = 2026-01-01
-source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2026.xlsx"
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR303e26v101.xlsx"
 review_status = "reviewed"
 
 [sources."aeat-modelo-303-procedure"]
