@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AeatError
 from ...core.i18n import tr
+from ._actions import WorkUnitNotFoundError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -116,11 +117,6 @@ class ReconciliationDeclarationSourceUnsupportedError(AeatError):
     as a required surface variant. Until the parser lands, the service
     refuses cleanly rather than silently degrading.
     """
-
-
-class WorkUnitNotFoundError(AeatError):
-    """Raised when ``modelo_reconcile`` cannot find the addressed work unit."""
-
 
 class ReconciliationCrossBucketRefusedError(AeatError):
     """Raised when the addressed work unit belongs to a different bucket
