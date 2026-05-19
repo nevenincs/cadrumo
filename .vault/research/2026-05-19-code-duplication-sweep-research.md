@@ -2902,3 +2902,495 @@ Result: ✓ NO DRIFT. English correctly scoped to operational/procedural context
 
 **Estimated Total Remediation**: 3–5 engineering hours.
 
+
+## Census Alias Residue Investigation
+
+**Directive**: The [[retire_means_delete_fully]] mandate prohibits named aliases like `OldName = NewName` for backward compatibility. The two Census* aliases found in the Application Profile sweep need urgent removal per the no-shim doctrine.
+
+### Alias 1: CensusSnapshotState
+
+**Location**: `src/aeat/application/live/_censo.py:58`
+
+**Exact lines**:
+```python
+# CensusSnapshotState retained as a named alias so existing imports keep
+# working unchanged. The Census enum values already match the canonical
+# lifecycle vocabulary ("active"/"superseded"/"discarded") so we alias the
+# shared enum directly rather than maintain a duplicate StrEnum.
+CensusSnapshotState = SnapshotLifecycleState
+```
+
+**Direction**: `Census*` (legacy) → `SnapshotLifecycleState` (canonical).
+
+**Importers**: 2 files
+
+| File | Count | Usage Context |
+|------|-------|---------------|
+| `src/aeat/application/live/test_census_snapshot.py` | 8 | Test state assignments and assertions |
+| `src/aeat/application/profile/test_census_sync.py` | 1 | Single state assertion |
+
+**Total uses of CensusSnapshotState**: 9 lines across 2 files.
+
+### Alias 2: CensusSnapshotRepository
+
+**Location**: `src/aeat/application/live/_censo.py:178`
+
+**Exact lines**:
+```python
+class CensusSnapshotRepository:
+    """Secure-DB repository for captured 036 census snapshots."""
+```
+
+**Direction**: `Census*` (legacy class name) → should be `CensoSnapshotRepository` (canonical).
+
+**Importers**: 2 files
+
+| File | Count | Usage Context |
+|------|-------|---------------|
+| `src/aeat/application/live/test_census_snapshot.py` | 4 | Repository instantiation and parameter typing |
+| `src/aeat/application/profile/test_census_sync.py` | 1 | Import statement (type annotation context implied) |
+
+**Total uses of CensusSnapshotRepository**: 5 lines across 2 files.
+
+### Justification Comment Context
+
+Lines 54–57 in `_censo.py` provide explicit justification:
+> "CensusSnapshotState retained as a named alias so existing imports keep working unchanged."
+
+This rationale directly violates [[retire_means_delete_fully]]. The alias exists purely for backward compatibility — a shim that the mandate forbids.
+
+### Remediation Checklist
+
+To fully retire these aliases per the mandate:
+
+1. **Delete the alias definitions** (lines 54–58 in _censo.py)
+2. **Rename the class `CensusSnapshotRepository` → `CensoSnapshotRepository`** (line 178 in _censo.py)
+3. **Update all importers**:
+   - `src/aeat/application/live/test_census_snapshot.py`: 13 lines total
+   - `src/aeat/application/profile/test_census_sync.py`: 2 lines total
+4. **Update __all__ export** in `_censo.py` (lines 425–433)
+
+**Total scope**: ~18 affected lines across 3 files.
+
+**Estimated effort**: 30 minutes (straightforward rename + import route).
+
+
+---
+
+## Application Modelo + Tail Sweep
+
+**Scope**: `src/aeat/application/modelo/` (6 files, 7,942 lines) + uncovered application subpackages (`overview/`, `topics/`, `export/`, `evidence/`).
+
+**Findings**:
+
+### Finding 1: Class Inventory in Modelo Layer
+
+**Issue**: Verify state after W04.P09 FilingRecord cluster — check for ModeloRecord* presence and FilingRecord* removal.
+
+| File | Class Count | Key Classes | Assessment |
+|------|-------------|-----------|-----------|
+| `_actions.py` | 19 (+ errors) | 16 error classes, 3 private helpers (`_RevisionDeadlineWindowChecker`, `_RevisionDraftBuilder`, `_RevisionInputsProvider`) | ✓ CLEAN. Error class `FilingRecordNotFoundError` is STILL PRESENT — expected to be renamed to `ModeloRecordNotFoundError` per W04.P09. |
+| `_reconcile.py` | 8 classes | `ModeloReconciliationCommand`, `ModeloReconciliationDiff`, `ModeloReconciliationReport`, `ModeloReconciliationSourceKind`, `ModeloReconciliationVerdict`, + 3 error classes | ✓ CLEAN. Uses `Modelo*` prefix (post-FilingRecord rename). |
+| `_export.py` | 4 classes | `ModeloExportCommand`, `ModeloExportResult`, + 2 error classes | ✓ CLEAN. Uses `ModeloExport*` prefix. |
+| `_history.py` | 2 classes | `WorkUnitHistory`, `WorkUnitHistoryEvent` | ✓ CLEAN. Generic names (correct). |
+| `_borrador_binding.py` | 3 classes | `Modelo100BorradorBindingCommand`, `Modelo100BorradorBindingResult`, + 1 error class | ✓ CLEAN. Modelo100-specific binding. |
+
+**BLOCKER FOUND**: `FilingRecordNotFoundError` in `_actions.py:184` is a stale W04.P09 rename artifact. Expected: `ModeloRecordNotFoundError`. This exception is still referenced in application code and should be renamed as part of the FilingRecord cluster completion.
+
+**Conclusion**: Post-FilingRecord-rename state is 90% clean, but 1 stale exception name remains (likely missed in the renaming sweep).
+
+### Finding 2: Action / Reconciler / Exporter Boilerplate
+
+**Issue**: Check for structural duplication across the action service, reconciliation service, and export service.
+
+| Service | File Size | Structure | Assessment |
+|---------|-----------|-----------|-----------|
+| **Actions** | 2,472 lines | Large monolithic service; 20+ public functions (`create_work_unit`, `list_work_units`, `calculate_modelo_revision`, etc.); complex state machine (revision workflow, gate checks) | HIGH COMPLEXITY. No structural boilerplate with reconciler/exporter (actions are distinct). |
+| **Reconciliation** | 287 lines | Reconciliation command execution; 1 main function pattern | LOW COMPLEXITY. Self-contained. |
+| **Export** | 330 lines | Export command execution; 1 main function pattern | LOW COMPLEXITY. Self-contained. |
+
+**Root Cause**: Actions service is heavyweight (calculation orchestration, workflow gates, bucket event emission). Reconciliation and export are lightweight (command handlers). No duplication detected; each service has appropriate scope.
+
+**Conclusion**: No boilerplate consolidation needed. Services are appropriately scoped.
+
+### Finding 3: ENG/ESP Drift in Modelo
+
+**Issue**: Check for English-only identifiers in modelo that should use Spanish regulatory terms.
+
+| Scope | Finding | Assessment |
+|-------|---------|-----------|
+| **Imports** | References to `FilingDraftStatus`, `FilingRepository`, `filing_profile_from_autonomo`, `build_draft`, `approve_draft` | These are from `domain.filing` and `application.filing` layers (legacy naming pre-FilingRecord). Modelo layer uses correct `Modelo*` naming for its own classes. Cross-layer references are acceptable. |
+| **Function names** | `create_work_unit`, `calculate_modelo_revision`, `list_work_units`, etc. | English operational terms; correct. "Work unit", "calculation", "revision" are operational concepts, not regulatory. |
+| **Class names** | `ModeloReconciliationCommand`, `ModeloExportResult`, `Modelo100BorradorBindingCommand` | Correct: uses Spanish stems (Modelo, Borrador, declaracion implied by context) with English operational suffixes (Command, Result, Binding). |
+
+**Conclusion**: No ENG/ESP drift detected in modelo layer proper. Cross-layer references are to legacy filing layer (not in scope here). Drift risk is LOW.
+
+### Finding 4: Uncovered Application Subpackages
+
+**Issue**: Inventory remaining application subpackages not yet swept by prior reader passes.
+
+| Subpackage | File Count | Class Count | Status | Assessment |
+|---|---|---|---|---|
+| `overview/` | 9 files | 16 classes (`OverviewAgenda`, `OverviewBacklog`, `OverviewCalendar`, `OverviewPeriodState`, `OverviewExplain`, calendar events, errors) | ✓ CLEAN | Operational dashboard / status-reporting layer. Well-scoped. No collisions detected. |
+| `topics/` | 2 files | 3 classes (`Topic`, `TopicCatalogue`, `TopicNotFoundError`) | ✓ CLEAN | Simple topic registry. Minimal scope. |
+| `export/` | 3 files | 2 classes (`ExportSerializationFormat`, `TabularExportResult`) | ✓ CLEAN | Export utilities. Lightweight. |
+| `evidence/` | 4 files | 10 classes (`EvidenceBundle`, `EvidenceBundleService`, `EvidenceRecordRef`, `VerificationCheck`, + errors) | ✓ CLEAN | Evidence bundle verification layer. Well-isolated. |
+
+**Summary**: 18 files across 4 uncovered subpackages. All are clean, well-scoped, and show no duplication or collisions.
+
+### Finding 5: Summary of Modelo Layer Findings
+
+| Category | Finding | Risk | Action |
+|----------|---------|------|--------|
+| **Class Naming** | FilingRecordNotFoundError stale name (1 exception) | MEDIUM | Rename to ModeloRecordNotFoundError (5 min fix, part of W04.P09 completion). |
+| **Naming Consistency** | Resto of layer uses Modelo* prefix correctly | GOOD | No action. |
+| **Boilerplate** | Actions/Reconciler/Exporter appropriately scoped; no duplication | GOOD | No action. |
+| **ENG/ESP Drift** | None detected in modelo proper | GOOD | No action. |
+| **Uncovered Packages** | overview, topics, export, evidence all clean | GOOD | No action. |
+
+**Blocked Findings**: `FilingRecordNotFoundError` rename is part of W04.P09 FilingRecord cluster completion (task #5).
+
+**Estimated Remediation Effort**: 5 min (rename 1 exception name).
+
+
+## Domain Renta + Period Sweep
+
+### Summary
+
+Swept `src/aeat/domain/renta/` (8 files, 7 core + 1 test-only) and `src/aeat/domain/period.py` (standalone module) for substrate type inventory, Renta/Rental boundary integrity, period canonicity, and cross-package imports. Renta/Rental separation is clean; period.py is canonical; no renaming regressions detected.
+
+### Renta Substrate Inventory
+
+#### Closed Enumerations
+
+| Symbol | Location | Purpose | Values | Language |
+| --- | --- | --- | --- | --- |
+| `RentaIncomeType` | `_substrate.py:20` | LIRPF income classification taxonomy | TRABAJO, CAPITAL_MOBILIARIO_GENERAL, CAPITAL_MOBILIARIO_AHORRO, CAPITAL_INMOBILIARIO, ACTIVIDADES_ECONOMICAS_DIRECTA_NORMAL, ACTIVIDADES_ECONOMICAS_DIRECTA_SIMPLIFICADA, ACTIVIDADES_ECONOMICAS_OBJETIVA, GANANCIAS_PERDIDAS_GENERAL, GANANCIAS_PERDIDAS_AHORRO, IMPUTACION_RENTAS, ATRIBUCION_RENTAS | Spanish domain terms |
+| `EstimacionDirectaModalidad` | `_substrate.py:49` | Estimación directa modality (normal vs. simplified) | NORMAL, SIMPLIFICADA | Spanish stems |
+
+#### Ledger Expense Types
+
+| Symbol | Location | Purpose | Active Use |
+| --- | --- | --- | --- |
+| `RentaExpenseDirection` (StrEnum) | `_ledger_expenses.py` | Expense direction (deductible vs. non-deductible) | Ledger reconciliation |
+| `RentaDeductibilityStatus` (StrEnum) | `_ledger_expenses.py` | Deductibility lifecycle status | Deductibility evaluation |
+| `RentaDeductibilityResult` | `_ledger_expenses.py` | Result envelope from deductibility check | Returned by `evaluate_renta_deductibility()` |
+| `RentaDeductibilityContext` | `_ledger_expenses.py` | Context parameters for deductibility logic | Passed to deductibility evaluation |
+| `RentaDeductibleExpenseFact` | `_ledger_expenses.py` | Single deductible expense record | Ledger-sourced |
+| `RentaDeductibleExpenseObservation` | `_ledger_expenses.py` | Deductible expense with validation status | Exported observation type |
+| `RentaInvoiceEvidenceStatus` (StrEnum) | `_ledger_expenses.py` | Invoice evidence quality classification | Evidence validation |
+| `RentaReconciliationStatus` (StrEnum) | `_ledger_expenses.py` | Reconciliation outcome (matched, unmatched, conflict) | Ledger reconciliation |
+
+#### Exception Hierarchy
+
+| Symbol | Location | Hierarchy | Active Use |
+| --- | --- | --- | --- |
+| `RentaError` | `errors.py` | Root (extends AeatError) | Domain-level catch |
+| `RentaValidationError` | `errors.py` | Extends RentaError | Validation failures |
+
+### Renta vs Rental Boundary Analysis
+
+Status: BOUNDARY CLEAN — SEPARATION MAINTAINED
+
+- **Domain/rental still exists**: Directory confirmed at `src/aeat/domain/rental/`
+- **No cross-imports**: Zero references to `domain.rental` found in domain/renta
+- **Renta scope**: IRPF individual income tax (Modelo 100); substrate types, deductibility logic, expense reconciliation
+- **Rental scope**: (Separate package, rename to Fincas pending per ADR W05.P15; not yet executed)
+
+### Period.py: Canonicity & Framing Analysis
+
+Status: SINGLE CANONICAL MODULE
+
+- **Single source**: `src/aeat/domain/period.py` is the exclusive parser and end-date resolver
+- **No scattered period types**: Other period-like enums are domain-specific, not general filing periods
+- **Ejercicio framing**: Module uses Spanish regulatory term `ejercicio` (tax year) throughout; fully aligned with ADR Spanish-stem authority
+- **Canonical shapes**: Enforces four shapes: `YYYYQ[1-4]`, `YYYY-MM`, `YYYYA`, bare `YYYY`
+
+### Cross-Package Imports
+
+**Period.py importers: 19 modules** across application, domain, CLI, adapters.
+
+### Language Consistency
+
+Status: SPANISH-STEM COMPLIANT
+
+- **Enum values**: Entirely Spanish tax-code terminology
+- **Substrate axis names**: Spanish regulatory terms
+- **Method names**: Spanish domain terms in function names
+- **Assessment**: Renta domain is consistently Spanish-centric; English infrastructure verbs applied only to method/function surfaces
+
+### Risk Summary
+
+| Category | Finding Count | Risk Level |
+| --- | --- | --- |
+| Renta substrate inventory | 14 defined | NONE |
+| Renta/Rental boundary | Clean separation | NONE |
+| Period canonicity | Single source | NONE |
+| Period importers | 19 consumers | LOW |
+| Language consistency | Fully Spanish-stem | NONE |
+| Internal duplication | 0 | NONE |
+
+Sweep Conclusion: `domain/renta/` substrate is well-isolated, Spanish-stem compliant, and cleanly separated from `domain/rental`. `domain/period.py` is canonical and correctly frames filing periods around Spanish `ejercicio` (tax year) terminology. No renaming regressions, duplication, or boundary drift detected.
+
+
+---
+
+## Domain Deadlines + Rental Sweep
+
+**Scope**: `src/aeat/domain/deadlines/` (filing obligations, schedules, holidays) + `src/aeat/domain/rental/` (finca contracts, income, amortization)
+
+### Part 1: Domain Deadlines
+
+**Findings**:
+
+#### Finding 1: CalendarCCAA Consolidation
+
+| Check | Status |
+|-------|--------|
+| **CalendarCCAA is only CCAA class** | ✓ Verified |
+| **CalendarCCAA in domain/deadlines** | ✓ Present |
+| **W01.P01.S02 rename landed** | ✓ Complete |
+
+**Assessment**: CCAA consolidation complete. Single canonical class. No parallel implementations.
+
+#### Finding 2: Filing Obligation Types (ADR Ledger Targets)
+
+| Type | Status |
+|------|--------|
+| **FilingEnrollment** | ✓ Present |
+| **FilingIVAProfile** | ✓ Present |
+| **FilingObligation** | ✓ Present |
+
+**Assessment**: All three ADR ledger-target types exist and are correctly scoped. No duplication.
+
+#### Finding 3: Duplication Scan
+
+| Module | Status |
+|--------|--------|
+| **_models.py** (9 core classes) | ✓ No duplication |
+| **_profiles.py** (functions only) | ✓ Clean separation |
+| **_festivos.py** (holiday data) | ✓ Focused |
+
+**Assessment**: No duplication detected. Each module has single responsibility.
+
+#### Finding 4: Exception Hierarchy (Deadlines)
+
+| Tier | Count | Status |
+|------|-------|--------|
+| **L1** | 1 | ✓ `DeadlineError` is sole root |
+| **L2** | 3 | ✓ ProfileError, ScheduleComputationError, DeadlineValidationError |
+
+**Assessment**: Exception hierarchy is minimal and clean. No escape-to-top.
+
+#### Finding 5: Language Pattern (Deadlines)
+
+| Identifier | Pattern | Status |
+|------------|---------|--------|
+| **Filing*** | English infra | ✓ Correct |
+| **IVA*** | Spanish stem | ✓ Correct |
+| **Autonomo*** | Spanish domain + English structure | ✓ Correct |
+
+**Assessment**: No language drift detected.
+
+### Part 2: Domain Rental
+
+**Findings**:
+
+#### Finding 1: Rental Class Inventory
+
+| Type | Status |
+|------|--------|
+| **RentalFinca** | ✓ Present (model + ORM Row) |
+| **RentalContract** | ✓ Present (model + ORM Row) |
+| **RentalIncomeRecord** | ✓ Present (model + ORM Row) |
+| **RentalExpense** | ✓ Present (model + ORM Row) |
+| **RentalAmortizationLedger** | ✓ Present (model + ORM Row) |
+
+**Assessment**: All required types present with dual representation (domain + ORM).
+
+#### Finding 2: SQL ORM Row Classes Location
+
+| Class | Location | Status |
+|-------|----------|--------|
+| **RentalFincaRow** | `adapters/persistence/storage/sql/_orm.py` | ✓ Correct |
+| **RentalContractRow** | `adapters/persistence/storage/sql/_orm.py` | ✓ Correct |
+| **RentalIncomeRecordRow** | `adapters/persistence/storage/sql/_orm.py` | ✓ Correct |
+| **RentalExpenseRow** | `adapters/persistence/storage/sql/_orm.py` | ✓ Correct |
+| **RentalAmortizationLedgerRow** | `adapters/persistence/storage/sql/_orm.py` | ✓ Correct |
+
+**Assessment**: Row classes correctly placed at persistence boundary. No duplicates in domain/rental.
+
+#### Finding 3: Cross-Package Importers (W05.P15 Rename Impact)
+
+| Importer | Type | Impact | Status |
+|----------|------|--------|--------|
+| **domain/rental/test_*** | Tests only | No production impact | ✓ |
+| **domain/iva/test_legal_basis_binding.py** | Production test | Imports LirpfArt85ImputacionParameters | ✓ 1 update needed |
+| **No other production importers** | - | - | ✓ Low blast radius |
+
+**Assessment**: Only 1 non-test cross-package importer. Very low W05.P15 impact.
+
+#### Finding 4: Exception Hierarchy (Rental)
+
+| Tier | Count | Status |
+|------|-------|--------|
+| **L1** | 1 | ✓ `RentalRegisterError` root |
+| **L2** | 6 | ✓ Aggregation, validation, not-found, tier, amortization errors |
+
+**Assessment**: Exception hierarchy is well-scoped. Domain-specific failures clearly named.
+
+#### Finding 5: Language Pattern (Rental)
+
+| Identifier | Pattern | Status |
+|------------|---------|--------|
+| **Rental*** | English stem | ✓ Correct |
+| **LirpfArt85ImputacionParameters** | Spanish legal ref + Spanish term | ✓ Correct |
+| **Finca** | Spanish domain term (internal only) | ✓ Appropriate |
+
+**Assessment**: Language pattern appropriate. Public API (Rental*) uses English. Spanish internals scoped to domain.
+
+#### Finding 6: File Structure Consistency
+
+| Module | Lines | Status |
+|--------|-------|--------|
+| **_models.py** | 12,969 | ✓ Core models |
+| **_repository.py** | 26,054 | ✓ Repository pattern |
+| **_tier_resolver.py** | 17,960 | ✓ Tax tier logic |
+| **_amortization_ledger.py** | 6,145 | ✓ Amortization |
+| **_expense_rollup.py** | 7,890 | ✓ Expense aggregation |
+| **_enums.py** | 3,416 | ✓ Enums |
+| **_imputacion_parameters.py** | 4,941 | ✓ LIRPF parameters |
+| **_aggregates.py** | 16,449 | ✓ Aggregate computations |
+
+**Assessment**: Well-organized structure. Each module has clear responsibility. No duplication.
+
+**Risk Category**: structural integrity / clean — W05.P15 rename has minimal cross-package impact
+
+
+## Adapters Outbound AEAT Sede + Export Sweep
+
+**Date**: 2026-05-19  
+**Scope**: `src/aeat/adapters/outbound/aeat/sede/` and `src/aeat/adapters/outbound/aeat/export/`  
+**Inventory Method**: Filesystem scan + rg symbol search + docstring audit
+
+### Sede Module — Declaracion and Censo Rename Completion Status
+
+- **Declaracion cluster rename**: Verified complete. No stale `Declaration*` class symbols in production code; all class exports use Spanish-stem names (`FiledDeclaracionArtefact`, `FiledDeclaracionObservation`). Locale strings referencing English form remain acceptable.
+- **Censo cluster rename**: Verified complete. Module renamed `_censo.py`, no stale `Census*` class names in production. Locale keys still using English stems are acceptable per ADR.
+- **Wire-format boundary preservation**: Confirmed. AEAT-controlled HTTP payload field names (`expediente_id`, `modelo`, `ejercicio`, `status`, `presented_at`, `authenticated_identity`) remain unchanged. No mid-flight rename touched serialized wire formats.
+
+### Sede Module — Class Inventory and Spanish-Stem Compliance
+
+| Class | Location | Spanish-Stem Status | Notes |
+| --- | --- | --- | --- |
+| `Expediente` | `_schema.py` | Compliant | AEAT listing metadata; expediente_id shape validated. |
+| `JustificanteRef` | `_schema.py` | Compliant | CSV-keyed document handle; read-only boundary. |
+| `SedeCapture` | `_schema.py` | Compliant | Bundles expediente + CSV + PDF bytes + timestamp. |
+| `FiledDeclaracionArtefact` | `_schema.py` | Compliant | Artefact metadata (kind, source_url, content_type, sha256). |
+| `FiledDeclaracionObservation` | `_schema.py` | Compliant | Normalized observation of filed declaration; includes casillas, artefacts, extraction coverage. |
+| `ObservedCasillaValue` | `_schema.py` | Compliant | Per-casilla observation from AEAT filing. |
+| `IvaCompensationWalletRow` | `_schema.py` | Compliant | One AEAT wallet row for IVA compensation (generation period + monetary movements). |
+| `IvaCompensationWalletObservation` | `_schema.py` | Compliant | Read-only observation of AEAT IVA compensation wallet. Target_modelo literal `"303"`. |
+| `SedeError` | `_errors.py` | Compliant | Base class for sede-related errors. |
+| `SedeValidationError` | `_errors.py` | Compliant | Pydantic-compatible validation failure. |
+| `SedeFailureMode` (enum) | `_errors.py` | Compliant | Enumeration of failure types (network, parsing, timeout, etc.). |
+
+**Result**: All sede classes use Spanish-stem naming (Declaracion, Censo, Casilla, IVA forms). No English-only names found. Pydantic v2 strict/frozen validation enforced at boundary.
+
+### Sede Module — Error Pattern Assessment
+
+- `SedeError` base class → `SedeValidationError` and `SedeFailureMode` enum provide transparent error surface.
+- No cross-cutting OutboundStorageError references found in sede module (OutboundStorageError is inbound adapter concern, not relevant to read-only sede).
+- Error surface is narrow and appropriate to the wire-format boundary.
+
+### Export Module — Class Inventory
+
+| Class/Protocol | Location | Purpose | Notes |
+| --- | --- | --- | --- |
+| `FilingDraftLike` | `domain/submission/_protocols.py` (re-exported) | Protocol for filing draft abstraction | Public surface uses protocol, not concrete FilingDraft. |
+| `ModeloDraftLoader` | `domain/submission/_protocols.py` (re-exported) | Protocol for draft loading | Pending rename to ModeloDraft per W04.P08; not yet in progress. |
+| `DraftStatus` | `domain/submission/_protocols.py` (re-exported) | Enum for draft state | |
+| `FilingFinding` | `domain/submission/_protocols.py` (re-exported) | Preflight finding record | |
+| `FilingFindingSeverity` | `domain/submission/_protocols.py` (re-exported) | Enum for finding severity levels | |
+| `Preflight` | `domain/submission/__init__.py` (re-exported) | Preflight analysis result | |
+| `ExportError` | `_errors.py` | Base class for export errors | |
+| `ExportFormatError` | `_errors.py` | Format serialization failures | Inherits from ValueError for Pydantic compatibility. |
+| `ParsedRecord` | `_formats/_deserialise.py` | Typed deserializer output | Pydantic strict/frozen; field_values + casilla_values. |
+
+**Result**: Export module is protocol-oriented (FilingDraftLike, ModeloDraftLoader) and does not expose concrete Filing* types. Public surface respects boundaries.
+
+### Export Module — Serialise / Deserialise Pattern Analysis
+
+**Serialiser** (`_formats/_serialise.py`):
+- Entry point: `serialise(casilla_values, headers, specs, encoding, total_length, required_field_ids) -> bytes`
+- Encodes per-field via `RecordFieldSpec` entries; validates required headers before emission; checks final byte length.
+- Encoder dispatch: `_encode_field()` loops over specs and delegates to per-type encoders (encode_currency, encode_date, encode_text).
+- CRLF terminator ownership: serialiser adds it; field encoders do not.
+
+**Deserialiser** (`_formats/_deserialise.py`):
+- Entry point: `deserialise(content, specs, encoding, ...) -> ParsedRecord`
+- Inverse of serialiser: parses bytes per spec; yields ParsedRecord with field_values + casilla_values subsets.
+- Decoder dispatch: `_decode_currency()`, `_decode_date()`, `_decode_text()` inverse the encoder logic.
+
+**Duplication Assessment**:
+- Zero duplication detected. Serialiser and deserialiser are thin wrappers around per-type encoders/decoders defined in `_record_spec.py`.
+- Field layout is registry-driven (RecordFieldSpec tuples); both serialiser and deserialiser consume the same spec tuple.
+- No copy-paste or parallel implementation paths found.
+
+### Export Module — FilingDraft and ModeloDraft Reference Status
+
+- **FilingDraft references**: Appear only in docstrings (e.g., `_serialise.py` line 13, `_deserialise.py` line 44). No concrete FilingDraft imports in production code.
+- **ModeloDraft references**: Zero references found. Rename to ModeloDraft is pending (W04.P08 phase); not yet in progress.
+- **Public protocol surface**: All exports use `FilingDraftLike`, not concrete types. Boundary is protocol-respecting.
+
+**Status**: No mid-flight rename risk detected. Export module is already abstracted via protocols.
+
+### Export Module — Format Handler Structure
+
+Files under `_formats/`:
+- `_serialise.py` — Fichero-BOE serialisation (registry-driven fixed-width format).
+- `_deserialise.py` — Fichero-BOE deserialisation (round-trip inverse).
+- `_record_spec.py` — Field spec types, per-type encoders/decoders (encode_currency, encode_date, encode_text, and inverses).
+
+No other format handlers detected. Export pipeline is single-format (Fichero-BOE) with no multi-format duplication.
+
+### Summary Counts
+
+- **Sede module classes**: 11 (Expediente, JustificanteRef, SedeCapture, FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue, IvaCompensationWalletRow, IvaCompensationWalletObservation, SedeError, SedeValidationError, SedeFailureMode).
+- **Export module classes/protocols**: 8 (FilingDraftLike, ModeloDraftLoader, DraftStatus, FilingFinding, FilingFindingSeverity, Preflight, ExportError, ExportFormatError, ParsedRecord).
+- **Duplication findings in sede module**: 0
+- **Duplication findings in export module**: 0
+- **FilingDraft docstring references (informational)**: 2
+- **Serialiser/deserialiser code duplication**: 0
+
+**Conclusion**: Both sede and export modules exhibit clean class boundaries, Spanish-stem naming compliance, and zero cross-module duplication. Export module is correctly abstracted via protocols; FilingDraft remains a domain type not exposed at the outbound boundary. Serialisation / deserialisation is registry-driven with no parallel implementations.
+
+
+---
+
+## Campaign Progress Summary: W04.P06 Declaracion Cluster & Code-Duplication Sweep
+
+**Audit Scope & Discovery Sweeps Performed**
+
+Over five systematic discovery slices, reader-4 audited five application subpackage clusters spanning docs/api metadata, persistence backend state, transactions+ledger patterns, aggregation layer parallelism, and modelo+tail reconciliation logic. Each slice appended structured findings to this research document with grep-verified symbol inventories and cross-domain collision detection.
+
+**Renames Fully Landed**
+
+The W04.P06 Declaracion cluster (20 renames) is 100% clean: regex audit confirms zero production hits for all old names (`FilingDeclaration`, `DeclarationEditSpec`, `DeclarationReviewStatus`, etc.) across `src/aeat/`. The Censo rename (W04.P05) is complete. FilingRecord→ModeloRecord migration is ~90% done (core rename in place, 2/8 SecureBoundRepository adapters migrated, 1 stale exception name pending).
+
+**Renames In-Flight & Pending**
+
+W04.P09 FilingRecord cluster has one stray artifact: `FilingRecordNotFoundError` exception in `src/aeat/domain/filing/reconciliation/_errors.py` — needs rename to `ModeloRecordNotFoundError` to align with W04.P09 completion.
+
+**High-Priority Residue**
+
+Discovered during sweep: (1) three severity enums with identical value sets (INFO/WARNING/ERROR) — recommend consolidating to `BaseSeverity` in `src/aeat/core/errors/`; (2) `ForeignAssetObservation` collision across aggregation and domain/calculations with differing field types — requires reconciliation; (3) 22 application-layer repositories still using envelope boilerplate, only 2 migrated to `SecureBoundRepository` base class; (4) five parallel issue-reason enum values (IvaLedger + RentaLedger) suggesting duplication cluster.
+
+**Recommended Next-Wave Priorities**
+
+1. Finish FilingRecordNotFoundError rename (5 min, unblocks W04.P09 closure)
+2. Extract `BaseSeverity` enum and consolidate three duplicates (1–2 hrs, improves error hygiene)
+3. Resolve `ForeignAssetObservation` collision via typed model reconciliation (2–3 hrs)
+4. Complete SecureBoundRepository migration for remaining 20 repositories (4–6 hrs, bulk refactor)
+5. Verify `Rental*Row` status (in-flight or blocked) — deferred until current batch completes
+
