@@ -46,7 +46,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Generic, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -230,10 +230,14 @@ def _foreign_class_object_refused(
     foreign = _FOREIGN_CLASS_MAP[repo.sensitivity]
     identifier = repo.extract_identifier(case.first_payload)
     payload_cls = type(case.first_payload)
-    envelope_cls = Envelope.__class_getitem__(payload_cls)
-    bad = envelope_cls(
+    # Envelope[T] is parameterised via PEP-695 generic syntax; the
+    # subscription is a runtime concrete-class build, but ty cannot
+    # narrow ``payload_cls`` to a static type.
+    envelope_factory = cast(Any, Envelope.__class_getitem__(payload_cls))
+    written_at = datetime.now(UTC)
+    bad = envelope_factory(
         schema_version=repo.schema_version,
-        written_at=datetime.now(UTC),
+        written_at=written_at,
         classification=foreign,
         payload=case.first_payload,
     )
@@ -242,7 +246,7 @@ def _foreign_class_object_refused(
         object_key=identifier,
         classification=foreign,
         schema_version=repo.schema_version,
-        written_at=bad.written_at,
+        written_at=written_at,
         payload=bad.model_dump_json().encode("utf-8"),
     )
     with pytest.raises(ClassificationError):
