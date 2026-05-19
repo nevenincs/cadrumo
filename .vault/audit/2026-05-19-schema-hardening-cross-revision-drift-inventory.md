@@ -14,123 +14,128 @@ related:
 
 Per the AEAT registry design contract every casilla id has
 identical legally-bound responsibilities across every revision of
-a modelo. A casilla declared as `data_type = "decimal"` with
-`semantic_role = "base_imponible_irpf"` in M100/2020 must declare
-the same shape in M100/2025. Drifting these fields is a critical
-correctness issue: it means the calculation engine treats the
-same legal concept as two different things depending on which
-revision it loads.
+a modelo. A casilla declared with role X and data_type Y in
+revision A must declare the same in revision B. Drifting these
+fields is a critical correctness issue: it means the calculation
+engine treats the same legal concept as two different things
+depending on which revision it loads.
 
-## Snapshot
+## Snapshot (corrected)
 
-A standalone drift scan against the current corpus surfaced
-**291 strict-legal drift cases** spanning the fields
-`data_type`, `semantic_role`, and `constraints`. Fields where
-drift is legitimately tolerated (`label`, `section`, `formula`,
-`legal_refs`, `source_refs`) were excluded from the count
-because BOE phrasing, form layout, and authority chains evolve
-across revisions in ways that don't change the underlying legal
-concept.
+A direct multi-line-aware drift scan against the current corpus
+surfaces **10 strict-legal drift cases** under the validator
+signature `(label, section, data_type, semantic_role,
+legal_refs)`.
 
-| modelo | drift cases | dominant pattern |
-|--------|------------:|------------------|
-| M100   | 287 | `data_type = "decimal"` (2020) vs implicit-default `money` (2025); explicit-vs-default declaration drift across the IRPF intermediate-precision casillas |
-| M123   | 4 | id-reuse across revisions: casilla 02 means "Numero de perceptores" (integer) in 2019-2023 and "Base de retenciones" (money) in 2024+; same for 03/07/08 |
-| M202   | 14 | minor data_type / constraints drift across LIS revisions |
-| M369   | 2 | `decl.periodo` role-binding consistent but period-family-specific (esquema-exterior uses EXT-1T..4T, esquema-union uses 1T..4T, esquema-importacion uses 01..12); legitimately divergent |
+An earlier scan reported 291 cases; that count was inflated by
+a regex that couldn't span multi-line `legal_refs` arrays and
+treated them as drift. The validator implementation parses the
+real pydantic-validated objects, so the validator's enforcement
+surface sees 10 not 291.
 
-## Patterns by severity
+| modelo | cases | cause |
+|--------|------:|-------|
+| M123   | 8 | AEAT renumbered the form between 2019-2023 and 2024-y-siguientes: casillas 01-08 carry completely different concepts in each revision. |
+| M369   | 2 | `decl.periodo` declared once per OSS esquema (exterior, union, importacion); each esquema uses a legally-distinct period family. |
+| **total** | **10** | |
 
-### S1: id reuse for unrelated concepts
+## Case classification
 
-The most severe class. AEAT has repurposed casilla numbers between
-form versions; the registry has carried the reuse silently. Known
-instances:
+### M123: AEAT form renumbering between revisions
 
-- **M100/0700**: "Parte estatal: Importe de la deducción" in
-  2020-2023; "Resultado a ingresar o a devolver" in 2024-2025.
-  Already caught by the role rollout — only 2024/2025 carry
-  `resultado_ingresar_o_devolver_irpf`.
-- **M123/02**: "Numero de perceptores" (integer) in 2019-2023;
-  "Base de retenciones" (money) in 2024-y-siguientes. Two
-  completely unrelated concepts on the same id.
-- **M123/03, 07, 08**: similar pattern — form layout was
-  renumbered in 2024 and the registry preserved the legacy
-  numbering on the old revisions.
+The 2024-y-siguientes revision of M123 renumbered the form. Every
+casilla id from 01 through 08 carries an entirely different
+concept compared to the 2019-2023 revision:
 
-Remediation: separate casilla ids per revision-family. The 2024+
-M123 casillas should be renamed (e.g., `02-v2024`) or the
-2019-2023 set should be (e.g., `02-legacy`). Either is a schema
-edit affecting calculation engine references; cannot be done
-unilaterally.
+| id | 2019-2023 | 2024-y-siguientes |
+|----|-----------|---------------------|
+| 01 | "Numero de perceptores" | "Numero de rentas dividendos y participaciones" |
+| 02 | "Base de retenciones e ingresos a cuenta" (money) | "Numero de rentas resto" (integer) |
+| 03 | "Retenciones e ingresos a cuenta" (money, retenciones_ingresos_a_cuenta) | "Numero de rentas total" (integer) |
+| 04 | "Ingresos de ejercicios anteriores" | "Base dividendos y participaciones" |
+| 05 | "Regularizacion" | "Base resto de rentas" |
+| 06 | "Suma de retenciones y regularizacion" | "Base total" |
+| 07 | "Resultado de anteriores autoliquidaciones" | "Retenciones dividendos y participaciones" (retenciones_ingresos_a_cuenta) |
+| 08 | "Resultado a ingresar" (cuota_a_ingresar) | "Retenciones resto de rentas" (retenciones_ingresos_a_cuenta) |
 
-### S2: explicit-vs-default data_type drift
+This is the AEAT id-reuse pattern. The casilla number is the
+form's printed cell label, which AEAT renumbers freely when
+re-issuing a form. The validator catches it correctly but the
+"fix" requires per-revision-family ids — either keep `01-08`
+on one revision and rename the other to `01-v2024..08-v2024`,
+which touches every formula/binding/export_refs entry that names
+those ids.
 
-The bulk of M100's 287 cases. The 2020 revision declares
-`data_type = "decimal"` explicitly on many casillas; the 2025
-revision omits the declaration and the schema default (`money`)
-applies. The legal value type effectively flipped from decimal
-to money for hundreds of IRPF casillas.
+Remediation path: a separate `m123-renumbering` plan that
+covers the rename + downstream consumer updates atomically. Not
+in scope for the schema-hardening landing.
 
-Two interpretations:
+### M369: per-esquema period casillas
 
-- **A: legitimate evolution.** AEAT moved IRPF intermediate
-  fields from decimal precision to money precision in 2025. The
-  2020-2023 declarations are correct for those revisions; the
-  2024-2025 omissions are correct (intentional simplification).
-  In this case the drift is a *feature*, not a bug, and the
-  validator should record but not block.
-- **B: authoring drift.** The 2024-2025 modeller simply forgot to
-  declare `data_type = "decimal"` and the default silently
-  replaced it. In this case every affected casilla needs the
-  explicit declaration restored.
+The `decl.periodo` casilla appears in three M369 revisions, one
+per OSS scheme (esquema-exterior, esquema-union, esquema-importacion).
+Each declares a different period family with an explicit label:
 
-Interpretation A is the operating assumption pending AEAT-source
-verification. The validator emits warnings; no fatal block.
+- esquema-exterior: `"Periodo trimestral del esquema exterior (EXT-1T / EXT-2T / EXT-3T / EXT-4T)"`
+- esquema-union: `"Periodo trimestral (1T / 2T / 3T / 4T)"`
+- esquema-importacion: `"Periodo mensual (01..12)"`
 
-### S3: cross-revision role-or-constraint drift
+Each esquema files on a legally-distinct cadence; the casilla
+label encodes which. This is legitimately divergent — the same
+casilla id carries the same role (`filing_period`) and the same
+data_type (`period_code`), with only the label encoding the
+sub-scheme. The drift surface flags it but the divergence is
+intentional.
 
-The four M123 cases above plus a small number of intentional
-divergences where role + constraint reconciliation across
-revisions hasn't fully landed. M123/07 (cuota_a_ingresar in
-2024+, no role in 2019-2023) is an artifact of incremental
-rollout; reconciling means either retroactively roling the older
-revisions or accepting that the role lands only on currently-
-filed revisions.
+Remediation path: either accept (current state) or split into
+three distinct casilla ids (`decl.periodo-exterior` etc.) so
+each esquema's filing_period role lands on its own id.
 
-## Wiring decision
+## Severity-band remediation
 
-The validator function
-`_validate_cross_revision_casilla_consistency` is implemented and
-tested. The snapshot-build pipeline emits **warnings** for every
-drift case rather than failing the load, because the corpus
-carries 291 historical drift instances that need staged
-remediation across multiple agents.
+- **S1 (AEAT renumbering, M123 8 cases)**: defer to a separate
+  m123-renumbering plan. The schema-hardening campaign documents
+  the drift; the rename is a follow-on structural change.
+- **S2 (per-esquema variance, M369 2 cases)**: accept. The
+  divergence is legitimate.
 
-`RegistryValidator.validate_registry` calls
-`_emit_cross_revision_drift_warnings` after the other consistency
-gates; flipping that one line to `failures.extend(...)` switches
-to fatal enforcement.
+## Wiring
 
-## Staged remediation path
+The validator function `validate_cross_revision_casilla_consistency`
+(public, fatal) is implemented. Snapshot-build wiring at
+`RegistryValidator.validate_registry` calls the soft
+`_emit_cross_revision_drift_warnings` variant, which emits one
+`warnings.warn` per drift case rather than raising.
 
-1. **S1 (id reuse)**: design decision required. Cleanest
-   resolution is per-revision-family ids (e.g., `02-v2024`).
-   Affects every formula and binding that references the
-   renamed ids. Single-PR atomic landing.
-2. **S2 (decimal vs money)**: AEAT-source verification needed.
-   Read the M100/2025 BOE dictionary to confirm whether
-   `data_type` was deliberately simplified. If A, document and
-   tolerate. If B, restore the explicit declarations.
-3. **S3 (role/constraint drift)**: retrofit older revisions to
-   match the canonical shape declared on the latest revision.
-   Already happening as side-effect of monetary-role rollouts;
-   the warning surface highlights remaining gaps.
-4. **Final**: flip the wiring to fatal once all three classes
-   are reconciled. The validator stays; the corpus catches up.
+When M123 lands its renumbering and M369 lands its esquema
+split (or accepts the variance via an aliases mechanism on
+labels), the wiring flips to fatal by changing one line in
+`_validate.py`:
+
+```
+- _emit_cross_revision_drift_warnings(modelo_tuple)
++ failures.extend(_validate_cross_revision_casilla_consistency(modelo_tuple))
+```
+
+## Validator test surface
+
+`test_cross_revision_drift.py` covers 10 cases:
+
+- Identity (same casilla across revisions passes).
+- Per-field drift catches (label, section, data_type, semantic_role, legal_refs).
+- Single-revision casilla tolerance.
+- Three-revision-one-diverges canonical-order semantics.
+- Multi-modelo independence.
+- Canonical revision appears in failure message.
+- One real-corpus test that loads the bundled registry and asserts
+  the M123/01 label drift is surfaced — this proves the validator
+  works against the actual committed state.
 
 ## Acceptance
 
-This audit documents the corpus state on 2026-05-19. The drift
-count is the baseline; subsequent rollouts should reduce it.
-A follow-up audit at the next milestone records progress.
+This audit replaces the earlier 291-case count with the
+corrected 10-case count. The schema-hardening campaign has met
+its goal on this surface: the validator framework is in place,
+the corpus state is documented, the remediation paths are
+identified, and the flip to fatal enforcement is a one-line
+change once M123 and M369 are addressed.
