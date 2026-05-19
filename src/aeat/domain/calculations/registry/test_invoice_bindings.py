@@ -242,7 +242,11 @@ def test_resolve_invoice_binding_values_computes_rectification_delta_sum() -> No
 
 def test_resolve_invoice_binding_values_rejects_unsupported_fact() -> None:
     revision = _revision(_with_selector(_binding("vat-349-declarante-importe-operaciones"), fact="not_a_fact"))
-    with pytest.raises(RegistryValidationError, match=r"declares unsupported invoice fact 'not_a_fact'"):
+    # The typed _InvoiceSelector model's Literal fact validator rejects
+    # the bogus value upstream; the resolver surfaces this as the typed
+    # "malformed invoice selector" diagnostic rather than the older
+    # "declares unsupported invoice fact" message.
+    with pytest.raises(RegistryValidationError, match=r"has malformed invoice selector"):
         resolve_invoice_binding_values(revision, ())
 
 
