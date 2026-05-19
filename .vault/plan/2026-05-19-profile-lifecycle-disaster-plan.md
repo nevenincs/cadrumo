@@ -63,16 +63,16 @@ unblocks every operator-facing verb.
 Three sources of truth. One atomic provisioner. The cuts that
 resolve the create/read disagreement and the dual-profile pain.
 
-- [ ] `P03.S18` - rewrite `Settings._resolve_database_url_for_active_profile` to delegate to `resolve_active_bucket_id` and `read_pointer`; `drop the inline `tomllib.loads`; `src/aeat/core/config.py`.
-- [ ] `P03.S19` - add AST-guard test asserting no module under `src/aeat/` re-implements the precedence-chain parse outside `resolve_active_bucket_id` and `read_pointer`; `src/aeat/application/workflow/_test_resolver_uniqueness.py`.
-- [ ] `P03.S20` - introduce `initialize_profile_bucket(profile_id, *, facts, ...)` owning the atomic five-write sequence (dir + manifest + session + record + pointer) with all-or-nothing rollback; `src/aeat/application/setup/_service.py`.
-- [ ] `P03.S21` - rewrite the wizard create path to route through `initialize_profile_bucket`; `src/aeat/application/wizard/_persistence.py`.
+- [x] `P03.S18` - rewrite `Settings._resolve_database_url_for_active_profile` to delegate to `resolve_active_bucket_id` and `read_pointer`; `drop the inline `tomllib.loads`; `src/aeat/core/config.py`.
+- [x] `P03.S19` - add AST-guard test asserting no module under `src/aeat/` re-implements the precedence-chain parse outside `resolve_active_bucket_id` and `read_pointer`; `src/aeat/application/workflow/_test_resolver_uniqueness.py`.
+- [x] `P03.S20` - introduce `initialize_profile_bucket(profile_id, *, facts, ...)` owning the atomic five-write sequence (dir + manifest + session + record + pointer) with all-or-nothing rollback; `src/aeat/application/setup/_service.py`.
+- [x] `P03.S21` - rewrite the wizard create path to route through `initialize_profile_bucket`; `src/aeat/application/wizard/_persistence.py`.
 - [ ] `P03.S22` - rewrite `aeat config profile import` to route through `initialize_profile_bucket`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P03.S23` - rewrite `aeat config profile create --copy-from SOURCE` to route through `initialize_profile_bucket`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P03.S24` - retire `register_active_profile` from `user_profile/_orchestration.py`; `the responsibilities move into `initialize_profile_bucket`; `src/aeat/application/user_profile/_orchestration.py`.
-- [ ] `P03.S25` - rewrite `select_profile` to refuse when the manifest does not exist (today it checks only the encrypted UserProfileRecord); `src/aeat/application/user_profile/_orchestration.py`.
-- [ ] `P03.S26` - switch `profile list` from `state.active_profile_record()` to `list_profile_buckets()`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P03.S27` - refuse duplicate-name `profile create` with translated error; `src/aeat/application/setup/_service.py`.
+- [x] `P03.S25` - rewrite `select_profile` to refuse when the manifest does not exist (today it checks only the encrypted UserProfileRecord); `src/aeat/application/user_profile/_orchestration.py`.
+- [x] `P03.S26` - switch `profile list` from `state.active_profile_record()` to `list_profile_buckets()`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P03.S27` - refuse duplicate-name `profile create` with translated error; `src/aeat/application/setup/_service.py`.
 - [ ] `P03.S28` - migrate the 4 tests that still call `state.profiles[name]` to call `list_profile_buckets()` or `read_profile_bucket(name)`; `src/aeat/application/`.
 - [ ] `P03.S29` - add roundtrip test asserting create → list → show → switch → show all return consistent identity for the same profile; `src/aeat/application/setup/_test_atomic_create_roundtrip.py`.
 - [ ] `P03.S30` - add anti-tautology test asserting failure at step 4 of `initialize_profile_bucket` cleanly rolls back steps 1-3; `src/aeat/application/setup/_test_atomic_create_rollback.py`.
