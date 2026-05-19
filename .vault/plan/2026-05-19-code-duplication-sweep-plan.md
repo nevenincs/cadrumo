@@ -88,26 +88,26 @@ Execute the ADR-approved English-to-Spanish identifier renames across the Declar
 
 Rename the 20 Declaration-prefixed identifiers to Declaracion across the outbound Sede contract, application filing/review/workflow surface, registry live-parity, and domain reconciliation. Public-API rows in the outbound Sede contract are coordinated cuts: every callsite renames in the same commit.
 
-- [ ] `W04.P06.S23` - Rename Declaration to Declaracion in the outbound Sede declarations surface; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `W04.P06.S24` - Rename DeclarationsRegisterSession to DeclaracionesRegisterSession in the outbound Sede declarations surface; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `W04.P06.S25` - Rename FiledDeclarationArtefact to FiledDeclaracionArtefact in the outbound Sede schema; `src/aeat/adapters/outbound/aeat/sede/_schema.py`.
-- [ ] `W04.P06.S26` - Rename FiledDeclarationObservation to FiledDeclaracionObservation in the outbound Sede schema; `src/aeat/adapters/outbound/aeat/sede/_schema.py`.
-- [ ] `W04.P06.S27` - Rename FiledDeclarationObservationStore to FiledDeclaracionObservationStore; `src/aeat/adapters/outbound/aeat/sede/_observation_store.py`.
-- [ ] `W04.P06.S28` - Rename DeclarationCalculateNextAction to DeclaracionCalculateNextAction; `src/aeat/application/filing/_calculate.py`.
-- [ ] `W04.P06.S29` - Rename DeclarationCalculateSummary to DeclaracionCalculateSummary; `src/aeat/application/filing/_calculate.py`.
-- [ ] `W04.P06.S30` - Rename DeclarationExportFormat to DeclaracionExportFormat; `src/aeat/application/filing/_export.py`.
-- [ ] `W04.P06.S31` - Rename DeclarationVerifyVerdict to DeclaracionVerifyVerdict; `src/aeat/application/filing/_export.py`.
-- [ ] `W04.P06.S32` - Rename DeclarationExportResult to DeclaracionExportResult; `src/aeat/application/filing/_export.py`.
-- [ ] `W04.P06.S33` - Rename DeclarationVerifyResult to DeclaracionVerifyResult; `src/aeat/application/filing/_export.py`.
-- [ ] `W04.P06.S34` - Rename DeclarationEditSpec to DeclaracionEditSpec; `src/aeat/application/review/_edit.py`.
-- [ ] `W04.P06.S35` - Rename DeclarationReviewFilterKey to DeclaracionReviewFilterKey; `src/aeat/application/review/_filter.py`.
-- [ ] `W04.P06.S36` - Rename DeclarationReviewStatus to DeclaracionReviewStatus; `src/aeat/application/review/_filter.py`.
-- [ ] `W04.P06.S37` - Rename DeclarationReviewFilterSpec to DeclaracionReviewFilterSpec; `src/aeat/application/review/_filter.py`.
-- [ ] `W04.P06.S38` - Rename DeclarationPointer to DeclaracionPointer; `src/aeat/application/workflow/_models.py`.
-- [ ] `W04.P06.S39` - Rename DeclarationParseError to DeclaracionParseError; `src/aeat/domain/filing/reconciliation/_errors.py`.
-- [ ] `W04.P06.S40` - Rename ReconciliationDeclarationSourceUnsupportedError to ReconciliationDeclaracionSourceUnsupportedError; `src/aeat/application/modelo/_reconcile.py`.
-- [ ] `W04.P06.S41` - Rename CrossReferenceApplicabilityDeclaration to CrossReferenceApplicabilityDeclaracion; `src/aeat/domain/calculations/registry/_live_parity.py`.
-- [ ] `W04.P06.S42` - Rename RentaDeclarationType to RentaDeclaracionType in the renta codes module; `src/aeat/domain/profile/_renta_codes.py`.
+- [x] `W04.P06.S23` - Rename Declaration to Declaracion in the outbound Sede declarations surface; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `W04.P06.S24` - Rename DeclarationsRegisterSession to DeclaracionesRegisterSession in the outbound Sede declarations surface; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `W04.P06.S25` - Rename FiledDeclarationArtefact to FiledDeclaracionArtefact in the outbound Sede schema; `src/aeat/adapters/outbound/aeat/sede/_schema.py`.
+- [x] `W04.P06.S26` - Rename FiledDeclarationObservation to FiledDeclaracionObservation in the outbound Sede schema; `src/aeat/adapters/outbound/aeat/sede/_schema.py`.
+- [x] `W04.P06.S27` - Rename FiledDeclarationObservationStore to FiledDeclaracionObservationStore; `src/aeat/adapters/outbound/aeat/sede/_observation_store.py`.
+- [x] `W04.P06.S28` - Rename DeclarationCalculateNextAction to DeclaracionCalculateNextAction; `src/aeat/application/filing/_calculate.py`.
+- [x] `W04.P06.S29` - Rename DeclarationCalculateSummary to DeclaracionCalculateSummary; `src/aeat/application/filing/_calculate.py`.
+- [x] `W04.P06.S30` - Rename DeclarationExportFormat to DeclaracionExportFormat; `src/aeat/application/filing/_export.py`.
+- [x] `W04.P06.S31` - Rename DeclarationVerifyVerdict to DeclaracionVerifyVerdict; `src/aeat/application/filing/_export.py`.
+- [x] `W04.P06.S32` - Rename DeclarationExportResult to DeclaracionExportResult; `src/aeat/application/filing/_export.py`.
+- [x] `W04.P06.S33` - Rename DeclarationVerifyResult to DeclaracionVerifyResult; `src/aeat/application/filing/_export.py`.
+- [x] `W04.P06.S34` - Rename DeclarationEditSpec to DeclaracionEditSpec; `src/aeat/application/review/_edit.py`.
+- [x] `W04.P06.S35` - Rename DeclarationReviewFilterKey to DeclaracionReviewFilterKey; `src/aeat/application/review/_filter.py`.
+- [x] `W04.P06.S36` - Rename DeclarationReviewStatus to DeclaracionReviewStatus; `src/aeat/application/review/_filter.py`.
+- [x] `W04.P06.S37` - Rename DeclarationReviewFilterSpec to DeclaracionReviewFilterSpec; `src/aeat/application/review/_filter.py`.
+- [x] `W04.P06.S38` - Rename DeclarationPointer to DeclaracionPointer; `src/aeat/application/workflow/_models.py`.
+- [x] `W04.P06.S39` - Rename DeclarationParseError to DeclaracionParseError; `src/aeat/domain/filing/reconciliation/_errors.py`.
+- [x] `W04.P06.S40` - Rename ReconciliationDeclarationSourceUnsupportedError to ReconciliationDeclaracionSourceUnsupportedError; `src/aeat/application/modelo/_reconcile.py`.
+- [x] `W04.P06.S41` - Rename CrossReferenceApplicabilityDeclaration to CrossReferenceApplicabilityDeclaracion; `src/aeat/domain/calculations/registry/_live_parity.py`.
+- [x] `W04.P06.S42` - Rename RentaDeclarationType to RentaDeclaracionType in the renta codes module; `src/aeat/domain/profile/_renta_codes.py`.
 
 ### Phase `W04.P07` - Census to Censo Rename
 
