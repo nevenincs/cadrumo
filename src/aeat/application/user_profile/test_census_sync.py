@@ -19,14 +19,14 @@ from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.live._censo import CensoSnapshotService, SnapshotLifecycleState
-from aeat.application.profile import (
+from aeat.application.user_profile import (
     CENSUS_SOURCE_TAG,
     CensoApplyConflictError,
     CensoComparisonStatus,
     CensoNotAvailableError,
     CensoSyncService,
+    UserProfileLifecycleRepository,
 )
-from aeat.application.user_profile import UserProfileLifecycleRepository
 from aeat.core.config import Settings
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
 

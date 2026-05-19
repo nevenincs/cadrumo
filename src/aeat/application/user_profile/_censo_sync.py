@@ -40,12 +40,11 @@ from ..live._censo import (
     CensoSnapshot,
     CensoSnapshotService,
 )
-from ..user_profile._repository import UserProfileLifecycleRepository
 from ._censo_errors import (
     CensoApplyConflictError,
     CensoNotAvailableError,
 )
-
+from ._repository import UserProfileLifecycleRepository
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
