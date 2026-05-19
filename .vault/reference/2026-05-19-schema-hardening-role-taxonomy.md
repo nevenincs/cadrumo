@@ -24,7 +24,7 @@ matters.
 
 This is a living document. Each row reflects a corpus reality as
 of the most recent Plan C rollout commit. Total declarations
-recorded today: **648 across 39 distinct roles**.
+recorded today: **758 across 48 distinct roles**.
 
 ## Identity roles (data_type = "nif")
 
@@ -95,6 +95,24 @@ recorded today: **648 across 39 distinct roles**.
 |------|-----------|------:|---------|-------|
 | `intracomunitario_nif_iva` | `nif_iva` | 1 | M349 op.nif-comunitario | Counterparty NIF-IVA for intra-EU operations. |
 
+## Monetary roles
+
+All monetary roles bind `data_type = "money"` (or `"decimal"` for
+M100 IRPF intermediate-precision fields) and reconcile sign across
+participating modelos at the validator boundary. Retrofits added
+the `non_negative` constraint where modellers had left it unset,
+turning the research artefact's nine-way divergence into a single
+canonical shape per role.
+
+| role | data_type | sign | count | example | notes |
+|------|-----------|------|------:|---------|-------|
+| `retenciones_ingresos_a_cuenta` | `money` | `non_negative` | 25 | M111 28 (total), M180 perc.retenciones | Cross-modelo withholding amount; canonical role bridging M111 / M115 / M123 / M130 / M131 / M180 / M190 / M193 / M202. |
+| `base_retenciones_ingresos_a_cuenta` | `money` | `non_negative` | 7 | M115 02, M180 perc.base | Gross-base amount on which withholding is computed; pairs with retenciones_ingresos_a_cuenta. |
+| `pago_fraccionado` | `money` | `non_negative` | 10 | M130 04, M202 22/25/63/66 | Current-period fractional payment amount. |
+| `pago_fraccionado_previo` | `money` | `non_negative` | 8 | M130 05, M131 07, M202 30 | Prior-period fractional-payment totals carried into the current declaration. |
+| `cuota_a_ingresar` | `money` | `non_negative` | 4 | M111 30, M115 05, M123 08/14 | Strict "Resultado a ingresar" total. Excludes the signed "o a devolver" form (M100/0700, M200/00599) which carry their own role. |
+| `base_imponible_irpf` | `decimal` | `any` | 12 | M100 0259 (imputada), 0435 (general) | IRPF base imponible across M100's six revisions. Signed because IRPF base can be negative when losses dominate. |
+
 ## Validator behaviour
 
 - **Intra-role consistency.** Any casilla declaring an active role
@@ -128,12 +146,16 @@ proceed:
   `renta-2025-profile-tax-residence-ccaa` binding rather than a
   casilla; rollout deferred until the binding-vs-casilla
   decomposition decision lands.
-- `base_imponible`, `cuota_a_ingresar`,
-  `retenciones_ingresos_a_cuenta`, `pago_fraccionado` — monetary
-  roles. Cross-modelo constraint reconciliation pending (the
-  research artefact flagged that nine modelos disagree on the
-  `non_negative` sign for retenciones; reconciliation must land
-  with the role declaration).
+- `resultado_ingresar_o_devolver_irpf`,
+  `resultado_ingresar_o_devolver_is` — signed cuota roles for the
+  "Resultado a ingresar o a devolver" cluster (M100/0700 decimal,
+  M200/00599 money). Each is single-modelo; the irpf / is split
+  reflects the data_type divergence the research artefact flagged.
+- `base_imponible_negativa_is` — M200 casilla 00027 (negative-or-
+  zero IS base carry-forward, decimal, sign = non_positive).
+- `base_intracomunitaria` — M349 op.base-imponible /
+  rect.base-rectificada / rect.base-anterior (money, intra-EU
+  operations).
 
 ## OQ-1 deferred casillas
 
