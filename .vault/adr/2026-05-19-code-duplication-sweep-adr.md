@@ -1,30 +1,24 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/adr/ location)
-# Feature tag (replace code-duplication-sweep with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#adr'
   - '#code-duplication-sweep'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-05-19'
-# Related documents as quoted wiki-links
-# (e.g., "[[2026-02-04-feature-research]]")
 related:
   - '[[2026-05-19-code-duplication-sweep-research]]'
+  - '[[2026-05-19-spanish-stem-terminology-authority-adr]]'
+status: superseded
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
+> **SUPERSEDED 2026-05-19**: This ADR is superseded by the Spanish-stem
+> terminology authority ADR (see related link above). Specifically, the
+> W03.P04 VAT-wins direction is REVERSED: Spanish stems are authoritative
+> for tax-domain identifiers, `IvaInvoiceClassification` is canonical, and
+> `domain/vat` migrates into `domain/iva`. All other structural decisions
+> in this ADR (W01 minor symbol segregations, W02 boilerplate
+> consolidation, W03.P05 borrador deduplication) remain in force where
+> the existing plan executes against them.
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-# `code-duplication-sweep` adr: `Unify Shadowed Symbols, Secure Object Repositories, and Terminology Glossary` | (**status:** `accepted`)
+# `code-duplication-sweep` adr: `Unify Shadowed Symbols, Secure Object Repositories, and Terminology Glossary` | (**status:** `superseded`)
 
 ## Problem Statement
 
@@ -52,7 +46,7 @@ During a deep structural audit of the codebase, we identified several patterns o
 - **Unify Shadowed Symbols**: Consolidate `WorkUnitNotFoundError` into the canonical `_actions.py` module and import it where needed. Rename the calendar-specific `CCAA` enum to `CalendarCCAA`, and rename the static metadata helper `ModeloRepository` to `StaticModeloRepository`.
 - **Generic Bound Persistence**: Introduce a base `SecureBoundRepository[T]` generic class in `_secure_repository.py` that encapsulates common file path, locking, and roundtrip serialization, and refactor existing repositories to inherit from it.
 - **Unify Integrations**: Move pdfplumber extraction to `_pdfplumber.py` and have all parsers use it. Extract a common `BaseCheckerOracle` for live checkers to share JSON-decoding and replay logic.
-- **Acronym & Caching Standardisation**: Build a unified `VatClassification` domain model under `domain/vat`, deprecate the insecure local file-caching in `_borrador.py` in favor of the secure `_borrador_100.py` object repository, and update terminology across the codebase.
+- **Acronym & Caching Standardisation**: ~~Build a unified `VatClassification` domain model under `domain/vat`~~ **[SUPERSEDED â€” see superseding ADR; the direction is reversed. Consolidate into `IvaInvoiceClassification` under `domain/iva` instead.]** Deprecate the insecure local file-caching in `_borrador.py` in favor of the secure `_borrador_100.py` object repository, and update terminology across the codebase per the superseding ADR canonical rename ledger.
 
 ## Rationale
 
@@ -62,4 +56,4 @@ Unifying shadowed symbols prevents runtime import collision and catching bugs. C
 
 - Introducing `SecureBoundRepository[T]` will simplify persistence maintenance but requires refactoring several repository test suites.
 - Deprecating local caching in `_borrador.py` requires updating test fixtures to rely on secure-bucket storage, ensuring higher security.
-- Standardizing terminology reduces confusion around tax semantics.
+- Standardizing terminology reduces confusion around tax semantics â€” see superseding ADR for the canonical rename ledger.
