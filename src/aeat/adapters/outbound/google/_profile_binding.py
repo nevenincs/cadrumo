@@ -45,6 +45,7 @@ def resolve_active_profile() -> str:
         "no active AEAT profile bound for Google OAuth",
         context={"active_profile": resolved or ""},
         suggestion="aeat config profile create NAME --tax-id <NIF>",
+        translated_message="adapters.google.profile_binding.errors.no_active_profile",
     )
 
 

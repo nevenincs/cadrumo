@@ -37,6 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
+from .....core.i18n import tr
 from .....core.logging import get_logger
 from ....persistence.storage.sql import SecureObjectRepository
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -94,6 +95,7 @@ class ClaveMovilApprovalTimeoutError(AuthError):
         failure_mode: ClaveMovilFailureMode | str | None = None,
         context: dict[str, object] | None = None,
         suggestion: str | None = None,
+        translated_message: str | None = None,
     ) -> None:
         """Construct a Cl@ve Móvil approval failure with stable mode context."""
 
@@ -106,7 +108,12 @@ class ClaveMovilApprovalTimeoutError(AuthError):
             self.failure_mode: str | None = failure_mode_value
         else:
             self.failure_mode = None
-        super().__init__(message, context=enriched_context or None, suggestion=suggestion)
+        super().__init__(
+            message,
+            context=enriched_context or None,
+            suggestion=suggestion,
+            translated_message=translated_message,
+        )
 
 
 class ClaveMovilFailureMode(StrEnum):
@@ -945,17 +952,15 @@ class ClaveMovilAuthProvider:
             await self._dump_diagnostic(page, reason="pending-request-refusal")
             raise ClaveMovilApprovalTimeoutError(
                 "AEAT refused to issue a new Cl@ve Móvil push: a prior "
-                "authentication request is still pending server-side. Open the "
-                "Cl@ve app on your phone and REJECT every pending request, then "
-                "retry `aeat config auth test` (or wait up to 5 minutes for AEAT "
-                "to time them out automatically).",
+                "authentication request is still pending server-side.",
                 failure_mode=ClaveMovilFailureMode.PENDING_PETITION_BLOCKED,
                 context={
                     "reason": "aeat-refused-new-clave-movil-petition",
                     "url": getattr(page, "url", "") or "",
                     "detected_markers": tuple(marker for marker in pending_markers if marker in normalized),
                 },
-                suggestion="Open the Cl@ve app, reject the pending request, then run `aeat config auth test`.",
+                suggestion=tr("adapters.aeat.clave_movil.suggestions.reject_pending_request"),
+                translated_message="adapters.aeat.clave_movil.errors.pending_petition_blocked",
             )
 
     @staticmethod

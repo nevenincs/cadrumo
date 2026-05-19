@@ -23,6 +23,7 @@ from datetime import UTC, datetime
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....application.user_profile._orchestration import build_lifecycle_service, fact_value
 from ....core.config import SecretStoreBackend, load_settings
+from ....core.i18n import tr
 from ....domain.user_profile import ProfileNotFoundError
 from ._errors import (
     GoogleAuthBrowserOpenError,
@@ -56,7 +57,8 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
         raise GoogleAuthUnsecuredModeRefusedError(
             "google OAuth refused: secret store is unsecured and the active profile carries a real NIF",
             context={"profile": profile, "backend": "unsecured"},
-            suggestion="set aeat_secret_store_backend=keyring or use a synthetic test NIF",
+            suggestion=tr("adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic"),
+            translated_message="adapters.google.oauth_flow.errors.unsecured_mode_refused",
         )
 
 
@@ -116,6 +118,7 @@ def credentials_to_records(
             f"consent screen returned without granting required scopes: {missing!r}",
             context={"missing_scopes": list(missing), "account_email": account_email},
             suggestion="aeat config google login",
+            translated_message="adapters.google.oauth_flow.errors.scope_missing",
         )
     token = OAuthToken(refresh_token=refresh_token, token_uri=token_uri)
     metadata = OAuthMetadata(
@@ -178,6 +181,7 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
         raise GoogleAuthNetworkError(
             f"google-auth-oauthlib not importable: {exc}",
             suggestion="uv sync",
+            translated_message="adapters.google.oauth_flow.errors.oauthlib_not_importable",
         ) from exc
 
     client_config: dict[str, dict[str, object]] = {
@@ -194,24 +198,32 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
     try:
         flow = InstalledAppFlow.from_client_config(client_config, scopes=list(REQUIRED_SCOPES))
     except ValueError as exc:
-        raise GoogleAuthNetworkError(f"OAuth client config refused: {exc}") from exc
+        raise GoogleAuthNetworkError(
+            f"OAuth client config refused: {exc}",
+            translated_message="adapters.google.oauth_flow.errors.client_config_refused",
+        ) from exc
 
     try:
         credentials = flow.run_local_server(port=0)
     except OSError as exc:
         raise GoogleAuthLoopbackBindError(
             f"loopback receiver failed to bind: {exc}",
-            suggestion="close the application holding a stray loopback port and retry",
+            suggestion=tr("adapters.google.oauth_flow.suggestions.close_loopback_port"),
+            translated_message="adapters.google.oauth_flow.errors.loopback_bind_failed",
         ) from exc
     except Exception as exc:
         message = str(exc).lower()
         if "browser" in message or "webbrowser" in message:
             raise GoogleAuthBrowserOpenError(
                 f"OS browser launcher refused: {exc}",
-                suggestion="open the printed consent URL manually in your browser",
+                suggestion=tr("adapters.google.oauth_flow.suggestions.open_consent_url_manually"),
+                translated_message="adapters.google.oauth_flow.errors.browser_launcher_refused",
             ) from exc
         if "transport" in message or "connect" in message or "network" in message:
-            raise GoogleAuthNetworkError(f"OAuth endpoint unreachable: {exc}") from exc
+            raise GoogleAuthNetworkError(
+                f"OAuth endpoint unreachable: {exc}",
+                translated_message="adapters.google.oauth_flow.errors.endpoint_unreachable",
+            ) from exc
         raise
 
     # `google.oauth2.credentials.Credentials` exposes `token_uri` at runtime
@@ -252,6 +264,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
             "Google did not return an id_token; the OAuth consent did not include the openid+email scopes",
             context={"audience": audience},
             suggestion="aeat config google login",
+            translated_message="adapters.google.oauth_flow.errors.id_token_missing",
         )
     try:
         from google.auth.transport import requests as auth_requests
@@ -260,6 +273,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         raise GoogleAuthNetworkError(
             f"google-auth id_token module not importable: {exc}",
             suggestion="uv sync",
+            translated_message="adapters.google.oauth_flow.errors.id_token_module_not_importable",
         ) from exc
     try:
         payload = id_token_module.verify_oauth2_token(id_token_jwt, auth_requests.Request(), audience)
@@ -267,6 +281,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         raise GoogleAuthNetworkError(
             f"id_token verification failed: {exc}",
             context={"audience": audience},
+            translated_message="adapters.google.oauth_flow.errors.id_token_verification_failed",
         ) from exc
     email = str(payload.get("email", ""))
     if not email:
@@ -274,6 +289,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
             "id_token verified but carries no `email` claim",
             context={"audience": audience},
             suggestion="aeat config google login",
+            translated_message="adapters.google.oauth_flow.errors.email_claim_missing",
         )
     return email
 
