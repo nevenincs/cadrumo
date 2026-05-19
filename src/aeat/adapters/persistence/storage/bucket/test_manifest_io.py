@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, KdfParams
+from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
 from aeat.adapters.persistence.storage.bucket._manifest_io import (
     manifest_path,
     read_manifest,
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _fixture_manifest(*, last_unlocked: bool = True) -> BucketManifest:
-    kdf = KdfParams(
+    kdf = ManifestKdfParams(
         algorithm="argon2id",
         version=19,
         memory_cost=19_456,

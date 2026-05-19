@@ -8,11 +8,12 @@ schema version. The manifest never contains the derived key, the wrapped
 key, the passphrase, or any byte derivable from them; those artefacts
 travel through the separate master-key surface.
 
-The :class:`KdfParams` nested model carried here is the manifest-side
-shape (algorithm tag, parameter version, the four Argon2id cost
-parameters, salt). The canonical OWASP-pinned constructor and the
-parameter-window validators live alongside it under
-``master_key/_kdf_params.py``; manifest I/O wires the two together.
+The :class:`ManifestKdfParams` nested model carried here is the
+manifest-side shape (algorithm tag, parameter version, the four
+Argon2id cost parameters, salt). The canonical OWASP-pinned
+constructor and the parameter-window validators live alongside it
+under ``master_key/_kdf_params.py``; manifest I/O wires the two
+together.
 """
 
 from __future__ import annotations
@@ -38,7 +39,7 @@ def _ensure_utc(value: datetime) -> datetime:
     return value
 
 
-class KdfParams(BaseModel):
+class ManifestKdfParams(BaseModel):
     """Argon2id parameters and salt as carried in the bucket manifest.
 
     Strict pydantic v2 record. The canonical OWASP-baseline constructor
@@ -82,7 +83,7 @@ class BucketManifest(BaseModel):
     """Plaintext manifest for one per-bucket directory.
 
     The manifest never carries
-    sensitive bytes; see :class:`KdfParams` for the salt contract.
+    sensitive bytes; see :class:`ManifestKdfParams` for the salt contract.
     """
 
     model_config = _STRICT_FROZEN
@@ -91,7 +92,7 @@ class BucketManifest(BaseModel):
     label: str
     created_at: datetime
     last_unlocked_at: datetime | None
-    kdf_params: KdfParams
+    kdf_params: ManifestKdfParams
     recovery_enrolled: bool
     schema_version: int = Field(ge=1)
 
@@ -108,4 +109,4 @@ class BucketManifest(BaseModel):
         return _ensure_utc(value)
 
 
-__all__ = ["BucketManifest", "KdfParams"]
+__all__ = ["BucketManifest", "ManifestKdfParams"]
