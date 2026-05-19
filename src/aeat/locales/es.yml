@@ -7,56 +7,56 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: adapters.aeat.clave_movil.errors.pending_petition_blocked
+        pending_petition_blocked: "La AEAT rechazó emitir una nueva solicitud push de Cl@ve Móvil porque una petición de autenticación anterior aún está pendiente en el servidor."
       suggestions:
-        reject_pending_request: adapters.aeat.clave_movil.suggestions.reject_pending_request
+        reject_pending_request: "Abre la app Cl@ve en tu móvil, rechaza todas las peticiones pendientes y vuelve a ejecutar `aeat config auth test` (o espera hasta 5 minutos a que la AEAT las cancele automáticamente)."
     sede:
       groi:
         suggestions:
-          shape_change: adapters.aeat.sede.groi.suggestions.shape_change
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado el formulario GROI.
       nif_iva:
         suggestions:
-          shape_change: adapters.aeat.sede.nif_iva.suggestions.shape_change
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado el formulario NIF-IVA.
       renta_web_open:
         suggestions:
-          shape_change: adapters.aeat.sede.renta_web_open.suggestions.shape_change
+          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar si la AEAT ha cambiado la página Renta WEB Open.
   google:
     calc_sheets:
       errors:
-        api_call_failed: adapters.google.calc_sheets.errors.api_call_failed
-        api_call_refused: adapters.google.calc_sheets.errors.api_call_refused
-        api_target_not_found: adapters.google.calc_sheets.errors.api_target_not_found
-        googleapiclient_not_importable: adapters.google.calc_sheets.errors.googleapiclient_not_importable
+        api_call_failed: "La llamada a Google {action} ha fallado."
+        api_call_refused: "La llamada a Google {action} fue rechazada (HTTP {status})."
+        api_target_not_found: "El destino de Google {action} no se encontró."
+        googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador de Google no puede acceder a la API.
     oauth_flow:
       errors:
-        browser_launcher_refused: adapters.google.oauth_flow.errors.browser_launcher_refused
-        client_config_refused: adapters.google.oauth_flow.errors.client_config_refused
-        email_claim_missing: adapters.google.oauth_flow.errors.email_claim_missing
-        endpoint_unreachable: adapters.google.oauth_flow.errors.endpoint_unreachable
-        id_token_missing: adapters.google.oauth_flow.errors.id_token_missing
-        id_token_module_not_importable: adapters.google.oauth_flow.errors.id_token_module_not_importable
-        id_token_verification_failed: adapters.google.oauth_flow.errors.id_token_verification_failed
-        loopback_bind_failed: adapters.google.oauth_flow.errors.loopback_bind_failed
-        oauthlib_not_importable: adapters.google.oauth_flow.errors.oauthlib_not_importable
-        scope_missing: adapters.google.oauth_flow.errors.scope_missing
-        unsecured_mode_refused: adapters.google.oauth_flow.errors.unsecured_mode_refused
+        browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento OAuth en el navegador.
+        client_config_refused: La configuración del cliente Google OAuth fue rechazada.
+        email_claim_missing: El id_token de Google se verificó pero no incluye la reclamación email.
+        endpoint_unreachable: El endpoint OAuth de Google no es accesible.
+        id_token_missing: Google no devolvió un id_token; el consentimiento OAuth no incluyó los ámbitos openid+email.
+        id_token_module_not_importable: El módulo id_token de google-auth no se puede importar.
+        id_token_verification_failed: La verificación del id_token de Google ha fallado.
+        loopback_bind_failed: El receptor OAuth loopback local no pudo asignar un puerto.
+        oauthlib_not_importable: google-auth-oauthlib no se puede importar; el flujo OAuth no puede iniciarse.
+        scope_missing: La pantalla de consentimiento de Google se cerró sin conceder todos los ámbitos requeridos.
+        unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos está en modo inseguro y el perfil activo lleva un identificador fiscal español real.
       suggestions:
-        close_loopback_port: adapters.google.oauth_flow.suggestions.close_loopback_port
-        open_consent_url_manually: adapters.google.oauth_flow.suggestions.open_consent_url_manually
-        use_keyring_or_synthetic: adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic
+        close_loopback_port: Cierra la aplicación que esté ocupando un puerto loopback huérfano y vuelve a intentarlo.
+        open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento impresa.
+        use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o cambia el perfil activo a un identificador fiscal sintético de prueba.
     profile_binding:
       errors:
-        no_active_profile: adapters.google.profile_binding.errors.no_active_profile
+        no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
     refresh:
       errors:
-        google_auth_not_importable: adapters.google.refresh.errors.google_auth_not_importable
-        reauth_required: adapters.google.refresh.errors.reauth_required
-        refresh_failed: adapters.google.refresh.errors.refresh_failed
-        refresh_refused: adapters.google.refresh.errors.refresh_refused
-        token_endpoint_unreachable: adapters.google.refresh.errors.token_endpoint_unreachable
+        google_auth_not_importable: La librería google-auth no se puede importar; la renovación de OAuth Google no puede continuar.
+        reauth_required: La credencial OAuth de Google está marcada como pendiente de reautenticación; la ruta de renovación automática está cerrada.
+        refresh_failed: La renovación de Google OAuth ha fallado.
+        refresh_refused: Google OAuth rechazó la solicitud de renovación; el refresh token ya no es válido.
+        token_endpoint_unreachable: El endpoint de token de Google OAuth no es accesible.
       suggestions:
-        check_network: adapters.google.refresh.suggestions.check_network
-      testing_project_cap_warning: adapters.google.refresh.testing_project_cap_warning
+        check_network: Comprueba la conectividad de red con los endpoints OAuth de Google y vuelve a intentarlo.
+      testing_project_cap_warning: "El refresh token de Google OAuth se acerca al límite de 7 días del proyecto en modo Testing (quedan unas {hours_remaining}h); vuelve a ejecutar `aeat config google login` para prolongar la vida útil de la credencial."
 aggregation:
   iva_ledger:
     errors:
