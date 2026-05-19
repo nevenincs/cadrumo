@@ -62,7 +62,7 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 @pytest.fixture
 def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
@@ -73,12 +73,11 @@ def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        yield tmp_path
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield tmp_path
+        finally:
+            dispose_engine()
 
 
 def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
@@ -147,10 +146,10 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     init_result = _invoke(
         [
             "config",
-            "init",
-            "--quiet",
-            "--profile",
+            "profile",
+            "create",
             "operator",
+            "--quiet",
             "--tax-id",
             "00000000T",
             "--activity",
@@ -163,12 +162,17 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     )
     assert init_result.exit_code == 0, init_result.output
 
-    set_result = _invoke(["config", "profile", "set", "preferences.output_language", "en"])
-    assert set_result.exit_code == 0, set_result.output
+    from aeat.application.user_profile._orchestration import set_active_field
+    from aeat.domain.user_profile import UserProfileFact
 
-    get_result = _invoke(["--format", "json", "config", "profile", "get", "preferences.output_language"])
-    assert get_result.exit_code == 0, get_result.output
-    assert json.loads(_json_output(get_result))["value"] == "en"
+    workflow_state_repository().update(
+        lambda current: set_active_field(
+            current, UserProfileFact(path="preferences.output_language", value="en")
+        )
+    )
+
+    refreshed = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+    assert fact_value(refreshed, "preferences.output_language") == "en"
 
     status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output

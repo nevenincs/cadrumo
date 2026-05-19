@@ -156,9 +156,20 @@ class BucketSession:
         return now >= self._idle_deadline
 
     def close(self) -> None:
-        """Zeroise the KEK and DEK buffers and seal the session.
+        """Zeroise key buffers, evict the bucket's engine, and seal the session.
 
         Idempotent: a second call after the first is a no-op.
+
+        Engine eviction:
+
+        The SQLAlchemy engine for this bucket's database
+        (``sqlite:///<aeat_local_storage_root>/buckets/<bucket_id>/db/aeat.db``)
+        is removed from the process-wide engine cache so the next
+        consumer that opens a different bucket does not accidentally
+        reuse this bucket's engine handle. The lookup is conservative:
+        ``dispose_engine()`` is called without arguments only when
+        the per-bucket URL cannot be reconstructed from current
+        settings; otherwise the targeted dispose runs.
         """
 
         if self._sealed:
@@ -166,6 +177,30 @@ class BucketSession:
         _zeroise(self._kek_buffer)
         _zeroise(self._dek_buffer)
         self._sealed = True
+        self._evict_engine()
+
+    def _evict_engine(self) -> None:
+        """Dispose the SQLAlchemy engine bound to this bucket's database."""
+
+        try:
+            from .....core.config import Settings, load_settings
+            from ..sql.engine import dispose_engine
+        except Exception:  # pragma: no cover - defensive
+            return
+
+        try:
+            settings = load_settings()
+            bucket_db_path = (
+                settings.aeat_local_storage_root
+                / "buckets"
+                / self._bucket_id
+                / "db"
+                / "aeat.db"
+            )
+            target_url = f"sqlite:///{bucket_db_path.as_posix()}"
+            dispose_engine(Settings(aeat_database_url=target_url))
+        except Exception:  # pragma: no cover - never raise from close()
+            pass
 
 
 __all__ = ["BucketSession"]

@@ -20,7 +20,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -70,48 +69,47 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
     """A RegistryFilingObservation roundtrips through the encrypted observation repo."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "observations-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        original = _populated_observation()
-        # Non-default source_kind: the audit-sink path that pulls
-        # from the AEAT justificante.
-        captured_at = datetime.now(UTC).replace(microsecond=0)
-        repo = CalculationObservationRepository()
-        repo.save(
-            original,
-            source_kind="aeat_sede_justificante",
-            captured_at=captured_at,
+    with provider:
+        db_path = tmp_path / "observations-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        loaded = repo.load("303", 2025, "1T")
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        assert loaded is not None
-        # The envelope carries observation + metadata; pin both layers.
-        assert loaded.observation == original
-        assert loaded.source_kind == "aeat_sede_justificante"
-        assert loaded.captured_at == captured_at
-        # Per-field witnesses on the typed observation tuple:
-        # formula_id on the computed casilla, operand_refs +
-        # operand_values, legal_refs + source_refs.
-        assert len(loaded.observation.observations) == 2
-        loaded_computed = loaded.observation.observations[1]
-        assert loaded_computed.formula_id == "iva.formula.resultado"
-        assert loaded_computed.operand_refs == ("iva.devengado", "iva.deducible")
-        assert loaded_computed.operand_values == (
-            Decimal("20000.00"),
-            Decimal("7654.33"),
-        )
-        assert loaded_computed.legal_refs == ("liva.art-94",)
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            original = _populated_observation()
+            # Non-default source_kind: the audit-sink path that pulls
+            # from the AEAT justificante.
+            captured_at = datetime.now(UTC).replace(microsecond=0)
+            repo = CalculationObservationRepository()
+            repo.save(
+                original,
+                source_kind="aeat_sede_justificante",
+                captured_at=captured_at,
+            )
+            loaded = repo.load("303", 2025, "1T")
+
+            assert loaded is not None
+            # The envelope carries observation + metadata; pin both layers.
+            assert loaded.observation == original
+            assert loaded.source_kind == "aeat_sede_justificante"
+            assert loaded.captured_at == captured_at
+            # Per-field witnesses on the typed observation tuple:
+            # formula_id on the computed casilla, operand_refs +
+            # operand_values, legal_refs + source_refs.
+            assert len(loaded.observation.observations) == 2
+            loaded_computed = loaded.observation.observations[1]
+            assert loaded_computed.formula_id == "iva.formula.resultado"
+            assert loaded_computed.operand_refs == ("iva.devengado", "iva.deducible")
+            assert loaded_computed.operand_values == (
+                Decimal("20000.00"),
+                Decimal("7654.33"),
+            )
+            assert loaded_computed.legal_refs == ("liva.art-94",)
+        finally:
+            engine.dispose()
 
 
 def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
@@ -144,57 +142,56 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     from ._observations_repository import _OBSERVATION_NAMESPACE, observation_key
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "observations-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        original = _populated_observation()
-        captured_at = datetime.now(UTC).replace(microsecond=0)
-        repo = CalculationObservationRepository()
-        repo.save(
-            original,
-            source_kind="aeat_sede_justificante",
-            captured_at=captured_at,
+    with provider:
+        db_path = tmp_path / "observations-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        object_key = observation_key("303", 2025, "1T")
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _OBSERVATION_NAMESPACE,
-                SecureObjectRow.object_key == object_key,
+            original = _populated_observation()
+            captured_at = datetime.now(UTC).replace(microsecond=0)
+            repo = CalculationObservationRepository()
+            repo.save(
+                original,
+                source_kind="aeat_sede_justificante",
+                captured_at=captured_at,
             )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            # The envelope wraps the observation under "payload"; the
-            # observation itself nests the casillas under
-            # "observation" -> "observations".
-            casillas = envelope["payload"]["observation"]["observations"]
-            assert casillas and casillas[1]["legal_refs"], (
-                "fixture must serialise legal_refs onto the computed "
-                "casilla for this proof test to be meaningful"
-            )
-            casillas[1]["legal_refs"] = []
-            row.payload = _json.dumps(envelope).encode("utf-8")
 
-        # Reload. Whether the model_validator on CasillaObservation
-        # tolerates an empty legal_refs tuple or the load path surfaces
-        # the dropped grounding as inequality, the boundary must catch
-        # the drift somewhere.
-        loaded = repo.load("303", 2025, "1T")
-        assert loaded is not None
-        assert loaded.observation != original, (
-            "anti-tautology proof failed: deleting legal_refs from a "
-            "persisted casilla did NOT surface as strict inequality "
-            "on the loaded observation. The grounding boundary is "
-            "tautological and every observation roundtrip in the "
-            "suite is suspect."
-        )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            object_key = observation_key("303", 2025, "1T")
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _OBSERVATION_NAMESPACE,
+                    SecureObjectRow.object_key == object_key,
+                )
+                row = session.execute(stmt).scalar_one()
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                # The envelope wraps the observation under "payload"; the
+                # observation itself nests the casillas under
+                # "observation" -> "observations".
+                casillas = envelope["payload"]["observation"]["observations"]
+                assert casillas and casillas[1]["legal_refs"], (
+                    "fixture must serialise legal_refs onto the computed "
+                    "casilla for this proof test to be meaningful"
+                )
+                casillas[1]["legal_refs"] = []
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            # Reload. Whether the model_validator on CasillaObservation
+            # tolerates an empty legal_refs tuple or the load path surfaces
+            # the dropped grounding as inequality, the boundary must catch
+            # the drift somewhere.
+            loaded = repo.load("303", 2025, "1T")
+            assert loaded is not None
+            assert loaded.observation != original, (
+                "anti-tautology proof failed: deleting legal_refs from a "
+                "persisted casilla did NOT surface as strict inequality "
+                "on the loaded observation. The grounding boundary is "
+                "tautological and every observation roundtrip in the "
+                "suite is suspect."
+            )
+        finally:
+            engine.dispose()

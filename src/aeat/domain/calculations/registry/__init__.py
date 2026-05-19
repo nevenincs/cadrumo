@@ -101,7 +101,12 @@ from ._live_parity import (
     evaluate_cross_reference_applicability,
     resolve_cross_reference_oracle,
 )
-from ._loader import load_catalogue_file, load_modelo_file, load_registry_tree
+from ._loader import (
+    load_catalogue_file,
+    load_legal_parameters_only,
+    load_modelo_file,
+    load_registry_tree,
+)
 from ._parity_tapes import (
     ParityScenario,
     ParityTape,
@@ -384,6 +389,7 @@ __all__ = [
     "invoice_binding_requirements",
     "is_active_census_modelo",
     "load_catalogue_file",
+    "load_legal_parameters_only",
     "load_modelo_file",
     "load_parity_scenario",
     "load_parity_tape",

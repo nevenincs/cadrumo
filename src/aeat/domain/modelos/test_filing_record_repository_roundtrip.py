@@ -23,7 +23,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -117,44 +116,43 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
     """The two-record supersession chain round-trips through encrypted SQL."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "filing-records-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        repo = FilingRecordCatalogueRepository()
-        original = _populated_catalogue()
-        repo.save(original)
-        loaded = repo.load()
-
-        assert loaded == original
-        assert len(loaded.records) == 2
-        current = loaded.current_for(
-            bucket_id="bucket-A",
-            modelo="303",
-            filing_year=2024,
-            period="2T",
+    with provider:
+        db_path = tmp_path / "filing-records-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        assert current is not None
-        assert current.amends_filing_record_id is not None
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        superseded = loaded.get(current.amends_filing_record_id)
-        assert superseded is not None
-        assert superseded.status is FilingRecordStatus.SUPERSEDED
-        assert superseded.superseded_by_filing_record_id == current.filing_record_id
-        assert superseded.superseded_at == current.filed_at
-        # External-evidence carries the AEAT gate; pin it explicitly.
-        assert superseded.external_evidence is not None
-        assert superseded.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
-        assert superseded.external_evidence.reference_id == "just-303-2024-2T-original"
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            repo = FilingRecordCatalogueRepository()
+            original = _populated_catalogue()
+            repo.save(original)
+            loaded = repo.load()
+
+            assert loaded == original
+            assert len(loaded.records) == 2
+            current = loaded.current_for(
+                bucket_id="bucket-A",
+                modelo="303",
+                filing_year=2024,
+                period="2T",
+            )
+            assert current is not None
+            assert current.amends_filing_record_id is not None
+
+            superseded = loaded.get(current.amends_filing_record_id)
+            assert superseded is not None
+            assert superseded.status is FilingRecordStatus.SUPERSEDED
+            assert superseded.superseded_by_filing_record_id == current.filing_record_id
+            assert superseded.superseded_at == current.filed_at
+            # External-evidence carries the AEAT gate; pin it explicitly.
+            assert superseded.external_evidence is not None
+            assert superseded.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
+            assert superseded.external_evidence.reference_id == "just-303-2024-2T-original"
+        finally:
+            engine.dispose()
 
 
 def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
@@ -185,54 +183,53 @@ def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
     from ._filing_repository import _FILING_NAMESPACE, _FILING_OBJECT_KEY
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "filing-records-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        repo = FilingRecordCatalogueRepository()
-        original = _populated_catalogue()
-        repo.save(original)
-
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _FILING_NAMESPACE,
-                SecureObjectRow.object_key == _FILING_OBJECT_KEY,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            records = envelope["payload"]["records"]
-            superseded_id = next(
-                rid for rid, rec in records.items()
-                if rec["status"] == "superseded"
-            )
-            # Flip the SUPERSEDED record's status to CURRENT without
-            # clearing its supersession metadata. The catalogue's
-            # model_validator runs the "exactly one CURRENT per tuple"
-            # check AND the per-record "CURRENT must not carry
-            # supersession metadata" check; either invariant trips.
-            records[superseded_id]["status"] = "current"
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        regression_caught = False
-        try:
-            mutated = repo.load()
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        else:
-            if mutated != original:
-                regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: corrupting the supersession "
-            "chain did NOT surface on load. The catalogue boundary is "
-            "tautological and every filing-record roundtrip in the "
-            "suite is suspect."
+    with provider:
+        db_path = tmp_path / "filing-records-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+
+            repo = FilingRecordCatalogueRepository()
+            original = _populated_catalogue()
+            repo.save(original)
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _FILING_NAMESPACE,
+                    SecureObjectRow.object_key == _FILING_OBJECT_KEY,
+                )
+                row = session.execute(stmt).scalar_one()
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                records = envelope["payload"]["records"]
+                superseded_id = next(
+                    rid for rid, rec in records.items()
+                    if rec["status"] == "superseded"
+                )
+                # Flip the SUPERSEDED record's status to CURRENT without
+                # clearing its supersession metadata. The catalogue's
+                # model_validator runs the "exactly one CURRENT per tuple"
+                # check AND the per-record "CURRENT must not carry
+                # supersession metadata" check; either invariant trips.
+                records[superseded_id]["status"] = "current"
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            regression_caught = False
+            try:
+                mutated = repo.load()
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            else:
+                if mutated != original:
+                    regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: corrupting the supersession "
+                "chain did NOT surface on load. The catalogue boundary is "
+                "tautological and every filing-record roundtrip in the "
+                "suite is suspect."
+            )
+        finally:
+            engine.dispose()

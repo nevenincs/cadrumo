@@ -21,6 +21,7 @@ from pathlib import Path
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
+from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -760,6 +761,9 @@ def calculate_modelo_revision(
     from ...domain.calculations.registry._formula_runtime import (
         calculate_registry_snapshot,
     )
+    from ...domain.calculations.registry._relations import (
+        materialize_relation_binding_values,
+    )
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -791,6 +795,12 @@ def calculate_modelo_revision(
     )
     resolved_enum_bindings = dict(sorted({**borrador_result.enum_binding_values, **caller_enum_binding_values}.items()))
     resolved_relations = dict(relation_values or {})
+    relation_binding_values = materialize_relation_binding_values(
+        snapshot.revision,
+        resolved_relations,
+        period=work_unit.period,
+    )
+    resolved_bindings = dict(sorted({**relation_binding_values, **resolved_bindings}.items()))
     resolved_inputs = dict(
         sorted(
             {
@@ -2218,11 +2228,13 @@ def import_external_filing_evidence(
 
     if not casilla_values:
         raise ExternalFilingImportError(
-            "external-filing import requires at least one casilla value; got an empty mapping"
+            tr("application.modelo.errors.external_filing_no_casilla_values")
         )
     cleaned_reference = evidence_reference_id.strip()
     if not cleaned_reference:
-        raise ExternalFilingImportError("external-filing import requires a non-empty evidence_reference_id")
+        raise ExternalFilingImportError(
+            tr("application.modelo.errors.external_filing_evidence_reference_blank")
+        )
 
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)

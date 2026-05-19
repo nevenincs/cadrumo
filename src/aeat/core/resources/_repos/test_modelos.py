@@ -1,17 +1,17 @@
-"""Real-behaviour tests for ModeloRepository."""
+"""Real-behaviour tests for StaticModeloRepository."""
 
 from __future__ import annotations
 
 import pytest
 
 from aeat.core.resources._errors import ResourceNotFoundError
-from aeat.core.resources._repos.modelos import ModeloRepository
+from aeat.core.resources._repos.modelos import StaticModeloRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def test_modelo_repository_get_loads_real_modelo() -> None:
-    repo = ModeloRepository()
+    repo = StaticModeloRepository()
 
     modelo = repo.get("100")
     modelo_again = repo.get("100")
@@ -21,7 +21,7 @@ def test_modelo_repository_get_loads_real_modelo() -> None:
 
 
 def test_modelo_repository_all_returns_committed_modelos() -> None:
-    repo = ModeloRepository()
+    repo = StaticModeloRepository()
 
     modelos = repo.all()
 
@@ -32,14 +32,14 @@ def test_modelo_repository_all_returns_committed_modelos() -> None:
 
 
 def test_modelo_repository_unknown_id_raises_resource_not_found() -> None:
-    repo = ModeloRepository()
+    repo = StaticModeloRepository()
 
     with pytest.raises(ResourceNotFoundError):
         repo.get("999999")
 
 
 def test_modelo_repository_authority_property_exposes_backing_aggregate() -> None:
-    repo = ModeloRepository()
+    repo = StaticModeloRepository()
 
     authority = repo.authority
 
@@ -48,7 +48,7 @@ def test_modelo_repository_authority_property_exposes_backing_aggregate() -> Non
 
 
 def test_modelo_repository_clear_cache_resets_authority_and_identity_map() -> None:
-    repo = ModeloRepository()
+    repo = StaticModeloRepository()
     repo.get("100")
 
     repo.clear_cache()

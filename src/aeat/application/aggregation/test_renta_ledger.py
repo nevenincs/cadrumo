@@ -15,7 +15,6 @@ from ...adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
     SecretStore,
-    override_master_key_provider,
     override_secret_store,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -55,24 +54,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def secure_engine(tmp_path: Path) -> Iterator[Engine]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_secret_store(secret_store)
-    engine = create_engine(f"sqlite:///{tmp_path / 'aeat.db'}")
-    try:
-        yield engine
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
-        override_secret_store(None)
+    with provider:
+        blob_store = EncryptedBlobStore(
+            root_dir=tmp_path / "blobs",
+            master_key_provider=provider,
+        )
+        secret_store = SecretStore(
+            store_dir=tmp_path / "secrets",
+            blob_store=blob_store,
+            master_key_provider=provider,
+        )
+        override_secret_store(secret_store)
+        engine = create_engine(f"sqlite:///{tmp_path / 'aeat.db'}")
+        try:
+            yield engine
+        finally:
+            engine.dispose()
+            override_secret_store(None)
 
 
 def _raw_transaction(

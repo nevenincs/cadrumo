@@ -18,7 +18,6 @@ import pytest
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
@@ -84,21 +83,20 @@ def repos(tmp_path):
     """Yield the five catalogue repositories over an encrypted SQLite db."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "modelo_amend_flow.db"
-    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        objects = SecureObjectRepository(engine=engine)
-        wu = WorkUnitCatalogueRepository(objects=objects)
-        cr = CalculationRevisionCatalogueRepository(objects=objects)
-        fr = FilingRecordCatalogueRepository(objects=objects)
-        vr = VerificationReportCatalogueRepository(objects=objects)
-        bv = BucketEventHistoryRepository(objects=objects)
-        yield wu, cr, fr, vr, bv
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        db_path = tmp_path / "modelo_amend_flow.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            objects = SecureObjectRepository(engine=engine)
+            wu = WorkUnitCatalogueRepository(objects=objects)
+            cr = CalculationRevisionCatalogueRepository(objects=objects)
+            fr = FilingRecordCatalogueRepository(objects=objects)
+            vr = VerificationReportCatalogueRepository(objects=objects)
+            bv = BucketEventHistoryRepository(objects=objects)
+            yield wu, cr, fr, vr, bv
+        finally:
+            engine.dispose()
 
 
 def _seed_work_unit(wu_repo):

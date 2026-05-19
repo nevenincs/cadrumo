@@ -18,7 +18,7 @@ from typing import Union, get_args, get_origin
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.core.config import PROJECT_ROOT, CertificateBackendSetting, Settings
+from aeat.core.config import PROJECT_ROOT, CertificateBackend, Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -135,7 +135,7 @@ class TestCertificateBackendEnum:
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
         settings = IsolatedSettings()
-        assert settings.aeat_certificate_backend is CertificateBackendSetting.PLAYWRIGHT_CONTEXT
+        assert settings.aeat_certificate_backend is CertificateBackend.PLAYWRIGHT_CONTEXT
 
     def test_uppercase_enum_name_is_rejected(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import pydantic

@@ -35,6 +35,7 @@ closed-form `lookup_bracket` expansion.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import date
 from typing import Literal
 
@@ -249,34 +250,81 @@ def plan_layout(
             bracket entry is emitted in `lower_bound` order.
     """
 
+    value_column = _ENTRADAS_VALUE_COLUMN
+    anchor_column = _TARIFFS_ANCHOR_COLUMN
+
+    casilla_plan = _layout_casillas(revision, value_column=value_column)
+    binding_plan = _layout_bindings(
+        revision,
+        value_column=value_column,
+        entradas_row_start=casilla_plan.entradas_next_row,
+    )
+    parameter_plan = _layout_parameters(
+        revision,
+        anchor_column=anchor_column,
+        tariffs_row_start=_TARIFFS_HEADER_OFFSET + 1,
+        bracket_filter_date=bracket_filter_date,
+    )
+    relation_cells = _layout_relations(
+        revision,
+        anchor_column=anchor_column,
+        tariffs_row_start=parameter_plan.tariffs_next_row,
+    )
+    return SheetLayout(
+        revision_id=revision.id,
+        entradas_cells=casilla_plan.entradas_cells,
+        calculos_cells=casilla_plan.calculos_cells,
+        binding_cells=binding_plan.binding_cells,
+        parameter_cells=parameter_plan.parameter_cells,
+        relation_cells=relation_cells,
+        entradas_rows=tuple(casilla_plan.entradas_rows),
+        calculos_rows=tuple(casilla_plan.calculos_rows),
+        binding_rows=tuple(binding_plan.binding_rows),
+        tariff_anchors=parameter_plan.tariff_anchors,
+        bracket_ranges=parameter_plan.bracket_ranges,
+        bracket_entries=parameter_plan.bracket_entries,
+    )
+
+
+# Both data tabs share the same column layout:
+# A=Section, B=Casilla number, C=Casilla label, D=Value.
+_ENTRADAS_VALUE_COLUMN = 4
+# Tariffs tab: column A holds the parameter id label, column C
+# is the anchor cell (scalar value, or the bracket-table header).
+_TARIFFS_ANCHOR_COLUMN = 3
+# Row 1 of every tab is reserved for the header banner.
+_DATA_HEADER_ROW = 1
+_TARIFFS_HEADER_OFFSET = 1
+
+
+@dataclass(frozen=True, slots=True)
+class _CasillaPlan:
+    """Bundle returned by _layout_casillas — casilla cells + row trackers."""
+
+    entradas_cells: dict[CasillaId, SheetCellAddress]
+    calculos_cells: dict[CasillaId, SheetCellAddress]
+    entradas_rows: list[_CasillaRow]
+    calculos_rows: list[_CasillaRow]
+    entradas_next_row: int
+
+
+def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _CasillaPlan:
+    """Assign each casilla a tab + row + value-cell address.
+
+    Operator-input + informational casillas land on the Entradas
+    tab in declaration order; computed casillas land on the
+    Calculos tab. ``entradas_next_row`` is returned so the binding
+    layout below appends rows below the casilla block on Entradas.
+    """
     entradas_cells: dict[CasillaId, SheetCellAddress] = {}
     calculos_cells: dict[CasillaId, SheetCellAddress] = {}
     entradas_rows: list[_CasillaRow] = []
     calculos_rows: list[_CasillaRow] = []
-
-    # Both data tabs share the same column layout:
-    # A=Section, B=Casilla number, C=Casilla label, D=Value.
-    value_column = 4
-
-    entradas_row = 2  # Row 1 reserved for the header.
-    calculos_row = 2
-
+    entradas_row = _DATA_HEADER_ROW + 1
+    calculos_row = _DATA_HEADER_ROW + 1
     for casilla in revision.casillas:
-        if _is_operator_input(casilla):
-            address = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
-            entradas_cells[casilla.id] = address
-            entradas_rows.append(
-                _CasillaRow(
-                    casilla=casilla.id,
-                    tab=TabName.ENTRADAS,
-                    row=entradas_row,
-                    section_path=casilla.section,
-                )
-            )
-            entradas_row += 1
-        elif _is_computed(casilla):
-            address = SheetCellAddress.at(TabName.CALCULOS, calculos_row, value_column)
-            calculos_cells[casilla.id] = address
+        if _is_computed(casilla):
+            calculos_cells[casilla.id] = SheetCellAddress.at(TabName.CALCULOS, calculos_row, value_column)
             calculos_rows.append(
                 _CasillaRow(
                     casilla=casilla.id,
@@ -286,61 +334,102 @@ def plan_layout(
                 )
             )
             calculos_row += 1
-        else:
-            # Informational casillas appear in the Entradas tab as
-            # read-only descriptive rows.
-            address = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
-            entradas_cells[casilla.id] = address
-            entradas_rows.append(
-                _CasillaRow(
-                    casilla=casilla.id,
-                    tab=TabName.ENTRADAS,
-                    row=entradas_row,
-                    section_path=casilla.section,
-                )
-            )
-            entradas_row += 1
-
-    # Bindings — caller-supplied numeric values (ledger aggregations,
-    # profile fields, previous-filing snapshots) — occupy their own
-    # rows in the Entradas tab below the casilla rows.
-    binding_cells: dict[BindingId, SheetCellAddress] = {}
-    binding_rows: list[_BindingRow] = []
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
-    for binding_id in _referenced_bindings(revision):
-        definition = bindings_by_id.get(binding_id)
-        if definition is None:
             continue
-        address = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
-        binding_cells[binding_id] = address
-        binding_rows.append(
-            _BindingRow(
-                binding=binding_id,
+        # Operator-input and informational casillas both occupy the
+        # Entradas tab; informational rows are read-only at the
+        # presentation layer but the layout coordinates are
+        # identical.
+        entradas_cells[casilla.id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
+        entradas_rows.append(
+            _CasillaRow(
+                casilla=casilla.id,
                 tab=TabName.ENTRADAS,
                 row=entradas_row,
-                label=binding_id,
+                section_path=casilla.section,
             )
         )
         entradas_row += 1
+    return _CasillaPlan(
+        entradas_cells=entradas_cells,
+        calculos_cells=calculos_cells,
+        entradas_rows=entradas_rows,
+        calculos_rows=calculos_rows,
+        entradas_next_row=entradas_row,
+    )
 
+
+@dataclass(frozen=True, slots=True)
+class _BindingPlan:
+    """Bundle returned by _layout_bindings — caller-supplied numeric inputs on Entradas."""
+
+    binding_cells: dict[BindingId, SheetCellAddress]
+    binding_rows: list[_BindingRow]
+
+
+def _layout_bindings(
+    revision: ModeloRevision,
+    *,
+    value_column: int,
+    entradas_row_start: int,
+) -> _BindingPlan:
+    """Assign each referenced binding a row in the Entradas tab below the casilla block.
+
+    Bindings carry caller-supplied numeric values (ledger
+    aggregations, profile fields, previous-filing snapshots).
+    Bindings referenced by formulas but not declared on the
+    revision are silently skipped — registry validation already
+    refused those.
+    """
+    binding_cells: dict[BindingId, SheetCellAddress] = {}
+    binding_rows: list[_BindingRow] = []
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    entradas_row = entradas_row_start
+    for binding_id in _referenced_bindings(revision):
+        if binding_id not in bindings_by_id:
+            continue
+        binding_cells[binding_id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
+        binding_rows.append(
+            _BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id)
+        )
+        entradas_row += 1
+    return _BindingPlan(binding_cells=binding_cells, binding_rows=binding_rows)
+
+
+@dataclass(frozen=True, slots=True)
+class _ParameterPlan:
+    """Bundle returned by _layout_parameters — anchors + bracket tables on Tariffs."""
+
+    parameter_cells: dict[ParameterId, ParameterCell]
+    tariff_anchors: dict[ParameterId, SheetCellAddress]
+    bracket_ranges: dict[ParameterId, BracketRanges]
+    bracket_entries: dict[ParameterId, tuple[BracketEntry, ...]]
+    tariffs_next_row: int
+
+
+def _layout_parameters(
+    revision: ModeloRevision,
+    *,
+    anchor_column: int,
+    tariffs_row_start: int,
+    bracket_filter_date: date | None,
+) -> _ParameterPlan:
+    """Assign each referenced parameter an anchor cell on the Tariffs tab.
+
+    Scalar parameters take a single anchor cell; bracket-table
+    parameters expand into a header row + N data rows
+    (header: Cn=lower, Dn=upper, En=fixed, Fn=marginal). When
+    ``bracket_filter_date`` is supplied, only entries temporally
+    valid on that date are emitted so the registry runtime's
+    ``_resolve_bracket`` selection matches what the sheet shows.
+    """
     parameter_cells: dict[ParameterId, ParameterCell] = {}
     tariff_anchors: dict[ParameterId, SheetCellAddress] = {}
     bracket_ranges: dict[ParameterId, BracketRanges] = {}
     bracket_entries: dict[ParameterId, tuple[BracketEntry, ...]] = {}
-
     parameters_by_id: dict[ParameterId, ParameterDefinition] = {
         parameter.id: parameter for parameter in revision.parameters
     }
-
-    # Tariffs tab: column A holds the parameter id label, column C
-    # is the anchor cell (scalar value, or the bracket-table header).
-    # Bracket tables occupy:
-    #   header  : Cn=lower, Dn=upper, En=fixed, Fn=marginal
-    #   row n+1 : first bracket entry
-    #   ...
-    tariffs_row = 2  # Row 1 reserved for the header banner.
-    anchor_column = 3  # Column C.
-
+    tariffs_row = tariffs_row_start
     for parameter_id in _referenced_parameters(revision):
         if parameter_id not in parameters_by_id:
             continue
@@ -348,62 +437,91 @@ def plan_layout(
         anchor = SheetCellAddress.at(TabName.TARIFFS, tariffs_row, anchor_column)
         tariff_anchors[parameter_id] = anchor
         parameter_cells[parameter_id] = ParameterCell(parameter=parameter_id, anchor=anchor)
-        if definition.data_type == "bracket_table":
-            if bracket_filter_date is not None:
-                active = _select_active_brackets(definition, on=bracket_filter_date)
-            else:
-                active = tuple(sorted(definition.brackets, key=lambda b: b.lower_bound))
-            bracket_entries[parameter_id] = active
-            row_count = max(len(active), 1)
-            header_row = anchor.row
-            first_data_row = header_row + 1
-            last_data_row = header_row + row_count
-            lower_col = _column_index_to_letters(anchor_column)
-            fa_col = _column_index_to_letters(anchor_column + 2)
-            mr_col = _column_index_to_letters(anchor_column + 3)
-            tab_name = TabName.TARIFFS.value
-            bracket_ranges[parameter_id] = BracketRanges(
-                parameter=parameter_id,
-                lower_bound=(f"'{tab_name}'!{lower_col}{first_data_row}:{lower_col}{last_data_row}"),
-                fixed_addition=(f"'{tab_name}'!{fa_col}{first_data_row}:{fa_col}{last_data_row}"),
-                marginal_rate=(f"'{tab_name}'!{mr_col}{first_data_row}:{mr_col}{last_data_row}"),
-                row_count=row_count,
-            )
-            tariffs_row = last_data_row + 2  # one blank row between regions
-        else:
+        if definition.data_type != "bracket_table":
             tariffs_row += 2
-
-    # Relations occupy single-value cells at the bottom of the
-    # Tarifas tab. Each cell holds a pre-resolved aggregation the
-    # caller supplies (e.g. annual roll-up of quarterly modelo 111
-    # retentions feeding modelo 190). The translator resolves a
-    # `relation` leaf to its allocated cell.
-    relation_cells: dict[RelationId, SheetCellAddress] = {}
-    relations_by_id = {rel.id: rel for rel in revision.relations}
-    for relation_id in _referenced_relations(revision):
-        if relation_id not in relations_by_id:
-            # A relation referenced by a formula but undeclared on
-            # the revision would already have failed registry
-            # validation; defensive skip keeps the layout total.
             continue
-        address = SheetCellAddress.at(TabName.TARIFFS, tariffs_row, anchor_column)
-        relation_cells[relation_id] = address
-        tariffs_row += 2
-
-    return SheetLayout(
-        revision_id=revision.id,
-        entradas_cells=entradas_cells,
-        calculos_cells=calculos_cells,
-        binding_cells=binding_cells,
+        tariffs_row = _emit_bracket_table_layout(
+            definition,
+            parameter_id=parameter_id,
+            anchor=anchor,
+            anchor_column=anchor_column,
+            bracket_filter_date=bracket_filter_date,
+            bracket_ranges=bracket_ranges,
+            bracket_entries=bracket_entries,
+        )
+    return _ParameterPlan(
         parameter_cells=parameter_cells,
-        relation_cells=relation_cells,
-        entradas_rows=tuple(entradas_rows),
-        calculos_rows=tuple(calculos_rows),
-        binding_rows=tuple(binding_rows),
         tariff_anchors=tariff_anchors,
         bracket_ranges=bracket_ranges,
         bracket_entries=bracket_entries,
+        tariffs_next_row=tariffs_row,
     )
+
+
+def _emit_bracket_table_layout(
+    definition: ParameterDefinition,
+    *,
+    parameter_id: ParameterId,
+    anchor: SheetCellAddress,
+    anchor_column: int,
+    bracket_filter_date: date | None,
+    bracket_ranges: dict[ParameterId, BracketRanges],
+    bracket_entries: dict[ParameterId, tuple[BracketEntry, ...]],
+) -> int:
+    """Emit one bracket-table layout block; return the next free tariffs row.
+
+    Active entries are either temporally-filtered (when
+    ``bracket_filter_date`` is supplied) or every declared bracket
+    sorted by ``lower_bound``. ``row_count`` is at least 1 so an
+    empty active set still reserves one header + one placeholder
+    row — the layout never collapses to zero rows.
+    """
+    if bracket_filter_date is not None:
+        active = _select_active_brackets(definition, on=bracket_filter_date)
+    else:
+        active = tuple(sorted(definition.brackets, key=lambda b: b.lower_bound))
+    bracket_entries[parameter_id] = active
+    row_count = max(len(active), 1)
+    header_row = anchor.row
+    first_data_row = header_row + 1
+    last_data_row = header_row + row_count
+    lower_col = _column_index_to_letters(anchor_column)
+    fa_col = _column_index_to_letters(anchor_column + 2)
+    mr_col = _column_index_to_letters(anchor_column + 3)
+    tab_name = TabName.TARIFFS.value
+    bracket_ranges[parameter_id] = BracketRanges(
+        parameter=parameter_id,
+        lower_bound=(f"'{tab_name}'!{lower_col}{first_data_row}:{lower_col}{last_data_row}"),
+        fixed_addition=(f"'{tab_name}'!{fa_col}{first_data_row}:{fa_col}{last_data_row}"),
+        marginal_rate=(f"'{tab_name}'!{mr_col}{first_data_row}:{mr_col}{last_data_row}"),
+        row_count=row_count,
+    )
+    return last_data_row + 2  # one blank row between regions
+
+
+def _layout_relations(
+    revision: ModeloRevision,
+    *,
+    anchor_column: int,
+    tariffs_row_start: int,
+) -> dict[RelationId, SheetCellAddress]:
+    """Assign each referenced relation a single-value cell at the bottom of the Tariffs tab.
+
+    Each cell holds a pre-resolved aggregation the caller supplies
+    (e.g. annual roll-up of quarterly modelo 111 retentions feeding
+    modelo 190). Relations referenced by formulas but undeclared on
+    the revision are silently skipped — registry validation already
+    refused those.
+    """
+    relation_cells: dict[RelationId, SheetCellAddress] = {}
+    relations_by_id = {rel.id: rel for rel in revision.relations}
+    tariffs_row = tariffs_row_start
+    for relation_id in _referenced_relations(revision):
+        if relation_id not in relations_by_id:
+            continue
+        relation_cells[relation_id] = SheetCellAddress.at(TabName.TARIFFS, tariffs_row, anchor_column)
+        tariffs_row += 2
+    return relation_cells
 
 
 __all__ = ["BracketRanges", "SheetLayout", "plan_layout"]

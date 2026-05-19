@@ -772,7 +772,7 @@ class AeatAuthenticator:
         # secret straight through; the OpenSSL-binding env channel is
         # gone, so the secret never enters os.environ.
         try:
-            backend = CertificateBackend(self._settings.aeat_certificate_backend.name)
+            backend = self._settings.aeat_certificate_backend
             health = self._certificate_health_check(
                 self._settings.aeat_certificate_path,
                 password=self._settings.aeat_certificate_password_secret,
@@ -1181,7 +1181,7 @@ class AeatAuthenticator:
             path=path,
             password=password,
             friendly_name=self._settings.aeat_certificate_friendly_name,
-            backend=CertificateBackend(self._settings.aeat_certificate_backend.name),
+            backend=self._settings.aeat_certificate_backend,
         )
 
     async def _resolve_browser_session(self) -> BrowserSessionLike:

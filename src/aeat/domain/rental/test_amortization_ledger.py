@@ -120,8 +120,9 @@ class TestMultiYearAccumulation:
         """Cap = coste 10 000; basis = max(coste, catastral) = 10 000;
         gross = 10 000 * 0.03 = 300/yr; cap reached after year 33-ish.
         Set up so year-N has only 200 of cap left."""
+        cap = Decimal("10000.00")
         finca = _finca(
-            coste_construccion=Decimal("10000.00"),
+            coste_construccion=cap,
             valor_catastral_construccion=Decimal("8000.00"),
         )
         result_year_n = compute_amortization_for_year(
@@ -129,18 +130,18 @@ class TestMultiYearAccumulation:
             _income(2024),
             cumulative_through_prior_year=Decimal("9700.00"),
         )
-        assert result_year_n.basis == Decimal("10000.00")
+        assert result_year_n.basis == cap
         assert result_year_n.gross_amortization == Decimal("300.00")
         assert result_year_n.capped_amortization == Decimal("300.00")
         result_year_n_plus_1 = compute_amortization_for_year(
             finca,
             _income(2025),
-            cumulative_through_prior_year=Decimal("10000.00"),
+            cumulative_through_prior_year=cap,
         )
         assert result_year_n_plus_1.gross_amortization == Decimal("300.00")
         assert result_year_n_plus_1.capped_amortization == Decimal("0.00")
         assert result_year_n_plus_1.clamp_applied is True
-        assert result_year_n_plus_1.cumulative_through_year == Decimal("10000.00")
+        assert result_year_n_plus_1.cumulative_through_year == cap
 
     def test_strict_mode_raises_on_cap_overflow(self) -> None:
         with pytest.raises(AmortizationLedgerCapExceededError):
@@ -153,8 +154,9 @@ class TestMultiYearAccumulation:
 
     def test_partial_clamp_at_cap_boundary(self) -> None:
         """Cumulative 9 800 + gross 300 → clamp to 200 (cap = 10 000)."""
+        cap = Decimal("10000.00")
         finca = _finca(
-            coste_construccion=Decimal("10000.00"),
+            coste_construccion=cap,
             valor_catastral_construccion=Decimal("8000.00"),
         )
         result = compute_amortization_for_year(
@@ -164,7 +166,7 @@ class TestMultiYearAccumulation:
         )
         assert result.gross_amortization == Decimal("300.00")
         assert result.capped_amortization == Decimal("200.00")
-        assert result.cumulative_through_year == Decimal("10000.00")
+        assert result.cumulative_through_year == cap
         assert result.clamp_applied is True
 
 

@@ -259,34 +259,53 @@ def drafts_pending(
             continue
         path_str = str(path)
         if draft.findings:
-            for finding in draft.findings:
-                dedup_key = (draft.draft_id, finding.code, finding.casilla_id or "-")
-                if dedup_key in seen:
-                    continue
-                seen.add(dedup_key)
-                items.append(
-                    _to_finding_item(
-                        draft=draft,
-                        path_str=path_str,
-                        finding=finding,
-                    )
-                )
-            continue
-        if draft.status in {FilingDraftStatus.DRAFT, FilingDraftStatus.VALIDATED}:
-            items.append(
-                _to_placeholder_item(
-                    draft=draft,
-                    path_str=path_str,
-                )
-            )
-        elif draft.status is FilingDraftStatus.APPROVAL_STALE:
-            items.append(
-                _to_stale_approval_item(
-                    draft=draft,
-                    path_str=path_str,
-                )
-            )
+            items.extend(_draft_finding_review_items(draft, path_str=path_str, seen=seen))
+        else:
+            _append_unready_draft_review_item(draft, path_str=path_str, items=items)
     return tuple(items)
+
+
+def _draft_finding_review_items(
+    draft: FilingDraft,
+    *,
+    path_str: str,
+    seen: set[tuple[str, str, str]],
+) -> tuple[FindingReviewItem, ...]:
+    """Yield one ``FindingReviewItem`` per non-duplicate finding on ``draft``.
+
+    Dedup is keyed on ``(draft_id, finding.code, finding.casilla_id)``
+    so two findings against the same casilla under the same code
+    surface as a single review row. The ``seen`` set is mutated in
+    place so dedup spans every draft in the same ``drafts_pending``
+    pass, not just one draft.
+    """
+    out: list[FindingReviewItem] = []
+    for finding in draft.findings:
+        dedup_key = (draft.draft_id, finding.code, finding.casilla_id or "-")
+        if dedup_key in seen:
+            continue
+        seen.add(dedup_key)
+        out.append(_to_finding_item(draft=draft, path_str=path_str, finding=finding))
+    return tuple(out)
+
+
+def _append_unready_draft_review_item(
+    draft: FilingDraft,
+    *,
+    path_str: str,
+    items: list[FindingReviewItem],
+) -> None:
+    """Append one review item for a finding-free draft that is not yet ready to file.
+
+    DRAFT / VALIDATED drafts get a placeholder review row prompting
+    the operator to complete the draft. APPROVAL_STALE drafts get a
+    distinct review row prompting re-approval. Any other status is
+    a no-op — those drafts are not in the review queue's purview.
+    """
+    if draft.status in {FilingDraftStatus.DRAFT, FilingDraftStatus.VALIDATED}:
+        items.append(_to_placeholder_item(draft=draft, path_str=path_str))
+    elif draft.status is FilingDraftStatus.APPROVAL_STALE:
+        items.append(_to_stale_approval_item(draft=draft, path_str=path_str))
 
 
 def _resolve_active_tax_id(settings: Settings) -> str | None:

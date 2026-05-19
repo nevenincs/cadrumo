@@ -20,7 +20,6 @@ import pytest
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from aeat.adapters.persistence.storage.sql._orm import Base
@@ -39,16 +38,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'orch-pointer.db').as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'orch-pointer.db').as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            yield SecureObjectRepository(engine=engine)
+        finally:
+            engine.dispose()
 
 
 def test_register_active_profile_writes_pointer_file(

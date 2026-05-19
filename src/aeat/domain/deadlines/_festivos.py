@@ -56,7 +56,7 @@ from ._errors import DeadlineValidationError
 # ---------------------------------------------------------------------------
 
 
-class CCAA(StrEnum):
+class CalendarCCAA(StrEnum):
     """Spanish autonomous communities (Comunidades Autónomas) + the two
     autonomous cities, keyed by ISO 3166-2:ES code.
 
@@ -124,7 +124,7 @@ class Holiday(BaseModel):
 
     holiday_date: date
     jurisdiction: HolidayJurisdiction
-    ccaa_code: CCAA | None = None
+    ccaa_code: CalendarCCAA | None = None
     name: _NonEmptyShortString
 
 
@@ -241,7 +241,7 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
         Holiday(
             holiday_date=entry["date"],
             jurisdiction=HolidayJurisdiction.CCAA,
-            ccaa_code=CCAA(entry["ccaa_code"]),
+            ccaa_code=CalendarCCAA(entry["ccaa_code"]),
             name=entry["name"],
         )
         for entry in raw.get("ccaa", ())
@@ -268,7 +268,7 @@ def _holidays_on(
     candidate: date,
     *,
     calendar: HolidayCalendar,
-    ccaa_code: CCAA | None,
+    ccaa_code: CalendarCCAA | None,
 ) -> tuple[Holiday, ...]:
     """Return every holiday that matches ``candidate`` for the supplied
     CCAA (and always every national holiday)."""
@@ -288,7 +288,7 @@ def is_business_day(
     candidate: date,
     *,
     calendar: HolidayCalendar,
-    ccaa_code: CCAA | None,
+    ccaa_code: CalendarCCAA | None,
 ) -> bool:
     """Return True when ``candidate`` is a business day for AEAT filings.
 
@@ -309,7 +309,7 @@ def next_business_day(
     start: date,
     *,
     calendar: HolidayCalendar,
-    ccaa_code: CCAA | None,
+    ccaa_code: CalendarCCAA | None,
 ) -> date:
     """Return the first date on or after ``start`` that is a business day.
 
@@ -372,7 +372,7 @@ def shift_deadline(
     original_close_date: date,
     *,
     modelo: str,
-    ccaa_code: CCAA | None,
+    ccaa_code: CalendarCCAA | None,
     calendar: HolidayCalendar | None = None,
 ) -> DeadlineShift:
     """Apply the AEAT deadline-shift rule to one close date.
@@ -451,7 +451,7 @@ def shift_deadline(
 
 
 __all__ = (
-    "CCAA",
+    "CalendarCCAA",
     "MODELOS_WITHOUT_SHIFT",
     "DeadlineShift",
     "Holiday",

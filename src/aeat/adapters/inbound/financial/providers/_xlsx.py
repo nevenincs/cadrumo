@@ -11,6 +11,9 @@ matching CSV downloads.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -126,51 +129,28 @@ class XlsxProvider(FinancialProvider):
                 cell_lookup = _row_to_cells(headers, row)
                 if _row_is_blank(raw_fields):
                     continue
-                try:
-                    transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
-                    if not transaction_id:
-                        transaction_id = synthesize_transaction_id(
-                            provider_name=f"{layout.bank_name}-{sheet_name}",
-                            source_sha256=source_sha256,
-                            source_row_index=source_row_index,
-                        )
-                    booked_date = parse_date_value(
-                        _required_cell_value(cell_lookup, lookup, layout.columns.booked_date, "booked_date"),
-                        day_first=layout.day_first_dates,
-                    )
-                    value_raw = _cell_value_from_aliases(cell_lookup, lookup, layout.columns.value_date)
-                    value_date = (
-                        parse_date_value(value_raw, day_first=layout.day_first_dates) if value_raw is not None else None
-                    )
-                    amount = parse_amount_value(
-                        _required_cell_value(cell_lookup, lookup, layout.columns.amount, "amount"),
-                        decimal_separator=layout.decimal_separator,
-                    )
-                    currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
-                    description = _required_value(raw_fields, lookup, layout.columns.description, "description")
-                    counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
-                except ValueError as exc:
-                    _logger.warning(
-                        "xlsx_provider: parse error row=%d file=%s",
-                        source_row_index,
-                        path.name,
-                        exc_info=True,
-                    )
-                    raise InvalidFinancialSourceError(
-                        f"worksheet row {source_row_index} could not be parsed: {exc}",
-                    ) from exc
+                parsed = _parse_xlsx_row(
+                    layout=layout,
+                    lookup=lookup,
+                    raw_fields=raw_fields,
+                    cell_lookup=cell_lookup,
+                    sheet_name=sheet_name,
+                    source_sha256=source_sha256,
+                    source_row_index=source_row_index,
+                    path=path,
+                )
                 yield build_raw_transaction(
                     provider=self,
                     path=path,
                     source_sha256=source_sha256,
                     source_row_index=source_row_index,
-                    transaction_id=transaction_id,
-                    booked_date=booked_date,
-                    value_date=value_date,
-                    amount=amount,
-                    currency=currency,
-                    counterparty=counterparty,
-                    description=description,
+                    transaction_id=parsed.transaction_id,
+                    booked_date=parsed.booked_date,
+                    value_date=parsed.value_date,
+                    amount=parsed.amount,
+                    currency=parsed.currency,
+                    counterparty=parsed.counterparty,
+                    description=parsed.description,
                     raw_fields=raw_fields,
                 )
         finally:
@@ -181,51 +161,112 @@ class XlsxProvider(FinancialProvider):
         path: Path,
     ) -> tuple[Workbook, list[list[Any]], str, CsvBankLayout | None, list[str] | None, dict[str, str] | None, int]:
         """Return the first worksheet that matches a known bank layout."""
+        workbook = _open_workbook_or_refuse(path)
         try:
-            workbook = load_workbook(filename=path, read_only=True, data_only=True)
-        except Exception as exc:  # pragma: no cover - exercised via validation path
-            raise InvalidFinancialSourceError(f"could not open workbook: {path}") from exc
-        try:
-            best_worksheet: Worksheet | None = workbook.worksheets[0] if workbook.worksheets else None
-            best_sheet_name = best_worksheet.title if best_worksheet is not None else "Sheet1"
-            best_layout: CsvBankLayout | None = None
-            best_headers: list[str] | None = None
-            best_lookup: dict[str, str] | None = None
-            best_header_index = 0
-            best_score = -1
-            for worksheet in workbook.worksheets:
-                candidate = _best_layout_match_for_worksheet(worksheet)
-                if candidate is None or candidate[0] <= best_score:
-                    continue
-                score, index, row, lookup, layout = candidate
-                best_worksheet = worksheet
-                best_sheet_name = worksheet.title
-                best_layout = layout
-                best_headers = row
-                best_lookup = lookup
-                best_header_index = index
-                best_score = score
-            best_rows = [list(row) for row in best_worksheet.iter_rows(values_only=True)] if best_worksheet else []
-            self._last_sheet_name = best_sheet_name
-            self._last_header_index = best_header_index + 1
-            if best_score < 3:
-                return workbook, best_rows, best_sheet_name, None, None, None, best_header_index
-            return workbook, best_rows, best_sheet_name, best_layout, best_headers, best_lookup, best_header_index
+            best = _select_best_layout_across_worksheets(workbook)
+            best_rows = (
+                [list(row) for row in best.worksheet.iter_rows(values_only=True)] if best.worksheet else []
+            )
+            self._last_sheet_name = best.sheet_name
+            self._last_header_index = best.header_index + 1
+            if best.score < _MIN_LAYOUT_SCORE:
+                return workbook, best_rows, best.sheet_name, None, None, None, best.header_index
+            return (
+                workbook,
+                best_rows,
+                best.sheet_name,
+                best.layout,
+                best.headers,
+                best.lookup,
+                best.header_index,
+            )
         except Exception:
-            # Re-raise wrapper that guarantees workbook teardown. Broad
-            # catch because the upstream parse can raise openpyxl/xlrd
-            # errors, KeyError, ValueError, OSError, IndexError or
-            # TypeError depending on file shape; the close() must run
-            # uniformly. ``raise`` preserves the original cause.
-            try:
-                workbook.close()
-            except Exception as close_exc:
-                _logger.debug(
-                    "xlsx provider: workbook.close() during parse-error teardown failed (%s)",
-                    close_exc,
-                    exc_info=True,
-                )
+            _close_workbook_during_teardown(workbook)
             raise
+
+
+_MIN_LAYOUT_SCORE = 3
+
+
+@dataclass(frozen=True, slots=True)
+class _BestLayoutMatch:
+    """Best (worksheet, layout) match across every worksheet in the workbook.
+
+    Carries the per-worksheet score + selected layout + header row /
+    lookup so the caller can both report the picked sheet (via
+    name / index) and trigger the layout-not-supported short-circuit
+    when the best score falls below the minimum.
+    """
+
+    worksheet: Worksheet | None
+    sheet_name: str
+    layout: CsvBankLayout | None
+    headers: list[str] | None
+    lookup: dict[str, str] | None
+    header_index: int
+    score: int
+
+
+def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatch:
+    """Iterate every worksheet and keep the highest-scoring layout match.
+
+    ``best_worksheet`` defaults to the first sheet in the workbook
+    so a workbook whose every sheet scores below the minimum still
+    returns a deterministic fallback (the caller emits an
+    "unsupported" error envelope keyed on that sheet's identity).
+    """
+    fallback = workbook.worksheets[0] if workbook.worksheets else None
+    best = _BestLayoutMatch(
+        worksheet=fallback,
+        sheet_name=fallback.title if fallback is not None else "Sheet1",
+        layout=None,
+        headers=None,
+        lookup=None,
+        header_index=0,
+        score=-1,
+    )
+    for worksheet in workbook.worksheets:
+        candidate = _best_layout_match_for_worksheet(worksheet)
+        if candidate is None or candidate[0] <= best.score:
+            continue
+        score, index, row, lookup, layout = candidate
+        best = _BestLayoutMatch(
+            worksheet=worksheet,
+            sheet_name=worksheet.title,
+            layout=layout,
+            headers=row,
+            lookup=lookup,
+            header_index=index,
+            score=score,
+        )
+    return best
+
+
+def _open_workbook_or_refuse(path: Path) -> Workbook:
+    """Open ``path`` as an openpyxl workbook or re-wrap the parse failure."""
+    try:
+        return load_workbook(filename=path, read_only=True, data_only=True)
+    except Exception as exc:  # pragma: no cover - exercised via validation path
+        raise InvalidFinancialSourceError(f"could not open workbook: {path}") from exc
+
+
+def _close_workbook_during_teardown(workbook: Workbook) -> None:
+    """Best-effort ``workbook.close()`` after a parse error; never raise.
+
+    Broad ``except Exception`` because the upstream parse can raise
+    openpyxl / xlrd errors, KeyError, ValueError, OSError,
+    IndexError, or TypeError depending on file shape. The close()
+    must run uniformly. The caller re-raises the original cause —
+    this helper only owns the teardown side effect.
+    """
+    try:
+        workbook.close()
+    except Exception as close_exc:
+        _logger.debug(
+            "xlsx provider: workbook.close() during parse-error teardown failed (%s)",
+            close_exc,
+            exc_info=True,
+        )
 
 
 def _best_layout_match_for_worksheet(
@@ -247,6 +288,89 @@ def _best_layout_match_for_worksheet(
             if best is None or score > best[0]:
                 best = (score, index, row, lookup, layout)
     return best
+
+
+@dataclass(frozen=True, slots=True)
+class _ParsedXlsxRow:
+    """Per-row projection used by XlsxProvider.ingest.
+
+    Holds the seven typed fields the build_raw_transaction call
+    needs. Constructed inside _parse_xlsx_row so the per-column
+    parse + the bank-layout-specific defaulting (synthetic
+    transaction ids, default currency, optional value_date) all
+    happen in one place.
+    """
+
+    transaction_id: str
+    booked_date: date
+    value_date: date | None
+    amount: Decimal
+    currency: str
+    description: str
+    counterparty: str | None
+
+
+def _parse_xlsx_row(
+    *,
+    layout: CsvBankLayout,
+    lookup: dict[str, str],
+    raw_fields: dict[str, str],
+    cell_lookup: dict[str, object],
+    sheet_name: str,
+    source_sha256: str,
+    source_row_index: int,
+    path: Path,
+) -> _ParsedXlsxRow:
+    """Project one worksheet row into the typed ``_ParsedXlsxRow`` envelope.
+
+    Re-wraps any ``ValueError`` produced by the per-column parsers
+    as :class:`InvalidFinancialSourceError` so the caller sees one
+    typed envelope per malformed row. Falls back to
+    :func:`synthesize_transaction_id` when the bank does not
+    publish an external id; defaults the currency to
+    :func:`default_currency` when the bank layout does not declare
+    a currency column or the cell is blank.
+    """
+    try:
+        transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
+        if not transaction_id:
+            transaction_id = synthesize_transaction_id(
+                provider_name=f"{layout.bank_name}-{sheet_name}",
+                source_sha256=source_sha256,
+                source_row_index=source_row_index,
+            )
+        booked_date = parse_date_value(
+            _required_cell_value(cell_lookup, lookup, layout.columns.booked_date, "booked_date"),
+            day_first=layout.day_first_dates,
+        )
+        value_raw = _cell_value_from_aliases(cell_lookup, lookup, layout.columns.value_date)
+        value_date = parse_date_value(value_raw, day_first=layout.day_first_dates) if value_raw is not None else None
+        amount = parse_amount_value(
+            _required_cell_value(cell_lookup, lookup, layout.columns.amount, "amount"),
+            decimal_separator=layout.decimal_separator,
+        )
+        currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
+        description = _required_value(raw_fields, lookup, layout.columns.description, "description")
+        counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
+    except ValueError as exc:
+        _logger.warning(
+            "xlsx_provider: parse error row=%d file=%s",
+            source_row_index,
+            path.name,
+            exc_info=True,
+        )
+        raise InvalidFinancialSourceError(
+            f"worksheet row {source_row_index} could not be parsed: {exc}",
+        ) from exc
+    return _ParsedXlsxRow(
+        transaction_id=transaction_id,
+        booked_date=booked_date,
+        value_date=value_date,
+        amount=amount,
+        currency=currency,
+        description=description,
+        counterparty=counterparty,
+    )
 
 
 def _row_to_mapping(headers: Sequence[str], row: Sequence[object]) -> dict[str, str]:

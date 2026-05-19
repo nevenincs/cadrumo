@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ...core.i18n import tr
 from ..auth._models import AuthState
 from ._utils import utc_now
 
@@ -134,22 +135,24 @@ class WorkflowState(BaseModel):
 
     Attributes:
         auth: Local AEAT access readiness state.
-        profiles: Profile-bucket pointers keyed by profile name. The
-            active profile is no longer stored on the record; it
-            resolves at read time via
-            :func:`resolve_active_bucket_id` from the precedence
-            chain (Settings override > plaintext pointer file).
         declarations: Filing draft pointers keyed by :func:`declaration_key`.
         invoice_reviews: Invoice review annotations keyed by ``invoice_id``.
         ledger_reviews: Ledger transaction review annotations keyed by
             ``transaction_id``.
         updated_at: UTC timestamp of the last write.
+
+    The historical ``profiles`` field has retired. Consumers that
+    need to enumerate registered profiles call
+    :func:`aeat.application.workflow._profile_bucket_scan.list_profile_buckets`
+    or :func:`read_profile_bucket` directly; both scan
+    ``<aeat_local_storage_root>/buckets/*/manifest.toml`` and never
+    open an encrypted database. The active profile resolves via the
+    precedence chain (Settings override > plaintext pointer file).
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     auth: AuthState = Field(default_factory=AuthState)
-    profiles: dict[str, ProfileBucketPointer] = Field(default_factory=dict)
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
     invoice_reviews: dict[str, InvoiceReviewRecord] = Field(default_factory=dict)
     ledger_reviews: dict[str, LedgerReviewRecord] = Field(default_factory=dict)
@@ -229,7 +232,7 @@ def active_bucket_id_or_raise() -> str:
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
-        raise NoActiveProfileError("no active profile bucket")
+        raise NoActiveProfileError(tr("application.workflow.errors.no_active_profile_bucket"))
     return bucket_id
 
 
@@ -256,7 +259,7 @@ def require_active_bucket_id() -> str:
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
-        raise NoActiveProfileError("no active profile bucket")
+        raise NoActiveProfileError(tr("application.workflow.errors.no_active_profile_bucket"))
     return bucket_id
 
 
@@ -274,9 +277,9 @@ def active_transaction_catalogue_repository(
         bucket_id = active_bucket_id_or_raise()
     except NoActiveProfileError as exc:
         raise LedgerNoActiveBucketError(
-            "no active profile bucket",
+            tr("application.workflow.errors.no_active_profile_bucket"),
             context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
-            suggestion="aeat config init --profile NAME",
+            suggestion="aeat config profile create NAME",
         ) from exc
     return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 

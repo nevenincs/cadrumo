@@ -14,7 +14,6 @@ import pytest
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from aeat.adapters.persistence.storage.sql._orm import Base
@@ -41,20 +40,19 @@ _G313 = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
 @pytest.fixture
 def secure_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[SecureObjectRepository]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "census-sync.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    dispose_engine()
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
+    with provider:
+        db_path = tmp_path / "census-sync.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
         dispose_engine()
-        override_master_key_provider(None)
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            yield SecureObjectRepository(engine=engine)
+        finally:
+            engine.dispose()
+            dispose_engine()
 
 
 def _facts() -> dict[str, str]:

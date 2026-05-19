@@ -31,7 +31,6 @@ def _patch_master_key(tmp_path: Path):
         EncryptedBlobStore,
         EphemeralMasterKeyProvider,
         SecretStore,
-        override_master_key_provider,
         override_secret_store,
     )
 
@@ -45,13 +44,12 @@ def _patch_master_key(tmp_path: Path):
         blob_store=blob_store,
         master_key_provider=provider,
     )
-    override_master_key_provider(provider)
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
+    with provider:
+        override_secret_store(secret_store)
+        try:
+            yield
+        finally:
+            override_secret_store(None)
 
 
 def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, draft: FilingDraft) -> None:

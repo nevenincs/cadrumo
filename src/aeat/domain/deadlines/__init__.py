@@ -39,7 +39,7 @@ from ._errors import (
     ScheduleComputationError,
 )
 from ._festivos import (
-    CCAA,
+    CalendarCCAA,
     MODELOS_WITHOUT_SHIFT,
     DeadlineShift,
     Holiday,
@@ -70,7 +70,7 @@ from ._recargo import (
 )
 
 __all__ = [
-    "CCAA",
+    "CalendarCCAA",
     "MODELOS_WITHOUT_SHIFT",
     "AutonomoProfile",
     "DeadlineEngine",

@@ -18,7 +18,6 @@ import pytest
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
 from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
@@ -34,16 +33,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'init.db').as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'init.db').as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            yield SecureObjectRepository(engine=engine)
+        finally:
+            engine.dispose()
 
 
 def test_initialize_workspace_provisions_bucket_directory_and_manifest(

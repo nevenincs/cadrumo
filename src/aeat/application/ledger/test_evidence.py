@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.application.ledger._evidence import (
@@ -31,14 +31,13 @@ def isolated_settings(tmp_path: Path) -> Settings:
 @pytest.fixture
 def secure_engine(tmp_path: Path) -> Iterator[Engine]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield engine
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            yield engine
+        finally:
+            engine.dispose()
 
 
 @pytest.fixture

@@ -23,7 +23,7 @@ from cryptography.x509.oid import NameOID
 
 from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
 from .....core.classification import SensitivityClass
-from ....persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql import SecureObjectRepository, dispose_engine
 from . import (
     AEAT_SESSION_IDLE_TTL,
@@ -63,12 +63,11 @@ SECRET_PASSPHRASE = "correct-horse-battery-staple"
 def _isolated_secure_session_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     dispose_engine()
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _serialise_pkcs12(

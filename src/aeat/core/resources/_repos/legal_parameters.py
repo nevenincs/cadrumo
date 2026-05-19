@@ -13,7 +13,7 @@ class LegalParameterRepository(Repository[object, type(None)]):
     """
 
     def _load(self, key: None) -> object:
-        from ....domain.calculations.registry._loader import load_legal_parameters_only
+        from ....domain.calculations.registry import load_legal_parameters_only
         from .._boundary import bundled_path
 
         return load_legal_parameters_only(bundled_path("registry", "aeat"))

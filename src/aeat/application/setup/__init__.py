@@ -2,7 +2,7 @@
 
 This package owns the ``initialize_workspace`` application service
 that orchestrates atomic bucket/profile creation, authentication setup,
-and legacy state migration behind ``aeat config init``.
+and legacy state migration behind ``aeat config profile create NAME``.
 """
 
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult

@@ -32,7 +32,7 @@ from ._remote_state_guard import (
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
-from ._schema import CasillaDefinition, DataBindingDefinition
+from . import CasillaDefinition, DataBindingDefinition
 from ._snapshot import build_snapshot
 from ._validate import RegistryValidator
 
@@ -508,7 +508,7 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
     }.issubset(links_by_surface)
     assert all(link.requires_snapshot is True for link in snapshot.revision.application_links)
     assert links_by_surface["calculation"].consumer == "aeat.domain.calculations.registry.calculate_registry_snapshot"
-    assert links_by_surface["export"].consumer == "aeat.application.filing.export"
+    assert links_by_surface["export"].consumer == "aeat.application.filing.export_draft"
     assert links_by_surface["filing"].consumer == "aeat.application.filing"
     assert links_by_surface["verification"].consumer == "aeat.application.verification"
     assert links_by_surface["review"].consumer == "aeat.application.filing.review"

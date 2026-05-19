@@ -251,16 +251,43 @@ def _matching_source_revisions(
     year = relation.source_revision_selector.get("year")
     year_from = relation.source_revision_selector.get("year_from")
     year_to = relation.source_revision_selector.get("year_to")
-
     for revision in source_modelo.revisions.values():
-        selector = revision.period_selector
-        if isinstance(year, int):
-            if selector.year_from is not None and selector.year_from > year:
-                continue
-            if selector.year_to is not None and selector.year_to < year:
-                continue
-        if isinstance(year_from, int) and selector.year_to is not None and selector.year_to < year_from:
-            continue
-        if isinstance(year_to, int) and selector.year_from is not None and selector.year_from > year_to:
-            continue
-        yield revision
+        if _revision_covers_relation_year_window(
+            revision,
+            year=year,
+            year_from=year_from,
+            year_to=year_to,
+        ):
+            yield revision
+
+
+def _revision_covers_relation_year_window(
+    revision: ModeloRevision,
+    *,
+    year: object,
+    year_from: object,
+    year_to: object,
+) -> bool:
+    """Return True when ``revision``'s period selector overlaps the relation's source-year window.
+
+    Three independent predicates, each gating one selector field:
+
+    * Single ``year``: revision must contain that year (closed
+      interval against year_from / year_to).
+    * ``year_from`` floor: revision's upper bound must reach at
+      least year_from.
+    * ``year_to`` ceiling: revision's lower bound must not exceed
+      year_to.
+
+    Non-int selector values short-circuit to "no constraint" so
+    the revision passes through.
+    """
+    selector = revision.period_selector
+    if isinstance(year, int):
+        if selector.year_from is not None and selector.year_from > year:
+            return False
+        if selector.year_to is not None and selector.year_to < year:
+            return False
+    if isinstance(year_from, int) and selector.year_to is not None and selector.year_to < year_from:
+        return False
+    return not (isinstance(year_to, int) and selector.year_from is not None and selector.year_from > year_to)

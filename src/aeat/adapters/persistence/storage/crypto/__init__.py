@@ -6,8 +6,9 @@ primitives (:func:`encrypt_record`, :func:`decrypt_record`,
 :data:`KEY_SIZE` / :data:`NONCE_SIZE` / :data:`GCM_TAG_SIZE`
 constants) alongside the SQLAlchemy ``TypeDecorator`` set
 (:class:`EncryptedString`, :class:`EncryptedBytes`,
-:class:`EncryptedJSON`, :class:`HashedLookup`) and the
-:func:`override_master_key_provider` test helper.
+:class:`EncryptedJSON`, :class:`HashedLookup`). Column-level
+decrypt and encrypt operations resolve their key bytes through
+:func:`get_active_master_key` on the active :class:`BucketSession`.
 """
 
 from __future__ import annotations
@@ -26,7 +27,6 @@ from ._encrypted_columns import (
     EncryptedJSON,
     EncryptedString,
     HashedLookup,
-    override_master_key_provider,
 )
 
 __all__ = [
@@ -41,5 +41,4 @@ __all__ = [
     "decrypt_record",
     "derive_key",
     "encrypt_record",
-    "override_master_key_provider",
 ]

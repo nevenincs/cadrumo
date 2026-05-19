@@ -20,10 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ...persistence.storage import (
-    EphemeralMasterKeyProvider,
-    override_master_key_provider,
-)
+from ...persistence.storage import EphemeralMasterKeyProvider
 from ...persistence.storage.sql import SecureObjectRepository
 from ...persistence.storage.sql._orm import Base
 from ...persistence.storage.sql.engine import create_engine_from_settings
@@ -68,49 +65,48 @@ def test_llm_cache_entry_survives_encrypted_storage_roundtrip(
     """A populated CachedEntry round-trips through the encrypted LLM cache."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "llm-cache-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
+    with provider:
+        db_path = tmp_path / "llm-cache-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
 
-        created_at = datetime.now(UTC).replace(microsecond=0)
-        request = _populated_request()
-        response = _populated_response(created_at)
-        cache = LLMCache(root_dir=tmp_path / "llm-cache")
+            created_at = datetime.now(UTC).replace(microsecond=0)
+            request = _populated_request()
+            response = _populated_response(created_at)
+            cache = LLMCache(root_dir=tmp_path / "llm-cache")
 
-        stored = cache.write(request, response)
-        loaded = cache.read(request, response.provider, response.model)
+            stored = cache.write(request, response)
+            loaded = cache.read(request, response.provider, response.model)
 
-        assert loaded is not None
-        # ``read`` flips ``cache_hit`` and zeroes the cost on the
-        # returned response (cached responses are free). The stored
-        # entry retains the originals.
-        assert loaded.cache_hit is True
-        assert loaded.cost_estimate_usd == Decimal("0E-4")
-        assert loaded.text == response.text
-        assert loaded.provider == response.provider
-        assert loaded.model == response.model
-        assert loaded.input_tokens == response.input_tokens
-        assert loaded.output_tokens == response.output_tokens
-        assert loaded.request_id == response.request_id
-        assert loaded.created_at == response.created_at
-        # Witness the persisted ``CachedEntry`` skeleton too.
-        assert stored.provider == LLMProvider.ANTHROPIC
-        assert stored.model == "claude-opus-4-7"
-        assert stored.prompt_hash and len(stored.prompt_hash) == 64
-        assert stored.args_hash and len(stored.args_hash) == 64
+            assert loaded is not None
+            # ``read`` flips ``cache_hit`` and zeroes the cost on the
+            # returned response (cached responses are free). The stored
+            # entry retains the originals.
+            assert loaded.cache_hit is True
+            assert loaded.cost_estimate_usd == Decimal("0E-4")
+            assert loaded.text == response.text
+            assert loaded.provider == response.provider
+            assert loaded.model == response.model
+            assert loaded.input_tokens == response.input_tokens
+            assert loaded.output_tokens == response.output_tokens
+            assert loaded.request_id == response.request_id
+            assert loaded.created_at == response.created_at
+            # Witness the persisted ``CachedEntry`` skeleton too.
+            assert stored.provider == LLMProvider.ANTHROPIC
+            assert stored.model == "claude-opus-4-7"
+            assert stored.prompt_hash and len(stored.prompt_hash) == 64
+            assert stored.args_hash and len(stored.args_hash) == 64
 
-        stats = cache.stats()
-        assert stats.entries == 1
-        assert stats.total_bytes > 0
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            stats = cache.stats()
+            assert stats.entries == 1
+            assert stats.total_bytes > 0
+        finally:
+            engine.dispose()
 
 
 def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
@@ -140,56 +136,55 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     from ._errors import LLMCacheError
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "llm-cache-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        created_at = datetime.now(UTC).replace(microsecond=0)
-        request = _populated_request()
-        response = _populated_response(created_at)
-        cache = LLMCache(root_dir=tmp_path / "llm-cache")
-        cache.write(request, response)
-
-        # Reach into the encrypted row and surgically delete ``text``
-        # from the nested response on the redacted entry. The column
-        # accessor handles encrypt/decrypt automatically; the
-        # _CACHE_NAMESPACE filter pins the right row.
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _CACHE_NAMESPACE,
-            )
-            row = session.execute(stmt).scalar_one()
-            decoded = _json.loads(row.payload.decode("utf-8"))
-            entry_payload = decoded["entry"]
-            assert "text" in entry_payload["response"], (
-                "fixture must serialise response.text into the redacted "
-                "entry for this proof test to be meaningful"
-            )
-            del entry_payload["response"]["text"]
-            decoded["entry"] = entry_payload
-            row.payload = _json.dumps(decoded).encode("utf-8")
-
-        # Now read() must reject the mutated entry. LLMResponse.text
-        # is required (no default), so the strict pydantic re-parse
-        # must raise. The cache wraps re-parse failures in
-        # LLMCacheError.
-        regression_caught = False
-        try:
-            cache.read(request, response.provider, response.model)
-        except LLMCacheError:
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: deleting LLMResponse.text from "
-            "the persisted cache entry did NOT surface as LLMCacheError. "
-            "The cache boundary is tautological and every LLM cache "
-            "roundtrip in the suite is suspect."
+    with provider:
+        db_path = tmp_path / "llm-cache-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+
+            created_at = datetime.now(UTC).replace(microsecond=0)
+            request = _populated_request()
+            response = _populated_response(created_at)
+            cache = LLMCache(root_dir=tmp_path / "llm-cache")
+            cache.write(request, response)
+
+            # Reach into the encrypted row and surgically delete ``text``
+            # from the nested response on the redacted entry. The column
+            # accessor handles encrypt/decrypt automatically; the
+            # _CACHE_NAMESPACE filter pins the right row.
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _CACHE_NAMESPACE,
+                )
+                row = session.execute(stmt).scalar_one()
+                decoded = _json.loads(row.payload.decode("utf-8"))
+                entry_payload = decoded["entry"]
+                assert "text" in entry_payload["response"], (
+                    "fixture must serialise response.text into the redacted "
+                    "entry for this proof test to be meaningful"
+                )
+                del entry_payload["response"]["text"]
+                decoded["entry"] = entry_payload
+                row.payload = _json.dumps(decoded).encode("utf-8")
+
+            # Now read() must reject the mutated entry. LLMResponse.text
+            # is required (no default), so the strict pydantic re-parse
+            # must raise. The cache wraps re-parse failures in
+            # LLMCacheError.
+            regression_caught = False
+            try:
+                cache.read(request, response.provider, response.model)
+            except LLMCacheError:
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: deleting LLMResponse.text from "
+                "the persisted cache entry did NOT surface as LLMCacheError. "
+                "The cache boundary is tautological and every LLM cache "
+                "roundtrip in the suite is suspect."
+            )
+        finally:
+            engine.dispose()

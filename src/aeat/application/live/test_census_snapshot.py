@@ -19,7 +19,6 @@ import pytest
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
@@ -57,21 +56,20 @@ def _populated_facts() -> dict[str, str]:
 @pytest.fixture
 def isolated_secure_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "census-snapshot.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    dispose_engine()
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    SecureObjectRepository(engine=engine)
-    try:
-        yield
-    finally:
-        engine.dispose()
+    with provider:
+        db_path = tmp_path / "census-snapshot.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
         dispose_engine()
-        override_master_key_provider(None)
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        SecureObjectRepository(engine=engine)
+        try:
+            yield
+        finally:
+            engine.dispose()
+            dispose_engine()
 
 
 def test_derive_census_snapshot_id_is_deterministic_over_canonical_inputs() -> None:

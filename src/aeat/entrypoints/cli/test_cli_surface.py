@@ -358,7 +358,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     """
     _isolate(monkeypatch, tmp_path)
     init = _invoke(
-        ["config", "init", "--quiet", "--profile", "operator", "--tax-id", "12345678Z", "--activity", "Test"]
+        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"]
     )
     assert init.exit_code == 0, init.output
 
@@ -421,7 +421,7 @@ def _drive_ledger_lifecycle_round_trip(
     """
     _isolate(monkeypatch, tmp_path)
     init = _invoke(
-        ["config", "init", "--quiet", "--profile", "operator", "--tax-id", "12345678Z", "--activity", "Test"]
+        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"]
     )
     assert init.exit_code == 0, init.output
 

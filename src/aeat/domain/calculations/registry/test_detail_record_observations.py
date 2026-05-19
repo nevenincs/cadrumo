@@ -88,6 +88,11 @@ def test_withholding_observation_amounts_must_be_decimal_not_bool() -> None:
 
 
 def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
+    a_dinerario_q1 = Decimal("10000")
+    a_dinerario_q2 = Decimal("5000")
+    a_retencion_q1 = Decimal("1500")
+    a_retencion_q2 = Decimal("750")
+    z_dinerario = Decimal("30000")
     obs = (
         WithholdingObservation(
             source_id="p1a",
@@ -95,8 +100,8 @@ def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
             perceptor_legal_name="P One",
             transaction_date=date(2025, 3, 15),
             clave="A",
-            percibido_dinerario=Decimal("10000"),
-            retencion_practicada=Decimal("1500"),
+            percibido_dinerario=a_dinerario_q1,
+            retencion_practicada=a_retencion_q1,
         ),
         WithholdingObservation(
             source_id="p1b",
@@ -104,8 +109,8 @@ def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
             perceptor_legal_name="P One",
             transaction_date=date(2025, 6, 15),
             clave="A",
-            percibido_dinerario=Decimal("5000"),
-            retencion_practicada=Decimal("750"),
+            percibido_dinerario=a_dinerario_q2,
+            retencion_practicada=a_retencion_q2,
         ),
         WithholdingObservation(
             source_id="p2",
@@ -113,7 +118,7 @@ def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
             perceptor_legal_name="P Two",
             transaction_date=date(2025, 4, 1),
             clave="G",
-            percibido_dinerario=Decimal("30000"),
+            percibido_dinerario=z_dinerario,
             retencion_practicada=Decimal("5500"),
         ),
     )
@@ -122,9 +127,9 @@ def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
 
     assert len(rows) == 2
     by_nif = {row["perceptor_tax_id"]: row for row in rows}
-    assert by_nif["12345678A"]["percibido_dinerario"] == Decimal("15000")
-    assert by_nif["12345678A"]["retencion_practicada"] == Decimal("2250")
-    assert by_nif["87654321Z"]["percibido_dinerario"] == Decimal("30000")
+    assert by_nif["12345678A"]["percibido_dinerario"] == a_dinerario_q1 + a_dinerario_q2
+    assert by_nif["12345678A"]["retencion_practicada"] == a_retencion_q1 + a_retencion_q2
+    assert by_nif["87654321Z"]["percibido_dinerario"] == z_dinerario
 
 
 def test_build_withholding_rows_per_perceptor_clave_distinguishes_clave_tuples() -> None:
@@ -181,6 +186,9 @@ def test_related_party_observation_amount_must_be_decimal() -> None:
 
 
 def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
+    es_q1 = Decimal("1000")
+    es_q2 = Decimal("500")
+    de_amount = Decimal("2000")
     obs = (
         RelatedPartyOperationObservation(
             source_id="op1",
@@ -189,7 +197,7 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
             transaction_date=date(2025, 3, 15),
             operation_kind_code="01",
             transfer_pricing_method_code="CUP",
-            amount=Decimal("1000"),
+            amount=es_q1,
         ),
         RelatedPartyOperationObservation(
             source_id="op2",
@@ -198,7 +206,7 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
             transaction_date=date(2025, 6, 15),
             operation_kind_code="01",
             transfer_pricing_method_code="CUP",
-            amount=Decimal("500"),
+            amount=es_q2,
         ),
         RelatedPartyOperationObservation(
             source_id="op3",
@@ -207,7 +215,7 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
             transaction_date=date(2025, 4, 1),
             operation_kind_code="02",
             transfer_pricing_method_code="TNMM",
-            amount=Decimal("2000"),
+            amount=de_amount,
         ),
     )
 
@@ -216,8 +224,8 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
     assert len(rows) == 2
     es_row = next(row for row in rows if row["country_code"] == "ES")
     de_row = next(row for row in rows if row["country_code"] == "DE")
-    assert es_row["amount"] == Decimal("1500")
-    assert de_row["amount"] == Decimal("2000")
+    assert es_row["amount"] == es_q1 + es_q2
+    assert de_row["amount"] == de_amount
 
 
 # ---------------------------------------------------------------------------

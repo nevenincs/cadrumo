@@ -45,7 +45,7 @@ def test_verify_handshake_live_against_aeat() -> None:
         path=settings.aeat_certificate_path,
         password=settings.aeat_certificate_password_secret,
         friendly_name=settings.aeat_certificate_friendly_name,
-        backend=CertificateBackend(settings.aeat_certificate_backend.name),
+        backend=settings.aeat_certificate_backend,
     )
     loaded = load_certificate(bundle)
     result = verify_handshake(loaded, settings.aeat_certificate_verify_url)

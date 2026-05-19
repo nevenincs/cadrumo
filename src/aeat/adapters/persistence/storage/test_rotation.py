@@ -32,7 +32,6 @@ from . import (
     RotationSummary,
     SensitivityClass,
     load_encrypted_envelope,
-    override_master_key_provider,
     rotate_blob_stores,
     rotate_master_key,
     save_encrypted_envelope,
@@ -71,14 +70,11 @@ def bob() -> EphemeralMasterKeyProvider:
 def _patch_master_key(alice: EphemeralMasterKeyProvider) -> Iterator[None]:
     """Default provider during fixture setup is alice (the old key).
 
-    Individual tests temporarily swap to bob as needed via
-    ``override_master_key_provider``.
+    Individual tests temporarily swap to bob as needed by entering
+    the provider as a context manager.
     """
-    override_master_key_provider(alice)
-    try:
+    with alice:
         yield
-    finally:
-        override_master_key_provider(None)
 
 
 def _build_envelope(nif: str = _NIF_CANARY) -> Envelope[_Sample]:

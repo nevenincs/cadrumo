@@ -56,6 +56,7 @@ from ..errors import (
     EncryptionError,
     EnvelopeVersionError,
 )
+from ..master_key._active_session import get_active_master_key
 from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 
 _log = get_logger(__name__)
@@ -152,8 +153,9 @@ class EncryptedBlobStore:
         return self._root_dir
 
     def _master_key(self) -> bytes:
-        provider = self._master_key_provider or get_master_key_provider()
-        return provider.get_master_key()
+        if self._master_key_provider is not None:
+            return self._master_key_provider.get_master_key()
+        return get_active_master_key()
 
     def _shard_dir_for(self, hex_digest: str) -> Path:
         return self._root_dir / "blobs" / hex_digest[:2]

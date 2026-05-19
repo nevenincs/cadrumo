@@ -351,6 +351,21 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         # accompanying test verifies the Python primitive contract,
         # not a registry formula.
         "src/aeat/domain/vat/test_prorrata.py::test_sum_deductible_amounts_threads_through_decimal_addition",
+        # Round-trip identity: asserts the deserialised modelo-190
+        # perceptor rows preserve the original per-perceptor amounts
+        # byte-for-byte. The sum across perceptors is incidental
+        # fixture data — the test does not aggregate.
+        "src/aeat/application/calculations/test_detail_record_round_trip.py::test_modelo_190_perceptor_round_trip_preserves_typed_values",
+        # Decimal-precision JSON round-trip on a populated ledger
+        # command. amount/taxable_base/iva_amount form a sum
+        # incidentally; the test pins precision preservation, not an
+        # aggregator's arithmetic.
+        "src/aeat/application/ledger/test_manual_ledger_transaction_command_roundtrip.py::test_command_json_roundtrip_preserves_decimal_precision",
+        # Encrypted-storage round-trip identity for an invoice
+        # catalogue. base_total + iva_total = grand_total is invoice
+        # math captured at construction; the assertion targets the
+        # round-tripped copy, not an aggregator output.
+        "src/aeat/domain/invoices/test_secure_storage_roundtrip.py::test_invoice_catalogue_survives_encrypted_storage_roundtrip",
     }
 )
 """Functions whose hand-summed pattern is documented as legitimate.

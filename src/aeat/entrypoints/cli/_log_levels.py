@@ -17,6 +17,7 @@ from enum import StrEnum
 
 from ...core import logging as aeat_logging
 from ...core.errors import AeatError
+from ...core.i18n import tr
 
 
 class LogLevelResolutionError(AeatError):
@@ -84,7 +85,7 @@ def resolve_log_level(
 
     selected_flags = sum((quiet, verbose, debug))
     if selected_flags > 1:
-        raise LogLevelResolutionError("--quiet, --verbose, and --debug are mutually exclusive")
+        raise LogLevelResolutionError(tr("cli.log_levels.errors.flags_mutually_exclusive"))
     if debug:
         return LogLevel.DEBUG
     if verbose:
@@ -110,7 +111,9 @@ def resolve_log_level(
         return LogLevel(raw_value)
     except ValueError as exc:
         allowed = ", ".join(level.value for level in LogLevel)
-        raise LogLevelResolutionError(f"AEAT_LOG_LEVEL must be one of: {allowed}; got {raw_value!r}") from exc
+        raise LogLevelResolutionError(
+            tr("cli.log_levels.errors.invalid_env_value", allowed=allowed, value=raw_value)
+        ) from exc
 
 
 def apply_to_root_logger(level: LogLevel) -> None:

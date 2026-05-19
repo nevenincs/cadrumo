@@ -83,6 +83,16 @@ class SecretStoreError(PersistenceError):
     """Base class for secret-store I/O failures."""
 
 
+class PassphraseTooShortError(SecretStoreError):
+    """Raised when an operator-supplied passphrase falls below the NIST floor.
+
+    NIST SP 800-63B §5.1.1.1 mandates that verifiers SHALL require user-
+    chosen memorized secrets to be at least 8 characters in length. The
+    :class:`FileFallbackMasterKeyProvider` rejects shorter passphrases at
+    resolution time.
+    """
+
+
 class KeyringUnavailableError(SecretStoreError):
     """Raised when the OS keychain backend is unusable.
 

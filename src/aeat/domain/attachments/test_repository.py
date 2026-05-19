@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ._enums import AttachmentKind, AttachmentSource
@@ -23,12 +23,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     dispose_engine()
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str = "bucket-a") -> Attachment:

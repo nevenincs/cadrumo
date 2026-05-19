@@ -98,7 +98,11 @@ from .crypto._encrypted_columns import (
     EncryptedJSON,
     EncryptedString,
     HashedLookup,
-    override_master_key_provider,
+)
+from .master_key._active_session import (
+    NoActiveBucketSessionError,
+    activate_session,
+    get_active_master_key,
 )
 from .envelope._envelope import (
     AeadAlgorithm,
@@ -271,7 +275,9 @@ __all__ = [
     "looks_like_real_tax_id",
     "manifest_path_for",
     "materialise_secret",
-    "override_master_key_provider",
+    "NoActiveBucketSessionError",
+    "activate_session",
+    "get_active_master_key",
     "override_secret_store",
     "redact",
     "redact_for_log",

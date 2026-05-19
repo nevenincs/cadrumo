@@ -145,6 +145,13 @@ def _export_field_from_row_binding(
             f"export record {record.id!r} binding {binding.id!r} row_field {row_field!r}"
             " has no casilla mapping in row_field_casillas"
         )
+    # Pattern A: the record already hand-authors a kind="binding" field pinned
+    # to this binding id — trust the operator-pinned offset/length and skip
+    # derivation. base_fields will pass the hand-authored field through.
+    if any(field.kind == "binding" and field.binding == binding.id for field in record.fields):
+        return None
+    # Pattern B: a kind="casilla" template field exists for this casilla — derive
+    # a binding-kind field by copying the template's offset/length/data_type.
     template = next(
         (field for field in record.fields if field.kind == "casilla" and field.casilla == casilla),
         None,

@@ -14,7 +14,6 @@ import pytest
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
@@ -61,33 +60,32 @@ def test_filing_history_survives_encrypted_storage_roundtrip(
     """FilingHistory entries tuple round-trips strictly with non-default statuses."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "filing-history-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-
-        original = _populated_history()
-        repo = FilingHistoryRepository()
-        repo.save("303", original)
-        loaded = repo.load("303")
-
-        assert loaded is not None
-        assert loaded == original
-        # Per-field witnesses on the tuple ordering (entries
-        # preserve insertion order on the wire — drop-and-reload
-        # would otherwise stay invisible).
-        assert len(loaded.entries) == 3
-        assert tuple(e.period for e in loaded.entries) == ("2025Q1", "2025Q2", "2025Q3")
-        assert tuple(e.status for e in loaded.entries) == (
-            "ACKNOWLEDGED",
-            "ACKNOWLEDGED",
-            "REJECTED",
+    with provider:
+        db_path = tmp_path / "filing-history-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+
+            original = _populated_history()
+            repo = FilingHistoryRepository()
+            repo.save("303", original)
+            loaded = repo.load("303")
+
+            assert loaded is not None
+            assert loaded == original
+            # Per-field witnesses on the tuple ordering (entries
+            # preserve insertion order on the wire — drop-and-reload
+            # would otherwise stay invisible).
+            assert len(loaded.entries) == 3
+            assert tuple(e.period for e in loaded.entries) == ("2025Q1", "2025Q2", "2025Q3")
+            assert tuple(e.status for e in loaded.entries) == (
+                "ACKNOWLEDGED",
+                "ACKNOWLEDGED",
+                "REJECTED",
+            )
+        finally:
+            engine.dispose()

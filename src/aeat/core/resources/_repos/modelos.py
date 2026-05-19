@@ -1,4 +1,4 @@
-"""ModeloRepository: thin façade over ValidatedRegistryAuthority.
+"""StaticModeloRepository: thin façade over ValidatedRegistryAuthority.
 
 The modelos repository is the only one that backs onto an
 aggregate (`ValidatedRegistryAuthority`) rather than a direct
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from ....domain.calculations.registry._schema import ModeloDefinition
 
 
-class ModeloRepository(Repository["ModeloDefinition", str]):
+class StaticModeloRepository(Repository["ModeloDefinition", str]):
     """Modelo definitions keyed by their typed id (``"100"``, ``"180"``, …).
 
     Wraps :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`.

@@ -50,7 +50,7 @@ class NoActiveProfileError(WorkflowError):
 
 
 class BootstrapAlreadyCompleteError(WorkflowError):
-    """Raised when `aeat config init` is re-invoked after a profile already exists.
+    """Raised when `aeat config profile create NAME` is re-invoked after a profile already exists.
 
     The bootstrap wizard is a one-shot first-run flow per the
     2026-05-16 profile-lifecycle ADR. A second invocation must

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
 from ...core.config import Settings
@@ -30,30 +30,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+    with provider:
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            yield SecureObjectRepository(engine=engine)
+        finally:
+            engine.dispose()
 
 
 def _state(*, profile: str, bucket_id: str) -> WorkflowState:
-    """Build a WorkflowState whose active profile is set via the env override.
+    """Build a WorkflowState — the state is a passthrough here.
 
-    The active-profile precedence chain reads from
-    ``Settings.aeat_active_profile`` ahead of any state field; tests
-    that exercise the resolution path under multiple active profiles
-    set the override per-assertion rather than embedding the active
-    profile inside the state record.
+    ``active_transaction_catalogue_repository`` resolves the active
+    bucket via the precedence chain (``Settings.aeat_active_profile``
+    override or pointer file), not via any field on the state record.
+    Callers set ``override_settings(aeat_active_profile=...)`` per
+    assertion. The ``profile`` and ``bucket_id`` arguments are kept
+    for call-site readability.
     """
 
-    del profile  # callers set the override via override_settings on each assertion
-    return WorkflowState(
-        profiles={bucket_id: ProfileBucketPointer(bucket_id=bucket_id)},
-    )
+    del profile, bucket_id
+    return WorkflowState()
 
 
 def _transaction(provider_id: str) -> Transaction:

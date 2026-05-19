@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
@@ -39,13 +39,12 @@ MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'reconcile.db').as_posix()}")
     dispose_engine()
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
-        yield
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+            yield
+        finally:
+            dispose_engine()
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:

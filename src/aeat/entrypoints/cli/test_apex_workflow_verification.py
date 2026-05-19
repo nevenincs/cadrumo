@@ -144,9 +144,8 @@ def _drive_apex_workflow_round_trip(backend: Path) -> _ApexWorkflowOutcome:
     profile = _invoke(
         [
             "--format", "json",
-            "config", "init",
+            "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
-            "--profile", "operator",
             "--tax-id", "12345678Z",
             "--name", "Operator",
             "--activity", "design",

@@ -23,6 +23,8 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AeatError
+from ...core.i18n import tr
+from ._actions import WorkUnitNotFoundError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -116,11 +118,6 @@ class ReconciliationDeclarationSourceUnsupportedError(AeatError):
     refuses cleanly rather than silently degrading.
     """
 
-
-class WorkUnitNotFoundError(AeatError):
-    """Raised when ``modelo_reconcile`` cannot find the addressed work unit."""
-
-
 class ReconciliationCrossBucketRefusedError(AeatError):
     """Raised when the addressed work unit belongs to a different bucket
     than the active profile bucket.
@@ -155,8 +152,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
 
     if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
         raise ReconciliationDeclarationSourceUnsupportedError(
-            "declaration-PDF reconcile source is not yet implemented; "
-            "use --from-justificante PATH until the declaration parser lands",
+            tr("application.modelo.errors.reconcile_declaration_unsupported"),
         )
 
     from datetime import UTC, datetime
@@ -178,7 +174,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
         raise WorkUnitNotFoundError(
-            "no active profile bucket; run `aeat config init` before reconciling a work unit",
+            tr("application.modelo.errors.reconcile_no_active_bucket"),
         )
 
     catalogue = WorkUnitCatalogueRepository().load()

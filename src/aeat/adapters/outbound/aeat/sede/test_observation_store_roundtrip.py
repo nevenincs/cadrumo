@@ -23,10 +23,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....persistence.storage import (
-    EphemeralMasterKeyProvider,
-    override_master_key_provider,
-)
+from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql import SecureObjectRepository
 from ....persistence.storage.sql._orm import Base
 from ....persistence.storage.sql.engine import create_engine_from_settings
@@ -73,54 +70,53 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
     """A populated observation + artefact round-trips through the encrypted store."""
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "sede-observation-roundtrip.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-        store = FiledDeclarationObservationStore(tmp_path / "sede-cache")
-
-        body = b"%PDF-1.7 sede declaration sample body for roundtrip witness"
-        artefact = FiledDeclarationArtefact(
-            kind="declaration_pdf",
-            source_url=AnyHttpUrl("https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"),
-            content_type="application/pdf",
-            byte_count=len(body),
-            sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+    with provider:
+        db_path = tmp_path / "sede-observation-roundtrip.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        observation_key = (
-            "100",
-            2023,
-            "0A",
-            "202310013522456T",
-        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            store = FiledDeclarationObservationStore(tmp_path / "sede-cache")
 
-        persisted_artefact = store.persist_artefact(observation_key, artefact, body)
-        assert persisted_artefact.storage_ref is not None
-        # The persisted artefact carries the storage-ref the inbound
-        # path will rehydrate from. Round-trip the body too.
-        loaded_body = store.load_artefact(persisted_artefact.storage_ref)
-        assert loaded_body == body
+            body = b"%PDF-1.7 sede declaration sample body for roundtrip witness"
+            artefact = FiledDeclarationArtefact(
+                kind="declaration_pdf",
+                source_url=AnyHttpUrl("https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"),
+                content_type="application/pdf",
+                byte_count=len(body),
+                sha256=hashlib.sha256(body).hexdigest(),
+                captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+            )
+            observation_key = (
+                "100",
+                2023,
+                "0A",
+                "202310013522456T",
+            )
 
-        observation = _populated_observation(persisted_artefact)
-        logical_path = store.persist_observation(observation)
-        loaded = store.load_observation(logical_path)
+            persisted_artefact = store.persist_artefact(observation_key, artefact, body)
+            assert persisted_artefact.storage_ref is not None
+            # The persisted artefact carries the storage-ref the inbound
+            # path will rehydrate from. Round-trip the body too.
+            loaded_body = store.load_artefact(persisted_artefact.storage_ref)
+            assert loaded_body == body
 
-        assert loaded == observation
-        # Per-field witnesses on the boundary-attacking optional axes.
-        assert loaded.casillas[0].confidence == 0.87
-        assert loaded.metadata == {"capture_session": "sede-2024-06-30-A"}
-        assert loaded.extraction_coverage == {"declaration_pdf": 0.95}
-        assert loaded.registry_snapshot_id == "registry-2023-snapshot-04"
-        assert loaded.artefacts[0].storage_ref == persisted_artefact.storage_ref
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            observation = _populated_observation(persisted_artefact)
+            logical_path = store.persist_observation(observation)
+            loaded = store.load_observation(logical_path)
+
+            assert loaded == observation
+            # Per-field witnesses on the boundary-attacking optional axes.
+            assert loaded.casillas[0].confidence == 0.87
+            assert loaded.metadata == {"capture_session": "sede-2024-06-30-A"}
+            assert loaded.extraction_coverage == {"declaration_pdf": 0.95}
+            assert loaded.registry_snapshot_id == "registry-2023-snapshot-04"
+            assert loaded.artefacts[0].storage_ref == persisted_artefact.storage_ref
+        finally:
+            engine.dispose()
 
 
 def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
@@ -157,61 +153,60 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
     from ._observation_store import _OBSERVATION_NAMESPACE
 
     provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "sede-observation-anti-tautology.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
-    try:
-        SecureObjectRepository(engine=engine)
-        store = FiledDeclarationObservationStore(tmp_path / "sede-cache")
-
-        body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
-        artefact = FiledDeclarationArtefact(
-            kind="declaration_pdf",
-            source_url=AnyHttpUrl(
-                "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
-            ),
-            content_type="application/pdf",
-            byte_count=len(body),
-            sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+    with provider:
+        db_path = tmp_path / "sede-observation-anti-tautology.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
-        observation_key = ("100", 2023, "0A", "202310013522456T")
-        persisted_artefact = store.persist_artefact(observation_key, artefact, body)
-        observation = _populated_observation(persisted_artefact)
-        logical_path = store.persist_observation(observation)
-
-        with session_scope(engine) as session:
-            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-            obs_rows = [r for r in all_rows if r.namespace == _OBSERVATION_NAMESPACE]
-            assert len(obs_rows) == 1, (
-                f"expected one observation row, found {len(obs_rows)} "
-                f"(namespaces: {sorted({r.namespace for r in all_rows})})"
-            )
-            row = obs_rows[0]
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            payload = envelope["payload"]
-            assert payload.get("artefacts"), (
-                "fixture must serialise a non-empty artefacts tuple for "
-                "this proof test to be meaningful"
-            )
-            payload["artefacts"] = []
-            row.payload = _json.dumps(envelope).encode("utf-8")
-
-        regression_caught = False
+        Base.metadata.create_all(engine)
         try:
-            store.load_observation(logical_path)
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: stripping artefacts to empty "
-            "did NOT surface on load. The observation store's evidence-"
-            "of-AEAT-serve contract is tautological and the boundary "
-            "cannot be trusted as a filed-observation audit trail."
-        )
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
+            SecureObjectRepository(engine=engine)
+            store = FiledDeclarationObservationStore(tmp_path / "sede-cache")
+
+            body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
+            artefact = FiledDeclarationArtefact(
+                kind="declaration_pdf",
+                source_url=AnyHttpUrl(
+                    "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
+                ),
+                content_type="application/pdf",
+                byte_count=len(body),
+                sha256=hashlib.sha256(body).hexdigest(),
+                captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+            )
+            observation_key = ("100", 2023, "0A", "202310013522456T")
+            persisted_artefact = store.persist_artefact(observation_key, artefact, body)
+            observation = _populated_observation(persisted_artefact)
+            logical_path = store.persist_observation(observation)
+
+            with session_scope(engine) as session:
+                all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+                obs_rows = [r for r in all_rows if r.namespace == _OBSERVATION_NAMESPACE]
+                assert len(obs_rows) == 1, (
+                    f"expected one observation row, found {len(obs_rows)} "
+                    f"(namespaces: {sorted({r.namespace for r in all_rows})})"
+                )
+                row = obs_rows[0]
+                envelope = _json.loads(row.payload.decode("utf-8"))
+                payload = envelope["payload"]
+                assert payload.get("artefacts"), (
+                    "fixture must serialise a non-empty artefacts tuple for "
+                    "this proof test to be meaningful"
+                )
+                payload["artefacts"] = []
+                row.payload = _json.dumps(envelope).encode("utf-8")
+
+            regression_caught = False
+            try:
+                store.load_observation(logical_path)
+            except Exception:  # noqa: BLE001 - boundary may raise different types
+                regression_caught = True
+            assert regression_caught, (
+                "anti-tautology proof failed: stripping artefacts to empty "
+                "did NOT surface on load. The observation store's evidence-"
+                "of-AEAT-serve contract is tautological and the boundary "
+                "cannot be trusted as a filed-observation audit trail."
+            )
+        finally:
+            engine.dispose()

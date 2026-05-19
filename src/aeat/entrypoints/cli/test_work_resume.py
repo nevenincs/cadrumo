@@ -11,7 +11,6 @@ from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    override_master_key_provider,
 )
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.workflow import (
@@ -36,12 +35,11 @@ def cli_runner() -> CliRunner:
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     dispose_engine()
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'resume.db'}")
-    override_master_key_provider(EphemeralMasterKeyProvider())
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)

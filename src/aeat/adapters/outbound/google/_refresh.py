@@ -21,6 +21,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from ....core.config import Settings as _Settings
+from ....core.i18n import tr
 from ._errors import (
     GoogleAuthError,
     GoogleAuthExpiredError,
@@ -85,10 +86,9 @@ def detect_testing_project_warning(
     remaining = TESTING_PROJECT_TOKEN_LIFETIME - elapsed
     if remaining <= timedelta(0):
         return None
-    return (
-        "google OAuth refresh token is approaching the 7-day Testing-project cap "
-        f"(approx. {int(remaining.total_seconds() // 3600)}h remaining); "
-        "re-run `aeat config google login` to extend the credential lifetime"
+    return tr(
+        "adapters.google.refresh.testing_project_cap_warning",
+        hours_remaining=int(remaining.total_seconds() // 3600),
     )
 
 
@@ -144,6 +144,7 @@ def refresh_credentials(
             "google OAuth credential is marked reauth_required; refresh path is closed",
             context={"account_email": metadata.account_email},
             suggestion="aeat config google login",
+            translated_message="adapters.google.refresh.errors.reauth_required",
         )
 
     try:
@@ -159,7 +160,8 @@ def refresh_credentials(
     except OSError as exc:
         raise GoogleAuthNetworkError(
             f"google OAuth token endpoint unreachable: {exc}",
-            suggestion="check network connectivity and retry",
+            suggestion=tr("adapters.google.refresh.suggestions.check_network"),
+            translated_message="adapters.google.refresh.errors.token_endpoint_unreachable",
         ) from exc
 
     rotated_token = OAuthToken(refresh_token=new_refresh_token, token_uri=token.token_uri)
@@ -194,6 +196,7 @@ def _refresh_against_google(client: OAuthClient, token: OAuthToken) -> tuple[str
         raise GoogleAuthNetworkError(
             f"google-auth not importable: {exc}",
             suggestion="uv sync",
+            translated_message="adapters.google.refresh.errors.google_auth_not_importable",
         ) from exc
 
     creds = Credentials(
@@ -212,10 +215,12 @@ def _refresh_against_google(client: OAuthClient, token: OAuthToken) -> tuple[str
             raise GoogleAuthRevokedError(
                 f"google OAuth refresh refused: {exc}",
                 suggestion="aeat config google login",
+                translated_message="adapters.google.refresh.errors.refresh_refused",
             ) from exc
         raise GoogleAuthNetworkError(
             f"google OAuth refresh failed: {exc}",
-            suggestion="check network connectivity and retry",
+            suggestion=tr("adapters.google.refresh.suggestions.check_network"),
+            translated_message="adapters.google.refresh.errors.refresh_failed",
         ) from exc
 
     return (

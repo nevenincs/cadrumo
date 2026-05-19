@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
@@ -244,6 +245,125 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     assert "modelo-303-iva-repercutido-super-reducido-cuota" in construct.bindings
     assert "modelo-303-iva-soportado-interiores-cuota" in construct.bindings
     assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in construct.bindings
+
+
+def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> None:
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2009-y-siguientes"]
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    relation = next(item for item in revision.relations if item.id == "modelo-303-rel-self-compensacion-anteriores")
+
+    assert casillas["iva.compensacion-pendiente-periodos-anteriores"].number == "110"
+    assert casillas["iva.compensacion-aplicada-periodo"].number == "78"
+    assert casillas["iva.compensacion-pendiente-periodos-posteriores"].number == "87"
+    assert casillas["iva.resultado"].number == "69"
+    assert relation.target_periods == ("2T", "3T", "4T")
+    assert relation.source_period_offset_from_target == -1
+    assert relation.source_periods == ()
+    assert relation.target_binding == "modelo-303-compensacion-pendiente-anteriores"
+
+
+def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_output() -> None:
+    from aeat.domain.calculations.registry import (
+        CasillaObservation,
+        RegistryFilingObservation,
+        materialize_relation_binding_values,
+        previous_filing_observation_requirements,
+        relation_source_requirements,
+        resolve_previous_filing_binding_values,
+        resolve_relation_values_from_observations,
+    )
+
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2009-y-siguientes"]
+    observations = (
+        RegistryFilingObservation(
+            modelo="303",
+            filing_year=2025,
+            period="1T",
+            observations=(
+                CasillaObservation(
+                    casilla_id="iva.compensacion-disponible-fin-periodo",
+                    value=Decimal("1200.00"),
+                ),
+            ),
+        ),
+    )
+
+    binding_requirements = previous_filing_observation_requirements(revision, filing_year=2025, period="2T")
+    assert [(item.period, item.source_casillas) for item in binding_requirements] == [
+        ("1T", ("iva.compensacion-disponible-fin-periodo",))
+    ]
+
+    relation_requirements = relation_source_requirements(revision, filing_year=2025, period="2T")
+    assert [(item.periods, item.source_output) for item in relation_requirements] == [
+        (("1T",), "iva.compensacion-disponible-fin-periodo")
+    ]
+
+    assert resolve_previous_filing_binding_values(
+        revision,
+        observations,
+        filing_year=2025,
+        period="2T",
+    ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
+    assert resolve_relation_values_from_observations(
+        revision,
+        observations,
+        filing_year=2025,
+        period="2T",
+    ) == {"modelo-303-rel-self-compensacion-anteriores": Decimal("1200.00")}
+    assert materialize_relation_binding_values(
+        revision,
+        {"modelo-303-rel-self-compensacion-anteriores": Decimal("1200.00")},
+        period="2T",
+    ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
+
+
+def test_modelo_303_first_quarter_has_no_previous_quarter_compensation_requirement() -> None:
+    from aeat.domain.calculations.registry import (
+        previous_filing_observation_requirements,
+        resolve_previous_filing_binding_values,
+    )
+
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2009-y-siguientes"]
+
+    assert previous_filing_observation_requirements(revision, filing_year=2025, period="1T") == ()
+    assert resolve_previous_filing_binding_values(revision, (), filing_year=2025, period="1T") == {}
+
+
+def test_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:
+    from aeat.domain.calculations.registry import calculate_registry_snapshot, resolve_bound_casilla_inputs
+
+    modelo, catalogues = _load_modelo_303()
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="2T")
+
+    binding_values = {
+        "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
+        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00"),
+    }
+    bound_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=bound_inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(2025, 6, 30)},
+    )
+
+    expected_pendiente_anteriores = Decimal("1200.00")
+    expected_aplicada_periodo = Decimal("1000.00")
+    expected_pendiente_posteriores = Decimal("200.00")
+    expected_disponible_fin_periodo = Decimal("200.00")
+    assert result.values["iva.compensacion-pendiente-periodos-anteriores"] == expected_pendiente_anteriores
+    assert result.values["iva.compensacion-aplicada-periodo"] == expected_aplicada_periodo
+    assert result.values["iva.compensacion-pendiente-periodos-posteriores"] == expected_pendiente_posteriores
+    assert result.values["iva.resultado"] == Decimal("0.00")
+    assert result.values["iva.compensacion-generada-periodo"] == Decimal("0.00")
+    assert result.values["iva.compensacion-disponible-fin-periodo"] == expected_disponible_fin_periodo
 
 
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ...core.errors import AeatError
+from ...core.i18n import tr
 
 
 class OperatorSurfaceContractError(AeatError):
@@ -10,7 +11,11 @@ class OperatorSurfaceContractError(AeatError):
 
     def __init__(self, surface: str, *, reason: str, suggestion: str | None = None) -> None:
         super().__init__(
-            f"operator surface {surface!r} is not part of the accepted contract: {reason}",
+            tr(
+                "cli.operator_surface.errors.contract_not_accepted",
+                surface=repr(surface),
+                reason=reason,
+            ),
             context={"surface": surface, "reason": reason},
             suggestion=suggestion,
         )

@@ -190,6 +190,8 @@ number = "08"
 label = "Retenciones e ingresos a cuenta"
 section = ["total_liquidacion"]
 data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"] }
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
@@ -1133,6 +1135,8 @@ number = "08"
 label = "Retenciones e ingresos a cuenta"
 section = ["total_liquidacion"]
 data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
@@ -2901,6 +2905,8 @@ number = "08"
 label = "Retenciones e ingresos a cuenta"
 section = ["total_liquidacion"]
 data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
@@ -4605,6 +4611,8 @@ number = "08"
 label = "Retenciones e ingresos a cuenta"
 section = ["total_liquidacion"]
 data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]

@@ -227,7 +227,7 @@ class CalendarWarning(BaseModel):
         message: Translation key the renderer feeds through ``tr``.
         fix_command: Concrete shell command the operator can run to
             address the warning (e.g.
-            ``aeat config profile set iva.regime general``).
+            ``aeat config profile edit``).
         affected_modelos: Tuple of modelo identifiers whose
             applicability rule reads the missing key.
     """
@@ -317,27 +317,27 @@ _GATING_FIELDS: MappingProxyType[str, tuple[tuple[str, ...], str, str]] = Mappin
         "iva.regime": (
             ("303", "390"),
             "cli.overview.warning.iva_regime_unset",
-            "aeat config profile set iva.regime general",
+            "aeat config profile edit",
         ),
         "does_intracomunitario": (
             ("349",),
             "cli.overview.warning.intracomunitario_unset",
-            "aeat config profile set does_intracomunitario true",
+            "aeat config profile edit",
         ),
         "pays_professionals_with_retencion": (
             ("111",),
             "cli.overview.warning.retencion_profesionales_unset",
-            "aeat config profile set pays_professionals_with_retencion true",
+            "aeat config profile edit",
         ),
         "pays_rent_with_retencion": (
             ("115",),
             "cli.overview.warning.retencion_arrendamientos_unset",
-            "aeat config profile set pays_rent_with_retencion true",
+            "aeat config profile edit",
         ),
         "uses_objective_estimation_irpf": (
             ("131",),
             "cli.overview.warning.estimacion_objetiva_unset",
-            "aeat config profile set uses_objective_estimation_irpf true",
+            "aeat config profile edit",
         ),
     }
 )
