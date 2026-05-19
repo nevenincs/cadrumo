@@ -92,7 +92,7 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-exterior".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo trimestral del esquema exterior (EXT-1T / EXT-2T / EXT-3T / EXT-4T)"
+label = "Periodo de la declaracion"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
@@ -484,7 +484,7 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-union".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo trimestral (1T / 2T / 3T / 4T)"
+label = "Periodo de la declaracion"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
@@ -873,7 +873,7 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-importacion".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo mensual (01..12)"
+label = "Periodo de la declaracion"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
