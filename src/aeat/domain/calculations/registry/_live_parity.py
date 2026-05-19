@@ -25,8 +25,10 @@ abstraction stays free of network code.
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Iterable, Mapping
-from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
+from json import JSONDecodeError, loads
+from typing import TYPE_CHECKING, Any, Generic, Literal, Protocol, TypeVar, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -43,6 +45,8 @@ if TYPE_CHECKING:
     from ._schema import LiveCrossReferenceDecision, ModeloDefinition
 
 __all__ = [
+    "BaseCheckerOracle",
+    "CheckerObservation",
     "CrossReferenceApplicability",
     "CrossReferenceApplicabilityDeclaration",
     "LiveParityCatalogue",
@@ -57,6 +61,7 @@ __all__ = [
     "build_planned_operations",
     "collect_applicability_declarations",
     "collect_orphan_oracle_ids",
+    "decode_replay_json_payload",
     "evaluate_cross_reference_applicability",
     "pre_flight_oracle_operations",
     "resolve_cross_reference_oracle",
@@ -584,6 +589,155 @@ def collect_orphan_oracle_ids(
                 if cross_reference.oracle_id is not None:
                     bound.add(cross_reference.oracle_id)
     return tuple(sorted(set(catalogue.ids()) - bound))
+
+
+def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> dict[str, Any]:
+    """Decode a UTF-8 JSON replay payload to a top-level JSON object.
+
+    Shared by replay drivers: enforces UTF-8 encoding, valid JSON, and a
+    top-level object (dict) shape. ``surface_label`` is interpolated into
+    the error messages so callers can identify their oracle in failures
+    (e.g. ``"AEAT NIF-IVA replay"``).
+    """
+
+    try:
+        document = loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, JSONDecodeError) as exc:
+        raise RegistryValidationError(f"{surface_label} payload must be UTF-8 JSON") from exc
+    if not isinstance(document, dict):
+        raise RegistryValidationError(f"{surface_label} payload must be a JSON object")
+    return document
+
+
+CheckerObservation = TypeVar("CheckerObservation")
+
+
+class _CheckerDriver(Protocol, Generic[CheckerObservation]):
+    """Structural type of a checker-style replay/live driver."""
+
+    @property
+    def mode(self) -> Literal["live", "replay"]: ...
+
+    def planned_operations(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> tuple[RemoteOperation, ...]: ...
+
+    def collect_observation(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> CheckerObservation: ...
+
+
+class BaseCheckerOracle(Generic[CheckerObservation]):
+    """Shared orchestrator for checker-style oracles.
+
+    Encapsulates the common ``verify_payload`` template used by per-key
+    verdict checkers (NIF-IVA, GROI, and analogous future surfaces):
+    guard pre-flight, driver presence branch, driver-error → unverifiable
+    translation, per-key field comparison, overall verdict, and result
+    packing. Subclasses provide the surface-specific bits: the planned
+    operations builder, expected-value normaliser, observed-value lookup,
+    per-field comparison, and human narrative label.
+
+    Per-domain typed observation models (NIF/IVA vs GROI) stay in the
+    concrete adapter modules; this base composes them generically.
+    """
+
+    surface_label: str
+
+    def __init__(self, *, driver: _CheckerDriver[CheckerObservation] | None = None) -> None:
+        self._driver: _CheckerDriver[CheckerObservation] | None = driver
+
+    @property
+    @abstractmethod
+    def oracle_id(self) -> str: ...
+
+    @property
+    @abstractmethod
+    def surface_kind(self) -> OracleSurfaceKind: ...
+
+    @abstractmethod
+    def planned_operations(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> tuple[RemoteOperation, ...]: ...
+
+    @abstractmethod
+    def _expected_values(self, expected: Mapping[str, object]) -> dict[str, str]: ...
+
+    @abstractmethod
+    def _observed_for(
+        self,
+        observation: CheckerObservation,
+        key: str,
+    ) -> str | None: ...
+
+    @abstractmethod
+    def _compare_field(self, key: str, expected: str, *, observed: str | None) -> ParityFieldComparison: ...
+
+    @abstractmethod
+    def _observation_locator(self, observation: CheckerObservation) -> str | None: ...
+
+    def verify_payload(
+        self,
+        policy: RemoteStateGuardPolicy,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> ParityResult:
+        operations = self.planned_operations(payload, expected=expected)
+        try:
+            assert_oracle_operations_allowed(self, policy, operations)
+        except RegistryValidationError as exc:
+            return ParityResult(
+                oracle_id=self.oracle_id,
+                cross_reference_id=policy.id,
+                verdict="blocked",
+                narrative=f"{self.surface_label} oracle blocked by remote-state guard: {exc}",
+            )
+        driver = self._driver
+        if driver is None:
+            return ParityResult(
+                oracle_id=self.oracle_id,
+                cross_reference_id=policy.id,
+                verdict="unverifiable",
+                narrative=(
+                    f"{self.surface_label} oracle has no executable driver configured. "
+                    "Guard preflight passed, but no AEAT or replay observation was available "
+                    "for comparison."
+                ),
+            )
+        try:
+            observation = driver.collect_observation(payload, expected=expected)
+        except RegistryValidationError as exc:
+            return ParityResult(
+                oracle_id=self.oracle_id,
+                cross_reference_id=policy.id,
+                verdict="unverifiable",
+                narrative=f"{self.surface_label} driver could not produce comparable observations: {exc}",
+            )
+        fields = tuple(
+            self._compare_field(key, expected_value, observed=self._observed_for(observation, key))
+            for key, expected_value in sorted(self._expected_values(expected).items())
+        )
+        verdict: ParityVerdict = (
+            "match" if fields and all(field.verdict == "match" for field in fields) else "mismatch"
+        )
+        return ParityResult(
+            oracle_id=self.oracle_id,
+            cross_reference_id=policy.id,
+            verdict=verdict,
+            narrative=f"{self.surface_label} {driver.mode} comparison returned {verdict}.",
+            fields=fields,
+            raw_evidence_locator=self._observation_locator(observation),
+        )
 
 
 def audit_registry_oracle_bindings(
