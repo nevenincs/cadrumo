@@ -60,6 +60,23 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
         assert value.startswith("/")
 
 
+def test_clave_movil_surface_constants_are_typed() -> None:
+    """Cl@ve Móvil URL fragments and selectors live in the external registry."""
+
+    surface = load_external_constants().aeat.clave_movil
+
+    assert "{target}" in surface.selector_access_url_template
+    assert surface.selector_access_path_marker
+    assert surface.dialogo_representacion_path_marker
+    assert surface.obtener_clave_movil_path_marker
+    assert surface.obtener_clave_movil_qr_path_marker
+    assert surface.authorize_button_selector.startswith("button")
+    assert surface.non_qr_link_selector.startswith("a[")
+    assert surface.verification_code_selector.startswith("#")
+    assert surface.wait_text_markers
+    assert surface.pending_petition_text_markers
+
+
 def test_renta_web_open_template_has_year_placeholder() -> None:
     """The Renta WEB Open template parameterises the fiscal year."""
 

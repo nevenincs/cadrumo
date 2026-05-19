@@ -38,6 +38,11 @@ app = typer.Typer(
 )
 profile_app = typer.Typer(name="profile", help=tr("cli.config.profile.help"), no_args_is_help=True)
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
+auth_diagnostics_app = typer.Typer(
+    name="diagnostics",
+    help=tr("cli.config.auth.diagnostics.help", default="Inspect encrypted auth diagnostics."),
+    no_args_is_help=True,
+)
 apoderado_app = typer.Typer(
     name="apoderado",
     help=tr("cli.config.auth.apoderado.help", default="Manage apoderado configuration"),
@@ -441,15 +446,16 @@ def config_profile_duplicate(
 ) -> None:
     """Copy SOURCE into TARGET as a new active profile."""
 
-    from ....application.user_profile import DuplicateProfileCommand
-    from ....application.user_profile._orchestration import build_lifecycle_service
-    from ....application.workflow._utils import utc_now
-    from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
-    from ....core.config import load_settings
+    import shutil
+
     from ....adapters.persistence.storage.bucket._layout import bucket_paths
     from ....adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
     from ....adapters.persistence.storage.sql.engine import dispose_engine
-    import shutil
+    from ....application.user_profile import DuplicateProfileCommand
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.workflow._utils import utc_now
+    from ....core.config import load_settings
+    from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
 
     repository = _profile_state()
     repository.load()
@@ -590,11 +596,12 @@ def config_profile_rename(
 
     was_active = resolve_active_bucket_id() == source
 
-    from ....core.config import load_settings
+    import shutil
+
     from ....adapters.persistence.storage.bucket._layout import bucket_paths
     from ....adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
     from ....adapters.persistence.storage.sql.engine import dispose_engine
-    import shutil
+    from ....core.config import load_settings
 
     settings = load_settings()
     source_paths = bucket_paths(settings.aeat_local_storage_root, source)
@@ -964,6 +971,62 @@ def auth_clear(
     )
 
 
+@auth_diagnostics_app.command(
+    "list",
+    help=tr("cli.config.auth.diagnostics.list_help", default="List encrypted Cl@ve auth diagnostics."),
+)
+def auth_diagnostics_list(ctx: typer.Context) -> None:
+    """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
+
+    from ....application.auth import list_auth_diagnostics
+
+    report = list_auth_diagnostics()
+    lines = [f"row_count\t{report.row_count}"]
+    for row in report.rows:
+        lines.append(
+            "\t".join(
+                (
+                    row.diagnostic_id or "-",
+                    row.captured_at.isoformat(),
+                    row.reason,
+                    f"html={row.html_captured}",
+                    f"screenshot={row.screenshot_captured}",
+                )
+            )
+        )
+    _emit(ctx, report.model_dump(mode="json"), lines)
+
+
+@auth_diagnostics_app.command(
+    "show",
+    help=tr("cli.config.auth.diagnostics.show_help", default="Show one redacted encrypted auth diagnostic."),
+)
+def auth_diagnostics_show(
+    ctx: typer.Context,
+    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
+) -> None:
+    """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
+
+    from ....application.auth import load_auth_diagnostic
+
+    detail = load_auth_diagnostic(diagnostic_id)
+    if detail is None:
+        raise CliRefusedBoundaryError(f"auth diagnostic not found: {diagnostic_id}")
+    _emit(
+        ctx,
+        detail.model_dump(mode="json"),
+        (
+            f"diagnostic_id\t{detail.diagnostic_id or diagnostic_id}",
+            f"captured_at\t{detail.captured_at.isoformat()}",
+            f"reason\t{detail.reason}",
+            f"url\t{detail.url}",
+            f"html_captured\t{detail.html_captured}",
+            f"screenshot_captured\t{detail.screenshot_captured}",
+            f"html_excerpt\t{detail.html_excerpt or ''}",
+        ),
+    )
+
+
 scopes_app = typer.Typer(
     name="scopes",
     help=tr("cli.config.auth.apoderado.scopes.help", default="Manage apoderado scope vocabulary"),
@@ -1261,6 +1324,7 @@ _register_profile_census(profile_app)
 
 app.add_typer(profile_app, name="profile")
 auth_app.add_typer(apoderado_app, name="apoderado")
+auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
 app.add_typer(auth_app, name="auth")
 app.add_typer(bucket_app, name="bucket")
 

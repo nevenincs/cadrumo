@@ -147,6 +147,7 @@ async def require_verified_aeat_session(
     settings: Settings,
     *,
     kind: AuthProviderKind | None = None,
+    target_url: str | None = None,
 ) -> AeatSession:
     """Return a verified active AEAT session without exposing provider mechanics."""
 
@@ -173,7 +174,7 @@ async def require_verified_aeat_session(
         browser_session_factory=default_browser_session_factory,
     )
     try:
-        refreshed_session, assertion = await _probe_existing_session(provider)
+        refreshed_session, assertion = await _probe_existing_session(provider, target_url=target_url)
     except AuthSessionUnavailableError:
         raise
     except Exception as exc:
@@ -197,6 +198,7 @@ async def ensure_authenticated_aeat_session(
     fresh: bool = False,
     reset_lock: bool = False,
     operation: str = "auth-ensure-session",
+    target_url: str | None = None,
     browser_session_factory: BrowserSessionFactory | None = None,
     provider_factory: ProviderFactory | None = None,
 ) -> AuthenticatedAeatSessionResult:
@@ -224,6 +226,7 @@ async def ensure_authenticated_aeat_session(
         reused = await _try_probe_verified_session(
             settings,
             provider_kind,
+            target_url=target_url,
             browser_session_factory=browser_session_factory,
             provider_factory=provider_factory,
         )
@@ -248,6 +251,7 @@ async def ensure_authenticated_aeat_session(
             reused = await _try_probe_verified_session(
                 settings,
                 provider_kind,
+                target_url=target_url,
                 browser_session_factory=browser_session_factory,
                 provider_factory=provider_factory,
             )
@@ -271,8 +275,8 @@ async def ensure_authenticated_aeat_session(
             provider_factory=provider_factory,
         )
         try:
-            session = await provider.authenticate()
-            assertion = await provider.verify(session)
+            session = await provider.authenticate(target_url=target_url)
+            assertion = await provider.verify(session, target_url=target_url)
         finally:
             await _close_provider(provider)
         if not bool(getattr(assertion, "is_valid", False)):
@@ -348,6 +352,7 @@ async def _try_probe_verified_session(
     settings: Settings,
     kind: AuthProviderKind,
     *,
+    target_url: str | None,
     browser_session_factory: BrowserSessionFactory | None,
     provider_factory: ProviderFactory | None,
 ) -> tuple[AeatSession, AeatLoginAssertion] | None:
@@ -358,7 +363,7 @@ async def _try_probe_verified_session(
         provider_factory=provider_factory,
     )
     try:
-        session, assertion = await _probe_existing_session(provider)
+        session, assertion = await _probe_existing_session(provider, target_url=target_url)
     except Exception as exc:
         _logger.debug("ensure_authenticated_aeat_session: persisted probe failed: %s", exc, exc_info=True)
         return None
@@ -389,12 +394,16 @@ def _build_provider(
     )
 
 
-async def _probe_existing_session(provider: AuthProvider) -> tuple[AeatSession, AeatLoginAssertion]:
+async def _probe_existing_session(
+    provider: AuthProvider,
+    *,
+    target_url: str | None = None,
+) -> tuple[AeatSession, AeatLoginAssertion]:
     probe = getattr(provider, "probe_persisted_session", None)
     if probe is not None:
-        return await probe()
-    session = await provider.authenticate()
-    assertion = await provider.verify(session)
+        return await probe(target_url=target_url)
+    session = await provider.authenticate(target_url=target_url)
+    assertion = await provider.verify(session, target_url=target_url)
     return session, assertion
 
 

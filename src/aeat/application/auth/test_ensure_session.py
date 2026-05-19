@@ -41,7 +41,8 @@ class _Provider:
     def describe(self) -> AuthProviderDescription:
         return AuthProviderDescription(kind=self.kind, label="_Provider", configured=True, available=True)
 
-    async def probe_persisted_session(self) -> tuple[object, object]:
+    async def probe_persisted_session(self, *, target_url: str | None = None) -> tuple[object, object]:
+        del target_url
         self.probe_calls += 1
         if isinstance(self._probe, Exception):
             raise self._probe
@@ -49,13 +50,15 @@ class _Provider:
             raise AuthSessionUnavailableError("no persisted session")
         return self._probe
 
-    async def authenticate(self) -> object:
+    async def authenticate(self, *, target_url: str | None = None) -> object:
+        del target_url
         self.authenticate_calls += 1
         if self._auth is None:
             raise AuthSessionUnavailableError("auth not configured")
         return self._auth[0]
 
-    async def verify(self, session: object) -> object:
+    async def verify(self, session: object, *, target_url: str | None = None) -> object:
+        del target_url
         self.verify_calls += 1
         if self._auth is None:
             raise AuthSessionUnavailableError("auth not configured")
