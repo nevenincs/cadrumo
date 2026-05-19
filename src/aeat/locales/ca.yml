@@ -1,10 +1,67 @@
 access_gate:
   errors:
-    default_translatable: l'enviament en viu a l'AEAT està permanentment prohibit; utilitza produce -> verify -> export i puja el fitxer tu mateix al portal de l'AEAT
+    default_translatable: l'enviament en viu a l'AEAT està permanentment prohibit;
+      utilitza produce -> verify -> export i puja el fitxer tu mateix al portal de
+      l'AEAT
+adapters:
+  aeat:
+    clave_movil:
+      errors:
+        pending_petition_blocked: adapters.aeat.clave_movil.errors.pending_petition_blocked
+      suggestions:
+        reject_pending_request: adapters.aeat.clave_movil.suggestions.reject_pending_request
+    sede:
+      groi:
+        suggestions:
+          shape_change: adapters.aeat.sede.groi.suggestions.shape_change
+      nif_iva:
+        suggestions:
+          shape_change: adapters.aeat.sede.nif_iva.suggestions.shape_change
+      renta_web_open:
+        suggestions:
+          shape_change: adapters.aeat.sede.renta_web_open.suggestions.shape_change
+  google:
+    calc_sheets:
+      errors:
+        api_call_failed: adapters.google.calc_sheets.errors.api_call_failed
+        api_call_refused: adapters.google.calc_sheets.errors.api_call_refused
+        api_target_not_found: adapters.google.calc_sheets.errors.api_target_not_found
+        googleapiclient_not_importable: adapters.google.calc_sheets.errors.googleapiclient_not_importable
+    oauth_flow:
+      errors:
+        browser_launcher_refused: adapters.google.oauth_flow.errors.browser_launcher_refused
+        client_config_refused: adapters.google.oauth_flow.errors.client_config_refused
+        email_claim_missing: adapters.google.oauth_flow.errors.email_claim_missing
+        endpoint_unreachable: adapters.google.oauth_flow.errors.endpoint_unreachable
+        id_token_missing: adapters.google.oauth_flow.errors.id_token_missing
+        id_token_module_not_importable: adapters.google.oauth_flow.errors.id_token_module_not_importable
+        id_token_verification_failed: adapters.google.oauth_flow.errors.id_token_verification_failed
+        loopback_bind_failed: adapters.google.oauth_flow.errors.loopback_bind_failed
+        oauthlib_not_importable: adapters.google.oauth_flow.errors.oauthlib_not_importable
+        scope_missing: adapters.google.oauth_flow.errors.scope_missing
+        unsecured_mode_refused: adapters.google.oauth_flow.errors.unsecured_mode_refused
+      suggestions:
+        close_loopback_port: adapters.google.oauth_flow.suggestions.close_loopback_port
+        open_consent_url_manually: adapters.google.oauth_flow.suggestions.open_consent_url_manually
+        use_keyring_or_synthetic: adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic
+    profile_binding:
+      errors:
+        no_active_profile: adapters.google.profile_binding.errors.no_active_profile
+    refresh:
+      errors:
+        google_auth_not_importable: adapters.google.refresh.errors.google_auth_not_importable
+        reauth_required: adapters.google.refresh.errors.reauth_required
+        refresh_failed: adapters.google.refresh.errors.refresh_failed
+        refresh_refused: adapters.google.refresh.errors.refresh_refused
+        token_endpoint_unreachable: adapters.google.refresh.errors.token_endpoint_unreachable
+      suggestions:
+        check_network: adapters.google.refresh.suggestions.check_network
+      testing_project_cap_warning: adapters.google.refresh.testing_project_cap_warning
 aggregation:
   iva_ledger:
     errors:
-      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el bucket d'agregació sol·licitat.
+      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
+        bucket d'agregació sol·licitat.
   modelo_bindings:
     errors:
       unsupported_period: Període de model no admès per a l'agregació del llibre.
@@ -12,62 +69,96 @@ aggregation:
     errors:
       annual_period_mixed: El període no pot barrejar valors anuals i subannuals (trimestre/mes).
       month_required: El tipus de període mensual requereix un valor de mes.
-      period_type_ambiguous: El tipus de període és ambigu; especifiqueu trimestre o mes explícitament.
+      period_type_ambiguous: El tipus de període és ambigu; especifiqueu trimestre
+        o mes explícitament.
       quarter_required: El tipus de període trimestral requereix un valor de trimestre.
   per_modelo:
     errors:
       unsupported_modelo: Model no admès per a l'agregació per model
     registry:
       errors:
-        invalid_accrued_on: 'Data de meritació no vàlida per a l''observació %{source_object_id}: %{accrued_on}'
-        unsupported_provider: 'Proveïdor d''agregació no admès per al model %{modelo}: %{provider}'
+        invalid_accrued_on: 'Data de meritació no vàlida per a l''observació %{source_object_id}:
+          %{accrued_on}'
+        unsupported_provider: 'Proveïdor d''agregació no admès per al model %{modelo}:
+          %{provider}'
   period:
     parse_error: Format de període no reconegut
   renta_ledger:
     errors:
-      annual_period_required: Es requereix un període anual per a l'agregació del llibre de Renda.
-      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el bucket sol·licitat del llibre de Renda.
-      modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre de Renda.
-      period_mismatch: El període no coincideix amb el període esperat del llibre de Renda.
+      annual_period_required: Es requereix un període anual per a l'agregació del
+        llibre de Renda.
+      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
+        bucket sol·licitat del llibre de Renda.
+      modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre
+        de Renda.
+      period_mismatch: El període no coincideix amb el període esperat del llibre
+        de Renda.
 application:
   auth:
     acquisition_lock:
       errors:
-        acquire_failed: No s'ha pogut adquirir el bloqueig d'autenticació AEAT després de la recuperació del bloqueig obsolet.
-        lock_held: Ja hi ha una altra operació d'autenticació AEAT en curs per a aquest perfil. No iniciïs una segona petició de Cl@ve; espera que acabi el procés en curs o deixa expirar el bloqueig si
-          aquest procés ha fallat.
-        lock_held_suggestion: Executa `aeat config auth status --format json` per inspeccionar el bloqueig d'autenticació actiu.
+        acquire_failed: No s'ha pogut adquirir el bloqueig d'autenticació AEAT després
+          de la recuperació del bloqueig obsolet.
+        lock_held: Ja hi ha una altra operació d'autenticació AEAT en curs per a aquest
+          perfil. No iniciïs una segona petició de Cl@ve; espera que acabi el procés
+          en curs o deixa expirar el bloqueig si aquest procés ha fallat.
+        lock_held_suggestion: Executa `aeat config auth status --format json` per
+          inspeccionar el bloqueig d'autenticació actiu.
     operator:
       errors:
-        no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile create NAME` abans de configurar l'autenticació.
+        no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
+          create NAME` abans de configurar l'autenticació.
     provider_impact:
-      certificate_ready: L'autenticació amb certificat està a punt. L'operador manté el mateix flux de presentació a la CLI per a lectures recolzades per l'AEAT; tots els proveïdors utilitzen el mateix
-        flux d'ordres.
-      generic_ready: '%{label} està a punt. L''operador manté el mateix flux de presentació a la CLI mentre aquest proveïdor es connecta al protocol d''autenticació compartit.'
-      unavailable: '%{label} està configurat/da però encara no està a punt. L''operador encara pot generar, verificar i exportar presentacions localment, però les lectures recolzades per l''AEAT romandran
-        no disponibles fins que se solucioni l''autenticació.'
-      unconfigured: L'operador encara pot generar, verificar i exportar presentacions localment, però les lectures recolzades per l'AEAT romandran no disponibles fins que es configuri un proveïdor d'autenticació.
+      certificate_ready: L'autenticació amb certificat està a punt. L'operador manté
+        el mateix flux de presentació a la CLI per a lectures recolzades per l'AEAT;
+        tots els proveïdors utilitzen el mateix flux d'ordres.
+      generic_ready: '%{label} està a punt. L''operador manté el mateix flux de presentació
+        a la CLI mentre aquest proveïdor es connecta al protocol d''autenticació compartit.'
+      unavailable: '%{label} està configurat/da però encara no està a punt. L''operador
+        encara pot generar, verificar i exportar presentacions localment, però les
+        lectures recolzades per l''AEAT romandran no disponibles fins que se solucioni
+        l''autenticació.'
+      unconfigured: L'operador encara pot generar, verificar i exportar presentacions
+        localment, però les lectures recolzades per l'AEAT romandran no disponibles
+        fins que es configuri un proveïdor d'autenticació.
     sessions:
       errors:
-        corrupt_session: La sessió d'autenticació guardada està danyada i no es pot llegir. Executa `aeat config auth clear --sessions` i després `aeat config auth test`.
-        no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans de llegir dades AEAT.
-        sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config auth test` abans de llegir dades AEAT.
-        session_expired: La sessió AEAT ha caducat; executa `aeat config auth test` abans de llegir dades AEAT.
-        state_missing: Falta l'estat de la sessió AEAT; executa `aeat config auth test` abans de llegir dades AEAT.
-        verify_failed: No s'ha pogut verificar la sessió AEAT; executa `aeat config auth test` abans de llegir dades AEAT.
+        corrupt_session: La sessió d'autenticació guardada està danyada i no es pot
+          llegir. Executa `aeat config auth clear --sessions` i després `aeat config
+          auth test`.
+        no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
+          de llegir dades AEAT.
+        sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config
+          auth test` abans de llegir dades AEAT.
+        session_expired: La sessió AEAT ha caducat; executa `aeat config auth test`
+          abans de llegir dades AEAT.
+        state_missing: Falta l'estat de la sessió AEAT; executa `aeat config auth
+          test` abans de llegir dades AEAT.
+        verify_failed: No s'ha pogut verificar la sessió AEAT; executa `aeat config
+          auth test` abans de llegir dades AEAT.
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Les claus de binding aportades no poden estar en blanc.
-        snapshot_id_required: Els valors procedents de l'esborrany requereixen un borrador_snapshot_id.
-        snapshot_not_active: L'snapshot d'esborrany no està actiu; llista els snapshots actius amb `aeat app live borrador 100 list`.
-        source_trace_mismatch: La traça d'origen de l'esborrany ha de coincidir amb els identificadors de binding resolts.
+        caller_binding_keys_blank: Les claus de binding aportades no poden estar en
+          blanc.
+        snapshot_id_required: Els valors procedents de l'esborrany requereixen un
+          borrador_snapshot_id.
+        snapshot_not_active: L'snapshot d'esborrany no està actiu; llista els snapshots
+          actius amb `aeat app live borrador 100 list`.
+        source_trace_mismatch: La traça d'origen de l'esborrany ha de coincidir amb
+          els identificadors de binding resolts.
     errors:
-      export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile create NAME` abans d'exportar una revisió de modelo.
-      external_filing_evidence_reference_blank: La importació de declaració externa requereix un evidence_reference_id no buit.
-      external_filing_no_casilla_values: La importació de declaració externa requereix com a mínim un valor de casella; el mapatge aportat és buit.
-      reconcile_declaration_unsupported: La reconciliació des de PDF de declaració encara no està disponible; fes servir --from-justificante PATH fins que el parser de declaració estigui implementat.
-      reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile create NAME` abans de reconciliar una unitat de treball.
+      export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
+        create NAME` abans d'exportar una revisió de modelo.
+      external_filing_evidence_reference_blank: La importació de declaració externa
+        requereix un evidence_reference_id no buit.
+      external_filing_no_casilla_values: La importació de declaració externa requereix
+        com a mínim un valor de casella; el mapatge aportat és buit.
+      reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
+        encara no està disponible; fes servir --from-justificante PATH fins que el
+        parser de declaració estigui implementat.
+      reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
+        profile create NAME` abans de reconciliar una unitat de treball.
   overview:
     explain:
       errors:
@@ -77,23 +168,28 @@ application:
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
   wizard:
     errors:
-      profile_flag_required: L'assistent requereix --profile NAME (sense valor per defecte 'default' implícit).
-      quiet_missing_flags: Falten flags obligatoris per a una execució de l'assistent amb --quiet.
+      profile_flag_required: L'assistent requereix --profile NAME (sense valor per
+        defecte 'default' implícit).
+      quiet_missing_flags: Falten flags obligatoris per a una execució de l'assistent
+        amb --quiet.
     status:
       errors:
         missing_tax_id: El perfil actiu no té tax.id.
         no_active_profile: No hi ha cap perfil actiu configurat.
         projection_failed: El perfil actiu no supera la projecció de l'assistent.
-        unexpected_projection_type: Les respostes del flux de setup no es van projectar com SetupAnswers.
+        unexpected_projection_type: Les respostes del flux de setup no es van projectar
+          com SetupAnswers.
   workflow:
     errors:
       no_active_profile_bucket: No hi ha cap perfil actiu.
       state_unreadable: No s'ha pogut llegir l'estat de configuració local.
 auth:
   catalogue:
-    certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una altra autoritat reconeguda). Compatible amb tots els fluxos de la seu electrònica.
+    certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
+      altra autoritat reconeguda). Compatible amb tots els fluxos de la seu electrònica.
     certificate_label: Certificat digital
-    clave_movil_description: Autenticació amb aprovació push al mòbil del titular registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el dispositiu vinculat.
+    clave_movil_description: Autenticació amb aprovació push al mòbil del titular
+      registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el dispositiu vinculat.
     clave_movil_label: Cl@ve Móvil
     clave_permanente_description: Slot reservat i tancat per a Cl@ve Permanente.
     clave_permanente_label: Cl@ve Permanente
@@ -172,7 +268,8 @@ cli:
         eligible_help: Llista les categories que admeten proporció específica
         group_help: Proporcions d'ús professional per categoria de despesa
         list_help: Llista les proporcions per categoria del bucket actiu
-        no_override_error: No hi ha cap proporció desada per a la categoria {category!r} al bucket {bucket_id!r}
+        no_override_error: No hi ha cap proporció desada per a la categoria {category!r}
+          al bucket {bucket_id!r}
         ratio_help: Proporció aplicable entre 0 i 1
         set_help: Estableix o substitueix la proporció d'una categoria
         unknown_category: 'Categoria de despesa desconeguda: {raw!r}'
@@ -188,7 +285,8 @@ cli:
         list_help: Llistar snapshots persistits del borrador del model 100
         modelo_100_help: Ordres de snapshots del borrador del model 100
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
-        state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o all'
+        state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o
+          all'
         view_help: Mostrar un snapshot del borrador del model 100
       expediente_help: Identificador d'expedient AEAT
       expedientes:
@@ -200,7 +298,8 @@ cli:
         view_help: Mostra un snapshot d'expedients
       filed:
         capture_help: Capturar dades de declaracions presentades des d'AEAT
-        capture_sources_help: Capturar observacions presentades requerides per una declaració objectiu
+        capture_sources_help: Capturar observacions presentades requerides per una
+          declaració objectiu
         list_help: Llistar declaracions presentades sense descarregar artefactes
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
@@ -242,68 +341,97 @@ cli:
       year_help: Exercici de presentació
     modelo:
       aggregate:
-        counterpart_observation_help: Objecte JSON CounterpartObservation; repeteix l'opció per a diverses observacions
-        foreign_asset_observation_help: Objecte JSON ForeignAssetObservation; repeteix l'opció per a diverses observacions
-        modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o 720)
+        counterpart_observation_help: Objecte JSON CounterpartObservation; repeteix
+          l'opció per a diverses observacions
+        foreign_asset_observation_help: Objecte JSON ForeignAssetObservation; repeteix
+          l'opció per a diverses observacions
+        modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
+          720)
         period_help: Període enviat al servei d'agregació
-        retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció per a diverses observacions
+        retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
+          per a diverses observacions
       aggregate_help: Executa l'agregació per model amb observacions canòniques explícites
       app_help: Inspeccionar el catàleg de models tributaris AEAT al registre
       audit:
-        bundle_id_help: Identificador del paquet d'evidència (SHA-256 complet o prefix inequívoc).
-        check_help: Reverificar un paquet d'evidència recalculant els digests dels registres.
-        export_help: Generar un fitxer ZIP determinista del paquet d'evidència (manifest.json s'escriu l'últim).
-        force_incomplete_help: Permetre l'exportació quan la verificació indiqui que el paquet és incomplet.
+        bundle_id_help: Identificador del paquet d'evidència (SHA-256 complet o prefix
+          inequívoc).
+        check_help: Reverificar un paquet d'evidència recalculant els digests dels
+          registres.
+        export_help: Generar un fitxer ZIP determinista del paquet d'evidència (manifest.json
+          s'escriu l'últim).
+        force_incomplete_help: Permetre l'exportació quan la verificació indiqui que
+          el paquet és incomplet.
         group_help: Verbs d'auditoria del paquet d'evidència (show/check/export/replay).
         output_help: Ruta de sortida per al ZIP del paquet.
-        replay_help: Reproduir la verificació del cas d'evidència per al lliurament forense; mai contacta amb AEAT ni realitza tramesses.
+        replay_help: Reproduir la verificació del cas d'evidència per al lliurament
+          forense; mai contacta amb AEAT ni realitza tramesses.
         show_help: Mostrar el manifest i els registres referenciats d'un paquet d'evidència
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
-        list_help: Llistar els bindings requerits i disponibles per a un model / exercici / període
-        missing_help: Filtrar als bindings sense valor resolt (requereixen dades del bucket / llibre / perfil)
+        list_help: Llistar els bindings requerits i disponibles per a un model / exercici
+          / període
+        missing_help: Filtrar als bindings sense valor resolt (requereixen dades del
+          bucket / llibre / perfil)
         missing_required_options: 'Falten opcions obligatòries: %{options}'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1 i 2026-01
-        preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense mutar l'estat
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
+          exemples periodics inclouen 2026Q1 i 2026-01
+        preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense
+          mutar l'estat
         year_help: Exercici fiscal del model (p. ex. 2026)
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         form_number_help: Filtrar caselles pel número imprès al BOE (p. ex. 46)
-        input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound, computed, informational)
+        input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
+          computed, informational)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
+          exemples periodics inclouen 2026Q1 i 2026-01
         required_help: Mostrar només les caselles marcades com a obligatòries
       describe:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Token de periode per resoldre la revisio del model; per a Modelo 036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: Token de periode per resoldre la revisio del model; per a Modelo
+          036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1 i
+          2026-01
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
-          no_exportable_revision: La unitat de treball no té cap revisió de càlcul verificada o presentada per exportar. Executa `aeat app modelo verify` primer.
-        help: Exporta una revisió de modelo verificada o presentada a un fitxer local compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
+          no_exportable_revision: La unitat de treball no té cap revisió de càlcul
+            verificada o presentada per exportar. Executa `aeat app modelo verify`
+            primer.
+        help: Exporta una revisió de modelo verificada o presentada a un fitxer local
+          compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
-        revision_help: Identificador de la revisió de càlcul a exportar; per defecte, la revisió verificada o presentada més recent de la unitat de treball.
-        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix inequívoc).
+        revision_help: Identificador de la revisió de càlcul a exportar; per defecte,
+          la revisió verificada o presentada més recent de la unitat de treball.
+        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
+          inequívoc).
       filing_record:
         app_help: Inspeccionar els filing records interns registrats
         bucket_id_help: Filtrar per bucket
-        evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf, aeat_csv_register, aeat_live_capture)
-        evidence_reference_id_help: Identificador estable de l'evidència importada (número de justificant, id del registre CSV, id de captura en viu)
+        evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf, aeat_csv_register,
+          aeat_live_capture)
+        evidence_reference_id_help: Identificador estable de l'evidència importada
+          (número de justificant, id del registre CSV, id de captura en viu)
         filing_record_id_help: Identificador estable d'un filing record
-        import_casilla_help: Valor de casella importat amb sintaxi CASILLA=DECIMAL (repetible; almenys un requerit)
-        import_help: Persistir una declaració presentada externament com a filing record base amb evidència oficial importada de l'AEAT
-        include_superseded_help: Incloure els filing records superats (exclosos per defecte)
+        import_casilla_help: Valor de casella importat amb sintaxi CASILLA=DECIMAL
+          (repetible; almenys un requerit)
+        import_help: Persistir una declaració presentada externament com a filing
+          record base amb evidència oficial importada de l'AEAT
+        include_superseded_help: Incloure els filing records superats (exclosos per
+          defecte)
         list_help: Llistar els filing records registrats
         view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
-        explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula a la sortida de text. El payload JSON els porta sempre.
+        explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula
+          a la sortida de text. El payload JSON els porta sempre.
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
+          exemples periodics inclouen 2026Q1 i 2026-01
       history:
         modelo_help: Codi de model (p. ex. 100, 303)
         period_help: Filtre opcional de període (p. ex. Q1, annual)
@@ -319,66 +447,102 @@ cli:
       readiness_help: cli.app.modelo.readiness_help
       reconcile:
         errors:
-          exclusive_source: --from-justificante i --from-declaration són mútuament excloents.
+          exclusive_source: --from-justificante i --from-declaration són mútuament
+            excloents.
           missing_source: Indica --from-justificante RUTA o --from-declaration RUTA.
-        from_declaration_help: Ruta al PDF de la declaració presentada per reconciliar (reservat; parser pendent).
+        from_declaration_help: Ruta al PDF de la declaració presentada per reconciliar
+          (reservat; parser pendent).
         from_justificante_help: Ruta al PDF del justificant AEAT per reconciliar.
-        help: Reconciliar una unitat de treball de modelo amb evidència externa (PDF de justificant). Local; mai contacta amb AEAT.
-        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix inequívoc).
+        help: Reconciliar una unitat de treball de modelo amb evidència externa (PDF
+          de justificant). Local; mai contacta amb AEAT.
+        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
+          inequívoc).
       reconcile_from_justificante:
-        help: Reconciliar una unitat de treball de modelo amb un PDF de justificant. Sucre per a operadors que pensen "reconciliar des d'aquest justificant" en lloc de "reconciliar, font = justificant".
-          Comparteix el mateix punt d'entrada del servei modelo_reconcile amb la forma basada en flags. Local; mai contacta amb AEAT.
+        help: Reconciliar una unitat de treball de modelo amb un PDF de justificant.
+          Sucre per a operadors que pensen "reconciliar des d'aquest justificant"
+          en lloc de "reconciliar, font = justificant". Comparteix el mateix punt
+          d'entrada del servei modelo_reconcile amb la forma basada en flags. Local;
+          mai contacta amb AEAT.
         justificante_path_help: Ruta al PDF del justificant AEAT per reconciliar.
-        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix inequívoc).
+        work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
+          inequívoc).
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
-        list_help: Llistar els informes de verificació, opcionalment filtrats per revisió de càlcul
-        verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters) d'un informe de verificació
+        list_help: Llistar els informes de verificació, opcionalment filtrats per
+          revisió de càlcul
+        verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters)
+          d'un informe de verificació
         view_help: Mostrar un informe de verificació per id
       work:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
-        amend_help: Construir una declaració complementària sobre una declaració presentada externament. Requereix un filing record amb evidència oficial importada de l'AEAT
+        amend_help: Construir una declaració complementària sobre una declaració presentada
+          externament. Requereix un filing record amb evidència oficial importada
+          de l'AEAT
         amendment_kind_help: Tipus legal de l'amendació (complementaria o sustitutiva)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
-        app_help: Gestionar el cicle de vida de les unitats de treball d'un model tributari
-        borrador_help: Id del snapshot de borrador del model 100 (complet o prefix no ambigu). Els seus valors de binding s'usen només per a bindings marcats aeat_prefilled; les sobrescriptures --binding
-          de l'operador sempre tenen prioritat.
+        app_help: Gestionar el cicle de vida de les unitats de treball d'un model
+          tributari
+        borrador_help: Id del snapshot de borrador del model 100 (complet o prefix
+          no ambigu). Els seus valors de binding s'usen només per a bindings marcats
+          aeat_prefilled; les sobrescriptures --binding de l'operador sempre tenen
+          prioritat.
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
-        calculate_help: Persistir una nova revisió draft de càlcul per a la unitat de treball
-        calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters) d'una revisió de càlcul
+        calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
+          de treball
+        calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
+          d'una revisió de càlcul
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible)
-        create_help: Crear o reutilitzar una unitat de treball per a (model, exercici, període, revisió)
-        discard_help: Marcar una unitat de treball com descartada (transició d'estat auditable)
-        file_help: Marcar una revisió verificada com a internament presentada. NO envia a l'AEAT
-        from_filing_record_help: Identificador estable del filing record base a amendar. Ha de portar evidència externa importada (justificant / CSV / captura en viu)
-        history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat de treball
-        history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual vols veure
-        include_discarded_help: Incloure les unitats descartades en el llistat (excloses per defecte)
-        invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric en minúscules més separadors . _ : -, màx. 128 caràcters)'
-        invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric més separadors . _ : -, màx. 64 caràcters)'
-        invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules de 64 caràcters (resum SHA-256)
-        list_help: Llistar les unitats de treball registrades, opcionalment filtrades per bucket
+        create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
+          període, revisió)
+        discard_help: Marcar una unitat de treball com descartada (transició d'estat
+          auditable)
+        file_help: Marcar una revisió verificada com a internament presentada. NO
+          envia a l'AEAT
+        from_filing_record_help: Identificador estable del filing record base a amendar.
+          Ha de portar evidència externa importada (justificant / CSV / captura en
+          viu)
+        history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat
+          de treball
+        history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
+          vols veure
+        include_discarded_help: Incloure les unitats descartades en el llistat (excloses
+          per defecte)
+        invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
+          en minúscules més separadors . _ : -, màx. 128 caràcters)'
+        invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
+          més separadors . _ : -, màx. 64 caràcters)'
+        invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
+          de 64 caràcters (resum SHA-256)
+        list_help: Llistar les unitats de treball registrades, opcionalment filtrades
+          per bucket
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
         notes_help: Notes opcionals associades al filing record
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
-        period_help: Token de periode de la unitat; per a Modelo 036 usa alta, modificacion o baja; exemples periodics inclouen Q1, 4T, 0A i 01
+        period_help: Token de periode de la unitat; per a Modelo 036 usa alta, modificacion
+          o baja; exemples periodics inclouen Q1, 4T, 0A i 01
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
-        relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE. KEY és un id de relació del registry; VALUE és un decimal. Repetible.
+        relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
+          KEY és un id de relació del registry; VALUE és un decimal. Repetible.
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
-        resume_help: Valida si pots reintentar una execució de flux interrompuda sense contactar amb AEAT
+        resume_help: Valida si pots reintentar una execució de flux interrompuda sense
+          contactar amb AEAT
         resume_workflow_run_id_help: Id d'execució de flux de 16 caràcters
         revision_help: Identificador estable de la revisió registrada del model
-        revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per unitat de treball
-        set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible; almenys un requerit)
+        revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
+          unitat de treball
+        set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
+          almenys un requerit)
         status_help: Mostrar les metadades d'una unitat de treball
         verify_help: Verificar una revisió draft contra el contracte verified-complete
-        work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat de treball
+        work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
+          de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config init` abans d'usar ordres de dades del perfil.
+      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config init` abans
+        d'usar ordres de dades del perfil.
       period_empty: El periode fiscal no pot estar buit
       period_unrecognised: Període no reconegut
   config:
@@ -413,26 +577,36 @@ cli:
       configure_help: Configurar el proveïdor d'autenticació actiu
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
-      no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config init' abans de configurar l'autenticació.
+      no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config init'
+        abans de configurar l'autenticació.
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
       providers_help: Llistar proveïdors d'autenticació suportats
-      reserved_provider: 'Proveïdor d''autenticació reservat però no implementat: %{provider}.'
+      reserved_provider: 'Proveïdor d''autenticació reservat però no implementat:
+        %{provider}.'
       status_help: Mostrar l'estat d'autenticació configurat
       test_help: Comprovar la preparació d'autenticació local
-      unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa ''aeat config auth --help'' per veure els identificadors vàlids.'
+      unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
+        ''aeat config auth --help'' per veure els identificadors vàlids.'
     bucket:
-      actor_help: Filtrar l'historial a esdeveniments registrats per un actor concret (coincidència exacta)
-      bucket_id_help: Identificador del bucket l'historial d'esdeveniments del qual s'inspecciona
+      actor_help: Filtrar l'historial a esdeveniments registrats per un actor concret
+        (coincidència exacta)
+      bucket_id_help: Identificador del bucket l'historial d'esdeveniments del qual
+        s'inspecciona
       event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment (repetible)
       help: Inspeccionar l'emmagatzematge per bucket i el seu historial d'esdeveniments
       history_help: Mostrar l'historial d'esdeveniments només-append d'un bucket
-      object_id_help: Filtrar l'historial a esdeveniments sobre un object_id concret (coincidència exacta)
-      since_help: Filtrar l'historial a esdeveniments en o després d'aquesta marca ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
-      until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
+      object_id_help: Filtrar l'historial a esdeveniments sobre un object_id concret
+        (coincidència exacta)
+      since_help: Filtrar l'historial a esdeveniments en o després d'aquesta marca
+        ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
+      until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta marca ISO-8601
+        (p. ex. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
-      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config init --tax-id <NIF>' primer.
-      unknown_key: 'Clau de configuració desconeguda: %{name}. Executa ''aeat config profile list'' per veure les claus disponibles.'
+      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config init --tax-id
+        <NIF>' primer.
+      unknown_key: 'Clau de configuració desconeguda: %{name}. Executa ''aeat config
+        profile list'' per veure les claus disponibles.'
     get:
       help: Mostrar el valor actual d'una clau de configuració
       key_help: Clau a llegir (ex. tax.id, iva.regime)
@@ -444,35 +618,54 @@ cli:
         help: Gestiona la carpeta arrel de Google Drive
         set_help: Vincula una carpeta de Google Drive al perfil actiu
       help: Gestionar la integració OAuth de Google Desktop per a Drive i Sheets
-      login_help: Executar el flux de consentiment OAuth (o refrescar una credencial existent)
-      logout_help: Esborrar el token de refresc i les metadades; conservar el client registrat
+      login_help: Executar el flux de consentiment OAuth (o refrescar una credencial
+        existent)
+      logout_help: Esborrar el token de refresc i les metadades; conservar el client
+        registrat
       profile_help: Perfil AEAT a usar (per defecte = perfil actiu de l'estat de flux)
       refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
-      register_help: Registrar un JSON de client OAuth Desktop de Cloud Console per al perfil actiu
-      status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil actiu
+      register_help: Registrar un JSON de client OAuth Desktop de Cloud Console per
+        al perfil actiu
+      status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
+        actiu
       sync:
         calc:
           export:
             modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
             period_help: Codi de període (p. ex. 1T, 2T, 0A)
-            prefill_relations_help: Preomple els valors de relacions entre revisions des del magatzem local d'observacions abans d'exportar (resums anuals, arrossegament de trimestres anteriors, etc.)
-            root_folder_required: No hi ha cap carpeta arrel de Drive configurada; executeu `aeat config google folder set <id>` primer
-            snapshot_failure: 'No es pot construir el snapshot del registry per al model {modelo} ({period} {year}): {detail}'
-            unknown_modelo: Model desconegut {modelo!r}; els models disponibles són {available}
+            prefill_relations_help: Preomple els valors de relacions entre revisions
+              des del magatzem local d'observacions abans d'exportar (resums anuals,
+              arrossegament de trimestres anteriors, etc.)
+            root_folder_required: No hi ha cap carpeta arrel de Drive configurada;
+              executeu `aeat config google folder set <id>` primer
+            snapshot_failure: 'No es pot construir el snapshot del registry per al
+              model {modelo} ({period} {year}): {detail}'
+            unknown_modelo: Model desconegut {modelo!r}; els models disponibles són
+              {available}
             year_help: Any de declaració (p. ex. 2025)
-          export_help: Exporta la superfície de càlcul del registre per a un model i període a un full de Google Sheets dins de `aeat-vault/`
+          export_help: Exporta la superfície de càlcul del registre per a un model
+            i període a un full de Google Sheets dins de `aeat-vault/`
           help: Superfície de càlcul esquema-a-full (exportar i recuperar)
           pull:
-            assemble_observations_help: Després de recuperar, reensambla les cel·les de files de la pestanya Detalle en observacions tipades (perceptors, béns a l'estranger, operacions vinculades, membres
-              d'atribució, operacions de devolució) i emet-les al payload al costat dels row_set_edits crus
-            compute_help: Després de recuperar les edicions, executa el motor Decimal local sobre elles i emet els valors calculats de les caselles
-            compute_refused_stale: rebutjant calcular contra un llibre les marques de metadades del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match}); reexporteu i torneu
-              a recuperar
-            spreadsheet_id_help: Identificador del fitxer de Drive del llibre del qual llegir les edicions de l'operador (ha d'estar marcat com a propi de l'app i lligat al snapshot subministrat)
-          pull_help: Llegeix les cel·les editades per l'operador d'un full calc-sheets cap a registres tipats (després de validar la marca registry-SHA del llibre)
+            assemble_observations_help: Després de recuperar, reensambla les cel·les
+              de files de la pestanya Detalle en observacions tipades (perceptors,
+              béns a l'estranger, operacions vinculades, membres d'atribució, operacions
+              de devolució) i emet-les al payload al costat dels row_set_edits crus
+            compute_help: Després de recuperar les edicions, executa el motor Decimal
+              local sobre elles i emet els valors calculats de les caselles
+            compute_refused_stale: rebutjant calcular contra un llibre les marques
+              de metadades del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match});
+              reexporteu i torneu a recuperar
+            spreadsheet_id_help: Identificador del fitxer de Drive del llibre del
+              qual llegir les edicions de l'operador (ha d'estar marcat com a propi
+              de l'app i lligat al snapshot subministrat)
+          pull_help: Llegeix les cel·les editades per l'operador d'un full calc-sheets
+            cap a registres tipats (després de validar la marca registry-SHA del llibre)
           verify:
-            scenario_help: Ruta a un fitxer JSON amb entrades de l'operador i, si està disponible, un mapa de sortides esperades publicades per AEAT
-          verify_help: Comprovació de paritat triple del model (oracle AEAT vs motor Decimal local vs full de Sheets)
+            scenario_help: Ruta a un fitxer JSON amb entrades de l'operador i, si
+              està disponible, un mapa de sortides esperades publicades per AEAT
+          verify_help: Comprovació de paritat triple del model (oracle AEAT vs motor
+            Decimal local vs full de Sheets)
         help: Sincronitza dades locals amb la carpeta configurada de Google Drive
         probe_help: Comprova l'accés a la carpeta configurada de Google Drive
         probe_read_only_help: Comprova Google Drive en mode només lectura
@@ -480,11 +673,13 @@ cli:
         push_help: Puja els espais de dades locals a Google Drive
         push_limit_help: Nombre màxim de fitxers que es pujaran
         push_namespace_help: Espai de dades que vols pujar; es pot repetir
-        root_folder_id_unset: No hi ha cap carpeta arrel de Google Drive configurada; executa `aeat config google folder set <id>` primer
+        root_folder_id_unset: No hi ha cap carpeta arrel de Google Drive configurada;
+          executa `aeat config google folder set <id>` primer
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
       auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate password
+      certificate_password_env_help: Environment variable name containing the certificate
+        password
       certificate_path_help: Path to the .p12 or .pfx certificate file
       drafts_dir_help: Directory to store local filing drafts
       dry_run_help: Report changes without modifying the configuration
@@ -504,7 +699,8 @@ cli:
     list:
       help: Llistar totes les claus de configuració amb el seu valor actual
     profile:
-      already_exists: El perfil %{name} ja existeix. Tria un altre identificador de destinació.
+      already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
+        destinació.
       census:
         apply_help: Sobrescriu el perfil amb els valors censals comunicats per AEAT
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
@@ -515,9 +711,11 @@ cli:
       create_help: cli.config.profile.create_help
       delete_help: Elimina un perfil i el seu estat local; --yes confirma
       delete_name_help: Nom del perfil que vols eliminar
-      delete_requires_yes: L'eliminació és destructiva. Torna a executar 'aeat config profile delete %{name} --yes' per confirmar.
+      delete_requires_yes: L'eliminació és destructiva. Torna a executar 'aeat config
+        profile delete %{name} --yes' per confirmar.
       delete_yes_help: Confirma explícitament l'eliminació
-      duplicate_display_name_help: Nom visible del nou perfil (per defecte l''id de destinació)
+      duplicate_display_name_help: Nom visible del nou perfil (per defecte l''id de
+        destinació)
       duplicate_help: Copiar un perfil sota un id i nom visibles nous
       duplicate_source_help: Id del perfil d''origen a duplicar
       duplicate_target_help: Id del perfil de destinació per al duplicat
@@ -530,15 +728,18 @@ cli:
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
-      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>` first.
-      preflight_help: Report whether the active profile is ready for one modelo / year / period.
+      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+        first.
+      preflight_help: Report whether the active profile is ready for one modelo /
+        year / period.
       preflight_modelo_help: Modelo code (e.g. 303).
       preflight_period_help: Period token (e.g. Q1, annual).
       preflight_revision_help: Registry revision id.
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
       remove_name_help: Id del perfil a retirar
-      remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config profile remove %{name} --yes' per confirmar.
+      remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
+        profile remove %{name} --yes' per confirmar.
       remove_yes_help: Confirma explícitament l''operació de retirada
       rename_display_name_help: Etiqueta visible per a l'operador; per defecte, l'existent
       rename_help: Canvia el nom d'un perfil i mou el punter actiu automàticament
@@ -548,7 +749,8 @@ cli:
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
       switch_help: Activa un perfil existent
       switch_name_help: Nom del perfil que vols activar
-      unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile list'' per veure els perfils registrats.'
+      unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile
+        list'' per veure els perfils registrats.'
       use_help: Seleccionar un perfil existent com a perfil actiu
       use_name_help: Id del perfil que s''activarà
       validate_help: Validate the active profile against the schema.
@@ -556,23 +758,32 @@ cli:
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
-      help: Diagnosticar i reparar configuració local, registre, perfil, autenticació i logs
-      integrity_help: Probe AES-256-GCM tag verification across one namespace (or all).
+      help: Diagnosticar i reparar configuració local, registre, perfil, autenticació
+        i logs
+      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
+        all).
       integrity_namespace_help: Restrict the integrity probe to one namespace.
       list_all_help: Return every key, including unreadable.
-      list_conflicting_flags: --all and --unreadable cannot be combined; pass one or neither.
+      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
+        or neither.
       list_help: List secure-object keys stored under one namespace.
       list_namespace_help: Namespace to inventory.
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
-      quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu; requereix --yes)
-      quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb --yes per confirmar.
+      quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu;
+        requereix --yes)
+      quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
+        --yes per confirmar.
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
-      reset_state_dry_run_help: Informar l'empremta de l'envoltori sense eliminar la fila
-      reset_state_help: Descartar l'envoltori il·legible de l'estat del flux de treball (destructiu; requereix --yes)
-      reset_state_requires_yes: Aquesta operació és destructiva. Torna a executar amb --yes per confirmar o passa --dry-run per inspeccionar l'empremta.
-      reset_state_yes_help: Confirmar explícitament el reinici de l'estat del flux de treball
+      reset_state_dry_run_help: Informar l'empremta de l'envoltori sense eliminar
+        la fila
+      reset_state_help: Descartar l'envoltori il·legible de l'estat del flux de treball
+        (destructiu; requereix --yes)
+      reset_state_requires_yes: Aquesta operació és destructiva. Torna a executar
+        amb --yes per confirmar o passa --dry-run per inspeccionar l'empremta.
+      reset_state_yes_help: Confirmar explícitament el reinici de l'estat del flux
+        de treball
     reset:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
@@ -586,12 +797,15 @@ cli:
     setup:
       accept_defaults_help: Acceptar els valors per defecte del descriptor sense preguntar
       errors:
-        missing_required_flags: Falten banderes obligatòries per al mode --quiet; proporciona un valor per a cada pregunta obligatòria.
+        missing_required_flags: Falten banderes obligatòries per al mode --quiet;
+          proporciona un valor per a cada pregunta obligatòria.
       help: Configuració inicial guiada del perfil tributari
       profile_name_help: Nom del perfil on s'escriuen les respostes
-      quiet_help: Executar el flux sense interacció utilitzant només els valors de les banderes
+      quiet_help: Executar el flux sense interacció utilitzant només els valors de
+        les banderes
       success:
-        next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai de treball.'
+        next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai
+          de treball.'
         saved: Perfil '%{profile_name}' desat.
     status:
       empty_profile: Cap perfil configurat. Executa `aeat config init` per començar.
@@ -601,6 +815,54 @@ cli:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
     workflow_help: Mostrar ajuda del flux de configuració
+  diagnostics:
+    browser:
+      http_status_label: cli.diagnostics.browser.http_status_label
+      markers_label: cli.diagnostics.browser.markers_label
+      markers_none: cli.diagnostics.browser.markers_none
+      observed_at_label: cli.diagnostics.browser.observed_at_label
+      retry_after_label: cli.diagnostics.browser.retry_after_label
+      state_label: cli.diagnostics.browser.state_label
+      target_browser: cli.diagnostics.browser.target_browser
+      target_label: cli.diagnostics.browser.target_label
+    dead_end:
+      registry_bundled: cli.diagnostics.dead_end.registry_bundled
+    next_action:
+      inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+    repair:
+      auth_label: cli.diagnostics.repair.auth_label
+      checks_heading: cli.diagnostics.repair.checks_heading
+      detail_label: cli.diagnostics.repair.detail_label
+      logs_label: cli.diagnostics.repair.logs_label
+      next_label: cli.diagnostics.repair.next_label
+      note_label: cli.diagnostics.repair.note_label
+      overall_label: cli.diagnostics.repair.overall_label
+      profile_label: cli.diagnostics.repair.profile_label
+      python_label: cli.diagnostics.repair.python_label
+      version_label: cli.diagnostics.repair.version_label
+    summary:
+      auth_no_session: cli.diagnostics.summary.auth_no_session
+      auth_none: cli.diagnostics.summary.auth_none
+      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      profile_keys_set: cli.diagnostics.summary.profile_keys_set
+      profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
+      profile_none: cli.diagnostics.summary.profile_none
+      registry_counts: cli.diagnostics.summary.registry_counts
+      registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
+      registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
+      registry_integrity_skipped: cli.diagnostics.summary.registry_integrity_skipped
+      registry_unavailable: cli.diagnostics.summary.registry_unavailable
+      secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
+      secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
+      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      state_backend_readable: cli.diagnostics.summary.state_backend_readable
+      state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
+      venv_in_sync: cli.diagnostics.summary.venv_in_sync
+      venv_stale: cli.diagnostics.summary.venv_stale
+    version:
+      no_revisions: cli.diagnostics.version.no_revisions
+      registry_summary: cli.diagnostics.version.registry_summary
+      registry_unavailable: cli.diagnostics.version.registry_unavailable
   ledger:
     add:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -629,7 +891,8 @@ cli:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       business_pct_help: Proporció d'ús professional de 0 a 1
       category_help: Id de categoria de despesa o ingrés
-      help: Registrar proporcionalitat professional/personal per a un moviment del llibre
+      help: Registrar proporcionalitat professional/personal per a un moviment del
+        llibre
       id_help: Id del moviment del llibre a assignar
       prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
       usage_ratio_help: Id de proporció d'ús per a ús professional proporcional
@@ -642,14 +905,17 @@ cli:
       yes_help: Confirma l'arxivament de la transacció del llibre
     attach:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a diversos adjunts
+      attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
+        diversos adjunts
       help: Adjuntar objectes d'evidència segura a un moviment del llibre
       id_help: Id del moviment del llibre al qual adjuntar evidència
-      purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta el moviment
+      purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
+        el moviment
     check:
       bucket_id_help: Id del bucket a examinar (per defecte el bucket del perfil actiu).
-      help: Examina els moviments del llibre del bucket adreçat (per defecte el bucket del perfil actiu) i informa de files amb anomalies agregades a través de cada període que els moviments toquin. Local;
-        mai contacta amb AEAT.
+      help: Examina els moviments del llibre del bucket adreçat (per defecte el bucket
+        del perfil actiu) i informa de files amb anomalies agregades a través de cada
+        període que els moviments toquin. Local; mai contacta amb AEAT.
     classify:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       category_help: Id de categoria de despesa o ingrés
@@ -661,13 +927,18 @@ cli:
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       taxable_base_help: Import de base imposable
     errors:
-      confirm_required: Passa --yes per confirmar aquesta operació destructiva del llibre, o usa --dry-run primer
+      confirm_required: Passa --yes per confirmar aquesta operació destructiva del
+        llibre, o usa --dry-run primer
       filter_parse_error: Fallada en analitzar el filtre del llibre
-      id_prefix_collision: 'El prefix d''id de transacció %{prefix!r} coincideix amb més d''una transacció: %{candidates}. Allarga el prefix per desambiguar.'
-      id_prefix_empty: El prefix d'id de transacció és buit; passa almenys un caràcter hex.
+      id_prefix_collision: 'El prefix d''id de transacció %{prefix!r} coincideix amb
+        més d''una transacció: %{candidates}. Allarga el prefix per desambiguar.'
+      id_prefix_empty: El prefix d'id de transacció és buit; passa almenys un caràcter
+        hex.
       id_prefix_not_found: Cap transacció coincideix amb el prefix d'id %{prefix!r}.
-      id_prefix_not_hex: 'El prefix d''id de transacció %{prefix!r} conté caràcters no hex (permesos: 0-9, a-f).'
-      id_prefix_too_long: El prefix d'id de transacció %{prefix!r} té més de 64 caràcters (un digest SHA-256 complet).
+      id_prefix_not_hex: 'El prefix d''id de transacció %{prefix!r} conté caràcters
+        no hex (permesos: 0-9, a-f).'
+      id_prefix_too_long: El prefix d'id de transacció %{prefix!r} té més de 64 caràcters
+        (un digest SHA-256 complet).
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}'
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -678,7 +949,8 @@ cli:
     history:
       help: Mostra la cadena cronològica d'esdeveniments d'una transacció
       id_help: Id de la transacció (o prefix no ambigu)
-      include_split_siblings_help: Inclou transaccions germanes del mateix grup de divisió
+      include_split_siblings_help: Inclou transaccions germanes del mateix grup de
+        divisió
     import:
       dry_run_help: Executar la importació en mode de prova (sense desar)
       help: Importar extractes bancaris o registres al llibre comptable
@@ -731,10 +1003,14 @@ cli:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:
         cross_bucket_invoice: La factura pertany a un bucket diferent del perfil actiu.
-        invoice_not_found: La factura no existeix al catàleg de factures del perfil actiu.
+        invoice_not_found: La factura no existeix al catàleg de factures del perfil
+          actiu.
         missing_target: Indica almenys un de --invoice-id o --evidence-id.
-      evidence_id_help: Id del registre d'evidència de factura de compra a adjuntar al moviment.
-      help: Vincula un moviment del llibre amb una factura i/o amb un registre d'evidència de factura de compra en una única crida canònica. Rebutja vincles entre buckets. Local; mai contacta amb AEAT.
+      evidence_id_help: Id del registre d'evidència de factura de compra a adjuntar
+        al moviment.
+      help: Vincula un moviment del llibre amb una factura i/o amb un registre d'evidència
+        de factura de compra en una única crida canònica. Rebutja vincles entre buckets.
+        Local; mai contacta amb AEAT.
       id_help: Id del moviment del llibre (SHA-256 o prefix inequívoc).
       invoice_id_help: Id de la factura a vincular bidireccionalment amb el moviment.
     list:
@@ -749,8 +1025,9 @@ cli:
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la fusió de les transaccions filles
     preflight:
-      help: Informa de les dades comptables que falten (categoria, base imposable, import/tipus d'IVA, moneda, referència de prorrata) per als moviments del bucket actiu en un període donat. Local; mai
-        contacta amb AEAT.
+      help: Informa de les dades comptables que falten (categoria, base imposable,
+        import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
+        bucket actiu en un període donat. Local; mai contacta amb AEAT.
       period_help: Període canònic (p. ex. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -790,7 +1067,8 @@ cli:
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma l'enviament de la transacció a la reserva
     status:
-      help: Resumir l'estat del llibre i la preparació de càlcul del bucket del perfil actiu
+      help: Resumir l'estat del llibre i la preparació de càlcul del bucket del perfil
+        actiu
       period_help: Període fiscal per al preflight (AAAA-MM o període de model)
     track:
       help: Mostrar el llinatge d'esdeveniments d'un moviment del llibre
@@ -820,51 +1098,196 @@ cli:
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
-      invalid_env_value: 'AEAT_LOG_LEVEL ha de ser un de: %{allowed}; valor rebut: %{value}.'
+      invalid_env_value: 'AEAT_LOG_LEVEL ha de ser un de: %{allowed}; valor rebut:
+        %{value}.'
+  operator_surface:
+    errors:
+      accepted_roots_only: cli.operator_surface.errors.accepted_roots_only
+      contract_not_accepted: cli.operator_surface.errors.contract_not_accepted
+      source_kind_options: cli.operator_surface.errors.source_kind_options
+      unknown_source_kind: cli.operator_surface.errors.unknown_source_kind
+    help:
+      app:
+        footer: cli.operator_surface.help.app.footer
+        heading: cli.operator_surface.help.app.heading
+        ledger_allocate: cli.operator_surface.help.app.ledger_allocate
+        ledger_archive: cli.operator_surface.help.app.ledger_archive
+        ledger_attach: cli.operator_surface.help.app.ledger_attach
+        ledger_classify: cli.operator_surface.help.app.ledger_classify
+        ledger_export: cli.operator_surface.help.app.ledger_export
+        ledger_import: cli.operator_surface.help.app.ledger_import
+        ledger_list: cli.operator_surface.help.app.ledger_list
+        ledger_remove: cli.operator_surface.help.app.ledger_remove
+        ledger_reset: cli.operator_surface.help.app.ledger_reset
+        ledger_review: cli.operator_surface.help.app.ledger_review
+        ledger_stash: cli.operator_surface.help.app.ledger_stash
+        ledger_status: cli.operator_surface.help.app.ledger_status
+        ledger_update: cli.operator_surface.help.app.ledger_update
+        ledger_view: cli.operator_surface.help.app.ledger_view
+        live_filed_capture: cli.operator_surface.help.app.live_filed_capture
+        live_filed_capture_sources: cli.operator_surface.help.app.live_filed_capture_sources
+        live_filed_list: cli.operator_surface.help.app.live_filed_list
+        modelo_bindings: cli.operator_surface.help.app.modelo_bindings
+        modelo_describe: cli.operator_surface.help.app.modelo_describe
+        modelo_list: cli.operator_surface.help.app.modelo_list
+        modelo_work: cli.operator_surface.help.app.modelo_work
+        overview_status: cli.operator_surface.help.app.overview_status
+        paragraph_operational_workflow: cli.operator_surface.help.app.paragraph_operational_workflow
+        registry_inspect: cli.operator_surface.help.app.registry_inspect
+        registry_verify: cli.operator_surface.help.app.registry_verify
+        review_queue: cli.operator_surface.help.app.review_queue
+        review_view: cli.operator_surface.help.app.review_view
+        section_ledger: cli.operator_surface.help.app.section_ledger
+        section_live_reads: cli.operator_surface.help.app.section_live_reads
+        section_modelo: cli.operator_surface.help.app.section_modelo
+        section_overview: cli.operator_surface.help.app.section_overview
+        section_review_and_registry: cli.operator_surface.help.app.section_review_and_registry
+      config:
+        auth_clear: cli.operator_surface.help.config.auth_clear
+        auth_configure: cli.operator_surface.help.config.auth_configure
+        auth_providers: cli.operator_surface.help.config.auth_providers
+        auth_status: cli.operator_surface.help.config.auth_status
+        auth_test: cli.operator_surface.help.config.auth_test
+        diagnostics_logs: cli.operator_surface.help.config.diagnostics_logs
+        diagnostics_quarantine: cli.operator_surface.help.config.diagnostics_quarantine
+        diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
+        diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
+        first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
+        first_run_status: cli.operator_surface.help.config.first_run_status
+        footer: cli.operator_surface.help.config.footer
+        heading: cli.operator_surface.help.config.heading
+        paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
+        profile_delete: cli.operator_surface.help.config.profile_delete
+        profile_duplicate: cli.operator_surface.help.config.profile_duplicate
+        profile_list: cli.operator_surface.help.config.profile_list
+        profile_preflight: cli.operator_surface.help.config.profile_preflight
+        profile_rename: cli.operator_surface.help.config.profile_rename
+        profile_switch: cli.operator_surface.help.config.profile_switch
+        profile_validate: cli.operator_surface.help.config.profile_validate
+        profile_view: cli.operator_surface.help.config.profile_view
+        section_authentication: cli.operator_surface.help.config.section_authentication
+        section_diagnostics: cli.operator_surface.help.config.section_diagnostics
+        section_first_run: cli.operator_surface.help.config.section_first_run
+        section_profile_inspection: cli.operator_surface.help.config.section_profile_inspection
+        section_profile_lifecycle: cli.operator_surface.help.config.section_profile_lifecycle
+      root:
+        diagnostics_live_filed: cli.operator_surface.help.root.diagnostics_live_filed
+        diagnostics_overview: cli.operator_surface.help.root.diagnostics_overview
+        diagnostics_registry_inspect: cli.operator_surface.help.root.diagnostics_registry_inspect
+        diagnostics_repair: cli.operator_surface.help.root.diagnostics_repair
+        diagnostics_review_queue: cli.operator_surface.help.root.diagnostics_review_queue
+        footer: cli.operator_surface.help.root.footer
+        heading: cli.operator_surface.help.root.heading
+        ledger_allocate: cli.operator_surface.help.root.ledger_allocate
+        ledger_archive: cli.operator_surface.help.root.ledger_archive
+        ledger_attach: cli.operator_surface.help.root.ledger_attach
+        ledger_classify: cli.operator_surface.help.root.ledger_classify
+        ledger_export: cli.operator_surface.help.root.ledger_export
+        ledger_import: cli.operator_surface.help.root.ledger_import
+        ledger_list: cli.operator_surface.help.root.ledger_list
+        ledger_remove: cli.operator_surface.help.root.ledger_remove
+        ledger_reset: cli.operator_surface.help.root.ledger_reset
+        ledger_review: cli.operator_surface.help.root.ledger_review
+        ledger_stash: cli.operator_surface.help.root.ledger_stash
+        ledger_status: cli.operator_surface.help.root.ledger_status
+        ledger_update: cli.operator_surface.help.root.ledger_update
+        ledger_view: cli.operator_surface.help.root.ledger_view
+        modelo_bindings_list: cli.operator_surface.help.root.modelo_bindings_list
+        modelo_list: cli.operator_surface.help.root.modelo_list
+        modelo_work: cli.operator_surface.help.root.modelo_work
+        paragraph_two_roots: cli.operator_surface.help.root.paragraph_two_roots
+        paragraph_type_help: cli.operator_surface.help.root.paragraph_type_help
+        section_daily_ledger: cli.operator_surface.help.root.section_daily_ledger
+        section_diagnostics: cli.operator_surface.help.root.section_diagnostics
+        section_modelo_lifecycle: cli.operator_surface.help.root.section_modelo_lifecycle
+        section_setup: cli.operator_surface.help.root.section_setup
+        setup_configure_auth: cli.operator_surface.help.root.setup_configure_auth
+        setup_create_profile: cli.operator_surface.help.root.setup_create_profile
+        setup_inspect_profile: cli.operator_surface.help.root.setup_inspect_profile
+    landing:
+      active_profile_message: cli.operator_surface.landing.active_profile_message
+      no_active_profile_message: cli.operator_surface.landing.no_active_profile_message
+      text_template: cli.operator_surface.landing.text_template
+    retired:
+      archive_reason: cli.operator_surface.retired.archive_reason
+      data_reason: cli.operator_surface.retired.data_reason
+      declaration_reason: cli.operator_surface.retired.declaration_reason
+      filing_reason: cli.operator_surface.retired.filing_reason
+      financial_reason: cli.operator_surface.retired.financial_reason
+      invoice_reason: cli.operator_surface.retired.invoice_reason
+      llm_reason: cli.operator_surface.retired.llm_reason
+      preflight_reason: cli.operator_surface.retired.preflight_reason
+      presentation_reason: cli.operator_surface.retired.presentation_reason
+      sanitize_reason: cli.operator_surface.retired.sanitize_reason
+      setup_reason: cli.operator_surface.retired.setup_reason
+      submit_reason: cli.operator_surface.retired.submit_reason
+      topic_reason: cli.operator_surface.retired.topic_reason
+      workflow_reason: cli.operator_surface.retired.workflow_reason
   overview:
     agenda:
-      allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin incompletes.
-      date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte, avui.
+      allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
+        incompletes.
+      date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte,
+        avui.
       errors:
         invalid_horizon: --horizon ha de ser un nombre enter positiu (dies).
-      help: Classifica les obligacions properes i vençudes al voltant d'una data de referència. Indica un únic `next_due` més les cohorts due-today / due-soon / overdue. Local; mai contacta amb AEAT.
+      help: Classifica les obligacions properes i vençudes al voltant d'una data de
+        referència. Indica un únic `next_due` més les cohorts due-today / due-soon
+        / overdue. Local; mai contacta amb AEAT.
       horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     backlog:
-      allow_incomplete_help: Generar el backlog encara que les dades del perfil siguin incompletes.
-      from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans d'avui.
-      help: Llista les obligacions vençudes que l'operador encara no ha presentat. Ordenades de més antiga a més recent per prioritzar el triatge. Local; mai contacta amb AEAT.
+      allow_incomplete_help: Generar el backlog encara que les dades del perfil siguin
+        incompletes.
+      from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans
+        d'avui.
+      help: Llista les obligacions vençudes que l'operador encara no ha presentat.
+        Ordenades de més antiga a més recent per prioritzar el triatge. Local; mai
+        contacta amb AEAT.
       to_help: Data de fi inclusiva (ISO YYYY-MM-DD); per defecte, avui.
     calendar:
-      allow_incomplete_help: Generar el calendari encara que les dades del perfil siguin incompletes.
+      allow_incomplete_help: Generar el calendari encara que les dades del perfil
+        siguin incompletes.
       from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
-      help: Genera el calendari de terminis per al perfil actiu a la finestra de dates indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta amb AEAT.
+      help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
+        indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
+        amb AEAT.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
-    calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu ''aeat config profile set <clau> <valor>'' o useu --allow-incomplete per veure el calendari calculat amb valors per defecte.'
+    calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
+      ''aeat config profile set <clau> <valor>'' o useu --allow-incomplete per veure
+      el calendari calculat amb valors per defecte.'
     drafts: Esborranys
     explain:
-      help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra l'indicador binari, el text registral de justificació i les dades del perfil de les quals depèn la decisió. Local; mai contacta
-        amb AEAT.
+      help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
+        l'indicador binari, el text registral de justificació i les dades del perfil
+        de les quals depèn la decisió. Local; mai contacta amb AEAT.
       modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
-      drafts_present: '%{count} esborrany(s) de declaracions desats existeixen en aquest emmagatzematge local. Un espai buit acabat de crear normalment en te 0, aixi que aquest perfil/base de dades ja conte
-        estat local d''esborranys.'
-      integrity_next: Executeu `aeat config repair` per veure el detall. No poseu files en quarantena tret que vulgueu arxivar deliberadament dades locals antigues illegibles.
+      drafts_present: '%{count} esborrany(s) de declaracions desats existeixen en
+        aquest emmagatzematge local. Un espai buit acabat de crear normalment en te
+        0, aixi que aquest perfil/base de dades ja conte estat local d''esborranys.'
+      integrity_next: Executeu `aeat config repair` per veure el detall. No poseu
+        files en quarantena tret que vulgueu arxivar deliberadament dades locals antigues
+        illegibles.
       invoices_empty: Encara no s'han importat operacions de negoci.
       invoices_present: '%{count} operacio(ns) de negoci estan disponibles per revisar.'
       next_heading: Que escriure ara
-      next_import_command: '  aeat app ledger import <extracte-bancari.csv> --provider csv - importar moviments bancaris.'
+      next_import_command: '  aeat app ledger import <extracte-bancari.csv> --provider
+        csv - importar moviments bancaris.'
       next_landing_command: '  aeat --help - tornar a la guia de comandes.'
       next_review_command: '  aeat app ledger review - revisar files importades.'
       profile_active: Esteu treballant al perfil `%{profile}`.
-      profile_missing: No hi ha cap perfil actiu configurat. Executeu `aeat config init` abans d'importar dades.
+      profile_missing: No hi ha cap perfil actiu configurat. Executeu `aeat config
+        init` abans d'importar dades.
       storage_ok: L'emmagatzematge local xifrat es pot llegir amb la clau mestra actual.
-      storage_warning: '%{count} fila(es) xifrades de l''emmagatzematge local no es poden llegir amb la clau mestra actual. No son files del teu extracte bancari; pots importar moviments nous, pero revisa
-        diagnostics abans de confiar en dades locals antigues.'
+      storage_warning: '%{count} fila(es) xifrades de l''emmagatzematge local no es
+        poden llegir amb la clau mestra actual. No son files del teu extracte bancari;
+        pots importar moviments nous, pero revisa diagnostics abans de confiar en
+        dades locals antigues.'
       title: Estat de l'espai de treball
       transactions_empty: Encara no s'han importat moviments bancaris.
       transactions_present: '%{count} moviment(s) bancaris estan disponibles al llibre.'
@@ -872,9 +1295,11 @@ cli:
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
     app_help: Gestió del registre de models fiscals
-    audit_oracles_environment_help: Entorn del catàleg de paritat en viu a auditar (production, test_environment o both)
+    audit_oracles_environment_help: Entorn del catàleg de paritat en viu a auditar
+      (production, test_environment o both)
     audit_oracles_help: Mostrar discrepàncies d'oracles de paritat en viu a l'arrencada
-    casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles calculades per defecte
+    casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles
+      calculades per defecte
     citations:
       app_help: Inspeccionar el corpus normatiu (Llei 37/1992, Llei 35/2006, ...)
       articulo_help: Article concret a mostrar (p. ex. 91.U.2.1r)
@@ -942,16 +1367,20 @@ cli:
       workbook_count: workbook_count
       workbook_parity_ref_count: workbook_parity_ref_count
       workbook_path: workbook_path
-    observation_help: Manifest xifrat d'observació de declaració presentada que cal verificar
+    observation_help: Manifest xifrat d'observació de declaració presentada que cal
+      verificar
     parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals
     parity_output_help: Fitxer JSON de destinació per a la cinta de paritat generada
-    parity_replay_help: Reproduir una cinta de paritat arxivada contra el runtime actual del registre
+    parity_replay_help: Reproduir una cinta de paritat arxivada contra el runtime
+      actual del registre
     parity_run_help: Executar un escenari de paritat desat i arxivar la cinta resultant
     parity_scenario_help: Ruta a un fitxer JSON d'escenari de paritat
     parity_store_root_help: Directori arrel usat per desar les cintes de paritat generades
     parity_tape_help: Ruta a un fitxer JSON de cinta de paritat desada
-    source_observation_help: Manifest xifrat d'observació font requerit per vinculacions de declaracions prèvies o relacions
-    verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat capturat de l'AEAT
+    source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
+      de declaracions prèvies o relacions
+    verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat
+      capturat de l'AEAT
     verify_help: Verificar la integritat del registre local
     verify_source_root_help: Ruta al directori d'origen per verificar
     workbooks_app_help: Gestió de llibres de treball del registre
@@ -985,7 +1414,8 @@ cli:
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
-    app_app_help: Espai de treball fiscal per a overview, ledger, modelo, registry i review
+    app_app_help: Espai de treball fiscal per a overview, ledger, modelo, registry
+      i review
     app_help: 'Assistent per preparar declaracions tributàries espanyoles
 
 
@@ -997,14 +1427,21 @@ cli:
     help_help: Mostrar ajuda orientada al flux de treball
     landing:
       headline: Assistent fiscal AEAT
-      help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat app --help`.'
+      help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
+        app --help`.'
       quick_start_heading: Inici rapid
-      quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider csv` - afegir els moviments bancaris.'
-      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuracio, emmagatzematge i salut local.'
-      quick_start_review: '  4. `aeat app ledger review` - revisar i classificar les files importades.'
-      quick_start_setup_done: '  1. `aeat config profile status` - comprovar el perfil actiu abans del treball operatiu.'
-      quick_start_setup_needed: '  1. `aeat config init` - crear primer el perfil fiscal local.'
-      quick_start_status: '  2. `aeat app overview status` - llegir l''estat actual de l''espai i els diagnostics.'
+      quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
+        csv` - afegir els moviments bancaris.'
+      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuracio,
+        emmagatzematge i salut local.'
+      quick_start_review: '  4. `aeat app ledger review` - revisar i classificar les
+        files importades.'
+      quick_start_setup_done: '  1. `aeat config profile status` - comprovar el perfil
+        actiu abans del treball operatiu.'
+      quick_start_setup_needed: '  1. `aeat config init` - crear primer el perfil
+        fiscal local.'
+      quick_start_status: '  2. `aeat app overview status` - llegir l''estat actual
+        de l''espai i els diagnostics.'
       section_config: '  config - perfil, autenticacio i diagnostics'
       section_ledger: '  app ledger - importacio bancaria i revisio de moviments'
       section_modelo: '  app modelo - cataleg de models i unitats de treball'
@@ -1013,17 +1450,21 @@ cli:
       section_review: '  app review - elements que necessiten atencio'
       sections_heading: Seccions principals
       tagline: Flux fiscal espanyol local-first per a autonoms.
-      welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat; comenceu per la configuracio.
+      welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
+        comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
     language_help: Idioma de sortida per a aquesta ordre (substitueix el perfil actiu)
     quiet_help: Mostrar només errors a stderr
-    unavailable_app_help: Les ordres d'app no estan disponibles perquè falta una dependència opcional
+    unavailable_app_help: Les ordres d'app no estan disponibles perquè falta una dependència
+      opcional
     verbose_help: Mostrar logs interns informatius a stderr
-    version_help: Mostrar la versió del paquet (afegeix --detail per al resum complet del registre)
+    version_help: Mostrar la versió del paquet (afegeix --detail per al resum complet
+      del registre)
   topic:
     app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
     errors:
-      not_found: 'Tema no trobat: %{slug}. Executeu ''aeat app registry citations'' per llistar els temes registrats.'
+      not_found: 'Tema no trobat: %{slug}. Executeu ''aeat app registry citations''
+        per llistar els temes registrats.'
     opts:
       slug: Identificador del tema (kebab-case, ex. iva-regime)
 dotted:
@@ -1031,19 +1472,29 @@ dotted:
 errors:
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
-    bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base negativa {base}.
-    bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que cobreixi la base {base}.
-    bracket_no_window: El paràmetre escalonat {parameter_id} no té cap tram vàlid per a {as_of}.
-    casilla_constraint_violation: 'La casella {casilla_id} amb valor {value} infringeix la restricció declarada: {violation}. Refs: {legal_refs}.'
-    casilla_referenced_before_evaluation: La casella {casilla_id} s''ha referenciat abans d''avaluar la seva fórmula.
-    computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles calculades: {casilla_ids}.'
-    dispatch_key_unknown: 'La clau de despatx {dispatch_key!r} no és a la taula de l''operador {op} sobre la vinculació {binding_id} (claus declarades: {available_keys}).'
-    dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l''operador {op}; s''esperava un paràmetre escalar (decimal / dinerari / enter / ràtio).
+    bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
+      negativa {base}.
+    bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
+      cobreixi la base {base}.
+    bracket_no_window: El paràmetre escalonat {parameter_id} no té cap tram vàlid
+      per a {as_of}.
+    casilla_constraint_violation: 'La casella {casilla_id} amb valor {value} infringeix
+      la restricció declarada: {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: La casella {casilla_id} s''ha referenciat
+      abans d''avaluar la seva fórmula.
+    computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
+      calculades: {casilla_ids}.'
+    dispatch_key_unknown: 'La clau de despatx {dispatch_key!r} no és a la taula de
+      l''operador {op} sobre la vinculació {binding_id} (claus declarades: {available_keys}).'
+    dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l''operador
+      {op}; s''esperava un paràmetre escalar (decimal / dinerari / enter / ràtio).
     divide_by_zero: La fórmula amb operador {op} divideix entre zero.
     empty_expression: Expressió de fórmula buida.
-    enum_binding_value_missing: La vinculació enumerada {binding_id} no té cap valor assignat (requerida per l''operador {op}).
+    enum_binding_value_missing: La vinculació enumerada {binding_id} no té cap valor
+      assignat (requerida per l''operador {op}).
     lookup_dispatch_arg_count: L''operador {op} de la fórmula espera {expected} arguments.
-    lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position} sigui una fulla de tipus {expected_kind}.
+    lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position}
+      sigui una fulla de tipus {expected_kind}.
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
@@ -1106,48 +1557,66 @@ sheets:
       valuation_amount: Valoració
 topic:
   authentication:
-    body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat digital (FNMT / equivalent). Configura un proveïdor amb 'aeat config auth configure --provider certificate' i verifica
-      amb 'aeat config auth test'.
+    body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat
+      digital (FNMT / equivalent). Configura un proveïdor amb 'aeat config auth configure
+      --provider certificate' i verifica amb 'aeat config auth test'.
     title: Autenticació amb l'AEAT
   calendar:
-    body: El calendari mostra les obligacions de presentació (models i períodes) dins d'un rang. Requereix un perfil amb règim IVA declarat perquè el motor no assumeixi valors per defecte.
+    body: El calendari mostra les obligacions de presentació (models i períodes) dins
+      d'un rang. Requereix un perfil amb règim IVA declarat perquè el motor no assumeixi
+      valors per defecte.
     title: Calendari d'obligacions
   casilla:
-    body: Una casella és un camp numerat d'un model. Les caselles poden ser manuals, calculades o derivades de bindings. 'aeat app modelo casillas <modelo>' les llista.
+    body: Una casella és un camp numerat d'un model. Les caselles poden ser manuals,
+      calculades o derivades de bindings. 'aeat app modelo casillas <modelo>' les
+      llista.
     title: Caselles
   formats:
-    body: La CLI emet sortida en text, JSON, taula o csv segons '--format'. JSON és recomanat per a automatització; text per a inspecció humana.
+    body: La CLI emet sortida en text, JSON, taula o csv segons '--format'. JSON és
+      recomanat per a automatització; text per a inspecció humana.
     title: Formats de sortida
   irpf-regime:
-    body: Règim IRPF d'un autònom. Estimació directa (normal o simplificada) o estimació objectiva (mòduls). Determina quins models de pagament fraccionat apliquen (130 vs 131).
+    body: Règim IRPF d'un autònom. Estimació directa (normal o simplificada) o estimació
+      objectiva (mòduls). Determina quins models de pagament fraccionat apliquen (130
+      vs 131).
     title: Règim IRPF
   iva-regime:
-    body: Règim IVA aplicable al contribuent. General, simplificat, recàrrec d'equivalència, exempt, REAGP o REBU. Determina el model 303 trimestral i el resum anual 390.
+    body: Règim IVA aplicable al contribuent. General, simplificat, recàrrec d'equivalència,
+      exempt, REAGP o REBU. Determina el model 303 trimestral i el resum anual 390.
     title: Règim IVA
   modelos:
-    body: Catàleg de models tributaris AEAT (303, 130, 100, 347, 349, 111, 115, 184, etc.). Cada model té el seu calendari, caselles i regles d'aplicabilitat. 'aeat app modelo list' enumera els disponibles.
+    body: Catàleg de models tributaris AEAT (303, 130, 100, 347, 349, 111, 115, 184,
+      etc.). Cada model té el seu calendari, caselles i regles d'aplicabilitat. 'aeat
+      app modelo list' enumera els disponibles.
     title: Models tributaris
   pago-fraccionado:
-    body: Pagament a compte de l'IRPF que fa un autònom cada trimestre. El model 130 aplica a estimació directa; el 131 a estimació objectiva. El càlcul usa les dades del trimestre i, en alguns casos, les
-      de l'exercici anterior.
+    body: Pagament a compte de l'IRPF que fa un autònom cada trimestre. El model 130
+      aplica a estimació directa; el 131 a estimació objectiva. El càlcul usa les
+      dades del trimestre i, en alguns casos, les de l'exercici anterior.
     title: Pagament fraccionat IRPF
   profile:
-    body: El perfil local conté la teva identificació fiscal (NIF), activitat principal, règim IVA / IRPF i enrolaments opcionals (SII, Verifactu, intracomunitari). Edita'l amb 'aeat config profile set
-      <clau> <valor>'.
+    body: El perfil local conté la teva identificació fiscal (NIF), activitat principal,
+      règim IVA / IRPF i enrolaments opcionals (SII, Verifactu, intracomunitari).
+      Edita'l amb 'aeat config profile set <clau> <valor>'.
     title: Perfil del contribuent
   providers:
-    body: Proveïdors d'autenticació suportats; cadascun té requeriments diferents. 'aeat config auth --help' els llista amb els prerequisits.
+    body: Proveïdors d'autenticació suportats; cadascun té requeriments diferents.
+      'aeat config auth --help' els llista amb els prerequisits.
     title: Proveïdors d'autenticació
   recargo-extemporaneo:
-    body: La presentació fora de termini sense requeriment previ de l'AEAT acumula un recàrrec de l'1% per mes (fins al 12%) durant el primer any i 15% més interessos després de 12 mesos. Base legal Ley
-      58/2003 art-27.
+    body: La presentació fora de termini sense requeriment previ de l'AEAT acumula
+      un recàrrec de l'1% per mes (fins al 12%) durant el primer any i 15% més interessos
+      després de 12 mesos. Base legal Ley 58/2003 art-27.
     title: Recàrrec per presentació extemporània
   regimens:
-    body: Conjunt de règims fiscals aplicables a un autònom. Els dos eixos principals són IVA (general, simplificat, recàrrec d'equivalència, exempt) i IRPF (directa, objectiva).
+    body: Conjunt de règims fiscals aplicables a un autònom. Els dos eixos principals
+      són IVA (general, simplificat, recàrrec d'equivalència, exempt) i IRPF (directa,
+      objectiva).
     title: Règims fiscals
   sii-verifactu:
-    body: Sistemes de transmissió electrònica de factures a l'AEAT. SII (Subministrament Immediat d'Informació) aplica obligatòriament a grans empreses; Verifactu (RD 1007/2023) és un requisit gradual per
-      a sistemes de facturació.
+    body: Sistemes de transmissió electrònica de factures a l'AEAT. SII (Subministrament
+      Immediat d'Informació) aplica obligatòriament a grans empreses; Verifactu (RD
+      1007/2023) és un requisit gradual per a sistemes de facturació.
     title: SII i Verifactu
 transactions:
   import:
@@ -1176,15 +1645,20 @@ wizard:
     blank_secret: Secret value required for %{prompt_key}.
     blank_text: Value required for %{prompt_key}.
     checkbox_required: Select at least one option for %{prompt_key}.
-    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
+    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
-    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
+    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "La configuració guiada no ha pogut obrir una pregunta interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nTorna a provar-la des d'una sessió de terminal interactiva:\n\
-      \  aeat config init\n\nSi l'estat del perfil pot estar obsolet o corrupte, revisa'l primer:\n  aeat config repair\n\nPer descartar només l'estat local del perfil i començar de nou:\n  aeat config\
+    unsupported_console: "La configuració guiada no ha pogut obrir una pregunta interactiva\
+      \ en aquesta execució.\nEncara no s'ha desat res.\n\nTorna a provar-la des d'una\
+      \ sessió de terminal interactiva:\n  aeat config init\n\nSi l'estat del perfil\
+      \ pot estar obsolet o corrupte, revisa'l primer:\n  aeat config repair\n\nPer\
+      \ descartar només l'estat local del perfil i començar de nou:\n  aeat config\
       \ reset --scope profile --yes"
   other:
     description: Other configuration options
@@ -1314,11 +1788,14 @@ wizard:
     intro: 'Configuració guiada del perfil tributari
 
 
-      Això prepara el perfil local que l''app usa per als llibres registre i les comprovacions de models.
+      Això prepara el perfil local que l''app usa per als llibres registre i les comprovacions
+      de models.
 
-      Hi ha %{section_total} passos. Només %{required_total} respostes són obligatòries per començar; pots deixar en blanc el que encara no sàpigues.
+      Hi ha %{section_total} passos. Només %{required_total} respostes són obligatòries
+      per començar; pots deixar en blanc el que encara no sàpigues.
 
-      Tingues a mà el NIF/NIE/CIF, una descripció breu de l''activitat, règim d''IVA/IRPF, residència fiscal i dades familiars si apliquen.
+      Tingues a mà el NIF/NIE/CIF, una descripció breu de l''activitat, règim d''IVA/IRPF,
+      residència fiscal i dades familiars si apliquen.
 
       Després de desar, revisa el progrés amb `aeat config profile status`.'
     iva:
@@ -1395,7 +1872,8 @@ wizard:
             description: Useu aquest valor quan presenteu només la declaració individual
             label: 1 - individual
           joint:
-            description: Useu aquest valor només per a tributació conjunta de la unitat familiar
+            description: Useu aquest valor només per a tributació conjunta de la unitat
+              familiar
             label: 2 - conjunta
         prompt: Codi del tipus de tributació
       title: Identitat del perfil
