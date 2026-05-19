@@ -6,56 +6,76 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: "AEAT refused to issue a new Cl@ve Móvil push because a prior authentication request is still pending server-side."
+        pending_petition_blocked: AEAT refused to issue a new Cl@ve Móvil push because
+          a prior authentication request is still pending server-side.
       suggestions:
-        reject_pending_request: "Open the Cl@ve app on your phone, reject every pending request, then run `aeat config auth test` (or wait up to 5 minutes for AEAT to time them out automatically)."
+        reject_pending_request: Open the Cl@ve app on your phone, reject every pending
+          request, then run `aeat config auth test` (or wait up to 5 minutes for AEAT
+          to time them out automatically).
     sede:
       groi:
         suggestions:
-          shape_change: Re-run the live oracle after checking whether AEAT changed the GROI form shape.
+          shape_change: Re-run the live oracle after checking whether AEAT changed
+            the GROI form shape.
       nif_iva:
         suggestions:
-          shape_change: Re-run the live oracle after checking whether AEAT changed the NIF-IVA form shape.
+          shape_change: Re-run the live oracle after checking whether AEAT changed
+            the NIF-IVA form shape.
       renta_web_open:
         suggestions:
-          shape_change: Re-run the live oracle after checking whether AEAT changed the Renta WEB Open page shape.
+          shape_change: Re-run the live oracle after checking whether AEAT changed
+            the Renta WEB Open page shape.
   google:
     calc_sheets:
       errors:
-        api_call_failed: "Google {action} call failed."
-        api_call_refused: "Google {action} call was refused (HTTP {status})."
-        api_target_not_found: "Google {action} target was not found."
-        googleapiclient_not_importable: googleapiclient is not importable; the Google adapter cannot reach the API.
+        api_call_failed: Google {action} call failed.
+        api_call_refused: Google {action} call was refused (HTTP {status}).
+        api_target_not_found: Google {action} target was not found.
+        googleapiclient_not_importable: googleapiclient is not importable; the Google
+          adapter cannot reach the API.
     oauth_flow:
       errors:
-        browser_launcher_refused: The operating system browser launcher refused to open the OAuth consent URL.
+        browser_launcher_refused: The operating system browser launcher refused to
+          open the OAuth consent URL.
         client_config_refused: The Google OAuth client configuration was refused.
-        email_claim_missing: The Google id_token was verified but carries no email claim.
+        email_claim_missing: The Google id_token was verified but carries no email
+          claim.
         endpoint_unreachable: The Google OAuth endpoint is unreachable.
-        id_token_missing: Google did not return an id_token; the OAuth consent did not include the openid+email scopes.
+        id_token_missing: Google did not return an id_token; the OAuth consent did
+          not include the openid+email scopes.
         id_token_module_not_importable: The google-auth id_token module is not importable.
         id_token_verification_failed: Google id_token verification failed.
         loopback_bind_failed: The local loopback OAuth receiver failed to bind a port.
-        oauthlib_not_importable: google-auth-oauthlib is not importable; the OAuth flow cannot start.
-        scope_missing: The Google consent screen returned without granting every required scope.
-        unsecured_mode_refused: Google OAuth refused because the secret store is running in unsecured mode and the active profile carries a real Spanish tax identifier.
+        oauthlib_not_importable: google-auth-oauthlib is not importable; the OAuth
+          flow cannot start.
+        scope_missing: The Google consent screen returned without granting every required
+          scope.
+        unsecured_mode_refused: Google OAuth refused because the secret store is running
+          in unsecured mode and the active profile carries a real Spanish tax identifier.
       suggestions:
-        close_loopback_port: Close the application holding a stray loopback port and retry.
+        close_loopback_port: Close the application holding a stray loopback port and
+          retry.
         open_consent_url_manually: Open the printed consent URL manually in your browser.
-        use_keyring_or_synthetic: Set aeat_secret_store_backend=keyring or switch the active profile to a synthetic test tax identifier.
+        use_keyring_or_synthetic: Set aeat_secret_store_backend=keyring or switch
+          the active profile to a synthetic test tax identifier.
     profile_binding:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
     refresh:
       errors:
-        google_auth_not_importable: The google-auth library is not importable; Google OAuth refresh cannot proceed.
-        reauth_required: The Google OAuth credential is marked as requiring reauthentication; the automatic refresh path is closed.
+        google_auth_not_importable: The google-auth library is not importable; Google
+          OAuth refresh cannot proceed.
+        reauth_required: The Google OAuth credential is marked as requiring reauthentication;
+          the automatic refresh path is closed.
         refresh_failed: Google OAuth refresh failed.
-        refresh_refused: Google OAuth refused the refresh request; the refresh token is no longer valid.
+        refresh_refused: Google OAuth refused the refresh request; the refresh token
+          is no longer valid.
         token_endpoint_unreachable: The Google OAuth token endpoint is unreachable.
       suggestions:
         check_network: Check network connectivity to Google OAuth endpoints and retry.
-      testing_project_cap_warning: "The Google OAuth refresh token is approaching the 7-day Testing-project cap (about {hours_remaining}h remaining); re-run `aeat config google login` to extend the credential lifetime."
+      testing_project_cap_warning: The Google OAuth refresh token is approaching the
+        7-day Testing-project cap (about {hours_remaining}h remaining); re-run `aeat
+        config google login` to extend the credential lifetime.
 aggregation:
   iva_ledger:
     errors:
@@ -285,6 +305,12 @@ cli:
         list_help: List filed declaration rows without downloading artefacts
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
+      iva_wallet:
+        app_help: cli.app.live.iva_wallet.app_help
+        capture_history_help: cli.app.live.iva_wallet.capture_history_help
+        history_help: cli.app.live.iva_wallet.history_help
+        pull_help: cli.app.live.iva_wallet.pull_help
+        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
       notifications:
@@ -511,8 +537,8 @@ cli:
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
-      no_active_profile: No active profile. Run `aeat config profile create NAME` before using profile-scoped
-        data commands.
+      no_active_profile: No active profile. Run `aeat config profile create NAME`
+        before using profile-scoped data commands.
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
   config:
@@ -546,10 +572,15 @@ cli:
       clear_locks_help: Clear auth acquisition locks
       clear_sessions_help: Clear persisted AEAT auth sessions
       configure_help: Configure the active authentication provider
+      diagnostics:
+        help: cli.config.auth.diagnostics.help
+        id_help: cli.config.auth.diagnostics.id_help
+        list_help: cli.config.auth.diagnostics.list_help
+        show_help: cli.config.auth.diagnostics.show_help
       file_help: Path to the credential file (certificate or key)
       help: Configure the active authentication provider
-      no_active_bucket: No active profile bucket. Run 'aeat config profile create NAME' before configuring
-        authentication.
+      no_active_bucket: No active profile bucket. Run 'aeat config profile create
+        NAME' before configuring authentication.
       provider_help: Authentication provider id (e.g. certificado-electronico)
       providers_help: List supported authentication providers
       reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
@@ -572,8 +603,8 @@ cli:
         (e.g. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
-      no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id <NIF>'
-        first.
+      no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
+        <NIF>' first.
       unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile
         list'' to see the available keys.'
     get:
@@ -694,8 +725,8 @@ cli:
       import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
       logout_help: Sign out of the active profile by clearing the local pointer
-      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id <NIF>`
-        first.
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
+        <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
         year / period.
       preflight_modelo_help: Modelo code (e.g. 303).
@@ -738,6 +769,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
+      profile_clear_active_help: cli.config.repair.profile_clear_active_help
+      profile_help: cli.config.repair.profile_help
       quarantine_help: Move undecryptable rows into a quarantine table (destructive;
         requires --yes)
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
@@ -750,6 +783,7 @@ cli:
       reset_state_requires_yes: This operation is destructive. Re-run with --yes to
         confirm or pass --dry-run to inspect the fingerprint.
       reset_state_yes_help: Explicitly confirm the workflow-state reset
+      yes_help: cli.config.repair.yes_help
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -772,7 +806,8 @@ cli:
         next_step: 'Next step: run `aeat app overview status` to review your workspace.'
         saved: Profile '%{profile_name}' saved.
     status:
-      empty_profile: No profile configured. Run `aeat config profile create NAME` to get started.
+      empty_profile: No profile configured. Run `aeat config profile create NAME`
+        to get started.
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
     unset:
@@ -1073,8 +1108,10 @@ cli:
   operator_surface:
     errors:
       accepted_roots_only: The CLI accepts only the config and app roots.
-      contract_not_accepted: The requested command is outside the accepted operator surface.
-      source_kind_options: Source kind must be ledger_transaction, purchase_invoice_evidence, payable_invoice, or collectible_invoice.
+      contract_not_accepted: The requested command is outside the accepted operator
+        surface.
+      source_kind_options: Source kind must be ledger_transaction, purchase_invoice_evidence,
+        payable_invoice, or collectible_invoice.
       unknown_source_kind: 'Unknown source kind: %{value}.'
     help:
       app:
@@ -1102,7 +1139,8 @@ cli:
         modelo_list: List supported modelos.
         modelo_work: Create and operate modelo work units.
         overview_status: Summarize current profile and work state.
-        paragraph_operational_workflow: App commands operate on the active profile bucket.
+        paragraph_operational_workflow: App commands operate on the active profile
+          bucket.
         registry_inspect: Inspect registry metadata.
         registry_verify: Verify local registry integrity.
         review_queue: List items waiting for operator review.
@@ -1177,7 +1215,9 @@ cli:
     landing:
       active_profile_message: Active profile is %{profile}.
       no_active_profile_message: No active profile is configured.
-      text_template: "%{message}\nNext: %{command}"
+      text_template: '%{message}
+
+        Next: %{command}'
     retired:
       archive_reason: archive is consolidated under config bucket.
       data_reason: data work is consolidated under app ledger.
@@ -1219,8 +1259,8 @@ cli:
         AEAT.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
-      config profile edit NAME'' or pass --allow-incomplete to see the calendar
-      computed under defaults.'
+      config profile edit NAME'' or pass --allow-incomplete to see the calendar computed
+      under defaults.'
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -1246,8 +1286,8 @@ cli:
       next_landing_command: '  aeat --help - return to the command guide.'
       next_review_command: '  aeat app ledger review - review imported rows.'
       profile_active: You are working in profile `%{profile}`.
-      profile_missing: No active profile is configured. Run `aeat config profile create NAME` before
-        importing data.
+      profile_missing: No active profile is configured. Run `aeat config profile create
+        NAME` before importing data.
       storage_ok: Local encrypted storage is readable with the current master key.
       storage_warning: '%{count} encrypted local storage row(s) cannot be read with
         the current master key. These are not rows from your bank statement; you can
@@ -1387,6 +1427,10 @@ cli:
     app_help_help: Show app workflow help
     debug_help: Show internal debug logs on stderr
     detail_help: Also show the detailed registry summary
+    errors:
+      no_active_profile: 'No active profile. Run `aeat config profile create NAME`
+        to create your first profile, or `aeat config profile switch NAME` to activate
+        an existing one.'
     format_help: Output format for command results
     help_help: Show workflow-oriented help
     landing:
@@ -1402,8 +1446,8 @@ cli:
         rows.'
       quick_start_setup_done: '  1. `aeat config profile status` - check the active
         profile before operational work.'
-      quick_start_setup_needed: '  1. `aeat config profile create NAME` - create your local tax profile
-        first.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - create your
+        local tax profile first.'
       quick_start_status: '  2. `aeat app overview status` - read current workspace
         status and diagnostics.'
       section_config: '  config - profile setup, authentication, diagnostics'
@@ -1616,10 +1660,10 @@ wizard:
     select_without_choices: Question %{prompt_key} declares no select options.
     unsupported_console: "The guided setup could not open an interactive prompt in\
       \ this run.\nNothing has been saved yet.\n\nTry the guided setup again from\
-      \ an interactive terminal session:\n  aeat config profile create NAME\n\nIf this profile state\
-      \ may be stale or corrupt, inspect it first:\n  aeat config repair\n\nTo discard\
-      \ only local profile state and start over:\n  aeat config reset --scope profile\
-      \ --yes"
+      \ an interactive terminal session:\n  aeat config profile create NAME\n\nIf\
+      \ this profile state may be stale or corrupt, inspect it first:\n  aeat config\
+      \ repair\n\nTo discard only local profile state and start over:\n  aeat config\
+      \ reset --scope profile --yes"
   other:
     description: Other configuration options
     section:

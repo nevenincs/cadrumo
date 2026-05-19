@@ -50,9 +50,9 @@ unblocks every operator-facing verb.
 - [x] `P02.S08` - add `__enter__`/`__exit__` to `FileFallbackMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [x] `P02.S09` - add `__enter__`/`__exit__` to the auto-resolved provider (`get_master_key_provider`); `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [x] `P02.S10` - parameterise `BucketSession.open` by resolved `bucket_id` from the active-profile chain, not a hardcoded string; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P02.S11` - define the bootstrap-exempt verb registry as a typed tuple; `src/aeat/entrypoints/cli/_bootstrap_exempt.py`.
-- [ ] `P02.S12` - rewrite the CLI root callback to active-gate on the exempt registry plus `ctx.with_resource(provider)` for non-exempt verbs; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `P02.S13` - emit a translated `CliRefusedBoundaryError` for non-exempt verbs when no profile resolves, naming `profile create` and `profile switch` as next actions; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `P02.S11` - define the bootstrap-exempt verb registry as a typed tuple; `src/aeat/entrypoints/cli/_bootstrap_exempt.py`.
+- [x] `P02.S12` - rewrite the CLI root callback to active-gate on the exempt registry plus `ctx.with_resource(provider)` for non-exempt verbs; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `P02.S13` - emit a translated `CliRefusedBoundaryError` for non-exempt verbs when no profile resolves, naming `profile create` and `profile switch` as next actions; `src/aeat/entrypoints/cli/__init__.py`.
 - [ ] `P02.S14` - wire `BucketSession.is_expired` polling into `SecureObjectRepository`; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [ ] `P02.S15` - raise a translated `CliRefusedBoundaryError` on expired session naming `profile switch` as next action; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [ ] `P02.S16` - wire `BucketSession.touch` from the same repository hook; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.

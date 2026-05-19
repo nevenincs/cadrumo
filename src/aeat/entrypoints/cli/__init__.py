@@ -144,23 +144,92 @@ def _root(
             _emit_startup_import_error(_app_import_error)
         from ...application.workflow._models import resolve_active_bucket_id
 
-        workflow_state = workflow_state_repository().load()
         active = resolve_active_bucket_id()
         landing = build_root_landing_report(active)
         if active is None:
+            # Bare invocation with no active profile: render the
+            # landing card (which names `profile create` as the next
+            # action) and exit. Reading the workflow state here would
+            # require an active session the operator has not yet
+            # established — the F1 / F2 deadlock the disaster ADR
+            # closes.
             _emit(ctx, landing, render_cli_root_landing_lines(landing))
             raise typer.Exit()
+        workflow_state = workflow_state_repository().load()
         overview_report = build_overview_status_report(state=workflow_state)
         _emit(ctx, overview_report, render_cli_root_landing_lines(landing))
         raise typer.Exit()
 
 
 def _activate_active_bucket_session(ctx: typer.Context) -> None:
-    """Activate the pointed-at bucket for this CLI process when one exists."""
+    """Active-gate the CLI session against the bootstrap-exempt registry.
+
+    Bootstrap-exempt verbs (``profile create``, ``profile import``,
+    ``config repair`` family) run without a session. Every other
+    verb either opens the pointed-at bucket's session (when
+    ``resolve_active_bucket_id`` returns a name) or refuses with a
+    translated :class:`CliRefusedBoundaryError` that names
+    ``profile create`` / ``profile switch`` as next actions.
+
+    The refusal path replaces the silent-skip pattern that previously
+    let every non-exempt verb raise ``NoActiveBucketSessionError``
+    from inside its own body — the F1 / F2 cold-start deadlock the
+    2026-05-19 operator testimonies catalogued.
+    """
 
     from ...adapters.persistence.storage import get_master_key_provider
+    from ...application.workflow._models import resolve_active_bucket_id
+    from ._bootstrap_exempt import is_bootstrap_exempt
+    from ._errors import CliRefusedBoundaryError
 
+    if is_bootstrap_exempt(_full_invocation_verb_path()):
+        return
+    if resolve_active_bucket_id() is None:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.root.errors.no_active_profile",
+                default=(
+                    "No active profile. Run `aeat config profile create NAME` "
+                    "to create your first profile, or `aeat config profile "
+                    "switch NAME` to activate an existing one."
+                ),
+            ),
+        )
     ctx.with_resource(get_master_key_provider())
+
+
+def _full_invocation_verb_path() -> str | None:
+    """Return the operator-typed verb path stripped of top-level flags.
+
+    Reads ``sys.argv`` and removes top-level option flags
+    (``--version``, ``--help``, ``--language``, ``--format``, etc.)
+    so the returned string is the canonical subcommand chain the
+    operator typed: ``"config profile create"`` for
+    ``aeat --quiet config profile create alice``. Returns ``None``
+    for the bare invocation.
+
+    Matched against :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` via prefix
+    so ``"config profile create alice"`` matches the exempt entry
+    ``"config profile create"``.
+    """
+
+    import sys
+
+    tokens = sys.argv[1:]
+    verb_tokens: list[str] = []
+    skip_next = False
+    for token in tokens:
+        if skip_next:
+            skip_next = False
+            continue
+        if token.startswith("-"):
+            if token in ("--language", "--lang", "--format") and "=" not in token:
+                skip_next = True
+            continue
+        verb_tokens.append(token)
+    if not verb_tokens:
+        return None
+    return " ".join(verb_tokens)
 
 
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:

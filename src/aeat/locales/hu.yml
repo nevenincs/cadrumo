@@ -6,56 +6,81 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: "Az AEAT visszautasította egy új Cl@ve Móvil push küldését, mert egy korábbi hitelesítési kérés még függőben van a szerver oldalon."
+        pending_petition_blocked: Az AEAT visszautasította egy új Cl@ve Móvil push
+          küldését, mert egy korábbi hitelesítési kérés még függőben van a szerver
+          oldalon.
       suggestions:
-        reject_pending_request: "Nyisd meg a Cl@ve appot a telefonodon, utasíts el minden függőben lévő kérést, majd futtasd újra az `aeat config auth test` parancsot (vagy várj akár 5 percet, amíg az AEAT automatikusan kiszórja őket)."
+        reject_pending_request: Nyisd meg a Cl@ve appot a telefonodon, utasíts el
+          minden függőben lévő kérést, majd futtasd újra az `aeat config auth test`
+          parancsot (vagy várj akár 5 percet, amíg az AEAT automatikusan kiszórja
+          őket).
     sede:
       groi:
         suggestions:
-          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy az AEAT módosította-e a GROI űrlap szerkezetét.
+          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy
+            az AEAT módosította-e a GROI űrlap szerkezetét.
       nif_iva:
         suggestions:
-          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy az AEAT módosította-e a NIF-IVA űrlap szerkezetét.
+          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy
+            az AEAT módosította-e a NIF-IVA űrlap szerkezetét.
       renta_web_open:
         suggestions:
-          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy az AEAT módosította-e a Renta WEB Open oldal szerkezetét.
+          shape_change: Futtasd újra az élő orákulumot, miután ellenőrizted, hogy
+            az AEAT módosította-e a Renta WEB Open oldal szerkezetét.
   google:
     calc_sheets:
       errors:
-        api_call_failed: "A Google {action} hívás meghiúsult."
-        api_call_refused: "A Google {action} hívást a szerver elutasította (HTTP {status})."
-        api_target_not_found: "A Google {action} célja nem található."
-        googleapiclient_not_importable: A googleapiclient nem importálható; a Google adapter nem éri el az API-t.
+        api_call_failed: A Google {action} hívás meghiúsult.
+        api_call_refused: A Google {action} hívást a szerver elutasította (HTTP {status}).
+        api_target_not_found: A Google {action} célja nem található.
+        googleapiclient_not_importable: A googleapiclient nem importálható; a Google
+          adapter nem éri el az API-t.
     oauth_flow:
       errors:
-        browser_launcher_refused: Az operációs rendszer böngészőindítója elutasította az OAuth hozzájárulási URL megnyitását.
+        browser_launcher_refused: Az operációs rendszer böngészőindítója elutasította
+          az OAuth hozzájárulási URL megnyitását.
         client_config_refused: A Google OAuth kliens konfigurációját a rendszer elutasította.
-        email_claim_missing: A Google id_token érvényesítése sikerült, de nem tartalmaz email mezőt.
+        email_claim_missing: A Google id_token érvényesítése sikerült, de nem tartalmaz
+          email mezőt.
         endpoint_unreachable: A Google OAuth végpont nem elérhető.
-        id_token_missing: A Google nem küldött id_token-t; az OAuth hozzájárulás nem tartalmazta az openid+email scope-okat.
+        id_token_missing: A Google nem küldött id_token-t; az OAuth hozzájárulás nem
+          tartalmazta az openid+email scope-okat.
         id_token_module_not_importable: A google-auth id_token modulja nem importálható.
         id_token_verification_failed: A Google id_token érvényesítése meghiúsult.
         loopback_bind_failed: A helyi loopback OAuth fogadó nem tudott portot lefoglalni.
-        oauthlib_not_importable: A google-auth-oauthlib nem importálható; az OAuth folyamat nem indítható el.
-        scope_missing: A Google hozzájárulási képernyő úgy zárult be, hogy nem adta meg az összes szükséges scope-ot.
-        unsecured_mode_refused: A Google OAuth elutasítva, mert a titoktároló unsecured módban fut és az aktív profil valós spanyol adóazonosítót tartalmaz.
+        oauthlib_not_importable: A google-auth-oauthlib nem importálható; az OAuth
+          folyamat nem indítható el.
+        scope_missing: A Google hozzájárulási képernyő úgy zárult be, hogy nem adta
+          meg az összes szükséges scope-ot.
+        unsecured_mode_refused: A Google OAuth elutasítva, mert a titoktároló unsecured
+          módban fut és az aktív profil valós spanyol adóazonosítót tartalmaz.
       suggestions:
-        close_loopback_port: Zárd be azt az alkalmazást, amely egy árván maradt loopback portot tart, és próbáld újra.
-        open_consent_url_manually: Nyisd meg manuálisan a kiírt hozzájárulási URL-t a böngésződben.
-        use_keyring_or_synthetic: Állítsd be az aeat_secret_store_backend=keyring értéket, vagy válts az aktív profilon szintetikus teszt adóazonosítóra.
+        close_loopback_port: Zárd be azt az alkalmazást, amely egy árván maradt loopback
+          portot tart, és próbáld újra.
+        open_consent_url_manually: Nyisd meg manuálisan a kiírt hozzájárulási URL-t
+          a böngésződben.
+        use_keyring_or_synthetic: Állítsd be az aeat_secret_store_backend=keyring
+          értéket, vagy válts az aktív profilon szintetikus teszt adóazonosítóra.
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT profil hozzárendelve a Google OAuth-hoz.
     refresh:
       errors:
-        google_auth_not_importable: A google-auth könyvtár nem importálható; a Google OAuth frissítés nem folytatható.
-        reauth_required: A Google OAuth hitelesítő adat újra-hitelesítésre van jelölve; az automatikus frissítési útvonal le van zárva.
+        google_auth_not_importable: A google-auth könyvtár nem importálható; a Google
+          OAuth frissítés nem folytatható.
+        reauth_required: A Google OAuth hitelesítő adat újra-hitelesítésre van jelölve;
+          az automatikus frissítési útvonal le van zárva.
         refresh_failed: A Google OAuth frissítés meghiúsult.
-        refresh_refused: A Google OAuth visszautasította a frissítési kérést; a refresh token már nem érvényes.
+        refresh_refused: A Google OAuth visszautasította a frissítési kérést; a refresh
+          token már nem érvényes.
         token_endpoint_unreachable: A Google OAuth token végpont nem elérhető.
       suggestions:
-        check_network: Ellenőrizd a hálózati kapcsolatot a Google OAuth végpontjaival, és próbáld újra.
-      testing_project_cap_warning: "A Google OAuth refresh token közelít a 7 napos Testing projekt limithez (körülbelül {hours_remaining} óra van hátra); futtasd újra az `aeat config google login` parancsot a hitelesítő adat élettartamának meghosszabbításához."
+        check_network: Ellenőrizd a hálózati kapcsolatot a Google OAuth végpontjaival,
+          és próbáld újra.
+      testing_project_cap_warning: A Google OAuth refresh token közelít a 7 napos
+        Testing projekt limithez (körülbelül {hours_remaining} óra van hátra); futtasd
+        újra az `aeat config google login` parancsot a hitelesítő adat élettartamának
+        meghosszabbításához.
 aggregation:
   iva_ledger:
     errors:
@@ -298,6 +323,12 @@ cli:
         list_help: Benyújtott bevallási sorok listázása artefaktumok letöltése nélkül
       filed_app_help: Benyújtott bevallások csak olvasható megfigyelései
       from_year_help: Első benyújtási év
+      iva_wallet:
+        app_help: cli.app.live.iva_wallet.app_help
+        capture_history_help: cli.app.live.iva_wallet.capture_history_help
+        history_help: cli.app.live.iva_wallet.history_help
+        pull_help: cli.app.live.iva_wallet.pull_help
+        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
       limit_help: Rögzítendő sorok maximális száma
       modelo_help: Modelo kód
       notifications:
@@ -528,8 +559,8 @@ cli:
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
-      no_active_profile: Nincs aktív profil. Futtasd az `aeat config profile create NAME` parancsot
-        a profilhoz kötött adatparancsok előtt.
+      no_active_profile: Nincs aktív profil. Futtasd az `aeat config profile create
+        NAME` parancsot a profilhoz kötött adatparancsok előtt.
       period_empty: Az adózási időszak nem lehet üres
       period_unrecognised: Ismeretlen időszak
   config:
@@ -563,10 +594,15 @@ cli:
       clear_locks_help: Hitelesítési beszerzési zárolások törlése
       clear_sessions_help: Perzisztált AEAT hitelesítési munkamenetek törlése
       configure_help: Az aktív hitelesítési szolgáltató beállítása
+      diagnostics:
+        help: cli.config.auth.diagnostics.help
+        id_help: cli.config.auth.diagnostics.id_help
+        list_help: cli.config.auth.diagnostics.list_help
+        show_help: cli.config.auth.diagnostics.show_help
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
       help: Az aktív hitelesítési szolgáltató beállítása
-      no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config profile create NAME' parancsot
-        a hitelesítés beállítása előtt.
+      no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config profile
+        create NAME' parancsot a hitelesítés beállítása előtt.
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
       providers_help: Támogatott hitelesítési szolgáltatók listázása
       reserved_provider: 'Fenntartott, de nem implementált hitelesítési szolgáltató:
@@ -590,8 +626,8 @@ cli:
         eseményekre (pl. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
-      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config profile create NAME
-        --tax-id <NIF>' parancsot.
+      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config profile
+        create NAME --tax-id <NIF>' parancsot.
       unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config profile
         list'' listázza az érvényes kulcsokat.'
     get:
@@ -713,8 +749,8 @@ cli:
       import_missing_bundle: 'Nem található profilcsomag itt: %{path}'
       import_path_help: A profil JSON-csomagjának útvonala
       logout_help: Léptesd ki az aktív profilt a helyi mutató törlésével
-      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id <NIF>`
-        first.
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
+        <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
         year / period.
       preflight_modelo_help: Modelo code (e.g. 303).
@@ -759,6 +795,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
+      profile_clear_active_help: cli.config.repair.profile_clear_active_help
+      profile_help: cli.config.repair.profile_help
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
         --yes szükséges)
       quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
@@ -770,6 +808,7 @@ cli:
       reset_state_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
         a megerősítéshez, vagy adj --dry-run paramétert az ujjlenyomat megtekintéséhez.
       reset_state_yes_help: A munkafolyamat-állapot visszaállítás kifejezett megerősítése
+      yes_help: cli.config.repair.yes_help
     reset:
       help: Operátor által megadott konfigurációs hatókörök visszaállítása
       invalid_scope: 'Érvénytelen hatókör: %{scope}. Az érvényes hatókörök: %{valid}.'
@@ -795,8 +834,8 @@ cli:
           ellenőrzéséhez.'
         saved: A(z) '%{profile_name}' profil mentve.
     status:
-      empty_profile: Nincs konfigurált profil. Kezdéshez futtasd az `aeat config profile create NAME`
-        parancsot.
+      empty_profile: Nincs konfigurált profil. Kezdéshez futtasd az `aeat config profile
+        create NAME` parancsot.
       help: Az aktív konfigurációs profil készenlétének megjelenítése
       next_step: 'Következő lépés: `aeat app overview status`'
     unset:
@@ -1142,18 +1181,18 @@ cli:
         diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
         diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
         first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
-        first_run_status: cli.operator_surface.help.config.first_run_status
+        first_run_edit: cli.operator_surface.help.config.first_run_edit
         footer: cli.operator_surface.help.config.footer
         heading: cli.operator_surface.help.config.heading
         paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
+        profile_census: cli.operator_surface.help.config.profile_census
         profile_delete: cli.operator_surface.help.config.profile_delete
         profile_duplicate: cli.operator_surface.help.config.profile_duplicate
         profile_list: cli.operator_surface.help.config.profile_list
-        profile_preflight: cli.operator_surface.help.config.profile_preflight
         profile_rename: cli.operator_surface.help.config.profile_rename
+        profile_show: cli.operator_surface.help.config.profile_show
+        profile_status: cli.operator_surface.help.config.profile_status
         profile_switch: cli.operator_surface.help.config.profile_switch
-        profile_validate: cli.operator_surface.help.config.profile_validate
-        profile_view: cli.operator_surface.help.config.profile_view
         section_authentication: cli.operator_surface.help.config.section_authentication
         section_diagnostics: cli.operator_surface.help.config.section_diagnostics
         section_first_run: cli.operator_surface.help.config.section_first_run
@@ -1240,8 +1279,8 @@ cli:
         kapcsolódik az AEAT-hoz.
       to_help: A naptárablak záró dátuma, inkluzív (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
-      Futtasd: ''aeat config profile edit NAME'' vagy add meg --allow-incomplete
-      a naptár alapértelmezett értékekkel történő számításához.'
+      Futtasd: ''aeat config profile edit NAME'' vagy add meg --allow-incomplete a
+      naptár alapértelmezett értékekkel történő számításához.'
     drafts: Tervezetek
     explain:
       help: Lebontja egy modelo alkalmazhatóságát az aktív profilra. Megmutatja a
@@ -1410,6 +1449,10 @@ cli:
     app_help_help: Show app workflow help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
+    errors:
+      no_active_profile: 'Nincs aktív profil. Futtasd az `aeat config profile create
+        NÉV` parancsot az első profil létrehozásához, vagy az `aeat config profile
+        switch NÉV` parancsot egy meglévő aktiválásához.'
     format_help: A parancseredmények kimeneti formátuma
     help_help: Show workflow-oriented help
     landing:
@@ -1425,8 +1468,8 @@ cli:
         es osztalyozasa.'
       quick_start_setup_done: '  1. `aeat config profile status` - aktiv profil ellenorzese
         az operativ munka elott.'
-      quick_start_setup_needed: '  1. `aeat config profile create NAME` - eloszor hozd letre a helyi
-        adozasi profilt.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - eloszor
+        hozd letre a helyi adozasi profilt.'
       quick_start_status: '  2. `aeat app overview status` - aktualis munkaterulet-allapot
         es diagnosztika olvasasa.'
       section_config: '  config - profilbeallitas, hitelesites, diagnosztika'
@@ -1644,9 +1687,9 @@ wizard:
     select_without_choices: Question %{prompt_key} declares no select options.
     unsupported_console: "A vezetett beállítás nem tudott interaktív kérdést megnyitni\
       \ ebben a futásban.\nMég semmi nincs mentve.\n\nPróbáld újra interaktív terminálból:\n\
-      \  aeat config profile create NAME\n\nHa a profilállapot elavult vagy sérült lehet, először\
-      \ vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot eldobásához\
-      \ és újrakezdéshez:\n  aeat config reset --scope profile --yes"
+      \  aeat config profile create NAME\n\nHa a profilállapot elavult vagy sérült\
+      \ lehet, először vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot\
+      \ eldobásához és újrakezdéshez:\n  aeat config reset --scope profile --yes"
   other:
     description: Other configuration options
     section:

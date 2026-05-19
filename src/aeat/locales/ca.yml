@@ -7,56 +7,82 @@ adapters:
   aeat:
     clave_movil:
       errors:
-        pending_petition_blocked: "L'AEAT s'ha negat a emetre una nova petició push de Cl@ve Móvil perquè una sol·licitud d'autenticació anterior encara està pendent al servidor."
+        pending_petition_blocked: L'AEAT s'ha negat a emetre una nova petició push
+          de Cl@ve Móvil perquè una sol·licitud d'autenticació anterior encara està
+          pendent al servidor.
       suggestions:
-        reject_pending_request: "Obre l'app Cl@ve al teu mòbil, rebutja totes les sol·licituds pendents i torna a executar `aeat config auth test` (o espera fins a 5 minuts que l'AEAT les caduqui automàticament)."
+        reject_pending_request: Obre l'app Cl@ve al teu mòbil, rebutja totes les sol·licituds
+          pendents i torna a executar `aeat config auth test` (o espera fins a 5 minuts
+          que l'AEAT les caduqui automàticament).
     sede:
       groi:
         suggestions:
-          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT ha canviat el formulari GROI.
+          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT
+            ha canviat el formulari GROI.
       nif_iva:
         suggestions:
-          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT ha canviat el formulari NIF-IVA.
+          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT
+            ha canviat el formulari NIF-IVA.
       renta_web_open:
         suggestions:
-          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT ha canviat la pàgina Renta WEB Open.
+          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT
+            ha canviat la pàgina Renta WEB Open.
   google:
     calc_sheets:
       errors:
-        api_call_failed: "La crida a Google {action} ha fallat."
-        api_call_refused: "La crida a Google {action} ha estat rebutjada (HTTP {status})."
-        api_target_not_found: "El destí de Google {action} no s'ha trobat."
-        googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador de Google no pot accedir a l'API.
+        api_call_failed: La crida a Google {action} ha fallat.
+        api_call_refused: La crida a Google {action} ha estat rebutjada (HTTP {status}).
+        api_target_not_found: El destí de Google {action} no s'ha trobat.
+        googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
+          de Google no pot accedir a l'API.
     oauth_flow:
       errors:
-        browser_launcher_refused: El sistema operatiu ha rebutjat obrir l'URL de consentiment OAuth al navegador.
+        browser_launcher_refused: El sistema operatiu ha rebutjat obrir l'URL de consentiment
+          OAuth al navegador.
         client_config_refused: La configuració del client Google OAuth ha estat rebutjada.
-        email_claim_missing: L'id_token de Google s'ha verificat però no inclou la reclamació email.
+        email_claim_missing: L'id_token de Google s'ha verificat però no inclou la
+          reclamació email.
         endpoint_unreachable: L'endpoint OAuth de Google no és accessible.
-        id_token_missing: Google no ha retornat un id_token; el consentiment OAuth no incloïa els àmbits openid+email.
-        id_token_module_not_importable: El mòdul id_token de google-auth no es pot importar.
+        id_token_missing: Google no ha retornat un id_token; el consentiment OAuth
+          no incloïa els àmbits openid+email.
+        id_token_module_not_importable: El mòdul id_token de google-auth no es pot
+          importar.
         id_token_verification_failed: La verificació de l'id_token de Google ha fallat.
-        loopback_bind_failed: El receptor OAuth loopback local no ha pogut assignar cap port.
-        oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux OAuth no es pot iniciar.
-        scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir tots els àmbits requerits.
-        unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets està en mode insegur i el perfil actiu porta un identificador fiscal espanyol real.
+        loopback_bind_failed: El receptor OAuth loopback local no ha pogut assignar
+          cap port.
+        oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
+          OAuth no es pot iniciar.
+        scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
+          tots els àmbits requerits.
+        unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
+          està en mode insegur i el perfil actiu porta un identificador fiscal espanyol
+          real.
       suggestions:
-        close_loopback_port: Tanca l'aplicació que estigui ocupant un port loopback orfe i torna-ho a intentar.
-        open_consent_url_manually: Obre manualment al navegador l'URL de consentiment impresa.
-        use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o canvia el perfil actiu a un identificador fiscal sintètic de prova.
+        close_loopback_port: Tanca l'aplicació que estigui ocupant un port loopback
+          orfe i torna-ho a intentar.
+        open_consent_url_manually: Obre manualment al navegador l'URL de consentiment
+          impresa.
+        use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o canvia
+          el perfil actiu a un identificador fiscal sintètic de prova.
     profile_binding:
       errors:
         no_active_profile: No hi ha cap perfil AEAT actiu enllaçat per a Google OAuth.
     refresh:
       errors:
-        google_auth_not_importable: La biblioteca google-auth no es pot importar; la renovació d'OAuth Google no pot continuar.
-        reauth_required: La credencial OAuth de Google està marcada com a pendent de reautenticació; la ruta de renovació automàtica està tancada.
+        google_auth_not_importable: La biblioteca google-auth no es pot importar;
+          la renovació d'OAuth Google no pot continuar.
+        reauth_required: La credencial OAuth de Google està marcada com a pendent
+          de reautenticació; la ruta de renovació automàtica està tancada.
         refresh_failed: La renovació de Google OAuth ha fallat.
-        refresh_refused: Google OAuth ha rebutjat la sol·licitud de renovació; el refresh token ja no és vàlid.
+        refresh_refused: Google OAuth ha rebutjat la sol·licitud de renovació; el
+          refresh token ja no és vàlid.
         token_endpoint_unreachable: L'endpoint de token de Google OAuth no és accessible.
       suggestions:
-        check_network: Comprova la connectivitat de xarxa amb els endpoints OAuth de Google i torna-ho a intentar.
-      testing_project_cap_warning: "El refresh token de Google OAuth s'apropa al límit de 7 dies del projecte en mode Testing (queden unes {hours_remaining}h); torna a executar `aeat config google login` per allargar la vida útil de la credencial."
+        check_network: Comprova la connectivitat de xarxa amb els endpoints OAuth
+          de Google i torna-ho a intentar.
+      testing_project_cap_warning: El refresh token de Google OAuth s'apropa al límit
+        de 7 dies del projecte en mode Testing (queden unes {hours_remaining}h); torna
+        a executar `aeat config google login` per allargar la vida útil de la credencial.
 aggregation:
   iva_ledger:
     errors:
@@ -303,6 +329,12 @@ cli:
         list_help: Llistar declaracions presentades sense descarregar artefactes
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
+      iva_wallet:
+        app_help: cli.app.live.iva_wallet.app_help
+        capture_history_help: cli.app.live.iva_wallet.capture_history_help
+        history_help: cli.app.live.iva_wallet.history_help
+        pull_help: cli.app.live.iva_wallet.pull_help
+        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
       limit_help: Nombre màxim de files a capturar
       modelo_help: Codi de model
       notifications:
@@ -541,8 +573,8 @@ cli:
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config profile create NAME` abans
-        d'usar ordres de dades del perfil.
+      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config profile create
+        NAME` abans d'usar ordres de dades del perfil.
       period_empty: El periode fiscal no pot estar buit
       period_unrecognised: Període no reconegut
   config:
@@ -575,10 +607,15 @@ cli:
       clear_locks_help: Netejar bloquejos d'adquisició d'autenticació
       clear_sessions_help: Netejar sessions AEAT persistides
       configure_help: Configurar el proveïdor d'autenticació actiu
+      diagnostics:
+        help: cli.config.auth.diagnostics.help
+        id_help: cli.config.auth.diagnostics.id_help
+        list_help: cli.config.auth.diagnostics.list_help
+        show_help: cli.config.auth.diagnostics.show_help
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
-      no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config profile create NAME'
-        abans de configurar l'autenticació.
+      no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config profile
+        create NAME' abans de configurar l'autenticació.
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
       providers_help: Llistar proveïdors d'autenticació suportats
       reserved_provider: 'Proveïdor d''autenticació reservat però no implementat:
@@ -603,8 +640,8 @@ cli:
         (p. ex. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
-      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create NAME --tax-id
-        <NIF>' primer.
+      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
+        NAME --tax-id <NIF>' primer.
       unknown_key: 'Clau de configuració desconeguda: %{name}. Executa ''aeat config
         profile list'' per veure les claus disponibles.'
     get:
@@ -728,8 +765,8 @@ cli:
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
-      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id <NIF>`
-        first.
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
+        <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
         year / period.
       preflight_modelo_help: Modelo code (e.g. 303).
@@ -771,6 +808,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
+      profile_clear_active_help: cli.config.repair.profile_clear_active_help
+      profile_help: cli.config.repair.profile_help
       quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu;
         requereix --yes)
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
@@ -784,6 +823,7 @@ cli:
         amb --yes per confirmar o passa --dry-run per inspeccionar l'empremta.
       reset_state_yes_help: Confirmar explícitament el reinici de l'estat del flux
         de treball
+      yes_help: cli.config.repair.yes_help
     reset:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
@@ -808,7 +848,8 @@ cli:
           de treball.'
         saved: Perfil '%{profile_name}' desat.
     status:
-      empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME` per començar.
+      empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME`
+        per començar.
       help: Mostrar l'estat del perfil de configuració actiu
       next_step: 'Següent pas: `aeat app overview status`'
     unset:
@@ -1153,18 +1194,18 @@ cli:
         diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
         diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
         first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
-        first_run_status: cli.operator_surface.help.config.first_run_status
+        first_run_edit: cli.operator_surface.help.config.first_run_edit
         footer: cli.operator_surface.help.config.footer
         heading: cli.operator_surface.help.config.heading
         paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
+        profile_census: cli.operator_surface.help.config.profile_census
         profile_delete: cli.operator_surface.help.config.profile_delete
         profile_duplicate: cli.operator_surface.help.config.profile_duplicate
         profile_list: cli.operator_surface.help.config.profile_list
-        profile_preflight: cli.operator_surface.help.config.profile_preflight
         profile_rename: cli.operator_surface.help.config.profile_rename
+        profile_show: cli.operator_surface.help.config.profile_show
+        profile_status: cli.operator_surface.help.config.profile_status
         profile_switch: cli.operator_surface.help.config.profile_switch
-        profile_validate: cli.operator_surface.help.config.profile_validate
-        profile_view: cli.operator_surface.help.config.profile_view
         section_authentication: cli.operator_surface.help.config.section_authentication
         section_diagnostics: cli.operator_surface.help.config.section_diagnostics
         section_first_run: cli.operator_surface.help.config.section_first_run
@@ -1254,8 +1295,8 @@ cli:
         amb AEAT.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
-      ''aeat config profile edit NAME'' o useu --allow-incomplete per veure
-      el calendari calculat amb valors per defecte.'
+      ''aeat config profile edit NAME'' o useu --allow-incomplete per veure el calendari
+      calculat amb valors per defecte.'
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
@@ -1423,6 +1464,10 @@ cli:
     app_help_help: Mostrar ajuda del flux d'app
     debug_help: Mostrar logs interns de depuració a stderr
     detail_help: Also show the detailed registry summary
+    errors:
+      no_active_profile: 'No hi ha cap perfil actiu. Executa `aeat config profile
+        create NOM` per crear el teu primer perfil, o `aeat config profile switch
+        NOM` per activar-ne un d''existent.'
     format_help: Format de sortida per als resultats de l'ordre
     help_help: Mostrar ajuda orientada al flux de treball
     landing:
@@ -1438,8 +1483,8 @@ cli:
         files importades.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprovar el perfil
         actiu abans del treball operatiu.'
-      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primer el perfil
-        fiscal local.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primer
+        el perfil fiscal local.'
       quick_start_status: '  2. `aeat app overview status` - llegir l''estat actual
         de l''espai i els diagnostics.'
       section_config: '  config - perfil, autenticacio i diagnostics'
@@ -1656,9 +1701,9 @@ wizard:
     select_without_choices: Question %{prompt_key} declares no select options.
     unsupported_console: "La configuració guiada no ha pogut obrir una pregunta interactiva\
       \ en aquesta execució.\nEncara no s'ha desat res.\n\nTorna a provar-la des d'una\
-      \ sessió de terminal interactiva:\n  aeat config profile create NAME\n\nSi l'estat del perfil\
-      \ pot estar obsolet o corrupte, revisa'l primer:\n  aeat config repair\n\nPer\
-      \ descartar només l'estat local del perfil i començar de nou:\n  aeat config\
+      \ sessió de terminal interactiva:\n  aeat config profile create NAME\n\nSi l'estat\
+      \ del perfil pot estar obsolet o corrupte, revisa'l primer:\n  aeat config repair\n\
+      \nPer descartar només l'estat local del perfil i començar de nou:\n  aeat config\
       \ reset --scope profile --yes"
   other:
     description: Other configuration options
