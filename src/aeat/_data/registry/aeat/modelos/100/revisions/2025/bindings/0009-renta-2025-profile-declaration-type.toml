@@ -1,7 +1,7 @@
 [[revisions."2025".bindings]]
 id = "renta-2025-profile-declaration-type"
 source = "profile"
-selector = { profile_key = "declaration.type", xsd_attribute = "TIPOTRIBUTACION", dictionary_field = "TIPOTRIBUTACION" }
+selector = { profile_key = "filing_export.declaration_type", xsd_attribute = "TIPOTRIBUTACION", dictionary_field = "TIPOTRIBUTACION" }
 aggregation = { op = "copy" }
 legal_refs = ["orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

@@ -447,7 +447,7 @@ def _assert_spouse_joint_gating(bindings_by_id: Mapping[str, DataBindingDefiniti
     """Spouse-only bindings gate on declaration type 2 (joint)."""
     for binding_id in _SPOUSE_REQUIRED_BINDINGS:
         selector = bindings_by_id[binding_id].selector
-        assert selector["required_when_profile_key"] == "declaration.type", (
+        assert selector["required_when_profile_key"] == "filing_export.declaration_type", (
             f"{binding_id}: required_when_profile_key={selector['required_when_profile_key']!r}"
         )
         assert selector["required_when_value"] == "2", (
@@ -458,10 +458,10 @@ def _assert_spouse_joint_gating(bindings_by_id: Mapping[str, DataBindingDefiniti
 def _assert_eu_eea_gating(bindings_by_id: Mapping[str, DataBindingDefinition]) -> None:
     """The two EU-EEA bindings chain their gating predicates correctly."""
     eu_resident_selector = bindings_by_id["renta-2025-profile-spouse-eu-eea-resident"].selector
-    assert eu_resident_selector["required_when_profile_key"] == "spouse.non_resident_irpf"
+    assert eu_resident_selector["required_when_profile_key"] == "renta_spouse.non_resident_irpf"
     assert eu_resident_selector["required_when_value"] == "true"
     eu_country_selector = bindings_by_id["renta-2025-profile-spouse-eu-eea-country"].selector
-    assert eu_country_selector["required_when_profile_key"] == "spouse.eu_eea_resident"
+    assert eu_country_selector["required_when_profile_key"] == "renta_spouse.eu_eea_resident"
     assert eu_country_selector["required_when_value"] == "true"
 
 
