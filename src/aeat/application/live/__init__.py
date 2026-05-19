@@ -11,15 +11,18 @@ from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.sede import (
     Declaration,
     FiledDeclarationObservationStore,
+    IvaCompensationWalletObservation,
     capture_previous_filing_observations,
     capture_relation_source_observations,
+    fetch_iva_compensation_wallet,
     open_declarations_register,
     shared_playwright,
 )
 from ...application.auth import ensure_authenticated_aeat_session
+from ...application.calculations import reconcile_modelo_303_iva_compensation
 from ...core.access_gate import AeatAccessGate
 from ...core.config import Settings, load_settings
-from ...core.resources import bundled_path
+from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
@@ -60,6 +63,26 @@ class SourceFiledDataCaptureReport(BaseModel):
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     casilla_count: int
+
+
+class IvaWalletCaptureReport(BaseModel):
+    """Read-only IVA compensation wallet capture report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    taxpayer_nif: str
+    target_year: int
+    target_period: str
+    observation_path: str
+    decision_key: str
+    row_count: int
+    total_pending: str
+    selected_authority: str
+    selected_amount: str | None
+    local_recurrence_amount: str | None
+    divergence: str
+    blocked: bool
+    captured_at: datetime
 
 
 class FiledDataListingRow(BaseModel):
@@ -364,6 +387,58 @@ async def capture_notifications(*, bucket_id: str):
     return persisted
 
 
+async def capture_iva_compensation_wallet(
+    *,
+    target_year: int,
+    target_period: str,
+    taxpayer_nif: str | None = None,
+    output_root: Path | None = None,
+) -> IvaWalletCaptureReport:
+    """Live-fetch AEAT's IVA compensation wallet and persist the observation.
+
+    This is the operator-approved live path. It requires
+    `AEAT_LIVE_TESTS_ENABLED=1` and will acquire or reuse the configured
+    AEAT session, including Cl@ve Móvil approval when the auth provider
+    requires it.
+    """
+
+    session, settings = await _active_verified_session()
+    observation: IvaCompensationWalletObservation = await fetch_iva_compensation_wallet(
+        session,
+        target_year=target_year,
+        target_period=target_period,
+        taxpayer_nif=taxpayer_nif,
+        settings=settings,
+    )
+    store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-wallet"
+    store = FiledDeclarationObservationStore(store_root)
+    path = store.persist_iva_wallet_observation(observation)
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=target_year, period=target_period)
+    reconciliation = reconcile_modelo_303_iva_compensation(
+        snapshot,
+        taxpayer_nif=observation.taxpayer_nif,
+        wallet=observation,
+    )
+    decision = reconciliation.decision
+    return IvaWalletCaptureReport(
+        taxpayer_nif=observation.taxpayer_nif,
+        target_year=observation.target_year,
+        target_period=observation.target_period,
+        observation_path=str(path),
+        decision_key=f"{decision.taxpayer_nif}:{decision.target_year}:{decision.target_period}",
+        row_count=len(observation.rows),
+        total_pending=str(observation.total_pending),
+        selected_authority=decision.selected_authority,
+        selected_amount=str(decision.selected_amount) if decision.selected_amount is not None else None,
+        local_recurrence_amount=(
+            str(decision.local_recurrence_amount) if decision.local_recurrence_amount is not None else None
+        ),
+        divergence=decision.divergence,
+        blocked=decision.blocked,
+        captured_at=observation.captured_at,
+    )
+
+
 async def _active_verified_session() -> tuple[AeatSession, Settings]:
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
@@ -383,11 +458,13 @@ __all__ = [
     "FiledDataCaptureReport",
     "FiledDataListingReport",
     "FiledDataListingRow",
+    "IvaWalletCaptureReport",
     "LiveApplicationError",
     "LiveApplicationInputError",
     "SourceFiledDataCaptureReport",
     "borrador_100_snapshot_object_key",
     "capture_filed_data",
+    "capture_iva_compensation_wallet",
     "capture_notifications",
     "capture_source_filed_data",
     "derive_borrador_100_snapshot_id",

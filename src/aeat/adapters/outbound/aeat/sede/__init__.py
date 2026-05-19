@@ -87,6 +87,10 @@ from ._errors import (
     SedeNavigationError,
     SedeParseError,
 )
+from ._iva_compensation_wallet import (
+    fetch_iva_compensation_wallet,
+    parse_iva_compensation_wallet_html,
+)
 from ._notifications import (
     NotificationsSnapshot,
     RemoteNotification,
@@ -106,6 +110,8 @@ from ._schema import (
     Expediente,
     FiledDeclarationArtefact,
     FiledDeclarationObservation,
+    IvaCompensationWalletObservation,
+    IvaCompensationWalletRow,
     JustificanteRef,
     ObservedCasillaValue,
     SedeCapture,
@@ -125,6 +131,8 @@ __all__ = [
     "FiledDeclarationArtefact",
     "FiledDeclarationObservation",
     "FiledDeclarationObservationStore",
+    "IvaCompensationWalletObservation",
+    "IvaCompensationWalletRow",
     "JustificanteFetchError",
     "JustificanteRef",
     "NotificationsSnapshot",
@@ -144,12 +152,14 @@ __all__ = [
     "extract_renta_web_open_summary_value",
     "fetch_notifications_query",
     "fetch_notifications_summary",
+    "fetch_iva_compensation_wallet",
     "find_expediente",
     "open_declarations_register",
     "parse_expediente_detail",
     "parse_notifications_query",
     "parse_notifications_summary",
     "parse_resumen_tree",
+    "parse_iva_compensation_wallet_html",
     "registry_observation_from_filed_declaration",
     "resolve_justificante_ref",
     "resolve_previous_filing_bindings_from_filed_declarations",
