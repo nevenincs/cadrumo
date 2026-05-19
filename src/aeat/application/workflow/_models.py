@@ -8,7 +8,7 @@ diagnostics emitted by workflow diagnostics.
 
 Import ordering note
 --------------------
-The ``SiteHealthStatus`` and ``FilingObligation`` imports are placed
+The ``SiteHealthStatus`` and ``ModeloDeadline`` imports are placed
 *after* :class:`WorkflowState` and related state models so that
 :mod:`aeat.application.auth._actions` (which imports :class:`WorkflowState`
 from this partially-initialised module during the browser-adapter import
@@ -91,7 +91,7 @@ class WorkflowAbortReason(StrEnum):
     UNHANDLED_EXCEPTION = "UNHANDLED_EXCEPTION"
 
 
-class DeclarationPointer(BaseModel):
+class DeclaracionPointer(BaseModel):
     """Pointer to a persisted filing draft and its status."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -153,7 +153,7 @@ class WorkflowState(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     auth: AuthState = Field(default_factory=AuthState)
-    declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
+    declarations: dict[str, DeclaracionPointer] = Field(default_factory=dict)
     invoice_reviews: dict[str, InvoiceReviewRecord] = Field(default_factory=dict)
     ledger_reviews: dict[str, LedgerReviewRecord] = Field(default_factory=dict)
     bucket_events: tuple[WorkflowEvent, ...] = ()
@@ -297,11 +297,11 @@ def update_declaration_pointer(
     """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``."""
     import json as _json
 
-    declarations: dict[str, DeclarationPointer] = dict(state.declarations)
+    declarations: dict[str, DeclaracionPointer] = dict(state.declarations)
     key = declaration_key(modelo, period)
     current = declarations.get(key)
     if isinstance(current, dict):
-        current = DeclarationPointer.model_validate_json(_json.dumps(current, default=str))
+        current = DeclaracionPointer.model_validate_json(_json.dumps(current, default=str))
 
     now = utc_now()
     update_fields: dict[str, object] = {
@@ -314,10 +314,10 @@ def update_declaration_pointer(
     if verified is not None:
         update_fields["verified"] = verified
 
-    if isinstance(current, DeclarationPointer):
+    if isinstance(current, DeclaracionPointer):
         declarations[key] = current.model_copy(update=update_fields)
     else:
-        declarations[key] = DeclarationPointer(
+        declarations[key] = DeclaracionPointer(
             modelo=modelo,
             period=period,
             draft_id=draft_id,
@@ -337,7 +337,7 @@ def update_declaration_pointer(
 # ---------------------------------------------------------------------------
 
 from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
-from ...domain.deadlines import FilingObligation
+from ...domain.deadlines import ModeloDeadline
 from ..review._models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
@@ -462,7 +462,7 @@ class WorkflowResult(BaseModel):
     ended_at: datetime
     final_stage: WorkflowStage
     aborted_reason: WorkflowAbortReason | None = None
-    obligation: FilingObligation | None = None
+    obligation: ModeloDeadline | None = None
     draft_id: str | None = None
     submission_id: str | None = None
     steps: tuple[WorkflowStep, ...]

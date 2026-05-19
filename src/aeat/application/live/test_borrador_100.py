@@ -22,7 +22,7 @@ from aeat.application.live import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     Borrador100SnapshotService,
-    Borrador100SnapshotState,
+    SnapshotLifecycleState,
     LiveApplicationInputError,
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
@@ -61,7 +61,7 @@ def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
         period="0A",
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
-        state=Borrador100SnapshotState.ACTIVE,
+        state=SnapshotLifecycleState.ACTIVE,
         binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
     )
 
@@ -82,7 +82,7 @@ def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
         period="0A",
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
-        state=Borrador100SnapshotState.ACTIVE,
+        state=SnapshotLifecycleState.ACTIVE,
         binding_values={},
     )
     envelope = Envelope[Borrador100Snapshot](
@@ -117,7 +117,7 @@ def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
         period="0A",
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
-        state=Borrador100SnapshotState.ACTIVE,
+        state=SnapshotLifecycleState.ACTIVE,
         binding_values={},
     )
     second_snapshot = first_snapshot.model_copy(update={"snapshot_id": "second", "bucket_id": "other-bucket"})
@@ -141,7 +141,7 @@ def test_borrador_100_snapshot_repository_resolves_unambiguous_prefix(
         period="0A",
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
-        state=Borrador100SnapshotState.ACTIVE,
+        state=SnapshotLifecycleState.ACTIVE,
         binding_values={},
     )
     repository.save(snapshot)
@@ -216,12 +216,12 @@ def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot(
         binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("16.25")},
     )
 
-    assert repository.load(older.snapshot_id).state is Borrador100SnapshotState.SUPERSEDED
+    assert repository.load(older.snapshot_id).state is SnapshotLifecycleState.SUPERSEDED
     assert repository.load(older.snapshot_id).superseded_by_snapshot_id == newer.snapshot_id
     assert service.list_snapshots() == (newer,)
     assert service.list_snapshots(state=None) == (
         older.model_copy(
-            update={"state": Borrador100SnapshotState.SUPERSEDED, "superseded_by_snapshot_id": newer.snapshot_id}
+            update={"state": SnapshotLifecycleState.SUPERSEDED, "superseded_by_snapshot_id": newer.snapshot_id}
         ),
         newer,
     )
@@ -247,7 +247,7 @@ def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_
         binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
     )
 
-    assert repository.load(newer.snapshot_id).state is Borrador100SnapshotState.ACTIVE
-    assert repository.load(older.snapshot_id).state is Borrador100SnapshotState.SUPERSEDED
+    assert repository.load(newer.snapshot_id).state is SnapshotLifecycleState.ACTIVE
+    assert repository.load(older.snapshot_id).state is SnapshotLifecycleState.SUPERSEDED
     assert repository.load(older.snapshot_id).superseded_by_snapshot_id == newer.snapshot_id
     assert service.list_snapshots() == (newer,)

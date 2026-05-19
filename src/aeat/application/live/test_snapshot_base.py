@@ -19,13 +19,17 @@ from aeat.adapters.persistence.storage.sql import SecureObjectRecord, SecureObje
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.live._errors import LiveApplicationInputError
+from aeat.application.live._borrador_100 import BorradorSnapshotNotFoundError
+from aeat.application.live._censo import CensoSnapshotNotFoundError
 from aeat.application.live._snapshot_base import (
     SnapshotLifecycleState,
+    SnapshotNotFoundError,
     SnapshotService,
     derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
 from aeat.core.config import Settings
+from aeat.core.errors import AeatError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -429,3 +433,39 @@ def test_service_constructor_rejects_bucket_mismatch(secure_objects: SecureObjec
     repository = ProbeRepository(bucket_id="bucket-a", objects=secure_objects)
     with pytest.raises(LiveApplicationInputError, match="does not match repository bucket"):
         ProbeService(bucket_id="bucket-b", repository=repository)
+
+
+# ---- Per-service SnapshotNotFoundError subclass hierarchy ---------------
+
+
+def test_borrador_snapshot_not_found_error_inherits_shared_base() -> None:
+    error = BorradorSnapshotNotFoundError("borrador snapshot 'x' not found")
+    assert isinstance(error, SnapshotNotFoundError)
+    assert isinstance(error, AeatError)
+    assert issubclass(BorradorSnapshotNotFoundError, SnapshotNotFoundError)
+    assert issubclass(BorradorSnapshotNotFoundError, AeatError)
+
+
+def test_borrador_snapshot_not_found_error_accepts_structured_kwargs() -> None:
+    # AeatError-first MRO means suggestion= is accepted (KeyError.__init__ rejects kwargs).
+    error = BorradorSnapshotNotFoundError(
+        "borrador snapshot 'abc' not found in bucket 'b1'",
+        suggestion="aeat app live borrador 100 list",
+    )
+    assert error.suggestion == "aeat app live borrador 100 list"
+
+
+def test_censo_snapshot_not_found_error_inherits_shared_base() -> None:
+    error = CensoSnapshotNotFoundError("censo snapshot 'x' not found")
+    assert isinstance(error, SnapshotNotFoundError)
+    assert isinstance(error, AeatError)
+    assert issubclass(CensoSnapshotNotFoundError, SnapshotNotFoundError)
+    assert issubclass(CensoSnapshotNotFoundError, AeatError)
+
+
+def test_censo_snapshot_not_found_error_accepts_structured_kwargs() -> None:
+    error = CensoSnapshotNotFoundError(
+        "censo snapshot 'abc' not found in bucket 'b1'",
+        suggestion="aeat config profile census refresh",
+    )
+    assert error.suggestion == "aeat config profile census refresh"

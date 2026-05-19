@@ -33,7 +33,7 @@ from ...domain.buckets import (
 from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry._bindings import CasillaObservation
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
-from ...domain.filing import FilingDraftStatus
+from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -351,7 +351,7 @@ class _RevisionDraftBuilder:
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        if draft.status is not FilingDraftStatus.READY_TO_SUBMIT:
+        if draft.status is not ModeloDraftStatus.READY_TO_SUBMIT:
             return draft
         return approve_draft(
             draft,

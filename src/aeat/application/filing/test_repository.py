@@ -16,7 +16,7 @@ import pytest
 from ...adapters.persistence.storage.errors import ClassificationError
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...domain.filing._repository import FilingDraftRepository
-from ...domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind, compute_draft_id
+from ...domain.filing._schema import FilingDraft, ModeloDraftStatus, FilingValue, FilingValueKind, compute_draft_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -43,7 +43,7 @@ def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> FilingDraft
         modelo="130",
         period=period,
         profile_tax_id="00000000T",
-        status=FilingDraftStatus.VALIDATED,
+        status=ModeloDraftStatus.VALIDATED,
         values=values,
         created_at=now,
         updated_at=now,

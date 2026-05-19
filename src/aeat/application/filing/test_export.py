@@ -12,11 +12,11 @@ from pydantic import ValidationError
 from aeat.domain.calculations.registry import RegistryValidationError, parse_export_payload
 
 from . import (
-    DeclarationExportFormat,
-    DeclarationExportResult,
-    DeclarationVerifyResult,
-    DeclarationVerifyVerdict,
-    FilingDraftStatus,
+    DeclaracionExportFormat,
+    DeclaracionExportResult,
+    DeclaracionVerifyResult,
+    DeclaracionVerifyVerdict,
+    ModeloDraftStatus,
     FilingOperatorProfile,
     build_draft,
     build_runtime_schema_provider,
@@ -81,7 +81,7 @@ def _approved_registry_draft():
         },
         schema_provider=_schema_provider(),
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _modelo_130_export_headers() -> dict[str, str]:
@@ -113,7 +113,7 @@ def _approved_modelo_131_registry_draft():
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _approved_modelo_131_registry_draft_without_direct_debit():
@@ -134,7 +134,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _approved_modelo_131_zero_payable_direct_debit_draft():
@@ -152,7 +152,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_prefix: str):
@@ -174,7 +174,7 @@ def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_pr
         },
         schema_provider=_schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _approved_modelo_131_historical_registry_draft():
@@ -199,7 +199,7 @@ def _approved_modelo_131_historical_registry_draft():
         },
         schema_provider=provider,
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _approved_modelo_111_registry_draft():
@@ -224,7 +224,7 @@ def _approved_modelo_111_registry_draft():
         },
         schema_provider=_schema_provider(modelos=("111",)),
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _modelo_111_export_headers() -> dict[str, str]:
@@ -252,7 +252,7 @@ def _approved_modelo_115_registry_draft():
         },
         schema_provider=_schema_provider(modelos=("115",)),
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _modelo_115_export_headers() -> dict[str, str]:
@@ -286,7 +286,7 @@ def _approved_modelo_123_registry_draft():
         },
         schema_provider=_schema_provider(modelos=("123",)),
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _modelo_123_export_headers() -> dict[str, str]:
@@ -317,7 +317,7 @@ def _approved_modelo_123_2019_registry_draft():
         },
         schema_provider=provider,
     )
-    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+    return draft.model_copy(update={"status": ModeloDraftStatus.APPROVED})
 
 
 def _modelo_123_2019_export_headers() -> dict[str, str]:
@@ -331,19 +331,19 @@ def _modelo_123_2019_export_headers() -> dict[str, str]:
 
 
 def test_format_enum_carries_cli_values() -> None:
-    assert DeclarationExportFormat.FICHERO_BOE.value == "fichero-boe"
+    assert DeclaracionExportFormat.FICHERO_BOE.value == "fichero-boe"
 
 
 def test_verdict_enum_orders_match_drift_missing() -> None:
-    assert {item.value for item in DeclarationVerifyVerdict} == {"match", "drift", "missing"}
+    assert {item.value for item in DeclaracionVerifyVerdict} == {"match", "drift", "missing"}
 
 
 def test_export_result_round_trips_canonical_fields() -> None:
-    receipt = DeclarationExportResult(
+    receipt = DeclaracionExportResult(
         draft_id="d-130-2026Q1",
         modelo="130",
         period="2026Q1",
-        format=DeclarationExportFormat.FICHERO_BOE,
+        format=DeclaracionExportFormat.FICHERO_BOE,
         output_path=_EXPORT_PATH,
         byte_size=512,
         file_sha256=_HEX_DIGEST,
@@ -351,7 +351,7 @@ def test_export_result_round_trips_canonical_fields() -> None:
         narrative=_narrative(),
     )
     assert receipt.draft_id == "d-130-2026Q1"
-    assert receipt.format is DeclarationExportFormat.FICHERO_BOE
+    assert receipt.format is DeclaracionExportFormat.FICHERO_BOE
     assert receipt.output_path == _EXPORT_PATH
     assert receipt.byte_size == 512
     assert receipt.file_sha256 == _HEX_DIGEST
@@ -360,11 +360,11 @@ def test_export_result_round_trips_canonical_fields() -> None:
 
 def test_export_result_rejects_uppercase_digest() -> None:
     with pytest.raises(ValueError, match=r"file_sha256|hex|lowercase"):
-        DeclarationExportResult(
+        DeclaracionExportResult(
             draft_id="d",
             modelo="130",
             period="2026Q1",
-            format=DeclarationExportFormat.FICHERO_BOE,
+            format=DeclaracionExportFormat.FICHERO_BOE,
             output_path=_OTHER_EXPORT_PATH,
             byte_size=1,
             file_sha256="A" * 64,
@@ -375,11 +375,11 @@ def test_export_result_rejects_uppercase_digest() -> None:
 
 def test_export_result_rejects_non_hex_digest() -> None:
     with pytest.raises(ValueError, match=r"file_sha256|hex"):
-        DeclarationExportResult(
+        DeclaracionExportResult(
             draft_id="d",
             modelo="130",
             period="2026Q1",
-            format=DeclarationExportFormat.FICHERO_BOE,
+            format=DeclaracionExportFormat.FICHERO_BOE,
             output_path=_OTHER_EXPORT_PATH,
             byte_size=1,
             file_sha256="z" * 64,
@@ -389,11 +389,11 @@ def test_export_result_rejects_non_hex_digest() -> None:
 
 
 def test_export_result_is_frozen() -> None:
-    receipt = DeclarationExportResult(
+    receipt = DeclaracionExportResult(
         draft_id="d",
         modelo="130",
         period="2026Q1",
-        format=DeclarationExportFormat.FICHERO_BOE,
+        format=DeclaracionExportFormat.FICHERO_BOE,
         output_path=_OTHER_EXPORT_PATH,
         byte_size=0,
         file_sha256=_HEX_DIGEST,
@@ -405,24 +405,24 @@ def test_export_result_is_frozen() -> None:
 
 
 def test_verify_result_match_carries_no_mismatched_casillas() -> None:
-    verdict = DeclarationVerifyResult(
+    verdict = DeclaracionVerifyResult(
         draft_id="d-130-2026Q1",
         file_path=_EXPORT_PATH,
-        verdict=DeclarationVerifyVerdict.MATCH,
+        verdict=DeclaracionVerifyVerdict.MATCH,
         mismatched_casillas=(),
         file_sha256=_HEX_DIGEST,
         verified_at=datetime(2026, 5, 3, tzinfo=UTC),
         narrative=_narrative(),
     )
-    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
     assert verdict.mismatched_casillas == ()
 
 
 def test_verify_result_drift_lists_mismatched_casillas() -> None:
-    verdict = DeclarationVerifyResult(
+    verdict = DeclaracionVerifyResult(
         draft_id="d",
         file_path=_OTHER_EXPORT_PATH,
-        verdict=DeclarationVerifyVerdict.DRIFT,
+        verdict=DeclaracionVerifyVerdict.DRIFT,
         mismatched_casillas=("01", "07"),
         file_sha256=None,
         verified_at=datetime(2026, 5, 3, tzinfo=UTC),
@@ -434,10 +434,10 @@ def test_verify_result_drift_lists_mismatched_casillas() -> None:
 
 def test_verify_result_rejects_blank_casilla_ids() -> None:
     with pytest.raises(ValueError, match=r"casilla|empty|at least 1 character"):
-        DeclarationVerifyResult(
+        DeclaracionVerifyResult(
             draft_id="d",
             file_path=_OTHER_EXPORT_PATH,
-            verdict=DeclarationVerifyVerdict.DRIFT,
+            verdict=DeclaracionVerifyVerdict.DRIFT,
             mismatched_casillas=("", "07"),
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative=_narrative(),
@@ -446,10 +446,10 @@ def test_verify_result_rejects_blank_casilla_ids() -> None:
 
 def test_verify_result_rejects_padded_casilla_ids() -> None:
     with pytest.raises(ValueError, match=r"casilla|whitespace|leading|trailing"):
-        DeclarationVerifyResult(
+        DeclaracionVerifyResult(
             draft_id="d",
             file_path=_OTHER_EXPORT_PATH,
-            verdict=DeclarationVerifyVerdict.DRIFT,
+            verdict=DeclaracionVerifyVerdict.DRIFT,
             mismatched_casillas=(" 01 ",),
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative=_narrative(),
@@ -458,10 +458,10 @@ def test_verify_result_rejects_padded_casilla_ids() -> None:
 
 def test_verify_result_rejects_short_digest() -> None:
     with pytest.raises(ValueError, match=r"file_sha256|hex|length"):
-        DeclarationVerifyResult(
+        DeclaracionVerifyResult(
             draft_id="d",
             file_path=_OTHER_EXPORT_PATH,
-            verdict=DeclarationVerifyVerdict.MATCH,
+            verdict=DeclaracionVerifyVerdict.MATCH,
             file_sha256="abc",
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative=_narrative(),
@@ -509,7 +509,7 @@ def test_export_and_verify_build_model_scoped_provider_when_omitted(tmp_path: Pa
 
     assert receipt.modelo == "130"
     assert receipt.byte_size == len(output.read_bytes())
-    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
 
 
 def test_export_writes_modelo_131_binding_derived_layout(tmp_path: Path) -> None:
@@ -790,7 +790,7 @@ def test_verify_matches_exported_modelo_130_layout(tmp_path: Path) -> None:
 
     verdict = verify_export(draft, file_path=exported, schema_provider=_schema_provider())
 
-    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
     assert verdict.file_sha256 is not None
     assert verdict.mismatched_casillas == ()
 
@@ -808,7 +808,7 @@ def test_verify_matches_exported_modelo_111_layout(tmp_path: Path) -> None:
 
     verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
-    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
     assert verdict.file_sha256 is not None
     assert verdict.mismatched_casillas == ()
 
@@ -826,7 +826,7 @@ def test_verify_matches_exported_modelo_115_layout(tmp_path: Path) -> None:
 
     verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
-    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
     assert verdict.file_sha256 is not None
     assert verdict.mismatched_casillas == ()
 
@@ -844,7 +844,7 @@ def test_verify_matches_exported_modelo_123_layout(tmp_path: Path) -> None:
 
     verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
-    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
     assert verdict.file_sha256 is not None
     assert verdict.mismatched_casillas == ()
 
@@ -862,7 +862,7 @@ def test_verify_matches_exported_modelo_123_2019_layout(tmp_path: Path) -> None:
 
     verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
-    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
     assert verdict.file_sha256 is not None
     assert verdict.mismatched_casillas == ()
 
@@ -881,7 +881,7 @@ def test_verify_reports_missing_for_malformed_export_payload(tmp_path: Path) -> 
 
     verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
-    assert verdict.verdict is DeclarationVerifyVerdict.MISSING
+    assert verdict.verdict is DeclaracionVerifyVerdict.MISSING
     assert verdict.mismatched_casillas == ()
 
 
@@ -915,7 +915,7 @@ def test_verify_reports_casilla_drift_for_modelo_130_layout(tmp_path: Path) -> N
 
     verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
-    assert verdict.verdict is DeclarationVerifyVerdict.DRIFT
+    assert verdict.verdict is DeclaracionVerifyVerdict.DRIFT
     assert verdict.mismatched_casillas == (field.casilla,)
 
 

@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from ...adapters.outbound.aeat.export import FilingDraftLike
+from ...adapters.outbound.aeat.export import ModeloDraftLike
 from ...application.auth import AuthProviderDescription
 from ...domain.deadlines import AutonomoProfile, Schedule
 
@@ -43,7 +43,7 @@ class DeadlineEngineProtocol(Protocol):
 
 
 @runtime_checkable
-class RegistryFilingDraftProtocol(FilingDraftLike, Protocol):
+class RegistryFilingDraftProtocol(ModeloDraftLike, Protocol):
     """Workflow draft surface after registry-backed filing construction."""
 
     schema_version: str

@@ -30,7 +30,7 @@ from ...core.config import Settings
 from ._borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
-    Borrador100SnapshotState,
+    SnapshotLifecycleState,
     derive_borrador_100_snapshot_id,
 )
 
@@ -62,7 +62,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
         period="0A",
         captured_at=captured_at,
         source_url=source_url,
-        state=Borrador100SnapshotState.ACTIVE,
+        state=SnapshotLifecycleState.ACTIVE,
         binding_values=binding_values,
     )
 
@@ -158,7 +158,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
                 period="0A",
                 captured_at=captured_at,
                 source_url=source_url,
-                state=Borrador100SnapshotState.SUPERSEDED,
+                state=SnapshotLifecycleState.SUPERSEDED,
                 binding_values=binding_values,
                 superseded_by_snapshot_id=successor.snapshot_id,
             )
@@ -166,7 +166,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
             loaded = repo.load(original.snapshot_id)
 
             assert loaded == original
-            assert loaded.state is Borrador100SnapshotState.SUPERSEDED
+            assert loaded.state is SnapshotLifecycleState.SUPERSEDED
             # Per-field witness: the supersession pointer is the load-bearing
             # field for this state; a silent drop would either trip the
             # model_validator on reload or surface as inequality on this
@@ -238,7 +238,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
                 period="0A",
                 captured_at=captured_at,
                 source_url=source_url,
-                state=Borrador100SnapshotState.SUPERSEDED,
+                state=SnapshotLifecycleState.SUPERSEDED,
                 binding_values=binding_values,
                 superseded_by_snapshot_id=successor.snapshot_id,
             )

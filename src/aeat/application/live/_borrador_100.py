@@ -2,15 +2,12 @@
 
 Borrador100 is the proof-of-concept consumer of the shared
 ``_snapshot_base`` lifecycle abstraction. The public exception class names
-(``LiveApplicationInputError``-derived), ``Borrador100SnapshotService``
-class identity, storage namespace, object-key layout, and method
-signatures are preserved exactly; only the inline state-machine,
-supersession, and content-id helpers have been routed through the
-shared base.
-
-``Borrador100SnapshotState`` remains exported under its original name and
-is now an alias of :class:`SnapshotLifecycleState`, since the enum value
-names already match the canonical lifecycle vocabulary.
+(``BorradorSnapshotNotFoundError`` on lookup miss,
+``LiveApplicationInputError`` on input-validation failures),
+``Borrador100SnapshotService`` class identity, storage namespace,
+object-key layout, and method signatures are preserved exactly; only
+the inline state-machine, supersession, and content-id helpers have
+been routed through the shared base.
 """
 
 from __future__ import annotations
@@ -25,9 +22,11 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...core.errors import AeatError
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SnapshotLifecycleState,
+    SnapshotNotFoundError,
     SnapshotService,
     derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
@@ -39,12 +38,13 @@ _BORRADOR_100_SNAPSHOT_VERSION = 1
 type _BorradorValue = Decimal | str
 
 
-# Borrador100SnapshotState retained as a named alias so existing imports keep
-# working unchanged. Phase 1 deviation from the proposal: the proposal
-# suggested a subclass enum; the existing Borrador100 enum already uses the
-# canonical value names ("active"/"superseded"/"discarded") so we alias the
-# shared enum directly rather than introducing a duplicate StrEnum.
-Borrador100SnapshotState = SnapshotLifecycleState
+class BorradorSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
+    """Raised when a Modelo 100 borrador snapshot lookup misses by id.
+
+    Inherits ``AeatError`` first so MRO routes ``__init__`` through the
+    structured constructor (accepts ``suggestion=`` / ``context=`` kwargs)
+    rather than :class:`KeyError`'s C-level constructor.
+    """
 
 
 class Borrador100Snapshot(BaseModel):
@@ -167,7 +167,7 @@ class Borrador100SnapshotRepository:
             max_supported_version=_BORRADOR_100_SNAPSHOT_VERSION,
         )
         if record is None:
-            raise LiveApplicationInputError(
+            raise BorradorSnapshotNotFoundError(
                 f"borrador snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
                 suggestion="aeat app live borrador 100 list",
             )
@@ -207,12 +207,12 @@ class Borrador100SnapshotRepository:
             if snapshot.snapshot_id == trimmed_snapshot_id or snapshot.snapshot_id.startswith(trimmed_snapshot_id)
         ]
         if not matches:
-            raise LiveApplicationInputError(
+            raise BorradorSnapshotNotFoundError(
                 f"borrador snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
                 suggestion="aeat app live borrador 100 list",
             )
         if len(matches) > 1:
-            raise LiveApplicationInputError(
+            raise BorradorSnapshotNotFoundError(
                 f"borrador snapshot prefix {snapshot_id!r} is ambiguous",
                 suggestion="provide a longer snapshot id",
             )
@@ -349,7 +349,7 @@ __all__ = [
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
     "Borrador100SnapshotService",
-    "Borrador100SnapshotState",
+    "BorradorSnapshotNotFoundError",
     "borrador_100_snapshot_object_key",
     "derive_borrador_100_snapshot_id",
 ]

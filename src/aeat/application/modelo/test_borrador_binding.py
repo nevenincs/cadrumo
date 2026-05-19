@@ -13,7 +13,7 @@ from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
-from aeat.application.live import Borrador100Snapshot, Borrador100SnapshotRepository, Borrador100SnapshotState
+from aeat.application.live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
 from aeat.application.modelo import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
@@ -85,7 +85,7 @@ def _save_snapshot(
     repository: Borrador100SnapshotRepository,
     values: dict[str, Decimal | str],
     *,
-    state: Borrador100SnapshotState = Borrador100SnapshotState.ACTIVE,
+    state: SnapshotLifecycleState = SnapshotLifecycleState.ACTIVE,
     superseded_by_snapshot_id: str | None = None,
     discarded_by: str = "",
 ) -> str:
@@ -100,9 +100,9 @@ def _save_snapshot(
         state=state,
         binding_values=values,
         superseded_by_snapshot_id=superseded_by_snapshot_id,
-        discarded_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC) if state is Borrador100SnapshotState.DISCARDED else None,
+        discarded_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC) if state is SnapshotLifecycleState.DISCARDED else None,
         discarded_by=discarded_by,
-        discard_reason="refetched" if state is Borrador100SnapshotState.DISCARDED else "",
+        discard_reason="refetched" if state is SnapshotLifecycleState.DISCARDED else "",
     )
     repository.save(snapshot)
     return snapshot.snapshot_id
@@ -424,7 +424,7 @@ def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(snaps
     snapshot_id = _save_snapshot(
         snapshot_repository,
         {_DECIMAL_BINDING: Decimal("1")},
-        state=Borrador100SnapshotState.SUPERSEDED,
+        state=SnapshotLifecycleState.SUPERSEDED,
         superseded_by_snapshot_id="borrador-100-2025-newer",
     )
 
@@ -442,7 +442,7 @@ def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(snapsh
     snapshot_id = _save_snapshot(
         snapshot_repository,
         {_DECIMAL_BINDING: Decimal("1")},
-        state=Borrador100SnapshotState.DISCARDED,
+        state=SnapshotLifecycleState.DISCARDED,
         discarded_by="operator",
     )
 

@@ -1,6 +1,6 @@
 """Unit tests for the strict pydantic v2 submission domain models.
 
-Covers :class:`SubmissionAttempt`, :class:`SubmittedFiling`, and
+Covers :class:`SubmissionAttempt`, :class:`ModeloPresentado`, and
 :func:`make_submission_id`. Each test pins one validator or invariant
 (extra-fields rejection, frozen mutation, ordering constraints, etc.)
 so that schema drift surfaces deterministically.
@@ -17,7 +17,7 @@ from pydantic import ValidationError
 from .....domain.submission import (
     SubmissionAttempt,
     SubmissionStatus,
-    SubmittedFiling,
+    ModeloPresentado,
     make_submission_id,
 )
 
@@ -82,11 +82,11 @@ class TestSubmissionAttempt:
             )
 
 
-class TestSubmittedFiling:
-    """Invariants for :class:`SubmittedFiling`."""
+class TestModeloPresentado:
+    """Invariants for :class:`ModeloPresentado`."""
 
-    def _filing(self, **overrides: object) -> SubmittedFiling:
-        """Build a baseline :class:`SubmittedFiling`, applying ``overrides``."""
+    def _filing(self, **overrides: object) -> ModeloPresentado:
+        """Build a baseline :class:`ModeloPresentado`, applying ``overrides``."""
         base: dict[str, object] = dict(
             submission_id=make_submission_id("draft-1", 1),
             draft_id="draft-1",
@@ -98,7 +98,7 @@ class TestSubmittedFiling:
             attempts=(_attempt(),),
         )
         base.update(overrides)
-        return SubmittedFiling.model_validate(base)
+        return ModeloPresentado.model_validate(base)
 
     def test_happy_path(self) -> None:
         """Assert the canonical baseline filing validates and exposes its attempts."""
@@ -107,9 +107,9 @@ class TestSubmittedFiling:
         assert filing.attempts[0].attempt_id == "a1"
 
     def test_extra_fields_rejected(self) -> None:
-        """Assert ``extra="forbid"`` rejects unknown keys on :class:`SubmittedFiling`."""
+        """Assert ``extra="forbid"`` rejects unknown keys on :class:`ModeloPresentado`."""
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
-            SubmittedFiling.model_validate(
+            ModeloPresentado.model_validate(
                 {
                     "submission_id": "x",
                     "draft_id": "draft-1",
@@ -160,7 +160,7 @@ class TestSubmittedFiling:
             justificante_pdf_path=Path("var/submissions/j1.pdf"),
             acknowledged_at=datetime(2026, 4, 12, 10, 5, 0, tzinfo=UTC),
         )
-        restored = SubmittedFiling.model_validate_json(filing.model_dump_json())
+        restored = ModeloPresentado.model_validate_json(filing.model_dump_json())
         assert restored == filing
 
 
