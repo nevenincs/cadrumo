@@ -11,7 +11,13 @@ from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
 from ....core.config import Settings
 from ._errors import RegistryValidationError
-from ._live_parity import OracleSurfaceKind, ParityFieldComparison, ParityResult, assert_oracle_operations_allowed
+from ._live_parity import (
+    OracleSurfaceKind,
+    ParityFieldComparison,
+    ParityResult,
+    assert_oracle_operations_allowed,
+    decode_replay_json_payload,
+)
 from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 _EXTERNAL = Settings.external_constants()
@@ -118,12 +124,7 @@ class RentaWebOpenReplayDriver:
         *,
         expected: Mapping[str, object],
     ) -> RentaWebOpenObservation:
-        try:
-            document = loads(payload.decode("utf-8"))
-        except (UnicodeDecodeError, JSONDecodeError) as exc:
-            raise RegistryValidationError("Renta WEB Open replay payload must be UTF-8 JSON") from exc
-        if not isinstance(document, dict):
-            raise RegistryValidationError("Renta WEB Open replay payload must be a JSON object")
+        document = decode_replay_json_payload(payload, surface_label="Renta WEB Open replay")
         observed = document.get("observed")
         if not isinstance(observed, dict):
             raise RegistryValidationError("Renta WEB Open replay payload must contain an observed object")

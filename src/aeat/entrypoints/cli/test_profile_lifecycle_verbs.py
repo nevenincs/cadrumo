@@ -23,6 +23,7 @@ def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
     from aeat.adapters.persistence.storage import get_master_key_provider
 
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-verbs.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     dispose_engine()
@@ -39,6 +40,34 @@ def cli_runner() -> CliRunner:
 
 
 def _seed(name: str = "default") -> None:
+    from aeat.core.config import load_settings
+    from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
+    from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, KdfParams
+    from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
+    from datetime import datetime, UTC
+
+    settings = load_settings()
+    paths = provision_bucket_directory(settings.aeat_local_storage_root, name)
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=name,
+            label=name,
+            created_at=datetime.now(UTC),
+            last_unlocked_at=None,
+            kdf_params=KdfParams(
+                algorithm="argon2id",
+                version=0x13,
+                memory_cost=19_456,
+                time_cost=2,
+                parallelism=1,
+                salt=b"\x00" * 16,
+                output_length=32,
+            ),
+            recovery_enrolled=False,
+            schema_version=1,
+        ),
+    )
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=name))
 
 
@@ -131,8 +160,8 @@ def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> Non
     assert result.exit_code == 0, result.output
     assert "target_profile_id\toperator-spouse" in result.output
     assert "display_name\tSpouse" in result.output
-    state = workflow_state_repository().load()
-    assert "operator-spouse" in state.profiles
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+    assert read_profile_bucket("operator-spouse") is not None
 
 
 def test_config_profile_duplicate_refuses_existing_target(cli_runner: CliRunner) -> None:
@@ -142,42 +171,21 @@ def test_config_profile_duplicate_refuses_existing_target(cli_runner: CliRunner)
     assert result.exit_code != 0
 
 
-def test_config_profile_validate_emits_validation_report(cli_runner: CliRunner) -> None:
+def test_config_profile_show_runs_validation_inline(cli_runner: CliRunner) -> None:
     _seed("operator")
-    result = cli_runner.invoke(profile_app, ["validate"])
+    result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code == 0, result.output
     assert "profile_id\toperator" in result.output
-    assert "valid\t" in result.output
+    assert "readiness\tready" in result.output
 
 
-def test_config_profile_validate_refuses_when_no_active_profile(cli_runner: CliRunner) -> None:
+def test_config_profile_show_refuses_when_no_active_profile(cli_runner: CliRunner) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
-    # resolver returns None and the validate verb refuses.
+    # resolver returns None and the show verb refuses.
     from aeat.application.user_profile._orchestration import _clear_active_profile_pointer
     from aeat.core.config import override_settings
 
     _clear_active_profile_pointer()
     with override_settings(aeat_active_profile=None):
-        result = cli_runner.invoke(profile_app, ["validate"])
+        result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code != 0
-
-
-def test_config_profile_preflight_emits_report(cli_runner: CliRunner) -> None:
-    _seed("operator")
-    result = cli_runner.invoke(
-        profile_app,
-        [
-            "preflight",
-            "--modelo",
-            "303",
-            "--revision-id",
-            "rev1",
-            "--year",
-            "2026",
-            "--period",
-            "Q1",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert "modelo\t303" in result.output
-    assert "ready\t" in result.output

@@ -445,6 +445,11 @@ def config_profile_duplicate(
     from ....application.user_profile._orchestration import build_lifecycle_service
     from ....application.workflow._utils import utc_now
     from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
+    from ....core.config import load_settings
+    from ....adapters.persistence.storage.bucket._layout import bucket_paths
+    from ....adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    import shutil
 
     repository = _profile_state()
     repository.load()
@@ -453,7 +458,25 @@ def config_profile_duplicate(
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
     if read_profile_bucket(target) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+
+    settings = load_settings()
+    source_paths = bucket_paths(settings.aeat_local_storage_root, source)
+    target_paths = bucket_paths(settings.aeat_local_storage_root, target)
+
+    try:
+        shutil.copytree(source_paths.bucket_dir, target_paths.bucket_dir)
+    except Exception as exc:
+        raise CliRefusedBoundaryError(f"Failed to copy bucket directory: {exc}") from exc
+
+    try:
+        manifest = read_manifest(target_paths)
+        manifest = manifest.model_copy(update={"bucket_id": target, "label": target})
+        write_manifest(target_paths, manifest)
+    except Exception as exc:
+        raise CliRefusedBoundaryError(f"Failed to update target bucket manifest: {exc}") from exc
+
+    dispose_engine()
+    service = build_lifecycle_service(bucket_id=target)
     try:
         result = service.duplicate(
             DuplicateProfileCommand(
@@ -566,6 +589,29 @@ def config_profile_rename(
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
 
     was_active = resolve_active_bucket_id() == source
+
+    from ....core.config import load_settings
+    from ....adapters.persistence.storage.bucket._layout import bucket_paths
+    from ....adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    import shutil
+
+    settings = load_settings()
+    source_paths = bucket_paths(settings.aeat_local_storage_root, source)
+    target_paths = bucket_paths(settings.aeat_local_storage_root, target)
+
+    dispose_engine()
+    try:
+        shutil.move(source_paths.bucket_dir, target_paths.bucket_dir)
+    except Exception as exc:
+        raise CliRefusedBoundaryError(f"Failed to rename bucket directory: {exc}") from exc
+
+    try:
+        manifest = read_manifest(target_paths)
+        manifest = manifest.model_copy(update={"bucket_id": target, "label": target})
+        write_manifest(target_paths, manifest)
+    except Exception as exc:
+        raise CliRefusedBoundaryError(f"Failed to update bucket manifest: {exc}") from exc
 
     # WorkflowState.profiles retired; renaming the bucket directory on
     # disk is what removes ``source`` and registers ``target`` in the
