@@ -3286,6 +3286,8 @@ formulas = [
     "renta-2025-minimo-personal-base-liquidable-ahorro-estatal",
     "renta-2025-minimo-personal-base-liquidable-general-autonomica",
     "renta-2025-minimo-personal-base-liquidable-general-estatal",
+    "renta-2025-minimo-contribuyente-autonomica",
+    "renta-2025-minimo-contribuyente-estatal",
     "renta-2025-minimo-personal-y-familiar-autonomica",
     "renta-2025-minimo-personal-y-familiar-estatal",
     "renta-2025-saldo-neto-rendimientos-base-imponible-general",
