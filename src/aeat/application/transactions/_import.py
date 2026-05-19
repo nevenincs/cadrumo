@@ -5,6 +5,7 @@ Emits structured diagnostics during ledger-import verification.
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from collections.abc import Iterable
 from datetime import timedelta
 from pathlib import Path
@@ -19,7 +20,6 @@ from ...domain.transactions._models import derive_transaction_id
 from ._diagnostics import (
     LedgerImportDiagnostic,
     LedgerImportDiagnosticKind,
-    LedgerImportDiagnosticSeverity,
     build_ledger_import_diagnostic,
 )
 
@@ -64,7 +64,7 @@ def import_ledger_with_diagnostics(
         diagnostics.append(
             build_ledger_import_diagnostic(
                 kind=LedgerImportDiagnosticKind.PARSER,
-                severity=LedgerImportDiagnosticSeverity.WARNING,
+                severity=BaseSeverity.WARNING,
                 message=tr("transactions.import.message_185962"),
                 source_path=source_path,
             )
@@ -81,7 +81,7 @@ def import_ledger_with_diagnostics(
             diagnostics.append(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.DUPLICATE,
-                    severity=LedgerImportDiagnosticSeverity.INFO,
+                    severity=BaseSeverity.INFO,
                     message=tr("transactions.import.message_082074"),
                     source_path=source_path,
                     affected_transaction_ids=(tx_id,),
@@ -92,7 +92,7 @@ def import_ledger_with_diagnostics(
             diagnostics.append(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.DUPLICATE,
-                    severity=LedgerImportDiagnosticSeverity.WARNING,
+                    severity=BaseSeverity.WARNING,
                     message=tr("transactions.import.message_053465"),
                     source_path=source_path,
                     affected_transaction_ids=(tx_id,),
@@ -114,7 +114,7 @@ def import_ledger_with_diagnostics(
                 diagnostics.append(
                     build_ledger_import_diagnostic(
                         kind=LedgerImportDiagnosticKind.GAP,
-                        severity=LedgerImportDiagnosticSeverity.WARNING,
+                        severity=BaseSeverity.WARNING,
                         message=tr("transactions.import.message_829073"),
                         source_path=source_path,
                     )
@@ -127,7 +127,7 @@ def import_ledger_with_diagnostics(
             diagnostics.append(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
-                    severity=LedgerImportDiagnosticSeverity.INFO,
+                    severity=BaseSeverity.INFO,
                     message=tr("transactions.import.verified"),
                     source_path=original_source_path,
                 )
@@ -137,7 +137,7 @@ def import_ledger_with_diagnostics(
             diagnostics.append(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
-                    severity=LedgerImportDiagnosticSeverity.WARNING,
+                    severity=BaseSeverity.WARNING,
                     message=tr("transactions.import.unreadable"),
                     source_path=original_source_path,
                 )

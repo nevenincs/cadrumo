@@ -9,6 +9,7 @@ predicate table.
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from datetime import UTC, datetime, time
 from decimal import Decimal
 from pathlib import Path
@@ -32,8 +33,7 @@ from ...domain.transactions import (
 )
 from ..filing import (
     FilingDraft,
-    FilingDraftStatus,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
     FilingValidationFinding,
 )
 from ._enums import ReviewSeverity
@@ -302,9 +302,9 @@ def _append_unready_draft_review_item(
     distinct review row prompting re-approval. Any other status is
     a no-op — those drafts are not in the review queue's purview.
     """
-    if draft.status in {FilingDraftStatus.DRAFT, FilingDraftStatus.VALIDATED}:
+    if draft.status in {ModeloDraftStatus.DRAFT, ModeloDraftStatus.VALIDATED}:
         items.append(_to_placeholder_item(draft=draft, path_str=path_str))
-    elif draft.status is FilingDraftStatus.APPROVAL_STALE:
+    elif draft.status is ModeloDraftStatus.APPROVAL_STALE:
         items.append(_to_stale_approval_item(draft=draft, path_str=path_str))
 
 
@@ -344,11 +344,11 @@ def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
     return tuple(out)
 
 
-def _classify_finding(severity: FilingFindingSeverity) -> ReviewSeverity:
-    """Map FilingFindingSeverity to ReviewSeverity for findings."""
-    if severity is FilingFindingSeverity.ERROR:
+def _classify_finding(severity: BaseSeverity) -> ReviewSeverity:
+    """Map BaseSeverity to ReviewSeverity for findings."""
+    if severity is BaseSeverity.ERROR:
         return ReviewSeverity.CRITICAL
-    if severity is FilingFindingSeverity.WARNING:
+    if severity is BaseSeverity.WARNING:
         return ReviewSeverity.HIGH
     return ReviewSeverity.INFO
 

@@ -7,6 +7,7 @@ and the severity-mapping invariants.
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 import os
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -40,8 +41,7 @@ from ...domain.transactions import (
 from ...domain.transactions._repository import TransactionCatalogueRepository
 from ..filing import (
     FilingDraft,
-    FilingDraftStatus,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
     FilingValidationFinding,
     FilingValue,
     FilingValueKind,
@@ -333,7 +333,7 @@ def _draft(
     draft_id: str,
     modelo: str = "130",
     period: str = "2026Q1",
-    status: FilingDraftStatus = FilingDraftStatus.READY_TO_SUBMIT,
+    status: ModeloDraftStatus = ModeloDraftStatus.READY_TO_SUBMIT,
     findings: tuple[FilingValidationFinding, ...] = (),
 ) -> FilingDraft:
     values = (
@@ -379,19 +379,19 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
     findings = (
         FilingValidationFinding(
             casilla_id="03",
-            severity=FilingFindingSeverity.ERROR,
+            severity=BaseSeverity.ERROR,
             code="casilla-out-of-range",
             message=_summary("range"),
         ),
         FilingValidationFinding(
             casilla_id="04",
-            severity=FilingFindingSeverity.WARNING,
+            severity=BaseSeverity.WARNING,
             code="casilla-required-missing",
             message=_summary("missing"),
         ),
         FilingValidationFinding(
             casilla_id="05",
-            severity=FilingFindingSeverity.INFO,
+            severity=BaseSeverity.INFO,
             code="casilla-info-note",
             message=_summary("info"),
         ),
@@ -410,7 +410,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
     """`status=DRAFT` with no findings must emit the same placeholder as VALIDATED."""
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d_draft", status=FilingDraftStatus.DRAFT))
+    _write_draft(settings, _draft(draft_id="d_draft", status=ModeloDraftStatus.DRAFT))
     items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
@@ -422,7 +422,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
 def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d2", status=FilingDraftStatus.VALIDATED))
+    _write_draft(settings, _draft(draft_id="d2", status=ModeloDraftStatus.VALIDATED))
     items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
@@ -433,7 +433,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     """`status=APPROVAL_STALE` must surface as a HIGH-severity finding row."""
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d_stale", status=FilingDraftStatus.APPROVAL_STALE))
+    _write_draft(settings, _draft(draft_id="d_stale", status=ModeloDraftStatus.APPROVAL_STALE))
     items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
@@ -447,7 +447,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d3", status=FilingDraftStatus.READY_TO_SUBMIT))
+    _write_draft(settings, _draft(draft_id="d3", status=ModeloDraftStatus.READY_TO_SUBMIT))
     assert drafts_pending(settings) == ()
 
 
@@ -456,7 +456,7 @@ def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None
     _seed_active_profile()
     finding = FilingValidationFinding(
         casilla_id="03",
-        severity=FilingFindingSeverity.ERROR,
+        severity=BaseSeverity.ERROR,
         code="casilla-out-of-range",
         message=_summary("dup"),
     )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -25,7 +26,7 @@ from ...domain.transactions import (
     Transaction,
     TransactionDirection,
 )
-from ..filing import FilingFindingSeverity, FilingValidationFinding
+from ..filing import FilingValidationFinding
 from . import (
     FindingReviewItem,
     InvoiceReviewItem,
@@ -111,7 +112,7 @@ def _invoice() -> Invoice:
 def _finding() -> FilingValidationFinding:
     return FilingValidationFinding(
         casilla_id="03",
-        severity=FilingFindingSeverity.ERROR,
+        severity=BaseSeverity.ERROR,
         code="casilla-out-of-range",
         message=_summary("range error"),
     )
