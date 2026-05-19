@@ -180,7 +180,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             clock=_DECIDED_AT,
         )
 
-        assert revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"] == "1200.00"
+        assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("1200.00")
         assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("1200.00")
         assert revision.casilla_values["iva.compensacion-aplicada-periodo"] == Decimal("1000.00")
         assert revision.casilla_values["iva.compensacion-pendiente-periodos-posteriores"] == Decimal("200.00")
@@ -230,4 +230,4 @@ def test_wallet_divergence_blocks_real_modelo_303_engine_before_persisting_revis
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
             )
-        assert calc_repo.load().values() == ()
+        assert len(calc_repo.load()) == 0
