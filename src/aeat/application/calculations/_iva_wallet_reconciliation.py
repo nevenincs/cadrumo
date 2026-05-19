@@ -110,7 +110,7 @@ def reconcile_modelo_303_iva_compensation(
     previous-filing binding resolver used by the calculation chain.
     """
 
-    if snapshot.modelo != "303":
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
         raise IvaCompensationReconciliationInputError("IVA compensation wallet reconciliation only applies to Modelo 303")
     if wallet is not None:
         _validate_wallet_matches_snapshot(
