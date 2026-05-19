@@ -20,13 +20,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.adapters.persistence.storage import get_master_key_provider
 
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-verbs.db').as_posix()}")
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     dispose_engine()
     try:
-        yield
+        with get_master_key_provider():
+            yield
     finally:
         dispose_engine()
 
