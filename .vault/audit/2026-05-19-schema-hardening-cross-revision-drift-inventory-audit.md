@@ -5,7 +5,7 @@ tags:
 date: '2026-05-19'
 related:
   - "[[2026-05-18-schema-hardening-adr]]"
-  - "[[2026-05-19-schema-hardening-role-taxonomy]]"
+  - "[[2026-05-19-schema-hardening-role-taxonomy-reference]]"
 ---
 
 # `schema-hardening` audit: cross-revision drift inventory

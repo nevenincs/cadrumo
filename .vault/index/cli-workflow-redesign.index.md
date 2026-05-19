@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign'
-date: '2026-05-15'
+date: '2026-05-19'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -83,6 +83,59 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-workflow-engine-harvest-research]]'
   - '[[2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-research]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P002-review-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P002-summary-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P003-S0014-S0015-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P003-review-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P003-shim-cleanup-review-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P003-summary-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P004-review-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P004-summary-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P005-review-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-W01-P005-summary-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W08-P036-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W08-P037-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W08-P038-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W08-P039-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W08-P040-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W08-profile-bucket-review-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-W09-P041-S0241-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W09-P041-S0242-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W09-P041-S0243-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W09-P041-S0244-S0246-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W09-P041-S0245-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-S1801-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-S1802-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-S1803-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-S1804-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-S1805-S1806-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-S1805-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-S1806-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-code-review-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P301-summary-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P302-remediation-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P303-S1816-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P303-S1817-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P303-S1818-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P304-S1819-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P304-S1820-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P304-S1821-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P304-S1822-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P304-S1823-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P304-S1824-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P305-S1825-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P305-S1826-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P305-S1827-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P305-S1828-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P305-S1829-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W61-P305-S1830-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W62-P306-S1834-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W62-P307-S1836-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W62-P307-S1837-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W62-P307-S1838-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W62-P308-S1839-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W62-P308-S1840-S1841-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-W62-P308-S1842-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-actor-attribution-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-app-modelo-discard-adr]]'
@@ -152,19 +205,9 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-audit]]'
   - '[[2026-05-13-cli-workflow-redesign-w01-p001-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w01-p002-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p002-review-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p002-summary-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w01-p003-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p003-review-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p003-s0014-s0015-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p003-shim-cleanup-review-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p003-summary-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w01-p004-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p004-review-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p004-summary-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w01-p005-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p005-review-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p005-summary-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w05-p021-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w05-p022-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w05-p023-exec]]'
@@ -183,19 +226,8 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-w07-p033-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w07-p034-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w07-p035-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w08-p036-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w08-p037-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w08-p038-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w08-p039-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w08-p040-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w08-profile-bucket-review-audit]]'
   - '[[2026-05-13-cli-workflow-redesign-w08-summary-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w09-p041-s0241-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w09-p041-s0241-profile-service-ownership-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-w09-p041-s0242-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w09-p041-s0243-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w09-p041-s0244-s0246-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w09-p041-s0245-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w31-p156-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w31-p157-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w31-p158-exec]]'
@@ -231,17 +263,7 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-w47-p233-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w47-p234-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w47-p235-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-code-review-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-s1801-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w61-p301-s1801-ledger-storage-ownership-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-s1802-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-s1803-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-s1804-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-s1805-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-s1805-s1806-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-s1806-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p301-summary-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p302-remediation-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1807-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1808-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1809-exec]]'
@@ -251,40 +273,33 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-w61-p303-s1813-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w61-p303-s1814-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w61-p303-s1815-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p303-s1816-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p303-s1817-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p303-s1818-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p304-s1819-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p304-s1820-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p304-s1821-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p304-s1822-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p304-s1823-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p304-s1824-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p305-s1825-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p305-s1826-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p305-s1827-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p305-s1828-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p305-s1829-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w61-p305-s1830-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-p306-s1831-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-p306-s1832-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-p306-s1833-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w62-p306-s1834-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-p307-s1835-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w62-p307-s1836-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w62-p307-s1837-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w62-p307-s1838-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w62-p308-s1839-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w62-p308-s1840-s1841-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w62-p308-s1842-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-summary-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-S1840-S1841-code-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-S1842-code-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-W09-P042-S0247-duplicate-profile-surfaces-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-W09-P042-S0247-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-W09-P042-S0248-S0251-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-W09-P042-S0252-P045-closeout-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-W09-P042-foundation-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-W10-closeout-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-W61-P302-bucket-ownership-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-W61-P302-code-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-W61-P302-remediation-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-W61-P303-S1814-code-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-W61-P303-S1815-code-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-W61-P303-S1816-code-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-W62-P306-S1832-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr]]'
-  - '[[2026-05-14-cli-workflow-redesign-modelo-145-p01-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-modelo-145-p02-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-modelo-145-P01-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-modelo-145-P02-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-p01-s01-s06-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-p02-s07-s10-exec]]'
@@ -296,14 +311,6 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-s1838-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-s1839-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-s1840-code-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-s1840-s1841-code-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-s1842-code-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-w09-p042-foundation-exec]]'
-  - '[[2026-05-14-cli-workflow-redesign-w09-p042-s0247-duplicate-profile-surfaces-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-w09-p042-s0247-exec]]'
-  - '[[2026-05-14-cli-workflow-redesign-w09-p042-s0248-s0251-exec]]'
-  - '[[2026-05-14-cli-workflow-redesign-w09-p042-s0252-p045-closeout-exec]]'
-  - '[[2026-05-14-cli-workflow-redesign-w10-closeout-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-w11-closeout-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-w12-closeout-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-w13-w19-closeout-exec]]'
@@ -318,12 +325,6 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-w52-service-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-w53-w69-batch-closeout-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-w59-workflow-resume-backend-exec]]'
-  - '[[2026-05-14-cli-workflow-redesign-w61-p302-bucket-ownership-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-w61-p302-code-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-w61-p302-remediation-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-w61-p303-s1814-code-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-w61-p303-s1815-code-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-w61-p303-s1816-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-w61-p303-s1817-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-w61-p303-s1818-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-w61-p304-s1819-code-review-audit]]'
@@ -338,7 +339,6 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-w61-p305-s1828-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-w61-p305-s1829-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-w61-p305-s1830-code-review-audit]]'
-  - '[[2026-05-14-cli-workflow-redesign-w62-p306-s1832-code-review-audit]]'
   - '[[2026-05-14-cli-workflow-redesign-w70-closeout-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-w71-w75-w83-closeout-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-w80-file-workflow-gate-exec]]'
@@ -352,6 +352,9 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-w84-p408-s2319-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-w84-p408-s2322-exec]]'
   - '[[2026-05-14-cli-workflow-redesign-w84-registry-taxonomy-exec]]'
+  - '[[2026-05-15-cli-workflow-redesign-audit]]'
+  - '[[2026-05-16-cli-workflow-redesign-audit]]'
+  - '[[2026-05-19-cli-workflow-redesign-audit]]'
 ---
 
 # `cli-workflow-redesign` feature index
@@ -377,7 +380,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr` - `cli-workflow-redesign` adr: `complementaria external filing path` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-config-auth-shape-adr` - `cli-workflow-redesign` adr: `Config auth command surface` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr` - `cli-workflow-redesign` adr: `config doctor shape` | (**status:** `superseded by [[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]`)
-- `2026-05-12-cli-workflow-redesign-config-init-shape-adr` - `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `accepted`)
+- `2026-05-12-cli-workflow-redesign-config-init-shape-adr` - `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr` - `cli-workflow-redesign` adr: `domain harvest normatives and manuals` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr` - `cli-workflow-redesign` adr: `domain harvest OSS/IOSS` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr` - `cli-workflow-redesign` adr: `domain harvest rental` | (**status:** `accepted`)
@@ -412,7 +415,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr` - `cli-workflow-redesign` adr: `Borrador 100 snapshot binding integration into app modelo calculate` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-borrador-snapshot-management-adr` - `cli-workflow-redesign` adr: `Borrador snapshot management list, discard, export, verify` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-config-profile-keys-discovery-adr` - `cli-workflow-redesign` adr: `Config profile keys discovery verb` | (**status:** `accepted`)
-- `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr` - `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `accepted`)
+- `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr` - `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
 - `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` - `cli-workflow-redesign` adr: `config repair shape` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-explain-legal-ref-convention-adr` - `cli-workflow-redesign` adr: `Cross-cutting --explain legal reference convention` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-ledger-ratios-eligible-and-validate-adr` - `cli-workflow-redesign` adr: `App ledger ratios eligible and validate verbs` | (**status:** `accepted`)
@@ -431,38 +434,39 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 
 ### audit
 
+- `2026-05-13-cli-workflow-redesign-W01-P002-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-13-cli-workflow-redesign-W01-P003-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-13-cli-workflow-redesign-W01-P003-shim-cleanup-review-audit` - `cli-workflow-redesign` `W01.P003 shim cleanup` Code Review
+- `2026-05-13-cli-workflow-redesign-W01-P004-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-13-cli-workflow-redesign-W01-P005-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-13-cli-workflow-redesign-W08-profile-bucket-review-audit` - `cli-workflow-redesign` `W08 profile bucket` Code Review
+- `2026-05-13-cli-workflow-redesign-W61-P301-code-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-13-cli-workflow-redesign-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-audit` - `cli-workflow-redesign` audit: `unexposed-backend-capability-wave-expansion`
-- `2026-05-13-cli-workflow-redesign-w01-p002-review-audit` - `cli-workflow-redesign` Code Review
-- `2026-05-13-cli-workflow-redesign-w01-p003-review-audit` - `cli-workflow-redesign` Code Review
-- `2026-05-13-cli-workflow-redesign-w01-p003-shim-cleanup-review-audit` - `cli-workflow-redesign` `W01.P003 shim cleanup` Code Review
-- `2026-05-13-cli-workflow-redesign-w01-p004-review-audit` - `cli-workflow-redesign` Code Review
-- `2026-05-13-cli-workflow-redesign-w01-p005-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-13-cli-workflow-redesign-w05-root-help-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-13-cli-workflow-redesign-w06-output-rendering-review-audit` - `cli-workflow-redesign` W06 Output Rendering Code Review
 - `2026-05-13-cli-workflow-redesign-w07-observability-review-audit` - `cli-workflow-redesign-W07-observability` Code Review
-- `2026-05-13-cli-workflow-redesign-w08-profile-bucket-review-audit` - `cli-workflow-redesign` `W08 profile bucket` Code Review
 - `2026-05-13-cli-workflow-redesign-w09-p041-s0241-profile-service-ownership-audit` - `cli-workflow-redesign` `W09.P041.S0241` Audit — User Profile Backend Service Ownership Mapping
-- `2026-05-13-cli-workflow-redesign-w61-p301-code-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-13-cli-workflow-redesign-w61-p301-s1801-ledger-storage-ownership-audit` - `cli-workflow-redesign` `W61.P301.S1801` Audit — Active Profile Bucket and Transaction Catalogue Storage Ownership
-- `2026-05-14-cli-workflow-redesign-modelo-145-p01-review-audit` - `cli-workflow-redesign` Code Review
-- `2026-05-14-cli-workflow-redesign-modelo-145-p02-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-14-cli-workflow-redesign-S1840-S1841-code-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-14-cli-workflow-redesign-S1842-code-review-audit` - `cli-workflow-redesign-S1842` Code Review
+- `2026-05-14-cli-workflow-redesign-W09-P042-S0247-duplicate-profile-surfaces-audit` - `cli-workflow-redesign` `W09.P042.S0247` Audit — Duplicate Profile Surface Inventory
+- `2026-05-14-cli-workflow-redesign-W61-P302-bucket-ownership-review-audit` - `cli-workflow-redesign` W61.P302 Bucket Ownership Re-Review
+- `2026-05-14-cli-workflow-redesign-W61-P302-code-review-audit` - `cli-workflow-redesign` W61.P302 Code Review
+- `2026-05-14-cli-workflow-redesign-W61-P302-remediation-review-audit` - `cli-workflow-redesign` W61.P302 Remediation Code Review
+- `2026-05-14-cli-workflow-redesign-W61-P303-S1814-code-review-audit` - `cli-workflow-redesign` W61.P303.S1814 Code Review
+- `2026-05-14-cli-workflow-redesign-W61-P303-S1815-code-review-audit` - `cli-workflow-redesign` W61.P303.S1815 Code Review
+- `2026-05-14-cli-workflow-redesign-W61-P303-S1816-code-review-audit` - `W61.P303.S1816` Code Review
+- `2026-05-14-cli-workflow-redesign-W62-P306-S1832-code-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-14-cli-workflow-redesign-modelo-145-P01-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-14-cli-workflow-redesign-modelo-145-P02-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-14-cli-workflow-redesign-s1834-code-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-14-cli-workflow-redesign-s1836-code-review-audit` - `cli-workflow-redesign-S1836` Code Review
 - `2026-05-14-cli-workflow-redesign-s1837-code-review-audit` - `cli-workflow-redesign-S1837` Code Review
 - `2026-05-14-cli-workflow-redesign-s1838-code-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-14-cli-workflow-redesign-s1839-code-review-audit` - `cli-workflow-redesign-S1839` Code Review
 - `2026-05-14-cli-workflow-redesign-s1840-code-review-audit` - `cli-workflow-redesign` Code Review
-- `2026-05-14-cli-workflow-redesign-s1840-s1841-code-review-audit` - `cli-workflow-redesign` Code Review
-- `2026-05-14-cli-workflow-redesign-s1842-code-review-audit` - `cli-workflow-redesign-S1842` Code Review
-- `2026-05-14-cli-workflow-redesign-w09-p042-s0247-duplicate-profile-surfaces-audit` - `cli-workflow-redesign` `W09.P042.S0247` Audit — Duplicate Profile Surface Inventory
 - `2026-05-14-cli-workflow-redesign-w52-service-review-audit` - `cli-workflow-redesign` W52 Service Contract Code Review
-- `2026-05-14-cli-workflow-redesign-w61-p302-bucket-ownership-review-audit` - `cli-workflow-redesign` W61.P302 Bucket Ownership Re-Review
-- `2026-05-14-cli-workflow-redesign-w61-p302-code-review-audit` - `cli-workflow-redesign` W61.P302 Code Review
-- `2026-05-14-cli-workflow-redesign-w61-p302-remediation-review-audit` - `cli-workflow-redesign` W61.P302 Remediation Code Review
-- `2026-05-14-cli-workflow-redesign-w61-p303-s1814-code-review-audit` - `cli-workflow-redesign` W61.P303.S1814 Code Review
-- `2026-05-14-cli-workflow-redesign-w61-p303-s1815-code-review-audit` - `cli-workflow-redesign` W61.P303.S1815 Code Review
-- `2026-05-14-cli-workflow-redesign-w61-p303-s1816-code-review-audit` - `W61.P303.S1816` Code Review
 - `2026-05-14-cli-workflow-redesign-w61-p303-s1817-code-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-14-cli-workflow-redesign-w61-p303-s1818-code-review-audit` - `cli-workflow-redesign W61.P303.S1818` Code Review
 - `2026-05-14-cli-workflow-redesign-w61-p304-s1819-code-review-audit` - `cli-workflow-redesign` Code Review
@@ -477,10 +481,33 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-w61-p305-s1828-code-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-14-cli-workflow-redesign-w61-p305-s1829-code-review-audit` - `cli-workflow-redesign` Code Review
 - `2026-05-14-cli-workflow-redesign-w61-p305-s1830-code-review-audit` - `cli-workflow-redesign` Code Review
-- `2026-05-14-cli-workflow-redesign-w62-p306-s1832-code-review-audit` - `cli-workflow-redesign` Code Review
+- `2026-05-15-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `Apex CLI workflow redesign — 85-wave ground-truth audit`
+- `2026-05-16-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `remediation cycle close-out and task triage`
+- `2026-05-19-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `master plan rollout snapshot`
 
 ### exec
 
+- `2026-05-13-cli-workflow-redesign-W01-P002-summary-exec` - `cli-workflow-redesign` `W01.P002` summary
+- `2026-05-13-cli-workflow-redesign-W01-P003-S0014-S0015-exec` - `cli-workflow-redesign` `W01.P003.S0014-S0015`
+- `2026-05-13-cli-workflow-redesign-W01-P003-summary-exec` - `cli-workflow-redesign` `W01.P003` summary
+- `2026-05-13-cli-workflow-redesign-W01-P004-summary-exec` - `cli-workflow-redesign` `W01.P004` Summary
+- `2026-05-13-cli-workflow-redesign-W01-P005-summary-exec` - `cli-workflow-redesign` `W01.P005` Summary
+- `2026-05-13-cli-workflow-redesign-W08-P036-exec` - `cli-workflow-redesign` `W08.P036`
+- `2026-05-13-cli-workflow-redesign-W08-P037-exec` - `cli-workflow-redesign` `W08.P037`
+- `2026-05-13-cli-workflow-redesign-W08-P038-exec` - `cli-workflow-redesign` `W08.P038`
+- `2026-05-13-cli-workflow-redesign-W08-P039-exec` - `cli-workflow-redesign` `W08.P039`
+- `2026-05-13-cli-workflow-redesign-W08-P040-exec` - `cli-workflow-redesign` `W08.P040`
+- `2026-05-13-cli-workflow-redesign-W09-P041-S0241-exec` - `cli-workflow-redesign` `W09.P041.S0241`
+- `2026-05-13-cli-workflow-redesign-W09-P041-S0242-exec` - `cli-workflow-redesign` `W09.P041.S0242`
+- `2026-05-13-cli-workflow-redesign-W09-P041-S0243-exec` - `cli-workflow-redesign` `W09.P041.S0243`
+- `2026-05-13-cli-workflow-redesign-W61-P301-S1801-exec` - `cli-workflow-redesign` `W61.P301.S1801`
+- `2026-05-13-cli-workflow-redesign-W61-P301-S1802-exec` - `cli-workflow-redesign` `W61.P301.S1802`
+- `2026-05-13-cli-workflow-redesign-W61-P301-S1803-exec` - `cli-workflow-redesign` `W61.P301.S1803`
+- `2026-05-13-cli-workflow-redesign-W61-P301-S1804-exec` - `cli-workflow-redesign` `W61.P301.S1804`
+- `2026-05-13-cli-workflow-redesign-W61-P301-S1805-S1806-exec` - `cli-workflow-redesign` `W61.P301.S1805-S1806`
+- `2026-05-13-cli-workflow-redesign-W61-P301-S1805-exec` - `cli-workflow-redesign` `W61.P301.S1805`
+- `2026-05-13-cli-workflow-redesign-W61-P301-S1806-exec` - `cli-workflow-redesign` `W61.P301.S1806`
+- `2026-05-13-cli-workflow-redesign-W61-P301-summary-exec` - `cli-workflow-redesign` `W61.P301`
 - `2026-05-13-cli-workflow-redesign-p01-s01-exec` - `cli-workflow-redesign` `P01.S01`
 - `2026-05-13-cli-workflow-redesign-p01-s02-exec` - `cli-workflow-redesign` `P01.S02`
 - `2026-05-13-cli-workflow-redesign-p01-s03-exec` - `cli-workflow-redesign` `P01.S03`
@@ -526,14 +553,9 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-13-cli-workflow-redesign-p07-s06-exec` - `cli-workflow-redesign` P07.S06 — application diagnostics symbols renamed Doctor → Repair
 - `2026-05-13-cli-workflow-redesign-w01-p001-exec` - `cli-workflow-redesign` `W01.P001`
 - `2026-05-13-cli-workflow-redesign-w01-p002-exec` - `cli-workflow-redesign` exec: W01.P002 shadow duplicate removal
-- `2026-05-13-cli-workflow-redesign-w01-p002-summary-exec` - `cli-workflow-redesign` `W01.P002` summary
 - `2026-05-13-cli-workflow-redesign-w01-p003-exec` - `cli-workflow-redesign` `W01.P003`
-- `2026-05-13-cli-workflow-redesign-w01-p003-s0014-s0015-exec` - `cli-workflow-redesign` `W01.P003.S0014-S0015`
-- `2026-05-13-cli-workflow-redesign-w01-p003-summary-exec` - `cli-workflow-redesign` `W01.P003` summary
 - `2026-05-13-cli-workflow-redesign-w01-p004-exec` - `cli-workflow-redesign` `W01.P004`
-- `2026-05-13-cli-workflow-redesign-w01-p004-summary-exec` - `cli-workflow-redesign` `W01.P004` Summary
 - `2026-05-13-cli-workflow-redesign-w01-p005-exec` - `cli-workflow-redesign` `W01.P005`
-- `2026-05-13-cli-workflow-redesign-w01-p005-summary-exec` - `cli-workflow-redesign` `W01.P005` Summary
 - `2026-05-13-cli-workflow-redesign-w05-p021-exec` - `cli-workflow-redesign` `W05.P021`
 - `2026-05-13-cli-workflow-redesign-w05-p022-exec` - `cli-workflow-redesign` `W05.P022`
 - `2026-05-13-cli-workflow-redesign-w05-p023-exec` - `cli-workflow-redesign` `W05.P023`
@@ -549,15 +571,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-13-cli-workflow-redesign-w07-p033-exec` - W07.P033 Execution
 - `2026-05-13-cli-workflow-redesign-w07-p034-exec` - W07.P034 Execution
 - `2026-05-13-cli-workflow-redesign-w07-p035-exec` - W07.P035 Execution
-- `2026-05-13-cli-workflow-redesign-w08-p036-exec` - `cli-workflow-redesign` `W08.P036`
-- `2026-05-13-cli-workflow-redesign-w08-p037-exec` - `cli-workflow-redesign` `W08.P037`
-- `2026-05-13-cli-workflow-redesign-w08-p038-exec` - `cli-workflow-redesign` `W08.P038`
-- `2026-05-13-cli-workflow-redesign-w08-p039-exec` - `cli-workflow-redesign` `W08.P039`
-- `2026-05-13-cli-workflow-redesign-w08-p040-exec` - `cli-workflow-redesign` `W08.P040`
 - `2026-05-13-cli-workflow-redesign-w08-summary-exec` - `cli-workflow-redesign` `W08` summary
-- `2026-05-13-cli-workflow-redesign-w09-p041-s0241-exec` - `cli-workflow-redesign` `W09.P041.S0241`
-- `2026-05-13-cli-workflow-redesign-w09-p041-s0242-exec` - `cli-workflow-redesign` `W09.P041.S0242`
-- `2026-05-13-cli-workflow-redesign-w09-p041-s0243-exec` - `cli-workflow-redesign` `W09.P041.S0243`
 - `2026-05-13-cli-workflow-redesign-w31-p156-exec` - `cli-workflow-redesign` `W31.P156`
 - `2026-05-13-cli-workflow-redesign-w31-p157-exec` - `cli-workflow-redesign` `W31.P157`
 - `2026-05-13-cli-workflow-redesign-w31-p158-exec` - `cli-workflow-redesign` `W31.P158`
@@ -593,61 +607,53 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-13-cli-workflow-redesign-w47-p233-exec` - `cli-workflow-redesign` `W47.P233`
 - `2026-05-13-cli-workflow-redesign-w47-p234-exec` - `cli-workflow-redesign` `W47.P234`
 - `2026-05-13-cli-workflow-redesign-w47-p235-exec` - `cli-workflow-redesign` `W47.P235`
-- `2026-05-13-cli-workflow-redesign-w61-p301-s1801-exec` - `cli-workflow-redesign` `W61.P301.S1801`
-- `2026-05-13-cli-workflow-redesign-w61-p301-s1802-exec` - `cli-workflow-redesign` `W61.P301.S1802`
-- `2026-05-13-cli-workflow-redesign-w61-p301-s1803-exec` - `cli-workflow-redesign` `W61.P301.S1803`
-- `2026-05-13-cli-workflow-redesign-w61-p301-s1804-exec` - `cli-workflow-redesign` `W61.P301.S1804`
-- `2026-05-13-cli-workflow-redesign-w61-p301-s1805-exec` - `cli-workflow-redesign` `W61.P301.S1805`
-- `2026-05-13-cli-workflow-redesign-w61-p301-s1805-s1806-exec` - `cli-workflow-redesign` `W61.P301.S1805-S1806`
-- `2026-05-13-cli-workflow-redesign-w61-p301-s1806-exec` - `cli-workflow-redesign` `W61.P301.S1806`
-- `2026-05-13-cli-workflow-redesign-w61-p301-summary-exec` - `cli-workflow-redesign` `W61.P301`
 - `2026-05-13-cli-workflow-redesign-w61-p302-s1807-exec` - `cli-workflow-redesign` `W61.P302.S1807`
 - `2026-05-13-cli-workflow-redesign-w61-p302-s1808-exec` - `cli-workflow-redesign` `W61.P302.S1808`
 - `2026-05-13-cli-workflow-redesign-w61-p302-s1809-exec` - `cli-workflow-redesign` `W61.P302.S1809`
 - `2026-05-13-cli-workflow-redesign-w61-p302-s1810-exec` - `cli-workflow-redesign` `W61.P302.S1810`
 - `2026-05-13-cli-workflow-redesign-w61-p302-s1811-exec` - `cli-workflow-redesign` `W61.P302.S1811`
-- `2026-05-13-cli-workflow-redesign-w09-p041-s0244-s0246-exec` - `cli-workflow-redesign` `W09.P041.S0244-S0246`
-- `2026-05-13-cli-workflow-redesign-w09-p041-s0245-exec` - `cli-workflow-redesign` `W09.P041.S0245`
-- `2026-05-13-cli-workflow-redesign-w61-p302-remediation-exec` - `cli-workflow-redesign` `W61.P302.remediation`
+- `2026-05-13-cli-workflow-redesign-W09-P041-S0244-S0246-exec` - `cli-workflow-redesign` `W09.P041.S0244-S0246`
+- `2026-05-13-cli-workflow-redesign-W09-P041-S0245-exec` - `cli-workflow-redesign` `W09.P041.S0245`
+- `2026-05-13-cli-workflow-redesign-W61-P302-remediation-exec` - `cli-workflow-redesign` `W61.P302.remediation`
+- `2026-05-13-cli-workflow-redesign-W61-P303-S1816-exec` - `cli-workflow-redesign` `W61.P303.S1816`
+- `2026-05-13-cli-workflow-redesign-W61-P303-S1817-exec` - `cli-workflow-redesign` `W61.P303.S1817`
+- `2026-05-13-cli-workflow-redesign-W61-P303-S1818-exec` - `cli-workflow-redesign` `W61.P303.S1818`
+- `2026-05-13-cli-workflow-redesign-W61-P304-S1819-exec` - `cli-workflow-redesign` `W61.P304.S1819`
+- `2026-05-13-cli-workflow-redesign-W61-P304-S1820-exec` - `cli-workflow-redesign` `W61.P304.S1820`
+- `2026-05-13-cli-workflow-redesign-W61-P304-S1821-exec` - `cli-workflow-redesign` `W61.P304.S1821`
+- `2026-05-13-cli-workflow-redesign-W61-P304-S1822-exec` - `cli-workflow-redesign` `W61.P304.S1822`
+- `2026-05-13-cli-workflow-redesign-W61-P304-S1823-exec` - `cli-workflow-redesign` `W61.P304.S1823`
+- `2026-05-13-cli-workflow-redesign-W61-P304-S1824-exec` - `cli-workflow-redesign` `W61.P304.S1824`
+- `2026-05-13-cli-workflow-redesign-W61-P305-S1825-exec` - `cli-workflow-redesign` `W61.P305.S1825`
+- `2026-05-13-cli-workflow-redesign-W61-P305-S1826-exec` - `cli-workflow-redesign` `W61.P305.S1826`
+- `2026-05-13-cli-workflow-redesign-W61-P305-S1827-exec` - `cli-workflow-redesign` `W61.P305.S1827`
+- `2026-05-13-cli-workflow-redesign-W61-P305-S1828-exec` - `cli-workflow-redesign` `W61.P305.S1828`
+- `2026-05-13-cli-workflow-redesign-W61-P305-S1829-exec` - `cli-workflow-redesign` `W61.P305.S1829`
+- `2026-05-13-cli-workflow-redesign-W61-P305-S1830-exec` - `cli-workflow-redesign` `W61.P305.S1830`
+- `2026-05-13-cli-workflow-redesign-W62-P306-S1834-exec` - `cli-workflow-redesign` `W62.P306.S1834`
+- `2026-05-13-cli-workflow-redesign-W62-P307-S1836-exec` - `cli-workflow-redesign` `W62.P307.S1836`
+- `2026-05-13-cli-workflow-redesign-W62-P307-S1837-exec` - `cli-workflow-redesign` `W62.P307.S1837`
+- `2026-05-13-cli-workflow-redesign-W62-P307-S1838-exec` - `cli-workflow-redesign` `W62.P307.S1838`
+- `2026-05-13-cli-workflow-redesign-W62-P308-S1839-exec` - `cli-workflow-redesign` `W62.P308.S1839`
+- `2026-05-13-cli-workflow-redesign-W62-P308-S1840-S1841-exec` - `cli-workflow-redesign` `W62.P308.S1840-S1841`
+- `2026-05-13-cli-workflow-redesign-W62-P308-S1842-exec` - `cli-workflow-redesign` `W62.P308.S1842`
 - `2026-05-13-cli-workflow-redesign-w61-p302-s1812-exec` - `cli-workflow-redesign` `W61.P302.S1812`
 - `2026-05-13-cli-workflow-redesign-w61-p303-s1813-exec` - `cli-workflow-redesign` `W61.P303.S1813`
 - `2026-05-13-cli-workflow-redesign-w61-p303-s1814-exec` - `cli-workflow-redesign` `W61.P303.S1814`
 - `2026-05-13-cli-workflow-redesign-w61-p303-s1815-exec` - `cli-workflow-redesign` `W61.P303.S1815`
-- `2026-05-13-cli-workflow-redesign-w61-p303-s1816-exec` - `cli-workflow-redesign` `W61.P303.S1816`
-- `2026-05-13-cli-workflow-redesign-w61-p303-s1817-exec` - `cli-workflow-redesign` `W61.P303.S1817`
-- `2026-05-13-cli-workflow-redesign-w61-p303-s1818-exec` - `cli-workflow-redesign` `W61.P303.S1818`
-- `2026-05-13-cli-workflow-redesign-w61-p304-s1819-exec` - `cli-workflow-redesign` `W61.P304.S1819`
-- `2026-05-13-cli-workflow-redesign-w61-p304-s1820-exec` - `cli-workflow-redesign` `W61.P304.S1820`
-- `2026-05-13-cli-workflow-redesign-w61-p304-s1821-exec` - `cli-workflow-redesign` `W61.P304.S1821`
-- `2026-05-13-cli-workflow-redesign-w61-p304-s1822-exec` - `cli-workflow-redesign` `W61.P304.S1822`
-- `2026-05-13-cli-workflow-redesign-w61-p304-s1823-exec` - `cli-workflow-redesign` `W61.P304.S1823`
-- `2026-05-13-cli-workflow-redesign-w61-p304-s1824-exec` - `cli-workflow-redesign` `W61.P304.S1824`
-- `2026-05-13-cli-workflow-redesign-w61-p305-s1825-exec` - `cli-workflow-redesign` `W61.P305.S1825`
-- `2026-05-13-cli-workflow-redesign-w61-p305-s1826-exec` - `cli-workflow-redesign` `W61.P305.S1826`
-- `2026-05-13-cli-workflow-redesign-w61-p305-s1827-exec` - `cli-workflow-redesign` `W61.P305.S1827`
-- `2026-05-13-cli-workflow-redesign-w61-p305-s1828-exec` - `cli-workflow-redesign` `W61.P305.S1828`
-- `2026-05-13-cli-workflow-redesign-w61-p305-s1829-exec` - `cli-workflow-redesign` `W61.P305.S1829`
-- `2026-05-13-cli-workflow-redesign-w61-p305-s1830-exec` - `cli-workflow-redesign` `W61.P305.S1830`
 - `2026-05-13-cli-workflow-redesign-w62-p306-s1831-exec` - `cli-workflow-redesign` `W62.P306.S1831`
 - `2026-05-13-cli-workflow-redesign-w62-p306-s1832-exec` - `cli-workflow-redesign` `W62.P306.S1832`
 - `2026-05-13-cli-workflow-redesign-w62-p306-s1833-exec` - `cli-workflow-redesign` `W62.P306.S1833`
-- `2026-05-13-cli-workflow-redesign-w62-p306-s1834-exec` - `cli-workflow-redesign` `W62.P306.S1834`
 - `2026-05-13-cli-workflow-redesign-w62-p307-s1835-exec` - `cli-workflow-redesign` `W62.P307.S1835`
-- `2026-05-13-cli-workflow-redesign-w62-p307-s1836-exec` - `cli-workflow-redesign` `W62.P307.S1836`
-- `2026-05-13-cli-workflow-redesign-w62-p307-s1837-exec` - `cli-workflow-redesign` `W62.P307.S1837`
-- `2026-05-13-cli-workflow-redesign-w62-p307-s1838-exec` - `cli-workflow-redesign` `W62.P307.S1838`
-- `2026-05-13-cli-workflow-redesign-w62-p308-s1839-exec` - `cli-workflow-redesign` `W62.P308.S1839`
-- `2026-05-13-cli-workflow-redesign-w62-p308-s1840-s1841-exec` - `cli-workflow-redesign` `W62.P308.S1840-S1841`
-- `2026-05-13-cli-workflow-redesign-w62-p308-s1842-exec` - `cli-workflow-redesign` `W62.P308.S1842`
 - `2026-05-13-cli-workflow-redesign-w62-summary-exec` - `cli-workflow-redesign` `W62` Summary
+- `2026-05-14-cli-workflow-redesign-W09-P042-S0247-exec` - `cli-workflow-redesign` `W09.P042.S0247`
+- `2026-05-14-cli-workflow-redesign-W09-P042-S0248-S0251-exec` - `cli-workflow-redesign` `W09.P042.S0248..S0251` exec
+- `2026-05-14-cli-workflow-redesign-W09-P042-S0252-P045-closeout-exec` - `cli-workflow-redesign` `W09.P042.S0252` + `W09.P043..P045` closeout
+- `2026-05-14-cli-workflow-redesign-W09-P042-foundation-exec` - `cli-workflow-redesign` `W09.P042.S0248` foundation work
+- `2026-05-14-cli-workflow-redesign-W10-closeout-exec` - `cli-workflow-redesign` W10 closeout (config profile service surface)
 - `2026-05-14-cli-workflow-redesign-exec` - `cli-workflow-redesign` `W48.P236.S1411` / `W48.P236.S1412` / `W48.P236.S1413` / `W48.P236.S1414` / `W48.P236.S1415` / `W48.P236.S1416`
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-p01-s01-s06-exec` - `cli-workflow-redesign` `P01.S01-S06`
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-p02-s07-s10-exec` - `cli-workflow-redesign` `P02.S07-S10`
-- `2026-05-14-cli-workflow-redesign-w09-p042-foundation-exec` - `cli-workflow-redesign` `W09.P042.S0248` foundation work
-- `2026-05-14-cli-workflow-redesign-w09-p042-s0247-exec` - `cli-workflow-redesign` `W09.P042.S0247`
-- `2026-05-14-cli-workflow-redesign-w09-p042-s0248-s0251-exec` - `cli-workflow-redesign` `W09.P042.S0248..S0251` exec
-- `2026-05-14-cli-workflow-redesign-w09-p042-s0252-p045-closeout-exec` - `cli-workflow-redesign` `W09.P042.S0252` + `W09.P043..P045` closeout
-- `2026-05-14-cli-workflow-redesign-w10-closeout-exec` - `cli-workflow-redesign` W10 closeout (config profile service surface)
 - `2026-05-14-cli-workflow-redesign-w11-closeout-exec` - `cli-workflow-redesign` W11 closeout (config vs setup namespace)
 - `2026-05-14-cli-workflow-redesign-w12-closeout-exec` - `cli-workflow-redesign` W12 closeout (eliminate user_cli shim)
 - `2026-05-14-cli-workflow-redesign-w13-w19-closeout-exec` - `cli-workflow-redesign` W13..W19 closeout

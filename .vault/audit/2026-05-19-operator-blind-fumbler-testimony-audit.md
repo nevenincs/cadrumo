@@ -124,6 +124,25 @@ The `aeat config repair` output (which does complete when a session exists) emit
 
 **Severity: 3 — operator kills the process, re-runs it, doubles load time, gives up.**
 
+## UNSAFE-4b: Codebase import is broken (ModuleNotFoundError) — Severity 5
+
+**Scenario:** After 30+ minutes of waiting, the bash-invoked `aeat config profile create` (against a pre-seeded storage root) finally produced output. It was a Python `ModuleNotFoundError`:
+
+```
+File "Y:\code\aeat-worktrees\chore-476-restructure-execution\src\aeat\application\aggregation\_iva_ledger.py",
+line 24, in <module>
+    from ...domain.vat import (
+    ...
+    )
+ModuleNotFoundError: No module named 'aeat.domain.vat'
+```
+
+The codebase on this branch (`chore/eliminate-shims`) is in a broken state: `aeat.application.aggregation._iva_ledger` imports from `aeat.domain.vat`, which does not exist. Every CLI invocation eventually crashes during module import — which is what was causing all the "silent 10+ minutes" timeouts in earlier tests. The CLI is currently unusable on this branch from any cold-start path.
+
+The operator's takeaway: "I waited half an hour and then got a Python crash. The tool is broken and I can't even file a bug because I don't know which command broke it."
+
+**Severity: 5 — CLI is completely broken on this branch; every command path crashes during module import. This also revises the meaning of UNSAFE-1: it is not just a session-bootstrap deadlock, it is that no command can run at all on this branch.**
+
 ## UNSAFE-5: `--quiet` requires ALL optional fields to be provided — Severity 2
 
 **Scenario:** I tried `aeat config profile create ... --quiet --accept-defaults` with just `--tax-id`, `--name`, `--surnames`, `--activity`. The tool refused with:

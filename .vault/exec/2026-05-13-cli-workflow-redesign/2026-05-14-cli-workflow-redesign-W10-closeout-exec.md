@@ -7,7 +7,6 @@ step_id: 'W10.P046..W10.P050'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
-  - "[[2026-05-14-cli-workflow-redesign-w09-p042-s0252-p045-closeout-exec]]"
 ---
 
 # `cli-workflow-redesign` W10 closeout (config profile service surface)

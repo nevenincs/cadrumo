@@ -4,7 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-19'
 related:
-  - "[[2026-05-18-schema-hardening-nif-coverage-m100]]"
+  - "[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]"
   - "[[2026-05-20-schema-hardening-plan]]"
 ---
 

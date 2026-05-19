@@ -4,10 +4,10 @@ tags:
   - '#profile-lifecycle-cli'
 date: '2026-05-19'
 related:
-  - "[[2026-05-19-operator-blind-newcomer-testimony]]"
-  - "[[2026-05-19-operator-blind-returning-testimony]]"
-  - "[[2026-05-19-operator-blind-dual-testimony]]"
-  - "[[2026-05-19-operator-blind-fumbler-testimony]]"
+  - "[[2026-05-19-operator-blind-newcomer-testimony-audit]]"
+  - "[[2026-05-19-operator-blind-returning-testimony-audit]]"
+  - "[[2026-05-19-operator-blind-dual-testimony-audit]]"
+  - "[[2026-05-19-operator-blind-fumbler-testimony-audit]]"
   - "[[2026-05-19-operator-testimonial-audit]]"
   - "[[2026-05-18-profile-lifecycle-cli-adr]]"
   - "[[2026-05-18-profile-lifecycle-cli-plan]]"
@@ -150,6 +150,32 @@ Reported by the dual-profile persona. ``aeat config profile
 delete`` without arguments hangs without printing anything.
 Likely blocking on a stdin prompt for the double-confirm,
 without flushing the prompt text first.
+
+### F11 — Broken `aeat.domain.vat` import crashes every invocation (severity 5)
+
+Reported by the fumbler. The branch contains a stale-rename
+defect: ``aeat.application.aggregation._iva_ledger``,
+``_oss_ioss``, ``_prorrata``, and ``test_iva_ledger`` all import
+from ``aeat.domain.vat``, which does not exist on this branch.
+The actual module is ``aeat.domain.iva`` (a recent rename from
+the Spanish-stem terminology authority work). Every invocation
+of the ``aeat`` console-script entry crashes with
+``ModuleNotFoundError: No module named 'aeat.domain.vat'`` during
+module import.
+
+This is the root cause of F7. Operators see a 10-minute silent
+hang because the registry validation runs first and prints
+nothing; the import error then surfaces only after the registry
+work completes. The ``CliRunner`` paths used by the unit tests
+bypass the production console-script entry and therefore do not
+exercise the broken import — the gate that should have caught
+this regression does not fire.
+
+Not introduced by the cascade-closure plan; introduced by a
+parallel rename commit on ``chore/eliminate-shims`` that
+retargeted ``domain.invoices._iva_classification`` to
+``domain.iva._invoice_classification`` without updating the
+upstream callers. Blast radius extends beyond profile-lifecycle.
 
 ## What works (preserve in the rewrite)
 

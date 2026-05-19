@@ -7,7 +7,6 @@ step_id: 'W09.P042.S0247'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
-  - "[[2026-05-14-cli-workflow-redesign-w09-p042-s0247-duplicate-profile-surfaces-audit]]"
 ---
 
 # `cli-workflow-redesign` `W09.P042.S0247`
