@@ -1,6 +1,61 @@
 access_gate:
   errors:
-    default_translatable: az élő AEAT küldés véglegesen tiltott; használd a produce -> verify -> export folyamatot, és töltsd fel a fájlt magad az AEAT portálon
+    default_translatable: az élő AEAT küldés véglegesen tiltott; használd a produce
+      -> verify -> export folyamatot, és töltsd fel a fájlt magad az AEAT portálon
+adapters:
+  aeat:
+    clave_movil:
+      errors:
+        pending_petition_blocked: adapters.aeat.clave_movil.errors.pending_petition_blocked
+      suggestions:
+        reject_pending_request: adapters.aeat.clave_movil.suggestions.reject_pending_request
+    sede:
+      groi:
+        suggestions:
+          shape_change: adapters.aeat.sede.groi.suggestions.shape_change
+      nif_iva:
+        suggestions:
+          shape_change: adapters.aeat.sede.nif_iva.suggestions.shape_change
+      renta_web_open:
+        suggestions:
+          shape_change: adapters.aeat.sede.renta_web_open.suggestions.shape_change
+  google:
+    calc_sheets:
+      errors:
+        api_call_failed: adapters.google.calc_sheets.errors.api_call_failed
+        api_call_refused: adapters.google.calc_sheets.errors.api_call_refused
+        api_target_not_found: adapters.google.calc_sheets.errors.api_target_not_found
+        googleapiclient_not_importable: adapters.google.calc_sheets.errors.googleapiclient_not_importable
+    oauth_flow:
+      errors:
+        browser_launcher_refused: adapters.google.oauth_flow.errors.browser_launcher_refused
+        client_config_refused: adapters.google.oauth_flow.errors.client_config_refused
+        email_claim_missing: adapters.google.oauth_flow.errors.email_claim_missing
+        endpoint_unreachable: adapters.google.oauth_flow.errors.endpoint_unreachable
+        id_token_missing: adapters.google.oauth_flow.errors.id_token_missing
+        id_token_module_not_importable: adapters.google.oauth_flow.errors.id_token_module_not_importable
+        id_token_verification_failed: adapters.google.oauth_flow.errors.id_token_verification_failed
+        loopback_bind_failed: adapters.google.oauth_flow.errors.loopback_bind_failed
+        oauthlib_not_importable: adapters.google.oauth_flow.errors.oauthlib_not_importable
+        scope_missing: adapters.google.oauth_flow.errors.scope_missing
+        unsecured_mode_refused: adapters.google.oauth_flow.errors.unsecured_mode_refused
+      suggestions:
+        close_loopback_port: adapters.google.oauth_flow.suggestions.close_loopback_port
+        open_consent_url_manually: adapters.google.oauth_flow.suggestions.open_consent_url_manually
+        use_keyring_or_synthetic: adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic
+    profile_binding:
+      errors:
+        no_active_profile: adapters.google.profile_binding.errors.no_active_profile
+    refresh:
+      errors:
+        google_auth_not_importable: adapters.google.refresh.errors.google_auth_not_importable
+        reauth_required: adapters.google.refresh.errors.reauth_required
+        refresh_failed: adapters.google.refresh.errors.refresh_failed
+        refresh_refused: adapters.google.refresh.errors.refresh_refused
+        token_endpoint_unreachable: adapters.google.refresh.errors.token_endpoint_unreachable
+      suggestions:
+        check_network: adapters.google.refresh.suggestions.check_network
+      testing_project_cap_warning: adapters.google.refresh.testing_project_cap_warning
 aggregation:
   iva_ledger:
     errors:
@@ -10,64 +65,96 @@ aggregation:
       unsupported_period: Nem támogatott modelo időszak a főkönyvi aggregációhoz.
   models:
     errors:
-      annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap) értékeket.
+      annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap)
+        értékeket.
       month_required: A havi időszaktípushoz hónapnapérték szükséges.
-      period_type_ambiguous: Az időszaktípus nem egyértelmű; adja meg explicitül a negyedévet vagy hónapot.
+      period_type_ambiguous: Az időszaktípus nem egyértelmű; adja meg explicitül a
+        negyedévet vagy hónapot.
       quarter_required: A negyedéves időszaktípushoz negyedévérték szükséges.
   per_modelo:
     errors:
       unsupported_modelo: Nem támogatott modelo a modelo szerinti összesítéshez
     registry:
       errors:
-        invalid_accrued_on: 'Érvénytelen teljesítési dátum a(z) %{source_object_id} megfigyeléshez: %{accrued_on}'
-        unsupported_provider: 'Nem támogatott összesítési szolgáltató ehhez a modelohoz: %{modelo}: %{provider}'
+        invalid_accrued_on: 'Érvénytelen teljesítési dátum a(z) %{source_object_id}
+          megfigyeléshez: %{accrued_on}'
+        unsupported_provider: 'Nem támogatott összesítési szolgáltató ehhez a modelohoz:
+          %{modelo}: %{provider}'
   period:
     parse_error: Ismeretlen időszakformátum
   renta_ledger:
     errors:
       annual_period_required: Éves időszak szükséges a Renta nyilvántartás összesítéséhez.
-      bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért Renta főkönyvi buckettel.
+      bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért Renta főkönyvi
+        buckettel.
       modelo_mismatch: Az adómodell nem egyezik a Renta nyilvántartás várt modeljével.
       period_mismatch: Az időszak nem egyezik a Renta nyilvántartás várt időszakával.
 application:
   auth:
     acquisition_lock:
       errors:
-        acquire_failed: Az AEAT hitelesítési zár nem volt megszerezhető a megrekedt zár helyreállítása után.
-        lock_held: Ehhez a profilhoz már fut egy másik AEAT hitelesítési művelet. Ne indíts második Cl@ve kérést; várd meg, amíg a futó folyamat befejeződik, vagy hagyd lejárni a zárat, ha a folyamat összeomlott.
-        lock_held_suggestion: 'Az aktív hitelesítési zár állapotának megtekintéséhez futtasd: `aeat config auth status --format json`.'
+        acquire_failed: Az AEAT hitelesítési zár nem volt megszerezhető a megrekedt
+          zár helyreállítása után.
+        lock_held: Ehhez a profilhoz már fut egy másik AEAT hitelesítési művelet.
+          Ne indíts második Cl@ve kérést; várd meg, amíg a futó folyamat befejeződik,
+          vagy hagyd lejárni a zárat, ha a folyamat összeomlott.
+        lock_held_suggestion: 'Az aktív hitelesítési zár állapotának megtekintéséhez
+          futtasd: `aeat config auth status --format json`.'
     operator:
       errors:
-        no_active_bucket: Nincs aktív profil; futtasd a `aeat config profile create NAME` parancsot a hitelesítés beállítása előtt.
+        no_active_bucket: Nincs aktív profil; futtasd a `aeat config profile create
+          NAME` parancsot a hitelesítés beállítása előtt.
     provider_impact:
-      certificate_ready: A tanúsítványos hitelesítés kész. A kezelő ugyanazt a CLI benyújtási folyamatot használja az AEAT által támogatott olvasásokhoz; minden szolgáltató ugyanazt a parancsfolyamatot
-        használja.
-      generic_ready: '%{label} készen áll. A kezelő ugyanazt a CLI benyújtási folyamatot használja, miközben ez a szolgáltató csatlakozik a megosztott hitelesítési protokollhoz.'
-      unavailable: '%{label} be van állítva, de még nem áll készen. A kezelő továbbra is képes helyben előállítani, ellenőrizni és exportálni a benyújtásokat, de az AEAT által támogatott olvasások mindaddig
-        nem elérhetők, amíg a hitelesítési hiba el nem hárul.'
-      unconfigured: A kezelő továbbra is képes helyben előállítani, ellenőrizni és exportálni a benyújtásokat, de az AEAT által támogatott olvasások mindaddig nem elérhetők, amíg a hitelesítési szolgáltató
-        nincs beállítva.
+      certificate_ready: A tanúsítványos hitelesítés kész. A kezelő ugyanazt a CLI
+        benyújtási folyamatot használja az AEAT által támogatott olvasásokhoz; minden
+        szolgáltató ugyanazt a parancsfolyamatot használja.
+      generic_ready: '%{label} készen áll. A kezelő ugyanazt a CLI benyújtási folyamatot
+        használja, miközben ez a szolgáltató csatlakozik a megosztott hitelesítési
+        protokollhoz.'
+      unavailable: '%{label} be van állítva, de még nem áll készen. A kezelő továbbra
+        is képes helyben előállítani, ellenőrizni és exportálni a benyújtásokat, de
+        az AEAT által támogatott olvasások mindaddig nem elérhetők, amíg a hitelesítési
+        hiba el nem hárul.'
+      unconfigured: A kezelő továbbra is képes helyben előállítani, ellenőrizni és
+        exportálni a benyújtásokat, de az AEAT által támogatott olvasások mindaddig
+        nem elérhetők, amíg a hitelesítési szolgáltató nincs beállítva.
     sessions:
       errors:
-        corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható. Futtasd a `aeat config auth clear --sessions` majd a `aeat config auth test` parancsot.
-        no_session: Nincs aktív AEAT munkamenet; futtasd a `aeat config auth test` parancsot, mielőtt AEAT adatokat olvasnál.
-        sede_rejected: Az AEAT Sede nem fogadja el a munkamenetet; futtasd a `aeat config auth test` parancsot, mielőtt AEAT adatokat olvasnál.
-        session_expired: Az AEAT munkamenet lejárt; futtasd a `aeat config auth test` parancsot, mielőtt AEAT adatokat olvasnál.
-        state_missing: Hiányzik az AEAT munkamenet állapota; futtasd a `aeat config auth test` parancsot, mielőtt AEAT adatokat olvasnál.
-        verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtasd a `aeat config auth test` parancsot, mielőtt AEAT adatokat olvasnál.
+        corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
+          Futtasd a `aeat config auth clear --sessions` majd a `aeat config auth test`
+          parancsot.
+        no_session: Nincs aktív AEAT munkamenet; futtasd a `aeat config auth test`
+          parancsot, mielőtt AEAT adatokat olvasnál.
+        sede_rejected: Az AEAT Sede nem fogadja el a munkamenetet; futtasd a `aeat
+          config auth test` parancsot, mielőtt AEAT adatokat olvasnál.
+        session_expired: Az AEAT munkamenet lejárt; futtasd a `aeat config auth test`
+          parancsot, mielőtt AEAT adatokat olvasnál.
+        state_missing: Hiányzik az AEAT munkamenet állapota; futtasd a `aeat config
+          auth test` parancsot, mielőtt AEAT adatokat olvasnál.
+        verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtasd a `aeat
+          config auth test` parancsot, mielőtt AEAT adatokat olvasnál.
   modelo:
     borrador_binding:
       errors:
         caller_binding_keys_blank: A megadott binding kulcsok nem lehetnek üresek.
-        snapshot_id_required: A borrador forrású értékekhez kötelező a borrador_snapshot_id megadása.
-        snapshot_not_active: A borrador pillanatkép nem aktív; az aktív pillanatképeket az `aeat app live borrador 100 list` paranccsal listázhatod.
-        source_trace_mismatch: A borrador forrásnyom nem egyezik a feloldott binding azonosítókkal.
+        snapshot_id_required: A borrador forrású értékekhez kötelező a borrador_snapshot_id
+          megadása.
+        snapshot_not_active: A borrador pillanatkép nem aktív; az aktív pillanatképeket
+          az `aeat app live borrador 100 list` paranccsal listázhatod.
+        source_trace_mismatch: A borrador forrásnyom nem egyezik a feloldott binding
+          azonosítókkal.
     errors:
-      export_no_active_bucket: Nincs aktív profil; futtasd a `aeat config profile create NAME` parancsot egy modelo revízió exportja előtt.
-      external_filing_evidence_reference_blank: A külső bevallás importálásához nem üres evidence_reference_id szükséges.
-      external_filing_no_casilla_values: A külső bevallás importálásához legalább egy casilla érték kell; a megadott leképezés üres.
-      reconcile_declaration_unsupported: A nyilatkozat-PDF alapú egyeztetés még nincs implementálva; használd a --from-justificante PATH kapcsolót, amíg a nyilatkozat parser elkészül.
-      reconcile_no_active_bucket: Nincs aktív profil; futtasd a `aeat config profile create NAME` parancsot egy munkaegység egyeztetése előtt.
+      export_no_active_bucket: Nincs aktív profil; futtasd a `aeat config profile
+        create NAME` parancsot egy modelo revízió exportja előtt.
+      external_filing_evidence_reference_blank: A külső bevallás importálásához nem
+        üres evidence_reference_id szükséges.
+      external_filing_no_casilla_values: A külső bevallás importálásához legalább
+        egy casilla érték kell; a megadott leképezés üres.
+      reconcile_declaration_unsupported: A nyilatkozat-PDF alapú egyeztetés még nincs
+        implementálva; használd a --from-justificante PATH kapcsolót, amíg a nyilatkozat
+        parser elkészül.
+      reconcile_no_active_bucket: Nincs aktív profil; futtasd a `aeat config profile
+        create NAME` parancsot egy munkaegység egyeztetése előtt.
   overview:
     explain:
       errors:
@@ -77,25 +164,30 @@ application:
       no_active_profile_selected: Nincs kiválasztva aktív profil.
   wizard:
     errors:
-      profile_flag_required: A varázsló --profile NAME kapcsolót igényel (nincs implicit 'default' visszaesés).
+      profile_flag_required: A varázsló --profile NAME kapcsolót igényel (nincs implicit
+        'default' visszaesés).
       quiet_missing_flags: Hiányoznak a --quiet varázsló futtatáshoz szükséges kapcsolók.
     status:
       errors:
         missing_tax_id: Az aktív profilból hiányzik a tax.id.
         no_active_profile: Nincs aktív profil beállítva.
         projection_failed: Az aktív profil nem felel meg a varázsló projekciójának.
-        unexpected_projection_type: A setup folyamat válaszai nem SetupAnswers-re vetültek.
+        unexpected_projection_type: A setup folyamat válaszai nem SetupAnswers-re
+          vetültek.
   workflow:
     errors:
       no_active_profile_bucket: Nincs aktív profil.
       state_unreadable: A helyi konfigurációs állapotot nem sikerült beolvasni.
 auth:
   catalogue:
-    certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy más elismert hatóság). A Sede minden folyamatát támogatja.
+    certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
+      más elismert hatóság). A Sede minden folyamatát támogatja.
     certificate_label: Digitális tanúsítvány
-    clave_movil_description: Cl@ve-rendszerben regisztrált mobilon megjelenő push-jóváhagyásos hitelesítés. DNI/NIE, Cl@ve-regisztráció és párosított készülék szükséges.
+    clave_movil_description: Cl@ve-rendszerben regisztrált mobilon megjelenő push-jóváhagyásos
+      hitelesítés. DNI/NIE, Cl@ve-regisztráció és párosított készülék szükséges.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Fenntartott, zárt szolgáltatóhely a Cl@ve Permanente számára.
+    clave_permanente_description: Fenntartott, zárt szolgáltatóhely a Cl@ve Permanente
+      számára.
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Fenntartott, zárt szolgáltatóhely a Cl@ve PIN számára.
     clave_pin_label: Cl@ve PIN
@@ -153,7 +245,8 @@ cli:
         unknown_movement_kind: 'Ismeretlen mozgástípus: {kind!r}'
         valuation_group_help: Számítsd ki és nézd meg előre a készletértékelést
         valuation_method_help: Értékelési módszer (fifo vagy pmp)
-        valuation_preview_help: Nézd meg előre a zárókészletet és az eladott áruk költségét
+        valuation_preview_help: Nézd meg előre a zárókészletet és az eladott áruk
+          költségét
         vat_rate_help: IVA-kulcs százalékban
         year_help: Adóév
       payable_invoice:
@@ -172,7 +265,8 @@ cli:
         eligible_help: Listázd a külön arányt támogató kategóriákat
         group_help: Szakmai használati arányok kiadási kategóriánként
         list_help: Listázd az aktív bucket kategóriaarányait
-        no_override_error: Nincs mentett arány a(z) {category!r} kategóriához a(z) {bucket_id!r} bucketben
+        no_override_error: Nincs mentett arány a(z) {category!r} kategóriához a(z)
+          {bucket_id!r} bucketben
         ratio_help: Alkalmazandó arány 0 és 1 között
         set_help: Állítsd be vagy cseréld le egy kategória arányát
         unknown_category: 'Ismeretlen kiadási kategória: {raw!r}'
@@ -233,7 +327,8 @@ cli:
         list_help: Listázd a mentett ellenőrzési megfigyeléseket
         nif_help: Szűrés egy NIF szerint
         nif_iva_arg_help: NIF-IVA érték (pl. ESB12345678)
-        nif_iva_help: Ellenőrizz egy közösségi NIF-IVA értéket AEAT IXVI-ben és mentsd a megfigyelést
+        nif_iva_help: Ellenőrizz egy közösségi NIF-IVA értéket AEAT IXVI-ben és mentsd
+          a megfigyelést
         observation_id_help: Megfigyelésazonosító (vagy egyértelmű előtag)
         surface_help: 'Szűrés felület szerint: nif_iva vagy tgvi'
         tgvi_arg_help: Ellenőrizendő spanyol NIF/NIE
@@ -242,68 +337,95 @@ cli:
       year_help: Benyújtási év
     modelo:
       aggregate:
-        counterpart_observation_help: JSON CounterpartObservation objektum; több megfigyeléshez ismételd az opciót
-        foreign_asset_observation_help: JSON ForeignAssetObservation objektum; több megfigyeléshez ismételd az opciót
-        modelo_help: Támogatott modelo kód (111, 115, 123, 180, 190, 193, 347, 349 vagy 720)
+        counterpart_observation_help: JSON CounterpartObservation objektum; több megfigyeléshez
+          ismételd az opciót
+        foreign_asset_observation_help: JSON ForeignAssetObservation objektum; több
+          megfigyeléshez ismételd az opciót
+        modelo_help: Támogatott modelo kód (111, 115, 123, 180, 190, 193, 347, 349
+          vagy 720)
         period_help: Az összesítési szolgáltatásnak átadott időszak
-        retencion_observation_help: JSON RetencionObservation objektum; több megfigyeléshez ismételd az opciót
+        retencion_observation_help: JSON RetencionObservation objektum; több megfigyeléshez
+          ismételd az opciót
       aggregate_help: Futtasd a modelo szerinti összesítést explicit kanonikus megfigyelésekkel
       app_help: AEAT adóbevallás-modellek (modelos) regisztrációs katalógusának áttekintése
       audit:
-        bundle_id_help: A bizonyítékcsomag azonosítója (teljes SHA-256 vagy egyértelmű előtag).
+        bundle_id_help: A bizonyítékcsomag azonosítója (teljes SHA-256 vagy egyértelmű
+          előtag).
         check_help: Egy bizonyítékcsomag újraellenőrzése a rekord-digestek újraszámításával.
-        export_help: A bizonyítékcsomag determinisztikus ZIP-archívumának kiírása (manifest.json kerül utoljára).
-        force_incomplete_help: Az exportálás engedélyezése akkor is, ha az ellenőrzés a csomagot hiányosnak jelenti.
+        export_help: A bizonyítékcsomag determinisztikus ZIP-archívumának kiírása
+          (manifest.json kerül utoljára).
+        force_incomplete_help: Az exportálás engedélyezése akkor is, ha az ellenőrzés
+          a csomagot hiányosnak jelenti.
         group_help: Bizonyítékcsomag-audit parancsok (show/check/export/replay).
         output_help: A csomag ZIP-archívumának kimeneti útvonala.
-        replay_help: A bizonyítékügy ellenőrzésének újrafuttatása forenzikus átadáshoz; soha nem kapcsolódik az AEAT-hoz és nem küld beadványt.
-        show_help: Egy bizonyítékcsomag manifesztjének és a hivatkozott rekordoknak a megjelenítése
+        replay_help: A bizonyítékügy ellenőrzésének újrafuttatása forenzikus átadáshoz;
+          soha nem kapcsolódik az AEAT-hoz és nem küld beadványt.
+        show_help: Egy bizonyítékcsomag manifesztjének és a hivatkozott rekordoknak
+          a megjelenítése
       bindings:
         app_help: Egy AEAT adóbevallás bindingjeinek vizsgálata és előnézete
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         list_help: A modell / év / időszak szükséges és elérhető bindingjeinek listázása
-        missing_help: Szűrés azokra a bindingekre, amelyeknek nincs feloldott értékük (bucket / nyilvántartás / profil adatra van szükségük)
+        missing_help: Szűrés azokra a bindingekre, amelyeknek nincs feloldott értékük
+          (bucket / nyilvántartás / profil adatra van szükségük)
         missing_required_options: 'Hiányzó kötelező opciók: %{options}'
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
-        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
-        preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció nélkül
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
+        preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció
+          nélkül
         year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
-        form_number_help: Cellák szűrése a BOE-nyomtatványon szereplő mezőszám alapján (pl. 46)
-        input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed, informational)
+        form_number_help: Cellák szűrése a BOE-nyomtatványon szereplő mezőszám alapján
+          (pl. 46)
+        input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed,
+          informational)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
         required_help: Csak a kötelezőként megjelölt cellák megjelenítése
       describe:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: 'Idoszak token a modellrevizio feloldasahoz; Modelo 036 eseten alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
+        period_help: 'Idoszak token a modellrevizio feloldasahoz; Modelo 036 eseten
+          alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
       export:
         actor_help: A MODELO_EXPORTED eseménybe rögzített operátor címke.
         errors:
-          no_exportable_revision: A munkaegységnek nincs verifikált vagy benyújtott kalkulációs revíziója az exportáláshoz. Először futtasd az `aeat app modelo verify` parancsot.
-        help: Egy verifikált vagy benyújtott modelo revízió exportálása helyi AEAT-kompatibilis fichero-BOE fájlba. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+          no_exportable_revision: A munkaegységnek nincs verifikált vagy benyújtott
+            kalkulációs revíziója az exportáláshoz. Először futtasd az `aeat app modelo
+            verify` parancsot.
+        help: Egy verifikált vagy benyújtott modelo revízió exportálása helyi AEAT-kompatibilis
+          fichero-BOE fájlba. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
         output_help: A fichero-BOE artefakt írási útvonala.
-        revision_help: Az exportálandó kalkulációs revízió azonosítója; alapértelmezés szerint a munkaegység legutóbbi verifikált vagy benyújtott revíziója.
+        revision_help: Az exportálandó kalkulációs revízió azonosítója; alapértelmezés
+          szerint a munkaegység legutóbbi verifikált vagy benyújtott revíziója.
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       filing_record:
         app_help: Belső bejelentési rekordok (filing records) vizsgálata
         bucket_id_help: Szűrés bucket szerint
-        evidence_kind_help: Importált evidencia típusa (aeat_justificante_pdf, aeat_csv_register, aeat_live_capture)
-        evidence_reference_id_help: Az importált evidencia stabil hivatkozási azonosítója (justificante szám, CSV regiszter id, élő rögzítés id)
+        evidence_kind_help: Importált evidencia típusa (aeat_justificante_pdf, aeat_csv_register,
+          aeat_live_capture)
+        evidence_reference_id_help: Az importált evidencia stabil hivatkozási azonosítója
+          (justificante szám, CSV regiszter id, élő rögzítés id)
         filing_record_id_help: Filing record stabil azonosítója
-        import_casilla_help: Importált cellaérték CASILLA=DECIMAL szintaxissal (ismételhető; legalább egy kötelező)
-        import_help: Külsőleg leadott bevallás rögzítése alap filing recordként, importált AEAT-hitelesített evidenciával
-        include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten kihagyva)
+        import_casilla_help: Importált cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
+          legalább egy kötelező)
+        import_help: Külsőleg leadott bevallás rögzítése alap filing recordként, importált
+          AEAT-hitelesített evidenciával
+        include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
+          kihagyva)
         list_help: Regisztrált filing recordok listázása
         view_help: Egy filing record megjelenítése azonosító alapján
       formulas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
-        explain_help: A szövegkimenetbe is belekerülnek a képletet alátámasztó legal_refs és source_refs hivatkozások. A JSON payload mindig tartalmazza őket.
+        explain_help: A szövegkimenetbe is belekerülnek a képletet alátámasztó legal_refs
+          és source_refs hivatkozások. A JSON payload mindig tartalmazza őket.
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
       history:
         modelo_help: modelo kód (pl. 100, 303)
         period_help: Opcionális időszakszűrő (pl. Q1, annual)
@@ -319,66 +441,95 @@ cli:
       readiness_help: cli.app.modelo.readiness_help
       reconcile:
         errors:
-          exclusive_source: A --from-justificante és --from-declaration kölcsönösen kizárják egymást.
-          missing_source: Add meg a --from-justificante ÚTVONAL vagy --from-declaration ÚTVONAL kapcsolót.
-        from_declaration_help: A benyújtott deklaráció PDF útvonala (fenntartott; a parser még nem érhető el).
+          exclusive_source: A --from-justificante és --from-declaration kölcsönösen
+            kizárják egymást.
+          missing_source: Add meg a --from-justificante ÚTVONAL vagy --from-declaration
+            ÚTVONAL kapcsolót.
+        from_declaration_help: A benyújtott deklaráció PDF útvonala (fenntartott;
+          a parser még nem érhető el).
         from_justificante_help: Az AEAT justificante PDF útvonala az egyeztetéshez.
-        help: Egy modelo munkaegység egyeztetése külső bizonyítékkal (justificante PDF). Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+        help: Egy modelo munkaegység egyeztetése külső bizonyítékkal (justificante
+          PDF). Csak helyi; soha nem kapcsolódik az AEAT-hoz.
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       reconcile_from_justificante:
-        help: Egy modelo munkaegység egyeztetése egy justificante PDF-fel. Cukor azoknak az operátoroknak, akik úgy gondolkodnak, hogy "egyeztetés ebből a justificantéből" a "egyeztetés, forrás = justificante"
-          helyett. Ugyanazt a modelo_reconcile szolgáltatás belépési pontot használja, mint a flag-alapú forma. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+        help: Egy modelo munkaegység egyeztetése egy justificante PDF-fel. Cukor azoknak
+          az operátoroknak, akik úgy gondolkodnak, hogy "egyeztetés ebből a justificantéből"
+          a "egyeztetés, forrás = justificante" helyett. Ugyanazt a modelo_reconcile
+          szolgáltatás belépési pontot használja, mint a flag-alapú forma. Csak helyi;
+          soha nem kapcsolódik az AEAT-hoz.
         justificante_path_help: Az AEAT justificante PDF útvonala az egyeztetéshez.
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       verification_report:
         app_help: Rögzített verifikációs jelentések megtekintése
-        list_help: Verifikációs jelentések listázása, opcionálisan egy kalkulációs revízió szerint szűrve
-        verification_report_id_help: Egy verifikációs jelentés stabil 64-karakteres SHA-256 azonosítója
+        list_help: Verifikációs jelentések listázása, opcionálisan egy kalkulációs
+          revízió szerint szűrve
+        verification_report_id_help: Egy verifikációs jelentés stabil 64-karakteres
+          SHA-256 azonosítója
         view_help: Egy verifikációs jelentés megjelenítése azonosító alapján
       work:
         actor_help: A művelet felelőse (legfeljebb 64 karakteres szabadszöveges címke)
-        amend_help: Helyesbítő (complementaria) bevallás építése egy külsőleg leadott bevallás fölött. Importált AEAT-hitelesített evidenciával rendelkező filing record szükséges
+        amend_help: Helyesbítő (complementaria) bevallás építése egy külsőleg leadott
+          bevallás fölött. Importált AEAT-hitelesített evidenciával rendelkező filing
+          record szükséges
         amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
         amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése
-        borrador_help: Modelo 100 borrador snapshot azonosító (teljes vagy egyértelmű prefix). A snapshot binding értékei csak aeat_prefilled jelölésű bindingokhoz használhatók; a kezelő --binding felülírásai
-          mindig elsőbbséget élveznek.
+        borrador_help: Modelo 100 borrador snapshot azonosító (teljes vagy egyértelmű
+          prefix). A snapshot binding értékei csak aeat_prefilled jelölésű bindingokhoz
+          használhatók; a kezelő --binding felülírásai mindig elsőbbséget élveznek.
         bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
         calculate_help: Új draft kalkulációs revízió rögzítése a munkaegységhez
-        calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256 azonosítója
+        calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256
+          azonosítója
         casilla_help: Cella értéke CASILLA=DECIMAL szintaxissal (ismételhető)
-        create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak, revízió) kulcsra
+        create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
+          revízió) kulcsra
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
-        file_help: Ellenőrzött revízió belsőleg leadottként megjelölése. NEM küldi el az AEAT-nak
-        from_filing_record_help: A helyesbítendő alap filing record stabil azonosítója. Külső importált evidenciát kell hordoznia (justificante / CSV / élő rögzítés)
+        file_help: Ellenőrzött revízió belsőleg leadottként megjelölése. NEM küldi
+          el az AEAT-nak
+        from_filing_record_help: A helyesbítendő alap filing record stabil azonosítója.
+          Külső importált evidenciát kell hordoznia (justificante / CSV / élő rögzítés)
         history_help: Mutasd egy munkaegység összes életciklus-eseményét
         history_work_unit_id_help: A megjelenítendő életciklusú munkaegység azonosítója
-        include_discarded_help: A megszakított munkaegységeket is mutassa a listában (alapértelmezetten kihagyva)
-        invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus plusz . _ : - elválasztók, max. 128 karakter)'
-        invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus plusz . _ : - elválasztók, max. 64 karakter)'
-        invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc kell legyen (SHA-256 kivonat)
-        list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint szűrve
+        include_discarded_help: A megszakított munkaegységeket is mutassa a listában
+          (alapértelmezetten kihagyva)
+        invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
+          plusz . _ : - elválasztók, max. 128 karakter)'
+        invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
+          plusz . _ : - elválasztók, max. 64 karakter)'
+        invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
+          kell legyen (SHA-256 kivonat)
+        list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
+          szűrve
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         name_help: A munkaegység opcionális megjelenítési neve
         notes_help: A filing recordhoz fűzött opcionális megjegyzések
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
-        period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
-        reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb 500 karakter)
-        relation_help: Előző időszak relációs érték KEY=VALUE szintaxissal. A KEY egy registry relációazonosító; a VALUE decimális. Ismételhető.
+        period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
+          vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
+        reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb
+          500 karakter)
+        relation_help: Előző időszak relációs érték KEY=VALUE szintaxissal. A KEY
+          egy registry relációazonosító; a VALUE decimális. Ismételhető.
         rename_help: Munkaegység megjelenítési nevének módosítása
-        resume_help: Ellenőrizd, hogy újrapróbálhatsz-e megszakadt folyamatfutást AEAT-kapcsolat nélkül
+        resume_help: Ellenőrizd, hogy újrapróbálhatsz-e megszakadt folyamatfutást
+          AEAT-kapcsolat nélkül
         resume_workflow_run_id_help: 16 karakteres folyamatfutás-azonosító
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
-        revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint szűrve
-        set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető; legalább egy kötelező)
+        revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
+          szűrve
+        set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
+          legalább egy kötelező)
         status_help: Egy munkaegység metaadatainak megjelenítése
-        verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés ellen
+        verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
+          ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
-      no_active_profile: Nincs aktív profil. Futtasd az `aeat config init` parancsot a profilhoz kötött adatparancsok előtt.
+      no_active_profile: Nincs aktív profil. Futtasd az `aeat config init` parancsot
+        a profilhoz kötött adatparancsok előtt.
       period_empty: Az adózási időszak nem lehet üres
       period_unrecognised: Ismeretlen időszak
   config:
@@ -393,7 +544,8 @@ cli:
         configure_help: Set active apoderado configuration
         help: Manage apoderado configuration
         scope:
-          censo: Nyilvántartási adatok (bejelentkezés, módosítás, kijelentkezés) (modelo 036)
+          censo: Nyilvántartási adatok (bejelentkezés, módosítás, kijelentkezés) (modelo
+            036)
           exped: Ügyiratok és eljárások
           generalnt: Általános adóügyi eljárások
           inform: Informatív bevallások (modelo 347, 349, 720)
@@ -413,26 +565,35 @@ cli:
       configure_help: Az aktív hitelesítési szolgáltató beállítása
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
       help: Az aktív hitelesítési szolgáltató beállítása
-      no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config init' parancsot a hitelesítés beállítása előtt.
+      no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config init' parancsot
+        a hitelesítés beállítása előtt.
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
       providers_help: Támogatott hitelesítési szolgáltatók listázása
-      reserved_provider: 'Fenntartott, de nem implementált hitelesítési szolgáltató: %{provider}.'
+      reserved_provider: 'Fenntartott, de nem implementált hitelesítési szolgáltató:
+        %{provider}.'
       status_help: Beállított hitelesítési állapot megjelenítése
       test_help: Helyi hitelesítési készültség ellenőrzése
-      unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
+      unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
+        az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
     bucket:
-      actor_help: A történet szűrése egy adott aktor által rögzített eseményekre (pontos egyezés)
+      actor_help: A történet szűrése egy adott aktor által rögzített eseményekre (pontos
+        egyezés)
       bucket_id_help: A bucket azonosítója, amelynek eseménytörténetét megjelenítjük
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
       history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
-      object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos egyezés)
-      since_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy utána) történt eseményekre (pl. 2026-04-01T00:00:00+00:00)
-      until_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy előtte) történt eseményekre (pl. 2026-04-30T23:59:59+00:00)
+      object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos
+        egyezés)
+      since_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy utána) történt
+        eseményekre (pl. 2026-04-01T00:00:00+00:00)
+      until_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy előtte) történt
+        eseményekre (pl. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
-      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config init --tax-id <NIF>' parancsot.
-      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config profile list'' listázza az érvényes kulcsokat.'
+      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config init
+        --tax-id <NIF>' parancsot.
+      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config profile
+        list'' listázza az érvényes kulcsokat.'
     get:
       help: Egy konfigurációs kulcs aktuális értékének megjelenítése
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
@@ -444,35 +605,53 @@ cli:
         help: Kezeld a Google Drive gyökérmappát
         set_help: Kapcsolj Google Drive mappát az aktív profilhoz
       help: A Google OAuth Desktop integráció kezelése Drive és Sheets eléréshez
-      login_help: OAuth hozzájárulási folyamat futtatása (vagy meglévő hitelesítő adat frissítése)
+      login_help: OAuth hozzájárulási folyamat futtatása (vagy meglévő hitelesítő
+        adat frissítése)
       logout_help: A frissítő token és metaadatok törlése; a regisztrált kliens megőrzése
-      profile_help: AEAT profil neve (alapértelmezett = a munkafolyam állapotában aktív profil)
+      profile_help: AEAT profil neve (alapértelmezett = a munkafolyam állapotában
+        aktív profil)
       refresh_only_help: A hozzájárulás kihagyása; csak meglévő hitelesítő adat frissítése
-      register_help: Cloud Console Desktop OAuth kliens JSON regisztrálása az aktív profilhoz
-      status_help: A Google OAuth munkamenet aktuális állapotának megjelenítése az aktív profilhoz
+      register_help: Cloud Console Desktop OAuth kliens JSON regisztrálása az aktív
+        profilhoz
+      status_help: A Google OAuth munkamenet aktuális állapotának megjelenítése az
+        aktív profilhoz
       sync:
         calc:
           export:
             modelo_help: Az exportálandó modelo azonosítója (pl. 130, 303, 100)
             period_help: Időszak kódja (pl. 1T, 2T, 0A)
-            prefill_relations_help: Revíziók közötti relációértékek előtöltése a helyi megfigyelési tárból az exportálás előtt (éves összesítések, előző negyedévek átvitele stb.)
-            root_folder_required: Nincs Drive gyökérmappa konfigurálva; futtassa először az `aeat config google folder set <id>` parancsot
-            snapshot_failure: 'A regiszter snapshot nem épülhet fel a modelo {modelo} ({period} {year}) esetén: {detail}'
+            prefill_relations_help: Revíziók közötti relációértékek előtöltése a helyi
+              megfigyelési tárból az exportálás előtt (éves összesítések, előző negyedévek
+              átvitele stb.)
+            root_folder_required: Nincs Drive gyökérmappa konfigurálva; futtassa először
+              az `aeat config google folder set <id>` parancsot
+            snapshot_failure: 'A regiszter snapshot nem épülhet fel a modelo {modelo}
+              ({period} {year}) esetén: {detail}'
             unknown_modelo: 'Ismeretlen modelo {modelo!r}; elérhető modelók: {available}'
             year_help: Bevallási év (pl. 2025)
-          export_help: Exportálja a regiszter számítási felületét egy modelo+időszakhoz a Google Sheets munkafüzetbe az `aeat-vault/` alá
+          export_help: Exportálja a regiszter számítási felületét egy modelo+időszakhoz
+            a Google Sheets munkafüzetbe az `aeat-vault/` alá
           help: Séma-táblázat számítási felület (exportálás és visszaolvasás)
           pull:
-            assemble_observations_help: A behúzás után állítsa össze a Detalle fül sor-cellaértékeit típusos megfigyelésekké (kedvezményezettek, külföldi vagyon, kapcsolt felek közötti műveletek, atribución
-              tagok, visszatérítési műveletek) és bocsássa ki őket a payloadba a nyers row_set_edits mellett
-            compute_help: A behúzás után futtassa a lokális Decimal futtatókörnyezetet a behúzott bemenetekre és bocsássa ki a számított cella értékeket
-            compute_refused_stale: megtagadva a számítás olyan munkafüzettel szemben amelynek metaadat-pecsétjei nem egyeznek a megadott snapshottal (metadata_match={metadata_match}); újraexportálni majd
-              újra behúzni
-            spreadsheet_id_help: A Drive fájl azonosítója amelyből az operátor módosításait olvassuk (alkalmazás-tulajdonú kell legyen és a megadott snapshothoz kötött)
-          pull_help: Operátor által szerkesztett cellák visszaolvasása calc-sheets munkafüzetből tipizált rekordokba (a registry-SHA pecsét validálása után)
+            assemble_observations_help: A behúzás után állítsa össze a Detalle fül
+              sor-cellaértékeit típusos megfigyelésekké (kedvezményezettek, külföldi
+              vagyon, kapcsolt felek közötti műveletek, atribución tagok, visszatérítési
+              műveletek) és bocsássa ki őket a payloadba a nyers row_set_edits mellett
+            compute_help: A behúzás után futtassa a lokális Decimal futtatókörnyezetet
+              a behúzott bemenetekre és bocsássa ki a számított cella értékeket
+            compute_refused_stale: megtagadva a számítás olyan munkafüzettel szemben
+              amelynek metaadat-pecsétjei nem egyeznek a megadott snapshottal (metadata_match={metadata_match});
+              újraexportálni majd újra behúzni
+            spreadsheet_id_help: A Drive fájl azonosítója amelyből az operátor módosításait
+              olvassuk (alkalmazás-tulajdonú kell legyen és a megadott snapshothoz
+              kötött)
+          pull_help: Operátor által szerkesztett cellák visszaolvasása calc-sheets
+            munkafüzetből tipizált rekordokba (a registry-SHA pecsét validálása után)
           verify:
-            scenario_help: JSON forgatókönyv fájl elérési útja operátori bemenetekkel és opcionálisan AEAT által közzétett várt kimenetek térképével
-          verify_help: Háromirányú paritás-ellenőrzés (AEAT orákulum vs lokális Decimal futtatókörnyezet vs Sheets munkafüzet)
+            scenario_help: JSON forgatókönyv fájl elérési útja operátori bemenetekkel
+              és opcionálisan AEAT által közzétett várt kimenetek térképével
+          verify_help: Háromirányú paritás-ellenőrzés (AEAT orákulum vs lokális Decimal
+            futtatókörnyezet vs Sheets munkafüzet)
         help: Szinkronizáld a helyi adatokat a beállított Google Drive mappával
         probe_help: Ellenőrizd a hozzáférést a beállított Google Drive mappához
         probe_read_only_help: Ellenőrizd a Google Drive-ot csak olvasható módban
@@ -480,11 +659,13 @@ cli:
         push_help: Töltsd fel a helyi adattereket Google Drive-ra
         push_limit_help: Feltöltendő fájlok maximális száma
         push_namespace_help: Feltöltendő adattér; ismételhető
-        root_folder_id_unset: 'Nincs beállított Google Drive gyökérmappa; előbb futtasd: `aeat config google folder set <id>`'
+        root_folder_id_unset: 'Nincs beállított Google Drive gyökérmappa; előbb futtasd:
+          `aeat config google folder set <id>`'
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
       auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate password
+      certificate_password_env_help: Environment variable name containing the certificate
+        password
       certificate_path_help: Path to the .p12 or .pfx certificate file
       drafts_dir_help: Directory to store local filing drafts
       dry_run_help: Report changes without modifying the configuration
@@ -515,9 +696,11 @@ cli:
       create_help: cli.config.profile.create_help
       delete_help: Törölj egy profilt és a helyi állapotát; a --yes megerősíti
       delete_name_help: Törlendő profil neve
-      delete_requires_yes: 'A törlés destruktív. Megerősítéshez futtasd újra: ''aeat config profile delete %{name} --yes''.'
+      delete_requires_yes: 'A törlés destruktív. Megerősítéshez futtasd újra: ''aeat
+        config profile delete %{name} --yes''.'
       delete_yes_help: Erősítsd meg kifejezetten a törlést
-      duplicate_display_name_help: Megjelenített név az új profilhoz (alapértelmezetten a cél-azonosító)
+      duplicate_display_name_help: Megjelenített név az új profilhoz (alapértelmezetten
+        a cél-azonosító)
       duplicate_help: Profil másolása új azonosítóval és megjelenített névvel
       duplicate_source_help: A duplikálandó forrásprofil azonosítója
       duplicate_target_help: A duplikátum cél-azonosítója
@@ -530,25 +713,32 @@ cli:
       import_missing_bundle: 'Nem található profilcsomag itt: %{path}'
       import_path_help: A profil JSON-csomagjának útvonala
       logout_help: Léptesd ki az aktív profilt a helyi mutató törlésével
-      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>` first.
-      preflight_help: Report whether the active profile is ready for one modelo / year / period.
+      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+        first.
+      preflight_help: Report whether the active profile is ready for one modelo /
+        year / period.
       preflight_modelo_help: Modelo code (e.g. 303).
       preflight_period_help: Period token (e.g. Q1, annual).
       preflight_revision_help: Registry revision id.
       preflight_year_help: Filing year.
-      remove_help: Profil sírkövezése (a megváltoztathatatlan jelentés-pillanatképek megmaradnak)
+      remove_help: Profil sírkövezése (a megváltoztathatatlan jelentés-pillanatképek
+        megmaradnak)
       remove_name_help: A sírkövezendő profil azonosítója
-      remove_requires_yes: A törlés destruktív művelet. Futtasd újra 'aeat config profile remove %{name} --yes' megerősítéshez.
+      remove_requires_yes: A törlés destruktív művelet. Futtasd újra 'aeat config
+        profile remove %{name} --yes' megerősítéshez.
       remove_yes_help: A sírkövezés művelet kifejezett megerősítése
-      rename_display_name_help: Operátornak látható címke; alapértelmezés szerint a meglévő
+      rename_display_name_help: Operátornak látható címke; alapértelmezés szerint
+        a meglévő
       rename_help: Nevezz át egy profilt, és mozgasd automatikusan az aktív mutatót
       rename_source_help: A profil jelenlegi neve
       rename_target_help: A profil új neve
       show_help: Mutasd egy profil adatait
-      show_name_help: A megjelenítendő profil azonosítója (alapértelmezetten az aktív profil)
+      show_name_help: A megjelenítendő profil azonosítója (alapértelmezetten az aktív
+        profil)
       switch_help: Aktiválj egy meglévő profilt
       switch_name_help: Aktiválandó profil neve
-      unknown_profile: 'Ismeretlen profil: %{name}. Futtasd: ''aeat config profile list'' a regisztrált profilok megtekintéséhez.'
+      unknown_profile: 'Ismeretlen profil: %{name}. Futtasd: ''aeat config profile
+        list'' a regisztrált profilok megtekintéséhez.'
       use_help: Meglévő profil kiválasztása aktív profilként
       use_name_help: Az aktiválandó profil azonosítója
       validate_help: Validate the active profile against the schema.
@@ -556,22 +746,29 @@ cli:
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolat ellenőrzése
       connectivity_target_help: Ellenőrizendő kapcsolati cél
-      help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája és javítása
-      integrity_help: Probe AES-256-GCM tag verification across one namespace (or all).
+      help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
+        és javítása
+      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
+        all).
       integrity_namespace_help: Restrict the integrity probe to one namespace.
       list_all_help: Return every key, including unreadable.
-      list_conflicting_flags: --all and --unreadable cannot be combined; pass one or neither.
+      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
+        or neither.
       list_help: List secure-object keys stored under one namespace.
       list_namespace_help: Namespace to inventory.
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
-      quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló; --yes szükséges)
-      quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez.
+      quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
+        --yes szükséges)
+      quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
+        a megerősítéshez.
       quarantine_yes_help: A karantén művelet kifejezett megerősítése
       reset_state_dry_run_help: A boríték ujjlenyomatának közlése a sor törlése nélkül
-      reset_state_help: Az olvashatatlan munkafolyamat-állapot boríték eldobása (romboló; --yes szükséges)
-      reset_state_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez, vagy adj --dry-run paramétert az ujjlenyomat megtekintéséhez.
+      reset_state_help: Az olvashatatlan munkafolyamat-állapot boríték eldobása (romboló;
+        --yes szükséges)
+      reset_state_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
+        a megerősítéshez, vagy adj --dry-run paramétert az ujjlenyomat megtekintéséhez.
       reset_state_yes_help: A munkafolyamat-állapot visszaállítás kifejezett megerősítése
     reset:
       help: Operátor által megadott konfigurációs hatókörök visszaállítása
@@ -584,23 +781,76 @@ cli:
       key_help: A beállítandó kulcs (pl. iva.regime)
       value_help: A beállítandó érték (szöveg, true/false, összeg a kulcstól függően)
     setup:
-      accept_defaults_help: A leíró alapértelmezett értékeinek elfogadása kérdezés nélkül
+      accept_defaults_help: A leíró alapértelmezett értékeinek elfogadása kérdezés
+        nélkül
       errors:
-        missing_required_flags: Hiányoznak a kötelező kapcsolók a --quiet módhoz; adj meg értéket minden kötelező kérdéshez.
+        missing_required_flags: Hiányoznak a kötelező kapcsolók a --quiet módhoz;
+          adj meg értéket minden kötelező kérdéshez.
       help: Az adóprofil vezetett kezdeti beállítása
       profile_name_help: A profil neve, ahova a válaszok kerülnek
-      quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit használva
+      quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit
+        használva
       success:
-        next_step: 'Következő lépés: `aeat app overview status` futtatása a munkaterület ellenőrzéséhez.'
+        next_step: 'Következő lépés: `aeat app overview status` futtatása a munkaterület
+          ellenőrzéséhez.'
         saved: A(z) '%{profile_name}' profil mentve.
     status:
-      empty_profile: Nincs konfigurált profil. Kezdéshez futtasd az `aeat config init` parancsot.
+      empty_profile: Nincs konfigurált profil. Kezdéshez futtasd az `aeat config init`
+        parancsot.
       help: Az aktív konfigurációs profil készenlétének megjelenítése
       next_step: 'Következő lépés: `aeat app overview status`'
     unset:
       help: Egy konfigurációs kulcshoz rendelt érték törlése
       key_help: A törlendő kulcs
     workflow_help: Konfigurációs munkafolyamat súgójának megjelenítése
+  diagnostics:
+    browser:
+      http_status_label: cli.diagnostics.browser.http_status_label
+      markers_label: cli.diagnostics.browser.markers_label
+      markers_none: cli.diagnostics.browser.markers_none
+      observed_at_label: cli.diagnostics.browser.observed_at_label
+      retry_after_label: cli.diagnostics.browser.retry_after_label
+      state_label: cli.diagnostics.browser.state_label
+      target_browser: cli.diagnostics.browser.target_browser
+      target_label: cli.diagnostics.browser.target_label
+    dead_end:
+      registry_bundled: cli.diagnostics.dead_end.registry_bundled
+    next_action:
+      inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+    repair:
+      auth_label: cli.diagnostics.repair.auth_label
+      checks_heading: cli.diagnostics.repair.checks_heading
+      detail_label: cli.diagnostics.repair.detail_label
+      logs_label: cli.diagnostics.repair.logs_label
+      next_label: cli.diagnostics.repair.next_label
+      note_label: cli.diagnostics.repair.note_label
+      overall_label: cli.diagnostics.repair.overall_label
+      profile_label: cli.diagnostics.repair.profile_label
+      python_label: cli.diagnostics.repair.python_label
+      version_label: cli.diagnostics.repair.version_label
+    summary:
+      auth_no_session: cli.diagnostics.summary.auth_no_session
+      auth_none: cli.diagnostics.summary.auth_none
+      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      profile_keys_set: cli.diagnostics.summary.profile_keys_set
+      profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
+      profile_none: cli.diagnostics.summary.profile_none
+      registry_counts: cli.diagnostics.summary.registry_counts
+      registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
+      registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
+      registry_integrity_skipped: cli.diagnostics.summary.registry_integrity_skipped
+      registry_unavailable: cli.diagnostics.summary.registry_unavailable
+      secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
+      secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
+      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      state_backend_readable: cli.diagnostics.summary.state_backend_readable
+      state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
+      venv_in_sync: cli.diagnostics.summary.venv_in_sync
+      venv_stale: cli.diagnostics.summary.venv_stale
+    version:
+      no_revisions: cli.diagnostics.version.no_revisions
+      registry_summary: cli.diagnostics.version.registry_summary
+      registry_unavailable: cli.diagnostics.version.registry_unavailable
   ledger:
     add:
       actor_help: A bucket eseményen rögzített operátornév
@@ -642,14 +892,18 @@ cli:
       yes_help: Erősítsd meg a főkönyvi tranzakció archiválását
     attach:
       actor_help: A bucket eseményen rögzített kezelő neve
-      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször is megadható
+      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször
+        is megadható
       help: Biztonságos bizonyítékobjektumok csatolása egy főkönyvi tranzakcióhoz
       id_help: Főkönyvi tranzakcióazonosító, amelyhez bizonyítékot kell csatolni
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat azonosítója
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
+        azonosítója
     check:
-      bucket_id_help: A vizsgálandó bucket azonosítója (alapértelmezésben az aktív profil bucketje).
-      help: Vizsgálja a megadott bucket (alapértelmezésben az aktív profil bucketje) főkönyvi tranzakcióit és anomáliákat jelent minden olyan periódusra aggregálva, amelyet egy tranzakció érint. Csak helyi;
-        soha nem kapcsolódik az AEAT-hoz.
+      bucket_id_help: A vizsgálandó bucket azonosítója (alapértelmezésben az aktív
+        profil bucketje).
+      help: Vizsgálja a megadott bucket (alapértelmezésben az aktív profil bucketje)
+        főkönyvi tranzakcióit és anomáliákat jelent minden olyan periódusra aggregálva,
+        amelyet egy tranzakció érint. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
     classify:
       actor_help: A bucket eseményen rögzített kezelő neve
       category_help: Kiadási vagy bevételi kategória azonosítója
@@ -661,13 +915,19 @@ cli:
       iva_rate_help: IVA kulcs tizedesként, például 0.21
       taxable_base_help: Adóalap összege
     errors:
-      confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez, vagy használd előbb a --dry-run kapcsolót
+      confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez,
+        vagy használd előbb a --dry-run kapcsolót
       filter_parse_error: A naplószűrő elemzése sikertelen
-      id_prefix_collision: 'A %{prefix!r} tranzakció-azonosító előtag több tranzakcióra is illeszkedik: %{candidates}. Egyértelműsíts az előtag bővítésével.'
-      id_prefix_empty: A tranzakció-azonosító előtag üres; adj meg legalább egy hex karaktert.
-      id_prefix_not_found: Nincs olyan tranzakció, amely a %{prefix!r} azonosító-előtagra illeszkedik.
-      id_prefix_not_hex: 'A %{prefix!r} tranzakció-azonosító előtag nem-hex karaktert tartalmaz (megengedett: 0-9, a-f).'
-      id_prefix_too_long: A %{prefix!r} tranzakció-azonosító előtag hosszabb 64 karakternél (egy teljes SHA-256 digest).
+      id_prefix_collision: 'A %{prefix!r} tranzakció-azonosító előtag több tranzakcióra
+        is illeszkedik: %{candidates}. Egyértelműsíts az előtag bővítésével.'
+      id_prefix_empty: A tranzakció-azonosító előtag üres; adj meg legalább egy hex
+        karaktert.
+      id_prefix_not_found: Nincs olyan tranzakció, amely a %{prefix!r} azonosító-előtagra
+        illeszkedik.
+      id_prefix_not_hex: 'A %{prefix!r} tranzakció-azonosító előtag nem-hex karaktert
+        tartalmaz (megengedett: 0-9, a-f).'
+      id_prefix_too_long: A %{prefix!r} tranzakció-azonosító előtag hosszabb 64 karakternél
+        (egy teljes SHA-256 digest).
       invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
     export:
       actor_help: A bucket eseményen rögzített kezelő neve
@@ -733,9 +993,11 @@ cli:
         cross_bucket_invoice: A számla az aktív profiltól eltérő buckethez tartozik.
         invoice_not_found: A számla nincs az aktív profil számlakatalógusában.
         missing_target: Adj meg legalább egyet a --invoice-id vagy --evidence-id közül.
-      evidence_id_help: A tranzakcióhoz csatolandó beszerzési számla bizonyíték rekord azonosítója.
-      help: Egy főkönyvi tranzakció összekapcsolása egy számlával és/vagy egy beszerzési számla bizonyíték rekorddal egyetlen kanonikus hívással. Elutasítja a bucket-közti összekapcsolásokat. Csak helyi;
-        soha nem kapcsolódik az AEAT-hoz.
+      evidence_id_help: A tranzakcióhoz csatolandó beszerzési számla bizonyíték rekord
+        azonosítója.
+      help: Egy főkönyvi tranzakció összekapcsolása egy számlával és/vagy egy beszerzési
+        számla bizonyíték rekorddal egyetlen kanonikus hívással. Elutasítja a bucket-közti
+        összekapcsolásokat. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
       id_help: Főkönyvi tranzakció azonosító (SHA-256 vagy egyértelmű előtag).
       invoice_id_help: A tranzakcióval kétirányúan összekapcsolandó számla azonosítója.
     list:
@@ -750,8 +1012,9 @@ cli:
       reason_help: Az életciklus-előzményekben rögzített indok
       yes_help: Erősítsd meg a gyermektranzakciók összevonását
     preflight:
-      help: Jelenti az aktív bucket tranzakcióinál hiányzó főkönyvi adatokat (kategória, adóalap, ÁFA összeg/kulcs, deviza, arányosítási hivatkozás) egy adott periódusra. Csak helyi; soha nem kapcsolódik
-        az AEAT-hoz.
+      help: Jelenti az aktív bucket tranzakcióinál hiányzó főkönyvi adatokat (kategória,
+        adóalap, ÁFA összeg/kulcs, deviza, arányosítási hivatkozás) egy adott periódusra.
+        Csak helyi; soha nem kapcsolódik az AEAT-hoz.
       period_help: Kanonikus periódus (pl. 2026Q1, 2026-03, 2026).
     remove:
       actor_help: A bucket eseményen rögzített kezelő neve
@@ -762,7 +1025,8 @@ cli:
       yes_help: A főkönyvi tranzakció törlésének megerősítése
     reset:
       actor_help: A bucket eseményen rögzített kezelő neve
-      dry_run_help: Visszaállítási hatások jelentése a főkönyvi katalógus ürítése nélkül
+      dry_run_help: Visszaállítási hatások jelentése a főkönyvi katalógus ürítése
+        nélkül
       help: Az aktív profil bucket főkönyvi katalógusának visszaállítása
       reason_help: A visszaállítási előzményben rögzített ok
       yes_help: Az aktív főkönyvi katalógus ürítésének megerősítése
@@ -791,7 +1055,8 @@ cli:
       reason_help: Az életciklus-előzményben rögzített ok
       yes_help: Erősítsd meg a tranzakció tartalékba helyezését
     status:
-      help: A főkönyvi állapot és számítási készenlét összefoglalása az aktív profil bucketjében
+      help: A főkönyvi állapot és számítási készenlét összefoglalása az aktív profil
+        bucketjében
       period_help: Preflight adóidőszak (YYYY-MM vagy modelo időszak)
     track:
       help: Egy főkönyvi tranzakció eseményláncának megjelenítése
@@ -820,53 +1085,195 @@ cli:
     scaffold_check_help: Eltérések jelentése locale fájlok írása nélkül
   log_levels:
     errors:
-      flags_mutually_exclusive: A --quiet, --verbose és --debug kölcsönösen kizárják egymást.
-      invalid_env_value: 'Az AEAT_LOG_LEVEL csak ezek közül lehet: %{allowed}; kapott érték: %{value}.'
+      flags_mutually_exclusive: A --quiet, --verbose és --debug kölcsönösen kizárják
+        egymást.
+      invalid_env_value: 'Az AEAT_LOG_LEVEL csak ezek közül lehet: %{allowed}; kapott
+        érték: %{value}.'
+  operator_surface:
+    errors:
+      accepted_roots_only: cli.operator_surface.errors.accepted_roots_only
+      contract_not_accepted: cli.operator_surface.errors.contract_not_accepted
+      source_kind_options: cli.operator_surface.errors.source_kind_options
+      unknown_source_kind: cli.operator_surface.errors.unknown_source_kind
+    help:
+      app:
+        footer: cli.operator_surface.help.app.footer
+        heading: cli.operator_surface.help.app.heading
+        ledger_allocate: cli.operator_surface.help.app.ledger_allocate
+        ledger_archive: cli.operator_surface.help.app.ledger_archive
+        ledger_attach: cli.operator_surface.help.app.ledger_attach
+        ledger_classify: cli.operator_surface.help.app.ledger_classify
+        ledger_export: cli.operator_surface.help.app.ledger_export
+        ledger_import: cli.operator_surface.help.app.ledger_import
+        ledger_list: cli.operator_surface.help.app.ledger_list
+        ledger_remove: cli.operator_surface.help.app.ledger_remove
+        ledger_reset: cli.operator_surface.help.app.ledger_reset
+        ledger_review: cli.operator_surface.help.app.ledger_review
+        ledger_stash: cli.operator_surface.help.app.ledger_stash
+        ledger_status: cli.operator_surface.help.app.ledger_status
+        ledger_update: cli.operator_surface.help.app.ledger_update
+        ledger_view: cli.operator_surface.help.app.ledger_view
+        live_filed_capture: cli.operator_surface.help.app.live_filed_capture
+        live_filed_capture_sources: cli.operator_surface.help.app.live_filed_capture_sources
+        live_filed_list: cli.operator_surface.help.app.live_filed_list
+        modelo_bindings: cli.operator_surface.help.app.modelo_bindings
+        modelo_describe: cli.operator_surface.help.app.modelo_describe
+        modelo_list: cli.operator_surface.help.app.modelo_list
+        modelo_work: cli.operator_surface.help.app.modelo_work
+        overview_status: cli.operator_surface.help.app.overview_status
+        paragraph_operational_workflow: cli.operator_surface.help.app.paragraph_operational_workflow
+        registry_inspect: cli.operator_surface.help.app.registry_inspect
+        registry_verify: cli.operator_surface.help.app.registry_verify
+        review_queue: cli.operator_surface.help.app.review_queue
+        review_view: cli.operator_surface.help.app.review_view
+        section_ledger: cli.operator_surface.help.app.section_ledger
+        section_live_reads: cli.operator_surface.help.app.section_live_reads
+        section_modelo: cli.operator_surface.help.app.section_modelo
+        section_overview: cli.operator_surface.help.app.section_overview
+        section_review_and_registry: cli.operator_surface.help.app.section_review_and_registry
+      config:
+        auth_clear: cli.operator_surface.help.config.auth_clear
+        auth_configure: cli.operator_surface.help.config.auth_configure
+        auth_providers: cli.operator_surface.help.config.auth_providers
+        auth_status: cli.operator_surface.help.config.auth_status
+        auth_test: cli.operator_surface.help.config.auth_test
+        diagnostics_logs: cli.operator_surface.help.config.diagnostics_logs
+        diagnostics_quarantine: cli.operator_surface.help.config.diagnostics_quarantine
+        diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
+        diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
+        first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
+        first_run_status: cli.operator_surface.help.config.first_run_status
+        footer: cli.operator_surface.help.config.footer
+        heading: cli.operator_surface.help.config.heading
+        paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
+        profile_delete: cli.operator_surface.help.config.profile_delete
+        profile_duplicate: cli.operator_surface.help.config.profile_duplicate
+        profile_list: cli.operator_surface.help.config.profile_list
+        profile_preflight: cli.operator_surface.help.config.profile_preflight
+        profile_rename: cli.operator_surface.help.config.profile_rename
+        profile_switch: cli.operator_surface.help.config.profile_switch
+        profile_validate: cli.operator_surface.help.config.profile_validate
+        profile_view: cli.operator_surface.help.config.profile_view
+        section_authentication: cli.operator_surface.help.config.section_authentication
+        section_diagnostics: cli.operator_surface.help.config.section_diagnostics
+        section_first_run: cli.operator_surface.help.config.section_first_run
+        section_profile_inspection: cli.operator_surface.help.config.section_profile_inspection
+        section_profile_lifecycle: cli.operator_surface.help.config.section_profile_lifecycle
+      root:
+        diagnostics_live_filed: cli.operator_surface.help.root.diagnostics_live_filed
+        diagnostics_overview: cli.operator_surface.help.root.diagnostics_overview
+        diagnostics_registry_inspect: cli.operator_surface.help.root.diagnostics_registry_inspect
+        diagnostics_repair: cli.operator_surface.help.root.diagnostics_repair
+        diagnostics_review_queue: cli.operator_surface.help.root.diagnostics_review_queue
+        footer: cli.operator_surface.help.root.footer
+        heading: cli.operator_surface.help.root.heading
+        ledger_allocate: cli.operator_surface.help.root.ledger_allocate
+        ledger_archive: cli.operator_surface.help.root.ledger_archive
+        ledger_attach: cli.operator_surface.help.root.ledger_attach
+        ledger_classify: cli.operator_surface.help.root.ledger_classify
+        ledger_export: cli.operator_surface.help.root.ledger_export
+        ledger_import: cli.operator_surface.help.root.ledger_import
+        ledger_list: cli.operator_surface.help.root.ledger_list
+        ledger_remove: cli.operator_surface.help.root.ledger_remove
+        ledger_reset: cli.operator_surface.help.root.ledger_reset
+        ledger_review: cli.operator_surface.help.root.ledger_review
+        ledger_stash: cli.operator_surface.help.root.ledger_stash
+        ledger_status: cli.operator_surface.help.root.ledger_status
+        ledger_update: cli.operator_surface.help.root.ledger_update
+        ledger_view: cli.operator_surface.help.root.ledger_view
+        modelo_bindings_list: cli.operator_surface.help.root.modelo_bindings_list
+        modelo_list: cli.operator_surface.help.root.modelo_list
+        modelo_work: cli.operator_surface.help.root.modelo_work
+        paragraph_two_roots: cli.operator_surface.help.root.paragraph_two_roots
+        paragraph_type_help: cli.operator_surface.help.root.paragraph_type_help
+        section_daily_ledger: cli.operator_surface.help.root.section_daily_ledger
+        section_diagnostics: cli.operator_surface.help.root.section_diagnostics
+        section_modelo_lifecycle: cli.operator_surface.help.root.section_modelo_lifecycle
+        section_setup: cli.operator_surface.help.root.section_setup
+        setup_configure_auth: cli.operator_surface.help.root.setup_configure_auth
+        setup_create_profile: cli.operator_surface.help.root.setup_create_profile
+        setup_inspect_profile: cli.operator_surface.help.root.setup_inspect_profile
+    landing:
+      active_profile_message: cli.operator_surface.landing.active_profile_message
+      no_active_profile_message: cli.operator_surface.landing.no_active_profile_message
+      text_template: cli.operator_surface.landing.text_template
+    retired:
+      archive_reason: cli.operator_surface.retired.archive_reason
+      data_reason: cli.operator_surface.retired.data_reason
+      declaration_reason: cli.operator_surface.retired.declaration_reason
+      filing_reason: cli.operator_surface.retired.filing_reason
+      financial_reason: cli.operator_surface.retired.financial_reason
+      invoice_reason: cli.operator_surface.retired.invoice_reason
+      llm_reason: cli.operator_surface.retired.llm_reason
+      preflight_reason: cli.operator_surface.retired.preflight_reason
+      presentation_reason: cli.operator_surface.retired.presentation_reason
+      sanitize_reason: cli.operator_surface.retired.sanitize_reason
+      setup_reason: cli.operator_surface.retired.setup_reason
+      submit_reason: cli.operator_surface.retired.submit_reason
+      topic_reason: cli.operator_surface.retired.topic_reason
+      workflow_reason: cli.operator_surface.retired.workflow_reason
   overview:
     agenda:
       allow_incomplete_help: Az agenda generálása akkor is, ha a profil adatai hiányosak.
       date_help: Az agenda referenciadátuma (ISO YYYY-MM-DD); alapértelmezetten ma.
       errors:
         invalid_horizon: A --horizon értéke pozitív egész szám kell legyen (napokban).
-      help: Rangsorolja a közelgő és lejárt kötelezettségeket egy referenciadátum körül. Egyetlen `next_due` mezőt jelenít meg, valamint a due-today / due-soon / overdue kohorszokat. Csak helyi; soha nem
-        kapcsolódik az AEAT-hoz.
-      horizon_help: Előrenéző ablak (napokban), amelyet a `due_soon` kohorsz figyelembe vesz.
+      help: Rangsorolja a közelgő és lejárt kötelezettségeket egy referenciadátum
+        körül. Egyetlen `next_due` mezőt jelenít meg, valamint a due-today / due-soon
+        / overdue kohorszokat. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      horizon_help: Előrenéző ablak (napokban), amelyet a `due_soon` kohorsz figyelembe
+        vesz.
     app_help: Az aktuális adózási munkaterület áttekintése
     backlog:
       allow_incomplete_help: A backlog generálása akkor is, ha a profil adatai hiányosak.
-      from_help: Inkluzív kezdő dátum (ISO YYYY-MM-DD); alapértelmezetten 365 nappal a mai nap előtt.
-      help: Felsorolja a lejárt, még be nem nyújtott kötelezettségeket. A legrégebbiek kerülnek előre, hogy a legsürgetőbb triázsolható legyen először. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      from_help: Inkluzív kezdő dátum (ISO YYYY-MM-DD); alapértelmezetten 365 nappal
+        a mai nap előtt.
+      help: Felsorolja a lejárt, még be nem nyújtott kötelezettségeket. A legrégebbiek
+        kerülnek előre, hogy a legsürgetőbb triázsolható legyen először. Csak helyi;
+        soha nem kapcsolódik az AEAT-hoz.
       to_help: Inkluzív záró dátum (ISO YYYY-MM-DD); alapértelmezetten ma.
     calendar:
       allow_incomplete_help: A naptár generálása akkor is, ha a profil adatai hiányosak.
       from_help: A naptárablak kezdő dátuma, inkluzív (ISO YYYY-MM-DD).
-      help: A határidőnaptár generálása az aktív profilra a megadott dátumablakban. Alkalmazza az ünnepnapokat és a munkanapi eltolásokat. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+      help: A határidőnaptár generálása az aktív profilra a megadott dátumablakban.
+        Alkalmazza az ünnepnapokat és a munkanapi eltolásokat. Csak helyi; soha nem
+        kapcsolódik az AEAT-hoz.
       to_help: A naptárablak záró dátuma, inkluzív (ISO YYYY-MM-DD).
-    calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}. Futtasd: ''aeat config profile set <kulcs> <érték>'' vagy add meg --allow-incomplete a naptár alapértelmezett értékekkel
-      történő számításához.'
+    calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
+      Futtasd: ''aeat config profile set <kulcs> <érték>'' vagy add meg --allow-incomplete
+      a naptár alapértelmezett értékekkel történő számításához.'
     drafts: Tervezetek
     explain:
-      help: Lebontja egy modelo alkalmazhatóságát az aktív profilra. Megmutatja a bináris indikátort, a regisztrációs alapú indoklást és a profil tényeit, amelyektől a döntés függ. Csak helyi; soha nem
-        kapcsolódik az AEAT-hoz.
+      help: Lebontja egy modelo alkalmazhatóságát az aktív profilra. Megmutatja a
+        bináris indikátort, a regisztrációs alapú indoklást és a profil tényeit, amelyektől
+        a döntés függ. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
       modelo_help: AEAT modelo azonosító (pl. 303, 130, 100).
-      year_help: Az alkalmazhatóság értékeléséhez használt adóév; alapértelmezetten az aktuális év.
+      year_help: Az alkalmazhatóság értékeléséhez használt adóév; alapértelmezetten
+        az aktuális év.
     period: Időszak
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
     status:
       drafts_empty: Nem talalhato mentett bevallastervezet.
-      drafts_present: '%{count} mentett bevallastervezet van ebben a helyi taroloban. Egy friss, ures munkaterulet normal esetben 0-t mutat, tehat ez a profil/adatbazis mar tartalmaz helyi tervezetallapotot.'
-      integrity_next: Futtasd az `aeat config repair` parancsot a reszletekert. Ne helyezz karantenba sorokat, hacsak nem szandekosan akarod archivalni a nem olvashato regi helyi adatokat.
+      drafts_present: '%{count} mentett bevallastervezet van ebben a helyi taroloban.
+        Egy friss, ures munkaterulet normal esetben 0-t mutat, tehat ez a profil/adatbazis
+        mar tartalmaz helyi tervezetallapotot.'
+      integrity_next: Futtasd az `aeat config repair` parancsot a reszletekert. Ne
+        helyezz karantenba sorokat, hacsak nem szandekosan akarod archivalni a nem
+        olvashato regi helyi adatokat.
       invoices_empty: Meg nincs importalt uzleti muveleti rekord.
       invoices_present: '%{count} uzleti muveleti rekord var felulvizsgalatra.'
       next_heading: Mit irj be kovetkezokent
-      next_import_command: '  aeat app ledger import <banki-kivonat.csv> --provider csv - banki tranzakciok importalasa.'
+      next_import_command: '  aeat app ledger import <banki-kivonat.csv> --provider
+        csv - banki tranzakciok importalasa.'
       next_landing_command: '  aeat --help - vissza a parancsutmutatohoz.'
       next_review_command: '  aeat app ledger review - importalt sorok ellenorzese.'
       profile_active: A(z) `%{profile}` profilon dolgozol.
-      profile_missing: Nincs aktiv profil beallitva. Adatok importalasa elott futtasd az `aeat config init` parancsot.
+      profile_missing: Nincs aktiv profil beallitva. Adatok importalasa elott futtasd
+        az `aeat config init` parancsot.
       storage_ok: A helyi titkositott tarolo olvashato az aktualis mesterkulccsal.
-      storage_warning: '%{count} titkositott helyi tarolosor nem olvashato az aktualis mesterkulccsal. Ezek nem a banki kivonat sorai; uj tranzakciokat importalhatsz, de regi helyi adatok hasznalata elott
-        ellenorizd a diagnosztikat.'
+      storage_warning: '%{count} titkositott helyi tarolosor nem olvashato az aktualis
+        mesterkulccsal. Ezek nem a banki kivonat sorai; uj tranzakciokat importalhatsz,
+        de regi helyi adatok hasznalata elott ellenorizd a diagnosztikat.'
       title: Munkaterulet allapota
       transactions_empty: Meg nincs importalt banki tranzakcio.
       transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
@@ -874,9 +1281,11 @@ cli:
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
     app_help: Adózási modellek nyilvántartásának kezelése
-    audit_oracles_environment_help: Auditálandó élő paritási katalógus környezet (production, test_environment vagy both)
+    audit_oracles_environment_help: Auditálandó élő paritási katalógus környezet (production,
+      test_environment vagy both)
     audit_oracles_help: Élő paritási oracle-kötési eltérések megjelenítése indításkor
-    casilla_help: Összehasonlítandó casilla azonosító; ismételhető az alapértelmezett számított casillák felülírásához
+    casilla_help: Összehasonlítandó casilla azonosító; ismételhető az alapértelmezett
+      számított casillák felülírásához
     citations:
       app_help: Jogszabály-korpusz vizsgálata (Ley 37/1992, Ley 35/2006, ...)
       articulo_help: Megjelenítendő konkrét cikk (pl. 91.Uno.2.1º)
@@ -944,16 +1353,21 @@ cli:
       workbook_count: workbook_count
       workbook_parity_ref_count: workbook_parity_ref_count
       workbook_path: workbook_path
-    observation_help: Ellenőrizendő titkosított benyújtott bevallási megfigyelési manifeszt
+    observation_help: Ellenőrizendő titkosított benyújtott bevallási megfigyelési
+      manifeszt
     parity_app_help: Paritási forgatókönyvek és szalagok futtatása manuális ellenőrzésekhez
     parity_output_help: A generált paritási szalag cél JSON fájlja
-    parity_replay_help: Archivált paritási szalag visszajátszása az aktuális registry runtime ellen
-    parity_run_help: Egy mentett paritási forgatókönyv futtatása és az eredmény szalag archiválása
+    parity_replay_help: Archivált paritási szalag visszajátszása az aktuális registry
+      runtime ellen
+    parity_run_help: Egy mentett paritási forgatókönyv futtatása és az eredmény szalag
+      archiválása
     parity_scenario_help: Paritási forgatókönyv JSON fájl elérési útja
     parity_store_root_help: A generált paritási szalagok tárolására használt gyökérkönyvtár
     parity_tape_help: Egy mentett paritási szalag JSON fájl elérési útja
-    source_observation_help: Korábbi bevallási kötéshez vagy relációhoz szükséges titkosított forrásmegfigyelési manifeszt
-    verify_filed_state_help: Helyi registry számítás összehasonlítása rögzített AEAT benyújtott állapottal
+    source_observation_help: Korábbi bevallási kötéshez vagy relációhoz szükséges
+      titkosított forrásmegfigyelési manifeszt
+    verify_filed_state_help: Helyi registry számítás összehasonlítása rögzített AEAT
+      benyújtott állapottal
     verify_help: A helyi nyilvántartás integritásának ellenőrzése
     verify_source_root_help: A forráskönyvtár útvonala az ellenőrzéshez
     workbooks_app_help: Nyilvántartási munkafüzetek kezelése
@@ -987,7 +1401,8 @@ cli:
       help: Egy felülvizsgálati elem megjelenítése
       id_help: Felülvizsgálati elem azonosítója
   root:
-    app_app_help: Adózási munkaterület overview, ledger, modelo, registry és review számára
+    app_app_help: Adózási munkaterület overview, ledger, modelo, registry és review
+      számára
     app_help: 'Spanyol adóbevallási segéd
 
 
@@ -999,14 +1414,21 @@ cli:
     help_help: Show workflow-oriented help
     landing:
       headline: AEAT adoasszisztens
-      help_line: 'Tovabbi segitseg: futtasd az `aeat --help`, `aeat config --help` vagy `aeat app --help` parancsot.'
+      help_line: 'Tovabbi segitseg: futtasd az `aeat --help`, `aeat config --help`
+        vagy `aeat app --help` parancsot.'
       quick_start_heading: Gyors kezdes
-      quick_start_import: '  3. `aeat app ledger import <banki-kivonat.csv> --provider csv` - banki tranzakciok hozzaadasa.'
-      quick_start_repair: '  5. `aeat config repair` - konfiguracio, tarolo es helyi allapot diagnosztikaja.'
-      quick_start_review: '  4. `aeat app ledger review` - importalt sorok ellenorzese es osztalyozasa.'
-      quick_start_setup_done: '  1. `aeat config profile status` - aktiv profil ellenorzese az operativ munka elott.'
-      quick_start_setup_needed: '  1. `aeat config init` - eloszor hozd letre a helyi adozasi profilt.'
-      quick_start_status: '  2. `aeat app overview status` - aktualis munkaterulet-allapot es diagnosztika olvasasa.'
+      quick_start_import: '  3. `aeat app ledger import <banki-kivonat.csv> --provider
+        csv` - banki tranzakciok hozzaadasa.'
+      quick_start_repair: '  5. `aeat config repair` - konfiguracio, tarolo es helyi
+        allapot diagnosztikaja.'
+      quick_start_review: '  4. `aeat app ledger review` - importalt sorok ellenorzese
+        es osztalyozasa.'
+      quick_start_setup_done: '  1. `aeat config profile status` - aktiv profil ellenorzese
+        az operativ munka elott.'
+      quick_start_setup_needed: '  1. `aeat config init` - eloszor hozd letre a helyi
+        adozasi profilt.'
+      quick_start_status: '  2. `aeat app overview status` - aktualis munkaterulet-allapot
+        es diagnosztika olvasasa.'
       section_config: '  config - profilbeallitas, hitelesites, diagnosztika'
       section_ledger: '  app ledger - banki importok es tranzakcio-felulvizsgalat'
       section_modelo: '  app modelo - adonyomtatvany-katalogus es munkaegysegek'
@@ -1019,13 +1441,17 @@ cli:
       welcome_profile: Udvozlet ujra. Az aktiv profil `%{profile}`.
     language_help: A parancs kimeneti nyelve (felülírja az aktív profilt)
     quiet_help: Csak hibák megjelenítése stderr-en
-    unavailable_app_help: Az app parancsok nem érhetők el, mert hiányzik egy opcionális függőség
+    unavailable_app_help: Az app parancsok nem érhetők el, mert hiányzik egy opcionális
+      függőség
     verbose_help: Belső információs naplók megjelenítése stderr-en
-    version_help: Csomagverzió megjelenítése (a --detail kapcsoló mutatja a teljes regiszter-összefoglalót)
+    version_help: Csomagverzió megjelenítése (a --detail kapcsoló mutatja a teljes
+      regiszter-összefoglalót)
   topic:
-    app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT folyamatokról
+    app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT
+      folyamatokról
     errors:
-      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat app registry citations'' a regisztrált témák listájához.'
+      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat app registry citations''
+        a regisztrált témák listájához.'
     opts:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
 dotted:
@@ -1033,19 +1459,28 @@ dotted:
 errors:
   calc:
     binding_value_missing: A {binding_id} kötés nem rendelkezik értékkel.
-    bracket_negative_base: A(z) {parameter_id} sávos paraméter nem fogad el negatív bázist {base}.
-    bracket_no_coverage: A(z) {parameter_id} sávos paraméternek nincs olyan sávja, amely lefedi a(z) {base} bázist.
-    bracket_no_window: A(z) {parameter_id} sávos paraméternek nincs érvényes sávja {as_of} időpontra.
-    casilla_constraint_violation: 'A(z) {casilla_id} cella {value} értéke megsérti a deklarált megszorítást: {violation}. Refs: {legal_refs}.'
-    casilla_referenced_before_evaluation: A(z) {casilla_id} cellára hivatkoztak a képlete kiértékelése előtt.
+    bracket_negative_base: A(z) {parameter_id} sávos paraméter nem fogad el negatív
+      bázist {base}.
+    bracket_no_coverage: A(z) {parameter_id} sávos paraméternek nincs olyan sávja,
+      amely lefedi a(z) {base} bázist.
+    bracket_no_window: A(z) {parameter_id} sávos paraméternek nincs érvényes sávja
+      {as_of} időpontra.
+    casilla_constraint_violation: 'A(z) {casilla_id} cella {value} értéke megsérti
+      a deklarált megszorítást: {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: A(z) {casilla_id} cellára hivatkoztak a
+      képlete kiértékelése előtt.
     computed_supplied_as_input: 'Számított cellák nem adhatók meg bemenetként: {casilla_ids}.'
-    dispatch_key_unknown: 'A(z) {dispatch_key!r} elosztási kulcs nincs a(z) {op} operátor táblájában a(z) {binding_id} kötésen (deklarált kulcsok: {available_keys}).'
-    dispatch_parameter_kind: A(z) {parameter_id} paraméter típusa nem illik a(z) {op} operátorhoz; skalár paraméter szükséges (decimal / pénz / egész / arány).
+    dispatch_key_unknown: 'A(z) {dispatch_key!r} elosztási kulcs nincs a(z) {op} operátor
+      táblájában a(z) {binding_id} kötésen (deklarált kulcsok: {available_keys}).'
+    dispatch_parameter_kind: A(z) {parameter_id} paraméter típusa nem illik a(z) {op}
+      operátorhoz; skalár paraméter szükséges (decimal / pénz / egész / arány).
     divide_by_zero: A(z) {op} operátorral rendelkező képlet nullával oszt.
     empty_expression: Üres képletkifejezés.
-    enum_binding_value_missing: A(z) {binding_id} felsorolt kötés nem rendelkezik értékkel (a(z) {op} operátor megköveteli).
+    enum_binding_value_missing: A(z) {binding_id} felsorolt kötés nem rendelkezik
+      értékkel (a(z) {op} operátor megköveteli).
     lookup_dispatch_arg_count: A(z) {op} képlet operátor {expected} argumentumot vár.
-    lookup_dispatch_arg_kind: A(z) {op} képlet operátor megköveteli, hogy a(z) {position} egy {expected_kind} típusú levél legyen.
+    lookup_dispatch_arg_kind: A(z) {op} képlet operátor megköveteli, hogy a(z) {position}
+      egy {expected_kind} típusú levél legyen.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} reláció nem rendelkezik értékkel.
     unknown_input_casillas: 'Ismeretlen cellaazonosítók a bemenetben: {casilla_ids}.'
@@ -1108,48 +1543,68 @@ sheets:
       valuation_amount: Értékelés
 topic:
   authentication:
-    body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat config auth configure --provider certificate''
-      paranccsal és ellenőrizd: ''aeat config auth test''.'
+    body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális
+      tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat config
+      auth configure --provider certificate'' paranccsal és ellenőrizd: ''aeat config
+      auth test''.'
     title: AEAT hitelesítés
   calendar:
-    body: A naptár megjeleníti a benyújtási kötelezettségeket (modellek és időszakok) egy tartományon belül. Igényli, hogy a profil deklarálja az ÁFA rezsimet, hogy a motor ne alapértelmezett értékeket
-      feltételezzen.
+    body: A naptár megjeleníti a benyújtási kötelezettségeket (modellek és időszakok)
+      egy tartományon belül. Igényli, hogy a profil deklarálja az ÁFA rezsimet, hogy
+      a motor ne alapértelmezett értékeket feltételezzen.
     title: Kötelezettségi naptár
   casilla:
-    body: A casilla egy modell számozott mezője. A casillák lehetnek kézi, számított, vagy bindingekből származtatottak. 'aeat app modelo casillas <modelo>' listázza őket.
+    body: A casilla egy modell számozott mezője. A casillák lehetnek kézi, számított,
+      vagy bindingekből származtatottak. 'aeat app modelo casillas <modelo>' listázza
+      őket.
     title: Casillák
   formats:
-    body: A CLI text, JSON, tábla vagy csv formátumban ad ki kimenetet a '--format' alapján. Automatizációhoz a JSON ajánlott; emberi vizsgálathoz a text.
+    body: A CLI text, JSON, tábla vagy csv formátumban ad ki kimenetet a '--format'
+      alapján. Automatizációhoz a JSON ajánlott; emberi vizsgálathoz a text.
     title: Kimeneti formátumok
   irpf-regime:
-    body: Egy önfoglalkoztató IRPF rezsimje. Estimación directa (normál vagy egyszerűsített) vagy estimación objetiva (modulos). Meghatározza, mely pago fraccionado modellek alkalmazandók (130 vs 131).
+    body: Egy önfoglalkoztató IRPF rezsimje. Estimación directa (normál vagy egyszerűsített)
+      vagy estimación objetiva (modulos). Meghatározza, mely pago fraccionado modellek
+      alkalmazandók (130 vs 131).
     title: IRPF rezsim
   iva-regime:
-    body: Az adózóra alkalmazandó ÁFA rezsim. General, simplificado, recargo de equivalencia, exento, REAGP vagy REBU. Meghatározza a negyedéves 303-as modellt és a 390-es éves összesítőt.
+    body: Az adózóra alkalmazandó ÁFA rezsim. General, simplificado, recargo de equivalencia,
+      exento, REAGP vagy REBU. Meghatározza a negyedéves 303-as modellt és a 390-es
+      éves összesítőt.
     title: ÁFA rezsim
   modelos:
-    body: AEAT adóbevallási modellek katalógusa (303, 130, 100, 347, 349, 111, 115, 184, stb.). Mindegyiknek saját naptára, casillái és alkalmazhatósági szabályai vannak. 'aeat app modelo list' felsorolja
-      a rendelkezésre állókat.
+    body: AEAT adóbevallási modellek katalógusa (303, 130, 100, 347, 349, 111, 115,
+      184, stb.). Mindegyiknek saját naptára, casillái és alkalmazhatósági szabályai
+      vannak. 'aeat app modelo list' felsorolja a rendelkezésre állókat.
     title: Adóbevallási modellek
   pago-fraccionado:
-    body: Az önfoglalkoztató negyedévenkénti IRPF előleges befizetése. A 130-as modell az estimación directa-ra, a 131-es az estimación objetiva-ra vonatkozik. A számítás a negyedév adatait és néhány esetben
-      az előző évet használja.
+    body: Az önfoglalkoztató negyedévenkénti IRPF előleges befizetése. A 130-as modell
+      az estimación directa-ra, a 131-es az estimación objetiva-ra vonatkozik. A számítás
+      a negyedév adatait és néhány esetben az előző évet használja.
     title: IRPF előleges befizetés
   profile:
-    body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet, ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario). Szerkeszd: ''aeat config profile
-      set <kulcs> <érték>''.'
+    body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet,
+      ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario).
+      Szerkeszd: ''aeat config profile set <kulcs> <érték>''.'
     title: Adózói profil
   providers:
-    body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei vannak. 'aeat config auth --help' felsorolja őket a követelményekkel együtt.
+    body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei
+      vannak. 'aeat config auth --help' felsorolja őket a követelményekkel együtt.
     title: Hitelesítési szolgáltatók
   recargo-extemporaneo:
-    body: Határidő utáni benyújtás az AEAT előzetes felszólítása nélkül havi 1%-os pótdíjat (legfeljebb 12%) gyűjt az első évben és 15%-ot plusz kamatot 12 hónap után. Jogi alap Ley 58/2003 art-27.
+    body: Határidő utáni benyújtás az AEAT előzetes felszólítása nélkül havi 1%-os
+      pótdíjat (legfeljebb 12%) gyűjt az első évben és 15%-ot plusz kamatot 12 hónap
+      után. Jogi alap Ley 58/2003 art-27.
     title: Késedelmes benyújtás pótdíja
   regimens:
-    body: Egy önfoglalkoztatóra alkalmazandó adózási rendszerek halmaza. A két fő tengely az ÁFA (general, simplificado, recargo de equivalencia, exento) és az IRPF (directa, objetiva).
+    body: Egy önfoglalkoztatóra alkalmazandó adózási rendszerek halmaza. A két fő
+      tengely az ÁFA (general, simplificado, recargo de equivalencia, exento) és az
+      IRPF (directa, objetiva).
     title: Adózási rendszerek
   sii-verifactu:
-    body: Elektronikus számlatovábbítási rendszerek az AEAT-hoz. Az SII (Suministro Inmediato de Información) nagyvállalatokra kötelező; a Verifactu (RD 1007/2023) számlázási rendszerekre fokozatosan kötelező.
+    body: Elektronikus számlatovábbítási rendszerek az AEAT-hoz. Az SII (Suministro
+      Inmediato de Información) nagyvállalatokra kötelező; a Verifactu (RD 1007/2023)
+      számlázási rendszerekre fokozatosan kötelező.
     title: SII és Verifactu
 transactions:
   import:
@@ -1178,15 +1633,20 @@ wizard:
     blank_secret: Secret value required for %{prompt_key}.
     blank_text: Value required for %{prompt_key}.
     checkbox_required: Select at least one option for %{prompt_key}.
-    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
+    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
-    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
+    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "A vezetett beállítás nem tudott interaktív kérdést megnyitni ebben a futásban.\nMég semmi nincs mentve.\n\nPróbáld újra interaktív terminálból:\n  aeat config init\n\nHa a profilállapot\
-      \ elavult vagy sérült lehet, először vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot eldobásához és újrakezdéshez:\n  aeat config reset --scope profile --yes"
+    unsupported_console: "A vezetett beállítás nem tudott interaktív kérdést megnyitni\
+      \ ebben a futásban.\nMég semmi nincs mentve.\n\nPróbáld újra interaktív terminálból:\n\
+      \  aeat config init\n\nHa a profilállapot elavult vagy sérült lehet, először\
+      \ vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot eldobásához\
+      \ és újrakezdéshez:\n  aeat config reset --scope profile --yes"
   other:
     description: Other configuration options
     section:
@@ -1315,11 +1775,14 @@ wizard:
     intro: 'Irányított adóprofil-beállítás
 
 
-      Ez készíti elő azt a helyi profilt, amelyet az app a könyvelési munkához és a bevallási ellenőrzésekhez használ.
+      Ez készíti elő azt a helyi profilt, amelyet az app a könyvelési munkához és
+      a bevallási ellenőrzésekhez használ.
 
-      %{section_total} lépés van. Csak %{required_total} válasz kötelező az induláshoz; amit még nem tudsz, üresen hagyhatod.
+      %{section_total} lépés van. Csak %{required_total} válasz kötelező az induláshoz;
+      amit még nem tudsz, üresen hagyhatod.
 
-      Legyen kéznél a NIF/NIE/CIF, a tevékenység rövid leírása, az ÁFA/IRPF rendszer adatai, az adóügyi illetőség és szükség esetén a családi adatok.
+      Legyen kéznél a NIF/NIE/CIF, a tevékenység rövid leírása, az ÁFA/IRPF rendszer
+      adatai, az adóügyi illetőség és szükség esetén a családi adatok.
 
       Mentés után a haladást itt ellenőrizheted: `aeat config profile status`.'
     iva:
@@ -1358,7 +1821,8 @@ wizard:
         prompt: IRPF-et becsült rendszerben adózza
     profile:
       activity:
-        prompt: Gazdasági tevékenység (szabad szöveg is elég; használd az IAE-kódot, ha ismered)
+        prompt: Gazdasági tevékenység (szabad szöveg is elég; használd az IAE-kódot,
+          ha ismered)
       address-postcode:
         prompt: Adózási cím irányítószáma
       iva-regime:
