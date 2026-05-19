@@ -488,18 +488,20 @@ def config_profile_duplicate(
     )
 
 
-_config_init_callback = app.command(
-    "init",
-    help=tr("cli.config.init.help", default="Initialize a new active profile and config bucket."),
+# The wizard's persist_answers path detects an existing pointer and
+# calls `set_active_fields` rather than `register_active_profile`, so a
+# single closure powers both "create" and "edit" semantics with the
+# positional ``profile_name`` argument deciding which side of the
+# branch runs.
+_config_profile_create_callback = profile_app.command(
+    "create",
+    help=tr(
+        "cli.config.profile.create_help",
+        default="Initialize a new active profile and config bucket.",
+    ),
 )(_wizard_init_command)
 
 
-# Re-runs the wizard against the same backend so an operator can update
-# an existing profile interactively. The wizard's persist_answers path
-# detects an existing pointer and calls `set_active_fields` rather than
-# `register_active_profile`; the same closure powers both "create" and
-# "edit" semantics with the chosen `--profile NAME` deciding which side
-# of the branch runs.
 _config_profile_edit_callback = profile_app.command(
     "edit",
     help=tr(

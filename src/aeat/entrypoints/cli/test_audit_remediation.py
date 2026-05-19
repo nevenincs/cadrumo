@@ -72,10 +72,10 @@ def test_overview_calendar_for_general_iva_includes_modelo_303() -> None:
     init = _invoke(
         [
             "config",
-            "init",
-            "--quiet",
-            "--profile",
+            "profile",
+            "create",
             "operator",
+            "--quiet",
             "--tax-id",
             "12345678Z",
             "--activity",
