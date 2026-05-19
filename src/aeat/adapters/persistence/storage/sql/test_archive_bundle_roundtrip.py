@@ -64,107 +64,140 @@ def test_archive_bundle_round_trips_three_rows(tmp_path: Path) -> None:
         Base.metadata.create_all(engine)
         try:
             repo = SecureObjectRepository(engine=engine)
+            rows = _ARCHIVE_BUNDLE_FIXTURE_ROWS
 
-            rows = (
-                (
-                    "aeat.test.filing.drafts",
-                    "draft-2025-1T-303-zzz",
-                    SensitivityClass.FINANCIAL,
-                    3,
-                    b"ENVELOPE_BYTES_FINANCIAL_303",
-                ),
-                (
-                    "aeat.test.justificantes",
-                    "ABCD1234EFGH5678",
-                    SensitivityClass.AUDIT,
-                    1,
-                    b"ENVELOPE_BYTES_AUDIT_JUSTIFICANTE",
-                ),
-                (
-                    "aeat.test.sessions",
-                    "/profile/active/aeat-session",
-                    SensitivityClass.SESSION,
-                    1,
-                    b"ENVELOPE_BYTES_SESSION_STATE",
-                ),
-            )
-
-            # Phase 1: original saves under natural keys.
-            for namespace, natural_key, classification, schema_version, payload in rows:
-                repo.save(
-                    namespace=namespace,
-                    object_key=natural_key,
-                    classification=classification,
-                    schema_version=schema_version,
-                    written_at=datetime.now(UTC),
-                    payload=payload,
-                )
-
-            # Phase 2: walk every row as opaque ciphertext + hashed key.
-            # The raw walk yields the on-wire ciphertext payload alongside
-            # the HMAC of the natural key. The HMAC digest is what the
-            # restore needs; the ciphertext payload is what the remote
-            # mirror would consume.
+            _save_archive_bundle_rows(repo, rows=rows)
             bundle = tuple(repo.iter_all_records_raw())
-            assert len(bundle) == len(rows)
-            for raw in bundle:
-                assert len(raw.object_key) == 32, "HMAC digest must be 32 bytes"
-                assert isinstance(raw.payload, bytes)
-                # The on-wire payload IS ciphertext: it must not contain the
-                # plaintext sentinel bytes. (A regression that bypassed the
-                # column encryptor would leak the sentinel.)
-                for _, _, _, _, plaintext in rows:
-                    assert plaintext not in raw.payload
+            _assert_raw_bundle_is_ciphertext(bundle, rows=rows)
+            bundle_by_namespace = _index_bundle_by_namespace(bundle)
 
-            # Index the bundle by (namespace, hashed_object_key) so the
-            # restore loop can pair each plaintext to its HMAC digest.
-            bundle_by_namespace: dict[str, dict[bytes, object]] = {}
-            for raw in bundle:
-                bundle_by_namespace.setdefault(raw.namespace, {})[raw.object_key] = raw
+            _wipe_and_recreate_secure_objects_table(engine, repo=repo)
+            _restore_rows_under_hashed_keys(repo, rows=rows, bundle_by_namespace=bundle_by_namespace)
 
-            # Phase 3: nuke the table and rebuild. The restore replays each
-            # original plaintext payload under the captured HMAC digest;
-            # the column re-encrypts on insert.
-            Base.metadata.drop_all(engine)
-            Base.metadata.create_all(engine)
-            assert tuple(repo.iter_all_records_raw()) == ()
-
-            # Re-derive each row's HMAC by walking iter_all_records_raw of
-            # the original engine state; since we already captured `bundle`
-            # before the wipe, we pair up by namespace + natural-key
-            # ordering. A real restore would index the bundle on disk and
-            # pair by namespace + a stable inner key; for the test, the
-            # one-row-per-namespace shape lets us match deterministically.
-            for namespace, _natural_key, classification, schema_version, payload in rows:
-                # The bundle has exactly one row per namespace in this fixture.
-                ns_entries = bundle_by_namespace[namespace]
-                assert len(ns_entries) == 1
-                hashed_key = next(iter(ns_entries))
-                raw = ns_entries[hashed_key]
-                repo.save_with_raw_key(
-                    namespace=namespace,
-                    hashed_object_key=hashed_key,
-                    classification=classification,
-                    schema_version=schema_version,
-                    written_at=raw.written_at,  # type: ignore[attr-defined]
-                    payload=payload,
-                )
-
-            # Phase 4: load back under the original natural keys.
-            # save_with_raw_key restores the row at the same HMAC digest
-            # the original save() produced (because the master key is
-            # the same), so load() (which re-derives the HMAC of the
-            # natural key) finds the row.
-            for namespace, natural_key, classification, schema_version, payload in rows:
-                loaded = repo.load(
-                    namespace,
-                    natural_key,
-                    expected_class=classification,
-                    max_supported_version=schema_version,
-                )
-                assert loaded is not None, f"row {natural_key!r} did not survive the bundle round-trip"
-                assert loaded.payload == payload
-                assert loaded.classification is classification
-                assert loaded.schema_version == schema_version
+            _assert_rows_load_back_through_natural_keys(repo, rows=rows)
         finally:
             engine.dispose()
+
+
+_ARCHIVE_BUNDLE_FIXTURE_ROWS: tuple[tuple[str, str, SensitivityClass, int, bytes], ...] = (
+    (
+        "aeat.test.filing.drafts",
+        "draft-2025-1T-303-zzz",
+        SensitivityClass.FINANCIAL,
+        3,
+        b"ENVELOPE_BYTES_FINANCIAL_303",
+    ),
+    (
+        "aeat.test.justificantes",
+        "ABCD1234EFGH5678",
+        SensitivityClass.AUDIT,
+        1,
+        b"ENVELOPE_BYTES_AUDIT_JUSTIFICANTE",
+    ),
+    (
+        "aeat.test.sessions",
+        "/profile/active/aeat-session",
+        SensitivityClass.SESSION,
+        1,
+        b"ENVELOPE_BYTES_SESSION_STATE",
+    ),
+)
+
+
+def _save_archive_bundle_rows(
+    repo: SecureObjectRepository,
+    *,
+    rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
+) -> None:
+    """Phase 1: original saves under natural keys."""
+    for namespace, natural_key, classification, schema_version, payload in rows:
+        repo.save(
+            namespace=namespace,
+            object_key=natural_key,
+            classification=classification,
+            schema_version=schema_version,
+            written_at=datetime.now(UTC),
+            payload=payload,
+        )
+
+
+def _assert_raw_bundle_is_ciphertext(
+    bundle: tuple,  # type: ignore[type-arg]
+    *,
+    rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
+) -> None:
+    """Phase 2 asserts: the iter_all_records_raw walk yields ciphertext + HMAC keys.
+
+    Every raw row carries a 32-byte HMAC digest of the natural key
+    and a ``bytes`` payload that MUST be the on-wire ciphertext.
+    A regression that bypassed the column encryptor would leak one
+    of the plaintext sentinels into ``raw.payload``; the inclusion
+    check below catches that class of failure.
+    """
+    assert len(bundle) == len(rows)
+    for raw in bundle:
+        assert len(raw.object_key) == 32, "HMAC digest must be 32 bytes"
+        assert isinstance(raw.payload, bytes)
+        for _, _, _, _, plaintext in rows:
+            assert plaintext not in raw.payload
+
+
+def _index_bundle_by_namespace(bundle: tuple) -> dict[str, dict[bytes, object]]:  # type: ignore[type-arg]
+    """Index the raw bundle by ``(namespace, hashed_object_key)``.
+
+    The restore loop pairs each plaintext payload to its HMAC
+    digest through this index; the one-row-per-namespace fixture
+    shape makes the lookup deterministic.
+    """
+    bundle_by_namespace: dict[str, dict[bytes, object]] = {}
+    for raw in bundle:
+        bundle_by_namespace.setdefault(raw.namespace, {})[raw.object_key] = raw
+    return bundle_by_namespace
+
+
+def _wipe_and_recreate_secure_objects_table(engine, *, repo: SecureObjectRepository) -> None:  # type: ignore[no-untyped-def]
+    """Phase 3: drop the table, recreate it empty, and assert the raw walk yields nothing."""
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    assert tuple(repo.iter_all_records_raw()) == ()
+
+
+def _restore_rows_under_hashed_keys(
+    repo: SecureObjectRepository,
+    *,
+    rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
+    bundle_by_namespace: dict[str, dict[bytes, object]],
+) -> None:
+    """Phase 3b: replay each plaintext under the captured HMAC digest via save_with_raw_key."""
+    for namespace, _natural_key, classification, schema_version, payload in rows:
+        ns_entries = bundle_by_namespace[namespace]
+        assert len(ns_entries) == 1
+        hashed_key = next(iter(ns_entries))
+        raw = ns_entries[hashed_key]
+        repo.save_with_raw_key(
+            namespace=namespace,
+            hashed_object_key=hashed_key,
+            classification=classification,
+            schema_version=schema_version,
+            written_at=raw.written_at,  # type: ignore[attr-defined]
+            payload=payload,
+        )
+
+
+def _assert_rows_load_back_through_natural_keys(
+    repo: SecureObjectRepository,
+    *,
+    rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
+) -> None:
+    """Phase 4: load each row back through its natural key and assert payload + class + version."""
+    for namespace, natural_key, classification, schema_version, payload in rows:
+        loaded = repo.load(
+            namespace,
+            natural_key,
+            expected_class=classification,
+            max_supported_version=schema_version,
+        )
+        assert loaded is not None, f"row {natural_key!r} did not survive the bundle round-trip"
+        assert loaded.payload == payload
+        assert loaded.classification is classification
+        assert loaded.schema_version == schema_version
