@@ -189,7 +189,7 @@ class EnvelopeVersionError(PersistenceError):
     """
 
 
-class PathContainmentError(PersistenceError):
+class PathContainmentError(PersistenceError, ValueError):
     """Raised when a computed path escapes its configured root directory."""
 
 
