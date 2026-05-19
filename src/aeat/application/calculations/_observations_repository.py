@@ -39,9 +39,12 @@ from ...adapters.persistence.storage.errors import (
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.calculations.registry._bindings import RegistryFilingObservation
+from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 
 _OBSERVATION_NAMESPACE: Final[str] = "aeat.calculations.observations"
 _OBSERVATION_ENVELOPE_VERSION: Final[int] = 1
+_IVA_WALLET_DECISION_NAMESPACE: Final[str] = "aeat.calculations.iva_wallet.reconciliation_decisions"
+_IVA_WALLET_DECISION_ENVELOPE_VERSION: Final[int] = 1
 
 
 class _ObservationEnvelopePayload(BaseModel):
@@ -66,6 +69,14 @@ class _ObservationEnvelopePayload(BaseModel):
     )
 
 
+class _IvaWalletDecisionEnvelopePayload(BaseModel):
+    """Serialisable wrapper for an IVA wallet reconciliation decision."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    decision: IvaCompensationReconciliationDecision
+
+
 def observation_key(modelo: str, filing_year: int, period: str) -> str:
     """Stable repository key for a `(modelo, filing_year, period)` triple.
 
@@ -79,6 +90,16 @@ def observation_key(modelo: str, filing_year: int, period: str) -> str:
     if not 2000 <= filing_year <= 2099:
         raise ValueError(f"observation filing_year {filing_year} out of supported range [2000, 2099]")
     return f"{modelo}:{filing_year}:{period}"
+
+
+def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: str) -> str:
+    """Stable latest-decision key for one taxpayer and Modelo 303 target period."""
+
+    safe_repository_id(taxpayer_nif, context="taxpayer_nif")
+    safe_repository_id(target_period, context="target_period")
+    if not 2000 <= target_year <= 2099:
+        raise ValueError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
+    return f"{taxpayer_nif}:{target_year}:{target_period}"
 
 
 class CalculationObservationRepository:
@@ -187,8 +208,61 @@ class CalculationObservationRepository:
             observation_key(modelo, filing_year, period),
         )
 
+    def save_iva_wallet_decision(
+        self,
+        decision: IvaCompensationReconciliationDecision,
+    ) -> None:
+        """Persist the latest IVA wallet reconciliation decision for a target period."""
+
+        payload = _IvaWalletDecisionEnvelopePayload(decision=decision)
+        envelope = Envelope[_IvaWalletDecisionEnvelopePayload](
+            schema_version=_IVA_WALLET_DECISION_ENVELOPE_VERSION,
+            written_at=decision.decided_at,
+            classification=SensitivityClass.AUDIT,
+            payload=payload,
+        )
+        self._objects.save(
+            namespace=_IVA_WALLET_DECISION_NAMESPACE,
+            object_key=iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period),
+            classification=SensitivityClass.AUDIT,
+            schema_version=_IVA_WALLET_DECISION_ENVELOPE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+    def load_iva_wallet_decision(
+        self,
+        taxpayer_nif: str,
+        target_year: int,
+        target_period: str,
+    ) -> IvaCompensationReconciliationDecision | None:
+        """Return the latest persisted IVA wallet reconciliation decision."""
+
+        key = iva_wallet_decision_key(taxpayer_nif, target_year, target_period)
+        record = self._objects.load(
+            _IVA_WALLET_DECISION_NAMESPACE,
+            key,
+            expected_class=SensitivityClass.AUDIT,
+            max_supported_version=_IVA_WALLET_DECISION_ENVELOPE_VERSION,
+        )
+        if record is None:
+            return None
+        envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not SensitivityClass.AUDIT:
+            raise ClassificationError(
+                f"IVA wallet decision {key} has classification {envelope.classification}; "
+                f"consumer expected {SensitivityClass.AUDIT}",
+            )
+        if envelope.schema_version > _IVA_WALLET_DECISION_ENVELOPE_VERSION:
+            raise EnvelopeVersionError(
+                f"IVA wallet decision {key} is at version {envelope.schema_version}; "
+                f"consumer supports up to {_IVA_WALLET_DECISION_ENVELOPE_VERSION}",
+            )
+        return envelope.payload.decision
+
 
 __all__ = [
     "CalculationObservationRepository",
+    "iva_wallet_decision_key",
     "observation_key",
 ]

@@ -41,9 +41,76 @@ filed_app = typer.Typer(
 )
 app.add_typer(filed_app, name="filed")
 
+iva_wallet_app = typer.Typer(
+    name="iva-wallet",
+    help=tr(
+        "cli.app.live.iva_wallet.app_help",
+        default="AEAT IVA compensation wallet capture (read-only).",
+    ),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(iva_wallet_app, name="iva-wallet")
+
 
 def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
+
+
+@iva_wallet_app.command(
+    "pull",
+    help=tr(
+        "cli.app.live.iva_wallet.pull_help",
+        default="Live-fetch and persist AEAT's IVA compensation wallet.",
+    ),
+)
+def iva_wallet_pull_cmd(
+    ctx: typer.Context,
+    year: Annotated[
+        int,
+        typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help")),
+    ],
+    period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help"))],
+    taxpayer_nif: Annotated[
+        str | None,
+        typer.Option(
+            "--taxpayer-nif",
+            help=tr(
+                "cli.app.live.iva_wallet.taxpayer_nif_help",
+                default="Taxpayer NIF; defaults to authenticated identity.",
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Pull the authenticated AEAT IVA compensation wallet.
+
+    This is a live read. It refuses unless `AEAT_LIVE_TESTS_ENABLED=1`
+    is set and can trigger the configured authentication provider,
+    including Cl@ve Móvil manual approval.
+    """
+
+    from ...application.live import capture_iva_compensation_wallet
+
+    report = asyncio.run(
+        capture_iva_compensation_wallet(
+            target_year=year,
+            target_period=period,
+            taxpayer_nif=taxpayer_nif,
+        )
+    )
+    _emit(
+        ctx,
+        report,
+        (
+            _metric_line("taxpayer_nif", report.taxpayer_nif),
+            _metric_line("target_year", report.target_year),
+            _metric_line("target_period", report.target_period),
+            _metric_line("row_count", report.row_count),
+            _metric_line("total_pending", report.total_pending),
+            _metric_line("captured_at", report.captured_at.isoformat()),
+            _metric_line("observation_path", report.observation_path),
+        ),
+    )
 
 
 @filed_app.command("list", help=tr("cli.app.live.filed.list_help"))
@@ -1041,6 +1108,8 @@ __all__ = [
     "filed_capture_cmd",
     "filed_capture_sources_cmd",
     "filed_list_cmd",
+    "iva_wallet_app",
+    "iva_wallet_pull_cmd",
     "portals_app",
     "portals_list",
     "portals_show",

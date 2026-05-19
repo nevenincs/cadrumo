@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
+from decimal import Decimal
 from typing import Final, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
@@ -193,6 +194,51 @@ class ObservedCasillaValue(BaseModel):
     mode: Literal["read"] = "read"
 
 
+class IvaCompensationWalletRow(BaseModel):
+    """One AEAT wallet row for IVA compensation generated in a source period.
+
+    The row represents external AEAT state, not a filed-declaration
+    casilla. It keeps the generation period and the monetary movement
+    columns separate so reconciliation can review expiry, application,
+    and remaining balance scenarios without collapsing evidence into a
+    single synthetic filing.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    generation_year: int = Field(ge=2000, le=2099)
+    generation_period: str = Field(min_length=1, max_length=8)
+    generated_amount: Decimal = Field(ge=Decimal("0"))
+    applied_amount: Decimal = Field(ge=Decimal("0"))
+    pending_amount: Decimal = Field(ge=Decimal("0"))
+    raw_label: str | None = Field(default=None, min_length=1, max_length=256)
+    mode: Literal["read"] = "read"
+
+
+class IvaCompensationWalletObservation(BaseModel):
+    """Read-only observation of AEAT's IVA compensation wallet.
+
+    Produced by the authenticated Sede wallet reader. Calculation code
+    must not consume this record directly; it is raw evidence consumed
+    by the reconciliation layer, which emits the effective binding
+    decision for Modelo 303 casilla `110`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    taxpayer_nif: str = Field(min_length=1, max_length=32)
+    authenticated_identity: str = Field(min_length=1, max_length=32)
+    target_modelo: Literal["303"] = "303"
+    target_year: int = Field(ge=2000, le=2099)
+    target_period: str = Field(min_length=1, max_length=8)
+    rows: tuple[IvaCompensationWalletRow, ...] = ()
+    total_pending: Decimal = Field(ge=Decimal("0"))
+    source_url: AnyHttpUrl
+    captured_at: datetime
+    raw_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    mode: Literal["read"] = "read"
+
+
 class FiledDeclarationObservation(BaseModel):
     """Normalized read-only observation of one filed AEAT declaration.
 
@@ -231,6 +277,8 @@ __all__ = [
     "Expediente",
     "FiledDeclarationArtefact",
     "FiledDeclarationObservation",
+    "IvaCompensationWalletObservation",
+    "IvaCompensationWalletRow",
     "JustificanteRef",
     "ObservedCasillaValue",
     "SedeCapture",

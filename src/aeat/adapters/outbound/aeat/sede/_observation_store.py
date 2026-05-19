@@ -11,7 +11,7 @@ from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClas
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....persistence.storage.sql import SecureObjectRepository
 from ._errors import ExpedienteNotFoundError, SedeValidationError
-from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation
+from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation, IvaCompensationWalletObservation
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
 _ARTEFACT_CLASSIFICATION = SensitivityClass.FINANCIAL
@@ -19,6 +19,7 @@ _OBSERVATION_CLASSIFICATION = SensitivityClass.FINANCIAL
 _OBSERVATION_ENVELOPE_VERSION = 1
 _ARTEFACT_NAMESPACE = "aeat.outbound.aeat.sede.filed_declaration.artefacts"
 _OBSERVATION_NAMESPACE = "aeat.outbound.aeat.sede.filed_declaration.observations"
+_IVA_WALLET_OBSERVATION_NAMESPACE = "aeat.outbound.aeat.sede.iva_compensation_wallet.observations"
 _STORAGE_REF_PREFIX = "secure-object:financial:"
 
 
@@ -120,6 +121,56 @@ class FiledDeclarationObservationStore:
             )
         return envelope.payload
 
+    def persist_iva_wallet_observation(self, observation: IvaCompensationWalletObservation) -> Path:
+        """Persist a read-only IVA wallet observation and return its logical path."""
+
+        object_key = self._iva_wallet_observation_key(
+            observation.taxpayer_nif,
+            observation.target_year,
+            observation.target_period,
+            observation.captured_at.isoformat(),
+        )
+        envelope = Envelope[IvaCompensationWalletObservation](
+            schema_version=_OBSERVATION_ENVELOPE_VERSION,
+            written_at=datetime.now(UTC),
+            classification=_OBSERVATION_CLASSIFICATION,
+            payload=observation,
+        )
+        self._objects.save(
+            namespace=_IVA_WALLET_OBSERVATION_NAMESPACE,
+            object_key=object_key,
+            classification=_OBSERVATION_CLASSIFICATION,
+            schema_version=_OBSERVATION_ENVELOPE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+        return _logical_path(_IVA_WALLET_OBSERVATION_NAMESPACE, object_key)
+
+    def load_iva_wallet_observation(self, path: Path) -> IvaCompensationWalletObservation:
+        """Load and decrypt an IVA wallet observation."""
+
+        object_key = Path(path).name
+        record = self._objects.load(
+            _IVA_WALLET_OBSERVATION_NAMESPACE,
+            object_key,
+            expected_class=_OBSERVATION_CLASSIFICATION,
+            max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
+        )
+        if record is None:
+            raise ExpedienteNotFoundError(f"IVA wallet observation not found: {object_key}")
+        envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not _OBSERVATION_CLASSIFICATION:
+            raise ClassificationError(
+                f"IVA wallet observation {object_key} has classification {envelope.classification}; "
+                f"consumer expected {_OBSERVATION_CLASSIFICATION}",
+            )
+        if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+            raise EnvelopeVersionError(
+                f"IVA wallet observation {object_key} is at version {envelope.schema_version}; "
+                f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
+            )
+        return envelope.payload
+
     def _observation_key(
         self,
         modelo: str,
@@ -133,6 +184,23 @@ class FiledDeclarationObservationStore:
                 str(ejercicio),
                 _safe_segment(period),
                 _safe_segment(expediente_id),
+            )
+        )
+        return hashlib.sha256(key.encode("utf-8")).hexdigest()
+
+    def _iva_wallet_observation_key(
+        self,
+        taxpayer_nif: str,
+        target_year: int,
+        target_period: str,
+        captured_at: str,
+    ) -> str:
+        key = "\x1f".join(
+            (
+                _safe_segment(taxpayer_nif),
+                str(target_year),
+                _safe_segment(target_period),
+                captured_at,
             )
         )
         return hashlib.sha256(key.encode("utf-8")).hexdigest()

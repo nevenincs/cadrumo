@@ -711,6 +711,10 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
+class ModeloIvaWalletReconciliationBlocked(ModeloError):
+    """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
+
+
 def calculate_modelo_revision(
     work_unit_id: str,
     *,
@@ -720,6 +724,7 @@ def calculate_modelo_revision(
     enum_binding_values: Mapping[str, str] | None = None,
     backend_binding_values: Mapping[str, Decimal] | None = None,
     backend_casilla_inputs: Mapping[str, Decimal] | None = None,
+    iva_compensation_decision: object | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     source_transaction_ids: tuple[str, ...] = (),
@@ -779,6 +784,14 @@ def calculate_modelo_revision(
     caller_binding_values = dict(binding_values or {})
     caller_enum_binding_values = dict(enum_binding_values or {})
     lower_precedence_binding_values = dict(backend_binding_values or {})
+    _apply_iva_compensation_decision_binding(
+        work_unit.modelo,
+        work_unit.filing_year,
+        work_unit.period,
+        caller_binding_values=caller_binding_values,
+        backend_binding_values=lower_precedence_binding_values,
+        decision=iva_compensation_decision,
+    )
     borrador_result = _resolve_borrador_bindings_for_calculation(
         bucket_id=work_unit.bucket_id,
         modelo=work_unit.modelo,
@@ -906,6 +919,43 @@ def calculate_modelo_revision(
     return revision
 
 
+def _apply_iva_compensation_decision_binding(
+    modelo: str,
+    filing_year: int,
+    period: str,
+    *,
+    caller_binding_values: dict[str, Decimal],
+    backend_binding_values: dict[str, Decimal],
+    decision: object | None,
+) -> None:
+    """Apply a non-blocking IVA wallet decision to Modelo 303 binding values."""
+
+    if decision is None or modelo != "303":
+        return
+    from ..calculations._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
+
+    if not isinstance(decision, IvaCompensationReconciliationDecision):
+        raise ModeloIvaWalletReconciliationBlocked("iva_compensation_decision has an unsupported type")
+    binding_id = "modelo-303-compensacion-pendiente-anteriores"
+    if decision.target_year != filing_year or decision.target_period != period:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "IVA wallet reconciliation decision target does not match the Modelo 303 work unit"
+        )
+    if decision.blocked:
+        raise ModeloIvaWalletReconciliationBlocked(
+            f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}: {decision.reason}"
+        )
+    if decision.selected_amount is None:
+        raise ModeloIvaWalletReconciliationBlocked("IVA wallet reconciliation decision has no selected amount")
+    selected = Decimal(decision.selected_amount)
+    caller_value = caller_binding_values.get(binding_id)
+    if caller_value is not None and Decimal(caller_value) != selected:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "caller binding for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
+        )
+    backend_binding_values[binding_id] = selected
+
+
 def calculate_modelo_revision_from_bucket_aggregation(
     work_unit_id: str,
     *,
@@ -913,6 +963,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     casilla_inputs: Mapping[str, Decimal] | None = None,
     binding_values: Mapping[str, Decimal] | None = None,
     enum_binding_values: Mapping[str, str] | None = None,
+    iva_compensation_decision: object | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     filing_period_date: date | None = None,
@@ -979,6 +1030,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         binding_values=binding_values or {},
         backend_binding_values=ledger_bindings.binding_values,
         backend_casilla_inputs=backend_inputs,
+        iva_compensation_decision=iva_compensation_decision,
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=relation_values,
@@ -2393,6 +2445,7 @@ __all__ = [
     "ExternalFilingImportError",
     "FilingRecordNotFoundError",
     "ModeloAggregationBindingError",
+    "ModeloIvaWalletReconciliationBlocked",
     "ModeloWorkflowGateError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
