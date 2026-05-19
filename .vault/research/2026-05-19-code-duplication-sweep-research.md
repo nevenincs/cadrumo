@@ -4642,3 +4642,81 @@ Locale file scan across `src/aeat/locales/` (en.yml, es.yml, ca.yml, hu.yml):
 
 **Next Steps**: Dispatch W04.P08 (coder-beta in-flight) to eliminate remaining ~40 active Filing* code refs. Maintain task #23 as complete. Monitor W04.P11/W04.P13 pre-staged queues for dispatch readiness. Full alias sweep (#24) remains pending.
 
+
+## SecureRepositoryContract Consumer Migration Pre-Analysis (Reader-5)
+
+**Scope:** Identify test files with cloned anti-tautology functions, check repository migration status, propose consumer-suite migration for migrated repos.
+
+**Status:** Complete. Analysis executed 2026-05-19T14:40 UTC.
+
+### Test File Analysis Table
+
+| Test File | Repository Tested | Repository Class | SecureBoundRepository? | Anti-Tautology Functions | Consumer Migration Effort |
+|-----------|------------------|------------------|----------------------|------------------------|--------------------------|
+| `test_submission_repository.py` | SubmissionRepository | `SubmissionRepository(SecureBoundRepository[ModeloPresentado])` | ✓ YES | 4 cloned functions | **READY** — 1 call to contract suite replaces all 4 |
+| `test_complementaria_repository.py` | FilingAmendmentRepository | `BaseAmendmentRepository(SecureObjectRepository)` | ✗ NO (uses SecureObjectRepository) | 3 cloned functions | **BLOCKED** — repo not yet migrated; blocked on task #6 |
+| `test_history_repository.py` | FilingHistoryRepository | `FilingHistoryRepository(SecureBoundRepository[FilingHistory])` | ✓ YES | 3 cloned functions | **READY** — 1 call to contract suite replaces all 3 |
+| `test_repository.py` | ModeloDraftRepository | `ModeloDraftRepository(SecureBoundRepository[ModeloDraft])` | ✓ YES | 4 cloned functions | **READY** — 1 call to contract suite replaces all 4 |
+| `test_repository.py` (domain/justificante) | JustificanteRepository | `JustificanteRepository(SecureBoundRepository[Justificante])` | ✓ YES | 3 cloned functions | **READY** — 1 call to contract suite replaces all 3 |
+| `test_repository.py` (domain/submission) | SubmissionRepository | `SubmissionRepository(SecureBoundRepository[ModeloPresentado])` | ✓ YES | 4 cloned functions | **READY** — 1 call to contract suite replaces all 4 |
+| `test_repository_anti_tautology.py` | UserProfileLifecycleRepository + UserProfileSnapshotRepository | Both use `SecureObjectRepository` | ✗ NO (both use SecureObjectRepository) | 0 cloned functions | **OUT-OF-SCOPE** — these repositories use a different pattern (SecureObjectRepository, not SecureBoundRepository) |
+| `test_roundtrip_anti_tautology.py` | ModeloDraftRepository | `ModeloDraftRepository(SecureBoundRepository[ModeloDraft])` | ✓ YES | 0 cloned functions | **N/A** — file contains separate roundtrip validation, not anti-tautology clones |
+
+### Findings
+
+**Ready for Consumer Migration (5 test files):**
+- `src/aeat/adapters/persistence/storage/test_submission_repository.py` — 4 anti-tautology functions → 1 contract suite call
+- `src/aeat/application/filing/test_history_repository.py` — 3 anti-tautology functions → 1 contract suite call
+- `src/aeat/application/filing/test_repository.py` (filing drafts) — 4 anti-tautology functions → 1 contract suite call
+- `src/aeat/domain/justificante/test_repository.py` — 3 anti-tautology functions → 1 contract suite call
+- `src/aeat/domain/submission/test_repository.py` — 4 anti-tautology functions → 1 contract suite call
+
+**Blocked (1 test file):**
+- `src/aeat/application/filing/test_complementaria_repository.py` — Repository uses `SecureObjectRepository`, not yet migrated to `SecureBoundRepository`. Blocked by task #6 (SecureBoundRepository migration: remaining 20 repositories).
+
+**Out-of-Scope (2 test files):**
+- `src/aeat/application/user_profile/test_repository_anti_tautology.py` — Repositories (`UserProfileLifecycleRepository`, `UserProfileSnapshotRepository`) use `SecureObjectRepository` pattern (bucket-aware stateful repos, not SecureBoundRepository); covered by task #42 (separate consolidation patterns).
+- `src/aeat/domain/filing/test_roundtrip_anti_tautology.py` — Contains roundtrip validation (not anti-tautology clones); separate fixture validation strategy; no consumer migration needed.
+
+### Contract Suite Consumer Migration Pattern
+
+For migrated repos, the pattern is:
+
+```python
+# BEFORE: 4 cloned anti-tautology functions (~40 lines)
+def test_database_payload_is_encrypted_audit_data(): ...
+def test_round_trip_preserves_payload(): ...
+def test_load_returns_none_when_absent(): ...
+def test_delete_missing_returns_false(): ...
+
+# AFTER: 1 call to the contract suite
+from aeat.adapters.persistence.storage.test_secure_repository_contract import SecureRepositoryContractCase
+
+class TestSubmissionRepositoryContract(SecureRepositoryContractCase):
+    @property
+    def repository_under_test(self) -> SubmissionRepository:
+        return SubmissionRepository(envelope_factory, key_provider)
+    
+    @property
+    def payload_type(self) -> type[ModeloPresentado]:
+        return ModeloPresentado
+```
+
+The contract suite runs all 4 anti-tautology checks as part of its `assert_secure_repository_contract(...)` call, eliminating duplication and ensuring consistency.
+
+### Task Dispatch Recommendation
+
+Create two follow-up coder tasks:
+1. **Task: SecureRepositoryContract consumer migration — ready repos** (5 test files, low-risk)
+   - Delete cloned anti-tautology functions from the 5 ready test files
+   - Add `SecureRepositoryContractCase` inheritance
+   - Verify contract suite runs + tests pass
+   - Effort: ~2 hours, mechanical, no logic changes
+
+2. **Task: SecureRepositoryContract consumer migration — blocked repos** (1 test file; defer until task #6 lands)
+   - Unblock after `BaseAmendmentRepository` migrates to `SecureBoundRepository`
+
+### Append Verification
+
+Section "## SecureRepositoryContract Consumer Migration Pre-Analysis" landed in `.vault/research/2026-05-19-code-duplication-sweep-research.md`.
+
