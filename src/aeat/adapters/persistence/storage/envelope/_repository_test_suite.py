@@ -46,7 +46,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, cast
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -229,7 +229,8 @@ def _foreign_class_object_refused(
     repo = case.repository_factory()
     foreign = _FOREIGN_CLASS_MAP[repo.sensitivity]
     identifier = repo.extract_identifier(case.first_payload)
-    envelope_cls = Envelope[type(case.first_payload)]  # type: ignore[valid-type]
+    payload_cls = type(case.first_payload)
+    envelope_cls = Envelope.__class_getitem__(payload_cls)
     bad = envelope_cls(
         schema_version=repo.schema_version,
         written_at=datetime.now(UTC),
@@ -290,9 +291,9 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload(
     )
 
 
-_PARAM_CHECKS: tuple[
-    tuple[str, Callable[[SecureRepositoryContractCase[BaseModel]], None]], ...
-] = (
+_ParamCheck = Callable[[SecureRepositoryContractCase[BaseModel]], None]
+
+_PARAM_CHECKS: tuple[tuple[str, _ParamCheck], ...] = (
     ("test_round_trip_preserves_payload", _round_trip_preserves_payload),
     ("test_save_is_idempotent", _save_is_idempotent),
     ("test_load_returns_none_when_absent", _load_returns_none_when_absent),
@@ -343,13 +344,14 @@ def assert_secure_repository_contract(
 
     executed = 0
 
+    erased = cast(SecureRepositoryContractCase[BaseModel], case)
     for index, (label, check) in enumerate(_PARAM_CHECKS):
         db_path = tmp_path / f"contract-{index:02d}-{label}.db"
         provider = EphemeralMasterKeyProvider()
         with provider:
             engine = _activate_engine(db_path, monkeypatch)
             try:
-                check(case)  # type: ignore[arg-type]
+                check(erased)
             finally:
                 engine.dispose()
                 dispose_engine()
@@ -360,7 +362,7 @@ def assert_secure_repository_contract(
     with provider:
         engine = _activate_engine(db_path, monkeypatch)
         try:
-            _database_payload_is_encrypted_audit_data(case, db_path)  # type: ignore[arg-type]
+            _database_payload_is_encrypted_audit_data(erased, db_path)
         finally:
             engine.dispose()
             dispose_engine()
@@ -372,7 +374,7 @@ def assert_secure_repository_contract(
         engine = _activate_engine(db_path, monkeypatch)
         try:
             _boundary_catches_simulated_field_drop_via_corrupted_payload(
-                case,  # type: ignore[arg-type]
+                erased,
                 engine,
             )
         finally:
