@@ -4,12 +4,12 @@ Tests prove the aggregator threads ``VatOperation`` records into the
 correct prorrata pool per LIVA arts. 101-104, that art. 104 exclusions
 do NOT contribute to either pool, and that the provisional/definitiva
 orchestrators route the aggregator output into
-:class:`~aeat.domain.vat.ProrrataResult` values with the correct
+:class:`~aeat.domain.iva.ProrrataResult` values with the correct
 ``kind`` and ``period`` per LIVA arts. 105 and 109.
 
 No tautological assertions: the prorrata percentage itself is computed
 by the domain calculator (already covered in
-``src/aeat/domain/vat/test_prorrata.py``), and the integration tests
+``src/aeat/domain/iva/test_prorrata.py``), and the integration tests
 here verify that the aggregator's pool routing is faithful to the
 classification kind of each input record.
 """
@@ -32,7 +32,7 @@ from aeat.application.aggregation import (
     aggregate_prorrata_inputs,
     aggregate_provisional_prorrata,
 )
-from aeat.domain.vat import ProrrataKind, ProrrataRegime
+from aeat.domain.iva import ProrrataKind, ProrrataRegime
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

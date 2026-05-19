@@ -8,7 +8,7 @@ surfaces the error as a validation error in the enclosing
 
 The registry-grounded helpers
 :func:`is_eu_member_state_code` and :func:`assert_eu_member_state_code`
-anchor the EU axis to the substrate's :class:`aeat.domain.vat.EUMemberState`
+anchor the EU axis to the substrate's :class:`aeat.domain.iva.EUMemberState`
 enum. Modelo 369 binding selectors and the OSS / IOSS classifier
 boundary checks consume these helpers so the EU membership decision
 flows from the substrate, not from a hand-maintained list.
@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import re
 
-from ..vat import EUMemberState
+from ..iva import EUMemberState
 from ._errors import InvoiceValidationError
 
 __all__ = [
@@ -35,7 +35,7 @@ _ISO_2_RE = re.compile(r"^[A-Z]{2}$")
 
 EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(member.value.upper() for member in EUMemberState)
 """Closed set of ISO-3166 alpha-2 codes (uppercase) for the 27 EU
-Member States, sourced directly from :class:`aeat.domain.vat.EUMemberState`."""
+Member States, sourced directly from :class:`aeat.domain.iva.EUMemberState`."""
 
 
 def validate_country_code(value: str) -> str:
@@ -60,7 +60,7 @@ def is_eu_member_state_code(value: str) -> bool:
     """Return ``True`` when ``value`` matches one of the 27 EU Member State codes.
 
     The membership check is anchored to
-    :class:`aeat.domain.vat.EUMemberState`; if the substrate's enum
+    :class:`aeat.domain.iva.EUMemberState`; if the substrate's enum
     changes (Brexit-style additions or withdrawals) the helper picks
     up the new shape automatically.
 

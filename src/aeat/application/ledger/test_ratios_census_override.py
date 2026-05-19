@@ -15,7 +15,7 @@ import pytest
 
 from ...domain.categories import SpendingCategory
 from ._ratios import (
-    RatiosCensusOverrideWarning,
+    RatiosCensoOverrideWarning,
     census_business_pct_for,
     census_override_warning,
 )
@@ -41,7 +41,7 @@ def test_warning_emitted_when_home_office_override_diverges() -> None:
         raw_afectacion_ratio=Decimal("0.20"),
     )
 
-    assert isinstance(result, RatiosCensusOverrideWarning)
+    assert isinstance(result, RatiosCensoOverrideWarning)
     assert result.category is SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ
     assert result.override_ratio == Decimal("0.50")
     assert result.raw_afectacion_ratio == Decimal("0.20")

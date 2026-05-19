@@ -27,7 +27,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.vat import IvaFlowDirection, ProrrataKind, ProrrataRegime, VATCategory, VATRateKind
+from ...domain.vat import IvaFlowDirection, ProrrataKind, ProrrataRegime, IvaCategory, IvaRateKind
 from . import (
     AggregationValidationError,
     IvaLedgerAggregationIssueReason,
@@ -132,8 +132,8 @@ def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -
     observation = result.observations[0]
     assert observation.ledger_id == transaction.transaction_id
     assert observation.transaction_date == date(2026, 4, 5)
-    assert observation.category is VATCategory.DOMESTIC_GENERAL_21
-    assert observation.rate_kind is VATRateKind.GENERAL
+    assert observation.category is IvaCategory.DOMESTIC_GENERAL_21
+    assert observation.rate_kind is IvaRateKind.GENERAL
     assert observation.flow_direction is IvaFlowDirection.SOPORTADO
     assert observation.base_amount == transaction.taxable_base
     assert observation.iva_amount == transaction.iva_amount
@@ -182,8 +182,8 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
 
     assert result.issues == ()
     observation = result.observations[0]
-    assert observation.category is VATCategory.DOMESTIC_REDUCED_10
-    assert observation.rate_kind is VATRateKind.REDUCED
+    assert observation.category is IvaCategory.DOMESTIC_REDUCED_10
+    assert observation.rate_kind is IvaRateKind.REDUCED
     assert observation.flow_direction is IvaFlowDirection.REPERCUTIDO
     assert observation.iva_amount == Decimal("10.00")
 
@@ -433,8 +433,8 @@ def test_zero_and_super_reduced_rates_project_to_canonical_vat_categories() -> N
     )
 
     assert [observation.category for observation in result.observations] == [
-        VATCategory.DOMESTIC_ZERO,
-        VATCategory.DOMESTIC_SUPER_REDUCED_4,
+        IvaCategory.DOMESTIC_ZERO,
+        IvaCategory.DOMESTIC_SUPER_REDUCED_4,
     ]
 
 
