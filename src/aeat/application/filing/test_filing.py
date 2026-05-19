@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -14,8 +15,7 @@ from . import (
     FilingCalculateError,
     FilingDraft,
     FilingDraftError,
-    FilingDraftStatus,
-    FilingFindingSeverity,
+    ModeloDraftStatus,
     FilingValidationFinding,
     FilingValidator,
     FilingValueKind,
@@ -89,7 +89,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
     assert draft.schema_version == "registry:130:2019-y-siguientes"
     assert "19" in values
     assert values["19"].kind is FilingValueKind.COMPUTED
@@ -117,7 +117,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
     assert draft.schema_version == "registry:111:2019-y-siguientes"
     assert {"28", "30"} <= set(values)
     assert values["28"].kind is FilingValueKind.COMPUTED
@@ -139,7 +139,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
     assert draft.schema_version == "registry:115:2019-y-siguientes"
     assert {"03", "05"} <= set(values)
     assert values["03"].kind is FilingValueKind.COMPUTED
@@ -167,7 +167,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
     assert draft.schema_version == "registry:123:2024-y-siguientes"
     assert {"03", "06", "09", "12", "14"} <= set(values)
     assert values["03"].formula_trace == ("01", "02")
@@ -200,7 +200,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
     values = {value.casilla_id: value for value in draft.values}
     binding_values = {value.binding_id: value.value for value in draft.binding_values}
 
-    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.status is ModeloDraftStatus.READY_TO_SUBMIT
     assert draft.schema_version == "registry:131:2026"
     assert "15" in values
     assert binding_values["modelo-131.dpa.013-016.epigrafe-iae"] == "722"
@@ -300,13 +300,13 @@ def test_compute_draft_id_excludes_findings_and_status() -> None:
 def test_iter_findings_threshold() -> None:
     finding_error = FilingValidationFinding(
         casilla_id=None,
-        severity=FilingFindingSeverity.ERROR,
+        severity=BaseSeverity.ERROR,
         code="x",
         message=tr("translation"),
     )
     finding_info = FilingValidationFinding(
         casilla_id=None,
-        severity=FilingFindingSeverity.INFO,
+        severity=BaseSeverity.INFO,
         code="y",
         message=tr("translation"),
     )
@@ -341,7 +341,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
     )
 
-    assert approved.status is FilingDraftStatus.APPROVED
+    assert approved.status is ModeloDraftStatus.APPROVED
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
     assert approved.review_checksum is not None
@@ -376,7 +376,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
     )
 
-    assert approved.status is FilingDraftStatus.APPROVED
+    assert approved.status is ModeloDraftStatus.APPROVED
     assert approved.schema_version == "registry:111:2019-y-siguientes"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
@@ -404,7 +404,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
     )
 
-    assert approved.status is FilingDraftStatus.APPROVED
+    assert approved.status is ModeloDraftStatus.APPROVED
     assert approved.schema_version == "registry:115:2019-y-siguientes"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
@@ -438,7 +438,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
     )
 
-    assert approved.status is FilingDraftStatus.APPROVED
+    assert approved.status is ModeloDraftStatus.APPROVED
     assert approved.schema_version == "registry:123:2024-y-siguientes"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
@@ -480,7 +480,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     schema_provider = _schema_provider()
     draft = _draft(schema_provider).model_copy(
         update={
-            "status": FilingDraftStatus.SUBMITTED,
+            "status": ModeloDraftStatus.SUBMITTED,
             "approved_at": datetime(2026, 4, 18, 8, 0, tzinfo=UTC),
             "approved_by": "operator",
             "review_checksum": "a" * 64,
@@ -493,7 +493,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
         schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
     )
-    assert refreshed.status is FilingDraftStatus.SUBMITTED
+    assert refreshed.status is ModeloDraftStatus.SUBMITTED
     assert refreshed.approved_at is None
     assert refreshed.approved_by is None
     assert refreshed.review_checksum is None

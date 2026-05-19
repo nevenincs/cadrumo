@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 import pytest
 
 from ...core.resources import resources
@@ -12,7 +13,6 @@ from ...domain.user_profile import (
 from . import (
     ProfilePreflightService,
     ProfileValidationService,
-    ProfileValidationSeverity,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -36,7 +36,7 @@ def test_validation_reports_missing_required_fields(schema) -> None:
     required_misses = [
         issue
         for issue in report.issues
-        if issue.code == "required_field_missing" and issue.severity is ProfileValidationSeverity.ERROR
+        if issue.code == "required_field_missing" and issue.severity is BaseSeverity.ERROR
     ]
     assert len(required_misses) >= 1
 

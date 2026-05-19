@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.errors import BaseSeverity
 from collections.abc import Iterable
 
 from ...domain.user_profile import (
@@ -14,7 +15,6 @@ from ...domain.user_profile import (
 from . import (
     ProfileValidationIssue,
     ProfileValidationReport,
-    ProfileValidationSeverity,
 )
 
 
@@ -66,7 +66,7 @@ class ProfileValidationService:
         if binding is None:
             return (
                 ProfileValidationIssue(
-                    severity=ProfileValidationSeverity.ERROR,
+                    severity=BaseSeverity.ERROR,
                     code="unknown_field",
                     path=fact.path,
                     message=f"path {fact.path!r} does not match any schema field",
@@ -87,7 +87,7 @@ class ProfileValidationService:
         ):
             return (
                 ProfileValidationIssue(
-                    severity=ProfileValidationSeverity.WARNING,
+                    severity=BaseSeverity.WARNING,
                     code="effective_window_unused",
                     path=fact.path,
                     message=(
@@ -113,7 +113,7 @@ class ProfileValidationService:
                 if f"{section.key}.{field.key}" not in present:
                     issues.append(
                         ProfileValidationIssue(
-                            severity=ProfileValidationSeverity.ERROR,
+                            severity=BaseSeverity.ERROR,
                             code="required_field_missing",
                             path=f"{section.key}.{field.key}",
                             message=f"required field {section.key}.{field.key} is missing",
