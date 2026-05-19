@@ -51,7 +51,7 @@ Spanish stems are authoritative for tax-domain identifiers. The canonical stems,
 - modelo per AEAT Sede Electronica nomenclature and the per-modelo Ordenes Ministeriales (e.g. Orden HFP/227/2017 for Modelo 303). Supersedes form, tax_form, return_form. Always followed by the three-digit modelo number.
 - declaracion per Ley 58/2003 LGT Articulo 119 (BOE-A-2003-23186). Supersedes declaration, return when used in the LGT-119 sense.
 - autoliquidacion per Ley 58/2003 LGT Articulo 120. Supersedes self_assessment, self_liquidation.
-- justificante per AEAT Sede Electronica (CSV / justificante de presentacion workflow); regulatory framework Ley 40/2015 Articulo 27. Supersedes receipt, proof, confirmation when the artifact is the AEAT submission attestation. Does not absorb factura (commercial invoice, RD 1619/2012) or recibo (commercial receipt).
+- justificante per AEAT Sede Electronica (CSV / justificante de presentacion workflow); regulatory framework Ley 39/2015 LPAC Articulo 27 (BOE-A-2015-10565), with direct CSV regime grounded in Articulo 27.3 and Real Decreto 203/2021. Supersedes receipt, proof, confirmation when the artifact is the AEAT submission attestation. Does not absorb factura (commercial invoice, RD 1619/2012) or recibo (commercial receipt).
 - borrador per Ley 35/2006 IRPF Articulo 98 (AEAT Renta Web draft). Supersedes draft, prefill when the entity is the AEAT-prepared Modelo 100 draft.
 - renta per Ley 35/2006 IRPF (Titulo I, Capitulo I). Supersedes income in the IRPF base sense. Never collapses with English rental.
 - fincas (singular finca) per Ley Hipotecaria (Decreto 1946, BOE-A-1946-2453) and RDLeg 1/2004 del Catastro Inmobiliario. Supersedes real_estate, properties when the unit is a registrable real-estate parcel.
