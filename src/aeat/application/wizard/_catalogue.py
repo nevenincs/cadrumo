@@ -11,7 +11,7 @@ from __future__ import annotations
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
 from ...domain.deadlines._models import IVARegime
-from ...domain.profile import RentaDeclarationType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
+from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
 from ...domain.profile._ccaa import CCAA
 from ._models import (
     WizardChoice,
@@ -81,12 +81,12 @@ _OUTPUT_LANGUAGE_CHOICES: tuple[WizardChoice, ...] = tuple(
 
 _DECLARATION_TYPE_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
-        value=RentaDeclarationType.INDIVIDUAL.value,
+        value=RentaDeclaracionType.INDIVIDUAL.value,
         label=tr("wizard.setup.profile.taxation-type.choices.individual.label"),
         description=tr("wizard.setup.profile.taxation-type.choices.individual.description"),
     ),
     WizardChoice(
-        value=RentaDeclarationType.JOINT.value,
+        value=RentaDeclaracionType.JOINT.value,
         label=tr("wizard.setup.profile.taxation-type.choices.joint.label"),
         description=tr("wizard.setup.profile.taxation-type.choices.joint.description"),
     ),
