@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import typer
 
+from .profile import register as register_profile
 from .secure_objects import register as register_secure_objects
 
 app = typer.Typer(
@@ -21,6 +22,7 @@ app = typer.Typer(
 )
 
 register_secure_objects(app)
+register_profile(app)
 
 
 def main() -> None:
