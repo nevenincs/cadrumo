@@ -348,12 +348,8 @@ class RegistryValidator:
         # canonical role on every matching casilla.
         failures.extend(_validate_required_role_declarations(modelo_tuple))
         # Cross-revision drift detection: casillas sharing an id across
-        # revisions of a modelo should declare identical stable fields.
-        # This remains a warning at whole-registry validation because the
-        # committed corpus still carries known historical drift; callers
-        # that need a hard gate use
-        # validate_cross_revision_casilla_consistency.
-        _emit_cross_revision_drift_warnings(modelo_tuple)
+        # revisions of a modelo must declare identical stable fields.
+        failures.extend(_validate_cross_revision_casilla_consistency(modelo_tuple))
         _emit_semantic_role_typo_twin_warnings(modelo_tuple)
 
         if failures:
@@ -2656,23 +2652,6 @@ def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefiniti
         raise RegistryValidationError(
             "cross-revision casilla drift detected:\n" + "\n".join(f" - {failure}" for failure in failures)
         )
-
-
-def _emit_cross_revision_drift_warnings(
-    modelos: Iterable[ModeloDefinition],
-) -> None:
-    """Visibility surface for cross-revision drift.
-
-    Emits one ``warnings.warn`` per drift case found by
-    :func:`_validate_cross_revision_casilla_consistency`. Used as
-    the soft-enforcement entry point while the corpus is being
-    incrementally reconciled; the validator function remains the
-    hard-error gate when the operator flips the wiring at
-    ``RegistryValidator.validate_registry``.
-    """
-
-    for failure in _validate_cross_revision_casilla_consistency(modelos):
-        warnings.warn(failure, stacklevel=2)
 
 
 def _validate_cross_revision_casilla_consistency(
