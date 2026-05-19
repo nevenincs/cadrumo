@@ -46,10 +46,13 @@ class SnapshotNotFoundError(KeyError):
 
     Per-service subclasses (BorradorSnapshotNotFoundError,
     ExpedientesSnapshotNotFoundError, NotificationsSnapshotNotFoundError,
-    and future siblings) inherit from this base in addition to
-    :class:`aeat.core.errors.AeatError`, so callers can either catch the
-    domain-specific class name or the shared parent. Inheriting from
-    :class:`KeyError` mirrors the semantics of a missing lookup key.
+    and future siblings) inherit from this base alongside
+    :class:`aeat.core.errors.AeatError` so callers can either catch the
+    domain-specific class name or the shared parent. The per-service
+    classes list ``AeatError`` first in their bases so MRO routes
+    ``__init__`` through :meth:`AeatError.__init__` (which accepts the
+    structured ``suggestion=`` / ``context=`` kwargs) rather than
+    :class:`KeyError`'s C-level constructor.
     """
 
 
