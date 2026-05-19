@@ -65,13 +65,13 @@ Standardize the dual-acronym structures (VAT vs IVA) and triple-terminology divi
 
 Establish a uniform terminology glossary and merge overlapping classification logic into a canonical VAT domain package.
 
-- [ ] `W03.P04.S14` - Create canonical IVA invoice classification schema as the unified surface under domain/iva, absorbing VatClassification and IvaInvoiceClassification; `src/aeat/domain/iva/_classification.py`.
-- [ ] `W03.P04.S15` - Migrate VatRegulation, VATRateKind, and VATCatalogue into IvaRegulation, IvaRateKind, and IvaCatalogue under domain/iva, reconciling with any existing IVA equivalents; `src/aeat/domain/iva/_schema.py`.
-- [ ] `W03.P04.S18` - Migrate VatLedgerSelector callsites to the canonical _IvaLedgerSelector under domain/iva and remove the duplicate selector; `src/aeat/domain/iva/_flow.py`.
-- [ ] `W03.P04.S19` - Collapse IssuerResidency and CustomerResidency into a single IvaResidency enum used in both issuer and customer field roles; `src/aeat/domain/iva/_classification.py`.
-- [ ] `W03.P04.S20` - Collapse InvoiceDirection into the existing InvoiceKind enum and remove the InvoiceDirection symbol; `src/aeat/domain/iva/_classification.py`.
-- [ ] `W03.P04.S21` - Rename the domain package from domain/vat to domain/iva and update every import site to the new path; `src/aeat/domain/iva/__init__.py`.
-- [ ] `W03.P04.S22` - Delete the legacy domain/vat package directory after all consumers have migrated to domain/iva; `src/aeat/domain/vat/`.
+- [x] `W03.P04.S14` - Create canonical IVA invoice classification schema as the unified surface under domain/iva, absorbing VatClassification and IvaInvoiceClassification; `src/aeat/domain/iva/_classification.py`.
+- [x] `W03.P04.S15` - Migrate VatRegulation, VATRateKind, and VATCatalogue into IvaRegulation, IvaRateKind, and IvaCatalogue under domain/iva, reconciling with any existing IVA equivalents; `src/aeat/domain/iva/_schema.py`.
+- [x] `W03.P04.S18` - Migrate VatLedgerSelector callsites to the canonical _IvaLedgerSelector under domain/iva and remove the duplicate selector; `src/aeat/domain/iva/_flow.py`.
+- [x] `W03.P04.S19` - Collapse IssuerResidency and CustomerResidency into a single IvaResidency enum used in both issuer and customer field roles; `src/aeat/domain/iva/_classification.py`.
+- [x] `W03.P04.S20` - Collapse InvoiceDirection into the existing InvoiceKind enum and remove the InvoiceDirection symbol; `src/aeat/domain/iva/_classification.py`.
+- [x] `W03.P04.S21` - Rename the domain package from domain/vat to domain/iva and update every import site to the new path; `src/aeat/domain/iva/__init__.py`.
+- [x] `W03.P04.S22` - Delete the legacy domain/vat package directory after all consumers have migrated to domain/iva; `src/aeat/domain/vat/`.
 
 ### Phase `W03.P05` - Unify Draft Persistence and Deprecate Local file-based Snapshotting
 
