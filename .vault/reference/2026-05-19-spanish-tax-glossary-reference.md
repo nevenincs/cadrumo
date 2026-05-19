@@ -354,3 +354,83 @@ previously flagged for sign-off:
   not the CSV / authentic-copy basis.
 
 No UNVERIFIED items remain.
+
+## IVA Cluster Statutory Sanity Check (2026-05-19)
+
+Sanity check of the IVA reversal cluster's canonical identifiers
+against verified BOE citations. Read-only advisory; no code edits
+performed.
+
+### IvaInvoiceClassification - confirmed correct
+
+Hybrid `Iva` + English `InvoiceClassification` suffix matches the ADR
+English-infra carve-out. Ley 37/1992 uses `factura` and
+`clasificacion` separately but has no statutory compound name for
+the classifier-result type; coining `ClasificacionFactura` would be
+a false-statutory neologism. No amendment.
+
+- Statutory anchors: Ley 37/1992 IVA Articulo 4 (hecho imponible);
+  Articulos 8 / 11 (entregas de bienes / prestaciones de servicios).
+  BOE-A-1992-28740.
+
+### IvaResidency - suggested amendment (rename, not values)
+
+The 5 values (ES_MAINLAND, ES_CANARIAS, ES_CEUTA_MELILLA, EU_MEMBER,
+THIRD_COUNTRY) cover the canonical IVA segmentation, but the type
+name `IvaResidency` is statutorily imprecise. Ley 37/1992 does not
+frame these as "residency". The ES_* trio reflects the territorio
+de aplicacion del impuesto (TAI) carve-out, and the EU vs.
+third-country split reflects lugar de realizacion rules; counterparty
+residency (Articulo 84 reverse-charge triggers) is related but
+distinct.
+
+Suggested amendment: rename to `IvaTerritorialScope` (preferred) or
+`IvaTaiSegmentation`. Values stay the same.
+
+- Statutory anchors: Ley 37/1992 IVA Articulo 3.Dos (ambito espacial /
+  TAI; Canarias, Ceuta y Melilla excluidas); Articulos 68-72 (lugar
+  de realizacion del hecho imponible); Articulos 25-26
+  (entregas / adquisiciones intracomunitarias). BOE-A-1992-28740.
+
+### IvaFlowDirection - suggested amendment (third value)
+
+`REPERCUTIDO` and `SOPORTADO` are the canonical statutory terms
+(Articulo 88 repercusion del impuesto; Articulo 92 cuotas tributarias
+soportadas). `AUTOREPERCUTIDO` is a colloquial gloss; the BOE / AEAT
+canonical phrase for the self-charge / reverse-charge case is
+`inversion del sujeto pasivo`, and AEAT Modelo 303 labels the
+relevant casillas verbatim with this phrase.
+
+Suggested amendment: rename the third enum value from
+`AUTOREPERCUTIDO` to `INVERSION_SUJETO_PASIVO` (alias `ISP`
+acceptable).
+
+- Statutory anchors: Ley 37/1992 IVA Articulo 84.Uno.2 (inversion
+  del sujeto pasivo); Articulo 88 (repercusion); Articulo 92 (cuotas
+  soportadas). BOE-A-1992-28740.
+
+### InvoiceKind ("issued" / "received") - confirmed correct, with SII boundary note
+
+Lowercase English values are acceptable per the ADR English-infra
+allowance and align with registry TOML selectors. Note for awareness
+only: Real Decreto 1619/2012 (reglamento de facturacion) and the SII
+regime use `factura expedida` and `factura recibida`, and the AEAT
+SII libros registro are named `Libro registro de facturas expedidas`
+and `Libro registro de facturas recibidas`. If an SII or
+libro-registro adapter is added, the Spanish stems `expedida` /
+`recibida` should appear at that boundary even while the internal
+enum keeps `issued` / `received`.
+
+- Statutory anchors: Real Decreto 1619/2012 (reglamento por el que
+  se regulan las obligaciones de facturacion; BOE-A-2012-14696);
+  Real Decreto 596/2016 (modificacion del Reglamento del IVA,
+  instaurando el SII; BOE-A-2016-11575).
+
+### Summary
+
+| Identifier               | Verdict             | Action                                            |
+| :----------------------- | :------------------ | :------------------------------------------------ |
+| IvaInvoiceClassification | Confirmed correct   | None                                              |
+| IvaResidency             | Suggested amendment | Rename -> IvaTerritorialScope                     |
+| IvaFlowDirection         | Suggested amendment | Rename AUTOREPERCUTIDO -> INVERSION_SUJETO_PASIVO |
+| InvoiceKind              | Confirmed correct   | Document SII-boundary Spanish-stem expectation    |
