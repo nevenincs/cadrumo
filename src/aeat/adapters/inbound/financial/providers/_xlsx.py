@@ -161,51 +161,112 @@ class XlsxProvider(FinancialProvider):
         path: Path,
     ) -> tuple[Workbook, list[list[Any]], str, CsvBankLayout | None, list[str] | None, dict[str, str] | None, int]:
         """Return the first worksheet that matches a known bank layout."""
+        workbook = _open_workbook_or_refuse(path)
         try:
-            workbook = load_workbook(filename=path, read_only=True, data_only=True)
-        except Exception as exc:  # pragma: no cover - exercised via validation path
-            raise InvalidFinancialSourceError(f"could not open workbook: {path}") from exc
-        try:
-            best_worksheet: Worksheet | None = workbook.worksheets[0] if workbook.worksheets else None
-            best_sheet_name = best_worksheet.title if best_worksheet is not None else "Sheet1"
-            best_layout: CsvBankLayout | None = None
-            best_headers: list[str] | None = None
-            best_lookup: dict[str, str] | None = None
-            best_header_index = 0
-            best_score = -1
-            for worksheet in workbook.worksheets:
-                candidate = _best_layout_match_for_worksheet(worksheet)
-                if candidate is None or candidate[0] <= best_score:
-                    continue
-                score, index, row, lookup, layout = candidate
-                best_worksheet = worksheet
-                best_sheet_name = worksheet.title
-                best_layout = layout
-                best_headers = row
-                best_lookup = lookup
-                best_header_index = index
-                best_score = score
-            best_rows = [list(row) for row in best_worksheet.iter_rows(values_only=True)] if best_worksheet else []
-            self._last_sheet_name = best_sheet_name
-            self._last_header_index = best_header_index + 1
-            if best_score < 3:
-                return workbook, best_rows, best_sheet_name, None, None, None, best_header_index
-            return workbook, best_rows, best_sheet_name, best_layout, best_headers, best_lookup, best_header_index
+            best = _select_best_layout_across_worksheets(workbook)
+            best_rows = (
+                [list(row) for row in best.worksheet.iter_rows(values_only=True)] if best.worksheet else []
+            )
+            self._last_sheet_name = best.sheet_name
+            self._last_header_index = best.header_index + 1
+            if best.score < _MIN_LAYOUT_SCORE:
+                return workbook, best_rows, best.sheet_name, None, None, None, best.header_index
+            return (
+                workbook,
+                best_rows,
+                best.sheet_name,
+                best.layout,
+                best.headers,
+                best.lookup,
+                best.header_index,
+            )
         except Exception:
-            # Re-raise wrapper that guarantees workbook teardown. Broad
-            # catch because the upstream parse can raise openpyxl/xlrd
-            # errors, KeyError, ValueError, OSError, IndexError or
-            # TypeError depending on file shape; the close() must run
-            # uniformly. ``raise`` preserves the original cause.
-            try:
-                workbook.close()
-            except Exception as close_exc:
-                _logger.debug(
-                    "xlsx provider: workbook.close() during parse-error teardown failed (%s)",
-                    close_exc,
-                    exc_info=True,
-                )
+            _close_workbook_during_teardown(workbook)
             raise
+
+
+_MIN_LAYOUT_SCORE = 3
+
+
+@dataclass(frozen=True, slots=True)
+class _BestLayoutMatch:
+    """Best (worksheet, layout) match across every worksheet in the workbook.
+
+    Carries the per-worksheet score + selected layout + header row /
+    lookup so the caller can both report the picked sheet (via
+    name / index) and trigger the layout-not-supported short-circuit
+    when the best score falls below the minimum.
+    """
+
+    worksheet: Worksheet | None
+    sheet_name: str
+    layout: CsvBankLayout | None
+    headers: list[str] | None
+    lookup: dict[str, str] | None
+    header_index: int
+    score: int
+
+
+def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatch:
+    """Iterate every worksheet and keep the highest-scoring layout match.
+
+    ``best_worksheet`` defaults to the first sheet in the workbook
+    so a workbook whose every sheet scores below the minimum still
+    returns a deterministic fallback (the caller emits an
+    "unsupported" error envelope keyed on that sheet's identity).
+    """
+    fallback = workbook.worksheets[0] if workbook.worksheets else None
+    best = _BestLayoutMatch(
+        worksheet=fallback,
+        sheet_name=fallback.title if fallback is not None else "Sheet1",
+        layout=None,
+        headers=None,
+        lookup=None,
+        header_index=0,
+        score=-1,
+    )
+    for worksheet in workbook.worksheets:
+        candidate = _best_layout_match_for_worksheet(worksheet)
+        if candidate is None or candidate[0] <= best.score:
+            continue
+        score, index, row, lookup, layout = candidate
+        best = _BestLayoutMatch(
+            worksheet=worksheet,
+            sheet_name=worksheet.title,
+            layout=layout,
+            headers=row,
+            lookup=lookup,
+            header_index=index,
+            score=score,
+        )
+    return best
+
+
+def _open_workbook_or_refuse(path: Path) -> Workbook:
+    """Open ``path`` as an openpyxl workbook or re-wrap the parse failure."""
+    try:
+        return load_workbook(filename=path, read_only=True, data_only=True)
+    except Exception as exc:  # pragma: no cover - exercised via validation path
+        raise InvalidFinancialSourceError(f"could not open workbook: {path}") from exc
+
+
+def _close_workbook_during_teardown(workbook: Workbook) -> None:
+    """Best-effort ``workbook.close()`` after a parse error; never raise.
+
+    Broad ``except Exception`` because the upstream parse can raise
+    openpyxl / xlrd errors, KeyError, ValueError, OSError,
+    IndexError, or TypeError depending on file shape. The close()
+    must run uniformly. The caller re-raises the original cause —
+    this helper only owns the teardown side effect.
+    """
+    try:
+        workbook.close()
+    except Exception as close_exc:
+        _logger.debug(
+            "xlsx provider: workbook.close() during parse-error teardown failed (%s)",
+            close_exc,
+            exc_info=True,
+        )
 
 
 def _best_layout_match_for_worksheet(
