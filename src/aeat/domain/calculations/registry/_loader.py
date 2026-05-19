@@ -19,6 +19,29 @@ from ._schema import (
     SourceReference,
 )
 
+_REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
+    {
+        "parameters",
+        "casillas",
+        "formulas",
+        "bindings",
+        "algorithm_providers",
+        "algorithm_bindings",
+        "relations",
+        "extraction_profiles",
+        "live_cross_references",
+        "workbook_parity_refs",
+        "verification_expectations",
+        "application_links",
+        "deadline_windows",
+        "filing_schedules",
+        "support_removal_decisions",
+        "constructs",
+        "dependency_classifications",
+    }
+)
+_REVISION_EXPORT_LAYOUTS = "export_layouts"
+
 
 def _read_toml(path: Path) -> dict[str, object]:
     try:
@@ -99,9 +122,12 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
 
     The directory must contain ``manifest.toml`` carrying the ``[modelo]``
     metadata table. Per-revision data lives in ``revisions/{id}.toml``
-    files; each file declares one or more revisions via top-level
+    files, or in ``revisions/{id}/`` fragment directories. Revision
+    files declare one or more revisions via top-level
     ``[revisions."<id>"]`` (and ``[[revisions."<id>".X]]`` array tables).
-    All revision files are merged into the single in-memory
+    Fragment directories declare exactly the directory revision id
+    across one or more TOML files using the same table shape. All
+    revision sources are merged into the single in-memory
     ``ModeloDefinition`` that single-file mode produces.
 
     Public API stays identical to ``load_modelo_file``: callers receive
@@ -118,7 +144,7 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
     fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(manifest_path)]
     revisions_dir = resolved / "revisions"
     if revisions_dir.is_dir():
-        for path in sorted(revisions_dir.glob("*.toml")):
+        for path in sorted(revisions_dir.rglob("*.toml")):
             fingerprints.append(_toml_fingerprint(path))
     return _load_modelo_directory_cached(str(resolved), tuple(fingerprints))
 
@@ -165,6 +191,9 @@ def _load_modelo_revisions(resolved: Path) -> dict[str, object]:
     merged_revisions: dict[str, object] = {}
     for path in sorted(revisions_dir.glob("*.toml")):
         _merge_revision_file(path, merged_revisions)
+    for path in sorted(revisions_dir.iterdir()):
+        if path.is_dir():
+            _merge_revision_directory(path, merged_revisions)
     return merged_revisions
 
 
@@ -185,6 +214,131 @@ def _merge_revision_file(path: Path, merged_revisions: dict[str, object]) -> Non
                 f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
             )
         merged_revisions[revision_id] = raw_revision
+
+
+def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -> None:
+    """Merge a ``revisions/{id}/`` fragment tree into ``merged_revisions``."""
+    revision_id = path.name
+    if revision_id in merged_revisions:
+        raise RegistryLoadError(
+            f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
+        )
+    revision_manifest = path / "revision.toml"
+    if not revision_manifest.is_file():
+        raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
+    fragment_paths = [revision_manifest]
+    fragment_paths.extend(sorted(p for p in path.rglob("*.toml") if p != revision_manifest))
+    merged_revision: dict[str, object] = {}
+    for fragment_path in fragment_paths:
+        _merge_revision_fragment(fragment_path, revision_id, merged_revision)
+    merged_revisions[revision_id] = merged_revision
+
+
+def _merge_revision_fragment(path: Path, expected_revision_id: str, merged_revision: dict[str, object]) -> None:
+    """Merge one fragment TOML into a single raw revision payload."""
+    fragment_data = _freeze_toml(_read_toml(path))
+    _reject_local_catalogues(path, fragment_data)
+    if "modelo" in fragment_data:
+        raise RegistryLoadError(f"{path}: revision fragment must not declare [modelo]; that lives in manifest.toml")
+    file_revisions = fragment_data.get("revisions")
+    if not isinstance(file_revisions, dict) or not file_revisions:
+        raise RegistryLoadError(f"{path}: revision fragment must declare [revisions.<id>]")
+    if len(file_revisions) != 1:
+        raise RegistryLoadError(f"{path}: revision fragment must declare exactly one revision")
+    revision_id, raw_revision = next(iter(file_revisions.items()))
+    if not isinstance(revision_id, str):
+        raise RegistryLoadError(f"{path}: revision key must be a string")
+    if revision_id != expected_revision_id:
+        raise RegistryLoadError(
+            f"{path}: revision fragment declares {revision_id!r}, expected {expected_revision_id!r}"
+        )
+    if not isinstance(raw_revision, dict):
+        raise RegistryLoadError(f"{path}: revision {revision_id!r} must be a table")
+    for key, value in raw_revision.items():
+        _merge_revision_fragment_field(path, key, value, merged_revision)
+
+
+def _merge_revision_fragment_field(
+    path: Path,
+    key: str,
+    value: object,
+    merged_revision: dict[str, object],
+) -> None:
+    if key in _REVISION_APPEND_ARRAYS:
+        if not isinstance(value, tuple):
+            raise RegistryLoadError(f"{path}: revision fragment field {key!r} must be an array")
+        existing = merged_revision.get(key, ())
+        if not isinstance(existing, tuple):
+            raise RegistryLoadError(f"{path}: revision fragment field {key!r} conflicts with a non-array field")
+        merged_revision[key] = (*existing, *value)
+        return
+    if key == _REVISION_EXPORT_LAYOUTS:
+        if not isinstance(value, tuple):
+            raise RegistryLoadError(f"{path}: revision fragment field 'export_layouts' must be an array")
+        existing = merged_revision.get(key, ())
+        if not isinstance(existing, tuple):
+            raise RegistryLoadError(
+                f"{path}: revision fragment field 'export_layouts' conflicts with a non-array field"
+            )
+        merged_revision[key] = _merge_export_layout_fragments(path, existing, value)
+        return
+    if key in merged_revision:
+        raise RegistryLoadError(f"{path}: revision fragment redeclares scalar field {key!r}")
+    merged_revision[key] = value
+
+
+def _merge_export_layout_fragments(
+    path: Path,
+    existing: tuple[object, ...],
+    incoming: tuple[object, ...],
+) -> tuple[object, ...]:
+    """Merge export-layout fragments by layout id, appending record arrays."""
+    layouts: list[object] = list(existing)
+    index_by_id: dict[str, int] = {}
+    for index, layout in enumerate(layouts):
+        if isinstance(layout, dict) and isinstance(layout.get("id"), str):
+            index_by_id[layout["id"]] = index
+    for layout in incoming:
+        if not isinstance(layout, dict) or not isinstance(layout.get("id"), str):
+            layouts.append(layout)
+            continue
+        layout_id = layout["id"]
+        existing_index = index_by_id.get(layout_id)
+        if existing_index is None:
+            index_by_id[layout_id] = len(layouts)
+            layouts.append(layout)
+            continue
+        existing_layout = layouts[existing_index]
+        if not isinstance(existing_layout, dict):
+            raise RegistryLoadError(f"{path}: export layout {layout_id!r} conflicts with a non-table layout")
+        layouts[existing_index] = _merge_export_layout_by_id(path, layout_id, existing_layout, layout)
+    return tuple(layouts)
+
+
+def _merge_export_layout_by_id(
+    path: Path,
+    layout_id: str,
+    existing: dict[str, object],
+    incoming: dict[str, object],
+) -> dict[str, object]:
+    merged = dict(existing)
+    for key, value in incoming.items():
+        if key == "id":
+            continue
+        if key == "records":
+            if not isinstance(value, tuple):
+                raise RegistryLoadError(f"{path}: export layout {layout_id!r} records must be an array")
+            existing_records = merged.get("records", ())
+            if not isinstance(existing_records, tuple):
+                raise RegistryLoadError(f"{path}: export layout {layout_id!r} existing records are not an array")
+            merged["records"] = (*existing_records, *value)
+            continue
+        if key in merged and merged[key] != value:
+            raise RegistryLoadError(
+                f"{path}: export layout {layout_id!r} field {key!r} conflicts with another fragment"
+            )
+        merged[key] = value
+    return merged
 
 
 def load_catalogue_file(path: Path) -> RegistryCatalogues:
@@ -255,10 +409,10 @@ def _validate_catalogue_section[T: BaseModel](
 def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     """Load only the legal-parameter catalogue from ``root/legal/*.toml``.
 
-    Lightweight cycle-safe entry point. Consumers in ``aeat.domain.vat``
+    Lightweight cycle-safe entry point. Consumers in ``aeat.domain.iva``
     and ``aeat.domain.rental`` need parameter values at module-import
     time, but the full :func:`load_registry_tree` path pulls in
-    ``_bindings`` which itself imports from ``aeat.domain.vat`` — a
+    ``_bindings`` which itself imports from ``aeat.domain.iva`` — a
     circular import.
 
     This function reuses :func:`load_catalogue_file` (already
@@ -332,7 +486,7 @@ def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], .
     fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(entry / "manifest.toml")]
     revisions_dir = entry / "revisions"
     if revisions_dir.is_dir():
-        for rev_path in sorted(revisions_dir.glob("*.toml")):
+        for rev_path in sorted(revisions_dir.rglob("*.toml")):
             fingerprints.append(_toml_fingerprint(rev_path))
     return tuple(fingerprints)
 
