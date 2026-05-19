@@ -7,7 +7,7 @@ from collections.abc import Callable
 import pytest
 
 from aeat.core.resources import bundled_path
-from aeat.domain.deadlines import AutonomoProfile, FilingEnrollment, IVARegime
+from aeat.domain.deadlines import AutonomoProfile, ModeloEnrollment, IVARegime
 
 from . import (
     RegistryValidationError,
@@ -42,7 +42,7 @@ def test_modelo_111_selects_monthly_schedule_from_profile_object(
     profile = AutonomoProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
-        enrollment=FilingEnrollment(large_company=True),
+        enrollment=ModeloEnrollment(large_company=True),
     )
 
     schedules = applicable_filing_schedules(snapshot.revision, profile, period="01")

@@ -10,7 +10,7 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError, load_modelo_file
-from ._bindings import CasillaObservation, RegistryFilingObservation
+from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._loader import load_registry_tree
 from ._relations import relation_source_requirements, resolve_relation_values_from_observations
 from ._schema import ModeloDefinition, ModeloRevision
@@ -45,7 +45,7 @@ def _copy_committed_modelo_180(path: Path) -> None:
     path.write_text(_MODELO_180_FILE.read_text(encoding="utf-8"), encoding="utf-8")
 
 
-def _modelo_115_observations() -> tuple[RegistryFilingObservation, ...]:
+def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
     values_by_period = {
         "1T": {"01": Decimal("1"), "02": Decimal("250.10"), "03": Decimal("47.52")},
         "2T": {"01": Decimal("1"), "02": Decimal("749.90"), "03": Decimal("142.48")},
@@ -53,7 +53,7 @@ def _modelo_115_observations() -> tuple[RegistryFilingObservation, ...]:
         "4T": {"01": Decimal("1"), "02": Decimal("-50.25"), "03": Decimal("0.00")},
     }
     return tuple(
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="115",
             filing_year=2026,
             period=period,

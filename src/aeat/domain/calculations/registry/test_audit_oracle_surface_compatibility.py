@@ -15,7 +15,7 @@ import pytest
 
 from aeat.core.resources import bundled_path, resources
 
-from ._aeat_nif_iva_oracle import ORACLE_ID as AEAT_NIF_IVA_ORACLE_ID
+from ._aeat_nif_iva_oracle import ORACLE_ID
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
 from ._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ._live_parity import (
@@ -35,7 +35,7 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 # inside ``_COMPATIBLE_SURFACE_PAIRS``; the audit must accept all of
 # them. Each adapter is a real production oracle — no stub layer.
 _COMPATIBLE_BEHAVIOURAL_CASES: tuple[tuple[str, str, str], ...] = (
-    (AEAT_NIF_IVA_ORACLE_ID, "public_read_surface", "vat_id_check"),
+    (ORACLE_ID, "public_read_surface", "vat_id_check"),
     (GROI_ORACLE_ID, "authenticated_simulator", "vat_id_check"),
     ("modelo-100-renta-web-open", "open_simulator", "open_simulator"),
 )
@@ -74,7 +74,7 @@ def _bind_first_cross_reference(
 
 
 def test_compatible_pair_passes_audit() -> None:
-    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=AEAT_NIF_IVA_ORACLE_ID, surface="public_read_surface")
+    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=ORACLE_ID, surface="public_read_surface")
 
     failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
 
@@ -83,7 +83,7 @@ def test_compatible_pair_passes_audit() -> None:
 
 def test_static_official_documentation_surface_rejects_every_oracle() -> None:
     modelo = _bind_first_cross_reference(
-        _modelo_130(), oracle_id=AEAT_NIF_IVA_ORACLE_ID, surface="static_official_documentation"
+        _modelo_130(), oracle_id=ORACLE_ID, surface="static_official_documentation"
     )
 
     failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")

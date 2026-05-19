@@ -153,14 +153,14 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
 def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations() -> None:
     from aeat.domain.calculations.registry import (
         CasillaObservation,
-        RegistryFilingObservation,
+        RegistryModeloObservation,
         resolve_previous_filing_binding_values,
     )
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
     observations = (
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="303",
             filing_year=2025,
             period="1T",
@@ -171,7 +171,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
                 CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("10")),
             ),
         ),
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="303",
             filing_year=2025,
             period="2T",
@@ -182,7 +182,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
                 CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("20")),
             ),
         ),
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="303",
             filing_year=2025,
             period="3T",
@@ -193,7 +193,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
                 CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("30")),
             ),
         ),
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo="303",
             filing_year=2025,
             period="4T",
@@ -224,7 +224,7 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations()
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.vat import IvaFlowDirection, VATCategory, VATRateKind
+    from aeat.domain.iva import IvaFlowDirection, IvaCategory, IvaRateKind
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
@@ -234,8 +234,8 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations()
         IvaLedgerObservation(
             ledger_id=f"q{idx}-rep",
             transaction_date=date(2025, idx * 3, 15),
-            category=VATCategory.DOMESTIC_GENERAL_21,
-            rate_kind=VATRateKind.GENERAL,
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("1000") * idx,
             iva_amount=amount,

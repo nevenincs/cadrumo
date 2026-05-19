@@ -8,7 +8,7 @@ import pytest
 
 from . import RegistryCalculationResult, calculate_registry_snapshot
 from ._authority import ValidatedRegistryAuthority
-from ._bindings import CasillaObservation, RegistryFilingObservation, resolve_previous_filing_binding_values
+from ._bindings import CasillaObservation, RegistryModeloObservation, resolve_previous_filing_binding_values
 from ._relations import (
     RegistryRelationSourceRequirement,
     relation_source_requirements,
@@ -351,7 +351,7 @@ def test_modelo_130_resolves_previous_year_modelo_100_filed_casillas_into_bindin
     binding_values = resolve_previous_filing_binding_values(
         snapshot.revision,
         (
-            RegistryFilingObservation(
+            RegistryModeloObservation(
                 modelo="100",
                 filing_year=source_year,
                 period="0A",
@@ -529,7 +529,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
 def _observations_from_requirements(
     requirements: Iterable[RegistryRelationSourceRequirement],
     value_for: Callable[[RegistryRelationSourceRequirement, int], Decimal],
-) -> tuple[RegistryFilingObservation, ...]:
+) -> tuple[RegistryModeloObservation, ...]:
     observed: dict[tuple[str, int, str], dict[str, Decimal]] = {}
     for requirement in requirements:
         for period_index, period in enumerate(requirement.periods):
@@ -537,7 +537,7 @@ def _observations_from_requirements(
             casilla_values = observed.setdefault(key, {})
             casilla_values[requirement.source_output] = value_for(requirement, period_index)
     return tuple(
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo=modelo,
             filing_year=filing_year,
             period=period,

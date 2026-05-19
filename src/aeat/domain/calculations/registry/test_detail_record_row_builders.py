@@ -20,7 +20,7 @@ import pytest
 from ....core.resources import resources
 from ._bindings import (
     AtributionMemberObservation,
-    ForeignAssetObservation,
+    Modelo720RowObservation,
     RefundOperationObservation,
     _build_foreign_asset_rows,
     resolve_atribucion_binding_row_values,
@@ -37,7 +37,7 @@ def _modelos():
 
 def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> None:
     obs = (
-        ForeignAssetObservation(
+        Modelo720RowObservation(
             source_id="a1",
             asset_class_code="C",
             country_code="DE",
@@ -45,7 +45,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
             acquisition_date=date(2022, 6, 1),
             valuation_amount=Decimal("60000"),
         ),
-        ForeignAssetObservation(
+        Modelo720RowObservation(
             source_id="a2",
             asset_class_code="V",
             country_code="CH",
@@ -53,7 +53,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
             acquisition_date=date(2020, 1, 1),
             valuation_amount=Decimal("120000"),
         ),
-        ForeignAssetObservation(
+        Modelo720RowObservation(
             source_id="a3",
             asset_class_code="C",
             country_code="CH",
@@ -73,7 +73,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
 def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_values() -> None:
     revision = next(m for m in _modelos() if m.id == "720").revisions["2013-y-siguientes"]
     obs = (
-        ForeignAssetObservation(
+        Modelo720RowObservation(
             source_id="a1",
             asset_class_code="C",
             country_code="CH",

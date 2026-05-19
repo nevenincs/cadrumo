@@ -20,7 +20,7 @@ from pydantic import ValidationError
 
 from ._bindings import (
     AtributionMemberObservation,
-    ForeignAssetObservation,
+    Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
     WithholdingObservation,
@@ -229,13 +229,13 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
 
 
 # ---------------------------------------------------------------------------
-# ForeignAssetObservation
+# Modelo720RowObservation
 # ---------------------------------------------------------------------------
 
 
 def test_foreign_asset_observation_iso_codes_must_be_uppercase_alphabetic() -> None:
     with pytest.raises(ValidationError, match="ISO code must be uppercase alphabetic"):
-        ForeignAssetObservation(
+        Modelo720RowObservation(
             source_id="a1",
             asset_class_code="C",
             country_code="ch",
@@ -244,7 +244,7 @@ def test_foreign_asset_observation_iso_codes_must_be_uppercase_alphabetic() -> N
             valuation_amount=Decimal("60000"),
         )
     with pytest.raises(ValidationError, match="ISO code must be uppercase alphabetic"):
-        ForeignAssetObservation(
+        Modelo720RowObservation(
             source_id="a1",
             asset_class_code="C",
             country_code="CH",
@@ -256,7 +256,7 @@ def test_foreign_asset_observation_iso_codes_must_be_uppercase_alphabetic() -> N
 
 def test_foreign_asset_observation_valuation_must_be_non_negative() -> None:
     with pytest.raises(ValidationError, match="valuation must be non-negative"):
-        ForeignAssetObservation(
+        Modelo720RowObservation(
             source_id="a1",
             asset_class_code="C",
             country_code="CH",

@@ -337,12 +337,12 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
     Esquema Unión observations."""
     from decimal import Decimal
 
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         EUMemberState,
-        InvoiceDirection,
+        InvoiceKind,
         OssIossRegime,
         TransactionKind,
-        VATRateKind,
+        IvaRateKind,
     )
 
     modelo, _ = _load_modelo_369()
@@ -354,8 +354,8 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
             transaction_date=date(2025, 6, 15),
             regime=OssIossRegime.UNION_SCHEME,
             destination_member_state=EUMemberState.DE,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.OSS_UNION_SERVICES,
             base_amount=Decimal("1000"),
             iva_amount=Decimal("190"),
@@ -365,8 +365,8 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
             transaction_date=date(2025, 6, 20),
             regime=OssIossRegime.UNION_SCHEME,
             destination_member_state=EUMemberState.FR,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.OSS_UNION_SERVICES,
             base_amount=Decimal("500"),
             iva_amount=Decimal("100"),
@@ -376,8 +376,8 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
             transaction_date=date(2025, 7, 1),
             regime=OssIossRegime.UNION_SCHEME,
             destination_member_state=EUMemberState.DE,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
             base_amount=Decimal("200"),
             iva_amount=Decimal("38"),
@@ -396,12 +396,12 @@ def test_modelo_369_esquema_importacion_ioss_binding_resolves_low_value_sale() -
     """End-to-end smoke test for the IOSS Importación binding."""
     from decimal import Decimal
 
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         EUMemberState,
-        InvoiceDirection,
+        InvoiceKind,
         OssIossRegime,
         TransactionKind,
-        VATRateKind,
+        IvaRateKind,
     )
 
     modelo, _ = _load_modelo_369()
@@ -413,8 +413,8 @@ def test_modelo_369_esquema_importacion_ioss_binding_resolves_low_value_sale() -
             transaction_date=date(2025, 6, idx),
             regime=OssIossRegime.IMPORT_SCHEME,
             destination_member_state=EUMemberState.DE,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
             base_amount=base,
             iva_amount=iva,
@@ -503,12 +503,12 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     bound casillas → cuota-total formula sum."""
     from decimal import Decimal
 
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         EUMemberState,
-        InvoiceDirection,
+        InvoiceKind,
         OssIossRegime,
         TransactionKind,
-        VATRateKind,
+        IvaRateKind,
     )
 
     from . import (
@@ -526,8 +526,8 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
             transaction_date=date(2025, 6, 15),
             regime=OssIossRegime.UNION_SCHEME,
             destination_member_state=EUMemberState.DE,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.OSS_UNION_SERVICES,
             base_amount=Decimal("1000"),
             iva_amount=Decimal("190"),
@@ -537,8 +537,8 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
             transaction_date=date(2025, 6, 20),
             regime=OssIossRegime.UNION_SCHEME,
             destination_member_state=EUMemberState.FR,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.OSS_UNION_SERVICES,
             base_amount=Decimal("500"),
             iva_amount=Decimal("100"),
@@ -548,8 +548,8 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
             transaction_date=date(2025, 7, 1),
             regime=OssIossRegime.UNION_SCHEME,
             destination_member_state=EUMemberState.DE,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
             base_amount=Decimal("200"),
             iva_amount=Decimal("38"),
@@ -593,12 +593,12 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
 def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> None:
     from decimal import Decimal
 
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         EUMemberState,
-        InvoiceDirection,
+        InvoiceKind,
         OssIossRegime,
         TransactionKind,
-        VATRateKind,
+        IvaRateKind,
     )
 
     from . import (
@@ -616,8 +616,8 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
             transaction_date=date(2025, 6, 1),
             regime=OssIossRegime.IMPORT_SCHEME,
             destination_member_state=EUMemberState.DE,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
             base_amount=Decimal("80"),
             iva_amount=Decimal("15.20"),
@@ -627,8 +627,8 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
             transaction_date=date(2025, 6, 2),
             regime=OssIossRegime.IMPORT_SCHEME,
             destination_member_state=EUMemberState.DE,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
             base_amount=Decimal("120"),
             iva_amount=Decimal("22.80"),

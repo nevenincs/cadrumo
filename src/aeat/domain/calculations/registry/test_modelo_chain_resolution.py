@@ -8,7 +8,7 @@ import pytest
 
 from aeat.core.resources import bundled_path
 
-from ._bindings import CasillaObservation, RegistryFilingObservation
+from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._loader import load_registry_tree
 from ._relations import resolve_relation_values_from_observations
 from ._schema import ModeloDefinition, ModeloRevision
@@ -29,8 +29,8 @@ def _revision(modelo_id: str, revision_id: str) -> ModeloRevision:
 
 def _quarterly_filings(
     modelo_id: str, filing_year: int, casilla_quarters: dict[str, dict[str, Decimal]]
-) -> tuple[RegistryFilingObservation, ...]:
-    """Build one ``RegistryFilingObservation`` per quarter from a per-quarter casilla map."""
+) -> tuple[RegistryModeloObservation, ...]:
+    """Build one ``RegistryModeloObservation`` per quarter from a per-quarter casilla map."""
 
     periods = {"1T", "2T", "3T", "4T"}
     by_period: dict[str, dict[str, Decimal]] = {p: {} for p in periods}
@@ -38,7 +38,7 @@ def _quarterly_filings(
         for period, value in quarter_values.items():
             by_period[period][casilla_id] = value
     return tuple(
-        RegistryFilingObservation(
+        RegistryModeloObservation(
             modelo=modelo_id,
             filing_year=filing_year,
             period=period,
