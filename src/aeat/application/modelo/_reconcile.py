@@ -109,7 +109,7 @@ class ReconciliationEvidenceInvalidError(AeatError):
     """
 
 
-class ReconciliationDeclarationSourceUnsupportedError(AeatError):
+class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
     """Raised when ``from_declaration`` is requested before the declaration
     parser ships.
 
@@ -151,7 +151,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     """
 
     if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
-        raise ReconciliationDeclarationSourceUnsupportedError(
+        raise ReconciliationDeclaracionSourceUnsupportedError(
             tr("application.modelo.errors.reconcile_declaration_unsupported"),
         )
 
@@ -280,7 +280,7 @@ __all__ = [
     "ModeloReconciliationSourceKind",
     "ModeloReconciliationVerdict",
     "ReconciliationCrossBucketRefusedError",
-    "ReconciliationDeclarationSourceUnsupportedError",
+    "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
     "WorkUnitNotFoundError",
     "modelo_reconcile",

@@ -1,6 +1,6 @@
-"""Strict roundtrip across the encrypted FilingRecordCatalogueRepository.
+"""Strict roundtrip across the encrypted ModeloRecordCatalogueRepository.
 
-Persists :class:`FilingRecordCatalogue` under
+Persists :class:`ModeloRecordCatalogue` under
 ``aeat.domain.modelos.filing_records`` at
 ``SensitivityClass.FINANCIAL``.
 
@@ -9,7 +9,7 @@ Anti-tautology: the fixture populates two filing records on the same
 ``superseded_at`` / ``superseded_by_filing_record_id`` populated and
 ``external_evidence`` carrying an AEAT-imported justificante, plus the
 ``CURRENT`` successor pointing back via ``amends_filing_record_id``.
-The model_validator on ``FilingRecordCatalogue`` enforces the
+The model_validator on ``ModeloRecordCatalogue`` enforces the
 "exactly one CURRENT per tuple" invariant, so the fixture stresses the
 catalogue's structural gates while pinning supersession-chain identity.
 """
@@ -32,12 +32,12 @@ from ._codes import ModeloCode
 from ._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
-    FilingRecord,
-    FilingRecordCatalogue,
-    FilingRecordStatus,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ._filing_repository import FilingRecordCatalogueRepository
+from ._filing_repository import ModeloRecordCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -49,7 +49,7 @@ def _hex(seed: str) -> str:
     return base[:64]
 
 
-def _populated_catalogue() -> FilingRecordCatalogue:
+def _populated_catalogue() -> ModeloRecordCatalogue:
     bucket_id = "bucket-A"
     work_unit_id = _hex("a")
     superseded_revision = _hex("b")
@@ -70,7 +70,7 @@ def _populated_catalogue() -> FilingRecordCatalogue:
         filed_by="aeat.cli.modelo.amend",
     )
 
-    superseded = FilingRecord(
+    superseded = ModeloRecord(
         filing_record_id=superseded_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=superseded_revision,
@@ -82,7 +82,7 @@ def _populated_catalogue() -> FilingRecordCatalogue:
         filed_by="aeat.cli.modelo.file",
         notes="initial 2T filing - withheld import IVA at 21%",
         aeat_accepted=True,
-        status=FilingRecordStatus.SUPERSEDED,
+        status=ModeloRecordStatus.SUPERSEDED,
         superseded_at=current_filed_at,
         superseded_by_filing_record_id=current_id,
         external_evidence=ExternalEvidence(
@@ -91,7 +91,7 @@ def _populated_catalogue() -> FilingRecordCatalogue:
             imported_at=superseded_filed_at + timedelta(hours=2),
         ),
     )
-    current = FilingRecord(
+    current = ModeloRecord(
         filing_record_id=current_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=current_revision,
@@ -103,10 +103,10 @@ def _populated_catalogue() -> FilingRecordCatalogue:
         filed_by="aeat.cli.modelo.amend",
         notes="rectifying amendment - missing input IVA on invoice INV-2024-0145",
         aeat_accepted=True,
-        status=FilingRecordStatus.CURRENT,
+        status=ModeloRecordStatus.CURRENT,
         amends_filing_record_id=superseded_id,
     )
-    return FilingRecordCatalogue(records={superseded_id: superseded, current_id: current})
+    return ModeloRecordCatalogue(records={superseded_id: superseded, current_id: current})
 
 
 def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
@@ -126,7 +126,7 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
         try:
             SecureObjectRepository(engine=engine)
 
-            repo = FilingRecordCatalogueRepository()
+            repo = ModeloRecordCatalogueRepository()
             original = _populated_catalogue()
             repo.save(original)
             loaded = repo.load()
@@ -144,7 +144,7 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
 
             superseded = loaded.get(current.amends_filing_record_id)
             assert superseded is not None
-            assert superseded.status is FilingRecordStatus.SUPERSEDED
+            assert superseded.status is ModeloRecordStatus.SUPERSEDED
             assert superseded.superseded_by_filing_record_id == current.filing_record_id
             assert superseded.superseded_at == current.filed_at
             # External-evidence carries the AEAT gate; pin it explicitly.
@@ -193,7 +193,7 @@ def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
         try:
             SecureObjectRepository(engine=engine)
 
-            repo = FilingRecordCatalogueRepository()
+            repo = ModeloRecordCatalogueRepository()
             original = _populated_catalogue()
             repo.save(original)
 

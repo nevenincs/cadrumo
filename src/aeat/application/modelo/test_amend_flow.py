@@ -53,12 +53,12 @@ from aeat.domain.modelos._calculation_revision import (
 from aeat.domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
-    FilingRecord,
-    FilingRecordStatus,
+    ModeloRecord,
+    ModeloRecordStatus,
     derive_filing_record_id,
 )
 from aeat.domain.modelos._filing_repository import (
-    FilingRecordCatalogueRepository,
+    ModeloRecordCatalogueRepository,
     upsert_filing_record,
 )
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
@@ -91,7 +91,7 @@ def repos(tmp_path):
             objects = SecureObjectRepository(engine=engine)
             wu = WorkUnitCatalogueRepository(objects=objects)
             cr = CalculationRevisionCatalogueRepository(objects=objects)
-            fr = FilingRecordCatalogueRepository(objects=objects)
+            fr = ModeloRecordCatalogueRepository(objects=objects)
             vr = VerificationReportCatalogueRepository(objects=objects)
             bv = BucketEventHistoryRepository(objects=objects)
             yield wu, cr, fr, vr, bv
@@ -156,7 +156,7 @@ def _seed_external_baseline(repos_tuple, *, casilla_values):
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 
-    baseline_filing = FilingRecord(
+    baseline_filing = ModeloRecord(
         filing_record_id=filing_id,
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=revision_id,
@@ -168,7 +168,7 @@ def _seed_external_baseline(repos_tuple, *, casilla_values):
         filed_by="aeat-import",
         notes=None,
         aeat_accepted=True,
-        status=FilingRecordStatus.CURRENT,
+        status=ModeloRecordStatus.CURRENT,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id="JUST-2024-303-1T-ABC123",
@@ -240,7 +240,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos) -> None:
             fr_repo.load(),
             baseline.model_copy(
                 update={
-                    "status": FilingRecordStatus.SUPERSEDED,
+                    "status": ModeloRecordStatus.SUPERSEDED,
                     "superseded_at": _T3,
                     "superseded_by_filing_record_id": fake_successor,
                 }
@@ -307,7 +307,7 @@ def _drive_amend_creates_complementaria(repos) -> _AmendOutcome:  # type: ignore
 
 def test_amend_new_filing_is_current_complementaria_record(repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
-    assert outcome.new_filing.status is FilingRecordStatus.CURRENT
+    assert outcome.new_filing.status is ModeloRecordStatus.CURRENT
     assert outcome.new_filing.amends_filing_record_id == outcome.baseline.filing_record_id
     assert outcome.new_filing.external_evidence is None
 
@@ -322,7 +322,7 @@ def test_amend_baseline_is_superseded_by_new_filing(repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, _, fr_repo, _, _ = repos
     refreshed_baseline = get_filing_record(outcome.baseline.filing_record_id, filing_repository=fr_repo)
-    assert refreshed_baseline.status is FilingRecordStatus.SUPERSEDED
+    assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDED
     assert refreshed_baseline.superseded_by_filing_record_id == outcome.new_filing.filing_record_id
 
 
