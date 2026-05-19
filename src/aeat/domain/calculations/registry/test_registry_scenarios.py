@@ -158,12 +158,15 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             RegistryScenarioExpectedOutput(
                 target="0224",
                 value=Decimal("850.00"),
+                # Active-branch operand provenance: with the es_normal
+                # binding = "1", the if_then_else evaluates the normal
+                # branch (0180 - 0220) and only that branch's operands
+                # contribute. The simplificada branch (0180 - 0223) is
+                # structurally declared but not exercised here.
                 operand_refs=(
                     "renta-2025-modelo-100-estimacion-directa-es-normal",
                     "0180",
                     "0220",
-                    "0180",
-                    "0223",
                 ),
                 source_refs=(
                     "aeat-dr-100-2025-dictionary",
@@ -237,10 +240,10 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             RegistryScenarioExpectedOutput(
                 target="0224",
                 value=Decimal("98000.00"),
+                # es_normal binding = "0" selects the simplificada
+                # branch (0180 - 0223); active-branch operand provenance.
                 operand_refs=(
                     "renta-2025-modelo-100-estimacion-directa-es-normal",
-                    "0180",
-                    "0220",
                     "0180",
                     "0223",
                 ),
@@ -278,10 +281,9 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
             RegistryScenarioExpectedOutput(
                 target="0224",
                 value=Decimal("-400.00"),
+                # es_normal binding = "0" selects the simplificada branch.
                 operand_refs=(
                     "renta-2025-modelo-100-estimacion-directa-es-normal",
-                    "0180",
-                    "0220",
                     "0180",
                     "0223",
                 ),

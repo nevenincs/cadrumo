@@ -148,7 +148,7 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
 
     from ...adapters.persistence.storage.sql._orm import SecureObjectRow
     from ...adapters.persistence.storage.sql.session import session_scope
-    from ._repository import _SUBMISSION_NAMESPACE
+    _SUBMISSION_NAMESPACE = SubmissionRepository.namespace
 
     provider = EphemeralMasterKeyProvider()
     with provider:
