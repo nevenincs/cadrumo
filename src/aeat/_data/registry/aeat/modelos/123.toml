@@ -1204,8 +1204,8 @@ source_refs = [
 ]
 
 [[revisions."2019-2023".casillas]]
-id = "01"
-number = "01"
+id = "01-legacy"
+number = "01-legacy"
 label = "Numero de perceptores"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "integer"
@@ -1216,8 +1216,8 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".casillas]]
-id = "02"
-number = "02"
+id = "02-legacy"
+number = "02-legacy"
 label = "Base de retenciones e ingresos a cuenta"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
@@ -1230,8 +1230,8 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".casillas]]
-id = "03"
-number = "03"
+id = "03-legacy"
+number = "03-legacy"
 label = "Retenciones e ingresos a cuenta"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
@@ -1244,8 +1244,8 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".casillas]]
-id = "04"
-number = "04"
+id = "04-legacy"
+number = "04-legacy"
 label = "Ingresos de ejercicios anteriores"
 section = ["periodificacion"]
 data_type = "money"
@@ -1256,8 +1256,8 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".casillas]]
-id = "05"
-number = "05"
+id = "05-legacy"
+number = "05-legacy"
 label = "Regularizacion"
 section = ["periodificacion"]
 data_type = "money"
@@ -1268,8 +1268,8 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".casillas]]
-id = "06"
-number = "06"
+id = "06-legacy"
+number = "06-legacy"
 label = "Suma de retenciones y regularizacion"
 section = ["total_liquidacion"]
 data_type = "money"
@@ -1281,8 +1281,8 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".casillas]]
-id = "07"
-number = "07"
+id = "07-legacy"
+number = "07-legacy"
 label = "Resultado de anteriores autoliquidaciones"
 section = ["total_liquidacion"]
 data_type = "money"
@@ -1293,8 +1293,8 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".casillas]]
-id = "08"
-number = "08"
+id = "08-legacy"
+number = "08-legacy"
 label = "Resultado a ingresar"
 section = ["total_liquidacion"]
 data_type = "money"
@@ -1309,8 +1309,8 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 
 [[revisions."2019-2023".formulas]]
 id = "modelo-123-2019-total-liquidacion"
-target = "06"
-expression = { op = "add", args = [{ casilla = "03" }, { casilla = "05" }] }
+target = "06-legacy"
+expression = { op = "add", args = [{ casilla = "03-legacy" }, { casilla = "05-legacy" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13-form-text"]
@@ -1321,8 +1321,8 @@ required_text = ["[03] + [05]"]
 
 [[revisions."2019-2023".formulas]]
 id = "modelo-123-2019-resultado-ingresar"
-target = "08"
-expression = { op = "subtract", args = [{ casilla = "06" }, { casilla = "07" }] }
+target = "08-legacy"
+expression = { op = "subtract", args = [{ casilla = "06-legacy" }, { casilla = "07-legacy" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13-form-text"]
@@ -1562,7 +1562,7 @@ id = "modelo-123-2019-page-number"
 offset = 6
 length = 2
 kind = "literal"
-literal = "01"
+literal = "01-legacy"
 data_type = "text"
 required = true
 padding = "none"
@@ -1687,7 +1687,7 @@ id = "modelo-123-2019-casilla-01"
 offset = 109
 length = 15
 kind = "casilla"
-casilla = "01"
+casilla = "01-legacy"
 data_type = "integer"
 required = false
 padding = "left_zero"
@@ -1701,7 +1701,7 @@ id = "modelo-123-2019-casilla-02"
 offset = 124
 length = 17
 kind = "casilla"
-casilla = "02"
+casilla = "02-legacy"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1715,7 +1715,7 @@ id = "modelo-123-2019-casilla-03"
 offset = 141
 length = 17
 kind = "casilla"
-casilla = "03"
+casilla = "03-legacy"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1729,7 +1729,7 @@ id = "modelo-123-2019-casilla-04"
 offset = 158
 length = 17
 kind = "casilla"
-casilla = "04"
+casilla = "04-legacy"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1743,7 +1743,7 @@ id = "modelo-123-2019-casilla-05"
 offset = 175
 length = 17
 kind = "casilla"
-casilla = "05"
+casilla = "05-legacy"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1757,7 +1757,7 @@ id = "modelo-123-2019-casilla-06"
 offset = 192
 length = 17
 kind = "casilla"
-casilla = "06"
+casilla = "06-legacy"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1771,7 +1771,7 @@ id = "modelo-123-2019-casilla-07"
 offset = 209
 length = 17
 kind = "casilla"
-casilla = "07"
+casilla = "07-legacy"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1785,7 +1785,7 @@ id = "modelo-123-2019-casilla-08"
 offset = 226
 length = 17
 kind = "casilla"
-casilla = "08"
+casilla = "08-legacy"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1903,7 +1903,7 @@ surface = "export_record"
 artefact_kind = "submitted_file"
 accepted_artefact_kinds = ["submitted_file"]
 parser = "aeat.domain.calculations.registry.parse_export_payload"
-target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08"]
+target_casillas = ["01-legacy", "02-legacy", "03-legacy", "04-legacy", "05-legacy", "06-legacy", "07-legacy", "08-legacy"]
 confidence = "strict"
 min_coverage = "1"
 failure_semantics = "fail_hard"
@@ -1916,7 +1916,7 @@ surface = "declaracion_pdf"
 artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
-target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08"]
+target_casillas = ["01-legacy", "02-legacy", "03-legacy", "04-legacy", "05-legacy", "06-legacy", "07-legacy", "08-legacy"]
 confidence = "strict"
 min_coverage = "1"
 failure_semantics = "fail_hard"
@@ -1970,8 +1970,8 @@ source_refs = ["aeat-dr-123-2019-2023-v13"]
 
 [[revisions."2019-2023".verification_expectations]]
 id = "modelo-123-2019-calculation-verification"
-computed_casillas = ["06", "08"]
-reconciliation_totals = { ingresar = "08" }
+computed_casillas = ["06-legacy", "08-legacy"]
+reconciliation_totals = { ingresar = "08-legacy" }
 tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "1"
@@ -1989,7 +1989,7 @@ source_refs = [
     "aeat-modelo-123-procedure",
     "boe-modelo-123-2007-form",
 ]
-casillas = ["01", "02", "03", "04", "05", "06", "07", "08"]
+casillas = ["01-legacy", "02-legacy", "03-legacy", "04-legacy", "05-legacy", "06-legacy", "07-legacy", "08-legacy"]
 formulas = ["modelo-123-2019-total-liquidacion", "modelo-123-2019-resultado-ingresar"]
 export_layouts = ["modelo-123-2019-fichero-boe"]
 extraction_profiles = ["modelo-123-2019-export-record", "modelo-123-2019-declaracion-pdf"]
