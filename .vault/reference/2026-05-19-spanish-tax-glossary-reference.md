@@ -636,3 +636,214 @@ AEAT Sede Electronica Modelo-status nomenclature
 | ModeloObligation  | Suggested amendment | Rename to ModeloDeadline (if deadline/enrollment scope) or anchor to LGT Art. 17/29     |
 | ModeloAmendment   | Suggested amendment | Split into ModeloComplementaria / ModeloSustitutiva (LGT Art. 122 verbatim terms)       |
 | SubmittedModelo   | Suggested amendment | Rename to ModeloPresentado (AEAT Sede `Presentada` status verbatim)                     |
+
+
+## Fincas Cluster Statutory Sanity Check (2026-05-19)
+
+Forward-looking sanity check of the W05.P15 Fincas cluster
+ADR-proposed renames against verified BOE citations. Read-only
+advisory; no code edits performed.
+
+### Package rename: domain/rental/ -> domain/fincas/ - confirmed correct
+
+The Renta-vs-Rental adjudication in ADR Section 5 is statutorily
+sound. fincas is the BOE-stable unit of account across the AEAT
+surfaces this package feeds.
+
+Statutory anchors: Decreto de 8 de febrero de 1946 Ley Hipotecaria
+(BOE-A-1946-2453); RDLeg 1/2004 Catastro Inmobiliario.
+
+
+### RentalFinca -> Finca - confirmed correct
+
+The bare Finca is the canonical statutory term per Ley Hipotecaria
+Titulo II for registrable parcels in the Registro de la Propiedad,
+and per the Catastro Inmobiliario for cadastral units. AEAT uses
+Inmueble (broader: real-estate property) and Finca (narrower:
+registrable parcel) in different contexts:
+
+- Finca is the registral / cadastral unit. Statutorily anchored.
+- Inmueble is used in Ley 35/2006 IRPF (e.g. Articulo 85 Imputacion
+  de rentas inmobiliarias, title verbatim verified 2026-05-19) for
+  the broader real-estate concept feeding imputed rentas.
+
+The package choice Finca is correct because the unit of account
+for the domain is the registrable parcel. If any future entity
+captures the IRPF imputed-renta view at the inmueble (broader)
+level, that entity may legitimately use the Inmueble stem instead.
+The two stems are not synonyms.
+
+Statutory anchors: Ley Hipotecaria Decreto 1946 Titulo II
+(BOE-A-1946-2453); RDLeg 1/2004 Catastro Inmobiliario
+(BOE-A-2004-4163); Ley 35/2006 IRPF Articulo 85 (title verbatim
+verified 2026-05-19; first-sentence verbatim verification deferred
+to a direct BOE-PDF read).
+
+### RentalContract -> Arrendamiento - confirmed correct
+
+Arrendamiento is the canonical statutory term for the lease
+contract under both the urban regime (LAU) and the rural regime
+(LAR):
+
+- Ley 29/1994 LAU (BOE-A-1994-26003) verbatim title: Ley 29/1994,
+  de 24 de noviembre, de Arrendamientos Urbanos. Articulo 1
+  verbatim title: Ambito de aplicacion. Verbatim opening: La
+  presente ley establece el regimen juridico aplicable a los
+  arrendamientos de fincas urbanas que se destinen a vivienda o
+  a usos distintos del de vivienda.
+- Ley 49/2003 LAR (BOE-A-2003-21616) verbatim title: Ley 49/2003,
+  de 26 de noviembre, de Arrendamientos Rusticos. Articulo 1
+  verbatim title: Arrendamiento rustico. Verbatim opening: Se
+  consideraran arrendamientos rusticos aquellos contratos mediante
+  los cuales se ceden temporalmente una o varias fincas, o parte
+  de ellas, para su aprovechamiento agricola, ganadero o forestal
+  a cambio de un precio o renta.
+
+The bare Arrendamiento is correct as the umbrella domain stem.
+Rural-vs-urban context is a property of the specific arrendamiento
+instance, not a separate type. If the domain needs to
+discriminate, add a field regimen with values urbano or rustico
+on Arrendamiento (verbatim values from LAU and LAR titles),
+following the discriminator pattern recommended for
+ModeloComplementaria / ModeloSustitutiva.
+
+Note: arrendamiento covers both LAU/LAR lease contracts and the
+broader Codigo Civil contrato de arrendamiento. AEAT Modelo 347
+uses arrendamientos as the operations category.
+
+Statutory anchors: Ley 29/1994 LAU (BOE-A-1994-26003; verbatim
+verified 2026-05-19); Ley 49/2003 LAR (BOE-A-2003-21616; verbatim
+verified 2026-05-19); RDLeg 1/2004 Catastro for the cadastral
+side; Codigo Civil Articulos 1542-1582 for the general
+arrendamiento regime.
+
+
+### Income / Expense / Amortization Spanishness - suggested amendment
+
+The PM call to retain English Income / Expense / Amortization as
+generic accounting infra is defensible if the entities are
+strictly generic. They are not. Ley 35/2006 IRPF uses three
+specific verbatim Spanish stems that map directly onto these
+entities:
+
+- Rendimiento per Ley 35/2006 IRPF, specifically rendimientos del
+  capital inmobiliario (Capitulo III, Articulos 22-24 - the
+  Modelo 100 income category the domain feeds). NOT generic
+  accounting income; it is the IRPF-base income category whose
+  determination is regulated verbatim.
+- Gasto deducible per Ley 35/2006 IRPF Articulo 23 (gastos
+  deducibles del rendimiento del capital inmobiliario). NOT
+  generic expense; statutorily enumerated list of allowable
+  deductions.
+- Amortizacion per Ley 35/2006 IRPF Articulo 23.1.b and the
+  Reglamento IRPF (RD 439/2007) Articulo 14: amortizacion del
+  inmueble + amortizacion de bienes muebles cedidos con el
+  inmueble. NOT generic accounting amortization; the percentage
+  bases and asset-class split are statutory.
+
+Final advisory (revised from prior advisory): Spanish stems
+recommended for this trio in the IRPF-fed paths:
+
+- FincaIncomeRecord -> FincaRendimientoRecord (or
+  RendimientoCapitalInmobiliarioRecord if the file feeds Modelo
+  100 directly; the verbose form is more precise but longer).
+- FincaExpense -> FincaGasto (or GastoDeducible if the Articulo
+  23 enumeration is what is being modelled).
+- FincaAmortizationLedger -> FincaAmortizacionLedger. Ledger is
+  in the English-infra carve-out so the hybrid stem composes
+  cleanly (cf. JustificanteFetchError, BorradorSnapshot).
+
+Caveat for project lead adjudication: if the codebase has a clean
+boundary between IRPF-specific records (Spanish) and a separate
+generic accounting layer (English-OK), apply Spanish stems only
+at the IRPF boundary. The ADR Section 4 English-infra carve-out
+exists to avoid stem-stuttering on generic infrastructure
+entities; Income / Expense / Amortization in the IRPF domain are
+NOT generic.
+
+Statutory anchors: Ley 35/2006 IRPF Articulos 22-24 (rendimientos
+del capital inmobiliario y gastos deducibles); Articulo 23.1.b
+(amortizacion); RD 439/2007 Reglamento IRPF Articulo 14
+(amortizacion del capital inmobiliario). BOE-A-2006-20764.
+
+### Imputacion (_imputacion_parameters.py sibling) - confirmed statutorily defined
+
+Imputacion is verbatim statutory in Ley 35/2006 IRPF. The relevant
+regime for the fincas domain is:
+
+- Imputacion de rentas inmobiliarias per Articulo 85 (title
+  verbatim verified 2026-05-19: Imputacion de rentas
+  inmobiliarias). Applies to inmuebles urbanos no afectos a
+  actividades economicas, no arrendados, no constitutivos de
+  vivienda habitual; assigns a calculated renta to the
+  propietario.
+
+The bare Imputacion stem is correct and statutorily anchored. If
+the entity name needs more precision,
+ImputacionRentasInmobiliarias is the verbatim Articulo 85 phrase.
+
+Statutory anchors: Ley 35/2006 IRPF Articulo 85 (Imputacion de
+rentas inmobiliarias; title verbatim verified 2026-05-19).
+BOE-A-2006-20764.
+
+
+### Summary
+
+| ADR Proposal                                        | Verdict             | Action                                                                     |
+| :-------------------------------------------------- | :------------------ | :------------------------------------------------------------------------- |
+| domain/rental/ -> fincas/                           | Confirmed correct   | None                                                                       |
+| RentalFinca -> Finca                                | Confirmed correct   | Disambiguate Inmueble vs Finca for any IRPF-imputed-renta type             |
+| RentalContract -> Arrendamiento                     | Confirmed correct   | Add regimen field (urbano / rustico) if discrimination needed              |
+| RentalIncomeRecord -> FincaIncomeRecord             | Suggested amendment | Rename to FincaRendimientoRecord (IRPF Art. 22-24 anchor)                  |
+| RentalExpense -> FincaExpense                       | Suggested amendment | Rename to FincaGasto (IRPF Art. 23 gastos deducibles)                      |
+| RentalAmortizationLedger -> FincaAmortizationLedger | Suggested amendment | Rename to FincaAmortizacionLedger (IRPF Art. 23.1.b + RD 439/2007 Art. 14) |
+| Imputacion (sibling module)                         | Confirmed correct   | None (IRPF Art. 85 verbatim title verified)                                |
+
+### New verified citations added (2026-05-19)
+
+- Ley 29/1994 LAU (BOE-A-1994-26003) - title + Articulo 1 verbatim.
+- Ley 49/2003 LAR (BOE-A-2003-21616) - title + Articulo 1 verbatim.
+- Ley 35/2006 IRPF Articulo 85 (BOE-A-2006-20764) - title verbatim;
+  first-sentence verbatim verification deferred (WebFetch result
+  paraphrased; direct BOE-PDF read required for verbatim opening).
+
+Cumulative verified-citation count: 16 + 2 fully-verified (LAU,
+LAR) + 1 partial (IRPF Art. 85 title only) = 18 fully verified,
+1 partial.
+
+
+## IRPF Art. 85 verbatim verification confirmation (2026-05-19)
+
+Followup to the Fincas cluster sanity check section. The previously
+partial citation for Ley 35/2006 IRPF Articulo 85 (Imputacion de
+rentas inmobiliarias) is now fully verbatim-verified via direct
+read of the BOE consolidated PDF (BOE-A-2006-20764-consolidado.pdf,
+TITULO X, Capitulo I, Seccion 1, page 73).
+
+- TITULO X verbatim header: "Regimenes especiales."
+- Seccion 1.a verbatim header: "Imputacion de rentas inmobiliarias."
+- Articulo 85 verbatim title: "Imputacion de rentas inmobiliarias."
+- Articulo 85.1 verbatim opening (first paragraph, in full): "En el
+  supuesto de los bienes inmuebles urbanos, calificados como tales
+  en el articulo 7 del texto refundido de la Ley del Catastro
+  Inmobiliario, aprobado por el Real Decreto Legislativo 1/2004,
+  de 5 de marzo, asi como en el caso de los inmuebles rusticos con
+  construcciones que no resulten indispensables para el desarrollo
+  de explotaciones agricolas, ganaderas o forestales, no afectos
+  en ambos casos a actividades economicas, ni generadores de
+  rendimientos del capital, excluida la vivienda habitual y el
+  suelo no edificado, tendra la consideracion de renta imputada la
+  cantidad que resulte de aplicar el 2 por ciento al valor
+  catastral, determinandose proporcionalmente al numero de dias
+  que corresponda en cada periodo impositivo."
+
+This confirms the structural anchor used in the Fincas cluster
+sanity check for ImputacionRentasInmobiliarias and the
+Finca-vs-Inmueble disambiguation note. The article explicitly
+covers both bienes inmuebles urbanos and inmuebles rusticos
+(con-construcciones, no-afectos), excluding vivienda habitual and
+suelo no edificado.
+
+Status update: the previously-flagged partial citation is promoted
+to fully verbatim-verified. Cumulative verified-citation count
+moves from 18 fully + 1 partial to 19 fully verified.
