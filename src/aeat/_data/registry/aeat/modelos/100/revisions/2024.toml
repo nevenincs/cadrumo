@@ -6463,7 +6463,7 @@ id = "0210"
 number = "0210"
 label = "NIF de la guarderia o centro de educación infantil autorizado"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -6694,7 +6694,7 @@ id = "0240"
 number = "0240"
 label = "NIF del cónyuge"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -6829,7 +6829,7 @@ id = "0257"
 number = "0257"
 label = "Nº de identificación fiscal (NIF) de la entidad"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -7299,7 +7299,7 @@ id = "0311"
 number = "0311"
 label = "NIF de la sociedad o fondo de inversión"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -8001,7 +8001,7 @@ id = "0397"
 number = "0397"
 label = "NIF del empleador"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -8055,7 +8055,7 @@ id = "0403"
 number = "0403"
 label = "NIF de la sociedad emisora o fondo de inversión"
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -8490,7 +8490,7 @@ id = "0456"
 number = "0456"
 label = "Hijo/Hija 1 (*): NIF/NIE"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -8508,7 +8508,7 @@ id = "0458"
 number = "0458"
 label = "Hijo/Hija 2 (*): NIF/NIE"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -8620,7 +8620,7 @@ id = "0471"
 number = "0471"
 label = "N.º de identificación fiscal (NIF) de la persona con discapacidad partícipe, mutualista o asegurada"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_discapacidad"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -8678,7 +8678,7 @@ id = "0478"
 number = "0478"
 label = "Número de identificación fiscal (NIF) de la persona con discapacidad titular del patrimonio protegido"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_patrimonio_protegido_discapacidad"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -8720,7 +8720,7 @@ id = "0483"
 number = "0483"
 label = "N.º de identificación fiscal (NIF) de la persona que recibe cada pensión o anualidad"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_pensiones_compensatorias_alimentos"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -9837,7 +9837,7 @@ id = "0614"
 number = "0614"
 label = "NIF del descendiente"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -9890,7 +9890,7 @@ id = "0620"
 number = "0620"
 label = "NIF del cedente"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -9908,7 +9908,7 @@ id = "0622"
 number = "0622"
 label = "NIF del beneficiario"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -9933,7 +9933,7 @@ id = "0625"
 number = "0625"
 label = "NIF del ascendiente"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -9986,7 +9986,7 @@ id = "0631"
 number = "0631"
 label = "NIF del cedente"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -9995,7 +9995,7 @@ id = "0632"
 number = "0632"
 label = "NIF del cedente"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10004,7 +10004,7 @@ id = "0633"
 number = "0633"
 label = "NIF del cedente"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10022,7 +10022,7 @@ id = "0635"
 number = "0635"
 label = "NIF del beneficiario"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10047,7 +10047,7 @@ id = "0638"
 number = "0638"
 label = "NIF del arrendador 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ctrd"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10073,7 +10073,7 @@ id = "0641"
 number = "0641"
 label = "NIF del arrendador 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ctrd"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10185,7 +10185,7 @@ id = "0654"
 number = "0654"
 label = "NIF del cedente"
 section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10194,7 +10194,7 @@ id = "0655"
 number = "0655"
 label = "NIF del cedente"
 section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10203,7 +10203,7 @@ id = "0656"
 number = "0656"
 label = "NIF del cedente"
 section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10221,7 +10221,7 @@ id = "0658"
 number = "0658"
 label = "NIF del beneficiario"
 section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10279,7 +10279,7 @@ id = "0665"
 number = "0665"
 label = "NIF del descendiente cuya deducción se regulariza"
 section = ["resultados", "calculo_impuesto_res", "regularizacion_descendiente_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10296,7 +10296,7 @@ id = "0667"
 number = "0667"
 label = "NIF del ascendiente cuya deducción se regulariza"
 section = ["resultados", "calculo_impuesto_res", "regularizacion_ascendiente_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10564,7 +10564,7 @@ id = "0711"
 number = "0711"
 label = "NIF de la entidad 1 nueva o reciente creación"
 section = ["resultados", "anexo_a_res", "deduccion_empresas_nueva_creacion_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10581,7 +10581,7 @@ id = "0713"
 number = "0713"
 label = "NIF de la entidad 2 nueva o reciente creación"
 section = ["resultados", "anexo_a_res", "deduccion_empresas_nueva_creacion_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10598,7 +10598,7 @@ id = "0715"
 number = "0715"
 label = "NIF del arrendador 1"
 section = ["resultados", "anexo_a_res", "deduccion_alquiler_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -10616,7 +10616,7 @@ id = "0717"
 number = "0717"
 label = "NIF del arrendador 2"
 section = ["resultados", "anexo_a_res", "deduccion_alquiler_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -11235,7 +11235,7 @@ id = "0804"
 number = "0804"
 label = "NIF de la persona empleada"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -12372,7 +12372,7 @@ id = "0949"
 number = "0949"
 label = "NIF de la persona o entidadque realiza las obras"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -12670,7 +12670,7 @@ id = "0989"
 number = "0989"
 label = "NIF de la persona empleada del hogar, Escuela, Centro o Guardería Infantil"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -12703,7 +12703,7 @@ id = "0993"
 number = "0993"
 label = "NIF de la persona empleada:"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13289,7 +13289,7 @@ id = "1070"
 number = "1070"
 label = "NIF de la persona empleada del hogar,Escuela, Centro o Guardería Infantil"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13330,7 +13330,7 @@ id = "1076"
 number = "1076"
 label = "NIF de la Escuela, Centro  o Guardería Infantil"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13491,7 +13491,7 @@ id = "1096"
 number = "1096"
 label = "NIF del arrendador"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13581,7 +13581,7 @@ id = "1107"
 number = "1107"
 label = "NIF de la persona o entidad que realiza las obras:"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13598,7 +13598,7 @@ id = "1109"
 number = "1109"
 label = "NIF de la persona o entidad que realiza las obras:"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13773,7 +13773,7 @@ id = "1131"
 number = "1131"
 label = "NIF de la entidad 1 de nueva o reciente creación"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enc"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13790,7 +13790,7 @@ id = "1133"
 number = "1133"
 label = "NIF de la entidad 2 de nueva o reciente creación"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enc"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13823,7 +13823,7 @@ id = "1137"
 number = "1137"
 label = "NIF de la entidad 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_mab"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13840,7 +13840,7 @@ id = "1139"
 number = "1139"
 label = "NIF de la entidad 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_mab"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13873,7 +13873,7 @@ id = "1143"
 number = "1143"
 label = "NIF de la entidad 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13890,7 +13890,7 @@ id = "1145"
 number = "1145"
 label = "NIF de la entidad 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13923,7 +13923,7 @@ id = "1149"
 number = "1149"
 label = "NIF de la entidad 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_agt"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13940,7 +13940,7 @@ id = "1151"
 number = "1151"
 label = "NIF de la entidad 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_agt"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -13973,7 +13973,7 @@ id = "1155"
 number = "1155"
 label = "NIF/NIE del arrendador"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_avh"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -14128,7 +14128,7 @@ id = "1174"
 number = "1174"
 label = "NIF de la entidad 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ides"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -14145,7 +14145,7 @@ id = "1176"
 number = "1176"
 label = "NIF de la entidad 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ides"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -14234,7 +14234,7 @@ id = "1187"
 number = "1187"
 label = "NIF/NIE del arrendatario 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_eps"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -14278,7 +14278,7 @@ id = "1192"
 number = "1192"
 label = "NIF/NIE del arrendatario 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_eps"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -14322,7 +14322,7 @@ id = "1197"
 number = "1197"
 label = "NIF/NIE del arrendatario 3"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_eps"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -14712,7 +14712,7 @@ id = "1244"
 number = "1244"
 label = "NIF del otro progenitor 2"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -15438,7 +15438,7 @@ id = "1333"
 number = "1333"
 label = "Nº de identificación fiscal (NIF) de la persona con discapacidad"
 section = ["resultados", "anexo_c_res", "excesos_sistemas_prevision_social_personas_disc_parientes_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -15576,7 +15576,7 @@ id = "1350"
 number = "1350"
 label = "Nº de identificación fiscal (NIF) de la persona con discapacidad titular del patrimonio protegido"
 section = ["resultados", "anexo_c_res", "excesos_patrim_protegidos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -15941,7 +15941,7 @@ id = "1395"
 number = "1395"
 label = "Gasto 1: NIF de quién realizó la obra o servicio"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -15958,7 +15958,7 @@ id = "1397"
 number = "1397"
 label = "Gasto 2: NIF de quién realizó la obra o servicio"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -15976,7 +15976,7 @@ id = "1399"
 number = "1399"
 label = "Gasto 3: NIF de quién realizó la obra o servicio"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -15994,7 +15994,7 @@ id = "1401"
 number = "1401"
 label = "Gasto 4: NIF de quién realizó la obra o servicio"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -16012,7 +16012,7 @@ id = "1403"
 number = "1403"
 label = "Gasto 5: NIF de quién realizó la obra o servicio"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18174,7 +18174,7 @@ id = "1657"
 number = "1657"
 label = "NIF/NIE de la persona/entidad que ha realizado las obras (1)"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18183,7 +18183,7 @@ id = "1658"
 number = "1658"
 label = "NIF/NIE de la persona/entidad que ha realizado las obras (2)"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18243,7 +18243,7 @@ id = "1665"
 number = "1665"
 label = "NIF/NIE de la persona/entidad que ha realizado las obras (1)"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18252,7 +18252,7 @@ id = "1666"
 number = "1666"
 label = "NIF/NIE de la persona/entidad que ha realizado las obras (2)"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18321,7 +18321,7 @@ id = "1674"
 number = "1674"
 label = "NIF/NIE de la persona/entidad que ha realizado las obras (1)"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18330,7 +18330,7 @@ id = "1675"
 number = "1675"
 label = "NIF/NIE de la persona/entidad que ha realizado las obras (2)"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18525,7 +18525,7 @@ id = "1699"
 number = "1699"
 label = "NIF de la persona contratada o Centro de día 1"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18534,7 +18534,7 @@ id = "1700"
 number = "1700"
 label = "NIF de la persona contratada o Centro de día 2"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18656,7 +18656,7 @@ id = "1715"
 number = "1715"
 label = "NIF de la persona contratada o Centro de día"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18729,7 +18729,7 @@ id = "1724"
 number = "1724"
 label = "NIF del productor 1"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18738,7 +18738,7 @@ id = "1725"
 number = "1725"
 label = "NIF del productor 2"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18747,7 +18747,7 @@ id = "1726"
 number = "1726"
 label = "NIF del productor 3"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18796,7 +18796,7 @@ id = "1732"
 number = "1732"
 label = "NIF del productor 1"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18805,7 +18805,7 @@ id = "1733"
 number = "1733"
 label = "NIF del productor 2"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18814,7 +18814,7 @@ id = "1734"
 number = "1734"
 label = "NIF del productor 3"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18882,7 +18882,7 @@ id = "1742"
 number = "1742"
 label = "Hijo/Hija 1 (*): NIF/NIE del otro progenitor"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18908,7 +18908,7 @@ id = "1745"
 number = "1745"
 label = "Hijo/Hija 2 (*): NIF/NIE del otro progenitor"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18926,7 +18926,7 @@ id = "1747"
 number = "1747"
 label = "Hijo/Hija 3 (*): NIF/NIE"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18952,7 +18952,7 @@ id = "1750"
 number = "1750"
 label = "Hijo/Hija 3 (*): NIF/NIE del otro progenitor"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18970,7 +18970,7 @@ id = "1752"
 number = "1752"
 label = "Hijo/Hija 4 (*): NIF/NIE"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -18996,7 +18996,7 @@ id = "1755"
 number = "1755"
 label = "Hijo/Hija 4 (*): NIF/NIE del otro progenitor"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19014,7 +19014,7 @@ id = "1757"
 number = "1757"
 label = "Hijo/Hija 5 (*): NIF/NIE"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19040,7 +19040,7 @@ id = "1760"
 number = "1760"
 label = "Hijo/Hija 5 (*): NIF/NIE del otro progenitor"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19058,7 +19058,7 @@ id = "1762"
 number = "1762"
 label = "Hijo/Hija 1 (*): NIF/NIE del pagador de las anualidades"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19259,7 +19259,7 @@ id = "1786"
 number = "1786"
 label = "Hijo/Hija 2 (*): NIF/NIE del pagador de las anualidades"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19268,7 +19268,7 @@ id = "1787"
 number = "1787"
 label = "Hijo/Hija 3 (*): NIF/NIE del pagador de las anualidades"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19277,7 +19277,7 @@ id = "1788"
 number = "1788"
 label = "Hijo/Hija 4 (*): NIF/NIE del pagador de las anualidades"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19286,7 +19286,7 @@ id = "1789"
 number = "1789"
 label = "Hijo/Hija 5 (*): NIF/NIE del pagador de las anualidades"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19295,7 +19295,7 @@ id = "1790"
 number = "1790"
 label = "Compensación entre cónyuges: IBAN"
 section = ["resultados", "compensacion_conyuges_res"]
-data_type = "text"
+data_type = "iban"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -19367,7 +19367,7 @@ id = "1799"
 number = "1799"
 label = "Código País/Country code"
 section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
-data_type = "text"
+data_type = "country_code"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -20383,7 +20383,7 @@ id = "1918"
 number = "1918"
 label = "NIF/NIE de la persona/entidad vendedora"
 section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -20496,7 +20496,7 @@ id = "1931"
 number = "1931"
 label = "NIF/NIE de la persona/entidad que ha realizado la instalación (1)"
 section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -20840,7 +20840,7 @@ id = "1974"
 number = "1974"
 label = "NIF"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -20876,7 +20876,7 @@ id = "1978"
 number = "1978"
 label = "NIF"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21243,7 +21243,7 @@ id = "2040"
 number = "2040"
 label = "NIF de la guardería autorizada 1"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21260,7 +21260,7 @@ id = "2042"
 number = "2042"
 label = "NIF de la guardería autorizada 1"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21277,7 +21277,7 @@ id = "2044"
 number = "2044"
 label = "NIF/NIE 1"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21286,7 +21286,7 @@ id = "2045"
 number = "2045"
 label = "NIF/NIE 3"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21295,7 +21295,7 @@ id = "2046"
 number = "2046"
 label = "NIF/NIE 3"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21304,7 +21304,7 @@ id = "2047"
 number = "2047"
 label = "NIF/NIE 4"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21337,7 +21337,7 @@ id = "2052"
 number = "2052"
 label = "NIF/NIE 1"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21346,7 +21346,7 @@ id = "2053"
 number = "2053"
 label = "NIF/NIE 3"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21355,7 +21355,7 @@ id = "2054"
 number = "2054"
 label = "NIF/NIE 3"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21364,7 +21364,7 @@ id = "2055"
 number = "2055"
 label = "NIF/NIE 4"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21373,7 +21373,7 @@ id = "2062"
 number = "2062"
 label = "NIF/NIE del arrendador 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ges"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21409,7 +21409,7 @@ id = "2066"
 number = "2066"
 label = "NIF del Colegio Mayor/Menor/Residencia de estudiantes 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ges"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21418,7 +21418,7 @@ id = "2067"
 number = "2067"
 label = "NIF/NIE del arrendador 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ges"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21454,7 +21454,7 @@ id = "2071"
 number = "2071"
 label = "NIF del Colegio Mayor/Menor/Residencia de estudiantes 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ges"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21517,7 +21517,7 @@ id = "2078"
 number = "2078"
 label = "NIF de la entidad 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ipse"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21534,7 +21534,7 @@ id = "2080"
 number = "2080"
 label = "NIF de la entidad 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ipse"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21576,7 +21576,7 @@ id = "2085"
 number = "2085"
 label = "NIF prestador del servicio 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21593,7 +21593,7 @@ id = "2087"
 number = "2087"
 label = "NIF prestador del servicio 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21610,7 +21610,7 @@ id = "2089"
 number = "2089"
 label = "NIF prestador del servicio 3"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21627,7 +21627,7 @@ id = "2091"
 number = "2091"
 label = "NIF prestador del servicio 4"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21644,7 +21644,7 @@ id = "2093"
 number = "2093"
 label = "NIF prestador del servicio 5"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21661,7 +21661,7 @@ id = "2095"
 number = "2095"
 label = "NIF prestador del servicio 6"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21678,7 +21678,7 @@ id = "2097"
 number = "2097"
 label = "NIF prestador del servicio 7"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21695,7 +21695,7 @@ id = "2099"
 number = "2099"
 label = "NIF prestador del servicio 8"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21745,7 +21745,7 @@ id = "2105"
 number = "2105"
 label = "NIF prestador del servicio 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21762,7 +21762,7 @@ id = "2107"
 number = "2107"
 label = "NIF prestador del servicio 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21779,7 +21779,7 @@ id = "2109"
 number = "2109"
 label = "NIF prestador del servicio 3"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21796,7 +21796,7 @@ id = "2111"
 number = "2111"
 label = "NIF prestador del servicio 4"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21813,7 +21813,7 @@ id = "2113"
 number = "2113"
 label = "NIF prestador del servicio 5"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21830,7 +21830,7 @@ id = "2115"
 number = "2115"
 label = "NIF prestador del servicio 6"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21847,7 +21847,7 @@ id = "2117"
 number = "2117"
 label = "NIF prestador del servicio 7"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21864,7 +21864,7 @@ id = "2119"
 number = "2119"
 label = "NIF prestador del servicio 8"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21906,7 +21906,7 @@ id = "2124"
 number = "2124"
 label = "NIF prestador del servicio 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21923,7 +21923,7 @@ id = "2126"
 number = "2126"
 label = "NIF prestador del servicio 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21940,7 +21940,7 @@ id = "2128"
 number = "2128"
 label = "NIF prestador del servicio 3"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21957,7 +21957,7 @@ id = "2130"
 number = "2130"
 label = "NIF prestador del servicio 4"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21974,7 +21974,7 @@ id = "2132"
 number = "2132"
 label = "NIF prestador del servicio 5"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -21991,7 +21991,7 @@ id = "2134"
 number = "2134"
 label = "NIF prestador del servicio 6"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -22008,7 +22008,7 @@ id = "2136"
 number = "2136"
 label = "NIF prestador del servicio 7"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -22025,7 +22025,7 @@ id = "2138"
 number = "2138"
 label = "NIF prestador del servicio 8"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -22066,7 +22066,7 @@ id = "2143"
 number = "2143"
 label = "NIF de la entidad 1"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_afp"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
@@ -22083,7 +22083,7 @@ id = "2145"
 number = "2145"
 label = "NIF de la entidad 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_afp"]
-data_type = "text"
+data_type = "nif"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
