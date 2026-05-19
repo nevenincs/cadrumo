@@ -25,6 +25,7 @@ related:
   - '[[2026-05-18-profile-lifecycle-cli-adr]]'
   - '[[2026-05-18-profile-lifecycle-cli-audit]]'
   - '[[2026-05-18-profile-lifecycle-cli-plan]]'
+  - '[[2026-05-19-profile-lifecycle-cli-audit]]'
   - '[[2026-05-19-profile-lifecycle-cli-reference]]'
 ---
 
@@ -43,6 +44,7 @@ Auto-generated index of all documents tagged with `#profile-lifecycle-cli`.
 
 - `2026-05-17-per-bucket-sqlite-cascade-audit` - `profile-lifecycle-cli` audit: per-bucket SQLite cascade scope
 - `2026-05-18-profile-lifecycle-cli-audit` - `profile-lifecycle-cli` audit: P01 cascade scope expansion
+- `2026-05-19-profile-lifecycle-cli-audit` - `profile-lifecycle-cli` audit: operator testimony synthesis — pre-alpha disaster classification
 
 ### exec
 
