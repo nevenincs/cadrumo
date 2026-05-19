@@ -32,7 +32,7 @@ def resolve_active_profile() -> str:
     Raises:
         GoogleAuthProfileUnboundError: When the operator-facing
             precedence chain resolves to ``None``. The error carries
-            a `suggestion` pointing to `aeat config init` and a
+            a `suggestion` pointing to `aeat config profile create NAME` and a
             `context` payload naming the resolution attempt for
             renderers.
     """
@@ -44,7 +44,7 @@ def resolve_active_profile() -> str:
     raise GoogleAuthProfileUnboundError(
         "no active AEAT profile bound for Google OAuth",
         context={"active_profile": resolved or ""},
-        suggestion="aeat config init --tax-id <NIF>",
+        suggestion="aeat config profile create NAME --tax-id <NIF>",
     )
 
 

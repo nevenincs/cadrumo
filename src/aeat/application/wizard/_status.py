@@ -124,7 +124,7 @@ def _next_wizard_action(
     login_ready: bool,
 ) -> str:
     if not has_profile:
-        return "aeat config init --profile NAME"
+        return "aeat config profile create NAME"
     if missing_required:
         return f"aeat config set {missing_required[0]} VALUE"
     if missing_enrolment:

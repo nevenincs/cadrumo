@@ -1155,7 +1155,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_GOOGLE_PROFILE_UNBOUND",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_google_profile_unbound",
-            default_suggestion="aeat config init --tax-id <NIF>",
+            default_suggestion="aeat config profile create NAME --tax-id <NIF>",
             retryable=False,
             runbook_id=None,
         ),

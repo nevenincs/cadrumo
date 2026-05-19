@@ -446,14 +446,14 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="profile.readiness",
             status="warn",
             summary="no active profile",
-            next_action="aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>",
+            next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     if not report.profile_ready:
         return DiagnosticCheck(
             name="profile.readiness",
             status="warn",
             summary=f"missing required keys: {', '.join(report.missing_required)}",
-            next_action="aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>",
+            next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     return DiagnosticCheck(
         name="profile.readiness",

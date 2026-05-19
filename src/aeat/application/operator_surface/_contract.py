@@ -45,7 +45,7 @@ RETIRED_OPERATOR_SURFACES: tuple[RetiredOperatorSurface, ...] = (
     RetiredOperatorSurface(
         name="setup",
         replacement="config",
-        suggestion="aeat config init",
+        suggestion="aeat config profile create NAME",
         reason="setup and config are consolidated under the config root",
     ),
     RetiredOperatorSurface(

@@ -140,12 +140,13 @@ class WorkflowState(BaseModel):
             ``transaction_id``.
         updated_at: UTC timestamp of the last write.
 
-    The historical ``profiles`` field has retired in favour of a
-    filesystem manifest scan; consumers access the same mapping shape
-    via the :attr:`profiles` computed property below, which scans
-    ``<aeat_local_storage_root>/buckets/*/manifest.toml`` on every
-    read. The active profile resolves via the precedence chain
-    (Settings override > plaintext pointer file).
+    The historical ``profiles`` field has retired. Consumers that
+    need to enumerate registered profiles call
+    :func:`aeat.application.workflow._profile_bucket_scan.list_profile_buckets`
+    or :func:`read_profile_bucket` directly; both scan
+    ``<aeat_local_storage_root>/buckets/*/manifest.toml`` and never
+    open an encrypted database. The active profile resolves via the
+    precedence chain (Settings override > plaintext pointer file).
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -277,7 +278,7 @@ def active_transaction_catalogue_repository(
         raise LedgerNoActiveBucketError(
             "no active profile bucket",
             context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
-            suggestion="aeat config init --profile NAME",
+            suggestion="aeat config profile create NAME",
         ) from exc
     return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 

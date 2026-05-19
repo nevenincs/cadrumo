@@ -438,7 +438,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_FINANCIAL_LEDGER_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_financial_ledger_no_active_bucket",
-            default_suggestion="aeat config init",
+            default_suggestion="aeat config profile create NAME",
             retryable=False,
             runbook_id=None,
         ),

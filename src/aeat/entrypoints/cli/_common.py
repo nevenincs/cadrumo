@@ -71,8 +71,8 @@ def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
     if active is None:
         _emit(
             ctx,
-            {"error": "no-active-profile", "next": "aeat config init --profile NAME"},
-            ["error\tno-active-profile", "next\taeat config init --profile NAME"],
+            {"error": "no-active-profile", "next": "aeat config profile create NAME"},
+            ["error\tno-active-profile", "next\taeat config profile create NAME"],
         )
         _exit(2)
     return current, active
