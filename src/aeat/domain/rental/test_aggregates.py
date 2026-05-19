@@ -98,11 +98,15 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                 ),
             )
             assert contract.id is not None
+            gross_rent = Decimal("12000.00")
+            financiacion = Decimal("1000.00")
+            reparacion = Decimal("500.00")
+            ibi = Decimal("500.00")
             income_repo.upsert(
                 RentalIncomeRecord(
                     contract_id=contract.id,
                     period_year=2025,
-                    gross_rent_received=Decimal("12000.00"),
+                    gross_rent_received=gross_rent,
                     dias_alquilados=365,
                 ),
             )
@@ -111,7 +115,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                     finca_id=let_finca.id,
                     period_year=2025,
                     category=ExpenseCategory.FINANCIACION_INTERESES,
-                    amount=Decimal("1000.00"),
+                    amount=financiacion,
                 ),
             )
             expense_repo.add(
@@ -119,7 +123,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                     finca_id=let_finca.id,
                     period_year=2025,
                     category=ExpenseCategory.CONSERVACION_REPARACION,
-                    amount=Decimal("500.00"),
+                    amount=reparacion,
                 ),
             )
             expense_repo.add(
@@ -127,7 +131,7 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                     finca_id=let_finca.id,
                     period_year=2025,
                     category=ExpenseCategory.IBI_TRIBUTOS_NO_ESTATALES,
-                    amount=Decimal("500.00"),
+                    amount=ibi,
                 ),
             )
 
@@ -140,11 +144,14 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                 ledger_repo=ledger_repo,
             )
 
-            assert aggregates.ingresos_integros == Decimal("12000.00")
-            assert aggregates.gastos_deducibles == Decimal("2000.00")
-            assert aggregates.amortizacion == Decimal("5000.00")
-            assert aggregates.reduccion_arrendamiento_vivienda == Decimal("3000.00")
-            assert aggregates.imputacion_rentas_inmobiliarias == Decimal("2000.00")
+            expected_amortizacion = Decimal("5000.00")
+            expected_reduccion = Decimal("3000.00")
+            expected_imputacion = Decimal("2000.00")
+            assert aggregates.ingresos_integros == gross_rent
+            assert aggregates.gastos_deducibles == financiacion + reparacion + ibi
+            assert aggregates.amortizacion == expected_amortizacion
+            assert aggregates.reduccion_arrendamiento_vivienda == expected_reduccion
+            assert aggregates.imputacion_rentas_inmobiliarias == expected_imputacion
             assert set(aggregates.per_finca_attribution) == {let_finca.id, non_let_finca.id}
             assert set(aggregates.per_contract_tier) == {contract.id}
     finally:
