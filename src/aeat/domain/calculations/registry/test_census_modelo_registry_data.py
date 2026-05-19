@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
 
-from . import build_snapshot, load_registry_tree
+from . import build_snapshot, discover_modelo_sources, load_registry_tree
 from ._coverage import build_model_law_coverage_ledger
 from ._errors import RegistrySnapshotError
 from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
@@ -102,5 +100,5 @@ def test_modelo_036_rejects_unknown_census_event_period() -> None:
 
 
 def test_no_committed_modelo_037_toml_can_revive_active_support() -> None:
-    assert not (Path(PROJECT_ROOT) / "registry" / "aeat" / "modelos" / "037.toml").exists()
-    assert not (Path(PROJECT_ROOT) / "registry" / "aeat" / "modelos" / "037" / "manifest.toml").exists()
+    sources = discover_modelo_sources(bundled_path("registry", "aeat", "modelos"))
+    assert "037" not in {source.modelo_id for source in sources}

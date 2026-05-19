@@ -22,6 +22,7 @@ import typer
 from aeat.application.review import LedgerReviewFilterKey
 from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
+from aeat.domain.calculations.registry import discover_modelo_sources
 from aeat.entrypoints.cli import _ledger
 from aeat.tests.cli_runner import invoke_cached_cli
 
@@ -47,6 +48,20 @@ _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "wave ",
     "xfail",
 )
+
+
+def _modelo_source_paths(modelo_id: str) -> tuple[Path, ...]:
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    for source in discover_modelo_sources(modelos_dir):
+        if source.modelo_id != modelo_id:
+            continue
+        if source.layout == "single_file":
+            return (source.path,)
+        paths = [source.manifest_path]
+        for revision_source in source.revision_sources:
+            paths.extend(revision_source.fragment_paths)
+        return tuple(dict.fromkeys(paths))
+    raise AssertionError(f"modelo {modelo_id} is not present in registry sources")
 
 _LIVE_TEST_FILES = frozenset[str]()
 
@@ -441,7 +456,7 @@ def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_foundation.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_registry_data.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_queries.py",
-        bundled_path("registry", "aeat", "modelos", "036.toml"),
+        *_modelo_source_paths("036"),
     )
     forbidden_tokens = (
         "036, 037",
