@@ -42,8 +42,8 @@ Consolidate repeated repository structures and drivers into generic base classes
 Create a reusable generic persistence repository baseline to replace repeated pathing, locking, and serialization logic.
 
 - [x] `W02.P02.S04` - Implement generic SecureBoundRepository baseline class; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
-- [ ] `W02.P02.S05` - Refactor FilingDraftRepository to inherit from SecureBoundRepository; `src/aeat/domain/filing/_repository.py`.
-- [ ] `W02.P02.S06` - Refactor SubmissionRepository to inherit from SecureBoundRepository; `src/aeat/domain/submission/_repository.py`.
+- [x] `W02.P02.S05` - Refactor FilingDraftRepository to inherit from SecureBoundRepository; `src/aeat/domain/filing/_repository.py`.
+- [x] `W02.P02.S06` - Refactor SubmissionRepository to inherit from SecureBoundRepository; `src/aeat/domain/submission/_repository.py`.
 - [ ] `W02.P02.S07` - Extract shared repository roundtrip testing utility to replace duplicate assertions; `src/aeat/adapters/persistence/storage/conftest.py`.
 
 ### Phase `W02.P03` - Consolidate External Integrations
