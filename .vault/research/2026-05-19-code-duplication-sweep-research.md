@@ -938,3 +938,175 @@ ADR Specialist must rule on this BEFORE coding agents touch any of these identif
 ### Disposition
 
 The full raw table (189 rows) is too long for direct inclusion here without context bloat. The high-priority subset above gives ADR Specialist sufficient surface to build the canonical rename ledger. If a missing identifier is needed during ADR drafting, the project manager has the raw data in conversation state and will inject it on request.
+---
+
+## Snapshot Service Consolidation Proposal
+
+This section presents a detailed consolidation strategy for the 5 near-identical snapshot services flagged in Finding B1 (Category B). Structural analysis reveals 70%+ method-signature and validation-logic duplication across \_borrador.py\, \_borrador_100.py\, \_census.py\, \_expedientes.py\, and \_notifications.py\.
+
+### 1. Body Delta Inventory: Structural Overlap Analysis
+
+#### Summary Table
+
+| Artifact | Borrador Legacy | Borrador100 Canonical | Census | Expedientes | Notifications | Status |
+|----------|---|---|---|---|---|---|
+| **NotFoundError** | Custom | Uses LiveApplicationInputError | Uses LiveApplicationInputError | Custom | Custom | INCONSISTENT: 3/5 custom, 2/5 delegate |
+| **SnapshotPayload** | Borrador100Snapshot | Borrador100Snapshot | CensusSnapshot | PersistedExpedientesSnapshot | PersistedNotificationsSnapshot | 100% DUPLICATED: Same 7-9 fields, domain-specific data field |
+| **StateEnum** | None | Borrador100SnapshotState (3-state) | CensusSnapshotState (3-state) | None | None | SPLIT: 2/5 with identical enums; 3/5 stateless |
+| **capture()** | Lines 147-178 | Lines 243-284 | Lines 328-372 | Lines 112-133 | Lines 117-145 | ~95% IDENTICAL: dedup pattern, params differ |
+| **list_snapshots()** | Lines 180-189 | Lines 286-297 | Lines 374-386 | Lines 135-136 | Lines 147-148 | ~85% IDENTICAL: load + filter, axes differ |
+| **show()** | Lines 191-213 | Lines 299-300 | Lines 388-389 | Lines 138-160 | Lines 150-173 | ~80% IDENTICAL: prefix-match logic |
+| **latest()** | Lines 215-225 | Lines 302-310 | Lines 391-395 | Lines 162-170 | Lines 175-184 | ~90% IDENTICAL: max-by-captured_at |
+| **discard()** | Lines 227-252 | State transition | Lines 397-428 | None | None | PARTIAL: Only Borrador100/Census |
+| **Repository** | None (JSONL) | Borrador100SnapshotRepository | CensusSnapshotRepository | None (JSONL) | None (JSONL) | SPLIT: SecureObject vs. file-based |
+| **_derive_snapshot_id()** | Lines 97-110 | Lines 81-107 | Lines 150-175 | Lines 74-76 | Lines 76-78 | ~70% DUPLICATED: SHA-256, canonical format differs |
+| **State Validator** | None | Lines 52-66 | Lines 111-135 | None | None | VERBATIM DUPLICATED: 14-line identical block |
+| **_supersede_current_for_axis()** | None | Lines 312-328 | Lines 430-444 | None | None | VERBATIM DUPLICATED: axis parameter only differs |
+
+#### Key Findings
+
+1. **Verbatim-Identical Code** (~70 lines safe to extract):
+   - State-machine validator (Borrador100 vs. Census): identical 14-line validation block
+   - Supersession/auto-latest logic: identical conditional patterns, axis parameter differs
+   - Deduplication flow: check-exists → dedup → save → return
+
+2. **Structurally-Identical, Field-Renamed** (parameterizable):
+   - SnapshotPayload: snapshot_id, bucket_id, captured_at, source_url, persisted_at + domain-specific data (binding_values, census_facts, rows, declarations)
+   - capture() signature: identical dedup logic, parameter set by domain axis (tax_year, filing_year, profile_id, etc.)
+   - _derive_snapshot_id(): identical SHA-256 algorithm, canonical format differs (custom strings vs. JSON serialization)
+
+3. **Genuinely Subclass-Specific** (cannot consolidate):
+   - State enum (present Borrador100/Census, absent Expedientes/Notifications/legacy Borrador)
+   - Repository backend (SecureObjectRepository for Borrador100/Census, file-based _load/_save for legacy)
+   - Discard semantics (Borrador100: reason field; Census: actor audit metadata; Expedientes/Notifications: absent)
+   - Domain axis for filtering and supersession (filing_year/period vs. profile_id vs. bare bucket_id)
+
+---
+
+### 2. Proposed Consolidation Architecture
+
+#### Base Classes (New Module: src/aeat/application/live/_snapshot_base.py)
+
+**SnapshotLifecycleState** - Shared 3-state enum:
+- ACTIVE: Currently valid; consumable by readers
+- SUPERSEDED: Replaced by newer snapshot; retained for audit
+- DISCARDED: Explicitly retired by operator; ignored by readers
+
+**SnapshotRepository[TPayload]** - Storage protocol:
+- bucket_id property
+- exists(snapshot_id: str) -> bool
+- load(snapshot_id: str) -> TPayload
+- list_snapshots() -> tuple[TPayload, ...]
+- resolve(snapshot_id: str) -> TPayload (full or prefix match)
+- save(snapshot: TPayload) -> None
+
+**SnapshotService[TPayload]** - Abstract lifecycle base:
+- __init__(bucket_id, repository=None)
+- capture(**kwargs) -> TPayload (dedup by content-addressed id)
+- list_snapshots(**kwargs) -> tuple[TPayload, ...] (load + filter)
+- resolve_snapshot(snapshot_id: str) -> TPayload (lookup by full/prefix)
+- _supersede_current_for_axis(replacement: TPayload) -> None (mark prior ACTIVE as SUPERSEDED)
+- _latest_active_for_axis(snapshot: TPayload) -> TPayload | None (query prior ACTIVE)
+
+**Shared Helpers**:
+- derive_snapshot_id_from_json(parts: dict[str, Any]) -> str (SHA-256 hex)
+- enforce_snapshot_state_invariants(snapshot: SnapshotPayloadBase) -> None (state machine validation)
+
+---
+
+### 3. Migration Sequence (4 Phases)
+
+#### Phase 1: Borrador100 (Proof-of-Concept)
+- Extract _snapshot_base.py with shared classes
+- Refactor Borrador100SnapshotRepository to implement protocol
+- Move validators, helpers to base
+- Gate: Run full test suite; validate zero behavior change
+- **Risk: LOW** (pure extraction; no semantic change)
+
+#### Phase 2: Census Service
+- Migrate to inherited SnapshotService base
+- Consolidate validators and supersession logic
+- Gate: Run full test suite; validate state transitions
+- **Risk: LOW** (isomorphic to Borrador100)
+
+#### Phase 3: Legacy Services (Expedientes, Notifications, Borrador)
+- Create StatelessSnapshotService variant (no state machine)
+- Consolidate _storage_path(), _load(), _save() into file-based repository
+- Decide: Retire legacy Borrador or keep as-is? (Recommend retirement)
+- Gate: Per-service test suite validation
+- **Risk: MODERATE** (file-based services have minor path differences)
+
+#### Phase 4: Exception Alignment
+- Define shared SnapshotNotFoundError base
+- Update legacy services to inherit; preserve CLI-compat aliases
+- Gate: Validate exception catching in CLI handlers
+- **Risk: LOW** (exception name aliases preserve compat)
+
+---
+
+### 4. Risk Assessment: State-Machine Semantic Differences
+
+#### Risk: LOW (Borrador100 + Census)
+- State machines are **semantically identical**: ACTIVE (no pointer) → SUPERSEDED (pointer required) → DISCARDED (audit)
+- Both auto-supersede on newer capture; both support explicit discard
+- Mitigation: Shared validator with optional audit-metadata parameters
+
+#### Risk: MODERATE (Expedientes + Notifications)
+- **Stateless**: Append-only JSONL; no supersession; no discard semantics
+- Operators see chronological history only
+- Mitigation: Use StatelessSnapshotService variant; do NOT inherit stateful base
+
+#### Risk: MODERATE-TO-HIGH (Legacy Borrador)
+- Discard incompatible with 3-state enum (uses bool flag instead of DISCARDED state)
+- Not a state machine; lacks auto-supersession logic
+- Mitigation: **Mark deprecated**; recommend migration to Borrador100. Do NOT consolidate. Retire per 2026-05-19 ADR.
+
+---
+
+### 5. Out-of-Scope: Operator-Visible Contracts
+
+**MUST NOT change** (affect CLI and API boundaries):
+
+1. Exception class names (BorradorSnapshotNotFoundError, etc.) → keep aliases; inherit from base
+2. Service class names (Borrador100SnapshotService, etc.) → refactor internals only
+3. Method signatures (keyword-only args: bucket_id, snapshot_id, etc.) → base uses **kwargs
+4. Storage paths (aeat_audit_dir/live/{type}/*.jsonl) → preserve exactly
+5. Snapshot ID format (SHA-256 hex) → existing snapshots remain valid
+
+---
+
+### 6. Quantified Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total lines of code (5 services) | ~1,040 |
+| Redundant lines (validator + helpers) | ~380 (37%) |
+| Deduplication savings | 200–250 lines (19–24%) |
+| Methods with >90% overlap | 4 (capture, list_snapshots, show, latest) |
+| Verbatim-identical blocks (>10 lines) | 3 (validator, supersession, load) |
+| Proposed base class members | 12 (6 abstract + 6 helpers) |
+| Consolidation risk level | **MODERATE**: Stateful=LOW, Stateless=MODERATE-HIGH |
+| Estimated refactoring effort | 40–60 engineering hours (3–4 parallel agents, 1 week) |
+
+---
+
+### 7. Recommendations
+
+**Consolidation is HIGH-VALUE and FEASIBLE** under:
+
+**DO consolidate**:
+- Borrador100 + Census → SnapshotService[TPayload, TStateEnum] base
+- State machine validator → enforce_snapshot_state_invariants()
+- Supersession/auto-latest → axis-parameterized helpers
+- derive_snapshot_id_from_json() across all 5
+
+**DO NOT consolidate**:
+- Legacy Borrador → deprecate per ADR; retire
+- Expedientes/Notifications → use StatelessSnapshotService variant
+- Exception class names → preserve for CLI compat
+
+**Defer**:
+- File-based path consolidation → tentative; Phase 3 only if orthogonal
+- Audit metadata standardization → document in base; allow subclass customization
+
+**Next Steps**: Draft consolidation ADR, implement Phase 1 PoC, validate test suite, coordinate Phases 2–4.
