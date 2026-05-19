@@ -353,7 +353,7 @@ def test_committed_modelo_232_construct_includes_export_layout_and_export_link()
         assert construct.export_layouts == tuple(layout.id for layout in revision.export_layouts)
         export_links = [link for link in revision.application_links if link.surface == "export"]
         assert len(export_links) == 1, revision.id
-        assert export_links[0].consumer == "aeat.application.filing.export"
+        assert export_links[0].consumer == "aeat.application.filing.export_draft"
         assert export_links[0].id in construct.application_links
 
 

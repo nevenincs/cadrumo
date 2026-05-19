@@ -53,7 +53,7 @@ def test_modelo_145_source_authority_files_match_catalogue_fingerprints() -> Non
     sources = {source_id: catalogues.sources[source_id] for source_id in _SOURCE_IDS}
 
     for source in sources.values():
-        verify_source_file(PROJECT_ROOT, source)
+        verify_source_file(bundled_path(), source)
 
     assert sources["aeat-modelo-145-procedure"].evidence_tier == "official_source_guidance"
     assert sources["aeat-modelo-145-obligaciones-retenedor"].evidence_tier == "official_source_guidance"

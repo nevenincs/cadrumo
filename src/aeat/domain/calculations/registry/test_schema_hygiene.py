@@ -73,6 +73,7 @@ _VALIDATOR_TEST_ALLOWLIST = frozenset(
     {
         "test_country_code_data_type.py",
         "test_iban_data_type.py",
+        "test_long_tail_data_types.py",
         "test_nif_data_type.py",
         "test_period_code_data_type.py",
         "test_referential_integrity.py",
