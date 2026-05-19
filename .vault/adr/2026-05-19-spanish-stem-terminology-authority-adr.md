@@ -512,3 +512,84 @@ The spanish-tax-glossary reference document carries the canonical BOE / AEAT cit
 - Addition: RD 596/2016 (BOE-A-2016-11575) — modernización del IVA (libros registro). Required by Future Scope F2.
 
 The glossary section "## Verification addendum (2026-05-19)" carries the verified-citation table. This amendment does not duplicate the table; it cross-references the glossary as the single source of truth for the citation set.
+
+## Amendment A7 (2026-05-19): Future Scope F1 promoted to in-scope — canonical lifecycle vocabulary table
+
+### Context
+
+Task #39 promotes the state-machine rename from Future Scope F1 to an active in-scope campaign step. The full English→Spanish vocabulary table is required before coder agents can execute the rename sweep. This amendment provides that table with BOE/AEAT citations, adjudicates the contested `ACKNOWLEDGED` mapping, verifies the DraftStatus/ModeloDraftStatus singleton, and issues the enum-value encoding recommendation.
+
+### A7.1 Enum inventory
+
+The following enum classes carry filing/draft/submission/modelo-record lifecycle values across the three audit surfaces (`src/aeat/domain/`, `src/aeat/application/`, `src/aeat/adapters/persistence/`):
+
+| Enum class | File | Values |
+| --- | --- | --- |
+| `SubmissionStatus` | `src/aeat/domain/submission/_models.py` | `PENDING`, `IN_PROGRESS`, `SUBMITTED`, `ACKNOWLEDGED`, `REJECTED`, `FAILED` |
+| `ModeloDraftStatus` | `src/aeat/domain/submission/_protocols.py` | `DRAFT`, `VALIDATED`, `READY_TO_SUBMIT`, `APPROVED`, `APPROVAL_STALE`, `SUBMITTED`, `ACKNOWLEDGED`, `REJECTED`, `AMENDED`, `CANCELLED` |
+| `ModeloRecordStatus` | `src/aeat/domain/modelos/_filing_record.py` | `CURRENT`, `SUPERSEDED` |
+| `CalculationRevisionState` | `src/aeat/domain/modelos/_calculation_revision.py` | `DRAFT`, `FILED`, `FILED_SUPERSEDED`, `DISCARDED` |
+| `WorkUnitState` | `src/aeat/domain/modelos/_work_unit.py` | `DRAFT`, `DISCARDED` |
+| `ReconciliationStatus` | `src/aeat/application/filing/reconciliation/_schema.py` | `MATCH`, `DIVERGENT` |
+
+**DraftStatus singleton verification:** grep confirms a single `ModeloDraftStatus` enum at `_protocols.py:123`. No second `DraftStatus` or `FilingDraftStatus` class exists at this point. Task #20 consolidation landed successfully. No collapse work remains.
+
+### A7.2 Canonical English-to-Spanish vocabulary table
+
+Scope: `SubmissionStatus` and `ModeloDraftStatus` — the two enums whose values represent the AEAT Sede Electrónica submission lifecycle. The other enums (`ModeloRecordStatus`, `CalculationRevisionState`, `WorkUnitState`, `ReconciliationStatus`) represent internal-tool lifecycle concepts, not AEAT Sede lifecycle stages; see A7.4 for those.
+
+| Current English value | Canonical Spanish value | BOE / AEAT citation | Notes |
+| --- | --- | --- | --- |
+| `PENDING` | `PENDIENTE` | Ley 39/2015 LPAC Art. 27.1 (BOE-A-2015-10565): "los documentos administrativos se considerarán emitidos … cuando … estén pendientes de resolución". AEAT Sede Electrónica renders `Pendiente de presentar` in the declaración list view before first attempt. | See A7.3 for the full AEAT phrase (`PENDIENTE_DE_PRESENTAR`) vs. the abbreviated code token (`PENDIENTE`). |
+| `IN_PROGRESS` | `EN_TRAMITACION` | Ley 39/2015 LPAC Art. 70.4 uses "en tramitación" for the open-expediente state. AEAT Sede uses "En trámite" in the expediente list for procedures under active processing. | `IN_PROGRESS` is tool-internal (browser attempt running); no direct AEAT Sede label. Closest statutory concept is "en tramitación" — the filing is in motion but not yet concluded. |
+| `SUBMITTED` | `PRESENTADA` | AEAT Sede Electrónica renders `Presentada` on the declaración line immediately after the CSV justificante is issued, per the Sede submission flow documented under Ley 39/2015 LPAC Art. 27.3 (BOE-A-2015-10565) and Real Decreto 203/2021 Art. 41 (BOE-A-2021-4628). Ley 58/2003 LGT Art. 66.1 uses "presentación" as the operative moment for prescription purposes. | `SUBMITTED` covers the transition "attempt completed; awaiting AEAT response". Corresponds to the moment the declaración is logged as `Presentada` on Sede before AEAT validation completes. |
+| `ACKNOWLEDGED` | `ACEPTADA` | AEAT Sede renders `Aceptada` as the single terminal-success label after validation, CSV generation, and PDF justificante issuance. Ley 39/2015 LPAC Art. 27.3 grounds the justificante as the legal act of acceptance. Real Decreto 203/2021 Art. 41 makes the justificante de presentación the statutory attestation of the accepted filing. | **ACKNOWLEDGED maps to ACEPTADA, not to a preliminary receipt state.** Code evidence: `SubmissionStatus.ACKNOWLEDGED` requires `justificante_csv` AND `justificante_pdf_path` to both be present (model_validator at `_models.py:117-124`). The justificante is only generated after AEAT validation succeeds — this is the same event AEAT Sede labels `Aceptada`. There is no distinct "acuse de recibo" state in the Sede UI; AEAT goes directly from `Presentada` to `Aceptada` or `Rechazada`. An intermediate `ACUSE_RECIBO` or `EN_TRAMITACION` state would require a distinct code path not present in the codebase. |
+| `REJECTED` | `RECHAZADA` | AEAT Sede renders `Rechazada` when the declaración fails validation. Ley 39/2015 LPAC Art. 68.5 grounds rejection as a formal administrative act. | Both `SubmissionStatus.REJECTED` and `ModeloDraftStatus.REJECTED` map here. |
+| `FAILED` | `FALLIDA` | No direct AEAT Sede label. `FAILED` is a tool-internal state (transport failure, browser crash before AEAT confirmed receipt). The closest Spanish administrative concept is "fallida" (failed attempt) — not a statutory AEAT term but a safe, unambiguous label. | Remains tool-internal; no AEAT Sede mapping. |
+| `DRAFT` | `BORRADOR` | Ley 35/2006 IRPF Art. 98 (BOE-A-2006-20764) establishes the `borrador` as the AEAT-prepared draft. AEAT Sede renders `Borrador` in the Renta Web flow. | In `ModeloDraftStatus`, `DRAFT` denotes a taxpayer-side local draft not yet validated — distinct from the AEAT-prepared Borrador100. The Spanish token `BORRADOR` covers both: taxpayer local draft before submission is also in borrador state per colloquial AEAT usage. See Amendment A3 boundary rule. |
+| `VALIDATED` | `VALIDADO` | Tool-internal state (local validation rules passed). No direct AEAT Sede label. `Validado` follows established Spanish past-participle convention (cf. `Presentada`, `Aceptada`) and is unambiguous in context. | `ModeloDraftStatus` only. |
+| `READY_TO_SUBMIT` | `LISTO_PARA_PRESENTAR` | Tool-internal state (draft fully prepared, awaiting operator approval). No direct AEAT Sede label. `Listo para presentar` mirrors the AEAT Sede phrase "Pendiente de presentar" but from the tool's perspective (preparation complete); distinguished from `PENDIENTE` (filing recorded but attempt not yet run). | `ModeloDraftStatus` only. |
+| `APPROVED` | `APROBADO` | Tool-internal state (operator approved the draft for submission). No statutory AEAT term. `Aprobado` is the standard Spanish past-participle for an operator-approval act. | `ModeloDraftStatus` only. |
+| `APPROVAL_STALE` | `APROBACION_CADUCADA` | Tool-internal state (approval timestamp exceeded the staleness window per the draft-approval-staleness ADR). No AEAT Sede equivalent. `Aprobación caducada` follows the AEAT conventions for expired acts (cf. `caducidad` in LPAC Art. 95). | `ModeloDraftStatus` only. |
+| `AMENDED` | `ENMENDADO` | Tool-internal state (draft superseded by a complementaria or sustitutiva per LGT Art. 122). `Enmendado` is the past-participle form; `enmienda` is the generic Spanish legal term for amendment. Note: per Amendment A5, the concrete amendment entities are `ModeloComplementaria` / `ModeloSustitutiva`. `ENMENDADO` is the status label on the superseded draft. | `ModeloDraftStatus` only. |
+| `CANCELLED` | `ANULADO` | Ley 39/2015 LPAC Art. 89 (resolución de terminación) covers administrative cancellation. AEAT Sede uses `Anulada` for a cancelled declaración session. `ANULADO` is the correct past-participle for masculine `modelo` in context. | `ModeloDraftStatus` only. |
+
+### A7.3 PENDIENTE vs PENDIENTE_DE_PRESENTAR adjudication
+
+The AEAT Sede UI renders the full phrase `Pendiente de presentar` on the declaración list. The question is whether the enum member `.value` should be the full phrase token or a single-word abbreviation.
+
+**Decision: `PENDIENTE_DE_PRESENTAR`** is the canonical `.value` string. Rationale:
+
+- The AEAT Sede phrase is the statutory label; encoding the full phrase as an underscore-joined token removes ambiguity with any generic "pending" concept in adjacent code.
+- `PENDIENTE` alone already appears in `src/aeat/application/review/_enums.py` and `_filter.py` with completely different semantics (operator review queue state). Using `PENDIENTE_DE_PRESENTAR` avoids collision.
+- Enum member name: `PENDIENTE_DE_PRESENTAR` (matches `.value`; all-caps per StrEnum convention).
+
+### A7.4 Non-AEAT-Sede lifecycle enums — recommendation
+
+The following enums encode internal-tool or persistence lifecycle states, not AEAT Sede stages. They are **in scope for the rename convention** (Spanish stems authoritative) but do not map directly to Sede labels:
+
+| Enum class | Current values | Recommended Spanish values | Rationale |
+| --- | --- | --- | --- |
+| `ModeloRecordStatus` | `CURRENT`, `SUPERSEDED` | `VIGENTE`, `SUPERSEDIDO` | `VIGENTE` is the AEAT-adjacent term for a currently active registration/declaration (e.g., AEAT uses `vigente` for active census registrations in RD 1065/2007 RGAGI). `SUPERSEDIDO` is a direct Spanish past-participle for the supersession concept; no closer AEAT term exists for this persistence-internal state. |
+| `CalculationRevisionState` | `DRAFT`, `FILED`, `FILED_SUPERSEDED`, `DISCARDED` | `BORRADOR`, `PRESENTADO`, `PRESENTADO_SUPERSEDIDO`, `DESCARTADO` | `PRESENTADO` mirrors `PRESENTADA` (the submission act); `DESCARTADO` is the operator-discard concept, cf. LGT Art. 73 settlement discretion. `BORRADOR` per Ley 35/2006 Art. 98. |
+| `WorkUnitState` | `DRAFT`, `DISCARDED` | `BORRADOR`, `DESCARTADO` | Same rationale as `CalculationRevisionState`. |
+| `ReconciliationStatus` | `MATCH`, `DIVERGENT` | `COINCIDE`, `DIVERGENTE` | Tool-internal reconciliation labels. `COINCIDE` and `DIVERGENTE` are unambiguous Spanish equivalents with no statutory loading. |
+
+### A7.5 Enum encoding recommendation
+
+**Decision: both MEMBER NAME and `.value` string go Spanish simultaneously.** Justification:
+
+- The codebase mandate is "no shims, no legacy, no deprecation paths" (architecture-boundaries rule, aeat-source-hygiene rule). Keeping English member names with Spanish `.value` strings creates a two-tier cognitive model and is itself a form of compatibility shim.
+- The persisted `.value` strings are stored in local SQLite under the dev branch (factory-direct, no production DB). No migration cost beyond re-seeding, which is standard for this campaign.
+- The roundtrip-test gate (real adapters, strict pydantic equality, anti-tautology proof per aeat-roundtrip-discipline rule) enforces the rename through the persistence boundary automatically — a renamed `.value` that fails to roundtrip will fail the gate.
+- Examples of the fully-Spanish encoding: `PRESENTADA = "PRESENTADA"`, `ACEPTADA = "ACEPTADA"`, `BORRADOR = "BORRADOR"`.
+
+The coders executing this rename must: (1) rename both the member and the `.value` string in lockstep, (2) run the roundtrip gate for `SubmissionStatus` and `ModeloDraftStatus` before commit, (3) update every string-literal comparison and `Literal[...]` annotation that references the old English `.value` strings.
+
+### A7.6 Canonical lifecycle phases not yet represented
+
+Inspection found no enum value for the AEAT Sede intermediate state `En trámite` (between `Presentada` and `Aceptada/Rechazada`). AEAT validation is synchronous at the Sede submission boundary; the tool never observes this intermediate state because the Playwright adapter waits for the terminal CSV/rejection response before returning. No new enum member is required.
+
+### A7.7 Supersession note
+
+The "Future scope F1" paragraph in the "Future scope" section above is superseded by this amendment. The scope is now in-scope. The vocabulary table in A7.2 is the single authoritative source for all executing agents on this rename pass.
