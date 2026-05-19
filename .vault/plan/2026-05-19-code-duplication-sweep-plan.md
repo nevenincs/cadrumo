@@ -164,12 +164,12 @@ Rename the Filing-prefixed identifiers under src/aeat/domain/filing/ to their Mo
 
 Rename FilingRecord, FilingRecordStatus, FilingRecordCatalogue and friends to their Modelo equivalents under src/aeat/domain/modelos/ while preserving the split between ModeloRecord (domain pydantic) and ModeloRow (SQL ORM) per project-lead adjudication of ADR footnote 1. Schema-impact rows; gated by the standard roundtrip-test pattern.
 
-- [ ] `W04.P09.S84` - Rename FilingRecord to ModeloRecord as the canonical domain pydantic record; `keep the SQL ModeloRow separate per project-lead adjudication; `src/aeat/domain/modelos/_filing_record.py`.
-- [ ] `W04.P09.S85` - Rename FilingRecordStatus to ModeloRecordStatus; `src/aeat/domain/modelos/_filing_record.py`.
-- [ ] `W04.P09.S86` - Rename FilingRecordCatalogue to ModeloRecordCatalogue; `src/aeat/domain/modelos/_filing_record.py`.
-- [ ] `W04.P09.S87` - Rename FilingRecordPersistenceError to ModeloRecordPersistenceError; `src/aeat/domain/modelos/_filing_record.py`.
-- [ ] `W04.P09.S88` - Rename FilingRecordCatalogueRepository to ModeloRecordCatalogueRepository; `src/aeat/domain/modelos/_filing_repository.py`.
-- [ ] `W04.P09.S89` - Run the strict roundtrip-test gate over the ModeloRecord domain pydantic and ModeloRow SQL boundary after the rename, populating every defaultable field with a non-default value; `src/aeat/domain/modelos/test_modelo_record_roundtrip.py`.
+- [x] `W04.P09.S84` - Rename FilingRecord to ModeloRecord as the canonical domain pydantic record; `keep the SQL ModeloRow separate per project-lead adjudication; `src/aeat/domain/modelos/_filing_record.py`.
+- [x] `W04.P09.S85` - Rename FilingRecordStatus to ModeloRecordStatus; `src/aeat/domain/modelos/_filing_record.py`.
+- [x] `W04.P09.S86` - Rename FilingRecordCatalogue to ModeloRecordCatalogue; `src/aeat/domain/modelos/_filing_record.py`.
+- [x] `W04.P09.S87` - Rename FilingRecordPersistenceError to ModeloRecordPersistenceError; `src/aeat/domain/modelos/_filing_record.py`.
+- [x] `W04.P09.S88` - Rename FilingRecordCatalogueRepository to ModeloRecordCatalogueRepository; `src/aeat/domain/modelos/_filing_repository.py`.
+- [x] `W04.P09.S89` - Run the strict roundtrip-test gate over the ModeloRecord domain pydantic and ModeloRow SQL boundary after the rename, populating every defaultable field with a non-default value; `src/aeat/domain/modelos/test_modelo_record_roundtrip.py`.
 
 ### Phase `W04.P10` - Modelo Cluster: domain/deadlines and domain/calculations
 
