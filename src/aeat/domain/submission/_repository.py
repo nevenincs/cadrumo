@@ -15,20 +15,20 @@ from ...adapters.persistence.storage import SensitivityClass
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...core.logging import get_logger
-from ._models import SubmittedFiling
+from ._models import ModeloPresentado
 
 _log = get_logger(__name__)
 
 
-class SubmissionRepository(SecureBoundRepository[SubmittedFiling]):
+class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
     """Repository over encrypted SQL-backed submitted filing records."""
 
     namespace: ClassVar[str] = "aeat.domain.submission.records"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
-    payload_type: ClassVar[type[SubmittedFiling]] = SubmittedFiling
+    payload_type: ClassVar[type[ModeloPresentado]] = ModeloPresentado
 
-    def extract_identifier(self, payload: SubmittedFiling) -> str:
+    def extract_identifier(self, payload: ModeloPresentado) -> str:
         return payload.submission_id
 
     def list_submission_ids(self) -> tuple[str, ...]:
@@ -36,7 +36,7 @@ class SubmissionRepository(SecureBoundRepository[SubmittedFiling]):
 
         return tuple(self.iter_ids())
 
-    def iter_submissions(self) -> Iterator[SubmittedFiling]:
+    def iter_submissions(self) -> Iterator[ModeloPresentado]:
         """Yield every persisted submission, in lexicographic id order.
 
         Audit-record enumeration is resilient: rows that fail

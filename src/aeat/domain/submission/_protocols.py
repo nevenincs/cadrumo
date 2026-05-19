@@ -9,9 +9,9 @@ richer surfaces of its sibling subpackages.
 - ``AuthProviderProbe`` — narrow auth-provider surface for the preflight gate.
 - ``DeadlineWindowChecker`` — narrow surface over
   :mod:`aeat.domain.deadlines` used by preflight.
-- ``FilingFinding`` / ``FilingDraftLike`` / ``DraftLoader`` — narrow
+- ``ModeloFinding`` / ``ModeloDraftLike`` / ``ModeloDraftLoader`` — narrow
   filing draft surfaces; :class:`aeat.application.filing.FilingDraft`
-  structurally conforms to ``FilingDraftLike``.
+  structurally conforms to ``ModeloDraftLike``.
 
 Every record is either a strict+frozen pydantic v2 model or a
 ``runtime_checkable`` ``Protocol``; no dataclasses; no bare dicts.
@@ -26,6 +26,8 @@ from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict
+
+from ...core.errors import BaseSeverity
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -99,21 +101,7 @@ class DeadlineWindowChecker(Protocol):
         ...
 
 
-class FilingFindingSeverity(StrEnum):
-    """Severity of a filing / preflight finding.
-
-    Attributes:
-        INFO: Informational only; never blocks.
-        WARNING: Surfaced to the operator but does not block.
-        ERROR: Blocks submission; preflight refuses to proceed.
-    """
-
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
-
-
-class FilingFinding(BaseModel):
+class ModeloFinding(BaseModel):
     """Minimal finding record consumed by the preflight gate.
 
     Distinct from :class:`aeat.application.filing.FilingValidationFinding`,
@@ -128,16 +116,18 @@ class FilingFinding(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    severity: FilingFindingSeverity
+    severity: BaseSeverity
     message: str
 
 
-class DraftStatus(StrEnum):
-    """Mirror of :class:`aeat.application.filing.FilingDraftStatus` for preflight.
+class ModeloDraftStatus(StrEnum):
+    """Lifecycle status of a modelo draft, spanning preparation and submission.
 
-    Kept in sync with the source enum; the engine uses only the
-    :attr:`APPROVED` and :attr:`APPROVAL_STALE` members on its happy
-    path.
+    The state machine carries a draft from creation through validation,
+    operator approval, submission, and the AEAT-side terminal states.
+    The preflight engine consumes only :attr:`APPROVED` and
+    :attr:`APPROVAL_STALE` on its happy path; the broader filing /
+    submission stack consumes the full lifecycle.
 
     Attributes:
         DRAFT: New draft, not yet validated.
@@ -165,7 +155,7 @@ class DraftStatus(StrEnum):
 
 
 @runtime_checkable
-class FilingDraftLike(Protocol):
+class ModeloDraftLike(Protocol):
     """Narrow surface over a filing draft.
 
     :class:`aeat.application.filing.FilingDraft` structurally conforms to
@@ -200,9 +190,9 @@ class FilingDraftLike(Protocol):
 
 
 @runtime_checkable
-class DraftLoader(Protocol):
-    """Loads a :class:`FilingDraftLike` from a draft path on disk."""
+class ModeloDraftLoader(Protocol):
+    """Loads a :class:`ModeloDraftLike` from a draft path on disk."""
 
-    def load(self, draft_path: Path) -> FilingDraftLike:
-        """Load and return the :class:`FilingDraftLike` at ``draft_path``."""
+    def load(self, draft_path: Path) -> ModeloDraftLike:
+        """Load and return the :class:`ModeloDraftLike` at ``draft_path``."""
         ...

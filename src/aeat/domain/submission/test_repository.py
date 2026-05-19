@@ -20,7 +20,7 @@ from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRep
 from aeat.domain.submission import (
     SubmissionAttempt,
     SubmissionStatus,
-    SubmittedFiling,
+    ModeloPresentado,
     make_submission_id,
 )
 from aeat.domain.submission._repository import (
@@ -35,7 +35,7 @@ def _make_filing(
     draft_id: str = "draft-abc123",
     attempt_ordinal: int = 1,
     status: SubmissionStatus = SubmissionStatus.SUBMITTED,
-) -> SubmittedFiling:
+) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     submission_id = make_submission_id(draft_id, attempt_ordinal)
     attempt = SubmissionAttempt(
@@ -44,7 +44,7 @@ def _make_filing(
         ended_at=submitted_at,
         status=status,
     )
-    return SubmittedFiling(
+    return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="130",
@@ -165,7 +165,7 @@ class TestClassificationGate:
         from aeat.adapters.persistence.storage import Envelope, SensitivityClass
 
         filing = _make_filing()
-        bad = Envelope[SubmittedFiling](
+        bad = Envelope[ModeloPresentado](
             schema_version=1,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.OPERATIONAL,
