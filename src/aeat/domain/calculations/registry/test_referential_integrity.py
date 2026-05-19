@@ -698,10 +698,17 @@ def test_dangling_modelo_source_refs() -> None:
 
 
 def test_config_repair_report_includes_registry_integrity_check() -> None:
-    """build_config_repair_report produces a registry.integrity DiagnosticCheck."""
+    """build_config_repair_report produces a registry.integrity DiagnosticCheck.
+
+    The report walks SecureObject storage to surface bucket-side health,
+    so the test runs inside an EphemeralMasterKeyProvider session to
+    satisfy the encrypted-column decrypt path.
+    """
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
     from aeat.application.diagnostics import build_config_repair_report
 
-    report = build_config_repair_report()
+    with EphemeralMasterKeyProvider():
+        report = build_config_repair_report()
     check_names = [check.name for check in report.checks]
     assert "registry.integrity" in check_names
 
