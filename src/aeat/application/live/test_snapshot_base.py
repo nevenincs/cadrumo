@@ -155,6 +155,11 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
     def __init__(self, *, bucket_id: str, repository: ProbeRepository) -> None:
         super().__init__(bucket_id=bucket_id, repository=repository)
 
+    def capture(self, *, axis_label: str, captured_at: datetime, payload_text: str) -> ProbeSnapshot:
+        return self._capture_with_lifecycle(
+            axis_label=axis_label, captured_at=captured_at, payload_text=payload_text
+        )
+
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_snapshot_id_from_json(
             {
