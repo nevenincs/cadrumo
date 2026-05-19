@@ -14,11 +14,11 @@ from . import (
     CENSUS_MODELO_ERROR_CODES,
     CENSUS_MODELO_EVENT_KINDS,
     CENSUS_MODELO_SERVICE_OWNER,
-    CensusModeloEventKind,
-    CensusModeloFoundationCommand,
-    CensusModeloFoundationLogFields,
-    CensusModeloFoundationResult,
-    CensusModeloRole,
+    CensoModeloEventKind,
+    CensoModeloFoundationCommand,
+    CensoModeloFoundationLogFields,
+    CensoModeloFoundationResult,
+    CensoModeloRole,
     RegistrySnapshotError,
     RegistryValidationError,
     census_modelo_ownership,
@@ -47,7 +47,7 @@ def test_census_foundation_contract_records_service_error_codes() -> None:
     assert contract.service_owner == CENSUS_MODELO_SERVICE_OWNER
     assert contract.active_modelo == "036"
     assert contract.historical_modelos == ("037",)
-    assert contract.event_kinds == tuple(CensusModeloEventKind(kind) for kind in CENSUS_MODELO_EVENT_KINDS)
+    assert contract.event_kinds == tuple(CensoModeloEventKind(kind) for kind in CENSUS_MODELO_EVENT_KINDS)
     assert contract.error_codes == CENSUS_MODELO_ERROR_CODES
     assert CENSUS_MODELO_ERROR_CODES == ("ERROR_CALCULATIONS_REGISTRY_VALIDATION",)
     assert get_registered_error_code(RegistryValidationError).code == "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
@@ -56,7 +56,7 @@ def test_census_foundation_contract_records_service_error_codes() -> None:
 def test_modelo_036_is_active_event_triggered_foundation() -> None:
     record = census_modelo_ownership("036")
 
-    assert record.role is CensusModeloRole.ACTIVE_FOUNDATION
+    assert record.role is CensoModeloRole.ACTIVE_FOUNDATION
     assert record.event_kinds == CENSUS_MODELO_EVENT_KINDS
     assert record.event_kinds == ("alta", "modificacion", "baja")
     assert record.active_work_unit_allowed is True
@@ -80,15 +80,15 @@ def test_active_036_work_unit_periods_resolve_from_committed_registry_revision()
 
         assert result is not None
         assert result.modelo == "036"
-        assert result.event_kind is CensusModeloEventKind(period)
-        expected_event_kinds = tuple(CensusModeloEventKind(kind) for kind in snapshot.revision.period_selector.periods)
+        assert result.event_kind is CensoModeloEventKind(period)
+        expected_event_kinds = tuple(CensoModeloEventKind(kind) for kind in snapshot.revision.period_selector.periods)
         assert result.event_kinds == expected_event_kinds
 
 
 def test_modelo_037_is_historical_metadata_superseded_by_036() -> None:
     record = census_modelo_ownership("037")
 
-    assert record.role is CensusModeloRole.HISTORICAL_METADATA
+    assert record.role is CensoModeloRole.HISTORICAL_METADATA
     assert record.event_kinds == ()
     assert record.active_work_unit_allowed is False
     assert record.superseded_by == "036"
@@ -103,7 +103,7 @@ def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_s
 
     assert "boe-modelo-037-historical-suppression" in authority.catalogues.sources
     record = census_modelo_ownership("037")
-    assert record.role is CensusModeloRole.HISTORICAL_METADATA
+    assert record.role is CensoModeloRole.HISTORICAL_METADATA
     assert record.active_work_unit_allowed is False
     assert record.superseded_by == "036"
 
@@ -121,26 +121,26 @@ def test_census_modelo_lookup_rejects_integer_codes() -> None:
 
 
 def test_census_foundation_command_accepts_active_036_event_kind() -> None:
-    command = CensusModeloFoundationCommand(modelo="036", event_kind=CensusModeloEventKind.ALTA)
+    command = CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.ALTA)
 
     assert command.modelo == "036"
-    assert command.event_kind is CensusModeloEventKind.ALTA
+    assert command.event_kind is CensoModeloEventKind.ALTA
     with pytest.raises(ValidationError, match="frozen"):
         command.modelo = "037"
 
 
 def test_census_foundation_command_rejects_missing_event_for_036() -> None:
     with pytest.raises(ValidationError, match="requires event_kind"):
-        CensusModeloFoundationCommand(modelo="036")
+        CensoModeloFoundationCommand(modelo="036")
 
 
 def test_census_foundation_command_rejects_active_event_for_037() -> None:
     with pytest.raises(ValidationError, match="must not declare event_kind"):
-        CensusModeloFoundationCommand(modelo="037", event_kind=CensusModeloEventKind.BAJA)
+        CensoModeloFoundationCommand(modelo="037", event_kind=CensoModeloEventKind.BAJA)
 
 
 def test_census_foundation_command_accepts_inactive_037_without_event_kind() -> None:
-    command = CensusModeloFoundationCommand(modelo="037")
+    command = CensoModeloFoundationCommand(modelo="037")
 
     assert command.modelo == "037"
     assert command.event_kind is None
@@ -148,34 +148,34 @@ def test_census_foundation_command_accepts_inactive_037_without_event_kind() -> 
 
 def test_census_foundation_command_rejects_unknown_event_kind() -> None:
     with pytest.raises(ValidationError, match="Input should be"):
-        CensusModeloFoundationCommand.model_validate({"modelo": "036", "event_kind": "altaa"})
+        CensoModeloFoundationCommand.model_validate({"modelo": "036", "event_kind": "altaa"})
 
 
 @pytest.mark.parametrize("payload", [{"modelo": "36"}, {"modelo": " 036 "}, {"modelo": 36}])
 def test_census_foundation_command_rejects_alias_and_integer_codes(payload: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        CensusModeloFoundationCommand.model_validate({**payload, "event_kind": "alta"})
+        CensoModeloFoundationCommand.model_validate({**payload, "event_kind": "alta"})
 
 
 def test_census_foundation_result_accepts_active_036_decision() -> None:
-    result = CensusModeloFoundationResult(
+    result = CensoModeloFoundationResult(
         modelo="036",
-        role=CensusModeloRole.ACTIVE_FOUNDATION,
+        role=CensoModeloRole.ACTIVE_FOUNDATION,
         service_owner=CENSUS_MODELO_SERVICE_OWNER,
-        event_kind=CensusModeloEventKind.MODIFICACION,
-        event_kinds=tuple(CensusModeloEventKind(kind) for kind in CENSUS_MODELO_EVENT_KINDS),
+        event_kind=CensoModeloEventKind.MODIFICACION,
+        event_kinds=tuple(CensoModeloEventKind(kind) for kind in CENSUS_MODELO_EVENT_KINDS),
         active_work_unit_allowed=True,
     )
 
     assert result.modelo == "036"
-    assert result.event_kind is CensusModeloEventKind.MODIFICACION
+    assert result.event_kind is CensoModeloEventKind.MODIFICACION
     assert result.superseded_by is None
 
 
 def test_census_foundation_result_accepts_historical_037_decision() -> None:
-    result = CensusModeloFoundationResult(
+    result = CensoModeloFoundationResult(
         modelo="037",
-        role=CensusModeloRole.HISTORICAL_METADATA,
+        role=CensoModeloRole.HISTORICAL_METADATA,
         service_owner=CENSUS_MODELO_SERVICE_OWNER,
         active_work_unit_allowed=False,
         superseded_by="036",
@@ -188,9 +188,9 @@ def test_census_foundation_result_accepts_historical_037_decision() -> None:
 
 def test_census_foundation_result_rejects_active_037_work_unit() -> None:
     with pytest.raises(ValidationError, match="inactive and superseded by 036"):
-        CensusModeloFoundationResult(
+        CensoModeloFoundationResult(
             modelo="037",
-            role=CensusModeloRole.HISTORICAL_METADATA,
+            role=CensoModeloRole.HISTORICAL_METADATA,
             service_owner=CENSUS_MODELO_SERVICE_OWNER,
             active_work_unit_allowed=True,
             superseded_by="036",
@@ -199,14 +199,14 @@ def test_census_foundation_result_rejects_active_037_work_unit() -> None:
 
 def test_resolve_census_modelo_foundation_returns_active_036_decision() -> None:
     result = resolve_census_modelo_foundation(
-        CensusModeloFoundationCommand(modelo="036", event_kind=CensusModeloEventKind.BAJA)
+        CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.BAJA)
     )
 
     assert result.modelo == "036"
-    assert result.role is CensusModeloRole.ACTIVE_FOUNDATION
+    assert result.role is CensoModeloRole.ACTIVE_FOUNDATION
     assert result.service_owner == CENSUS_MODELO_SERVICE_OWNER
-    assert result.event_kind is CensusModeloEventKind.BAJA
-    assert result.event_kinds == tuple(CensusModeloEventKind(kind) for kind in CENSUS_MODELO_EVENT_KINDS)
+    assert result.event_kind is CensoModeloEventKind.BAJA
+    assert result.event_kinds == tuple(CensoModeloEventKind(kind) for kind in CENSUS_MODELO_EVENT_KINDS)
     assert result.active_work_unit_allowed is True
     assert result.superseded_by is None
     assert result.log_fields.as_extra() == {
@@ -222,10 +222,10 @@ def test_resolve_census_modelo_foundation_returns_active_036_decision() -> None:
 
 
 def test_resolve_census_modelo_foundation_returns_historical_037_decision() -> None:
-    result = resolve_census_modelo_foundation(CensusModeloFoundationCommand(modelo="037"))
+    result = resolve_census_modelo_foundation(CensoModeloFoundationCommand(modelo="037"))
 
     assert result.modelo == "037"
-    assert result.role is CensusModeloRole.HISTORICAL_METADATA
+    assert result.role is CensoModeloRole.HISTORICAL_METADATA
     assert result.event_kind is None
     assert result.event_kinds == ()
     assert result.active_work_unit_allowed is False
@@ -247,7 +247,7 @@ def test_resolve_census_modelo_work_unit_foundation_routes_active_census_modelo(
 
     assert active is not None
     assert active.modelo == "036"
-    assert active.event_kind is CensusModeloEventKind.ALTA
+    assert active.event_kind is CensoModeloEventKind.ALTA
 
 
 def test_resolve_census_modelo_work_unit_foundation_rejects_historical_037() -> None:
@@ -277,24 +277,24 @@ def test_resolve_census_modelo_work_unit_foundation_rejects_unknown_census_perio
 
 
 def test_census_foundation_log_fields_are_strict_and_immutable() -> None:
-    log_fields = CensusModeloFoundationLogFields(
+    log_fields = CensoModeloFoundationLogFields(
         service_owner=CENSUS_MODELO_SERVICE_OWNER,
         modelo="036",
-        role=CensusModeloRole.ACTIVE_FOUNDATION,
+        role=CensoModeloRole.ACTIVE_FOUNDATION,
         decision="active_work_unit_allowed",
-        event_kind=CensusModeloEventKind.ALTA,
+        event_kind=CensoModeloEventKind.ALTA,
         active_work_unit_allowed=True,
     )
 
     assert log_fields.as_extra()["event_kind"] == "alta"
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        CensusModeloFoundationLogFields.model_validate(
+        CensoModeloFoundationLogFields.model_validate(
             {
                 "service_owner": CENSUS_MODELO_SERVICE_OWNER,
                 "modelo": "036",
-                "role": CensusModeloRole.ACTIVE_FOUNDATION,
+                "role": CensoModeloRole.ACTIVE_FOUNDATION,
                 "decision": "active_work_unit_allowed",
-                "event_kind": CensusModeloEventKind.ALTA,
+                "event_kind": CensoModeloEventKind.ALTA,
                 "active_work_unit_allowed": True,
                 "unexpected": "field",
             }
@@ -306,10 +306,10 @@ def test_census_foundation_log_fields_are_strict_and_immutable() -> None:
 def test_resolve_census_modelo_foundation_emits_structured_debug_log(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._census_modelos")
+    caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._censo_modelos")
 
     resolve_census_modelo_foundation(
-        CensusModeloFoundationCommand(modelo="036", event_kind=CensusModeloEventKind.MODIFICACION)
+        CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.MODIFICACION)
     )
 
     record = next(
