@@ -34,7 +34,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry._loader import load_modelo_directory
+from aeat.domain.calculations.registry import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
