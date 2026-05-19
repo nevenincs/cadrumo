@@ -111,7 +111,9 @@ def reconcile_modelo_303_iva_compensation(
     """
 
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
-        raise IvaCompensationReconciliationInputError("IVA compensation wallet reconciliation only applies to Modelo 303")
+        raise IvaCompensationReconciliationInputError(
+            "IVA compensation wallet reconciliation only applies to Modelo 303"
+        )
     if wallet is not None:
         _validate_wallet_matches_snapshot(
             wallet,
@@ -120,8 +122,8 @@ def reconcile_modelo_303_iva_compensation(
             target_period=snapshot.period,
         )
 
-    from ._observations_repository import CalculationObservationRepository
     from ._binding_prefill import resolve_bindings_from_local_store
+    from ._observations_repository import CalculationObservationRepository
 
     repo = repository if repository is not None else CalculationObservationRepository()
     prefill_report = resolve_bindings_from_local_store(
@@ -329,10 +331,10 @@ def _is_wallet_stale(
 
 
 __all__ = [
-    "IvaCompensationReconciliationInputError",
     "IvaCompensationOverride",
     "IvaCompensationReconciliationDecision",
+    "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
-    "reconcile_modelo_303_iva_compensation",
     "reconcile_iva_compensation_wallet",
+    "reconcile_modelo_303_iva_compensation",
 ]
