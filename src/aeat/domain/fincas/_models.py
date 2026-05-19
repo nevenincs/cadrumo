@@ -31,6 +31,22 @@ class _FincaRecord(BaseModel):
 class Finca(_FincaRecord):
     """Public record for one row in ``rental_fincas``.
 
+    Unified storage entity covering both LIRPF regimes that consume
+    catastro facts. The :attr:`use_type` discriminates which regime
+    applies per ejercicio:
+
+    * ``VIVIENDA_ARRENDADA`` / ``LOCAL_COMERCIAL`` → rendimiento del
+      capital inmobiliario regime, Ley 35/2006 IRPF Arts. 22-24
+      (gross rent, deductible gastos, art. 23.1.f amortización,
+      art. 23.2 reducción). The W05.P15 ``Finca*`` stem covers this.
+    * ``OTRO_INMUEBLE_NO_AFECTO`` / ``VIVIENDA_DESOCUPADA`` →
+      imputación de rentas inmobiliarias regime, Ley 35/2006 IRPF
+      Art. 85 (2 % or 1,1 % of valor catastral). Use the
+      :attr:`imputed_under_art_85` derived property to test the
+      regime cheaply at the call site.
+    * ``VIVIENDA_HABITUAL`` → neither regime; explicitly excluded by
+      Art. 85 first paragraph ("constituye la vivienda habitual").
+
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
         identifier: Stable natural key chosen by the operator
@@ -90,6 +106,22 @@ class Finca(_FincaRecord):
         if self.disposal_date is not None and self.disposal_date < self.acquisition_date:
             raise FincaValidationError("disposal_date must not precede acquisition_date")
         return self
+
+    @property
+    def imputed_under_art_85(self) -> bool:
+        """Return whether this finca falls under the LIRPF Art. 85 imputación regime.
+
+        Ley 35/2006 IRPF Art. 85 ("Imputación de rentas inmobiliarias")
+        applies to bienes inmuebles urbanos that are neither the
+        taxpayer's vivienda habitual nor generadores de rendimientos
+        del capital inmobiliario. This property returns ``True`` for
+        :attr:`UseType.OTRO_INMUEBLE_NO_AFECTO` and
+        :attr:`UseType.VIVIENDA_DESOCUPADA`, ``False`` for every other
+        use type. The rendimiento regime (Arts. 22-24) and the
+        vivienda habitual exclusion both return ``False``.
+        """
+
+        return self.use_type in {UseType.OTRO_INMUEBLE_NO_AFECTO, UseType.VIVIENDA_DESOCUPADA}
 
 
 class Arrendamiento(_FincaRecord):
