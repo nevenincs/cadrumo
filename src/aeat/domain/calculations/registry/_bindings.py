@@ -1660,7 +1660,7 @@ def resolve_counterpart_binding_values(
         matched = tuple(
             _counterpart_to_invoice(observation)
             for observation in available
-            if binding.source == "invoice" or observation.source_kind == binding.source
+            if observation.source_kind == binding.source
         )
         scope_filtered = tuple(_filter_invoice_observations(matched, selector))
         resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)
