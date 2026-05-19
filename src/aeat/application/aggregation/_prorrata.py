@@ -44,7 +44,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from ...domain.vat import (
+from ...domain.iva import (
     ProrrataInputs,
     ProrrataKind,
     ProrrataResult,

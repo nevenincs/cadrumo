@@ -21,7 +21,7 @@ from ...domain.transactions import (
 from ...domain.transactions import (
     TransactionDirection as LedgerTransactionDirection,
 )
-from ...domain.vat import (
+from ...domain.iva import (
     EUMemberState,
     IvaCategory,
     IvaFlowDirection,
@@ -32,6 +32,7 @@ from ...domain.vat import (
     lookup_rate,
     validate_prorrata_reference,
 )
+from . import _shared_issue_reasons
 from ._errors import AggregationValidationError, t
 from ._models import Period
 
@@ -45,13 +46,20 @@ _RATE_KIND_TO_DOMESTIC_CATEGORY: dict[IvaRateKind, IvaCategory] = {
 
 
 class IvaLedgerAggregationIssueReason(StrEnum):
-    """Machine-readable reasons why a ledger row did not produce IVA observations."""
+    """Machine-readable reasons why a ledger row did not produce IVA observations.
 
-    UNSUPPORTED_DIRECTION = "unsupported_direction"
-    UNSUPPORTED_CURRENCY = "unsupported_currency"
-    UNCLASSIFIED_BUSINESS_STATE = "unclassified_business_state"
-    PERSONAL_TRANSACTION = "personal_transaction"
-    OUTSIDE_PERIOD = "outside_period"
+    The first five values are shared with
+    :class:`aeat.application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
+    through :mod:`._shared_issue_reasons` so cross-ledger telemetry can
+    group upstream filter rejections under one key. The remaining values
+    are IVA-specific.
+    """
+
+    UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
+    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
+    UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
+    PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
+    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
     MISSING_TAXABLE_BASE = "missing_taxable_base"
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
