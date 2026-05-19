@@ -6,15 +6,15 @@ tags:
 date: '2026-05-19'
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
-  - '[[2026-05-18-schema-hardening-nif-coverage-m100]]'
-  - '[[2026-05-18-schema-hardening-period-coverage]]'
+  - '[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]'
+  - '[[2026-05-18-schema-hardening-period-coverage-audit]]'
   - '[[2026-05-18-schema-hardening-plan]]'
   - '[[2026-05-18-schema-hardening-research]]'
-  - '[[2026-05-19-schema-hardening-constraint-backfill]]'
-  - '[[2026-05-19-schema-hardening-iban-deprecation]]'
+  - '[[2026-05-19-schema-hardening-constraint-backfill-audit]]'
+  - '[[2026-05-19-schema-hardening-iban-deprecation-audit]]'
   - '[[2026-05-19-schema-hardening-plan]]'
-  - '[[2026-05-19-schema-hardening-role-rollout-strategy]]'
-  - '[[2026-05-19-schema-hardening-role-taxonomy]]'
+  - '[[2026-05-19-schema-hardening-role-rollout-strategy-audit]]'
+  - '[[2026-05-19-schema-hardening-role-taxonomy-reference]]'
   - '[[2026-05-20-schema-hardening-plan]]'
 ---
 

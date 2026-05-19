@@ -6,7 +6,6 @@ date: '2026-05-13'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-w01-p003-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-w01-p003-review-audit]]'
 ---
 
 # `cli-workflow-redesign` `W01.P003` summary

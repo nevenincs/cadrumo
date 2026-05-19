@@ -106,10 +106,10 @@ Replace `doctor` with `repair` across translatable strings; flip the
 shouty `REFUSED` boundary label to sentence case per the apex tone
 contract.
 
-- [x] `P05.S01` - replace `doctor` references with `repair` in `src/aeat/locales/en.yml`.
-- [x] `P05.S02` - replace `doctor` references with `repair` in `src/aeat/locales/es.yml`.
-- [x] `P05.S03` - replace `doctor` references with `repair` in `src/aeat/locales/ca.yml`.
-- [x] `P05.S04` - replace `doctor` references with `repair` in `src/aeat/locales/hu.yml`.
+- [x] `P05.S01` - replace `doctor` references with `repair`; `src/aeat/locales/en.yml`.
+- [x] `P05.S02` - replace `doctor` references with `repair`; `src/aeat/locales/es.yml`.
+- [x] `P05.S03` - replace `doctor` references with `repair`; `src/aeat/locales/ca.yml`.
+- [x] `P05.S04` - replace `doctor` references with `repair`; `src/aeat/locales/hu.yml`.
 - [x] `P05.S05` - replace the all-caps `REFUSED:` prefix in the boundary text renderer with sentence-case `Refused.`; `src/aeat/entrypoints/cli/_errors.py`.
 - [x] `P05.S06` - update the locales CLI string table to match the renamed namespace and sentence-case boundary label; `src/aeat/locales/cli.py`.
 
@@ -134,7 +134,7 @@ fix plus the smallest test that proves the fix is on the live path.
 - [x] `P07.S01` - move the sentence-case error prefix into the production rendering boundary; introduce `_TEXT_PREFIX` dispatch table in `src/aeat/core/errors/_registry.py` and rewire `render_error_text` to use it; update the `Refused.` and grep-stable assertions in `src/aeat/entrypoints/cli/test_error_boundary_integration.py` and `src/aeat/core/errors/test_registry.py`.
 - [x] `P07.S02` - flip the `logging.file` row's `next_action` from `aeat --help` to `aeat config repair logs`; `src/aeat/application/diagnostics.py`.
 - [x] `P07.S03` - order the bucket-event emission before the secure-object delete in `WorkflowStateRepository.reset_workflow_state` so the trail survives a downstream failure; add a real-exception-injection test in `src/aeat/application/workflow/test_persistence.py`.
-- [x] `P07.S04` - rename the surviving `aeat config doctor` runtime hint and docstrings in `src/aeat/adapters/persistence/storage/sql/secure_objects.py` to `aeat config repair`.
+- [x] `P07.S04` - rename the surviving `aeat config doctor` runtime hint and docstrings; `src/aeat/adapters/persistence/storage/sql/secure_objects.py` to `aeat config repair`.
 - [x] `P07.S05` - harmonise `_profile_check` and `_auth_check` onto the ADR-canonical `profile.readiness` / `auth.readiness` row names; update `src/aeat/application/test_diagnostics.py` and `src/aeat/application/test_diagnostics_dispatch.py`.
 - [x] `P07.S06` - rename `ConfigDoctorReport` / `build_config_doctor_report` / `render_config_doctor_text` to their `…Repair…` form; update every caller and docstring across `src/aeat/application/diagnostics.py`, `src/aeat/entrypoints/cli/_config/__init__.py`, `src/aeat/application/wizard/_status.py`, `src/aeat/core/access_gate/__init__.py`; fold in L-1 by renaming `aeat.test.doctor.rotation` and `doctor-row-N` fixture identifiers in `src/aeat/application/test_diagnostics.py`.
 

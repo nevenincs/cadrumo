@@ -6,8 +6,8 @@ date: '2026-05-19'
 related:
   - "[[2026-05-18-schema-hardening-adr]]"
   - "[[2026-05-20-schema-hardening-plan]]"
-  - "[[2026-05-19-schema-hardening-role-rollout-strategy]]"
-  - "[[2026-05-19-schema-hardening-m100-nif-role-assignment]]"
+  - "[[2026-05-19-schema-hardening-role-rollout-strategy-audit]]"
+  - "[[2026-05-19-schema-hardening-m100-nif-role-assignment-audit]]"
 ---
 
 # `schema-hardening` reference: canonical semantic_role taxonomy

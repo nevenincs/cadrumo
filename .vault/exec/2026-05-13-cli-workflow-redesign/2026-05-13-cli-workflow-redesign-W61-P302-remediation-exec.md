@@ -7,9 +7,6 @@ step_id: 'W61.P302.remediation'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]"
-  - "[[2026-05-14-cli-workflow-redesign-w61-p302-code-review-audit]]"
-  - "[[2026-05-14-cli-workflow-redesign-w61-p302-remediation-review-audit]]"
-  - "[[2026-05-14-cli-workflow-redesign-w61-p302-bucket-ownership-review-audit]]"
 ---
 
 # `cli-workflow-redesign` `W61.P302.remediation`

@@ -5,7 +5,7 @@ tags:
 date: '2026-05-19'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
-  - '[[2026-05-19-live-iva-compensation-wallet-code-review]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-code-review-audit]]'
 ---
 
 # `live-iva-compensation-wallet` `implementation` summary

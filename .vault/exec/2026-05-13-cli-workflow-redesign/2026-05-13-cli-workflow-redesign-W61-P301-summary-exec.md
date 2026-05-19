@@ -8,7 +8,6 @@ related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-w61-p301-s1801-ledger-storage-ownership-audit]]"
-  - "[[2026-05-13-cli-workflow-redesign-w61-p301-code-review-audit]]"
 ---
 
 # `cli-workflow-redesign` `W61.P301`
