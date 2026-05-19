@@ -109,6 +109,8 @@ number = "05"
 label = "Pagos fraccionados anteriores"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
+semantic_role = "pago_fraccionado_previo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-05"]
