@@ -173,6 +173,7 @@ number = "13"
 label = "Resultado de anteriores autoliquidaciones"
 section = ["total_liquidacion"]
 data_type = "money"
+semantic_role = "resultado_anteriores_autoliquidaciones"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-123-casilla-13"]

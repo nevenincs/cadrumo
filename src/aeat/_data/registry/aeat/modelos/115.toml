@@ -51,6 +51,7 @@ number = "01"
 label = "Numero de perceptores"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "integer"
+semantic_role = "perceptor_count"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-115-casilla-01"]
