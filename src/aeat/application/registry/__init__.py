@@ -41,7 +41,7 @@ from ...domain.calculations.registry._live_parity import (
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
 )
-from ...domain.calculations.registry._loader import load_registry_tree
+from ...domain.calculations.registry import load_registry_tree
 from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
 from ...domain.period import period_end_date
 from ._corpus import (
