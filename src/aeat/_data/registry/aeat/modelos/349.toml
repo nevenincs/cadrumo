@@ -139,6 +139,8 @@ number = "134-146"
 label = "Base imponible o importe de la operacion intracomunitaria"
 section = ["operador", "operacion"]
 data_type = "money"
+semantic_role = "base_intracomunitaria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
@@ -176,6 +178,8 @@ number = "153-165"
 label = "Base imponible o importes rectificados"
 section = ["rectificacion", "importe"]
 data_type = "money"
+semantic_role = "base_intracomunitaria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
@@ -187,6 +191,8 @@ number = "166-178"
 label = "Base imponible declarada anteriormente"
 section = ["rectificacion", "importe"]
 data_type = "money"
+semantic_role = "base_intracomunitaria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
