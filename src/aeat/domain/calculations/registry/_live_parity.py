@@ -28,7 +28,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping
 from json import JSONDecodeError, loads
-from typing import TYPE_CHECKING, Any, Generic, Literal, Protocol, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -46,7 +46,6 @@ if TYPE_CHECKING:
 
 __all__ = [
     "BaseCheckerOracle",
-    "CheckerObservation",
     "CrossReferenceApplicability",
     "CrossReferenceApplicabilityDeclaration",
     "LiveParityCatalogue",
@@ -609,10 +608,7 @@ def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> dict[str, A
     return document
 
 
-CheckerObservation = TypeVar("CheckerObservation")
-
-
-class _CheckerDriver(Protocol, Generic[CheckerObservation]):
+class _CheckerDriver[CheckerObservation](Protocol):
     """Structural type of a checker-style replay/live driver."""
 
     @property
@@ -633,7 +629,7 @@ class _CheckerDriver(Protocol, Generic[CheckerObservation]):
     ) -> CheckerObservation: ...
 
 
-class BaseCheckerOracle(Generic[CheckerObservation]):
+class BaseCheckerOracle[CheckerObservation]:
     """Shared orchestrator for checker-style oracles.
 
     Encapsulates the common ``verify_payload`` template used by per-key
