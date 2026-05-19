@@ -46,7 +46,7 @@ class StorageProvider(Protocol):
             payload: Bytes to write. Already encrypted at the
                 application layer; providers do not decrypt or inspect.
             content_hash: Cryptographic hash of `payload` for integrity
-                round-tripping (`StorageIntegrityError` raised on read
+                round-tripping (`OutboundStorageIntegrityError` raised on read
                 if the stored hash diverges).
             label: Human-readable suffix appended to the filename for
                 operator orientation. Derived from the per-namespace
@@ -56,10 +56,10 @@ class StorageProvider(Protocol):
             The newly-written object's metadata.
 
         Raises:
-            StorageConflictError: Concurrent write detected.
-            StoragePermissionError: Credentials lack write scope.
-            StorageQuotaError: Backend quota exhausted.
-            StorageNetworkError: Endpoint unreachable.
+            OutboundStorageConflictError: Concurrent write detected.
+            OutboundStoragePermissionError: Credentials lack write scope.
+            OutboundStorageQuotaError: Backend quota exhausted.
+            OutboundStorageNetworkError: Endpoint unreachable.
         """
 
         ...
@@ -68,11 +68,11 @@ class StorageProvider(Protocol):
         """Read an object's payload and metadata.
 
         Raises:
-            StorageNotFoundError: Object does not exist.
-            StorageIntegrityError: Stored content hash mismatches the
+            OutboundStorageNotFoundError: Object does not exist.
+            OutboundStorageIntegrityError: Stored content hash mismatches the
                 fetched payload.
-            StoragePermissionError: Credentials lack read scope.
-            StorageNetworkError: Endpoint unreachable.
+            OutboundStoragePermissionError: Credentials lack read scope.
+            OutboundStorageNetworkError: Endpoint unreachable.
         """
 
         ...
@@ -81,8 +81,8 @@ class StorageProvider(Protocol):
         """Remove an object. Return True iff it existed before this call.
 
         Raises:
-            StoragePermissionError: Credentials lack delete scope.
-            StorageNetworkError: Endpoint unreachable.
+            OutboundStoragePermissionError: Credentials lack delete scope.
+            OutboundStorageNetworkError: Endpoint unreachable.
         """
 
         ...
@@ -101,9 +101,9 @@ class StorageProvider(Protocol):
         """Yield every object in `namespace`. Order is backend-defined.
 
         Raises:
-            StorageNotFoundError: Namespace does not exist.
-            StoragePermissionError: Credentials lack listing scope.
-            StorageNetworkError: Endpoint unreachable.
+            OutboundStorageNotFoundError: Namespace does not exist.
+            OutboundStoragePermissionError: Credentials lack listing scope.
+            OutboundStorageNetworkError: Endpoint unreachable.
         """
 
         ...

@@ -17,10 +17,10 @@ import pytest
 
 from aeat.adapters.outbound.storage import (
     ProviderKind,
-    StorageIntegrityError,
-    StorageNotFoundError,
+    OutboundStorageIntegrityError,
+    OutboundStorageNotFoundError,
     StorageProvider,
-    StorageValidationError,
+    OutboundStorageValidationError,
 )
 from aeat.adapters.outbound.storage._local import LocalFileSystemProvider
 
@@ -98,7 +98,7 @@ def test_get_raises_storage_not_found_for_missing_object(provider: LocalFileSyst
         content_hash=_hash(b"x"),
         label="x",
     )
-    with pytest.raises(StorageNotFoundError):
+    with pytest.raises(OutboundStorageNotFoundError):
         provider.get("ledger_transaction", "0000000000000000")
 
 
@@ -112,7 +112,7 @@ def test_get_raises_storage_integrity_on_payload_tamper(provider: LocalFileSyste
         label="tamper",
     )
     Path(metadata.provider_object_id).write_bytes(b"tampered")
-    with pytest.raises(StorageIntegrityError):
+    with pytest.raises(OutboundStorageIntegrityError):
         provider.get("ledger_transaction", "fedcba9876543210")
 
 
@@ -126,7 +126,7 @@ def test_delete_returns_true_when_object_existed(provider: LocalFileSystemProvid
         label="del",
     )
     assert provider.delete("ledger_transaction", "abcdef0123456789") is True
-    with pytest.raises(StorageNotFoundError):
+    with pytest.raises(OutboundStorageNotFoundError):
         provider.get("ledger_transaction", "abcdef0123456789")
 
 
@@ -153,7 +153,7 @@ def test_iter_objects_yields_metadata_for_every_object(provider: LocalFileSystem
 
 
 def test_iter_objects_raises_for_missing_namespace(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(StorageNotFoundError):
+    with pytest.raises(OutboundStorageNotFoundError):
         list(provider.iter_objects("never_seen"))
 
 
@@ -204,15 +204,15 @@ def test_put_with_relabel_replaces_existing_file(provider: LocalFileSystemProvid
 
 
 def test_put_rejects_blank_namespace(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(StorageValidationError, match="namespace must not be blank"):
+    with pytest.raises(OutboundStorageValidationError, match="namespace must not be blank"):
         provider.put("", "abcdef0123456789", b"x", content_hash="sha256-x", label="x")
 
 
 def test_put_rejects_namespace_with_slash(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(StorageValidationError, match="forbidden characters"):
+    with pytest.raises(OutboundStorageValidationError, match="forbidden characters"):
         provider.put("with/slash", "abcdef0123456789", b"x", content_hash="sha256-x", label="x")
 
 
 def test_put_rejects_blank_content_hash(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(StorageValidationError, match="content_hash"):
+    with pytest.raises(OutboundStorageValidationError, match="content_hash"):
         provider.put("ledger_transaction", "abcdef0123456789", b"x", content_hash="", label="x")

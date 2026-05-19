@@ -1,7 +1,7 @@
 """Tests for the storage provider abstraction's foundation surface.
 
 Covers the Protocol contract, the three pydantic records, the
-`ProviderKind` enum, and the typed `StorageError` hierarchy. Concrete
+`ProviderKind` enum, and the typed `OutboundStorageError` hierarchy. Concrete
 backend (`_local.py`, `_google_drive.py`, `_testing.py`) tests live in
 their own colocated test modules.
 """
@@ -17,16 +17,16 @@ from aeat.adapters.outbound.storage import (
     ProviderKind,
     ProviderObjectMetadata,
     ProviderProbeReport,
-    StorageConflictError,
-    StorageError,
-    StorageIntegrityError,
-    StorageNetworkError,
-    StorageNotFoundError,
-    StoragePermissionError,
+    OutboundStorageConflictError,
+    OutboundStorageError,
+    OutboundStorageIntegrityError,
+    OutboundStorageNetworkError,
+    OutboundStorageNotFoundError,
+    OutboundStoragePermissionError,
     StorageProvider,
-    StorageQuotaError,
-    StorageUnavailableError,
-    StorageValidationError,
+    OutboundStorageQuotaError,
+    OutboundStorageUnavailableError,
+    OutboundStorageValidationError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
@@ -110,33 +110,33 @@ def test_provider_probe_report_read_only_mode_round_trip() -> None:
 
 def test_storage_error_hierarchy_unified() -> None:
     for leaf in (
-        StorageConflictError,
-        StorageIntegrityError,
-        StorageNetworkError,
-        StorageNotFoundError,
-        StoragePermissionError,
-        StorageQuotaError,
-        StorageUnavailableError,
-        StorageValidationError,
+        OutboundStorageConflictError,
+        OutboundStorageIntegrityError,
+        OutboundStorageNetworkError,
+        OutboundStorageNotFoundError,
+        OutboundStoragePermissionError,
+        OutboundStorageQuotaError,
+        OutboundStorageUnavailableError,
+        OutboundStorageValidationError,
     ):
-        assert issubclass(leaf, StorageError), leaf.__name__
+        assert issubclass(leaf, OutboundStorageError), leaf.__name__
 
 
 def test_storage_validation_error_is_value_error_subclass() -> None:
-    assert issubclass(StorageValidationError, ValueError)
+    assert issubclass(OutboundStorageValidationError, ValueError)
 
 
 def test_every_leaf_carries_a_registered_error_code() -> None:
     leaves = (
-        StorageError,
-        StorageValidationError,
-        StorageNotFoundError,
-        StorageConflictError,
-        StoragePermissionError,
-        StorageQuotaError,
-        StorageNetworkError,
-        StorageIntegrityError,
-        StorageUnavailableError,
+        OutboundStorageError,
+        OutboundStorageValidationError,
+        OutboundStorageNotFoundError,
+        OutboundStorageConflictError,
+        OutboundStoragePermissionError,
+        OutboundStorageQuotaError,
+        OutboundStorageNetworkError,
+        OutboundStorageIntegrityError,
+        OutboundStorageUnavailableError,
     )
     codes = {leaf.code.code for leaf in leaves}
     assert len(codes) == len(leaves), f"duplicate codes: {codes}"

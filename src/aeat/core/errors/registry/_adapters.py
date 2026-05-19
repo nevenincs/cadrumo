@@ -1161,7 +1161,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageError",
+        "aeat.adapters.outbound.storage._errors.OutboundStorageError",
         ErrorCode(
             code="FAIL_OUTBOUND_STORAGE",
             category=ErrorCategory.FAIL,
@@ -1172,7 +1172,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageValidationError",
+        "aeat.adapters.outbound.storage._errors.OutboundStorageValidationError",
         ErrorCode(
             code="REFUSED_OUTBOUND_STORAGE_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -1183,7 +1183,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageNotFoundError",
+        "aeat.adapters.outbound.storage._errors.OutboundStorageNotFoundError",
         ErrorCode(
             code="ERROR_OUTBOUND_STORAGE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1194,7 +1194,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageConflictError",
+        "aeat.adapters.outbound.storage._errors.OutboundStorageConflictError",
         ErrorCode(
             code="REFUSED_OUTBOUND_STORAGE_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -1205,7 +1205,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StoragePermissionError",
+        "aeat.adapters.outbound.storage._errors.OutboundStoragePermissionError",
         ErrorCode(
             code="AUTH_OUTBOUND_STORAGE_PERMISSION",
             category=ErrorCategory.AUTH,
@@ -1216,7 +1216,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageQuotaError",
+        "aeat.adapters.outbound.storage._errors.OutboundStorageQuotaError",
         ErrorCode(
             code="REFUSED_OUTBOUND_STORAGE_QUOTA",
             category=ErrorCategory.REFUSED,
@@ -1227,7 +1227,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageNetworkError",
+        "aeat.adapters.outbound.storage._errors.OutboundStorageNetworkError",
         ErrorCode(
             code="FAIL_OUTBOUND_STORAGE_NETWORK",
             category=ErrorCategory.FAIL,
@@ -1238,7 +1238,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageIntegrityError",
+        "aeat.adapters.outbound.storage._errors.OutboundStorageIntegrityError",
         ErrorCode(
             code="INTEGRITY_OUTBOUND_STORAGE",
             category=ErrorCategory.INTEGRITY,
@@ -1249,7 +1249,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageUnavailableError",
+        "aeat.adapters.outbound.storage._errors.OutboundStorageUnavailableError",
         ErrorCode(
             code="FAIL_OUTBOUND_STORAGE_UNAVAILABLE",
             category=ErrorCategory.FAIL,

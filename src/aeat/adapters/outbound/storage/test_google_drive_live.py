@@ -13,7 +13,7 @@ The tests exercise three real Drive paths:
    reads it back, asserts payload equality + integrity verification.
 3. `iter_objects` + `delete` cleanup — confirms the new object is
    listed, then deletes it and confirms a subsequent get raises
-   `StorageNotFoundError`.
+   `OutboundStorageNotFoundError`.
 
 These tests intentionally use the `_probe/` namespace + a deterministic
 HMAC string so repeated runs do not pollute the operator's real
@@ -29,7 +29,7 @@ import os
 import pytest
 
 from aeat.adapters.outbound.storage import (
-    StorageNotFoundError,
+    OutboundStorageNotFoundError,
     StorageProvider,
     get_storage_provider,
 )
@@ -111,5 +111,5 @@ def test_delete_clears_the_object_against_real_drive() -> None:
         label="live-test",
     )
     assert provider.delete(_PROBE_NAMESPACE, _PROBE_HMAC) is True
-    with pytest.raises(StorageNotFoundError):
+    with pytest.raises(OutboundStorageNotFoundError):
         provider.get(_PROBE_NAMESPACE, _PROBE_HMAC)

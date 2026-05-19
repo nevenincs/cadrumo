@@ -44,11 +44,11 @@ from ....domain.calculations.registry._formula_runtime import (
 from ....domain.calculations.registry._ids import BindingId, CasillaId, RelationId
 from ....domain.calculations.registry._schema import CasillaDefinition, RegistrySnapshot
 from ...outbound.storage._errors import (
-    StorageConflictError,
-    StorageNetworkError,
-    StorageNotFoundError,
-    StoragePermissionError,
-    StorageValidationError,
+    OutboundStorageConflictError,
+    OutboundStorageNetworkError,
+    OutboundStorageNotFoundError,
+    OutboundStoragePermissionError,
+    OutboundStorageValidationError,
 )
 
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
@@ -207,7 +207,7 @@ def _drive_service(credentials: object) -> Any:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise StorageNetworkError(
+        raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             suggestion="uv sync",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
@@ -219,7 +219,7 @@ def _sheets_service(credentials: object) -> Any:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise StorageNetworkError(
+        raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             suggestion="uv sync",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
@@ -236,19 +236,19 @@ def _execute(request: Any, *, action: str) -> Any:
         if isinstance(exc, HttpError):
             status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
             if status in (401, 403):
-                raise StoragePermissionError(
+                raise OutboundStoragePermissionError(
                     f"Google {action} refused (HTTP {status}): {exc}",
                     suggestion="aeat config google login",
                     context={"action": action, "status": status},
                     translated_message="adapters.google.calc_sheets.errors.api_call_refused",
                 ) from exc
             if status == 404:
-                raise StorageNotFoundError(
+                raise OutboundStorageNotFoundError(
                     f"Google {action} target not found (HTTP 404): {exc}",
                     context={"action": action},
                     translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
                 ) from exc
-        raise StorageNetworkError(
+        raise OutboundStorageNetworkError(
             f"Google {action} failed: {exc}",
             context={"action": action},
             translated_message="adapters.google.calc_sheets.errors.api_call_failed",
@@ -267,7 +267,7 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
     )
     app_properties = file_meta.get("appProperties") or {}
     if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
-        raise StorageConflictError(
+        raise OutboundStorageConflictError(
             f"spreadsheet {spreadsheet_id!r} is not marked as app-owned; refusing "
             f"to read operator edits from a foreign Drive file",
             context={"spreadsheet_id": spreadsheet_id, "name": file_meta.get("name", "")},
@@ -391,15 +391,15 @@ def pull_operator_edits(
         local store may corrupt data.
 
     Raises:
-        StorageConflictError: The spreadsheet is not marked as app-owned.
-        StoragePermissionError: The Drive scope grant is insufficient.
-        StorageNotFoundError: The supplied spreadsheet id is unknown.
-        StorageValidationError: `spreadsheet_id` is blank.
-        StorageNetworkError: A transport or unmapped HTTP failure.
+        OutboundStorageConflictError: The spreadsheet is not marked as app-owned.
+        OutboundStoragePermissionError: The Drive scope grant is insufficient.
+        OutboundStorageNotFoundError: The supplied spreadsheet id is unknown.
+        OutboundStorageValidationError: `spreadsheet_id` is blank.
+        OutboundStorageNetworkError: A transport or unmapped HTTP failure.
     """
 
     if not spreadsheet_id.strip():
-        raise StorageValidationError(
+        raise OutboundStorageValidationError(
             "spreadsheet_id must not be blank",
             context={"spreadsheet_id": spreadsheet_id},
         )
@@ -896,7 +896,7 @@ def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> 
     """Refuse to compute when the workbook metadata doesn't bind to the snapshot."""
     if pull.metadata_match == "matches":
         return
-    raise StorageConflictError(
+    raise OutboundStorageConflictError(
         f"refusing to compute: workbook metadata_match={pull.metadata_match!r} "
         f"does not bind to the supplied snapshot",
         context={
