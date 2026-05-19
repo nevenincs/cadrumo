@@ -173,22 +173,16 @@ def repair_reset_state(
 
 @repair_app.command(
     "profile",
-    help=tr(
-        "cli.config.repair.profile_help",
-        default="Inspect and repair the active-profile pointer.",
-    ),
+    help=tr("cli.config.repair.profile_help"),
 )
 def repair_profile(
     ctx: typer.Context,
     clear_active: bool = typer.Option(
         False,
         "--clear-active",
-        help=tr(
-            "cli.config.repair.profile_clear_active_help",
-            default="Clear a pointer-file active profile only when it points at unreadable profile state.",
-        ),
+        help=tr("cli.config.repair.profile_clear_active_help"),
     ),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help", default="Confirm repair.")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
 ) -> None:
     """Inspect or safely clear a degraded active-profile pointer."""
 
