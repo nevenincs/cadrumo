@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import typer
 
+from ....core.i18n import tr
 from ....domain.profile._constants import BucketId, ProfileName
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
-from ....core.i18n import tr
 
 
 def _active_pointer() -> tuple[ProfileName, BucketId]:

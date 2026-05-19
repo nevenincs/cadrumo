@@ -189,7 +189,7 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
             regression_caught = False
             try:
                 load_run(original.run_id)
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: clearing aborted_reason on "

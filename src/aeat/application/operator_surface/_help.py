@@ -85,37 +85,88 @@ def _root_help() -> HelpDocument:
             HelpSection(
                 title=tr("cli.operator_surface.help.root.section_daily_ledger"),
                 entries=(
-                    HelpEntry(command="aeat app ledger import", description=tr("cli.operator_surface.help.root.ledger_import")),
-                    HelpEntry(command="aeat app ledger list", description=tr("cli.operator_surface.help.root.ledger_list")),
-                    HelpEntry(command="aeat app ledger view", description=tr("cli.operator_surface.help.root.ledger_view")),
-                    HelpEntry(command="aeat app ledger status", description=tr("cli.operator_surface.help.root.ledger_status")),
-                    HelpEntry(command="aeat app ledger review", description=tr("cli.operator_surface.help.root.ledger_review")),
-                    HelpEntry(command="aeat app ledger update", description=tr("cli.operator_surface.help.root.ledger_update")),
-                    HelpEntry(command="aeat app ledger classify", description=tr("cli.operator_surface.help.root.ledger_classify")),
-                    HelpEntry(command="aeat app ledger allocate", description=tr("cli.operator_surface.help.root.ledger_allocate")),
-                    HelpEntry(command="aeat app ledger attach", description=tr("cli.operator_surface.help.root.ledger_attach")),
-                    HelpEntry(command="aeat app ledger archive", description=tr("cli.operator_surface.help.root.ledger_archive")),
-                    HelpEntry(command="aeat app ledger stash", description=tr("cli.operator_surface.help.root.ledger_stash")),
-                    HelpEntry(command="aeat app ledger remove", description=tr("cli.operator_surface.help.root.ledger_remove")),
-                    HelpEntry(command="aeat app ledger reset", description=tr("cli.operator_surface.help.root.ledger_reset")),
-                    HelpEntry(command="aeat app ledger export", description=tr("cli.operator_surface.help.root.ledger_export")),
+                    HelpEntry(
+                        command="aeat app ledger import",
+                        description=tr("cli.operator_surface.help.root.ledger_import"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger list",
+                        description=tr("cli.operator_surface.help.root.ledger_list"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger view",
+                        description=tr("cli.operator_surface.help.root.ledger_view"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger status",
+                        description=tr("cli.operator_surface.help.root.ledger_status"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger review",
+                        description=tr("cli.operator_surface.help.root.ledger_review"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger update",
+                        description=tr("cli.operator_surface.help.root.ledger_update"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger classify",
+                        description=tr("cli.operator_surface.help.root.ledger_classify"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger allocate",
+                        description=tr("cli.operator_surface.help.root.ledger_allocate"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger attach",
+                        description=tr("cli.operator_surface.help.root.ledger_attach"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger archive",
+                        description=tr("cli.operator_surface.help.root.ledger_archive"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger stash",
+                        description=tr("cli.operator_surface.help.root.ledger_stash"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger remove",
+                        description=tr("cli.operator_surface.help.root.ledger_remove"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger reset",
+                        description=tr("cli.operator_surface.help.root.ledger_reset"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger export",
+                        description=tr("cli.operator_surface.help.root.ledger_export"),
+                    ),
                 ),
             ),
             HelpSection(
                 title=tr("cli.operator_surface.help.root.section_modelo_lifecycle"),
                 entries=(
-                    HelpEntry(command="aeat app modelo list", description=tr("cli.operator_surface.help.root.modelo_list")),
+                    HelpEntry(
+                        command="aeat app modelo list",
+                        description=tr("cli.operator_surface.help.root.modelo_list"),
+                    ),
                     HelpEntry(
                         command="aeat app modelo bindings list",
                         description=tr("cli.operator_surface.help.root.modelo_bindings_list"),
                     ),
-                    HelpEntry(command="aeat app modelo work", description=tr("cli.operator_surface.help.root.modelo_work")),
+                    HelpEntry(
+                        command="aeat app modelo work",
+                        description=tr("cli.operator_surface.help.root.modelo_work"),
+                    ),
                 ),
             ),
             HelpSection(
                 title=tr("cli.operator_surface.help.root.section_diagnostics"),
                 entries=(
-                    HelpEntry(command="aeat config repair", description=tr("cli.operator_surface.help.root.diagnostics_repair")),
+                    HelpEntry(
+                        command="aeat config repair",
+                        description=tr("cli.operator_surface.help.root.diagnostics_repair"),
+                    ),
                     HelpEntry(
                         command="aeat app overview status",
                         description=tr("cli.operator_surface.help.root.diagnostics_overview"),
@@ -203,18 +254,39 @@ def _config_help() -> HelpDocument:
             HelpSection(
                 title=tr("cli.operator_surface.help.config.section_authentication"),
                 entries=(
-                    HelpEntry(command="aeat config auth providers", description=tr("cli.operator_surface.help.config.auth_providers")),
-                    HelpEntry(command="aeat config auth configure", description=tr("cli.operator_surface.help.config.auth_configure")),
-                    HelpEntry(command="aeat config auth status", description=tr("cli.operator_surface.help.config.auth_status")),
-                    HelpEntry(command="aeat config auth test", description=tr("cli.operator_surface.help.config.auth_test")),
-                    HelpEntry(command="aeat config auth clear", description=tr("cli.operator_surface.help.config.auth_clear")),
+                    HelpEntry(
+                        command="aeat config auth providers",
+                        description=tr("cli.operator_surface.help.config.auth_providers"),
+                    ),
+                    HelpEntry(
+                        command="aeat config auth configure",
+                        description=tr("cli.operator_surface.help.config.auth_configure"),
+                    ),
+                    HelpEntry(
+                        command="aeat config auth status",
+                        description=tr("cli.operator_surface.help.config.auth_status"),
+                    ),
+                    HelpEntry(
+                        command="aeat config auth test",
+                        description=tr("cli.operator_surface.help.config.auth_test"),
+                    ),
+                    HelpEntry(
+                        command="aeat config auth clear",
+                        description=tr("cli.operator_surface.help.config.auth_clear"),
+                    ),
                 ),
             ),
             HelpSection(
                 title=tr("cli.operator_surface.help.config.section_diagnostics"),
                 entries=(
-                    HelpEntry(command="aeat config repair", description=tr("cli.operator_surface.help.config.diagnostics_repair")),
-                    HelpEntry(command="aeat config repair logs", description=tr("cli.operator_surface.help.config.diagnostics_logs")),
+                    HelpEntry(
+                        command="aeat config repair",
+                        description=tr("cli.operator_surface.help.config.diagnostics_repair"),
+                    ),
+                    HelpEntry(
+                        command="aeat config repair logs",
+                        description=tr("cli.operator_surface.help.config.diagnostics_logs"),
+                    ),
                     HelpEntry(
                         command="aeat config repair quarantine",
                         description=tr("cli.operator_surface.help.config.diagnostics_quarantine"),
@@ -239,42 +311,105 @@ def _app_help() -> HelpDocument:
             HelpSection(
                 title=tr("cli.operator_surface.help.app.section_overview"),
                 entries=(
-                    HelpEntry(command="aeat app overview status", description=tr("cli.operator_surface.help.app.overview_status")),
+                    HelpEntry(
+                        command="aeat app overview status",
+                        description=tr("cli.operator_surface.help.app.overview_status"),
+                    ),
                 ),
             ),
             HelpSection(
                 title=tr("cli.operator_surface.help.app.section_ledger"),
                 entries=(
-                    HelpEntry(command="aeat app ledger import", description=tr("cli.operator_surface.help.app.ledger_import")),
-                    HelpEntry(command="aeat app ledger list", description=tr("cli.operator_surface.help.app.ledger_list")),
-                    HelpEntry(command="aeat app ledger view", description=tr("cli.operator_surface.help.app.ledger_view")),
-                    HelpEntry(command="aeat app ledger status", description=tr("cli.operator_surface.help.app.ledger_status")),
-                    HelpEntry(command="aeat app ledger review", description=tr("cli.operator_surface.help.app.ledger_review")),
-                    HelpEntry(command="aeat app ledger update", description=tr("cli.operator_surface.help.app.ledger_update")),
-                    HelpEntry(command="aeat app ledger classify", description=tr("cli.operator_surface.help.app.ledger_classify")),
-                    HelpEntry(command="aeat app ledger allocate", description=tr("cli.operator_surface.help.app.ledger_allocate")),
-                    HelpEntry(command="aeat app ledger attach", description=tr("cli.operator_surface.help.app.ledger_attach")),
-                    HelpEntry(command="aeat app ledger archive", description=tr("cli.operator_surface.help.app.ledger_archive")),
-                    HelpEntry(command="aeat app ledger stash", description=tr("cli.operator_surface.help.app.ledger_stash")),
-                    HelpEntry(command="aeat app ledger remove", description=tr("cli.operator_surface.help.app.ledger_remove")),
-                    HelpEntry(command="aeat app ledger reset", description=tr("cli.operator_surface.help.app.ledger_reset")),
-                    HelpEntry(command="aeat app ledger export", description=tr("cli.operator_surface.help.app.ledger_export")),
+                    HelpEntry(
+                        command="aeat app ledger import",
+                        description=tr("cli.operator_surface.help.app.ledger_import"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger list",
+                        description=tr("cli.operator_surface.help.app.ledger_list"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger view",
+                        description=tr("cli.operator_surface.help.app.ledger_view"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger status",
+                        description=tr("cli.operator_surface.help.app.ledger_status"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger review",
+                        description=tr("cli.operator_surface.help.app.ledger_review"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger update",
+                        description=tr("cli.operator_surface.help.app.ledger_update"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger classify",
+                        description=tr("cli.operator_surface.help.app.ledger_classify"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger allocate",
+                        description=tr("cli.operator_surface.help.app.ledger_allocate"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger attach",
+                        description=tr("cli.operator_surface.help.app.ledger_attach"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger archive",
+                        description=tr("cli.operator_surface.help.app.ledger_archive"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger stash",
+                        description=tr("cli.operator_surface.help.app.ledger_stash"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger remove",
+                        description=tr("cli.operator_surface.help.app.ledger_remove"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger reset",
+                        description=tr("cli.operator_surface.help.app.ledger_reset"),
+                    ),
+                    HelpEntry(
+                        command="aeat app ledger export",
+                        description=tr("cli.operator_surface.help.app.ledger_export"),
+                    ),
                 ),
             ),
             HelpSection(
                 title=tr("cli.operator_surface.help.app.section_modelo"),
                 entries=(
-                    HelpEntry(command="aeat app modelo list", description=tr("cli.operator_surface.help.app.modelo_list")),
-                    HelpEntry(command="aeat app modelo describe", description=tr("cli.operator_surface.help.app.modelo_describe")),
-                    HelpEntry(command="aeat app modelo bindings", description=tr("cli.operator_surface.help.app.modelo_bindings")),
-                    HelpEntry(command="aeat app modelo work", description=tr("cli.operator_surface.help.app.modelo_work")),
+                    HelpEntry(
+                        command="aeat app modelo list",
+                        description=tr("cli.operator_surface.help.app.modelo_list"),
+                    ),
+                    HelpEntry(
+                        command="aeat app modelo describe",
+                        description=tr("cli.operator_surface.help.app.modelo_describe"),
+                    ),
+                    HelpEntry(
+                        command="aeat app modelo bindings",
+                        description=tr("cli.operator_surface.help.app.modelo_bindings"),
+                    ),
+                    HelpEntry(
+                        command="aeat app modelo work",
+                        description=tr("cli.operator_surface.help.app.modelo_work"),
+                    ),
                 ),
             ),
             HelpSection(
                 title=tr("cli.operator_surface.help.app.section_review_and_registry"),
                 entries=(
-                    HelpEntry(command="aeat app review queue", description=tr("cli.operator_surface.help.app.review_queue")),
-                    HelpEntry(command="aeat app review view ID", description=tr("cli.operator_surface.help.app.review_view")),
+                    HelpEntry(
+                        command="aeat app review queue",
+                        description=tr("cli.operator_surface.help.app.review_queue"),
+                    ),
+                    HelpEntry(
+                        command="aeat app review view ID",
+                        description=tr("cli.operator_surface.help.app.review_view"),
+                    ),
                     HelpEntry(
                         command="aeat app registry inspect",
                         description=tr("cli.operator_surface.help.app.registry_inspect"),
@@ -288,7 +423,10 @@ def _app_help() -> HelpDocument:
             HelpSection(
                 title=tr("cli.operator_surface.help.app.section_live_reads"),
                 entries=(
-                    HelpEntry(command="aeat app live filed list", description=tr("cli.operator_surface.help.app.live_filed_list")),
+                    HelpEntry(
+                        command="aeat app live filed list",
+                        description=tr("cli.operator_surface.help.app.live_filed_list"),
+                    ),
                     HelpEntry(
                         command="aeat app live filed capture",
                         description=tr("cli.operator_surface.help.app.live_filed_capture"),

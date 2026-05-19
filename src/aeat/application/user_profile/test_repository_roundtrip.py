@@ -211,7 +211,7 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
                 UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).load(
                     record.profile_id
                 )
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: stamping removed_at on an "
@@ -302,7 +302,7 @@ def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
             regression_caught = False
             try:
                 snapshots.load(snapshot.snapshot_id)
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: mutating a fact without "

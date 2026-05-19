@@ -30,7 +30,6 @@ from aeat.application.user_profile import UserProfileLifecycleRepository
 from aeat.core.config import Settings
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 

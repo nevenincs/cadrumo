@@ -278,7 +278,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
             regression_caught = False
             try:
                 mutated = repo.load(original.snapshot_id)
-            except (ValidationError, Exception):  # noqa: BLE001 - boundary may raise different types
+            except (ValidationError, Exception):
                 regression_caught = True
             else:
                 if mutated != original:

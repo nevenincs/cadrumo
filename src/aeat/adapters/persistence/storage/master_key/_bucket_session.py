@@ -199,7 +199,7 @@ class BucketSession:
             )
             target_url = f"sqlite:///{bucket_db_path.as_posix()}"
             dispose_engine(Settings(aeat_database_url=target_url))
-        except Exception:  # pragma: no cover - never raise from close()
+        except Exception:  # noqa: S110 — never raise from close(); engine eviction is best-effort cleanup  # pragma: no cover
             pass
 
 
