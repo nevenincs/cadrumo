@@ -4,6 +4,7 @@ number = "136-144"
 label = "Numero total de perceptores"
 section = ["declarante", "resumen"]
 data_type = "integer"
+semantic_role = "total_perceptores_count"
 required = true
 input_kind = "computed"
 formula = "modelo-180-total-perceptores"

@@ -4,6 +4,7 @@ number = "213-215"
 label = "Puerta del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
+semantic_role = "payee_inmueble_puerta"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-puerta"]

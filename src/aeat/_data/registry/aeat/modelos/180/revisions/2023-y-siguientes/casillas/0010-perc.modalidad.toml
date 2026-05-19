@@ -4,6 +4,7 @@ number = "78"
 label = "Modalidad de renta o rendimiento"
 section = ["perceptor", "renta"]
 data_type = "text"
+semantic_role = "payee_modalidad_renta"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-180-perc-modalidad"]

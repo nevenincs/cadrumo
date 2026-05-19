@@ -4,6 +4,7 @@ number = "135-139"
 label = "Tipo de via del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
+semantic_role = "payee_inmueble_tipo_via"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-tipo-via"]

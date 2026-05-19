@@ -4,6 +4,7 @@ number = "201-203"
 label = "Bloque del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
+semantic_role = "payee_inmueble_bloque"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-bloque"]

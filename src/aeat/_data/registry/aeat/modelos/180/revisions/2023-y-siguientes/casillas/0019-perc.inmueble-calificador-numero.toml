@@ -4,6 +4,7 @@ number = "198-200"
 label = "Calificador del numero del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
+semantic_role = "payee_inmueble_calificador_numero"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-calificador-numero"]

@@ -4,6 +4,7 @@ number = "286-315"
 label = "Municipio del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
+semantic_role = "payee_inmueble_municipio"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-municipio"]
