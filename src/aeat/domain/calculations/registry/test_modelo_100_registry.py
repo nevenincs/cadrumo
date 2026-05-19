@@ -32,7 +32,7 @@ from ._remote_state_guard import (
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
-from ._schema import CasillaDefinition, DataBindingDefinition
+from . import CasillaDefinition, DataBindingDefinition
 from ._snapshot import build_snapshot
 from ._validate import RegistryValidator
 
