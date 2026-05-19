@@ -18,11 +18,9 @@ Mis Datos Censales endpoint.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
-from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -30,6 +28,12 @@ from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ._errors import LiveApplicationInputError
+from ._snapshot_base import (
+    SnapshotLifecycleState,
+    SnapshotService,
+    derive_snapshot_id_from_json,
+    enforce_snapshot_state_invariants,
+)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -47,19 +51,11 @@ _CENSUS_SNAPSHOT_VERSION = 1
 type _CensusFactValue = str
 
 
-class CensusSnapshotState(StrEnum):
-    """Lifecycle state relevant to CensusSyncService consumption.
-
-    Mirrors :class:`Borrador100SnapshotState`. ACTIVE is the current
-    AEAT-side answer; SUPERSEDED is a prior capture replaced by a
-    newer refresh; DISCARDED is a snapshot the operator explicitly
-    retired (e.g. captured during a sede outage with malformed
-    fields).
-    """
-
-    ACTIVE = "active"
-    SUPERSEDED = "superseded"
-    DISCARDED = "discarded"
+# CensusSnapshotState retained as a named alias so existing imports keep
+# working unchanged. The Census enum values already match the canonical
+# lifecycle vocabulary ("active"/"superseded"/"discarded") so we alias the
+# shared enum directly rather than maintain a duplicate StrEnum.
+CensusSnapshotState = SnapshotLifecycleState
 
 
 class CensusSnapshot(BaseModel):
@@ -101,7 +97,7 @@ class CensusSnapshot(BaseModel):
     profile_id: str = Field(min_length=1, max_length=128)
     captured_at: datetime
     source_url: str = Field(min_length=1, max_length=2048)
-    state: CensusSnapshotState
+    state: SnapshotLifecycleState
     census_facts: Mapping[str, _CensusFactValue] = Field(default_factory=dict)
     superseded_by_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     discarded_at: datetime | None = None
@@ -110,25 +106,13 @@ class CensusSnapshot(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_state_payload(self) -> CensusSnapshot:
-        """Mirror the Borrador100 state-payload invariants verbatim."""
-
-        if self.state is CensusSnapshotState.ACTIVE and self.superseded_by_snapshot_id is not None:
-            raise LiveApplicationInputError(
-                "active census snapshots cannot carry supersession pointers",
-            )
-        if self.state is CensusSnapshotState.SUPERSEDED and self.superseded_by_snapshot_id is None:
-            raise LiveApplicationInputError(
-                "superseded census snapshots must carry superseded_by_snapshot_id",
-            )
-        if self.state is not CensusSnapshotState.DISCARDED:
-            if self.discarded_at is not None or self.discarded_by or self.discard_reason:
-                raise LiveApplicationInputError(
-                    "only discarded census snapshots can carry discard metadata",
-                )
-        elif self.discarded_at is None or not self.discarded_by.strip():
-            raise LiveApplicationInputError(
-                "discarded census snapshots require discarded_at and discarded_by",
-            )
+        enforce_snapshot_state_invariants(
+            state=self.state,
+            has_supersession_pointer=self.superseded_by_snapshot_id is not None,
+            discarded_at=self.discarded_at,
+            discarded_by=self.discarded_by,
+            discard_reason=self.discard_reason,
+        )
         blank_keys = sorted(key for key in self.census_facts if not key.strip())
         if blank_keys:
             raise LiveApplicationInputError("census fact keys must not be blank")
