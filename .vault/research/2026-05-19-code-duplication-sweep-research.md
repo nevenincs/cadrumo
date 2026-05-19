@@ -1247,6 +1247,44 @@ Exhaustive READ-ONLY audit of `src/aeat/_data/registry/aeat/` (65+ TOML files ac
 | **duplicate** | 2 | 24+ semantic_role redefinitions, 8+ modelo headers copy-pasted |
 | **orphan-ref** | 1 | legal_refs/source_refs undefined |
 | **english-stem-needs-spanish** | 1 | `filing_year` in domain-logic contexts |
+
+---
+
+## Locale Drift Sweep
+
+**Scope**: `src/aeat/locales/` (en.yml, es.yml, ca.yml, hu.yml)
+
+**Findings**:
+
+### Finding 1: Missing Key in ES Locale
+
+| Issue | Key Pair | File Location | Impact |
+|-------|----------|---------------|--------|
+| **orphan-key** | `transaction` (EN only) | en.yml (top-level key `transaction:`) | `transaction:` exists in EN but absent in ES. Nested keys like `transaction.id_prefix_empty` are shadowed. Code does not use the top-level `transaction` key directly (all usages are scoped to nested paths like `cli.ledger.labels.*`). Non-critical drift. |
+| **orphan-key** | `calculadas` (ES only) | es.yml (nested within error context) | `calculadas:` key exists in ES but absent in EN. Referenced in error message text but not bound to a locale access path (`tr()` call). Likely dead key or inline string. |
+
+### Finding 2: Key Namespace Integrity
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| **snake_case consistency** | ✓ Pass | All top-level and nested keys use canonical lowercase snake_case (e.g. `id_prefix_empty`, `filing_year_help`). No camelCase, dot-notation, or mixed delimiters detected. |
+| **EN/ES/CA/HU key set parity** | ✓ Pass (except 2 orphans) | ~1575 keys in EN; ES has same count except `transaction` (missing) and `calculadas` (extra). CA/HU follow EN structure. |
+| **English tax stems in ES values** | ✓ Pass | No canonical English tax stems (filing, declaration, worksheet, report, submission, draft, status) appear in ES value text where Spanish equivalent exists. All occurrences are within English documentation strings (e.g. filing_record help text uses English for CLI arg descriptions). |
+
+### Finding 3: Key Usage Coverage
+
+| Scope | Coverage | Notes |
+|-------|----------|-------|
+| **Code references `tr()` calls** | ✓ Pass | Sweeping 20+ modules (auth, calculations, adapters, CLI, tests). All observed `tr()` calls reference existing nested keys (e.g. `cli.overview.status.transactions_empty`, `cli.ledger.labels.id`). No missing-key errors detected in grep. |
+| **Orphan keys** | `calculadas` is suspect | Appears in error context but not bound to any `tr()` access pattern. Recommend audit of error message assembly in `src/aeat/application` error handlers. |
+
+**Recommendations**:
+
+1. **Remove orphan `transaction` top-level key** from EN (or populate ES). Nested keys like `transaction.id_prefix_*` remain valid. The top-level anchor appears unused.
+2. **Investigate `calculadas` key** in ES. Either bind it to a `tr()` call or remove if dead code.
+3. **Verify error message assembly** in `src/aeat/core/errors/registry/_application.py` and application error handlers to ensure `calculadas` is not shadowing a real error message.
+
+**Risk Category**: drift / orphan-ref
 | **structural inconsistency** | 2 | Flat modelos vs. manifest+revisions, no shared registries |
 
 **Total Unique Findings**: 8
@@ -1255,3 +1293,521 @@ Exhaustive READ-ONLY audit of `src/aeat/_data/registry/aeat/` (65+ TOML files ac
 
 ---
 
+## docs/api Drift Audit
+
+**Scope**: `docs/api/*.rst` sphinx-autodoc generated documentation (127 rst files)
+
+**Status**: All rst files are **auto-generated** via Sphinx autodoc directive (confirmed by sampling: `.. automodule::` with `:members:` flag). Structure regenerable via `sphinx-build`.
+
+**Findings**:
+
+### Finding 1: Package Rename Not Reflected in Docs
+
+| Issue | Source | Target | File Count |
+|-------|--------|--------|------------|
+| **VAT → IVA module rename** | `aeat.domain.vat` (stale) | `aeat.domain.iva` (current) | 2 rst files: `aeat.domain.vat.rst`, `aeat.domain.vat.errors.rst` |
+
+**Remediation**: Regenerate docs (stale filenames will be dropped; new `aeat.domain.iva*.rst` will be created by autodoc).
+
+### Finding 2: Deleted Sync Modules
+
+| Issue | Module Name | Status | RST Files |
+|-------|-------------|--------|-----------|
+| **domain.sync missing** | `aeat.domain.sync` | No source code | `aeat.domain.sync.rst` (1 file) |
+| **application.sync missing** | `aeat.application.sync` | No source code | `aeat.application.sync.rst` (1 file) |
+
+**Note**: These packages do not exist in `src/aeat/domain/` or `src/aeat/application/`. Regenerate will drop them.
+
+### Finding 3: CLI Subcommand Module Structure Drift
+
+**Issue**: 14+ rst files document CLI subcommands as if they were nested packages under `entrypoints.cli.*`, but actual source structure differs.
+
+| Documented Module | Docs Assume | Actual Status | RST File |
+|-------------------|-------------|---------------|----------|
+| `aeat.entrypoints.cli.browser.health` | `cli/browser/health/__init__.py` or similar | **Missing** — health moved or flattened | aeat.entrypoints.cli.browser.health.rst |
+| `aeat.entrypoints.cli.data.ledgers.*` | `cli/data/ledgers/{anexo_d,assets,inventory}/` | **Missing** — CLI structure refactored | 4 rst files |
+| `aeat.entrypoints.cli.deadlines.*` (explain/list/next) | `cli/deadlines/{submodule}/` | **Missing** — likely merged into single module | 3 rst files |
+| `aeat.entrypoints.cli.financial.*` (aggregate/ingest/invoices/profile/txs) | `cli/financial/{submodule}/` | **Missing** — CLI restructured | 5 rst files |
+
+**Root cause**: CLI subcommand structure was flattened/reorganized post-documentation generation. Actual `src/aeat/entrypoints/cli/` contains only `_config/` subpackage; all other subcommands are single-file modules or collapsed into the root `cli.py`.
+
+**Remediation**: Regenerate docs. Sphinx autodoc will detect current structure and rebuild rst files accordingly.
+
+### Finding 4: No Hand-Authored Rst Content
+
+All 127 rst files use standard Sphinx autodoc boilerplate:
+```
+.. automodule:: aeat.{domain,application,adapters,...}
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aeat.submodule
+```
+
+**Conclusion**: No custom prose, examples, or hand-authored references. Docs are purely structural mirrors of code. Drift is not editorial; it is structural—source code layout changed, autodoc artifacts were not refreshed.
+
+**Risk Category**: drift / stale-mirror
+
+**Total Stale RST Files**: **19 files** (2 VAT→IVA, 2 sync, 15 CLI structure)
+
+**Estimated Remediation Effort**: ~5 min (run `sphinx-build docs/ docs/_build/` or equivalent).
+
+---
+
+
+## Domain Calculations Sweep
+
+### Summary
+
+Swept `src/aeat/domain/calculations/` (28 files, 1 test subdirectory) for class-name collisions, copy-paste boilerplate >20 lines, ENG/ESP domain identifier drift, orphaned exception definitions, and Protocol/ABC overlaps. Findings are catalogued below in risk-order.
+
+### Findings by Category
+
+#### 1. Class-Name Collisions
+
+**Status: NONE FOUND**
+
+Scan for duplicate class definitions across domain/calculations registry modules returned no cross-file collisions. All class names are locally unique per file.
+
+#### 2. Copy-Paste Boilerplate (>20 lines structurally identical)
+
+**Status: NO HIGH-CONFIDENCE BOILERPLATE IDENTIFIED**
+
+Manual inspection of oracle implementations (`_aeat_nif_iva_oracle.py`, `_groi_oracle.py`, `_renta_web_open_oracle.py`) and parity validators shows structurally distinct implementations despite common protocol shape. Driver initialisation and state management patterns vary per oracle type (AEAT host pinning, GROI form dispatch, Renta web session handling), indicating purpose-specific logic rather than cut-paste instances.
+
+#### 3. ENG/ESP Domain Identifier Drift
+
+**Status: MARGINAL — TERMINOLOGY CONSISTENCY ISSUE**
+
+Identifier | Locations | Assessment
+--- | --- | ---
+`filing_period` | `test_authority.py:1` context dict | English term used in internal test context. Per Spanish-stem ADR authority (IVA, modelo, declaracion, justificante, borrador, renta, autoliquidacion, expediente, censo, fincas), should be `periodo_declaracion` or equivalent. LOW RISK: test-only, non-public API.
+`filing` (generic) | Scattered in Modelo docstrings and binding references | Generic English term. ADR ruling required on whether to migrate to `declaracion` per regulatory context. MEDIUM RISK: appears in binding selector names and oracle references which affect calculation semantics.
+
+No critical ENG/ESP drift detected in core registry identifiers; Spanish stems (modelo, declaracion, borrador, IVA, renta, etc.) are consistently applied to domain entities.
+
+#### 4. Exception Classes Defined But Never Raised
+
+**Status: ORPHANED EXCEPTION FOUND**
+
+Identifier | Location | Raise Sites | Catch Sites | Risk Assessment
+--- | --- | --- | --- | ---
+`_BinaryXlsConversionError` | `_workbook_parity.py:1` (private, internal) | Raised 3× in same file (`_workbook_parity.py:235,249,260`) | Caught 2× in same file (`_workbook_parity.py:220,245`) | LOW RISK. Private exception (_prefixed), fully contained within single module, correct raise/catch pairing. No orphaning.
+
+All registry-level exception family members (`RegistryError`, `RegistryLoadError`, `RegistryValidationError`, `RegistrySnapshotError`, `CasillaConstraintViolationError`) are actively raised across the domain; no orphaned definitions detected.
+
+#### 5. Protocol/ABC Overlaps
+
+**Status: PROTOCOL DESIGN SOUND — NO OVERLAPS**
+
+Five domain-boundary protocols identified:
+
+Protocol | Location | Role | Implementations
+--- | --- | --- | ---
+`AeatNifIvaDriver` | `_aeat_nif_iva_oracle.py` | Remote IVA/NIF oracle driver contract | Satisfied by `AeatNifIvaOracleAdapter` (outbound)
+`RentaExpenseObservationProtocol` | `_bindings.py` | Rental income observation shape | Implemented by registry binding definitions
+`GroiDriver` | `_groi_oracle.py` | GROI (gestión de renta online) form submit contract | Satisfied by `GroiOracleAdapter` (outbound)
+`RentaWebOpenDriver` | `_renta_web_open_oracle.py` | Renta web session driver contract | Satisfied by `RentaWebOpenOracleAdapter` (outbound)
+`LiveParityOracle` | `_live_parity.py` | Live filing parity oracle protocol (nested ABC for inheritance) | Implemented by AEAT, GROI, RentaWebOpen oracle adapters
+
+No overlapping method signatures or conflicting role definitions. Protocol/ABC hierarchy is clean and intentional (LiveParityOracle as parent, specific drivers as children).
+
+### Risk Summary
+
+| Category | Finding Count | Risk Level | Action |
+| --- | --- | --- | --- |
+| Class-name collisions | 0 | NONE | Monitor in future sweeps |
+| Copy-paste boilerplate | 0 | NONE | No refactor action required |
+| ENG/ESP drift | 2 marginal | LOW | Defer to Spanish-stem ADR ruling; test-only impact |
+| Orphaned exceptions | 0 | NONE | All exception definitions are actively used |
+| Protocol/ABC overlap | 0 | NONE | Design is coherent; no refactor needed |
+
+**Sweep Conclusion:** `domain/calculations/` subdomain is structurally sound. No high-priority duplication, orphaning, or naming collisions detected. Cross-reference all findings against domain/calculations registry-authority scope to ensure no inter-module collision slipped detection.
+
+
+## CLI Entrypoints Sweep Pass 2
+
+### 1. Payload Class Shape Duplication in `_modelo_payloads.py`
+
+**Status: CONFIRMED DUPLICATION — REFACTORING CANDIDATE**
+
+Result Class | Field List | Exact Match | Risk
+--- | --- | --- | ---
+`WorkCreateResult` | `operation`, `work_unit_id`, `bucket_id`, `modelo`, `filing_year`, `period`, `revision_id`, `name`, `state`, `created_at`, `updated_at`, `discarded_at`, `discarded_by`, `discard_reason` | `WorkUnitPayload` (identical fields, no `operation` field in payload) | MEDIUM: Four work-lifecycle commands (`create`, `status`, `rename`, `discard`) replicate WorkUnitPayload shape + operation string verbatim. Field duplication spans lines 136–214 (79 lines of boilerplate).
+`WorkStatusResult` | Identical to WorkCreateResult | WorkUnitPayload | MEDIUM
+`WorkRenameResult` | Identical to WorkCreateResult | WorkUnitPayload | MEDIUM
+`WorkDiscardResult` | Identical to WorkCreateResult | WorkUnitPayload | MEDIUM
+`WorkFileResult` | `operation`, `filing_record_id`, `work_unit_id`, `calculation_revision_id`, `bucket_id`, `modelo`, `filing_year`, `period`, `filed_at`, `filed_by`, `notes`, `aeat_accepted`, `status`, `superseded_at`, `superseded_by_filing_record_id`, `kind`, `live_submission` | `FilingRecordPayload` (identical, missing `operation` + `kind`/`live_submission` defaults) | MEDIUM: Both `WorkFileResult` and `WorkAmendResult` duplicate `FilingRecordPayload` shape.
+`WorkAmendResult` | Identical to WorkFileResult | FilingRecordPayload | MEDIUM
+`FilingRecordShowResult` | Identical to WorkFileResult | FilingRecordPayload | MEDIUM
+
+**Refactoring Path:** Extract a shared `WorkUnitResultFields` mixin or base class to eliminate the WorkCreate/Status/Rename/Discard duplication (4 classes, 79 lines saved). Apply similar pattern for FilingRecord variants (WorkFile, WorkAmend, FilingRecordShow: 3 classes, ~60 lines saved). Preserve `@register_schema` decorator for JSON contract registration (cannot be removed or aliased).
+
+### 2. `operation` Field String Duplication in `@register_schema` Decorator
+
+**Status: CONFIRMED DUPLICATION — DESIGN CONSTRAINT**
+
+Decorator | Operation String | Redundancy
+--- | --- | ---
+`@register_schema("modelo.work.create")` | `operation: str = "modelo.work.create"` | EXACT MATCH: 18 instances of `@register_schema("X")` paired with `operation: str = "X"`. String value must be repeated because Pydantic field defaults cannot reference decorator arguments at runtime.
+(all 18 registered payloads) | (all exact string duplicates) | DESIGN CONSTRAINT: JSON contract requires the operation field in the payload so downstream tooling can identify which command emitted it. Decorator is registry metadata for test introspection; field is user-facing. Both are necessary.
+
+**Remediation:** Cannot eliminate without breaking the JSON contract or test introspection. Acceptable overhead given the functional requirement.
+
+### 3. Help-String Localization Coverage
+
+**Status: GOOD — HELP STRINGS PROPERLY LOCALIZED**
+
+Scan Result | Count | Coverage | Assessment
+--- | --- | --- | ---
+`help=tr(...)` | 40+ instances across `_modelo.py`, `_app_live.py`, `_review.py`, `_config/__init__.py`, `registry.py` | 100% sampled | All CLI help strings use `tr()` locale function; no hardcoded English help detected. Attribute names (`--modelo`, `--year`, `--period`, `--bucket-id`) use kebab-case English; help text (user-facing) routes through locale keys.
+
+**Subcommand Registration Pattern Check:**
+- `_modelo.py`: Uses `@app.command("name", help=tr(...))` pattern consistently (create, status, rename, discard, calculate, verify, file, amend, revisions, etc.).
+- `_app_live.py`: Nested Typer apps (`filed_app`, `iva_wallet_app`) registered with help strings via `app.add_typer(subapp, name="...")` + standalone `help=tr(...)`.
+- `_config/__init__.py`: Similar pattern (profile_app, auth_app, apoderado_app, repair_app, bucket_app).
+
+No inconsistency detected; locale machinery is uniform.
+
+### 4. Error Formatting Boundary Consolidation
+
+**Status: GOOD — CENTRALIZED ERROR HANDLING**
+
+Finding | Location | Pattern
+--- | --- | ---
+Error emission is funneled through a single `command_error_boundary` decorator | `_errors.py:137-194` | All Typer callbacks are wrapped via `decorate_typer_app()`, which recursively decorates the entire command tree. Catches `AeatError`, `pydantic.ValidationError`, and unexpected exceptions, routing all to `_emit_error_and_exit()`.
+Error rendering is deterministic | `_errors.py:253-265` | Single `_emit_error_and_exit()` function selects JSON or text renderer based on `json_output_requested()`, writes via `write_stderr()`, raises `typer.Exit()` with the mapped exit code.
+No duplicated error-handling code detected | (grep: "try/except" across CLI modules) | Individual command functions do not re-implement error handling; they raise domain or validation exceptions which the boundary catches.
+
+**Assessment:** Error formatting is consolidated; no duplication.
+
+### 5. Argument Name Consistency (ENG/ESP Alignment)
+
+**Status: GOOD — KEBAB-CASE ENGLISH, LOCALIZED HELP**
+
+Argument Name | Locations | Language | Help String
+--- | --- | --- | ---
+`--modelo` | `_modelo.py:140,191,394,612`, `_app_live.py:71,180,206`, `registry.py:X` | Spanish term (correct per ADR) | `tr("cli.app.modelo.modelo_help")`
+`--year` | `_modelo.py:159`, `_app_live.py:69,148` | English | `tr("cli.app.live.year_help")`
+`--period` | `_modelo.py:162`, `_app_live.py:73,149` | English | `tr("cli.app.live.period_help")`
+`--bucket-id` | `_modelo.py:305,314` | English (kebab-case) | `tr("cli.app.modelo.work.bucket_id_help")`
+`--work-unit-id` | `_modelo.py:380` | English (kebab-case) | `tr("cli.app.modelo.work.work_unit_id_help")`
+`--expediente` | `_app_live.py:176` | Spanish term (correct per ADR) | `tr("cli.app.live.expediente_help")`
+`--as-of` | `_modelo.py:308,480,494` | English (temporal semantics) | `tr("cli.app.modelo.*.as_of_help")`
+
+**Assessment:** Argument naming follows the Spanish-stem ADR; domain terms (`modelo`, `expediente`, `periodo`) use Spanish; temporal/operational terms (`year`, `period`, `bucket-id`) use English kebab-case. Help strings are all localized via `tr()`. No drift detected.
+
+### Summary
+
+| Aspect | Finding | Risk | Action |
+| --- | --- | --- | ---
+| Payload shape duplication | 4 Work*/FilingRecord classes share identical field lists | MEDIUM | Refactor: extract base mixin for WorkUnit fields; separate mixin for FilingRecord fields. Preserve `@register_schema` decorators. Estimate: 140 lines boilerplate reduction, low risk, non-breaking.
+| Operation string duplication | 18 `@register_schema("X")` + `operation: str = "X"` pairs | ACCEPTED OVERHEAD | Design constraint; both required for JSON contract + test registry. No action.
+| Help-string localization | All 40+ help strings use `tr(...)` | GOOD | No action.
+| Error handling | Centralized via `command_error_boundary` + `decorate_typer_app` | GOOD | No action.
+| Argument naming | Spanish stems + English kebab-case, consistent with ADR | GOOD | No action.
+
+**Sweep Conclusion:** CLI entrypoints surface is functionally sound with minor refactoring opportunity in payload shape consolidation. No safety, correctness, or localization issues detected. Primary duplication is boilerplate repetition of field lists in result classes, addressable via Pydantic base class or mixin pattern.
+
+---
+
+## Tests Fixture Deep Sweep
+
+**Scope**: `src/aeat/tests/fixtures/` (7 subdirs: `aeat-pages`, `aeat-sede`, `financial`, `justificantes`, `pdf_corpus`, `remote_filings`, `site_health`); fixture generators and test helper classes.
+
+**Objective**: 1. Fixture generator duplication beyond surface-level findings. 2. Test helper class duplication across fixture flavours. 3. Shared infrastructure patterns across `pdf_corpus`, `financial`, `justificantes`, `synthetic`. 4. Fixture entries referencing deleted/renamed identifiers (drift). 5. Test naming conventions embedding transient stems that should be renamed.
+
+### Finding 1: Modelo Generator Copy-Paste (100, 130, 303)
+
+**Risk Category**: duplicate / structural copy-paste
+
+**Locations**:
+- `pdf_corpus/l3_synthetic/_generators/modelo_100_generator.py` (169 lines): `Modelo100GenParams`, `Modelo100GroundTruth`, `_draw_header()`, `_draw_footer()`, `generate()` function
+- `pdf_corpus/l3_synthetic/_generators/modelo_130_generator.py` (142 lines): `Modelo130GenParams`, `Modelo130GroundTruth`, `generate()` function
+- `pdf_corpus/l3_synthetic/_generators/modelo_303_generator.py` (153 lines): `Modelo303GenParams`, `Modelo303GroundTruth`, `generate()` function
+- Total: 464 lines across 3 files
+
+**Issue**: Three independent generators each define:
+- Identical pydantic param/groundtruth model structure (`BaseModel`, `ConfigDict(strict=True, frozen=True, extra="forbid")`, Field constraints, field isolation)
+- Identical `generate()` function skeleton (`io.BytesIO`, `canvas.Canvas(pagesize=(210*mm, 297*mm))`, `c.setTitle()`, render loop, `pdf_bytes`, ground_truth tuple return)
+- Model-specific header/footer/casilla-box layout configuration (differ only in casilla-label maps + y-position constants)
+
+**Evidence**:
+- All three call shared `_generator_shared.py` helpers (`draw_header`, `draw_casilla_box`, `draw_footer`, `CasillaBox`, `format_amount`)
+- Modelo 130 + 303 generate() implementations are 90% identical (130 lines 101–135, 303 lines 113–146; only variable names differ)
+- Modelo 100 uses private `_draw_header` + `_draw_footer` wrappers; 130 + 303 call `draw_header` + `draw_footer` directly (API inconsistency)
+
+**Remediation**: Extract generic `QuarterlyGeneratorBase` or parameterize `generate()` by (params_model, casilla_boxes_map, header_fields). Modelo 100 can inherit or adapt. Reduce 464 → ~250 lines (45% reduction).
+
+**Count**: 1 finding (3-file duplication cluster)
+
+---
+
+### Finding 2: Fixture Model Class Duplication (_Fixture across financial, justificantes)
+
+**Risk Category**: duplicate / class structure
+
+**Locations**:
+- `fixtures/financial/n26/_generate.py:20–23`: `_Fixture(filename, title, pages)` dataclass
+- `fixtures/justificantes/_generate.py:25–37`: `_Fixture(filename, modelo, ejercicio, periodo, tax_id, full_name, csv, presented_at, presentation_id, total_ingresar, total_devolver)` dataclass
+- Both are `@dataclass(frozen=True)` but have incompatible schemas
+
+**Issue**: Both fixture generators define a class named `_Fixture` with completely different field sets. They're not shared or inherited — each redeclares its own structure. If future fixture generators (e.g., `aeat-pages`, `aeat-sede`) need similar patterns, duplication will propagate across 7 subdirectories.
+
+**Evidence**: No inheritance or composition between the two. Both are private (_Fixture) so no external visibility, but the naming collision and repeated pattern increase cognitive load. No shared fixture-base module to establish conventions.
+
+**Remediation**: Define a base `FixtureSpec` protocol or abstract class in a shared fixtures utility module (`src/aeat/tests/fixtures/__init__.py` or `src/aeat/tests/fixtures/_spec.py`). Or namespace them as `N26FixtureSpec`, `JustificanteFixtureSpec` if they're intentionally distinct. Establishes convention and prevents future duplicates.
+
+**Count**: 1 finding (cross-directory duplication potential)
+
+---
+
+### Finding 3: Shared Infrastructure Consolidation Opportunity
+
+**Risk Category**: structural copy-paste / shared infra
+
+**Locations**:
+- `pdf_corpus/l3_synthetic/_generators/_generator_shared.py` (150 lines): `CasillaBox`, `format_amount()`, `draw_header()`, `draw_casilla_box()`, `draw_footer()`, font + margin constants
+- `financial/n26/_generate.py`: duplicates layout logic (_LEFT, _TOP, _LINE, canvas.drawString patterns) inline; does not import from shared
+- `justificantes/_generate.py`: duplicates header/footer structure and font setup inline; does not import from shared
+
+**Issue**: PDF rendering infrastructure (margins, fonts, A4 dimensions, text-drawing helpers) is scattered:
+- `_generator_shared.py` exports shared primitives (`A4_WIDTH`, `A4_HEIGHT`, `MARGIN_*`, `HEADER_FONT`, `LABEL_FONT`, etc.) used by all three modelos
+- N26 + justificantes define their own layout constants and redraw boilerplate instead of importing from `_generator_shared`
+- Both N26 and justificantes could leverage `CasillaBox` + `format_amount()` patterns but don't (locked into inline `canvas.drawString` calls)
+
+**Evidence**: No imports of `_generator_shared` utilities in N26 or justificantes generators. Both repeat canvas setup, font declarations, and layout constants.
+
+**Remediation**: Extend `_generator_shared.py` as centralized fixture utilities module. Import and reuse across all fixtures:
+- `A4_WIDTH`, `A4_HEIGHT`, margin constants across all fixtures
+- `draw_header()` / `draw_footer()` templates (adapt signature if needed for different title/header structures)
+- `format_amount()` for any currency-formatted values in future fixtures
+- Create optional `PageTemplate` helper to standardize header/footer rendering across fixture families
+
+**Count**: 1 finding (cross-subdirectory consolidation opportunity)
+
+---
+
+### Finding 4: No Orphaned Identifier Drift Detected
+
+**Risk Category**: drift / identifier consistency
+
+**Scope**: Searched fixture definitions for references to deleted/renamed production classes (`Filing*`, `Declaration*`, `Borrador*` stems from historical refactors).
+
+**Result**: ✓ PASS. All fixture generators reference only active production identifiers:
+- `modelo_100_generator.py`: references `Modelo100GenParams`, `Modelo100GroundTruth` (production class names active)
+- `modelo_130_generator.py`: references `Modelo130GenParams`, `Modelo130GroundTruth` (active)
+- `modelo_303_generator.py`: references `Modelo303GenParams`, `Modelo303GroundTruth` (active)
+- `justificantes/_generate.py`: references `_Fixture` (private test-only, no production dependency)
+- `financial/n26/_generate.py`: references `_Fixture` (private test-only, no production dependency)
+
+No references to legacy `Filing*` or `Declaration*` class names found. Generator param models already use canonical `modelo`, `ejercicio`, `periodo` identifiers (per ADR regulatory authority).
+
+**Count**: 0 findings (clean state)
+
+---
+
+### Finding 5: Test Naming Convention Integrity
+
+**Risk Category**: structural / naming convention
+
+**Scope**: Test function names in `src/aeat/tests/fixtures/` and fixture-dependent tests.
+
+**Result**: ✓ PASS. Test naming adheres to pytest conventions:
+- `pdf_corpus/l3_synthetic/_generators/test_generator_shared.py`: functions named `test_format_amount_*` (parameterized: `test_format_amount_matches_aeat_style`, `test_format_amount_quantises_to_two_decimals`, `test_format_amount_nbsp_thousands`)
+- No test functions embed transient stems like `test_old_filing_*` or `test_borrador_*`
+- Test scope is fixture-infrastructure (generators, rendering), not domain logic, so no historical class-rename ripple detected
+
+**Count**: 0 findings (clean state)
+
+---
+
+### Summary: Tests Fixture Deep Sweep
+
+| Category | Count | Examples | Risk Level | Action |
+|----------|-------|----------|------------|--------|
+| **Fixture generator copy-paste** | 1 | Modelo 100/130/303 generate() + param model duplication | MEDIUM | Consolidate via generic base or parameterization (Phase 2) |
+| **Fixture class structure duplication** | 1 | `_Fixture` defined twice with incompatible schemas across dirs | LOW | Namespace or establish protocol convention (Phase 2) |
+| **Shared infra consolidation opportunity** | 1 | `_generator_shared.py` not fully leveraged by N26 + justificantes | LOW | Extend utilities module + import refactoring (Phase 2) |
+| **Orphaned identifier drift** | 0 | No references to deleted Filing*/Declaration*/Borrador* stems | NONE | Continue monitoring |
+| **Test naming convention issues** | 0 | All test functions follow pytest standards | NONE | No action needed |
+
+**Total Unique Findings**: 3
+
+**Estimated Remediation Effort**: 12–20 engineering hours (generate() consolidation, class namespace alignment, utilities import refactoring, Phase 2 execution).
+
+
+## Domain Submission Sweep
+
+### Summary
+
+Swept `src/aeat/domain/submission/` (7 files + 2 tests) for class inventory, ADR ledger rename alignment, cross-package imports, and internal duplication. Submission package is a focused, single-responsibility module for filing lifecycle recording and preflight gates. No internal collision or boilerplate duplication detected.
+
+### Inventory: All Public Symbols
+
+#### Models (Pydantic BaseModel)
+
+| Symbol | Location | Purpose | ADR Rename Target |
+| --- | --- | --- | --- |
+| `SubmittedFiling` | `_models.py:79` | Audit record for one historical filing; persisted into SubmissionRepository | `SubmittedModelo` (per ADR ledger) |
+| `SubmissionAttempt` | `_models.py:45` | Attempt record with timestamps, status, error codes, browser trace path | NO RENAME (not in ADR ledger; submission-specific) |
+| `SubmissionStatus` (StrEnum) | `_models.py:22` | Lifecycle status: PENDING, IN_PROGRESS, SUBMITTED, ACKNOWLEDGED, REJECTED, FAILED | NO RENAME (submission-specific, not Filing*) |
+
+#### Protocols
+
+| Symbol | Location | Purpose | ADR Rename Target |
+| --- | --- | --- | --- |
+| `FilingDraftLike` | `_protocols.py` | Narrow protocol surface over filing draft; conformed to by `aeat.application.filing.FilingDraft` | `ModeloDraftLike` (per ADR ledger) |
+| `DraftLoader` | `_protocols.py` | Loads a `FilingDraftLike` from disk path | `ModeloDraftLoader` (per ADR ledger; note: ADR ledger marks target as `?`) |
+| `DraftStatus` (StrEnum) | `_protocols.py` | Mirror of `aeat.application.filing.FilingDraftStatus` for submission preflight | Consolidate into `ModeloDraftStatus` (per ADR ledger) |
+| `FilingFinding` | `_protocols.py` | Minimal finding record; distinct from `aeat.application.filing.FilingValidationFinding` | `ModeloFinding` (per ADR ledger) |
+| `FilingFindingSeverity` (StrEnum) | `_protocols.py` | Severity enum: ERROR, WARNING; re-exported by `domain.filing` | `ModeloFindingSeverity` (per ADR ledger) |
+| `AuthProviderProbe` | `_protocols.py` | Narrow auth-provider surface for preflight gate | NO RENAME (auth infrastructure, not Filing/Modelo) |
+| `AuthProviderDescriptionLike` | `_protocols.py` | Submission-facing shape from auth provider | NO RENAME (auth infrastructure) |
+| `DeadlineWindowChecker` | `_protocols.py` | Narrow surface over `aeat.domain.deadlines` for submission preflight | NO RENAME (deadline infrastructure) |
+
+#### Exceptions
+
+| Symbol | Location | Purpose | Status |
+| --- | --- | --- | --- |
+| `SubmissionError` | `_errors.py` | Base error for submission operations | Active; no orphaning |
+| `SubmissionPreflightError` | `_errors.py` | Raised when preflight gate blocks submission | Active; no orphaning |
+| `SubmissionValidationError` | `_errors.py` | Raised during model validation | Active (used in `SubmissionAttempt._check_time_ordering`) |
+
+#### Engine & Repository
+
+| Symbol | Location | Purpose |
+| --- | --- | --- |
+| `SubmissionEngine` | `_engine.py` | Orchestrates filing → submission → attempt recording and status tracking |
+| `Preflight` | `_preflight.py` | Checks draft readiness before submission (auth, deadline, findings severity) |
+| `SubmissionRepository` | `_repository.py` | Persistent storage for `SubmittedFiling` records; SQLite-backed |
+
+### Cross-Package Import Inventory
+
+`domain.submission` is imported by **6 application/outbound modules**:
+
+1. **`application.workflow._engine`** — submission state machine integration
+2. **`application.workflow._adapters`** — submission protocol bindings
+3. **`application.filing._import`** — justificante CSV ingest; reconstructs `SubmittedFiling` + `SubmissionAttempt`
+4. **`application.modelo._actions`** — submission record CRUD operations
+5. **`adapters.outbound.aeat.export`** — preflight gate and attempt export
+6. **`adapters.persistence.storage`** — roundtrip test for SubmissionRepository
+
+**Re-exports**: `domain.filing.__init__.py` re-exports `FilingFindingSeverity` to upstream consumers (marked as "re-exported from domain.submission" per note in research sweep init).
+
+### ADR Ledger Alignment Analysis
+
+Five symbols in `domain.submission` match ADR ledger rename targets:
+
+| Current Name | ADR Target | Scope | Status |
+| --- | --- | --- | --- |
+| `FilingFindingSeverity` | `ModeloFindingSeverity` | **BLOCKING**: re-exported by `domain.filing`; cannot rename submission-only | BLOCKED (cross-domain dependency) |
+| `FilingDraftLike` | `ModeloDraftLike` | **BLOCKING**: protocol implemented by `application.filing.FilingDraft`; cross-domain protocol | BLOCKED (cross-domain dependency) |
+| `DraftLoader` | `ModeloDraftLoader` (target marked `?` in ledger) | **LOW RISK**: internal submission protocol; no cross-package clients found | Proceed after consensus on target name |
+| `DraftStatus` | Consolidate into `ModeloDraftStatus` | **BLOCKING**: mirrors `application.filing.FilingDraftStatus`; requires application-layer consolidation first | BLOCKED (application-tier dependency) |
+| `SubmittedFiling` | `SubmittedModelo` | **LOW RISK**: no cross-package imports found; submission-repository only | Proceed independently |
+
+### Internal Duplication Analysis
+
+**Status: NO DUPLICATION DETECTED**
+
+- No class-name collisions within domain.submission
+- No copy-paste boilerplate or method-signature duplication
+- Protocol hierarchy is intentional: `FilingDraftLike`, `DraftLoader`, `FilingFinding`, `DraftStatus` are all intentional narrow surfaces for submission engine's discrete concerns
+- Exception family (`SubmissionError`, `SubmissionPreflightError`, `SubmissionValidationError`) is clean and actively used
+
+### Blocking Dependencies Summary
+
+Three symbols cannot be renamed without coordinating cross-domain refactors:
+
+**Blocking**: `FilingFindingSeverity`
+- **Why**: Re-exported by `domain.filing`; used throughout `domain.filing._validator`
+- **Action Required**: ADR must decide whether the entire Filing/Modelo cluster renames in one go, or phased with intermediate shims (not preferred per project policy)
+
+**Blocking**: `FilingDraftLike`
+- **Why**: Protocol implemented by `application.filing.FilingDraft`
+- **Action Required**: Application layer must rename FilingDraft first, then submission protocol can follow
+
+**Blocking**: `DraftStatus`
+- **Why**: Mirrors `application.filing.FilingDraftStatus`; consolidation required at application tier
+- **Action Required**: Application domain must consolidate the two enums first
+
+**Unblocked**: `SubmittedFiling` → `SubmittedModelo`
+- **Why**: Isolated to submission repository and filing._import; no upstream re-exports
+- **Action Required**: Can proceed independently once ADR approves
+
+**Unblocked (with consensus)**: `DraftLoader` → target TBD
+- **Why**: Internal submission protocol; no external clients
+- **Action Required**: Confirm ADR target name, then proceed
+
+### Risk Summary
+
+| Category | Finding Count | Risk Level | Action |
+| --- | --- | --- | --- |
+| ADR-ledger rename alignment | 5 identified | MEDIUM | 3 blocked on cross-domain dependencies; 2 unblocked; requires ADR sequencing |
+| Class-name collisions | 0 | NONE | Monitor in future sweeps |
+| Internal duplication | 0 | NONE | No refactor action required |
+| Cross-package dependencies | 6 consumers | LOW | All dependencies are intentional; import hygiene is good |
+| Orphaned exceptions | 0 | NONE | All exceptions actively used |
+
+**Sweep Conclusion:** `domain.submission` is well-isolated and internally coherent. Rename coordination must sequence with application-tier consolidation (FilingDraft, FilingDraftStatus) and filing-domain re-exports (FilingFindingSeverity). `SubmittedFiling` → `SubmittedModelo` is independently actionable.
+
+
+---
+
+## Adapters Inbound Sweep
+
+**Scope**: `src/aeat/adapters/inbound/` (borrador, declaracion, justificante, financial, identity, pdf, sanitizer)
+
+**Findings**:
+
+### Finding 1: Parser Structure Consistency
+
+| Subpackage | File Layout | Boilerplate Status | Notes |
+|------------|----------|--------|-------|
+| **borrador** | `_parser.py` + `_parsers/_pdfplumber_backend.py` (36 lines) | ✓ Minimal | Delegating entry point; backend is lean. |
+| **declaracion** | `_parser.py` + `_parsers/_pdfplumber_backend.py` (113 lines) | ⚠️ Extended | Includes pypdf AcroForm fast-path + lru_cache. Larger but justified by template-revision detection logic. |
+| **justificante** | `_parser.py` + `_parsers/_pdfplumber_backend.py` (32 lines) | ✓ Minimal | Consistent with borrador pattern. |
+| **financial** | Polymorphic provider registry (`_base.py` + `_csv.py`, `_ofx.py`, etc.) | ✓ No duplication | Each provider type is separate; no monolithic boilerplate. |
+
+**Assessment**: pdfplumber unification is comprehensive. Three DOM parsers (borrador, declaracion, justificante) follow a consistent pattern: public entry point (`parse_*`) + backend abstraction (`_parsers/_pdfplumber_backend.py`). Financial provider pattern is distinct and separate; no inappropriate duplication.
+
+### Finding 2: Class-Name Collisions
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| **Duplicate class names across subpackages** | ✓ Pass | No collisions detected. Each error class is locally scoped (e.g. `BorradorParseError`, `DeclaracionParseError`, `FinancialProviderError` are unique). |
+| **Naming consistency per domain** | ✓ Pass | Spanish-domain classes follow Spanish stems: `BorradorObservation`, `DeclaracionObservation`, `JustificanteParserBackend`. English infrastructure classes (`Parser`, `Error`) follow English patterns. |
+| **Test class prefixes** | ✓ Pass | Test classes use `Test` prefix (e.g. `TestJustificanteErrorRehome`, `TestPdfFilingImportError`). No collision with production classes. |
+
+### Finding 3: Exception Hierarchy
+
+| Tier | Count | Parents | Leaf Classes | Status |
+|------|-------|---------|-----|--------|
+| **Root** | 1 | - | (implicitly) | `AeatError` (inherited, not local) |
+| **L1 (Inbound)** | 2 | `AeatError` | `PdfFilingImportError`, `SanitizationError`, `FinancialProviderError` | ✓ Clean hierarchy |
+| **L2 (Domain-specific)** | 6 | L1 parents | `BorradorParseError`, `DeclaracionParseError`, `ScrubError`, `SanitizerValidationError`, `SignaturePresentError`, `AlreadySanitizedError` | ✓ Well-scoped |
+| **L3 (Subtype-specific)** | 4 | L2 parents | `ArtefactNotRecognisedError`, `TemplateNotDetectedError`, `UnsupportedFinancialSourceError`, `InvalidFinancialSourceError` | ✓ Specific, not orphan |
+
+**Assessment**: Exception hierarchy is clean. No escape-to-top. No dead classes. No collision-prone patterns.
+
+### Finding 4: Language Drift
+
+| Domain | Identifier | Language Pattern | Status |
+|--------|-----------|------------------|--------|
+| **borrador** | `BorradorParseError`, `ArtefactKind`, `BorradorObservation` | Spanish stem + English infrastructure | ✓ Correct |
+| **declaracion** | `DeclaracionParseError`, `TemplateRevision`, `DeclaracionObservation` | Spanish stem + English infrastructure | ✓ Correct |
+| **justificante** | `JustificanteParserBackend`, `JustificanteParseError` | Spanish stem + English infrastructure | ✓ Correct |
+| **financial** | `FinancialProviderError`, `FinancialValidationError` | English domain + English infrastructure | ✓ Appropriate |
+| **sanitizer** | `SanitizationError`, `SanitizerValidationError` | English infrastructure | ✓ Appropriate |
+
+**Assessment**: No drift detected. Spanish-domain classes consistently use Spanish stems paired with English infrastructure naming. Cross-domain utilities correctly use English stems. No mixed-language identifiers.
+
+**Risk Category**: structural integrity / clean — no high-risk findings
