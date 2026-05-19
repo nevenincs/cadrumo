@@ -36,7 +36,9 @@ def isolated_settings(tmp_path: Path) -> Settings:
 def secure_engine(tmp_path: Path) -> Iterator[Engine]:
     provider = EphemeralMasterKeyProvider()
     with provider:
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"))
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+        )
         Base.metadata.create_all(engine)
         try:
             yield engine
