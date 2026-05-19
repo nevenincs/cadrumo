@@ -9,9 +9,9 @@ import pytest
 from . import (
     AutonomoProfile,
     DeadlineEngine,
-    FilingEnrollment,
-    FilingIVAProfile,
-    FilingObligation,
+    ModeloEnrollment,
+    ModeloIVAProfile,
+    ModeloDeadline,
     IVARegime,
     ObligationStatus,
     Schedule,
@@ -108,7 +108,7 @@ class TestCompute:
         schedule = _engine().compute(
             _profile(
                 has_employees=True,
-                enrollment=FilingEnrollment(large_company=True),
+                enrollment=ModeloEnrollment(large_company=True),
             ),
             2026,
             today=date(2026, 1, 1),
@@ -144,7 +144,7 @@ class TestCompute:
         schedule = _engine().compute(
             _profile(
                 does_intracomunitario=True,
-                iva=FilingIVAProfile(intracommunity_operations_exceed_50000_eur=True),
+                iva=ModeloIVAProfile(intracommunity_operations_exceed_50000_eur=True),
             ),
             2026,
             today=date(2026, 1, 1),
@@ -220,7 +220,7 @@ class TestCompute:
 
 
 class TestStatusTransitions:
-    def _find_q1(self, schedule: Schedule) -> FilingObligation:
+    def _find_q1(self, schedule: Schedule) -> ModeloDeadline:
         return next(o for o in schedule.obligations if o.period == "2026Q1")
 
     def test_overdue(self) -> None:

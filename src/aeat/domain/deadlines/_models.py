@@ -40,7 +40,7 @@ class IVARegime(StrEnum):
 
 
 class ObligationStatus(StrEnum):
-    """Status of a single :class:`FilingObligation` against a reference date.
+    """Status of a single :class:`ModeloDeadline` against a reference date.
 
     :attr:`UPCOMING` and :attr:`DUE_SOON` are differentiated by the
     ``AEAT_DEADLINE_DUE_SOON_DAYS`` setting (default 14 days).
@@ -70,7 +70,7 @@ class ObligationStatus(StrEnum):
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class FilingEnrollment(BaseModel):
+class ModeloEnrollment(BaseModel):
     """AEAT enrollment facts used by registry filing schedules."""
 
     model_config = _STRICT_FROZEN
@@ -79,7 +79,7 @@ class FilingEnrollment(BaseModel):
     public_administration_budget_gt_6000000: bool = False
 
 
-class FilingIVAProfile(BaseModel):
+class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules."""
 
     model_config = _STRICT_FROZEN
@@ -134,8 +134,8 @@ class AutonomoProfile(BaseModel):
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
-    iva: FilingIVAProfile = Field(default_factory=FilingIVAProfile)
-    enrollment: FilingEnrollment = Field(default_factory=FilingEnrollment)
+    iva: ModeloIVAProfile = Field(default_factory=ModeloIVAProfile)
+    enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
     fiscal_address_cadastral_reference: str = ""
     fiscal_address_is_habitual_vivienda: bool = False
     activity_start_date: date | None = None
@@ -156,7 +156,7 @@ class RecargoBand(BaseModel):
     surcharge schedule for self-assessments filed after the deadline
     without prior AEAT notice. Each row materialises into one
     :class:`RecargoBand`; the :class:`Recovery` value attached to an
-    OVERDUE :class:`FilingObligation` references the resolved band
+    OVERDUE :class:`ModeloDeadline` references the resolved band
     by ``id``.
 
     Attributes:
@@ -221,7 +221,7 @@ class Recovery(BaseModel):
     next_command: str = Field(min_length=1, max_length=256)
 
 
-class FilingObligation(BaseModel):
+class ModeloDeadline(BaseModel):
     """A single filing obligation in a :class:`Schedule`.
 
     Attributes:
@@ -262,7 +262,7 @@ class FilingObligation(BaseModel):
     recovery: Recovery | None = None
 
     @model_validator(mode="after")
-    def _check_window_order(self) -> FilingObligation:
+    def _check_window_order(self) -> ModeloDeadline:
         """Reject obligations whose ``opens_on`` is after ``closes_on``."""
         if self.opens_on > self.closes_on:
             raise DeadlineValidationError(f"opens_on ({self.opens_on}) is after closes_on ({self.closes_on})")
@@ -280,7 +280,7 @@ class Schedule(BaseModel):
         profile: The :class:`AutonomoProfile` the schedule was computed
             for.
         year: The target year.
-        obligations: Tuple of :class:`FilingObligation` ordered by
+        obligations: Tuple of :class:`ModeloDeadline` ordered by
             ``(closes_on, modelo, period)``.
         generated_at: UTC timestamp of when :meth:`DeadlineEngine.compute`
             built this schedule. The only non-deterministic field.
@@ -290,5 +290,5 @@ class Schedule(BaseModel):
 
     profile: AutonomoProfile
     year: int = Field(ge=1900, le=2999)
-    obligations: tuple[FilingObligation, ...]
+    obligations: tuple[ModeloDeadline, ...]
     generated_at: datetime
