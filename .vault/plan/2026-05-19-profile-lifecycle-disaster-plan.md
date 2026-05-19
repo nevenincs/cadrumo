@@ -81,8 +81,8 @@ resolve the create/read disagreement and the dual-profile pain.
 
 Remove every state read from the help/version surfaces.
 
-- [ ] `P04.S31` - rewrite `build_cli_version_report` to return name + version only via `importlib.metadata`; `remove `ValidatedRegistryAuthority.load()`; `src/aeat/application/diagnostics.py`.
-- [ ] `P04.S32` - short-circuit `--help` and `--version` in the CLI root callback before any state-touching call; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `P04.S31` - rewrite `build_cli_version_report` to return name + version only via `importlib.metadata`; `remove `ValidatedRegistryAuthority.load()`; `src/aeat/application/diagnostics.py`.
+- [x] `P04.S32` - short-circuit `--help` and `--version` in the CLI root callback before any state-touching call; `src/aeat/entrypoints/cli/__init__.py`.
 - [ ] `P04.S33` - move full registry validation behind a dedicated opt-in verb `aeat config repair integrity registry`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P04.S34` - add roundtrip test asserting `aeat --version` and `aeat --help` complete in under 200 ms on a clean storage root; `src/aeat/entrypoints/cli/test_fast_path_no_state.py`.
 

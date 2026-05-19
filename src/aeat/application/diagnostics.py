@@ -134,14 +134,31 @@ class ConfigRepairReport(BaseModel):
     checks: tuple[DiagnosticCheck, ...]
 
 
-def build_cli_version_report(registry_root: Path | None = None) -> CliVersionReport:
-    """Return the package and registry summary for CLI version surfaces."""
+def build_cli_version_report(
+    registry_root: Path | None = None,
+    *,
+    with_registry: bool = True,
+) -> CliVersionReport:
+    """Return the package and registry summary for CLI version surfaces.
 
-    root = registry_root or bundled_path("registry", "aeat")
+    The ``with_registry`` flag controls whether the full registry
+    TOML load fires. The CLI root callback passes
+    ``with_registry=False`` for bare ``aeat --version`` invocations
+    (the fast-path mandated by disaster ADR Ruling 4 — the operator
+    must see name + version in under a second on cold start). When
+    ``--detail`` is on, the caller re-invokes with
+    ``with_registry=True`` to populate the registry summary.
+    """
+
+    if with_registry:
+        root = registry_root or bundled_path("registry", "aeat")
+        summary = _build_registry_version_summary(root)
+    else:
+        summary = RegistryVersionSummary(available=False, registry_root="")
     return CliVersionReport(
         package_name="aeat",
         package_version=__version__,
-        registry=_build_registry_version_summary(root),
+        registry=summary,
     )
 
 
@@ -674,6 +691,12 @@ def render_cli_version_text(report: CliVersionReport) -> str:
     )
     return tr(
         "cli.diagnostics.version.registry_summary",
+        default=(
+            "{package} {version}\n"
+            "Registry: {modelos} modelos, {casillas} casillas, "
+            "{formulas} formulas\n"
+            "Revisions: {revisions}"
+        ),
         package=report.package_name,
         version=report.package_version,
         revisions=revision_label,
