@@ -350,8 +350,10 @@ class KeyringMasterKeyProvider:
     so the auto fallback can route to the file backend without
     silently dropping the master key into a sink.
 
-    The in-process cache is keyed by ``(service, username)`` so two
-    providers bound to distinct identities never share key material.
+    Older builds kept an in-process key cache keyed by ``(service,
+    username)``. That cache has retired in favour of
+    :class:`BucketSession`; this provider resolves through the keyring
+    on each call.
 
     The optional ``client`` argument injects a :class:`KeyringClient`
     implementation so tests exercise the provider's contract against a
@@ -381,6 +383,12 @@ class KeyringMasterKeyProvider:
         self._service = service
         self._username = username
         self._client: KeyringClient = client or _RealKeyringClient()
+
+    @classmethod
+    def _reset_for_tests(cls) -> None:
+        """Compatibility hook for suites written against the retired cache."""
+
+        return
 
     def _probe_backend(self) -> None:
         """Refuse no-op keyring backends up-front, via the injected client.
@@ -511,6 +519,12 @@ class FileFallbackMasterKeyProvider:
         """
         self._store_dir = Path(store_dir)
         self._passphrase_callback = passphrase_callback or _default_passphrase_callback
+
+    @classmethod
+    def _reset_for_tests(cls) -> None:
+        """Compatibility hook for suites written against the retired cache."""
+
+        return
 
     @property
     def _salt_path(self) -> Path:

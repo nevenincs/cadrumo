@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.adapters.persistence.storage.bucket._manifest import KdfParams
+from aeat.adapters.persistence.storage.bucket._manifest import ManifestKdfParams
 from aeat.adapters.persistence.storage.master_key._kdf import derive_kek
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _REFERENCE_PASSPHRASE = b"correct horse battery staple"
 _REFERENCE_SALT = b"\x00" * 16
-_REFERENCE_PARAMS = KdfParams(
+_REFERENCE_PARAMS = ManifestKdfParams(
     algorithm="argon2id",
     version=19,
     memory_cost=19 * 1024,
@@ -88,7 +88,7 @@ def test_derive_kek_differs_for_different_passphrases() -> None:
 
 
 def test_derive_kek_rejects_non_argon2id_algorithm() -> None:
-    bad_params = KdfParams(
+    bad_params = ManifestKdfParams(
         algorithm="bcrypt",
         version=19,
         memory_cost=19 * 1024,
@@ -103,7 +103,7 @@ def test_derive_kek_rejects_non_argon2id_algorithm() -> None:
 
 
 def test_derive_kek_rejects_non_thirty_two_output_length() -> None:
-    bad_params = KdfParams(
+    bad_params = ManifestKdfParams(
         algorithm="argon2id",
         version=19,
         memory_cost=19 * 1024,

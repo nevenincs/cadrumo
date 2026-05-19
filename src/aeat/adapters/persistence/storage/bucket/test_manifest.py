@@ -1,4 +1,4 @@
-"""Strict-validation tests for :class:`BucketManifest` and :class:`KdfParams`."""
+"""Strict-validation tests for :class:`BucketManifest` and :class:`ManifestKdfParams`."""
 
 from __future__ import annotations
 
@@ -9,13 +9,13 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ._manifest import BucketManifest, KdfParams
+from ._manifest import BucketManifest, ManifestKdfParams
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-def _kdf() -> KdfParams:
-    return KdfParams(
+def _kdf() -> ManifestKdfParams:
+    return ManifestKdfParams(
         algorithm="argon2id",
         version=19,
         memory_cost=19 * 1024,
@@ -47,7 +47,7 @@ def _manifest(**overrides: object) -> BucketManifest:
 def test_round_trip_preserves_salt_bytes() -> None:
     salt = secrets.token_bytes(16)
     manifest = _manifest(
-        kdf_params=KdfParams(
+        kdf_params=ManifestKdfParams(
             algorithm="argon2id",
             version=19,
             memory_cost=19 * 1024,
@@ -117,7 +117,7 @@ def test_rejects_non_positive_schema_version() -> None:
 
 def test_rejects_wrong_salt_length() -> None:
     with pytest.raises(ValidationError):
-        KdfParams(
+        ManifestKdfParams(
             algorithm="argon2id",
             version=19,
             memory_cost=19 * 1024,
@@ -130,7 +130,7 @@ def test_rejects_wrong_salt_length() -> None:
 
 def test_rejects_unknown_kdf_algorithm_length_zero() -> None:
     with pytest.raises(ValidationError):
-        KdfParams(
+        ManifestKdfParams(
             algorithm="",
             version=19,
             memory_cost=19 * 1024,
