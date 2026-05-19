@@ -386,7 +386,7 @@ def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
     """Build one ``inspect.Parameter`` per descriptor question.
 
     Each question's ``rich_help_panel`` is the section's translated
-    title so ``aeat config init --help`` renders one help panel per
+    title so ``aeat config profile create NAME --help`` renders one help panel per
     :class:`WizardSection`.
     """
 

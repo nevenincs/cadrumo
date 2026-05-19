@@ -79,7 +79,7 @@ class AuthConfigureNoActiveBucketError(AeatError):
 
     The bucket-event-history ADR requires every event to be scoped to a
     bucket id. Provider configuration must happen after
-    ``aeat config init`` has activated a profile bucket; running before
+    ``aeat config profile create NAME`` has activated a profile bucket; running before
     that point would either leave a silent audit hole or require deferred
     replay, both of which the ADR refuses. Surfacing the refusal here
     keeps the bootstrap contract explicit at the CLI surface.
@@ -101,7 +101,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 
     Raises:
         AuthConfigureNoActiveBucketError: When no active profile bucket
-            exists yet. The operator must run ``aeat config init`` first.
+            exists yet. The operator must run ``aeat config profile create NAME`` first.
     """
 
     from datetime import UTC, datetime
@@ -123,7 +123,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     current_state = state_repo.load()
     if current_state.active_profile_bucket_id() is None:
         raise AuthConfigureNoActiveBucketError(
-            "no active profile bucket; run `aeat config init` before configuring auth",
+            "no active profile bucket; run `aeat config profile create NAME` before configuring auth",
         )
 
     next_state = _append_bucket_event(

@@ -178,7 +178,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
         raise WorkUnitNotFoundError(
-            "no active profile bucket; run `aeat config init` before reconciling a work unit",
+            "no active profile bucket; run `aeat config profile create NAME` before reconciling a work unit",
         )
 
     catalogue = WorkUnitCatalogueRepository().load()

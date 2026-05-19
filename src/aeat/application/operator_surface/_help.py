@@ -27,8 +27,8 @@ def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
         )
     return RootLandingReport(
         active_profile=None,
-        command="aeat config init",
-        message="No active profile. Run aeat config init to get started.",
+        command="aeat config profile create NAME",
+        message="No active profile. Run aeat config profile create NAME to get started.",
     )
 
 
@@ -74,7 +74,7 @@ def _root_help() -> HelpDocument:
         sections=(
             _section(
                 "Setup",
-                _entry("aeat config init", "Create your first profile"),
+                _entry("aeat config profile create NAME", "Create your first profile"),
                 _entry("aeat config profile", "Inspect and edit profile values"),
                 _entry("aeat config auth", "Configure local AEAT authentication"),
             ),
@@ -122,7 +122,7 @@ def _config_help() -> HelpDocument:
         sections=(
             _section(
                 "First run",
-                _entry("aeat config init --profile NAME", "Bootstrap the first profile"),
+                _entry("aeat config profile create NAME", "Bootstrap the first profile"),
                 _entry("aeat config profile status", "Show active-profile readiness"),
             ),
             _section(

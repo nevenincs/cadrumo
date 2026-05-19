@@ -194,7 +194,7 @@ def export_modelo_revision(
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
-            "no active profile bucket; run `aeat config init` before exporting a modelo revision",
+            "no active profile bucket; run `aeat config profile create NAME` before exporting a modelo revision",
         )
 
     revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)
