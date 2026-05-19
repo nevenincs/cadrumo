@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from . import FilingBuilderError, build_draft, build_runtime_schema_provider
+from . import ModeloBuilderError, build_draft, build_runtime_schema_provider
 from .testing import FilingTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -31,7 +31,7 @@ def test_modelo_build_draft_requires_registry_definition(
     period: str,
     inputs: dict[str, object],
 ) -> None:
-    with pytest.raises(FilingBuilderError, match="not present in the calculation registry"):
+    with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
         build_draft(
             modelo=modelo,
             period=period,

@@ -1,11 +1,11 @@
 """Frozen-strict pydantic v2 records for the rental register.
 
 Defines the persistent record types backing rental aggregate
-calculation: :class:`RentalFinca` (urban inmueble metadata),
-:class:`RentalContract` (per-tenant arrendamiento), :class:`RentalIncomeRecord`
-(per-period gross-rent ledger), :class:`RentalExpense` (LIRPF
+calculation: :class:`Finca` (urban inmueble metadata),
+:class:`Arrendamiento` (per-tenant arrendamiento), :class:`FincaRendimientoRecord`
+(per-period gross-rent ledger), :class:`FincaGasto` (LIRPF
 art. 23.1 deductible-category surface), and
-:class:`RentalAmortizationLedgerEntry` (LIRPF art. 23.1.f 3 %
+:class:`FincaAmortizacionLedgerEntry` (LIRPF art. 23.1.f 3 %
 amortización cumulative ledger).
 """
 
@@ -17,18 +17,18 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._enums import ExpenseCategory, UseType
-from ._errors import RentalValidationError
+from ._errors import FincaValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class _RentalRecord(BaseModel):
+class _FincaRecord(BaseModel):
     """Shared base — frozen, strict, no extra fields."""
 
     model_config = _STRICT_FROZEN
 
 
-class RentalFinca(_RentalRecord):
+class Finca(_FincaRecord):
     """Public record for one row in ``rental_fincas``.
 
     Attributes:
@@ -78,21 +78,21 @@ class RentalFinca(_RentalRecord):
     schema_version: str = "1"
 
     @model_validator(mode="after")
-    def _validate_ratios(self) -> RentalFinca:
+    def _validate_ratios(self) -> Finca:
         if self.valor_catastral_construccion > self.valor_catastral_total:
-            raise RentalValidationError(
+            raise FincaValidationError(
                 "valor_catastral_construccion must not exceed valor_catastral_total",
             )
         if self.coste_adquisicion_construccion > self.coste_adquisicion:
-            raise RentalValidationError(
+            raise FincaValidationError(
                 "coste_adquisicion_construccion must not exceed coste_adquisicion",
             )
         if self.disposal_date is not None and self.disposal_date < self.acquisition_date:
-            raise RentalValidationError("disposal_date must not precede acquisition_date")
+            raise FincaValidationError("disposal_date must not precede acquisition_date")
         return self
 
 
-class RentalContract(_RentalRecord):
+class Arrendamiento(_FincaRecord):
     """Public record for one row in ``rental_contracts``.
 
     Models the per-contract metadata required by the LIRPF art. 23.2
@@ -102,7 +102,7 @@ class RentalContract(_RentalRecord):
 
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
-        finca_id: Foreign key to :class:`RentalFinca`.
+        finca_id: Foreign key to :class:`Finca`.
         contract_celebration_date: Date the contract was signed.
             Drives DT 38ª grandfathering (pre-26/05/2023) and the
             "Los requisitos señalados deberán cumplirse en el momento
@@ -171,9 +171,9 @@ class RentalContract(_RentalRecord):
     schema_version: str = "1"
 
     @model_validator(mode="after")
-    def _validate_invariants(self) -> RentalContract:
+    def _validate_invariants(self) -> Arrendamiento:
         if self.qualifying_co_tenant_count > self.tenant_count:
-            raise RentalValidationError(
+            raise FincaValidationError(
                 "qualifying_co_tenant_count must not exceed tenant_count",
             )
         if (
@@ -181,18 +181,18 @@ class RentalContract(_RentalRecord):
             and self.tenant_max_age is not None
             and self.tenant_min_age > self.tenant_max_age
         ):
-            raise RentalValidationError("tenant_min_age must not exceed tenant_max_age")
+            raise FincaValidationError("tenant_min_age must not exceed tenant_max_age")
         if (
             self.contract_termination_date is not None
             and self.contract_termination_date < self.contract_celebration_date
         ):
-            raise RentalValidationError(
+            raise FincaValidationError(
                 "contract_termination_date must not precede contract_celebration_date",
             )
         return self
 
 
-class RentalIncomeRecord(_RentalRecord):
+class FincaRendimientoRecord(_FincaRecord):
     """Public record for one row in ``rental_income_records``.
 
     Per-contract per-period gross-rent ledger. The aggregate layer
@@ -201,7 +201,7 @@ class RentalIncomeRecord(_RentalRecord):
 
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
-        contract_id: Foreign key to :class:`RentalContract`.
+        contract_id: Foreign key to :class:`Arrendamiento`.
         period_year: Ejercicio (e.g. ``2025``).
         gross_rent_received: Gross rent collected during the period.
         dias_alquilados: Days the dwelling was let during the period
@@ -217,7 +217,7 @@ class RentalIncomeRecord(_RentalRecord):
     schema_version: str = "1"
 
 
-class RentalExpense(_RentalRecord):
+class FincaGasto(_FincaRecord):
     """Public record for one row in ``rental_expenses``.
 
     Per-finca per-period categorised expense surface. Multiple rows
@@ -228,7 +228,7 @@ class RentalExpense(_RentalRecord):
 
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
-        finca_id: Foreign key to :class:`RentalFinca`.
+        finca_id: Foreign key to :class:`Finca`.
         period_year: Ejercicio.
         category: Closed expense-category enum.
         amount: Gasto amount (positive Decimal).
@@ -243,19 +243,19 @@ class RentalExpense(_RentalRecord):
     schema_version: str = "1"
 
 
-class RentalAmortizationLedgerEntry(_RentalRecord):
+class FincaAmortizacionLedgerEntry(_FincaRecord):
     """Public record for one row in ``rental_amortization_ledger``.
 
     Per-finca per-period 3 % amortización accrual with cumulative-
     through-year tracking. Cumulative-through-year is the SUM of
     ``amortization_amount`` across all entries for the same finca
     with ``period_year <= self.period_year``. The cap rule
-    (cumulative ≤ ``RentalFinca.coste_adquisicion_construccion``)
+    (cumulative ≤ ``Finca.coste_adquisicion_construccion``)
     is enforced by the ledger writer, not at the row level.
 
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
-        finca_id: Foreign key to :class:`RentalFinca`.
+        finca_id: Foreign key to :class:`Finca`.
         period_year: Ejercicio.
         dias_alquilados: Days the dwelling was let during the period
             (drives the pro-rate factor).
@@ -282,9 +282,9 @@ class RentalAmortizationLedgerEntry(_RentalRecord):
 
 
 __all__ = [
-    "RentalAmortizationLedgerEntry",
-    "RentalContract",
-    "RentalExpense",
-    "RentalFinca",
-    "RentalIncomeRecord",
+    "FincaAmortizacionLedgerEntry",
+    "Arrendamiento",
+    "FincaGasto",
+    "Finca",
+    "FincaRendimientoRecord",
 ]

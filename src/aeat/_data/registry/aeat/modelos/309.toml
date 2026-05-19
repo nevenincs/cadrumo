@@ -64,7 +64,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".bindings]]
 id = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
@@ -89,7 +89,7 @@ required_text = ["modelo 309"]
 id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
 label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias (medios de transporte nuevos, etc.)"
-section = ["iva", "no_periodica", "autorepercutido"]
+section = ["iva", "no_periodica", "inversion_sujeto_pasivo"]
 data_type = "money"
 required = false
 input_kind = "bound"

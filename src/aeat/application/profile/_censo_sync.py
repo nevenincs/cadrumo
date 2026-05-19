@@ -19,7 +19,7 @@ The service composes:
 The sede G313 live fetch is injected as a ``fact_source`` callable so
 the same service body backs both the production sede adapter and
 test scaffolding without conditional code paths. The dependent-
-stamping walker (mark CalculationRevision / WorkUnit / FilingDraft /
+stamping walker (mark CalculationRevision / WorkUnit / ModeloDraft /
 ModeloRecord as CENSUS_STALE on apply) is the P05 follow-on; this
 service emits ``CENSUS_APPLIED`` so the walker can hook in via that
 event without further coupling.

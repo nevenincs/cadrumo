@@ -2,7 +2,7 @@
 
 Provides the :func:`approve_draft` / :func:`unapprove_draft` /
 :func:`refresh_review_status` lifecycle on top of
-:class:`aeat.domain.filing.FilingDraft`, plus the deterministic
+:class:`aeat.domain.filing.ModeloDraft`, plus the deterministic
 fingerprint pipeline that lets :func:`approval_stale_reasons` detect
 when an APPROVED draft has been invalidated by upstream changes
 (catalogue, profiles, schema, or the draft's own validation surface).
@@ -22,11 +22,11 @@ from ...domain._identifiers import canonical_decimal_string
 from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
 from ...domain.filing import (
     CasillaSchemaProvider,
-    FilingApprovalBasis,
-    FilingDraft,
-    FilingDraftError,
+    ModeloApprovalBasis,
+    ModeloDraft,
+    ModeloDraftError,
     ModeloDraftStatus,
-    FilingValidator,
+    ModeloValidator,
     derive_validation_status,
 )
 from ...domain.transactions import Transaction, TransactionCatalogue
@@ -54,7 +54,7 @@ class FilingApprovalStaleReason(StrEnum):
 
     Attributes:
         APPROVAL_BASIS_VERSION_CHANGED: The
-            :class:`aeat.domain.filing.FilingApprovalBasis` schema
+            :class:`aeat.domain.filing.ModeloApprovalBasis` schema
             version has been bumped since approval.
         DRAFT_PAYLOAD_CHANGED: The draft's payload fingerprint
             (``draft_id``) no longer matches the stored basis.
@@ -77,17 +77,17 @@ class FilingApprovalStaleReason(StrEnum):
 
 
 def compute_current_approval_basis(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
-) -> FilingApprovalBasis:
-    """Return the :class:`FilingApprovalBasis` digests for the current upstream state.
+) -> ModeloApprovalBasis:
+    """Return the :class:`ModeloApprovalBasis` digests for the current upstream state.
 
     Args:
-        draft: The :class:`aeat.domain.filing.FilingDraft` whose basis
+        draft: The :class:`aeat.domain.filing.ModeloDraft` whose basis
             is being computed.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
@@ -98,12 +98,12 @@ def compute_current_approval_basis(
             profile map. Defaults to the bundled 2025 registry.
 
     Returns:
-        A freshly computed :class:`FilingApprovalBasis`.
+        A freshly computed :class:`ModeloApprovalBasis`.
     """
 
     catalogue = transaction_catalogue or _load_transaction_catalogue(bucket_id)
     profiles = category_profiles or resolve_category_profiles(2025)
-    return FilingApprovalBasis(
+    return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
         draft_review_fingerprint=_draft_review_fingerprint(draft),
         transaction_catalogue_fingerprint=_transaction_catalogue_fingerprint(catalogue),
@@ -115,7 +115,7 @@ def compute_current_approval_basis(
     )
 
 
-def compute_review_checksum(approval_basis: FilingApprovalBasis) -> str:
+def compute_review_checksum(approval_basis: ModeloApprovalBasis) -> str:
     """Return the canonical SHA-256 hex checksum for ``approval_basis``.
 
     Args:
@@ -129,7 +129,7 @@ def compute_review_checksum(approval_basis: FilingApprovalBasis) -> str:
 
 
 def approval_stale_reasons(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
@@ -143,7 +143,7 @@ def approval_stale_reasons(
     recomputed basis.
 
     Args:
-        draft: The :class:`aeat.domain.filing.FilingDraft` to inspect.
+        draft: The :class:`aeat.domain.filing.ModeloDraft` to inspect.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.
@@ -182,7 +182,7 @@ def approval_stale_reasons(
 
 
 def approve_draft(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     bucket_id: str,
     approved_by: str,
@@ -190,7 +190,7 @@ def approve_draft(
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     approved_at: datetime | None = None,
-) -> FilingDraft:
+) -> ModeloDraft:
     """Stamp approval metadata on ``draft`` and promote it to ``APPROVED``.
 
     Args:
@@ -205,20 +205,20 @@ def approve_draft(
         approved_at: Optional timestamp; defaults to ``datetime.now(UTC)``.
 
     Returns:
-        A new :class:`FilingDraft` with approval metadata populated.
+        A new :class:`ModeloDraft` with approval metadata populated.
 
     Raises:
-        :exc:`aeat.domain.filing.FilingDraftError`: When
+        :exc:`aeat.domain.filing.ModeloDraftError`: When
             ``approved_by`` is blank or the draft is not in
             :attr:`ModeloDraftStatus.READY_TO_SUBMIT`.
     """
 
     normalized_approver = approved_by.strip()
     if not normalized_approver:
-        raise FilingDraftError("approved_by must not be blank")
+        raise ModeloDraftError("approved_by must not be blank")
 
     if derive_validation_status(draft.findings) is not ModeloDraftStatus.READY_TO_SUBMIT:
-        raise FilingDraftError("only READY_TO_SUBMIT drafts may be approved")
+        raise ModeloDraftError("only READY_TO_SUBMIT drafts may be approved")
     _require_registry_review_alignment(draft, schema_provider=schema_provider)
 
     timestamp = approved_at or datetime.now(tz=UTC)
@@ -250,10 +250,10 @@ def approve_draft(
 
 
 def unapprove_draft(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     unapproved_at: datetime | None = None,
-) -> FilingDraft:
+) -> ModeloDraft:
     """Remove approval metadata and restore the machine validation status.
 
     Args:
@@ -262,9 +262,9 @@ def unapprove_draft(
             ``datetime.now(UTC)``.
 
     Returns:
-        A new :class:`FilingDraft` with approval metadata cleared and
+        A new :class:`ModeloDraft` with approval metadata cleared and
         ``status`` set to the validation status derived from
-        :attr:`FilingDraft.findings`.
+        :attr:`ModeloDraft.findings`.
     """
 
     timestamp = unapproved_at or datetime.now(tz=UTC)
@@ -283,14 +283,14 @@ def unapprove_draft(
 
 
 def refresh_review_status(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     refreshed_at: datetime | None = None,
-) -> FilingDraft:
+) -> ModeloDraft:
     """Return ``draft`` with its approval status synchronised to current state.
 
     Downstream-status drafts (submitted / acknowledged / rejected /
@@ -310,7 +310,7 @@ def refresh_review_status(
 
     Returns:
         Either ``draft`` unchanged (when no transition was needed) or a
-        new :class:`FilingDraft` with the appropriate status update.
+        new :class:`ModeloDraft` with the appropriate status update.
     """
 
     timestamp = refreshed_at or datetime.now(tz=UTC)
@@ -414,7 +414,7 @@ def _review_metadata_reset() -> dict[str, object]:
     }
 
 
-def _has_review_metadata(draft: FilingDraft) -> bool:
+def _has_review_metadata(draft: ModeloDraft) -> bool:
     return any(
         value is not None
         for value in (
@@ -427,15 +427,15 @@ def _has_review_metadata(draft: FilingDraft) -> bool:
 
 
 def _require_registry_review_alignment(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     schema_provider: CasillaSchemaProvider,
 ) -> None:
-    findings = FilingValidator(schema_provider=schema_provider).validate(draft)
+    findings = ModeloValidator(schema_provider=schema_provider).validate(draft)
     if derive_validation_status(findings) is ModeloDraftStatus.READY_TO_SUBMIT:
         return
     codes = tuple(finding.code for finding in findings)
-    raise FilingDraftError(f"draft does not match the registry review surface: {codes!r}")
+    raise ModeloDraftError(f"draft does not match the registry review surface: {codes!r}")
 
 
 def _load_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
@@ -461,7 +461,7 @@ def _read_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
     return repository.load()
 
 
-def _draft_review_fingerprint(draft: FilingDraft) -> str:
+def _draft_review_fingerprint(draft: ModeloDraft) -> str:
     payload = {
         "validation_status": derive_validation_status(draft.findings).value,
         "findings": [
@@ -521,7 +521,7 @@ def _category_profiles_fingerprint(profiles: Mapping[SpendingCategory, CategoryP
 
 
 def _schema_formula_fingerprint(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     schema_provider: CasillaSchemaProvider,
 ) -> str:

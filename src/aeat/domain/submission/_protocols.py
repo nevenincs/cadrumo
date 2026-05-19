@@ -10,7 +10,7 @@ richer surfaces of its sibling subpackages.
 - ``DeadlineWindowChecker`` — narrow surface over
   :mod:`aeat.domain.deadlines` used by preflight.
 - ``ModeloFinding`` / ``ModeloDraftLike`` / ``ModeloDraftLoader`` — narrow
-  filing draft surfaces; :class:`aeat.application.filing.FilingDraft`
+  filing draft surfaces; :class:`aeat.application.filing.ModeloDraft`
   structurally conforms to ``ModeloDraftLike``.
 
 Every record is either a strict+frozen pydantic v2 model or a
@@ -104,7 +104,7 @@ class DeadlineWindowChecker(Protocol):
 class ModeloFinding(BaseModel):
     """Minimal finding record consumed by the preflight gate.
 
-    Distinct from :class:`aeat.application.filing.FilingValidationFinding`,
+    Distinct from :class:`aeat.application.filing.ModeloValidationFinding`,
     which carries the validator's full provenance graph; the submission
     engine reads only ``severity`` to decide whether the draft is
     blocked.
@@ -158,7 +158,7 @@ class ModeloDraftStatus(StrEnum):
 class ModeloDraftLike(Protocol):
     """Narrow surface over a filing draft.
 
-    :class:`aeat.application.filing.FilingDraft` structurally conforms to
+    :class:`aeat.application.filing.ModeloDraft` structurally conforms to
     this Protocol so the engine can accept either the real draft or any
     Protocol-conforming hand-rolled class in tests.
 

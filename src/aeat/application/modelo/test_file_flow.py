@@ -348,7 +348,7 @@ def _workflow_gate(
         auth_provider=provider,
         engine=WorkflowEngine(
             deadline_engine=DeadlineEngineAdapter(deadline_engine),
-            filing_draft_builder=_RevisionDraftBuilder(  # pyrefly: ignore[bad-argument-type]  # reason: _RevisionDraftBuilder is a duck-typed test fake whose .build() returns FilingDraft which structurally satisfies RegistryFilingDraftProtocol at runtime
+            filing_draft_builder=_RevisionDraftBuilder(  # pyrefly: ignore[bad-argument-type]  # reason: _RevisionDraftBuilder is a duck-typed test fake whose .build() returns ModeloDraft which structurally satisfies RegistryFilingDraftProtocol at runtime
                 work_unit=work_unit,
                 actor="operator-A",
                 clock=clock,

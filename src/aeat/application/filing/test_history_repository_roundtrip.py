@@ -30,6 +30,7 @@ def _populated_history() -> FilingHistory:
 
     now = datetime.now(UTC).replace(microsecond=0)
     return FilingHistory(
+        modelo="303",
         entries=(
             FilingHistoryEntry(
                 modelo="303",
@@ -72,7 +73,7 @@ def test_filing_history_survives_encrypted_storage_roundtrip(
 
             original = _populated_history()
             repo = FilingHistoryRepository()
-            repo.save("303", original)
+            repo.save(original)
             loaded = repo.load("303")
 
             assert loaded is not None

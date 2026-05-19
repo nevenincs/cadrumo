@@ -1,4 +1,4 @@
-"""Tests for registry-gated FilingDraft to Justificante reconciliation."""
+"""Tests for registry-gated ModeloDraft to Justificante reconciliation."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.justificante import parse_justificante
-from ....domain.filing import FilingBuilderError, FilingDraft, ModeloDraftStatus
+from ....domain.filing import ModeloBuilderError, ModeloDraft, ModeloDraftStatus
 from ....domain.justificante import Justificante
 from ....tests import FIXTURES_DIR
 from .. import build_runtime_schema_provider
@@ -71,7 +71,7 @@ def _draft_for_130(
     period: str = "2024Q1",
     profile_tax_id: str = "Y4113523X",
     status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
-) -> FilingDraft:
+) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="130",
         period=period,
@@ -86,7 +86,7 @@ def _draft_for_111(
     period: str = "2026Q1",
     profile_tax_id: str = "Y4113523X",
     status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
-) -> FilingDraft:
+) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="111",
         period=period,
@@ -101,7 +101,7 @@ def _draft_for_123(
     period: str = "2026Q1",
     profile_tax_id: str = "Y4113523X",
     status: ModeloDraftStatus = ModeloDraftStatus.APPROVED,
-) -> FilingDraft:
+) -> ModeloDraft:
     return build_registry_filing_draft(
         modelo="123",
         period=period,
@@ -274,11 +274,11 @@ class TestRegistryGate:
     def test_reconcile_requires_active_registry_snapshot(self) -> None:
         draft = _draft_for_130().model_copy(update={"schema_version": "registry:130:wrong-revision"})
 
-        with pytest.raises(FilingBuilderError, match="active registry snapshot"):
+        with pytest.raises(ModeloBuilderError, match="active registry snapshot"):
             reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)
 
     def test_reconcile_requires_period_declared_by_registry_snapshot(self) -> None:
         draft = _draft_for_130().model_copy(update={"period": "2024A"})
 
-        with pytest.raises(FilingBuilderError, match="draft period declared"):
+        with pytest.raises(ModeloBuilderError, match="draft period declared"):
             reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)

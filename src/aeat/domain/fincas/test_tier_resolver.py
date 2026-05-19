@@ -1,6 +1,6 @@
 """Unit tests for the LIRPF art. 23.2 tier resolver.
 
-Exercises :func:`aeat.domain.rental.resolve_reduccion` against every BOE
+Exercises :func:`aeat.domain.fincas.resolve_reduccion` against every BOE
 trigger condition, every priority-order edge, every effective-date
 branch, the LAU art. 17.6 forfeit sentinel, and the qualifying-share
 split for the tier 70-b-1 (joven inquilino) ordinal.
@@ -16,8 +16,8 @@ import pytest
 from . import (
     LEY_12_2023_IN_FORCE_DATE,
     ReduccionTier,
-    RentalContract,
-    RentalFinca,
+    Arrendamiento,
+    Finca,
     TierResolutionError,
     UseType,
     resolve_reduccion,
@@ -26,8 +26,8 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _finca(*, is_stressed_area: bool = False) -> RentalFinca:
-    return RentalFinca(
+def _finca(*, is_stressed_area: bool = False) -> Finca:
+    return Finca(
         identifier="test-finca",
         address="Calle de Prueba 1",
         valor_catastral_total=Decimal("100000.00"),
@@ -57,8 +57,8 @@ def _contract(
     lau_17_6_compliant: bool = True,
     tenant_min_age: int | None = None,
     tenant_max_age: int | None = None,
-) -> RentalContract:
-    return RentalContract(
+) -> Arrendamiento:
+    return Arrendamiento(
         finca_id=finca_id,
         contract_celebration_date=celebration,
         tenant_count=tenant_count,

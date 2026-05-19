@@ -112,7 +112,7 @@ required_text = ["modelo 353"]
 [[revisions."2008-y-siguientes".bindings]]
 id = "modelo-353-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-84", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
@@ -173,7 +173,7 @@ source_refs = ["aeat-dr-353-2026"]
 id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
 label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias - agregado del grupo"
-section = ["iva", "regimen_general", "autorepercutido"]
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 data_type = "money"
 required = false
 input_kind = "bound"

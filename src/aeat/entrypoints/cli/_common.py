@@ -24,7 +24,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_expense_aggregation_binding_values,
 )
 from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
-from ...domain.filing import FilingDraft, FilingDraftRepository
+from ...domain.filing import ModeloDraft, ModeloDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
 from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogue, TransactionCatalogueRepository
@@ -164,8 +164,8 @@ def _invoice_repo() -> InvoiceCatalogueRepository:
     return InvoiceCatalogueRepository()
 
 
-def _draft_repo() -> FilingDraftRepository:
-    return FilingDraftRepository()
+def _draft_repo() -> ModeloDraftRepository:
+    return ModeloDraftRepository()
 
 
 def _load_transactions(state: WorkflowState) -> TransactionCatalogue:
@@ -176,12 +176,12 @@ def _load_invoices() -> InvoiceCatalogue:
     return _invoice_repo().load()
 
 
-def _load_drafts() -> tuple[FilingDraft, ...]:
+def _load_drafts() -> tuple[ModeloDraft, ...]:
     repo = _draft_repo()
     return tuple(repo.iter_drafts())
 
 
-def _draft_by_id(draft_id: str) -> FilingDraft:
+def _draft_by_id(draft_id: str) -> ModeloDraft:
     for draft in _load_drafts():
         if draft.draft_id == draft_id:
             return draft

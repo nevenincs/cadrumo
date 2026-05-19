@@ -145,7 +145,7 @@ def test_modelo_303_construct_links_filing_extractor_verification() -> None:
 def test_modelo_303_declares_iva_repercutido_soportado_autorepercutido_bindings() -> None:
     """Modelo 303 must declare ledger_iva_aggregation bindings for the
     three IVA flow directions so the runtime can resolve cuota
-    devengada / cuota deducible / autorepercutido cross-modelo."""
+    devengada / cuota deducible / INVERSION_SUJETO_PASIVO cross-modelo."""
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
 
@@ -218,7 +218,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             transaction_date=date(2025, 6, 6),
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
+            flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base_amount=Decimal("400"),
             iva_amount=Decimal("84"),
         ),

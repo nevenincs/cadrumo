@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.logging import get_logger
 from ._errors import AmortizationLedgerCapExceededError
-from ._models import RentalAmortizationLedgerEntry, RentalFinca, RentalIncomeRecord
+from ._models import FincaAmortizacionLedgerEntry, Finca, FincaRendimientoRecord
 
 _logger = get_logger(__name__)
 
@@ -72,8 +72,8 @@ class AmortizationComputation(BaseModel):
 
 
 def compute_amortization_for_year(
-    finca: RentalFinca,
-    income: RentalIncomeRecord,
+    finca: Finca,
+    income: FincaRendimientoRecord,
     *,
     cumulative_through_prior_year: Decimal,
     strict: bool = False,
@@ -81,7 +81,7 @@ def compute_amortization_for_year(
     """Compute the per-finca per-year amortización 3 % entry.
 
     Args:
-        finca: Owning :class:`RentalFinca`.
+        finca: Owning :class:`Finca`.
         income: Income record for the same finca/contract for the
             target period — provides ``period_year`` and
             ``dias_alquilados``.
@@ -143,11 +143,11 @@ def compute_amortization_for_year(
 
 def computation_to_ledger_entry(
     finca_id: int,
-    income: RentalIncomeRecord,
+    income: FincaRendimientoRecord,
     computation: AmortizationComputation,
-) -> RentalAmortizationLedgerEntry:
+) -> FincaAmortizacionLedgerEntry:
     """Project an :class:`AmortizationComputation` into a persistable record."""
-    return RentalAmortizationLedgerEntry(
+    return FincaAmortizacionLedgerEntry(
         finca_id=finca_id,
         period_year=computation.period_year,
         dias_alquilados=income.dias_alquilados,

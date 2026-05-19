@@ -124,7 +124,7 @@ def reconcile_modelo_303_iva_compensation(
         )
 
     from ._binding_prefill import resolve_bindings_from_local_store
-    from ._observations_repository import CalculationObservationRepository
+    from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
     repo = repository if repository is not None else CalculationObservationRepository()
     prefill_report = resolve_bindings_from_local_store(
@@ -144,7 +144,7 @@ def reconcile_modelo_303_iva_compensation(
         max_wallet_age_days=max_wallet_age_days,
     )
     if persist:
-        repo.save_iva_wallet_decision(decision)
+        IvaWalletDecisionRepository().save_decision(decision)
     return IvaCompensationReconciliationReport(
         decision=decision,
         prefill_report=prefill_report,

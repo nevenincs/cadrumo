@@ -55,6 +55,7 @@ from ._declarations import (
     _select_authoritative_declaration,
     _select_combobox_value,
     _verify_submitted_file_context,
+    _with_derived_303_compensation_available_observation,
     registry_observation_from_filed_declaration,
     resolve_previous_filing_bindings_from_filed_declarations,
     resolve_relation_values_from_filed_declarations,
@@ -117,6 +118,67 @@ def _modelo_130_snapshot():
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
+
+
+def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
+    snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+        content_type="application/octet-stream",
+        byte_count=600,
+        sha256="0" * 64,
+        captured_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
+    )
+
+    observed = _observed_casillas_from_submitted_file(
+        snapshot=snapshot,
+        declaration=_declaration_row(
+            expediente_id="202430313521429A",
+            presented_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
+        ),
+        body=_modelo_303_page_03_payload(
+            casilla_87="00000000000000000",
+            casilla_69="N0000000000025802",
+            casilla_71="N0000000000025802",
+        ),
+        artefact=artefact,
+    )
+
+    assert {casilla.casilla_id: casilla.value for casilla in observed} == {
+        "87": "0",
+        "69": "-258.02",
+        "71": "-258.02",
+    }
+
+
+def test_modelo_303_filed_observation_derives_compensation_available() -> None:
+    observation = _filed_observation(
+        modelo="303",
+        ejercicio=2024,
+        period="4T",
+        casilla_values={"87": Decimal("0"), "69": Decimal("-258.02")},
+    )
+
+    derived = _with_derived_303_compensation_available_observation(observation)
+    registry_observation = registry_observation_from_filed_declaration(derived)
+
+    assert {casilla.casilla_id: casilla.value for casilla in derived.casillas}[
+        "iva.compensacion-disponible-fin-periodo"
+    ] == "258.02"
+    assert registry_observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("258.02")
+
+
+def _modelo_303_page_03_payload(
+    *,
+    casilla_87: str,
+    casilla_69: str,
+    casilla_71: str,
+) -> bytes:
+    page = list("<T30303000>" + ("0" * 600))
+    for position, raw in ((289, casilla_87), (323, casilla_69), (374, casilla_71)):
+        page[position - 1 : position - 1 + len(raw)] = raw
+    return "".join(page).encode("latin-1")
 
 
 def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: str) -> bytes:

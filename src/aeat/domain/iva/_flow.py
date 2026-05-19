@@ -1,4 +1,4 @@
-"""IVA flow direction enum — repercutido / soportado / autorepercutido.
+"""IVA flow direction enum — repercutido / soportado / INVERSION_SUJETO_PASIVO.
 
 Codifies the IVA collectability axis the ledger and modelo registries
 need alongside the operation-kind axis (:class:`IvaCategory`) and the
@@ -23,7 +23,7 @@ The three flow directions are anchored to LIVA articles:
   tributarias deducibles). The sujeto pasivo bears IVA via direct
   repercusión from suppliers and may deduct that IVA from its own
   output IVA.
-* :attr:`IvaFlowDirection.AUTOREPERCUTIDO` — LIVA art. 84.Uno.2.º
+* :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO` — LIVA art. 84.Uno.2.º
   (inversión del sujeto pasivo). The recipient of certain
   operations (intra-community acquisitions, art. 84.Uno.2.º.f
   construction reverse charge, etc.) is the sujeto pasivo and
@@ -64,10 +64,10 @@ Flow direction     Devengada   Deducible
 ================  ==========  ==========
 REPERCUTIDO        ✓           ─
 SOPORTADO          ─           ✓
-AUTOREPERCUTIDO    ✓           ✓
+INVERSION_SUJETO_PASIVO    ✓           ✓
 ================  ==========  ==========
 
-AUTOREPERCUTIDO is the only flow that contributes to BOTH sides on
+INVERSION_SUJETO_PASIVO is the only flow that contributes to BOTH sides on
 the SAME operation: the recipient self-assesses an output entry
 (devengada) and a matching input entry (deducible) for the cuota
 that would have been repercutida by a non-existent or non-EU
@@ -104,7 +104,7 @@ class IvaFlowDirection(StrEnum):
         SOPORTADO: Input IVA. The sujeto pasivo bears IVA charged by a
             supplier via direct repercusión and may deduct it under
             LIVA art. 92.
-        AUTOREPERCUTIDO: Self-assessed reverse charge. The sujeto
+        INVERSION_SUJETO_PASIVO: Self-assessed reverse charge. The sujeto
             pasivo is the recipient of an operation that triggers
             inversión del sujeto pasivo under LIVA art. 84.Uno.2.º
             (intra-community acquisitions, construction RC, waste RC,
@@ -115,7 +115,7 @@ class IvaFlowDirection(StrEnum):
 
     REPERCUTIDO = "repercutido"
     SOPORTADO = "soportado"
-    AUTOREPERCUTIDO = "autorepercutido"
+    INVERSION_SUJETO_PASIVO = "inversion_sujeto_pasivo"
 
 
 _REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
@@ -124,7 +124,7 @@ _REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     }
 )
-"""VAT categories that route to ``AUTOREPERCUTIDO`` regardless of the
+"""VAT categories that route to ``INVERSION_SUJETO_PASIVO`` regardless of the
 invoice direction. The substrate's classifier emits these values from
 the rule set R01-R03 (domestic RC) and R11/R13 (intra-community
 acquisitions / EU services received)."""
@@ -141,7 +141,7 @@ def derive_flow_for_classification(
 
     * Reverse-charge categories (domestic RC, intra-community
       acquisition RC) always resolve to
-      :attr:`IvaFlowDirection.AUTOREPERCUTIDO`, irrespective of the
+      :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`, irrespective of the
       invoice direction. The substrate's classifier emits these for
       operations where the recipient self-assesses both output and
       input IVA on the same operation.
@@ -161,7 +161,7 @@ def derive_flow_for_classification(
         The :class:`IvaFlowDirection` that matches the classification.
     """
     if category in _REVERSE_CHARGE_CATEGORIES:
-        return IvaFlowDirection.AUTOREPERCUTIDO
+        return IvaFlowDirection.INVERSION_SUJETO_PASIVO
     if invoice_direction is InvoiceKind.ISSUED:
         return IvaFlowDirection.REPERCUTIDO
     return IvaFlowDirection.SOPORTADO
@@ -190,10 +190,10 @@ class IvaSettlementSide(StrEnum):
 _FLOW_TO_SETTLEMENT_SIDES: dict[IvaFlowDirection, frozenset[IvaSettlementSide]] = {
     IvaFlowDirection.REPERCUTIDO: frozenset({IvaSettlementSide.DEVENGADA}),
     IvaFlowDirection.SOPORTADO: frozenset({IvaSettlementSide.DEDUCIBLE}),
-    IvaFlowDirection.AUTOREPERCUTIDO: frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}),
+    IvaFlowDirection.INVERSION_SUJETO_PASIVO: frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}),
 }
 """Closed mapping from flow direction to the settlement side(s) it
-contributes to. AUTOREPERCUTIDO is the only flow that contributes to
+contributes to. INVERSION_SUJETO_PASIVO is the only flow that contributes to
 both sides on the same operation (LIVA art. 84.Uno.2 mechanism)."""
 
 _DEVENGADA_FLOWS: frozenset[IvaFlowDirection] = frozenset(
@@ -219,7 +219,7 @@ def settlement_sides_for_flow(
         ``{DEVENGADA}`` for :attr:`IvaFlowDirection.REPERCUTIDO`,
         ``{DEDUCIBLE}`` for :attr:`IvaFlowDirection.SOPORTADO`,
         ``{DEVENGADA, DEDUCIBLE}`` for
-        :attr:`IvaFlowDirection.AUTOREPERCUTIDO`.
+        :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`.
     """
     return _FLOW_TO_SETTLEMENT_SIDES[flow]
 
@@ -229,7 +229,7 @@ def is_devengada_flow(flow: IvaFlowDirection) -> bool:
 
     Canonical predicate for the ledger / modelo registries when
     aggregating cuota devengada totals — equivalent to
-    ``flow in {REPERCUTIDO, AUTOREPERCUTIDO}`` but anchored to the
+    ``flow in {REPERCUTIDO, INVERSION_SUJETO_PASIVO}`` but anchored to the
     substrate's settlement-side codification so downstream consumers
     don't have to re-enumerate the mapping.
     """
@@ -241,7 +241,7 @@ def is_deducible_flow(flow: IvaFlowDirection) -> bool:
 
     Canonical predicate for the ledger / modelo registries when
     aggregating cuota deducible totals — equivalent to
-    ``flow in {SOPORTADO, AUTOREPERCUTIDO}`` but anchored to the
+    ``flow in {SOPORTADO, INVERSION_SUJETO_PASIVO}`` but anchored to the
     substrate's settlement-side codification.
     """
     return flow in _DEDUCIBLE_FLOWS

@@ -3,7 +3,7 @@
 The :mod:`aeat.domain.filing` subpackage owns the immutable records
 that describe a filing draft (and its amendment), the cross-package
 Protocols upstream subpackages plug into, the cross-cutting
-:class:`FilingValidator`, the FilingDraft <-> Justificante
+:class:`ModeloValidator`, the ModeloDraft <-> Justificante
 reconciliation engine, and the governed-persistence repositories
 (FINANCIAL drafts and AUDIT amendments).
 
@@ -21,26 +21,29 @@ from __future__ import annotations
 
 from ._amendment import (
     AmendmentKind,
+    BaseAmendment,
     CasillaChange,
     CasillaDelta,
     CasillaInputs,
     FilingAmendment,
     ModeloCode,
+    ModeloComplementaria,
+    ModeloSustitutiva,
     make_amendment_id,
 )
 from ._complementaria_repository import (
-    FilingAmendmentRepository,
+    ModeloAmendmentRepository,
 )
 from ._errors import (
-    FilingAmendmentError,
-    FilingAmendmentValidationError,
-    FilingBuilderError,
-    FilingComputationError,
-    FilingDraftError,
-    FilingExportError,
-    FilingExportValidationError,
-    FilingImportError,
-    FilingValidationError,
+    ModeloAmendmentError,
+    ModeloAmendmentValidationError,
+    ModeloBuilderError,
+    ModeloComputationError,
+    ModeloDraftError,
+    ModeloExportError,
+    ModeloExportValidationError,
+    ModeloImportError,
+    ModeloValidationError,
 )
 from ._protocols import (
     CasillaCollection,
@@ -48,27 +51,27 @@ from ._protocols import (
     CasillaSchemaProvider,
     DeadlineChecker,
     DeadlineStatus,
-    FilingInputs,
-    FilingProfile,
+    ModeloInputs,
+    ModeloProfile,
     ModeloIdentity,
 )
 from ._repository import (
-    FilingDraftRepository,
+    ModeloDraftRepository,
 )
 from ._schema import (
     APPROVAL_BASIS_VERSION,
-    FilingApprovalBasis,
-    FilingBindingValue,
-    FilingDraft,
+    ModeloApprovalBasis,
+    ModeloBindingValue,
+    ModeloDraft,
     ModeloDraftStatus,
-    FilingScalar,
-    FilingValidationFinding,
-    FilingValue,
-    FilingValueKind,
-    compute_draft_id,
+    ModeloScalar,
+    ModeloValidationFinding,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
 )
 from ._validator import (
-    FilingValidator,
+    ModeloValidator,
     apply_validation,
     derive_validation_status,
 )
@@ -76,6 +79,7 @@ from ._validator import (
 __all__ = [
     "APPROVAL_BASIS_VERSION",
     "AmendmentKind",
+    "BaseAmendment",
     "CasillaChange",
     "CasillaCollection",
     "CasillaDelta",
@@ -85,32 +89,34 @@ __all__ = [
     "DeadlineChecker",
     "DeadlineStatus",
     "FilingAmendment",
-    "FilingAmendmentError",
-    "FilingAmendmentRepository",
-    "FilingAmendmentValidationError",
-    "FilingApprovalBasis",
-    "FilingBindingValue",
-    "FilingBuilderError",
-    "FilingComputationError",
-    "FilingDraft",
-    "FilingDraftError",
-    "FilingDraftRepository",
+    "ModeloAmendmentError",
+    "ModeloComplementaria",
+    "ModeloSustitutiva",
+    "ModeloAmendmentRepository",
+    "ModeloAmendmentValidationError",
+    "ModeloApprovalBasis",
+    "ModeloBindingValue",
+    "ModeloBuilderError",
+    "ModeloComputationError",
+    "ModeloDraft",
+    "ModeloDraftError",
+    "ModeloDraftRepository",
     "ModeloDraftStatus",
-    "FilingExportError",
-    "FilingExportValidationError",
-    "FilingImportError",
-    "FilingInputs",
-    "FilingProfile",
-    "FilingScalar",
-    "FilingValidationError",
-    "FilingValidationFinding",
-    "FilingValidator",
-    "FilingValue",
-    "FilingValueKind",
+    "ModeloExportError",
+    "ModeloExportValidationError",
+    "ModeloImportError",
+    "ModeloInputs",
+    "ModeloProfile",
+    "ModeloScalar",
+    "ModeloValidationError",
+    "ModeloValidationFinding",
+    "ModeloValidator",
+    "ModeloValue",
+    "ModeloValueKind",
     "ModeloCode",
     "ModeloIdentity",
     "apply_validation",
-    "compute_draft_id",
+    "compute_modelo_draft_id",
     "derive_validation_status",
     "make_amendment_id",
 ]

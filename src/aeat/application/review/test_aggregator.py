@@ -34,11 +34,11 @@ from ...domain.transactions import (
 )
 from ...domain.transactions._repository import TransactionCatalogueRepository
 from ..filing import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
-    FilingValidationFinding,
-    FilingValue,
-    FilingValueKind,
+    ModeloValidationFinding,
+    ModeloValue,
+    ModeloValueKind,
 )
 from . import (
     ReviewItemKind,
@@ -138,23 +138,23 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
     )
     InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((invoice,)))
 
-    finding = FilingValidationFinding(
+    finding = ModeloValidationFinding(
         casilla_id="03",
         severity=BaseSeverity.ERROR,
         code="casilla-out-of-range",
         message=_summary("range"),
     )
-    draft = FilingDraft(
+    draft = ModeloDraft(
         draft_id="d1",
         modelo="130",
         period="2026Q1",
         profile_tax_id="00000000T",
         status=ModeloDraftStatus.DRAFT,
         values=(
-            FilingValue(
+            ModeloValue(
                 casilla_id="03",
                 value=Decimal("0"),
-                kind=FilingValueKind.LITERAL,
+                kind=ModeloValueKind.LITERAL,
                 source="test",
             ),
         ),
@@ -163,9 +163,9 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version=_schema_version(),
     )
-    from ...domain.filing import FilingDraftRepository
+    from ...domain.filing import ModeloDraftRepository
 
-    FilingDraftRepository().save(draft)
+    ModeloDraftRepository().save(draft)
 
     return settings
 

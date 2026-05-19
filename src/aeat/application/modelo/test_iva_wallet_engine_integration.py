@@ -16,6 +16,7 @@ from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from aeat.application.calculations import (
     CalculationObservationRepository,
+    IvaWalletDecisionRepository,
     reconcile_modelo_303_iva_compensation,
 )
 from aeat.application.modelo import (
@@ -166,7 +167,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             decided_at=_DECIDED_AT,
         )
 
-        loaded_decision = observation_repo.load_iva_wallet_decision(_TAXPAYER_NIF, _TARGET_YEAR, _TARGET_PERIOD)
+        loaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, _TARGET_YEAR, _TARGET_PERIOD)
         assert loaded_decision == report.decision
         assert report.decision.selected_authority == "aeat_wallet"
         assert report.decision.local_recurrence_amount == Decimal("1200.00")

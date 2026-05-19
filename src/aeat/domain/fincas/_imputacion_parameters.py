@@ -2,7 +2,7 @@
 
 The LIRPF art. 85 imputación-de-rentas-inmobiliarias rates and the
 catastral-revision lookback window are no longer Python literals on
-:mod:`aeat.domain.rental._aggregates`. They live in
+:mod:`aeat.domain.fincas._aggregates`. They live in
 ``registry/aeat/legal/irpf.toml`` under ``[parameters."lirpf-art-85:*"]``
 entries with explicit BOE citations and review metadata, and the
 rental aggregator imports them from this module.
@@ -72,7 +72,7 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     """
     # load_legal_parameters_only is the cycle-safe entry point — the full
     # load_registry_tree path pulls in registry._bindings which imports
-    # from aeat.domain.vat (which itself imports rental upstream), so a
+    # from aeat.domain.iva (which itself imports rental upstream), so a
     # parameter-only loader is needed here to avoid import-time cycles.
     from ..calculations.registry._loader import load_legal_parameters_only
 

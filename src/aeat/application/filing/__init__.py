@@ -28,28 +28,28 @@ from ...domain.filing import (
     DeadlineChecker,
     DeadlineStatus,
     FilingAmendment,
-    FilingAmendmentError,
-    FilingAmendmentValidationError,
-    FilingApprovalBasis,
-    FilingBindingValue,
-    FilingBuilderError,
-    FilingComputationError,
-    FilingDraft,
-    FilingDraftError,
+    ModeloAmendmentError,
+    ModeloAmendmentValidationError,
+    ModeloApprovalBasis,
+    ModeloBindingValue,
+    ModeloBuilderError,
+    ModeloComputationError,
+    ModeloDraft,
+    ModeloDraftError,
     ModeloDraftStatus,
-    FilingImportError,
-    FilingInputs,
-    FilingProfile,
-    FilingScalar,
-    FilingValidationError,
-    FilingValidationFinding,
-    FilingValidator,
-    FilingValue,
-    FilingValueKind,
+    ModeloImportError,
+    ModeloInputs,
+    ModeloProfile,
+    ModeloScalar,
+    ModeloValidationError,
+    ModeloValidationFinding,
+    ModeloValidator,
+    ModeloValue,
+    ModeloValueKind,
     ModeloCode,
     ModeloIdentity,
     apply_validation,
-    compute_draft_id,
+    compute_modelo_draft_id,
     derive_validation_status,
     make_amendment_id,
 )
@@ -97,12 +97,12 @@ def build_draft(
     *,
     modelo: str,
     period: str,
-    profile: FilingProfile,
-    inputs: FilingInputs,
+    profile: ModeloProfile,
+    inputs: ModeloInputs,
     schema_provider: CasillaSchemaProvider,
     deadline_checker: DeadlineChecker | None = None,
     fail_on_warning: bool = False,
-) -> FilingDraft:
+) -> ModeloDraft:
     """Build and validate a filing draft from a registry snapshot.
 
     Args:
@@ -115,7 +115,7 @@ def build_draft(
         fail_on_warning: Raise when validation produces any warning or error.
 
     Raises:
-        FilingBuilderError: If the registry has no matching snapshot,
+        ModeloBuilderError: If the registry has no matching snapshot,
             inputs are malformed, or strict validation fails.
     """
 
@@ -129,7 +129,7 @@ def build_draft(
     )
     collection = schema_provider.get_collection(modelo)
     if collection.schema_version != f"registry:{snapshot.modelo.id}:{snapshot.revision.id}":
-        raise FilingBuilderError(
+        raise ModeloBuilderError(
             f"schema provider version {collection.schema_version!r} does not match registry snapshot "
             f"{snapshot.revision.id!r}"
         )
@@ -147,19 +147,19 @@ def build_draft(
             binding_values=binding_inputs,
         )
     except RegistryValidationError as exc:
-        raise FilingBuilderError(f"registry calculation failed: {exc}") from exc
+        raise ModeloBuilderError(f"registry calculation failed: {exc}") from exc
     entries = {entry.target: entry for entry in result.entries}
     schema_ids = {casilla.id for casilla in collection.all()}
-    values: list[FilingValue] = []
+    values: list[ModeloValue] = []
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind == "computed":
             entry = entries[casilla.id]
             trace = tuple(ref for ref in entry.operand_refs if ref in schema_ids)
             values.append(
-                FilingValue(
+                ModeloValue(
                     casilla_id=casilla.id,
                     value=result.values[casilla.id],
-                    kind=FilingValueKind.COMPUTED,
+                    kind=ModeloValueKind.COMPUTED,
                     source=f"registry formula {entry.formula_id}",
                     formula_trace=trace,
                 )
@@ -167,19 +167,19 @@ def build_draft(
             continue
         if casilla.id in casilla_inputs:
             values.append(
-                FilingValue(
+                ModeloValue(
                     casilla_id=casilla.id,
                     value=casilla_inputs[casilla.id],
-                    kind=FilingValueKind.LITERAL,
+                    kind=ModeloValueKind.LITERAL,
                     source="registry input",
                 )
             )
             continue
         values.append(
-            FilingValue(
+            ModeloValue(
                 casilla_id=casilla.id,
                 value=None,
-                kind=FilingValueKind.EMPTY,
+                kind=ModeloValueKind.EMPTY,
                 source="registry schema",
             )
         )
@@ -189,10 +189,10 @@ def build_draft(
     # Propagate identity from the validated profile substrate into the
     # draft. ``profile.tax_id`` is already validated against the AEAT
     # checksum via ``SubjectTaxId`` on the profile model, so the
-    # post-validation result type-checks at the FilingDraft boundary
+    # post-validation result type-checks at the ModeloDraft boundary
     # and survives every downstream encrypted-persistence roundtrip.
-    draft = FilingDraft(
-        draft_id=compute_draft_id(
+    draft = ModeloDraft(
+        draft_id=compute_modelo_draft_id(
             modelo=modelo,
             period=period,
             profile_tax_id=profile.tax_id,
@@ -212,10 +212,10 @@ def build_draft(
         updated_at=created_at,
         schema_version=collection.schema_version,
     )
-    validator = FilingValidator(schema_provider=schema_provider, deadline_checker=deadline_checker)
+    validator = ModeloValidator(schema_provider=schema_provider, deadline_checker=deadline_checker)
     findings = validator.validate(draft)
     if fail_on_warning and findings:
-        raise FilingBuilderError("draft validation produced findings under fail_on_warning")
+        raise ModeloBuilderError("draft validation produced findings under fail_on_warning")
     return apply_validation(draft, findings)
 
 
@@ -230,7 +230,7 @@ def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
             period=registry_period,
         )
     except RegistrySnapshotError as exc:
-        raise FilingBuilderError(
+        raise ModeloBuilderError(
             f"registry snapshot is not available for modelo={modelo} period={period}: {exc}"
         ) from exc
 
@@ -239,7 +239,7 @@ def _registry_period(period: str) -> tuple[int, str]:
     try:
         return parse_canonical_period(period)
     except PeriodValidationError as exc:
-        raise FilingBuilderError(str(exc)) from exc
+        raise ModeloBuilderError(str(exc)) from exc
 
 
 def _filing_period_date(period: str) -> date:
@@ -262,7 +262,7 @@ def _collect_formula_binding_ids(expression: object, binding_ids: set[str]) -> N
         _collect_formula_binding_ids(arg, binding_ids)
 
 
-def _decimal_inputs_for_ids(inputs: FilingInputs, input_ids: set[str]) -> dict[str, Decimal]:
+def _decimal_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[str, Decimal]:
     decimal_inputs: dict[str, Decimal] = {}
     for casilla_id, value in inputs.items():
         if casilla_id not in input_ids:
@@ -273,18 +273,18 @@ def _decimal_inputs_for_ids(inputs: FilingInputs, input_ids: set[str]) -> dict[s
     return decimal_inputs
 
 
-def _filing_binding_values(inputs: FilingInputs, bindings: Mapping[str, object]) -> list[FilingBindingValue]:
-    values: list[FilingBindingValue] = []
+def _filing_binding_values(inputs: ModeloInputs, bindings: Mapping[str, object]) -> list[ModeloBindingValue]:
+    values: list[ModeloBindingValue] = []
     for binding_id, binding in bindings.items():
         if binding_id not in inputs or inputs[binding_id] is None:
             continue
         raw_value = inputs[binding_id]
         if isinstance(raw_value, list | tuple):
             values.extend(
-                FilingBindingValue(
+                ModeloBindingValue(
                     binding_id=binding_id,
                     value=_binding_input(binding_id, row_value, binding),
-                    kind=FilingValueKind.LITERAL,
+                    kind=ModeloValueKind.LITERAL,
                     source="registry binding input",
                     row_index=index,
                 )
@@ -293,10 +293,10 @@ def _filing_binding_values(inputs: FilingInputs, bindings: Mapping[str, object])
             continue
         if isinstance(raw_value, Mapping):
             values.extend(
-                FilingBindingValue(
+                ModeloBindingValue(
                     binding_id=binding_id,
                     value=_binding_input(binding_id, row_value, binding),
-                    kind=FilingValueKind.LITERAL,
+                    kind=ModeloValueKind.LITERAL,
                     source="registry binding input",
                     row_index=_binding_row_index(binding_id, row_key),
                 )
@@ -304,10 +304,10 @@ def _filing_binding_values(inputs: FilingInputs, bindings: Mapping[str, object])
             )
             continue
         values.append(
-            FilingBindingValue(
+            ModeloBindingValue(
                 binding_id=binding_id,
                 value=_binding_input(binding_id, raw_value, binding),
-                kind=FilingValueKind.LITERAL,
+                kind=ModeloValueKind.LITERAL,
                 source="registry binding input",
             )
         )
@@ -316,22 +316,22 @@ def _filing_binding_values(inputs: FilingInputs, bindings: Mapping[str, object])
 
 def _binding_row_index(binding_id: str, row_key: object) -> int:
     if isinstance(row_key, bool):
-        raise FilingBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+        raise ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
     if isinstance(row_key, int):
         index = row_key
     elif isinstance(row_key, str):
         try:
             index = int(row_key)
         except ValueError as exc:
-            raise FilingBuilderError(f"binding input {binding_id!r} row key must be a positive integer") from exc
+            raise ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer") from exc
     else:
-        raise FilingBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+        raise ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
     if index < 1:
-        raise FilingBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+        raise ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
     return index
 
 
-def _binding_input(binding_id: str, value: object, binding: object) -> FilingScalar:
+def _binding_input(binding_id: str, value: object, binding: object) -> ModeloScalar:
     selector = getattr(binding, "selector", None)
     data_type = str(getattr(selector, "data_type", None) or "decimal")
     if data_type == "text":
@@ -339,26 +339,26 @@ def _binding_input(binding_id: str, value: object, binding: object) -> FilingSca
     if data_type == "integer":
         decimal_value = _decimal_input(binding_id, value)
         if decimal_value != decimal_value.to_integral_value():
-            raise FilingBuilderError(f"binding input {binding_id!r} must be an integer value")
+            raise ModeloBuilderError(f"binding input {binding_id!r} must be an integer value")
         return int(decimal_value)
     if data_type == "boolean":
         return _boolean_input(binding_id, value)
     if data_type in {"decimal", "money"}:
         return _decimal_input(binding_id, value)
-    raise FilingBuilderError(f"binding input {binding_id!r} declares unsupported data type {data_type!r}")
+    raise ModeloBuilderError(f"binding input {binding_id!r} declares unsupported data type {data_type!r}")
 
 
 def _decimal_input(input_id: str, value: object) -> Decimal:
     if isinstance(value, bool):
-        raise FilingBuilderError(f"input {input_id!r} must be a Decimal value")
+        raise ModeloBuilderError(f"input {input_id!r} must be a Decimal value")
     if isinstance(value, Decimal):
         return value
     if isinstance(value, int | str):
         try:
             return Decimal(value)
         except (InvalidOperation, ValueError, TypeError) as exc:
-            raise FilingBuilderError(f"input {input_id!r} must be a Decimal value") from exc
-    raise FilingBuilderError(f"input {input_id!r} must be a Decimal value")
+            raise ModeloBuilderError(f"input {input_id!r} must be a Decimal value") from exc
+    raise ModeloBuilderError(f"input {input_id!r} must be a Decimal value")
 
 
 def _boolean_input(input_id: str, value: object) -> bool:
@@ -370,16 +370,16 @@ def _boolean_input(input_id: str, value: object) -> bool:
             return True
         if normalized in {"0", "false", "n", "no"}:
             return False
-    raise FilingBuilderError(f"binding input {input_id!r} must be a boolean value")
+    raise ModeloBuilderError(f"binding input {input_id!r} must be a boolean value")
 
 
 def validate_draft(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     deadline_checker: DeadlineChecker | None = None,
-) -> FilingDraft:
+) -> ModeloDraft:
     """Re-run validation against an existing draft.
 
     The returned draft preserves ``draft_id`` because the hash
@@ -392,10 +392,10 @@ def validate_draft(
         deadline_checker: Optional deadline check Protocol implementation.
 
     Returns:
-        A new :class:`FilingDraft` with refreshed findings, status
+        A new :class:`ModeloDraft` with refreshed findings, status
         and ``updated_at``.
     """
-    validator = FilingValidator(
+    validator = ModeloValidator(
         schema_provider=schema_provider,
         deadline_checker=deadline_checker,
     )
@@ -419,10 +419,10 @@ _SEVERITY_RANK: dict[str, int] = {
 
 
 def iter_findings(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     severity_at_least: str = "WARNING",
-) -> Iterator[FilingValidationFinding]:
+) -> Iterator[ModeloValidationFinding]:
     """Yield findings filtered by minimum severity.
 
     Args:
@@ -432,7 +432,7 @@ def iter_findings(
             ``"WARNING"``.
 
     Yields:
-        Each :class:`FilingValidationFinding` whose severity meets
+        Each :class:`ModeloValidationFinding` whose severity meets
         or exceeds the threshold, in declaration order.
 
     Raises:
@@ -471,30 +471,30 @@ __all__ = [
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
     "FilingAmendment",
-    "FilingAmendmentError",
-    "FilingAmendmentValidationError",
+    "ModeloAmendmentError",
+    "ModeloAmendmentValidationError",
     "FilingApplicationError",
-    "FilingApprovalBasis",
+    "ModeloApprovalBasis",
     "FilingApprovalStaleReason",
-    "FilingBindingValue",
-    "FilingBuilderError",
+    "ModeloBindingValue",
+    "ModeloBuilderError",
     "FilingCalculateError",
-    "FilingComputationError",
-    "FilingDraft",
-    "FilingDraftError",
+    "ModeloComputationError",
+    "ModeloDraft",
+    "ModeloDraftError",
     "ModeloDraftStatus",
     "FilingHistory",
     "FilingHistoryEntry",
-    "FilingImportError",
-    "FilingInputs",
+    "ModeloImportError",
+    "ModeloInputs",
     "FilingOperatorProfile",
-    "FilingProfile",
-    "FilingScalar",
-    "FilingValidationError",
-    "FilingValidationFinding",
-    "FilingValidator",
-    "FilingValue",
-    "FilingValueKind",
+    "ModeloProfile",
+    "ModeloScalar",
+    "ModeloValidationError",
+    "ModeloValidationFinding",
+    "ModeloValidator",
+    "ModeloValue",
+    "ModeloValueKind",
     "JustificanteImportResult",
     "ModeloCode",
     "ModeloIdentity",
@@ -505,7 +505,7 @@ __all__ = [
     "build_draft",
     "build_runtime_schema_provider",
     "compute_current_approval_basis",
-    "compute_draft_id",
+    "compute_modelo_draft_id",
     "compute_review_checksum",
     "derive_validation_status",
     "describe_stale_reason",

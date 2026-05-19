@@ -1,4 +1,4 @@
-"""Tests for the governed-persistence :class:`FilingDraftRepository`.
+"""Tests for the governed-persistence :class:`ModeloDraftRepository`.
 
 Exercises round-trip save/load, idempotent saves, list/iter, deletion,
 the FINANCIAL classification gate, the unsafe-id rejection, and the
@@ -15,30 +15,30 @@ import pytest
 
 from ...adapters.persistence.storage.errors import ClassificationError
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ...domain.filing._repository import FilingDraftRepository
-from ...domain.filing._schema import FilingDraft, ModeloDraftStatus, FilingValue, FilingValueKind, compute_draft_id
+from ...domain.filing._repository import ModeloDraftRepository
+from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloValue, ModeloValueKind, compute_modelo_draft_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> FilingDraft:
+def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> ModeloDraft:
     now = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     values = (
-        FilingValue(
+        ModeloValue(
             casilla_id="01",
             value=Decimal(ingresos),
-            kind=FilingValueKind.LITERAL,
+            kind=ModeloValueKind.LITERAL,
             source="test input",
         ),
     )
-    draft_id = compute_draft_id(
+    draft_id = compute_modelo_draft_id(
         modelo="130",
         period=period,
         profile_tax_id="00000000T",
         schema_version="test-schema-v1",
         values=values,
     )
-    return FilingDraft(
+    return ModeloDraft(
         draft_id=draft_id,
         modelo="130",
         period=period,
@@ -57,30 +57,30 @@ def _database_bytes(tmp_path: Path) -> bytes:
 
 class TestEmptyState:
     def test_load_returns_none_when_absent(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         assert repo.load("does-not-exist") is None
 
     def test_object_marker_identifies_secure_backend(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.filing.drafts/abc123")
 
     def test_list_draft_ids_empty(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         assert repo.list_draft_ids() == ()
 
 
 class TestSaveLoad:
     def test_round_trip_preserves_payload(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         draft = _make_draft()
         repo.save(draft)
 
-        repo_b = FilingDraftRepository()
+        repo_b = ModeloDraftRepository()
         loaded = repo_b.load(draft.draft_id)
         assert loaded == draft
 
     def test_save_is_idempotent(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         draft = _make_draft()
         repo.save(draft)
         repo.save(draft)
@@ -89,7 +89,7 @@ class TestSaveLoad:
 
 class TestListAndIter:
     def test_list_returns_persisted_ids_sorted(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         d1 = _make_draft(period="2026Q1", ingresos=10000)
         d2 = _make_draft(period="2026Q2", ingresos=20000)
         repo.save(d1)
@@ -99,7 +99,7 @@ class TestListAndIter:
         assert ids == tuple(sorted(ids))
 
     def test_iter_drafts_yields_payloads(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         d1 = _make_draft(period="2026Q1", ingresos=10000)
         d2 = _make_draft(period="2026Q2", ingresos=20000)
         repo.save(d1)
@@ -111,20 +111,20 @@ class TestListAndIter:
 
 class TestDelete:
     def test_delete_removes_object(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         draft = _make_draft()
         repo.save(draft)
         assert repo.delete(draft.draft_id) is True
         assert repo.load(draft.draft_id) is None
 
     def test_delete_missing_returns_false(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         assert repo.delete("never-existed") is False
 
 
 class TestClassificationGate:
     def test_database_payload_is_encrypted_financial_data(self, tmp_path: Path) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         draft = _make_draft()
         repo.save(draft)
         raw = _database_bytes(tmp_path)
@@ -137,13 +137,13 @@ class TestClassificationGate:
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         draft = _make_draft()
-        bad = Envelope[FilingDraft](
+        bad = Envelope[ModeloDraft](
             schema_version=1,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.OPERATIONAL,
             payload=draft,
         )
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         SecureObjectRepository().save(
             namespace="aeat.domain.filing.drafts",
             object_key=draft.draft_id,
@@ -172,7 +172,7 @@ class TestUnsafeDraftIds:
         ],
     )
     def test_unsafe_draft_id_rejected(self, bad: str) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
 
@@ -185,7 +185,7 @@ class TestPerDraftLockIsolation:
     """
 
     def test_lock_target_per_draft(self) -> None:
-        repo = FilingDraftRepository()
+        repo = ModeloDraftRepository()
         a = repo.lock_target_for("draft-a")
         b = repo.lock_target_for("draft-b")
         assert a != b

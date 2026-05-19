@@ -6,7 +6,7 @@ that a save-drops-X / load-re-defaults-X regression would still pass
 the equality check if the test fixture used the default value for X.
 
 This file exercises the *negative case* explicitly: it persists a
-FilingDraft through the encrypted store, then surgically mutates the
+ModeloDraft through the encrypted store, then surgically mutates the
 on-disk JSON envelope to delete one critical field and confirms the
 load side either rejects the mutated payload or surfaces the missing
 data as inequality against the original. The point is to prove
@@ -40,20 +40,20 @@ from ...adapters.persistence.storage.sql.engine import create_engine_from_settin
 from ...adapters.persistence.storage.sql.session import session_scope
 from ...core.config import Settings
 from ..calculations.registry._schema import RegistrySnapshotRef
-from ._repository import FilingDraftRepository
+from ._repository import ModeloDraftRepository
 from ._schema import (
-    FilingDraft,
-    FilingDraftStatus,
-    FilingValue,
-    FilingValueKind,
+    ModeloDraft,
+    ModeloDraftStatus,
+    ModeloValue,
+    ModeloValueKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-def _populated_draft() -> FilingDraft:
+def _populated_draft() -> ModeloDraft:
     now = datetime.now(UTC).replace(microsecond=0)
-    return FilingDraft(
+    return ModeloDraft(
         draft_id="d" * 64,
         modelo="303",
         period="2025Q1",
@@ -65,12 +65,12 @@ def _populated_draft() -> FilingDraft:
             filing_year=2025,
             period="1T",
         ),
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
         values=(
-            FilingValue(
+            ModeloValue(
                 casilla_id="iva.resultado",
                 value=Decimal("12345.67"),
-                kind=FilingValueKind.COMPUTED,
+                kind=ModeloValueKind.COMPUTED,
                 source="computed from inputs",
                 formula_trace=("iva.devengado", "iva.deducible"),
             ),
@@ -101,7 +101,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
 
       * The load side raises a typed ``ValidationError``
         (strict-mode + extra='forbid' refuses the mutated shape).
-      * The load side returns a FilingDraft whose ``snapshot_ref`` is
+      * The load side returns a ModeloDraft whose ``snapshot_ref`` is
         ``None`` instead of the original ``RegistrySnapshotRef`` — a
         strict-equality check against the original then fails.
 
@@ -114,7 +114,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "anti-tautology.db"
-        # ``FilingDraftRepository()`` constructs its own
+        # ``ModeloDraftRepository()`` constructs its own
         # ``SecureObjectRepository()`` which falls back to the
         # process-default engine. Setting the env var here ensures the
         # default engine and the explicit engine in this test point at
@@ -128,7 +128,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
             SecureObjectRepository(engine=engine)
 
             original = _populated_draft()
-            repo = FilingDraftRepository()
+            repo = ModeloDraftRepository()
             repo.save(original)
 
             # Sanity check: a normal load yields strict equality.
@@ -153,7 +153,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
 
             # Now reload through the repository. With ``snapshot_ref``
             # absent, one of two things must happen:
-            #   (a) the FilingDraft model validation raises (strict mode);
+            #   (a) the ModeloDraft model validation raises (strict mode);
             #   (b) the load succeeds but the loaded model has
             #       ``snapshot_ref=None`` (the field default), which makes
             #       it strictly unequal to the original.

@@ -16,7 +16,7 @@ Effective-date dispatch:
   - Otherwise → four-tier dispatch.
 
 LAU art. 17.6 non-compliance forfeits the reducción entirely
-(:attr:`aeat.domain.rental.ReduccionTier.FORFEIT_LAU_17_6`) — checked
+(:attr:`aeat.domain.fincas.ReduccionTier.FORFEIT_LAU_17_6`) — checked
 before any tier evaluation per the closing paragraph of the rewritten
 apartado 2.
 
@@ -39,7 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.logging import get_logger
 from ._enums import ReduccionTier
 from ._errors import TierResolutionError
-from ._models import RentalContract, RentalFinca
+from ._models import Arrendamiento, Finca
 
 _logger = get_logger(__name__)
 
@@ -140,8 +140,8 @@ _TIER_90 = TierResolution(
 
 
 def resolve_reduccion(
-    contract: RentalContract,
-    finca: RentalFinca,
+    contract: Arrendamiento,
+    finca: Finca,
     period_year: int,
     *,
     ejercicio_amendment_year: int | None = None,
@@ -213,8 +213,8 @@ def resolve_reduccion(
 
 
 def _qualifies_for_tier_90(
-    contract: RentalContract,
-    finca: RentalFinca,
+    contract: Arrendamiento,
+    finca: Finca,
     *,
     prior_rent_rebaja_threshold: Decimal,
 ) -> bool:
@@ -287,8 +287,8 @@ def _resolve_ejercicio_amendment_year(period_year: int) -> int:
 
 
 def _resolve_tier_70(
-    contract: RentalContract,
-    finca: RentalFinca,
+    contract: Arrendamiento,
+    finca: Finca,
     *,
     joven_age_min: int,
     joven_age_max: int,
@@ -305,7 +305,7 @@ def _resolve_tier_70(
     return _resolve_tier_70_b_1(contract, finca, joven_age_min=joven_age_min, joven_age_max=joven_age_max)
 
 
-def _resolve_tier_70_b_2(contract: RentalContract) -> TierResolution | None:
+def _resolve_tier_70_b_2(contract: Arrendamiento) -> TierResolution | None:
     """Ordinal 2.º — Public Admin tenant or Ley 49/2002 entity destining
     the dwelling to alquiler social, IMV beneficiary, or dwelling in a
     public housing program with a rent cap."""
@@ -320,8 +320,8 @@ def _resolve_tier_70_b_2(contract: RentalContract) -> TierResolution | None:
 
 
 def _resolve_tier_70_b_1(
-    contract: RentalContract,
-    finca: RentalFinca,
+    contract: Arrendamiento,
+    finca: Finca,
     *,
     joven_age_min: int,
     joven_age_max: int,
@@ -361,7 +361,7 @@ def _resolve_tier_70_b_1(
 
 
 def _qualifies_for_tier_60_rehab(
-    contract: RentalContract,
+    contract: Arrendamiento,
     *,
     rehab_lookback_days: int,
 ) -> bool:

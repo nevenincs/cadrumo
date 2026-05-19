@@ -51,7 +51,7 @@ from ...domain.deadlines import (
     shift_deadline,
 )
 from ...domain.deadlines._festivos import DeadlineValidationError
-from ...domain.filing import FilingDraftRepository
+from ...domain.filing import ModeloDraftRepository
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ._errors import (
@@ -478,7 +478,7 @@ def build_overview_status_report(
     state: WorkflowState | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    draft_repository: FilingDraftRepository | None = None,
+    draft_repository: ModeloDraftRepository | None = None,
     unreadable_rows: int | None = None,
 ) -> OverviewStatusReport:
     """Build the typed readiness report used by root and overview status."""
@@ -494,7 +494,7 @@ def build_overview_status_report(
     else:
         transactions = transaction_repository.load()
     invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
-    drafts = tuple((draft_repository or FilingDraftRepository()).iter_drafts())
+    drafts = tuple((draft_repository or ModeloDraftRepository()).iter_drafts())
     unreadable_total = secure_object_unreadable_total() if unreadable_rows is None else unreadable_rows
     from ..workflow._models import resolve_active_bucket_id
 

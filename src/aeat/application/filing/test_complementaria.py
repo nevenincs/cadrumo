@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.filing import ModeloDraftStatus, FilingValue, FilingValueKind
+from ...domain.filing import ModeloDraftStatus, ModeloValue, ModeloValueKind
 from ...domain.submission import SubmissionAttempt, SubmissionStatus, ModeloPresentado
 from . import (
-    FilingAmendmentError,
-    FilingBuilderError,
-    FilingDraft,
+    ModeloAmendmentError,
+    ModeloBuilderError,
+    ModeloDraft,
     build_complementaria,
     build_draft,
     build_runtime_schema_provider,
@@ -52,8 +52,8 @@ def _patch_master_key(tmp_path: Path):
             override_secret_store(None)
 
 
-def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, draft: FilingDraft) -> None:
-    from ...domain.filing import FilingDraftRepository
+def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, draft: ModeloDraft) -> None:
+    from ...domain.filing import ModeloDraftRepository
 
     drafts_dir = tmp_path / "drafts"
     submissions_dir = tmp_path / "submissions"
@@ -62,11 +62,11 @@ def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, dra
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(drafts_dir))
     monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(submissions_dir))
     del drafts_dir
-    FilingDraftRepository().save(draft)
+    ModeloDraftRepository().save(draft)
 
 
 def _submitted_filing(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     submission_id: str = "sub-1",
     justificante_csv: str | None = None,
@@ -94,18 +94,18 @@ def _submitted_filing(
     )
 
 
-def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> FilingDraft:
+def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> ModeloDraft:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
     values = tuple(
-        FilingValue(
+        ModeloValue(
             casilla_id=casilla_id,
             value=value,
-            kind=FilingValueKind.LITERAL,
+            kind=ModeloValueKind.LITERAL,
             source="input",
         )
         for casilla_id, value in sorted(casillas.items())
     )
-    return FilingDraft(
+    return ModeloDraft(
         draft_id=f"unsupported-{modelo}-{period}",
         modelo=modelo,
         period=period,
@@ -118,7 +118,7 @@ def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> FilingDraf
     )
 
 
-def _registry_draft(*, casillas: dict[str, Decimal]) -> FilingDraft:
+def _registry_draft(*, casillas: dict[str, Decimal]) -> ModeloDraft:
     return build_draft(
         modelo="130",
         period="2024Q1",
@@ -172,7 +172,7 @@ class TestBuildComplementaria:
         assert load_amendment(amendment.amendment_id).amendment_id == amendment.amendment_id
 
     def test_load_amendment_rejects_traversal_id(self) -> None:
-        with pytest.raises(FilingAmendmentError, match="path separators"):
+        with pytest.raises(ModeloAmendmentError, match="path separators"):
             load_amendment("../escape")
 
     def test_complementaria_requires_official_justificante_csv(
@@ -188,7 +188,7 @@ class TestBuildComplementaria:
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
         original = _submitted_filing(original_draft, justificante_csv="")
 
-        with pytest.raises(FilingBuilderError, match="official justificante CSV"):
+        with pytest.raises(ModeloBuilderError, match="official justificante CSV"):
             build_complementaria(
                 original,
                 {"01": Decimal("11000")},
@@ -209,7 +209,7 @@ class TestBuildComplementaria:
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
         original = _submitted_filing(original_draft)
 
-        with pytest.raises(FilingBuilderError, match="active registry snapshot"):
+        with pytest.raises(ModeloBuilderError, match="active registry snapshot"):
             build_complementaria(
                 original,
                 {"01": Decimal("11000")},
@@ -222,7 +222,7 @@ class TestBuildComplementaria:
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-303")
 
-        with pytest.raises(FilingBuilderError, match="not present in the calculation registry"):
+        with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
             build_complementaria(
                 original,
                 {"07": Decimal("11000.00"), "29": Decimal("200.00")},
@@ -235,7 +235,7 @@ class TestBuildComplementaria:
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-390")
 
-        with pytest.raises(FilingBuilderError, match="not present in the calculation registry"):
+        with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
             build_complementaria(
                 original,
                 {"01": 2024},

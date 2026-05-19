@@ -192,7 +192,7 @@ def test_resolve_filters_by_flow_direction_repercutido() -> None:
     observations = [
         _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
         _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
-        _observation(flow=IvaFlowDirection.AUTOREPERCUTIDO, iva=Decimal("90")),
+        _observation(flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO, iva=Decimal("90")),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("210")}
@@ -213,7 +213,7 @@ def test_resolve_filters_by_flow_direction_autorepercutido() -> None:
     observations = [
         _observation(
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            flow=IvaFlowDirection.AUTOREPERCUTIDO,
+            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             iva=Decimal("42"),
         ),
         _observation(
@@ -338,7 +338,7 @@ def test_modelo_390_annual_iva_totals_reconcile_with_four_registry_calculated_mo
                 ledger_id="q4-output-reverse-charge",
                 txn_date=date(2025, 11, 4),
                 category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-                flow=IvaFlowDirection.AUTOREPERCUTIDO,
+                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 iva=Decimal("84.00"),
             ),
         ),

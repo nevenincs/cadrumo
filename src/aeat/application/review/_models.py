@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ...core.i18n import Translatable as tr
 from ...domain.invoices import Invoice
 from ...domain.transactions import Transaction
-from ..filing import FilingValidationFinding
+from ..filing import ModeloValidationFinding
 from ..workflow._models import WorkflowEvent
 from ..workflow._utils import _normalise_key, utc_now
 from ._enums import ReviewItemKind, ReviewSeverity
@@ -102,7 +102,7 @@ class FindingReviewItem(_ReviewItemBase):
     ``source`` is ``None`` for the placeholder row emitted when a draft
     has no findings but is in a DRAFT or VALIDATED status. Otherwise it
     carries the verbatim
-    :class:`aeat.application.filing.FilingValidationFinding`.
+    :class:`aeat.application.filing.ModeloValidationFinding`.
 
     Attributes:
         kind: Literal discriminator pinned to
@@ -114,7 +114,7 @@ class FindingReviewItem(_ReviewItemBase):
     """
 
     kind: Literal[ReviewItemKind.FINDING] = ReviewItemKind.FINDING
-    source: FilingValidationFinding | None
+    source: ModeloValidationFinding | None
     draft_id: str = Field(min_length=1)
     draft_path: str = Field(min_length=1)
 

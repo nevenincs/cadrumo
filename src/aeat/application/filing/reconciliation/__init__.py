@@ -1,6 +1,6 @@
-"""Reconcile a local :class:`FilingDraft` against an AEAT :class:`Justificante`.
+"""Reconcile a local :class:`ModeloDraft` against an AEAT :class:`Justificante`.
 
-Takes a locally-approved :class:`aeat.domain.filing.FilingDraft` and
+Takes a locally-approved :class:`aeat.domain.filing.ModeloDraft` and
 the :class:`aeat.domain.justificante.Justificante` parsed from AEAT's
 authoritative PDF record, then emits a
 :class:`ReconciliationReport` with a single user-observable verdict:

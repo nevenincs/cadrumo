@@ -20,7 +20,7 @@ from typing import get_type_hints
 
 import pytest
 
-from ...filing._schema import FilingDraft, ModeloDraftStatus, FilingValue, FilingValueKind
+from ...filing._schema import ModeloDraft, ModeloDraftStatus, ModeloValue, ModeloValueKind
 from ...modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -150,7 +150,7 @@ def test_live_cross_reference_decision_oracle_id_is_typed() -> None:
 
 
 def test_filing_draft_carries_typed_subject_identity() -> None:
-    """``FilingDraft`` must carry a typed ``subject_tax_id`` field.
+    """``ModeloDraft`` must carry a typed ``subject_tax_id`` field.
 
     Fails today because only ``profile_tax_id: str`` exists on the model.
     The structural intent recorded in the linkage-audit inventory is that
@@ -158,15 +158,15 @@ def test_filing_draft_carries_typed_subject_identity() -> None:
     from the profile substrate, not a bare ``str``.
     """
 
-    hints = get_type_hints(FilingDraft, include_extras=True)
+    hints = get_type_hints(ModeloDraft, include_extras=True)
     assert "subject_tax_id" in hints, (
-        "FilingDraft has no subject_tax_id field. "
+        "ModeloDraft has no subject_tax_id field. "
         "Identity propagation through the filing chain is not wired."
     )
 
 
 def test_filing_draft_snapshot_ref_replaces_schema_version() -> None:
-    """``FilingDraft`` participates in ``draft_id`` hash via a typed snapshot reference.
+    """``ModeloDraft`` participates in ``draft_id`` hash via a typed snapshot reference.
 
     Fails today because ``schema_version: str`` is still in the hash basis.
     A bare-string ``schema_version`` cannot be re-resolved against the
@@ -174,9 +174,9 @@ def test_filing_draft_snapshot_ref_replaces_schema_version() -> None:
     period + content hash) can.
     """
 
-    hints = get_type_hints(FilingDraft, include_extras=True)
+    hints = get_type_hints(ModeloDraft, include_extras=True)
     assert "snapshot_ref" in hints, (
-        "FilingDraft has no snapshot_ref field. "
+        "ModeloDraft has no snapshot_ref field. "
         "The hash basis still relies on the bare-string schema_version."
     )
 
@@ -187,7 +187,7 @@ def test_filing_draft_snapshot_ref_replaces_schema_version() -> None:
 
 
 def test_filing_draft_full_roundtrip() -> None:
-    """A FilingDraft with a values tuple survives JSON round-trip strictly.
+    """A ModeloDraft with a values tuple survives JSON round-trip strictly.
 
     Establishes the baseline that the existing filing-draft schema is
     JSON-serializable end-to-end. When ``subject_tax_id`` / ``snapshot_ref``
@@ -196,29 +196,29 @@ def test_filing_draft_full_roundtrip() -> None:
     """
 
     now = datetime.now(UTC).replace(microsecond=0)
-    original = FilingDraft(
+    original = ModeloDraft(
         draft_id="f" * 64,
         modelo="303",
         period="2025Q1",
         profile_tax_id="12345678Z",
         status=ModeloDraftStatus.DRAFT,
         values=(
-            FilingValue(
+            ModeloValue(
                 casilla_id="iva.devengado",
                 value=Decimal("20000.00"),
-                kind=FilingValueKind.LITERAL,
+                kind=ModeloValueKind.LITERAL,
                 source="user-supplied",
             ),
-            FilingValue(
+            ModeloValue(
                 casilla_id="iva.deducible",
                 value=Decimal("7654.33"),
-                kind=FilingValueKind.LITERAL,
+                kind=ModeloValueKind.LITERAL,
                 source="user-supplied",
             ),
-            FilingValue(
+            ModeloValue(
                 casilla_id="iva.resultado-regimen-general",
                 value=Decimal("12345.67"),
-                kind=FilingValueKind.COMPUTED,
+                kind=ModeloValueKind.COMPUTED,
                 source="computed from iva.devengado - iva.deducible",
                 formula_trace=("iva.devengado", "iva.deducible"),
             ),
@@ -231,7 +231,7 @@ def test_filing_draft_full_roundtrip() -> None:
         notes="",
     )
 
-    roundtripped = FilingDraft.model_validate_json(original.model_dump_json())
+    roundtripped = ModeloDraft.model_validate_json(original.model_dump_json())
 
     assert roundtripped == original
     assert tuple(v.casilla_id for v in roundtripped.values) == tuple(
@@ -243,13 +243,13 @@ def test_filing_draft_full_roundtrip() -> None:
     # formula_trace MUST survive round-trip: the test fails if any
     # boundary erases the computation provenance.
     computed = next(
-        v for v in roundtripped.values if v.kind is FilingValueKind.COMPUTED
+        v for v in roundtripped.values if v.kind is ModeloValueKind.COMPUTED
     )
     assert computed.formula_trace == ("iva.devengado", "iva.deducible")
 
 
 def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
-    """``FilingDraft.subject_tax_id`` runs the AEAT NIF/NIE/CIF checksum.
+    """``ModeloDraft.subject_tax_id`` runs the AEAT NIF/NIE/CIF checksum.
 
     A malformed identifier must raise a pydantic ValidationError at
     construction time, not surface downstream as a silent typed-str.
@@ -274,16 +274,16 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
     )
 
     # 12345678Z is a valid Spanish NIF (checksum letter for 12345678 is Z).
-    valid = FilingDraft(subject_tax_id="12345678Z", **common_kwargs)
+    valid = ModeloDraft(subject_tax_id="12345678Z", **common_kwargs)
     assert valid.subject_tax_id == "12345678Z"
 
     # Same digits with a wrong checksum letter must fail at validation.
     with _pytest.raises(ValidationError):
-        FilingDraft(subject_tax_id="12345678A", **common_kwargs)
+        ModeloDraft(subject_tax_id="12345678A", **common_kwargs)
 
 
 def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
-    """A populated ``RegistrySnapshotRef`` survives strict JSON round-trip on FilingDraft."""
+    """A populated ``RegistrySnapshotRef`` survives strict JSON round-trip on ModeloDraft."""
 
     from ._schema import RegistrySnapshotRef
 
@@ -294,7 +294,7 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
         filing_year=2025,
         period="1T",
     )
-    original = FilingDraft(
+    original = ModeloDraft(
         draft_id="f" * 64,
         modelo="303",
         period="2025Q1",
@@ -310,7 +310,7 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
         schema_version="schema-2025-1",
     )
 
-    roundtripped = FilingDraft.model_validate_json(original.model_dump_json())
+    roundtripped = ModeloDraft.model_validate_json(original.model_dump_json())
 
     assert roundtripped == original
     assert roundtripped.snapshot_ref == ref

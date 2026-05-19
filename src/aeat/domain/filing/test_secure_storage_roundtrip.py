@@ -5,7 +5,7 @@ suite asserts pydantic ``model_dump_json``/``model_validate_json``
 identity. That covers the in-process JSON boundary but does not exercise
 the encrypted persistence boundary: encrypt -> SQL row -> decrypt ->
 pydantic reload. This file fills that gap for the
-:class:`FilingDraftRepository` path.
+:class:`ModeloDraftRepository` path.
 
 Tests fail strictly if the persistence boundary drops any field on the
 typed envelope. They use real SQLite + real encryption (no mocks, no
@@ -30,19 +30,19 @@ from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...core.config import Settings
 from ..calculations.registry._schema import RegistrySnapshotRef
-from ._repository import FilingDraftRepository
+from ._repository import ModeloDraftRepository
 from ._schema import (
-    FilingDraft,
-    FilingDraftStatus,
-    FilingValue,
-    FilingValueKind,
+    ModeloDraft,
+    ModeloDraftStatus,
+    ModeloValue,
+    ModeloValueKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-def _populated_draft() -> FilingDraft:
-    """Build a FilingDraft with every richest-typed field populated.
+def _populated_draft() -> ModeloDraft:
+    """Build a ModeloDraft with every richest-typed field populated.
 
     Surfaces data-loss in the persistence layer the moment it occurs:
     if any field is silently dropped during the encrypted round-trip,
@@ -51,7 +51,7 @@ def _populated_draft() -> FilingDraft:
     """
 
     now = datetime.now(UTC).replace(microsecond=0)
-    return FilingDraft(
+    return ModeloDraft(
         draft_id="d" * 64,
         modelo="303",
         period="2025Q1",
@@ -63,18 +63,18 @@ def _populated_draft() -> FilingDraft:
             filing_year=2025,
             period="1T",
         ),
-        status=FilingDraftStatus.DRAFT,
+        status=ModeloDraftStatus.DRAFT,
         values=(
-            FilingValue(
+            ModeloValue(
                 casilla_id="iva.devengado",
                 value=Decimal("20000.00"),
-                kind=FilingValueKind.LITERAL,
+                kind=ModeloValueKind.LITERAL,
                 source="user-supplied",
             ),
-            FilingValue(
+            ModeloValue(
                 casilla_id="iva.resultado-regimen-general",
                 value=Decimal("12345.67"),
-                kind=FilingValueKind.COMPUTED,
+                kind=ModeloValueKind.COMPUTED,
                 source="computed from iva.devengado - iva.deducible",
                 formula_trace=("iva.devengado", "iva.deducible"),
             ),
@@ -90,16 +90,16 @@ def _populated_draft() -> FilingDraft:
 def test_filing_draft_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
 ) -> None:
-    """A FilingDraft saved through FilingDraftRepository loads back byte-for-byte equal.
+    """A ModeloDraft saved through ModeloDraftRepository loads back byte-for-byte equal.
 
     Exercises the full encrypted-persistence boundary:
 
-        FilingDraft -> Envelope -> JSON bytes -> column encryption ->
+        ModeloDraft -> Envelope -> JSON bytes -> column encryption ->
             SQLite -> column decryption -> JSON bytes -> Envelope ->
-                FilingDraft.
+                ModeloDraft.
 
     If any layer drops a field on the typed envelope (subject_tax_id,
-    snapshot_ref, formula_trace on a FilingValue, the period or
+    snapshot_ref, formula_trace on a ModeloValue, the period or
     revision_id of the snapshot_ref nested model, etc.), the strict
     pydantic equality fails. No mocks; the encryption hook is the
     real one driven by an :class:`EphemeralMasterKeyProvider`.
@@ -113,7 +113,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
         )
         Base.metadata.create_all(engine)
         try:
-            # FilingDraftRepository builds its own SecureObjectRepository
+            # ModeloDraftRepository builds its own SecureObjectRepository
             # off the process-default engine; for the test we need to
             # ensure the same engine + key provider is in scope when the
             # repository is constructed. The `with provider:` block
@@ -123,7 +123,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
 
             # Build, save, load.
             original = _populated_draft()
-            repo = FilingDraftRepository()
+            repo = ModeloDraftRepository()
             repo.save(original)
             loaded = repo.load(original.draft_id)
 
@@ -139,7 +139,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
             assert loaded.snapshot_ref.filing_year == 2025
             assert loaded.snapshot_ref.period == "1T"
             computed = next(
-                v for v in loaded.values if v.kind is FilingValueKind.COMPUTED
+                v for v in loaded.values if v.kind is ModeloValueKind.COMPUTED
             )
             assert computed.formula_trace == ("iva.devengado", "iva.deducible")
         finally:

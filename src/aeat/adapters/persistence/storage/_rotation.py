@@ -390,7 +390,7 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
             hkdf_context=b"aeat.adapters.outbound.aeat.export.filing.v1",
         ),
         # Amendments share one HKDF context across two store dirs.
-        # ``FilingAmendmentRepository`` is one consumer identity but it
+        # ``ModeloAmendmentRepository`` is one consumer identity but it
         # binds to two sibling subdirectories under ``aeat_submissions_dir``
         # (``amendment-results/`` and ``amendments/``). Both directories
         # therefore appear here as separate plan entries with the same

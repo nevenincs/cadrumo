@@ -4,7 +4,7 @@ The CLI exposes two primitives the application layer must back end-to-end:
 
 - modelo export writes an
   AEAT declaration file from a validated registry snapshot for an approved
-  :class:`aeat.domain.filing.FilingDraft` and reports the byte-level
+  :class:`aeat.domain.filing.ModeloDraft` and reports the byte-level
   summary the operator needs to track the artefact (output path, draft
   identity, content hash, format).
 - modelo export verification re-reads a previously
@@ -42,10 +42,10 @@ from ...domain.calculations.registry import (
     parse_export_payload,
 )
 from ...domain.filing import (
-    FilingDraft,
+    ModeloDraft,
     ModeloDraftStatus,
-    FilingExportError,
-    FilingExportValidationError,
+    ModeloExportError,
+    ModeloExportValidationError,
 )
 from .runtime import RegistrySchemaProvider, build_runtime_schema_provider
 
@@ -98,7 +98,7 @@ class DeclaracionExportResult(BaseModel):
     the export event without re-reading the file.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.FilingDraft` identity
+        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
             the export was generated from.
         modelo: AEAT modelo identifier.
         period: Canonical period identifier (e.g. ``"2026Q1"``).
@@ -133,9 +133,9 @@ class DeclaracionExportResult(BaseModel):
         try:
             int(value, 16)
         except ValueError as exc:
-            raise FilingExportValidationError("file_sha256 must be a hex-encoded digest") from exc
+            raise ModeloExportValidationError("file_sha256 must be a hex-encoded digest") from exc
         if value != value.lower():
-            raise FilingExportValidationError("file_sha256 must be lowercase hex")
+            raise ModeloExportValidationError("file_sha256 must be lowercase hex")
         return value
 
 
@@ -144,11 +144,11 @@ class DeclaracionVerifyResult(BaseModel):
 
     The verify command re-reads the file the export command wrote and
     compares its casilla payload against the approved
-    :class:`aeat.domain.filing.FilingDraft`. The verdict is the typed
+    :class:`aeat.domain.filing.ModeloDraft`. The verdict is the typed
     return value the CLI renders.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.FilingDraft` identity
+        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
             the file was compared against.
         file_path: Absolute path of the file that was verified.
         verdict: Closed :class:`DeclaracionVerifyVerdict`.
@@ -186,7 +186,7 @@ class DeclaracionVerifyResult(BaseModel):
         """Reject blank casilla identifiers; the CLI renders them verbatim."""
         for entry in value:
             if not entry or entry != entry.strip():
-                raise FilingExportValidationError(
+                raise ModeloExportValidationError(
                     "mismatched_casillas entries must be non-blank, untrimmed identifiers"
                 )
         return value
@@ -198,18 +198,18 @@ class DeclaracionVerifyResult(BaseModel):
         if value is None:
             return None
         if len(value) != _SHA256_HEX_LENGTH:
-            raise FilingExportValidationError(f"file_sha256 must be {_SHA256_HEX_LENGTH} hex characters when provided")
+            raise ModeloExportValidationError(f"file_sha256 must be {_SHA256_HEX_LENGTH} hex characters when provided")
         try:
             int(value, 16)
         except ValueError as exc:
-            raise FilingExportValidationError("file_sha256 must be a hex-encoded digest") from exc
+            raise ModeloExportValidationError("file_sha256 must be a hex-encoded digest") from exc
         if value != value.lower():
-            raise FilingExportValidationError("file_sha256 must be lowercase hex")
+            raise ModeloExportValidationError("file_sha256 must be lowercase hex")
         return value
 
 
 def export_draft(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     output_path: Path,
     headers: dict[str, str],
@@ -219,11 +219,11 @@ def export_draft(
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
-        raise FilingExportError("declaration export requires a draft built from the active registry snapshot")
+        raise ModeloExportError("declaration export requires a draft built from the active registry snapshot")
     if draft.status is not ModeloDraftStatus.APPROVED:
-        raise FilingExportError("declaration export requires an approved draft")
+        raise ModeloExportError("declaration export requires an approved draft")
     if not subview.export_layout_ids:
-        raise FilingExportError(f"modelo {draft.modelo!r} registry snapshot declares no export layout")
+        raise ModeloExportError(f"modelo {draft.modelo!r} registry snapshot declares no export layout")
     payload = _render_layout(subview.export_layouts[0], draft=draft, headers=headers)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(payload)
@@ -242,7 +242,7 @@ def export_draft(
 
 
 def verify_export(
-    draft: FilingDraft,
+    draft: ModeloDraft,
     *,
     file_path: Path,
     schema_provider: RegistrySchemaProvider | None = None,
@@ -251,7 +251,7 @@ def verify_export(
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
-        raise FilingExportError("declaration verify requires a draft built from the active registry snapshot")
+        raise ModeloExportError("declaration verify requires a draft built from the active registry snapshot")
     if not subview.export_layout_ids:
         digest = sha256_file(file_path) if file_path.exists() else None
         return DeclaracionVerifyResult(
@@ -299,7 +299,7 @@ _QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
 _MONEY_QUANT = Decimal("0.01")
 
 
-def _render_layout(layout: ExportLayoutDefinition, *, draft: FilingDraft, headers: dict[str, str]) -> bytes:
+def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, headers: dict[str, str]) -> bytes:
     chunks: list[bytes] = []
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[str, object] = {value.casilla_id: value.value for value in draft.values}
@@ -356,7 +356,7 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
     raw = casilla_values.get(record.requires_positive_casilla)
     amount = Decimal("0") if raw in {None, ""} else Decimal(str(raw))
     if amount <= 0:
-        raise FilingExportValidationError(
+        raise ModeloExportValidationError(
             f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}"
         )
 
@@ -364,7 +364,7 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
 def _render_record(
     record: ExportRecordDefinition,
     *,
-    draft: FilingDraft,
+    draft: ModeloDraft,
     headers: dict[str, str],
     casilla_values: dict[str, object],
     binding_values: dict[tuple[str, int | None], object],
@@ -387,7 +387,7 @@ def _render_record(
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
         if field.offset is None:
-            raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
+            raise ModeloExportValidationError(f"export field {field.id!r} must declare offset")
         rendered = _render_field(
             field,
             draft=draft,
@@ -399,7 +399,7 @@ def _render_record(
         start = field.offset - 1
         end = start + len(rendered)
         if any(char != " " for char in buffer[start:end]):
-            raise FilingExportError(f"export field {field.id!r} overlaps another field")
+            raise ModeloExportError(f"export field {field.id!r} overlaps another field")
         buffer[start:end] = rendered
     return "".join(buffer)
 
@@ -407,14 +407,14 @@ def _render_record(
 def _render_field(
     field: ExportFieldDefinition,
     *,
-    draft: FilingDraft,
+    draft: ModeloDraft,
     headers: dict[str, str],
     casilla_values: dict[str, object],
     binding_values: dict[tuple[str, int | None], object],
     row_index: int | None,
 ) -> str:
     if field.length is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
+        raise ModeloExportValidationError(f"export field {field.id!r} must declare length")
     raw = _field_value(
         field,
         draft=draft,
@@ -429,7 +429,7 @@ def _render_field(
 def _field_value(
     field: ExportFieldDefinition,
     *,
-    draft: FilingDraft,
+    draft: ModeloDraft,
     headers: dict[str, str],
     casilla_values: dict[str, object],
     binding_values: dict[tuple[str, int | None], object],
@@ -451,12 +451,12 @@ def _field_value(
         case "computed":
             return _computed_field_value(field, draft)
         case _:
-            raise FilingExportError(f"unsupported export field kind {field.kind!r}")
+            raise ModeloExportError(f"unsupported export field kind {field.kind!r}")
 
 
 def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[str, object]) -> object:
     if field.casilla is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare casilla")
+        raise ModeloExportValidationError(f"export field {field.id!r} must declare casilla")
     return casilla_values.get(field.casilla)
 
 
@@ -466,27 +466,27 @@ def _binding_field_value(
     row_index: int | None,
 ) -> object:
     if field.binding is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
+        raise ModeloExportValidationError(f"export field {field.id!r} must declare binding")
     return binding_values.get((field.binding, row_index))
 
 
 def _header_field_value(field: ExportFieldDefinition, headers: dict[str, str]) -> str:
     if field.header_key is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare header_key")
+        raise ModeloExportValidationError(f"export field {field.id!r} must declare header_key")
     value = headers.get(field.header_key.lower())
     if field.required and (value is None or value == ""):
-        raise FilingExportValidationError(f"export header {field.header_key!r} is required")
+        raise ModeloExportValidationError(f"export header {field.header_key!r} is required")
     return value or ""
 
 
-def _computed_field_value(field: ExportFieldDefinition, draft: FilingDraft) -> str:
+def _computed_field_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
     if field.computed_key == "envelope_closing_tag":
         year, period = _period_parts(draft.period)
         return f"</T{draft.modelo}0{year}{period}0000>"
-    raise FilingExportError(f"unsupported export computed field {field.computed_key!r}")
+    raise ModeloExportError(f"unsupported export computed field {field.computed_key!r}")
 
 
-def _draft_value(field: ExportFieldDefinition, draft: FilingDraft) -> str:
+def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
     if field.draft_attribute == "modelo":
         return draft.modelo
     if field.draft_attribute == "period":
@@ -497,12 +497,12 @@ def _draft_value(field: ExportFieldDefinition, draft: FilingDraft) -> str:
         return _period_parts(draft.period)[0]
     if field.draft_attribute == "period_code":
         return _period_parts(draft.period)[1]
-    raise FilingExportError(f"unsupported draft export attribute {field.draft_attribute!r}")
+    raise ModeloExportError(f"unsupported draft export attribute {field.draft_attribute!r}")
 
 
 def _format_field(field: ExportFieldDefinition, value: object) -> str:
     if field.length is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
+        raise ModeloExportValidationError(f"export field {field.id!r} must declare length")
     if field.kind == "filler":
         return " " * field.length
     if field.data_type == "money":
@@ -514,7 +514,7 @@ def _format_field(field: ExportFieldDefinition, value: object) -> str:
     else:
         rendered = "" if value is None else str(value)
     if len(rendered) > field.length:
-        raise FilingExportValidationError(f"export field {field.id!r} value exceeds length {field.length}")
+        raise ModeloExportValidationError(f"export field {field.id!r} value exceeds length {field.length}")
     return _pad(rendered, field)
 
 
@@ -522,13 +522,13 @@ def _format_money(value: object, *, length: int, signed: bool) -> str:
     if value is None or value == "":
         amount = Decimal("0")
     elif isinstance(value, bool):
-        raise FilingExportValidationError("money export fields cannot render boolean values")
+        raise ModeloExportValidationError("money export fields cannot render boolean values")
     else:
         amount = Decimal(str(value))
     cents = int((abs(amount).quantize(_MONEY_QUANT, rounding=ROUND_HALF_UP) * 100).to_integral_value())
     if amount < 0:
         if not signed:
-            raise FilingExportValidationError("unsigned money export field cannot render a negative value")
+            raise ModeloExportValidationError("unsigned money export field cannot render a negative value")
         return "N" + str(cents).zfill(length - 1)
     if signed:
         return " " + str(cents).zfill(length - 1)
@@ -539,13 +539,13 @@ def _format_integer(value: object, *, length: int) -> str:
     if value is None or value == "":
         return "0".zfill(length)
     if isinstance(value, bool):
-        raise FilingExportValidationError("integer export fields cannot render boolean values")
+        raise ModeloExportValidationError("integer export fields cannot render boolean values")
     return str(int(Decimal(str(value)))).zfill(length)
 
 
 def _pad(value: str, field: ExportFieldDefinition) -> str:
     if field.length is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
+        raise ModeloExportValidationError(f"export field {field.id!r} must declare length")
     if field.padding == "left_zero":
         return value.rjust(field.length, "0")
     if field.padding == "left_space":
@@ -558,7 +558,7 @@ def _pad(value: str, field: ExportFieldDefinition) -> str:
 def _mismatched_casillas(
     layout: ExportLayoutDefinition,
     *,
-    draft: FilingDraft,
+    draft: ModeloDraft,
     payload: bytes,
 ) -> tuple[str, ...]:
     values = {value.casilla_id: value.value for value in draft.values}
@@ -578,7 +578,7 @@ def _mismatched_casillas(
 def _period_parts(period: str) -> tuple[str, str]:
     match = _QUARTER_PERIOD_RE.fullmatch(period)
     if match is None:
-        raise FilingExportError(f"declaration export does not support period {period!r}")
+        raise ModeloExportError(f"declaration export does not support period {period!r}")
     return match.group("year"), f"{match.group('quarter')}T"
 
 
