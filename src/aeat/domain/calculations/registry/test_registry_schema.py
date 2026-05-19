@@ -614,6 +614,28 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
         )
 
 
+def test_validator_rejects_literal_export_field_longer_than_declared_length() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    layout = revision.export_layouts[0]
+    record = layout.records[0]
+    field = next(item for item in record.fields if item.kind == "literal" and item.length is not None)
+    oversized = field.model_copy(update={"literal": "X" * (field.length + 1)})
+    fields = tuple(oversized if item.id == field.id else item for item in record.fields)
+    records = tuple(
+        record.model_copy(update={"fields": fields}) if item.id == record.id else item
+        for item in layout.records
+    )
+    layouts = tuple(
+        layout.model_copy(update={"records": records}) if item.id == layout.id else item
+        for item in revision.export_layouts
+    )
+    mutated = revision.model_copy(update={"export_layouts": layouts})
+
+    with pytest.raises(RegistryValidationError, match=r"literal length .* exceeds declared length"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
