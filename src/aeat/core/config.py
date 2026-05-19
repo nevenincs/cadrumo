@@ -18,7 +18,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .errors import CoreValidationError
@@ -330,8 +330,15 @@ class Settings(BaseSettings):
 
     # ── Storage ─────────────────────────────────────────────────────────────
     aeat_database_url: str = Field(
-        default=f"sqlite:///{(PROJECT_ROOT / 'var' / 'aeat.db').as_posix()}",
-        description="SQLAlchemy URL for the primary persistence backend (default: local SQLite)",
+        default="",
+        description=(
+            "SQLAlchemy URL for the primary persistence backend. When empty, "
+            "the model validator resolves the URL through the active-profile "
+            "precedence chain to "
+            "``sqlite:///<aeat_local_storage_root>/buckets/<bucket-id>/db/aeat.db``. "
+            "Tests that need a deterministic location supply this field "
+            "explicitly; production reads the computed value."
+        ),
     )
     aeat_storage_backup_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "backups",
@@ -834,6 +841,66 @@ class Settings(BaseSettings):
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
+
+    @model_validator(mode="after")
+    def _resolve_database_url_for_active_profile(self) -> Settings:
+        """Resolve ``aeat_database_url`` through the active-profile chain.
+
+        When the field is left empty (the production default), this
+        validator computes the per-bucket SQLite URL at
+        ``sqlite:///<aeat_local_storage_root>/buckets/<bucket-id>/db/aeat.db``.
+        Tests that pass an explicit URL bypass the resolution — the
+        validator only fires the computation when the field is empty.
+
+        Active-profile resolution honours the operator-facing
+        precedence chain:
+
+        1. ``self.aeat_active_profile`` (from ``AEAT_ACTIVE_PROFILE``
+           env var, or an ``override_settings`` block in tests).
+        2. ``<aeat_local_storage_root>/active-profile`` plaintext
+           pointer file written by ``profile create`` / ``profile
+           switch``.
+
+        When neither rung resolves, the field stays empty and
+        :func:`get_engine` raises ``StorageError`` on first access —
+        the operator must run ``aeat config profile create`` or
+        ``aeat config profile switch`` before any persistence path
+        opens.
+        """
+
+        if self.aeat_database_url:
+            return self
+        bucket_id = (self.aeat_active_profile or "").strip()
+        if not bucket_id:
+            # Parse the TOML pointer file directly to avoid a circular
+            # Settings construction. The pointer is a one-line TOML
+            # document carrying ``bucket_id = "..."`` plus a
+            # ``schema_version`` int (see
+            # ``_bucket_pointer_io.write_pointer``).
+            import tomllib
+
+            pointer_file = self.aeat_local_storage_root / "active-profile"
+            try:
+                raw = pointer_file.read_text(encoding="utf-8")
+            except OSError:
+                raw = ""
+            if raw:
+                try:
+                    parsed = tomllib.loads(raw)
+                except tomllib.TOMLDecodeError:
+                    parsed = {}
+                bucket_id = str(parsed.get("bucket_id", "")).strip()
+        if not bucket_id:
+            return self
+        bucket_db_path = (
+            self.aeat_local_storage_root / "buckets" / bucket_id / "db" / "aeat.db"
+        )
+        object.__setattr__(
+            self,
+            "aeat_database_url",
+            f"sqlite:///{bucket_db_path.as_posix()}",
+        )
+        return self
 
     @field_validator(
         "aeat_certificate_path",
