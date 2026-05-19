@@ -464,3 +464,61 @@ Footnote 1: ModeloRecord already exists in src/aeat/adapters/persistence/storage
 
 Footnote 2: DraftStatus and FilingDraftStatus carry identical 10-value sets. Consolidate to a single ModeloDraftStatus enum and remove the duplicate.
 
+#### Declaracion cluster (Declaration to Declaracion)
+
+Stem authority: declaracion per Ley 58/2003 LGT Articulo 119.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| Declaration | src/aeat/adapters/outbound/aeat/sede/_declarations.py | Declaracion | public-API |
+| DeclarationsRegisterSession | src/aeat/adapters/outbound/aeat/sede/_declarations.py | DeclaracionesRegisterSession | public-API |
+| FiledDeclarationArtefact | src/aeat/adapters/outbound/aeat/sede/_schema.py | FiledDeclaracionArtefact | public-API |
+| FiledDeclarationObservation | src/aeat/adapters/outbound/aeat/sede/_schema.py | FiledDeclaracionObservation | public-API |
+| FiledDeclarationObservationStore | src/aeat/adapters/outbound/aeat/sede/_observation_store.py | FiledDeclaracionObservationStore | public-API |
+| DeclarationCalculateNextAction | src/aeat/application/filing/_calculate.py | DeclaracionCalculateNextAction | TBD |
+| DeclarationCalculateSummary | src/aeat/application/filing/_calculate.py | DeclaracionCalculateSummary | TBD |
+| DeclarationExportFormat | src/aeat/application/filing/_export.py | DeclaracionExportFormat | TBD |
+| DeclarationVerifyVerdict | src/aeat/application/filing/_export.py | DeclaracionVerifyVerdict | TBD |
+| DeclarationExportResult | src/aeat/application/filing/_export.py | DeclaracionExportResult | TBD |
+| DeclarationVerifyResult | src/aeat/application/filing/_export.py | DeclaracionVerifyResult | TBD |
+| DeclarationEditSpec | src/aeat/application/review/_edit.py | DeclaracionEditSpec | TBD |
+| DeclarationReviewFilterKey | src/aeat/application/review/_filter.py | DeclaracionReviewFilterKey | TBD |
+| DeclarationReviewStatus | src/aeat/application/review/_filter.py | DeclaracionReviewStatus | TBD |
+| DeclarationReviewFilterSpec | src/aeat/application/review/_filter.py | DeclaracionReviewFilterSpec | TBD |
+| DeclarationPointer | src/aeat/application/workflow/_models.py | DeclaracionPointer | TBD |
+| DeclarationParseError | src/aeat/domain/filing/reconciliation/_errors.py | DeclaracionParseError | TBD |
+| ReconciliationDeclarationSourceUnsupportedError | src/aeat/application/modelo/_reconcile.py | ReconciliationDeclaracionSourceUnsupportedError | TBD |
+| CrossReferenceApplicabilityDeclaration | src/aeat/domain/calculations/registry/_live_parity.py | CrossReferenceApplicabilityDeclaracion | TBD |
+| RentaDeclarationType | src/aeat/domain/profile/_renta_codes.py | RentaDeclaracionType | TBD |
+
+#### Censo cluster (Census to Censo)
+
+Stem authority: censo per RD 1065/2007 RGAGI.
+
+| Current | Location | Approved Rename | Phase |
+| --- | --- | --- | --- |
+| CensusSyncError | src/aeat/application/profile/_census_errors.py | CensoSyncError | TBD |
+| CensusNotAvailableError | src/aeat/application/profile/_census_errors.py | CensoNotAvailableError | TBD |
+| CensusFieldValidationError | src/aeat/application/profile/_census_errors.py | CensoFieldValidationError | TBD |
+| CensusApplyConflictError | src/aeat/application/profile/_census_errors.py | CensoApplyConflictError | TBD |
+| CensusComparisonStatus | src/aeat/application/profile/_census_sync.py | CensoComparisonStatus | TBD |
+| CensusFieldComparison | src/aeat/application/profile/_census_sync.py | CensoFieldComparison | TBD |
+| CensusProfileComparison | src/aeat/application/profile/_census_sync.py | CensoProfileComparison | TBD |
+| CensusApplyResult | src/aeat/application/profile/_census_sync.py | CensoApplyResult | TBD |
+| CensusSyncService | src/aeat/application/profile/_census_sync.py | CensoSyncService | TBD |
+| CensusSnapshot | src/aeat/application/live/_census.py | CensoSnapshot (Snapshot suffix retained per disambiguation rule) | TBD |
+| CensusStaleRefusedError | src/aeat/domain/modelos/_errors.py | CensoStaleRefusedError | TBD |
+| CensusRatioMismatchError | src/aeat/domain/usage_ratios/_errors.py | CensoRatioMismatchError | TBD |
+| RatiosCensusOverrideWarning | src/aeat/application/ledger/_ratios.py | RatiosCensoOverrideWarning | TBD |
+| CensusModeloRole | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloRole | TBD |
+| CensusModeloEventKind | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloEventKind | TBD |
+| CensusModeloFoundationLogFields | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloFoundationLogFields | TBD |
+| CensusModeloOwnership | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloOwnership | TBD |
+| CensusModeloFoundationContract | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloFoundationContract | TBD |
+| CensusModeloFoundationCommand | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloFoundationCommand | TBD |
+| CensusModeloFoundationResult | src/aeat/domain/calculations/registry/_census_modelos.py | CensoModeloFoundationResult | TBD |
+| CensusFactSet | src/aeat/adapters/outbound/aeat/sede/_census.py | CensoFactSet | public-API |
+| CensusParseError | src/aeat/adapters/outbound/aeat/sede/_census.py | CensoParseError | public-API |
+
+The module path src/aeat/application/live/_census.py and the outbound module src/aeat/adapters/outbound/aeat/sede/_census.py also rename to _censo.py in lockstep with the contained symbols.
+
