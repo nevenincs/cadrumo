@@ -43,7 +43,7 @@ from ...application.workflow import WorkflowState, workflow_state_repository
 from ...domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
-    FilingObligation,
+    ModeloDeadline,
     HolidayJurisdiction,
     ObligationStatus,
     Recovery,
@@ -141,7 +141,7 @@ class OverviewCalendarRange(BaseModel):
 class OverviewCalendarEntry(BaseModel):
     """One ``(modelo, period)`` row in the calendar view.
 
-    Mirrors :class:`aeat.domain.deadlines.FilingObligation` fields the
+    Mirrors :class:`aeat.domain.deadlines.ModeloDeadline` fields the
     CLI table needs, plus the precomputed user state so renderers
     do not re-derive the mapping at every call site.
 
@@ -161,7 +161,7 @@ class OverviewCalendarEntry(BaseModel):
             via :func:`user_state_for` for the CLI's 4-column table.
         recovery: Resolved :class:`Recovery` payload when ``status`` is
             ``OVERDUE``; ``None`` otherwise. Carried through verbatim
-            from the underlying :class:`FilingObligation`.
+            from the underlying :class:`ModeloDeadline`.
     """
 
     model_config = _STRICT_FROZEN
@@ -305,7 +305,7 @@ class OverviewStatusReport(BaseModel):
 
 
 def _entry_intersects_range(
-    obligation: FilingObligation,
+    obligation: ModeloDeadline,
     calendar_range: OverviewCalendarRange,
 ) -> bool:
     """Return whether ``obligation``'s [opens_on, closes_on] intersects the range."""

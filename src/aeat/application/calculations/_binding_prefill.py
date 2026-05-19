@@ -31,7 +31,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict
 
 from ...domain.calculations.registry._bindings import (
-    RegistryFilingObservation,
+    RegistryModeloObservation,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
@@ -94,12 +94,12 @@ def _gather_observations(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository,
-) -> tuple[RegistryFilingObservation, ...]:
+) -> tuple[RegistryModeloObservation, ...]:
     """Walk every previous_filing binding in the revision and pull
     matching observations from the local store.
     """
 
-    needed: dict[tuple[str, int, str], RegistryFilingObservation] = {}
+    needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
     for requirement in previous_filing_observation_requirements(
         snapshot.revision,
         filing_year=snapshot.filing_year,

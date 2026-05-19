@@ -1,6 +1,6 @@
 """Strict roundtrip across the CalculationObservationRepository boundary.
 
-Persists :class:`RegistryFilingObservation` records at
+Persists :class:`RegistryModeloObservation` records at
 ``SensitivityClass.AUDIT`` keyed by ``(modelo, filing_year, period)``.
 
 Anti-tautology: the populated observation carries two
@@ -27,7 +27,7 @@ from ...adapters.persistence.storage.sql.engine import create_engine_from_settin
 from ...core.config import Settings
 from ...domain.calculations.registry._bindings import (
     CasillaObservation,
-    RegistryFilingObservation,
+    RegistryModeloObservation,
 )
 from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 from ._observations_repository import CalculationObservationRepository
@@ -35,8 +35,8 @@ from ._observations_repository import CalculationObservationRepository
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-def _populated_observation() -> RegistryFilingObservation:
-    return RegistryFilingObservation(
+def _populated_observation() -> RegistryModeloObservation:
+    return RegistryModeloObservation(
         modelo="303",
         filing_year=2025,
         period="1T",
@@ -67,7 +67,7 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A RegistryFilingObservation roundtrips through the encrypted observation repo."""
+    """A RegistryModeloObservation roundtrips through the encrypted observation repo."""
 
     provider = EphemeralMasterKeyProvider()
     with provider:
@@ -119,7 +119,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 ) -> None:
     """Anti-tautology proof: deleting ``legal_refs`` on a casilla must surface.
 
-    The whole point of persisting :class:`RegistryFilingObservation` is
+    The whole point of persisting :class:`RegistryModeloObservation` is
     the regulatory grounding (legal_refs, source_refs, formula_id) it
     carries through the AUDIT-class boundary. A save-drops-grounding
     drift is the highest-stakes regression this codebase can have: a

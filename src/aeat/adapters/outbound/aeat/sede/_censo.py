@@ -1,6 +1,6 @@
 """Sede G313 (Mis Datos Censales) read-only census adapter — data layer.
 
-Owns the strict pydantic envelope (:class:`CensusFactSet`) and the pure
+Owns the strict pydantic envelope (:class:`CensoFactSet`) and the pure
 HTML parser (:func:`parse_g313_html`) that lift the AEAT G313 result
 page into a typed boundary value. The live Playwright driver, the raw-
 HTML persistence path, and the
@@ -20,7 +20,7 @@ projection:
 Every field is optional at the envelope level because G313 returns a
 sparse projection: a brand-new alta may not have a habitual-vivienda
 flag yet, an operator who never deducted suministros has no
-vivienda_office row, etc. The CensusSyncService layer above is where
+vivienda_office row, etc. The CensoSyncService layer above is where
 "missing-when-required" is adjudicated, not here.
 """
 
@@ -39,7 +39,7 @@ from ._errors import SedeError, SedeFailureMode
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 # G313 publishes the operator's elected withholding rate as a percentage
-# string. The closed enum {15, 7, 1} is enforced at the CensusSyncService
+# string. The closed enum {15, 7, 1} is enforced at the CensoSyncService
 # layer (per the ADR amendment); here the parser accepts any well-formed
 # decimal-as-string and lets the application layer adjudicate.
 _WITHHOLDING_RE: Final = re.compile(r"^\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*%?\s*$")
@@ -48,12 +48,12 @@ _CADASTRAL_RE: Final = re.compile(r"^[0-9A-Z]{20}$")
 _DATE_RE: Final = re.compile(r"^\s*(\d{2}[-/]\d{2}[-/]\d{4})\s*$")
 
 
-class CensusFactSet(BaseModel):
+class CensoFactSet(BaseModel):
     """Typed projection of one G313 (Mis Datos Censales) page read.
 
     Every field is optional because G313 returns whatever subset of the
     census the operator's NIF actually has registered. The
-    CensusSyncService layer above is responsible for refusing a partial
+    CensoSyncService layer above is responsible for refusing a partial
     capture that contradicts a required calculation; the adapter never
     fabricates a default to fill a hole.
     """
@@ -104,7 +104,7 @@ class CensusFactSet(BaseModel):
     )
 
 
-class CensusParseError(SedeError):
+class CensoParseError(SedeError):
     """Raised when a value on the G313 page does not parse against the schema."""
 
     def __init__(self, message: str, *, field: str, raw: str) -> None:
@@ -128,8 +128,8 @@ _G313_LABELS: Final[dict[str, str]] = {
 }
 
 
-def parse_g313_html(html: str) -> CensusFactSet:
-    """Parse a G313 (Mis Datos Censales) result page into a CensusFactSet.
+def parse_g313_html(html: str) -> CensoFactSet:
+    """Parse a G313 (Mis Datos Censales) result page into a CensoFactSet.
 
     The parser is deliberately label-driven rather than DOM-structural:
     AEAT re-shapes the surrounding ZK markup periodically without
@@ -137,14 +137,14 @@ def parse_g313_html(html: str) -> CensusFactSet:
     longest-lived contract. Each label maps to one field; missing labels
     yield ``None`` on the corresponding attribute.
 
-    Raises :exc:`CensusParseError` when a label is present but its
+    Raises :exc:`CensoParseError` when a label is present but its
     value does not parse against the field schema — that is a shape
     change and must surface to the operator rather than silently drop
     the value.
     """
 
     extracted = _label_value_table(html)
-    return CensusFactSet(
+    return CensoFactSet(
         fiscal_address_cadastral_reference=_parse_cadastral(
             extracted.get(_G313_LABELS["fiscal_address_cadastral_reference"]),
         ),
@@ -238,7 +238,7 @@ def _parse_cadastral(raw: str | None) -> str | None:
     if not cleaned:
         return None
     if not _CADASTRAL_RE.match(cleaned):
-        raise CensusParseError(
+        raise CensoParseError(
             f"cadastral reference {cleaned!r} is not 20 alphanumerics",
             field="fiscal_address_cadastral_reference",
             raw=raw,
@@ -265,7 +265,7 @@ def _parse_date(raw: str | None, *, field: str) -> date | None:
         return None
     match = _DATE_RE.match(cleaned)
     if match is None:
-        raise CensusParseError(
+        raise CensoParseError(
             f"{field} value {cleaned!r} is not a dd-mm-yyyy or dd/mm/yyyy date",
             field=field,
             raw=raw,
@@ -275,7 +275,7 @@ def _parse_date(raw: str | None, *, field: str) -> date | None:
     try:
         return date(year, month, day)
     except ValueError as exc:
-        raise CensusParseError(
+        raise CensoParseError(
             f"{field} value {cleaned!r} is not a valid calendar date",
             field=field,
             raw=raw,
@@ -290,7 +290,7 @@ def _parse_withholding(raw: str | None) -> str | None:
         return None
     match = _WITHHOLDING_RE.match(cleaned)
     if match is None:
-        raise CensusParseError(
+        raise CensoParseError(
             f"withholding percentage {cleaned!r} is not a valid percentage literal",
             field="elected_withholding_pct",
             raw=raw,
@@ -306,7 +306,7 @@ def _parse_m2(raw: str | None, *, field: str) -> Decimal | None:
         return None
     match = _M2_RE.match(cleaned)
     if match is None:
-        raise CensusParseError(
+        raise CensoParseError(
             f"{field} value {cleaned!r} is not a valid m² literal",
             field=field,
             raw=raw,
@@ -315,7 +315,7 @@ def _parse_m2(raw: str | None, *, field: str) -> Decimal | None:
     try:
         return Decimal(decimal_str)
     except InvalidOperation as exc:
-        raise CensusParseError(
+        raise CensoParseError(
             f"{field} value {cleaned!r} is not a valid decimal",
             field=field,
             raw=raw,
@@ -323,7 +323,7 @@ def _parse_m2(raw: str | None, *, field: str) -> Decimal | None:
 
 
 __all__ = [
-    "CensusFactSet",
-    "CensusParseError",
+    "CensoFactSet",
+    "CensoParseError",
     "parse_g313_html",
 ]

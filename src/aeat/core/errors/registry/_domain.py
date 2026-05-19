@@ -26,6 +26,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.live._borrador_100.BorradorSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_BORRADOR_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_borrador_snapshot_not_found",
+            default_suggestion="aeat app live borrador 100 list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.live._censo.CensoSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_CENSO_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_censo_snapshot_not_found",
+            default_suggestion="aeat config profile census refresh",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.live._verify.VerifyObservationNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_VERIFY_OBSERVATION_NOT_FOUND",
@@ -48,11 +70,11 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.justificante._errors.PdfFilingImportError",
+        "aeat.domain.justificante._errors.PdfModeloImportError",
         ErrorCode(
-            code="ERROR_PDF_IMPORT_PDF_FILING_IMPORT",
+            code="ERROR_PDF_IMPORT_PDF_MODELO_IMPORT",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_pdf_import_pdf_filing_import",
+            message_key="errors.error.error_pdf_import_pdf_modelo_import",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -466,7 +488,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.usage_ratios._errors.CensusRatioMismatchError",
+        "aeat.domain.usage_ratios._errors.CensoRatioMismatchError",
         ErrorCode(
             code="REFUSED_FINANCIAL_USAGE_RATIOS_CENSUS_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -477,7 +499,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.VatCatalogueError",
+        "aeat.domain.iva.errors.IvaCatalogueError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATALOGUE",
             category=ErrorCategory.ERROR,
@@ -488,7 +510,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.VatCategoryNotFoundError",
+        "aeat.domain.iva.errors.IvaCategoryNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATEGORY_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -499,7 +521,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.VatClassificationError",
+        "aeat.domain.iva.errors.IvaClassificationError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CLASSIFICATION",
             category=ErrorCategory.ERROR,
@@ -510,7 +532,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.VatError",
+        "aeat.domain.iva.errors.IvaError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT",
             category=ErrorCategory.ERROR,
@@ -521,7 +543,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.VatRateNotFoundError",
+        "aeat.domain.iva.errors.IvaRateNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_RATE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -532,7 +554,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.VatRateOverlapError",
+        "aeat.domain.iva.errors.IvaRateOverlapError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_RATE_OVERLAP",
             category=ErrorCategory.ERROR,
@@ -807,7 +829,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.rental._errors.RentalRegisterError",
+        "aeat.domain.fincas._errors.FincaRegisterError",
         ErrorCode(
             code="ERROR_RENTAL_REGISTER",
             category=ErrorCategory.ERROR,
@@ -818,7 +840,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.rental._errors.FincaNotFoundError",
+        "aeat.domain.fincas._errors.FincaNotFoundError",
         ErrorCode(
             code="ERROR_RENTAL_FINCA_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -829,7 +851,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.rental._errors.ContractNotFoundError",
+        "aeat.domain.fincas._errors.ContractNotFoundError",
         ErrorCode(
             code="ERROR_RENTAL_CONTRACT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -840,7 +862,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.rental._errors.TierResolutionError",
+        "aeat.domain.fincas._errors.TierResolutionError",
         ErrorCode(
             code="ERROR_RENTAL_TIER_RESOLUTION",
             category=ErrorCategory.ERROR,
@@ -851,7 +873,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.rental._errors.AmortizationLedgerCapExceededError",
+        "aeat.domain.fincas._errors.AmortizationLedgerCapExceededError",
         ErrorCode(
             code="ERROR_RENTAL_AMORTIZATION_CAP_EXCEEDED",
             category=ErrorCategory.ERROR,
@@ -862,7 +884,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.rental._errors.RentalAggregationError",
+        "aeat.domain.fincas._errors.FincaAggregationError",
         ErrorCode(
             code="ERROR_RENTAL_AGGREGATION",
             category=ErrorCategory.ERROR,
@@ -1073,7 +1095,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.FilingRecordNotFoundError",
+        "aeat.application.modelo._actions.ModeloRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1150,7 +1172,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._filing_repository.FilingRecordPersistenceError",
+        "aeat.domain.modelos._filing_repository.ModeloRecordPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_FILING_RECORD_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -1381,7 +1403,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.rental._errors.RentalValidationError",
+        "aeat.domain.fincas._errors.FincaValidationError",
         ErrorCode(
             code="ERROR_RENTAL_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -1392,7 +1414,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.VatValidationError",
+        "aeat.domain.iva.errors.IvaValidationError",
         ErrorCode(
             code="ERROR_VAT_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -1403,7 +1425,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.ProrrataError",
+        "aeat.domain.iva.errors.ProrrataError",
         ErrorCode(
             code="ERROR_VAT_PRORRATA",
             category=ErrorCategory.ERROR,
@@ -1414,7 +1436,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.ProrrataInputError",
+        "aeat.domain.iva.errors.ProrrataInputError",
         ErrorCode(
             code="ERROR_VAT_PRORRATA_INPUT",
             category=ErrorCategory.ERROR,
@@ -1425,7 +1447,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.vat.errors.ProrrataSectorError",
+        "aeat.domain.iva.errors.ProrrataSectorError",
         ErrorCode(
             code="ERROR_VAT_PRORRATA_SECTOR",
             category=ErrorCategory.ERROR,
@@ -2008,7 +2030,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._errors.CensusStaleRefusedError",
+        "aeat.domain.modelos._errors.CensoStaleRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_CENSUS_STALE",
             category=ErrorCategory.REFUSED,
@@ -2019,7 +2041,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing.reconciliation._errors.DeclarationParseError",
+        "aeat.domain.filing.reconciliation._errors.DeclaracionParseError",
         ErrorCode(
             code="FAIL_DECLARATION_PARSE",
             category=ErrorCategory.FAIL,

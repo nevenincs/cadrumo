@@ -24,7 +24,7 @@ from ..categories import (
     resolve_category_profiles,
 )
 from ._errors import (
-    CensusRatioMismatchError,
+    CensoRatioMismatchError,
     UsageRatioPersistenceError,
     UsageRatioValidationError,
 )
@@ -181,7 +181,7 @@ def load_usage_ratios_with_census_guard(
     coercion, no warning-and-continue. The calling surface
     (calculate / verify / file / build_draft / approve_draft /
     export_draft) must therefore surface the underlying
-    :exc:`CensusRatioMismatchError` to the operator so they can
+    :exc:`CensoRatioMismatchError` to the operator so they can
     re-run ``aeat config profile census refresh + apply`` or unset
     the diverging override.
 
@@ -199,7 +199,7 @@ def load_usage_ratios_with_census_guard(
         override disagrees with the census.
 
     Raises:
-        :exc:`CensusRatioMismatchError`: when at least one persisted
+        :exc:`CensoRatioMismatchError`: when at least one persisted
             HOME_OFFICE override disagrees, or when any persisted
             HOME_OFFICE override exists with ``raw_afectacion_ratio``
             unset.
@@ -214,7 +214,7 @@ def load_usage_ratios_with_census_guard(
         return profile
     if raw_afectacion_ratio is None:
         offending = sorted(c.value for c in persisted_home_office)
-        raise CensusRatioMismatchError(
+        raise CensoRatioMismatchError(
             f"persisted HOME_OFFICE overrides require an applied census; "
             f"offending categories: {offending}"
         )
@@ -229,7 +229,7 @@ def load_usage_ratios_with_census_guard(
             f"{category.value} persisted={persisted} census={census}"
             for category, (persisted, census) in sorted(mismatches.items(), key=lambda kv: kv[0].value)
         )
-        raise CensusRatioMismatchError(
+        raise CensoRatioMismatchError(
             f"persisted HOME_OFFICE overrides disagree with the bound census: {rendered}"
         )
     return profile

@@ -14,7 +14,7 @@ supported API.
 from __future__ import annotations
 
 from ._errors import (
-    CensusRatioMismatchError,
+    CensoRatioMismatchError,
     UsageRatioError,
     UsageRatioPersistenceError,
     UsageRatioValidationError,
@@ -36,7 +36,7 @@ from ._service import (
 
 __all__ = [
     "ELIGIBLE_USAGE_RATIO_CATEGORIES",
-    "CensusRatioMismatchError",
+    "CensoRatioMismatchError",
     "UsageRatioError",
     "UsageRatioPersistenceError",
     "UsageRatioProfile",

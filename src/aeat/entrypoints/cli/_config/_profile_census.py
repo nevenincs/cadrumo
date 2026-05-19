@@ -2,7 +2,7 @@
 
 Mounts the operator-facing census-sync surface on the existing
 ``config profile`` subgroup. The backend is
-:class:`aeat.application.profile.CensusSyncService`; this module is the
+:class:`aeat.application.profile.CensoSyncService`; this module is the
 thin Typer layer that resolves the active profile/bucket, calls the
 service, emits payload + text, and surfaces typed refusals.
 
@@ -17,12 +17,12 @@ from __future__ import annotations
 import typer
 
 from ....core.i18n import tr
-from ....domain.profile._constants import BucketId, ProfileName
+from ....domain.profile._constants import ProfileName
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 
 
-def _active_pointer() -> tuple[ProfileName, BucketId]:
+def _active_pointer() -> tuple[ProfileName, ProfileName]:
     from ....application.workflow._models import resolve_active_bucket_id
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
@@ -36,9 +36,9 @@ def _active_pointer() -> tuple[ProfileName, BucketId]:
 
 
 def _build_service(bucket_id: str):
-    from ....application.profile import CensusSyncService
+    from ....application.profile import CensoSyncService
 
-    return CensusSyncService(bucket_id=bucket_id)
+    return CensoSyncService(bucket_id=bucket_id)
 
 
 def _emit_census_event(*, bucket_id: str, event_type, profile_id: str, snapshot_id: str) -> None:
@@ -105,14 +105,14 @@ def register(profile_app: typer.Typer) -> None:
     def census_refresh(ctx: typer.Context) -> None:
         import asyncio
 
-        from ....application.profile import CensusNotAvailableError
+        from ....application.profile import CensoNotAvailableError
         from ....domain.buckets import BucketEventType
 
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
         try:
             snapshot = asyncio.run(service.refresh_census_from_sede(profile_id=profile_id))
-        except CensusNotAvailableError as exc:
+        except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(str(exc)) from exc
         _emit_census_event(
             bucket_id=bucket_id,
@@ -151,7 +151,7 @@ def register(profile_app: typer.Typer) -> None:
             ),
         ),
     ) -> None:
-        from ....application.profile import CensusNotAvailableError
+        from ....application.profile import CensoNotAvailableError
 
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
@@ -160,7 +160,7 @@ def register(profile_app: typer.Typer) -> None:
                 profile_id=profile_id,
                 snapshot_id=snapshot_id or None,
             )
-        except CensusNotAvailableError as exc:
+        except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(str(exc)) from exc
         payload = {
             "snapshot_id": snapshot.snapshot_id,
@@ -197,7 +197,7 @@ def register(profile_app: typer.Typer) -> None:
             ),
         ),
     ) -> None:
-        from ....application.profile import CensusNotAvailableError
+        from ....application.profile import CensoNotAvailableError
 
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
@@ -206,7 +206,7 @@ def register(profile_app: typer.Typer) -> None:
                 profile_id=profile_id,
                 snapshot_id=snapshot_id or None,
             )
-        except CensusNotAvailableError as exc:
+        except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(str(exc)) from exc
         payload = comparison.model_dump(mode="json")
         lines = [
@@ -241,8 +241,8 @@ def register(profile_app: typer.Typer) -> None:
         ),
     ) -> None:
         from ....application.profile import (
-            CensusApplyConflictError,
-            CensusNotAvailableError,
+            CensoApplyConflictError,
+            CensoNotAvailableError,
         )
         from ....domain.buckets import BucketEventType
 
@@ -253,9 +253,9 @@ def register(profile_app: typer.Typer) -> None:
                 profile_id=profile_id,
                 snapshot_id=snapshot_id or None,
             )
-        except CensusNotAvailableError as exc:
+        except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(str(exc)) from exc
-        except CensusApplyConflictError as exc:
+        except CensoApplyConflictError as exc:
             raise CliRefusedBoundaryError(str(exc)) from exc
         _emit_census_event(
             bucket_id=bucket_id,

@@ -345,7 +345,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.sede._census.CensusParseError",
+        "aeat.adapters.outbound.aeat.sede._censo.CensoParseError",
         ErrorCode(
             code="FAIL_SEDE_CENSUS_PARSE",
             category=ErrorCategory.FAIL,

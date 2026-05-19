@@ -403,11 +403,11 @@ def test_census_modelo_foundation_stays_backend_owned() -> None:
     """CLI must not reimplement Modelo 036/037 census foundation routing."""
 
     forbidden_cli_tokens = (
-        "CensusModeloFoundationCommand",
+        "CensoModeloFoundationCommand",
         "resolve_census_modelo_foundation",
         "resolve_census_modelo_work_unit_foundation",
         "is_active_census_modelo",
-        "CensusModeloRole",
+        "CensoModeloRole",
         "active_work_unit_allowed",
         "historical_metadata_only",
     )
@@ -436,7 +436,7 @@ def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
         PROJECT_ROOT / "src" / "aeat" / "locales" / "es.yml",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "ca.yml",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "hu.yml",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_census_modelos.py",
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_censo_modelos.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_queries.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_foundation.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_registry_data.py",

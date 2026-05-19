@@ -44,7 +44,7 @@ from .....domain.calculations.registry import (
     CasillaObservation,
     ExportFieldDefinition,
     ParsedExportFieldValue,
-    RegistryFilingObservation,
+    RegistryModeloObservation,
     RegistrySnapshot,
     RegistryValidationError,
     RemoteOperation,
@@ -332,7 +332,7 @@ async def _open_register_page(
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
         raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
-    from ....application.workflow._models import require_active_bucket_id
+    from .....application.workflow._models import require_active_bucket_id
 
     profile = Profile(
         name=require_active_bucket_id(),
@@ -968,6 +968,10 @@ async def _capture_filed_declaration_observation_from_row(
     ]
     casillas: tuple[ObservedCasillaValue, ...] = ()
     extraction_coverage: dict[str, float] = {}
+    metadata = {
+        "tipo_solicitud": declaration.tipo_solicitud or "",
+        "observaciones": declaration.observaciones or "",
+    }
 
     justificante, justificante_body = await _capture_row_pdf_artefact(
         context=context,
@@ -1006,40 +1010,50 @@ async def _capture_filed_declaration_observation_from_row(
         )
 
     if declaration.archive_link_text and declaration.archive_cell_index is not None:
-        submitted_artefact, submitted_body = await _capture_submitted_file_artefact(
-            page=page,
-            row_locator=row_locator,
-            declaration=declaration,
-            cell_index=declaration.archive_cell_index,
-            read_policy=read_policy,
-        )
-        submitted_artefact = _store_artefact(
-            artefact_sink,
-            observation_key=observation_key,
-            artefact=submitted_artefact,
-            body=submitted_body,
-        )
-        artefacts.append(submitted_artefact)
-        casillas = _observed_casillas_from_submitted_file(
-            snapshot=snapshot,
-            declaration=declaration,
-            body=submitted_body,
-            artefact=submitted_artefact,
-        )
-        resolved_layout = resolve_export_layout(snapshot)
-        if resolved_layout.layout.format == "xml_dictionary":
-            extraction_coverage["submitted_file"] = 1.0
+        try:
+            submitted_artefact, submitted_body = await _capture_submitted_file_artefact(
+                page=page,
+                row_locator=row_locator,
+                declaration=declaration,
+                cell_index=declaration.archive_cell_index,
+                read_policy=read_policy,
+            )
+        except (JustificanteFetchError, SedeNavigationError) as exc:
+            metadata["submitted_file_capture_error"] = str(exc)
         else:
-            expected_casillas = len(resolved_layout.fields_by_casilla)
-            extraction_coverage["submitted_file"] = len(casillas) / expected_casillas if expected_casillas else 0.0
-    elif declaration_pdf_body is not None:
+            submitted_artefact = _store_artefact(
+                artefact_sink,
+                observation_key=observation_key,
+                artefact=submitted_artefact,
+                body=submitted_body,
+            )
+            artefacts.append(submitted_artefact)
+            try:
+                casillas = _observed_casillas_from_submitted_file(
+                    snapshot=snapshot,
+                    declaration=declaration,
+                    body=submitted_body,
+                    artefact=submitted_artefact,
+                )
+                resolved_layout = resolve_export_layout(snapshot)
+                if resolved_layout.layout.format == "xml_dictionary":
+                    extraction_coverage["submitted_file"] = 1.0
+                else:
+                    expected_casillas = len(resolved_layout.fields_by_casilla)
+                    extraction_coverage["submitted_file"] = (
+                        len(casillas) / expected_casillas if expected_casillas else 0.0
+                    )
+            except (RegistryValidationError, SedeParseError) as exc:
+                metadata["submitted_file_extraction_error"] = str(exc)
+
+    if not casillas and declaration_pdf_body is not None:
         casillas = _observed_casillas_from_declaration_pdf(
             snapshot=snapshot,
             declaration=declaration,
             body=declaration_pdf_body,
         )
         extraction_coverage["declaration_pdf"] = 1.0
-    else:
+    elif not casillas and not declaration.archive_link_text and declaration_pdf_body is None:
         raise SedeParseError(
             f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data"
         )
@@ -1054,10 +1068,7 @@ async def _capture_filed_declaration_observation_from_row(
         authenticated_identity=authenticated_identity,
         artefacts=tuple(artefacts),
         casillas=casillas,
-        metadata={
-            "tipo_solicitud": declaration.tipo_solicitud or "",
-            "observaciones": declaration.observaciones or "",
-        },
+        metadata=metadata,
         extraction_coverage=extraction_coverage,
         registry_snapshot_id=f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:{declaration.period}",
     )
@@ -1080,13 +1091,14 @@ async def capture_previous_filing_observations(
         for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
             rows = await register.walk(modelo=requirement.modelo, ejercicio=requirement.filing_year)
             matches = tuple(row for row in rows if row.period == requirement.period)
-            if len(matches) != 1:
-                raise SedeParseError(
-                    f"previous-filing requirement {requirement.modelo!r}/"
-                    f"{requirement.filing_year}/{requirement.period!r} expected one filed declaration, "
-                    f"found {len(matches)}"
-                )
-            observation = await register.capture_observation(matches[0], artefact_sink=artefact_sink)
+            declaration = _select_authoritative_declaration(
+                matches,
+                modelo=requirement.modelo,
+                ejercicio=requirement.filing_year,
+                period=requirement.period,
+                context="previous-filing requirement",
+            )
+            observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
             observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
             missing = sorted(set(requirement.source_casillas).difference(observed_casillas))
             if missing:
@@ -1121,12 +1133,14 @@ async def capture_relation_source_observations(
         for (modelo, source_year, source_period), source_outputs in sorted(required_outputs.items()):
             rows = await register.walk(modelo=modelo, ejercicio=source_year)
             matches = tuple(row for row in rows if row.period == source_period)
-            if len(matches) != 1:
-                raise SedeParseError(
-                    f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
-                    f"expected one filed declaration, found {len(matches)}"
-                )
-            observation = await register.capture_observation(matches[0], artefact_sink=artefact_sink)
+            declaration = _select_authoritative_declaration(
+                matches,
+                modelo=modelo,
+                ejercicio=source_year,
+                period=source_period,
+                context="relation source requirement",
+            )
+            observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
             observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
             missing = sorted(source_outputs.difference(observed_casillas))
             if missing:
@@ -1136,6 +1150,23 @@ async def capture_relation_source_observations(
                 )
             observations.append(observation)
     return tuple(observations)
+
+
+def _select_authoritative_declaration(
+    declarations: tuple[Declaracion, ...],
+    *,
+    modelo: str,
+    ejercicio: int,
+    period: str,
+    context: str,
+) -> Declaracion:
+    """Select the latest accepted register row for one filed period."""
+
+    if not declarations:
+        raise SedeParseError(f"{context} {modelo!r}/{ejercicio}/{period!r} found no filed declaration")
+    active = tuple(row for row in declarations if row.estado.upper() == "ALTA")
+    candidates = active or declarations
+    return max(candidates, key=lambda row: (row.presented_at, row.expediente_id))
 
 
 def _register_row_artefact(
@@ -1303,7 +1334,7 @@ def _verify_submitted_file_context(
 
 def registry_observation_from_filed_declaration(
     observation: FiledDeclaracionObservation,
-) -> RegistryFilingObservation:
+) -> RegistryModeloObservation:
     """Convert a filed-declaration observation into registry binding input."""
 
     if not observation.extraction_coverage:
@@ -1336,7 +1367,7 @@ def registry_observation_from_filed_declaration(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
             "has no registry casilla observations"
         )
-    return RegistryFilingObservation(
+    return RegistryModeloObservation(
         modelo=observation.modelo,
         filing_year=observation.ejercicio,
         period=observation.period,

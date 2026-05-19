@@ -18,7 +18,7 @@ casilla outputs:
 This resolver is the application-layer consumer that the engine /
 relation_resolver / binding pre-resolution call into. It reads
 observations from the local `CalculationObservationRepository` and
-returns them as the `RegistryFilingObservation` records the runtime
+returns them as the `RegistryModeloObservation` records the runtime
 expects.
 
 The resolver does NOT silently invent missing prior years.  When a
@@ -34,7 +34,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...domain.calculations.registry._bindings import RegistryFilingObservation
+from ...domain.calculations.registry._bindings import RegistryModeloObservation
 from ._observations_repository import CalculationObservationRepository
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -57,7 +57,7 @@ class MultiYearResolutionReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     request: MultiYearResolutionRequest
-    observations: tuple[RegistryFilingObservation, ...]
+    observations: tuple[RegistryModeloObservation, ...]
     requested_years: tuple[int, ...]
     found_years: tuple[int, ...]
     missing_years: tuple[int, ...]
@@ -89,7 +89,7 @@ class MultiYearResolver:
         """
 
         requested_years = tuple(request.current_year - offset for offset in range(1, request.years_back + 1))
-        observations: list[RegistryFilingObservation] = []
+        observations: list[RegistryModeloObservation] = []
         for payload in self._repository.iter_modelo(request.modelo):
             obs = payload.observation
             if obs.filing_year not in requested_years:

@@ -1,8 +1,8 @@
-"""Real-behavior tests for the operator-facing CensusSyncService.
+"""Real-behavior tests for the operator-facing CensoSyncService.
 
 Exercises each of the four verbs (refresh / show / compare / apply)
 against a real encrypted SQLite backend with a real
-CensusSnapshotService and UserProfileLifecycleRepository — no mocks.
+CensoSnapshotService and UserProfileLifecycleRepository — no mocks.
 """
 
 from __future__ import annotations
@@ -18,13 +18,13 @@ from aeat.adapters.persistence.storage import (
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.live._census import CensusSnapshotService, CensusSnapshotState
+from aeat.application.live._censo import CensoSnapshotService, SnapshotLifecycleState
 from aeat.application.profile import (
     CENSUS_SOURCE_TAG,
-    CensusApplyConflictError,
-    CensusComparisonStatus,
-    CensusNotAvailableError,
-    CensusSyncService,
+    CensoApplyConflictError,
+    CensoComparisonStatus,
+    CensoNotAvailableError,
+    CensoSyncService,
 )
 from aeat.application.user_profile import UserProfileLifecycleRepository
 from aeat.core.config import Settings
@@ -64,10 +64,10 @@ def _facts() -> dict[str, str]:
     }
 
 
-def _service(secure_objects: SecureObjectRepository) -> CensusSyncService:
-    snapshots = CensusSnapshotService(bucket_id="b1")
+def _service(secure_objects: SecureObjectRepository) -> CensoSyncService:
+    snapshots = CensoSnapshotService(bucket_id="b1")
     profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_objects)
-    return CensusSyncService(
+    return CensoSyncService(
         bucket_id="b1",
         snapshots=snapshots,
         profiles=profiles,
@@ -83,14 +83,14 @@ def test_refresh_captures_active_snapshot(secure_store: SecureObjectRepository) 
         fact_source=_facts,
     )
 
-    assert snapshot.state is CensusSnapshotState.ACTIVE
+    assert snapshot.state is SnapshotLifecycleState.ACTIVE
     assert snapshot.census_facts["census.establecimiento_type"] == "propio"
 
 
 def test_refresh_refuses_when_sede_returns_no_facts(secure_store: SecureObjectRepository) -> None:
     service = _service(secure_store)
 
-    with pytest.raises(CensusNotAvailableError):
+    with pytest.raises(CensoNotAvailableError):
         service.refresh_census(profile_id="operator", source_url=_G313, fact_source=dict)
 
 
@@ -106,7 +106,7 @@ def test_show_returns_latest_active(secure_store: SecureObjectRepository) -> Non
 def test_show_refuses_when_no_snapshot_exists(secure_store: SecureObjectRepository) -> None:
     service = _service(secure_store)
 
-    with pytest.raises(CensusNotAvailableError):
+    with pytest.raises(CensoNotAvailableError):
         service.show_census(profile_id="operator")
 
 
@@ -123,9 +123,9 @@ def test_compare_diffs_per_field_against_profile(secure_store: SecureObjectRepos
             ),
         ),
     )
-    service = CensusSyncService(
+    service = CensoSyncService(
         bucket_id="b1",
-        snapshots=CensusSnapshotService(bucket_id="b1"),
+        snapshots=CensoSnapshotService(bucket_id="b1"),
         profiles=profiles,
     )
     service.refresh_census(profile_id="operator", source_url=_G313, fact_source=_facts)
@@ -133,10 +133,10 @@ def test_compare_diffs_per_field_against_profile(secure_store: SecureObjectRepos
     comparison = service.compare_census_with_profile(profile_id="operator")
 
     statuses = {row.path: row.status for row in comparison.rows}
-    assert statuses["census.activity_start_date"] is CensusComparisonStatus.MATCHES
-    assert statuses["census.establecimiento_type"] is CensusComparisonStatus.DIVERGES
-    assert statuses["manual.only.path"] is CensusComparisonStatus.PROFILE_ONLY
-    assert statuses["vivienda_office.total_m2"] is CensusComparisonStatus.CENSUS_ONLY
+    assert statuses["census.activity_start_date"] is CensoComparisonStatus.MATCHES
+    assert statuses["census.establecimiento_type"] is CensoComparisonStatus.DIVERGES
+    assert statuses["manual.only.path"] is CensoComparisonStatus.PROFILE_ONLY
+    assert statuses["vivienda_office.total_m2"] is CensoComparisonStatus.CENSUS_ONLY
 
 
 def test_apply_stamps_census_facts_with_provenance_tag(secure_store: SecureObjectRepository) -> None:
@@ -151,9 +151,9 @@ def test_apply_stamps_census_facts_with_provenance_tag(secure_store: SecureObjec
             ),
         ),
     )
-    service = CensusSyncService(
+    service = CensoSyncService(
         bucket_id="b1",
-        snapshots=CensusSnapshotService(bucket_id="b1"),
+        snapshots=CensoSnapshotService(bucket_id="b1"),
         profiles=profiles,
     )
     service.refresh_census(profile_id="operator", source_url=_G313, fact_source=_facts)
@@ -173,7 +173,7 @@ def test_apply_refuses_when_profile_does_not_exist(secure_store: SecureObjectRep
     service = _service(secure_store)
     service.refresh_census(profile_id="operator", source_url=_G313, fact_source=_facts)
 
-    with pytest.raises(CensusApplyConflictError):
+    with pytest.raises(CensoApplyConflictError):
         service.apply_census_to_profile(profile_id="operator")
 
 
@@ -208,9 +208,9 @@ def test_apply_seeds_home_office_usage_ratios_from_census(
     profiles.save(
         UserProfileRecord(profile_id="operator", display_name="Operator"),
     )
-    service = CensusSyncService(
+    service = CensoSyncService(
         bucket_id="b1",
-        snapshots=CensusSnapshotService(bucket_id="b1"),
+        snapshots=CensoSnapshotService(bucket_id="b1"),
         profiles=profiles,
     )
     service.refresh_census(
@@ -233,9 +233,9 @@ def test_apply_seeding_idempotent_on_repeat(secure_store: SecureObjectRepository
 
     profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
     profiles.save(UserProfileRecord(profile_id="operator", display_name="Operator"))
-    service = CensusSyncService(
+    service = CensoSyncService(
         bucket_id="b1",
-        snapshots=CensusSnapshotService(bucket_id="b1"),
+        snapshots=CensoSnapshotService(bucket_id="b1"),
         profiles=profiles,
     )
     service.refresh_census(
@@ -276,9 +276,9 @@ def test_apply_preserves_windowed_manual_facts(secure_store: SecureObjectReposit
             ),
         ),
     )
-    service = CensusSyncService(
+    service = CensoSyncService(
         bucket_id="b1",
-        snapshots=CensusSnapshotService(bucket_id="b1"),
+        snapshots=CensoSnapshotService(bucket_id="b1"),
         profiles=profiles,
     )
     service.refresh_census(profile_id="operator", source_url=_G313, fact_source=_facts)
