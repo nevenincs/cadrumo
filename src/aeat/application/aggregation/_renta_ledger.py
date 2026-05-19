@@ -32,6 +32,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
+from . import _shared_issue_reasons
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 
@@ -40,18 +41,27 @@ _LEDGER_CATALOGUE_ID = "ledger"
 
 
 class RentaLedgerAggregationIssueReason(StrEnum):
-    """Machine-readable reasons why a ledger row did not produce an observation."""
+    """Machine-readable reasons why a ledger row did not produce an observation.
+
+    The five upstream filter rejections (``UNSUPPORTED_DIRECTION``,
+    ``UNSUPPORTED_CURRENCY``, ``UNCLASSIFIED_BUSINESS_STATE``,
+    ``PERSONAL_TRANSACTION``, ``OUTSIDE_PERIOD``) are shared with
+    :class:`aeat.application.aggregation._iva_ledger.IvaLedgerAggregationIssueReason`
+    through :mod:`._shared_issue_reasons`. ``UNSUPPORTED_PERIOD`` is a
+    Renta-only refusal raised against quarter-level requests; the
+    remaining values describe Renta-specific deductibility checks.
+    """
 
     UNSUPPORTED_PERIOD = "unsupported_period"
-    UNSUPPORTED_DIRECTION = "unsupported_direction"
-    UNSUPPORTED_CURRENCY = "unsupported_currency"
-    UNCLASSIFIED_BUSINESS_STATE = "unclassified_business_state"
-    PERSONAL_TRANSACTION = "personal_transaction"
+    UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
+    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
+    UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
+    PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
     MISSING_CATEGORY = "missing_category"
     UNKNOWN_CATEGORY = "unknown_category"
     CATEGORY_OUTSIDE_FIRST_SLICE = "category_outside_first_slice"
     MISSING_CATEGORY_PROFILE = "missing_category_profile"
-    OUTSIDE_PERIOD = "outside_period"
+    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
     MISSING_PURCHASE_INVOICE_EVIDENCE = "missing_purchase_invoice_evidence"
     UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND = "unsupported_purchase_invoice_evidence_kind"
     PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH = "purchase_invoice_evidence_bucket_mismatch"
