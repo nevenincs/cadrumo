@@ -44,15 +44,15 @@ Create a reusable generic persistence repository baseline to replace repeated pa
 - [x] `W02.P02.S04` - Implement generic SecureBoundRepository baseline class; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
 - [x] `W02.P02.S05` - Refactor FilingDraftRepository to inherit from SecureBoundRepository; `src/aeat/domain/filing/_repository.py`.
 - [x] `W02.P02.S06` - Refactor SubmissionRepository to inherit from SecureBoundRepository; `src/aeat/domain/submission/_repository.py`.
-- [ ] `W02.P02.S07` - Extract shared repository roundtrip testing utility to replace duplicate assertions; `src/aeat/adapters/persistence/storage/conftest.py`.
+- [x] `W02.P02.S07` - Extract shared repository roundtrip testing utility to replace duplicate assertions; `src/aeat/adapters/persistence/storage/conftest.py`.
 
 ### Phase `W02.P03` - Consolidate External Integrations
 
 Unify copy-pasted pdfplumber extraction logic, logging control suppression, and live oracle checker drivers.
 
-- [ ] `W02.P03.S08` - Migrate all PDF text extraction calls to canonical pdfplumber utility and implement the shared `_suppress_pdfminer_debug_logging` control to eliminate PDF logging noise globally; `src/aeat/adapters/inbound/pdf/_pdfplumber.py`.
-- [ ] `W02.P03.S09` - Refactor borrador parser to use shared PDF text extraction utility; `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py`.
-- [ ] `W02.P03.S10` - Refactor declaracion parser to use shared PDF text extraction utility; `src/aeat/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`.
+- [x] `W02.P03.S08` - Migrate all PDF text extraction calls to canonical pdfplumber utility and implement the shared `_suppress_pdfminer_debug_logging` control to eliminate PDF logging noise globally; `src/aeat/adapters/inbound/pdf/_pdfplumber.py`.
+- [x] `W02.P03.S09` - Refactor borrador parser to use shared PDF text extraction utility; `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py`.
+- [x] `W02.P03.S10` - Refactor declaracion parser to use shared PDF text extraction utility; `src/aeat/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`.
 - [ ] `W02.P03.S11` - Extract BaseCheckerOracle and shared JSON-decoding replay driver under live parity backend; `src/aeat/domain/calculations/registry/_live_parity.py`.
 - [ ] `W02.P03.S12` - Refactor AeatNifIvaCheckerOracle to inherit from BaseCheckerOracle; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
 - [ ] `W02.P03.S13` - Refactor GroiCheckerOracle to inherit from BaseCheckerOracle; `src/aeat/domain/calculations/registry/_groi_oracle.py`.
@@ -141,27 +141,104 @@ Rename the 22 Census-prefixed identifiers to Censo across application profile sy
 
 Rename the Filing-prefixed identifiers under src/aeat/domain/filing/ to their Modelo equivalents: schema records, validators, amendment models, errors, protocols, and the FilingDraftRepository. Self-contained domain package; no cross-domain ripple within this phase.
 
+- [ ] `W04.P08.S66` - Rename FilingDraft to ModeloDraft in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [ ] `W04.P08.S67` - Rename FilingValue to ModeloValue in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [ ] `W04.P08.S68` - Rename FilingValueKind to ModeloValueKind in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [ ] `W04.P08.S69` - Rename FilingBindingValue to ModeloBindingValue in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [ ] `W04.P08.S70` - Rename FilingValidationFinding to ModeloValidationFinding in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [ ] `W04.P08.S71` - Rename FilingApprovalBasis to ModeloApprovalBasis in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [ ] `W04.P08.S72` - Rename FilingValidator to ModeloValidator; `src/aeat/domain/filing/_validator.py`.
+- [ ] `W04.P08.S73` - Rename FilingAmendment to ModeloAmendment; `src/aeat/domain/filing/_amendment.py`.
+- [ ] `W04.P08.S74` - Rename FilingAmendmentError to ModeloAmendmentError; `src/aeat/domain/filing/_errors.py`.
+- [ ] `W04.P08.S75` - Rename FilingDraftError to ModeloDraftError; `src/aeat/domain/filing/_errors.py`.
+- [ ] `W04.P08.S76` - Rename FilingBuilderError to ModeloBuilderError; `src/aeat/domain/filing/_errors.py`.
+- [ ] `W04.P08.S77` - Rename FilingValidationError to ModeloValidationError; `src/aeat/domain/filing/_errors.py`.
+- [ ] `W04.P08.S78` - Rename FilingComputationError to ModeloComputationError; `src/aeat/domain/filing/_errors.py`.
+- [ ] `W04.P08.S79` - Rename FilingImportError to ModeloImportError; `src/aeat/domain/filing/_errors.py`.
+- [ ] `W04.P08.S80` - Rename FilingExportError to ModeloExportError; `src/aeat/domain/filing/_errors.py`.
+- [ ] `W04.P08.S81` - Rename FilingExportValidationError to ModeloExportValidationError; `src/aeat/domain/filing/_errors.py`.
+- [ ] `W04.P08.S82` - Rename FilingProfile protocol to ModeloProfile; `src/aeat/domain/filing/_protocols.py`.
+- [ ] `W04.P08.S83` - Rename FilingDraftRepository to ModeloDraftRepository; `src/aeat/domain/filing/_repository.py`.
 
 ### Phase `W04.P09` - Modelo Cluster: domain/modelos FilingRecord Consolidation
 
 Rename FilingRecord, FilingRecordStatus, FilingRecordCatalogue and friends to their Modelo equivalents under src/aeat/domain/modelos/ while preserving the split between ModeloRecord (domain pydantic) and ModeloRow (SQL ORM) per project-lead adjudication of ADR footnote 1. Schema-impact rows; gated by the standard roundtrip-test pattern.
 
+- [ ] `W04.P09.S84` - Rename FilingRecord to ModeloRecord as the canonical domain pydantic record; `keep the SQL ModeloRow separate per project-lead adjudication; `src/aeat/domain/modelos/_filing_record.py`.
+- [ ] `W04.P09.S85` - Rename FilingRecordStatus to ModeloRecordStatus; `src/aeat/domain/modelos/_filing_record.py`.
+- [ ] `W04.P09.S86` - Rename FilingRecordCatalogue to ModeloRecordCatalogue; `src/aeat/domain/modelos/_filing_record.py`.
+- [ ] `W04.P09.S87` - Rename FilingRecordPersistenceError to ModeloRecordPersistenceError; `src/aeat/domain/modelos/_filing_record.py`.
+- [ ] `W04.P09.S88` - Rename FilingRecordCatalogueRepository to ModeloRecordCatalogueRepository; `src/aeat/domain/modelos/_filing_repository.py`.
+- [ ] `W04.P09.S89` - Run the strict roundtrip-test gate over the ModeloRecord domain pydantic and ModeloRow SQL boundary after the rename, populating every defaultable field with a non-default value; `src/aeat/domain/modelos/test_modelo_record_roundtrip.py`.
 
 ### Phase `W04.P10` - Modelo Cluster: domain/deadlines and domain/calculations
 
 Rename FilingObligation, FilingEnrollment, FilingIVAProfile under domain/deadlines, and FilingScheduleDefinition, RegistryFilingObservation, OracleFilingObservation, RegistryFilingObservationRequirement, _PreviousFilingSelector under domain/calculations/registry. These are cross-domain registry symbols; rename in coordinated commits with their importers.
 
+- [ ] `W04.P10.S90` - Rename FilingObligation to ModeloObligation; `src/aeat/domain/deadlines/_models.py`.
+- [ ] `W04.P10.S91` - Rename FilingEnrollment to ModeloEnrollment; `src/aeat/domain/deadlines/_models.py`.
+- [ ] `W04.P10.S92` - Rename FilingIVAProfile to ModeloIvaProfile; `src/aeat/domain/deadlines/_models.py`.
+- [ ] `W04.P10.S93` - Rename FilingScheduleDefinition to ModeloScheduleDefinition; `src/aeat/domain/calculations/registry/_schema.py`.
+- [ ] `W04.P10.S94` - Rename RegistryFilingObservation to RegistryModeloObservation; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `W04.P10.S95` - Rename OracleFilingObservation to OracleModeloObservation; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `W04.P10.S96` - Rename RegistryFilingObservationRequirement to RegistryModeloObservationRequirement; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `W04.P10.S97` - Rename _PreviousFilingSelector to _PreviousModeloSelector; `src/aeat/domain/calculations/registry/_bindings.py`.
 
 ### Phase `W04.P11` - Modelo Cluster: application/filing, application/modelo, application/workflow
 
 Rename Filing-prefixed identifiers across the application layer: filing errors, history, review, reconciliation, runtime, testing harnesses, workflow adapters and protocols, and modelo action errors. The CLI _modelo_payloads renames are public-API and coordinate with operator-facing locale refresh.
 
+- [ ] `W04.P11.S98` - Rename FilingApplicationError to ModeloApplicationError; `src/aeat/application/filing/errors.py`.
+- [ ] `W04.P11.S99` - Rename FilingCalculateError to ModeloCalculateError; `src/aeat/application/filing/errors.py`.
+- [ ] `W04.P11.S100` - Rename FilingHistory to ModeloHistory; `src/aeat/application/filing/_history_models.py`.
+- [ ] `W04.P11.S101` - Rename FilingHistoryEntry to ModeloHistoryEntry; `src/aeat/application/filing/_history_models.py`.
+- [ ] `W04.P11.S102` - Rename FilingHistoryRepository to ModeloHistoryRepository; `src/aeat/application/filing/_history_repository.py`.
+- [ ] `W04.P11.S103` - Rename FilingApprovalStaleReason to ModeloApprovalStaleReason; `src/aeat/application/filing/_review.py`.
+- [ ] `W04.P11.S104` - Rename FilingDivergenceKind to ModeloDivergenceKind in the reconciliation surface; `src/aeat/application/filing/reconciliation/_models.py`.
+- [ ] `W04.P11.S105` - Rename FilingDraftRef to ModeloDraftRef in the reconciliation surface; `src/aeat/application/filing/reconciliation/_models.py`.
+- [ ] `W04.P11.S106` - Rename FilingOperatorProfile to ModeloOperatorProfile; `src/aeat/application/filing/runtime.py`.
+- [ ] `W04.P11.S107` - Rename RegistryFilingSubview to RegistryModeloSubview; `src/aeat/application/filing/runtime.py`.
+- [ ] `W04.P11.S108` - Rename FilingTestProfile to ModeloTestProfile; `src/aeat/application/filing/testing.py`.
+- [ ] `W04.P11.S109` - Rename FilingTestDeadlineStatus to ModeloTestDeadlineStatus; `src/aeat/application/filing/testing.py`.
+- [ ] `W04.P11.S110` - Rename FilingTestDeadlineChecker to ModeloTestDeadlineChecker; `src/aeat/application/filing/testing.py`.
+- [ ] `W04.P11.S111` - Rename FilingDraftBuilderAdapter to ModeloDraftBuilderAdapter; `src/aeat/application/workflow/_adapters.py`.
+- [ ] `W04.P11.S112` - Rename RegistryFilingDraftProtocol to RegistryModeloDraftProtocol; `src/aeat/application/workflow/_protocols.py`.
+- [ ] `W04.P11.S113` - Rename FilingDraftBuilderProtocol to ModeloDraftBuilderProtocol; `src/aeat/application/workflow/_protocols.py`.
+- [ ] `W04.P11.S114` - Rename FilingInputsProviderProtocol to ModeloInputsProviderProtocol; `src/aeat/application/workflow/_protocols.py`.
+- [ ] `W04.P11.S115` - Rename FilingRecordNotFoundError to ModeloRecordNotFoundError; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P11.S116` - Rename ExternalFilingImportError to ExternalModeloImportError; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P11.S117` - Rename FilingFixtureError to ModeloFixtureError; `src/aeat/core/errors/__init__.py`.
+- [ ] `W04.P11.S118` - Rename FilingRecordPayload to ModeloRecordPayload (public-API; `refresh operator locales); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [ ] `W04.P11.S119` - Rename FilingRecordListResult to ModeloRecordListResult (public-API); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [ ] `W04.P11.S120` - Rename FilingRecordShowResult to ModeloRecordShowResult (public-API); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
 
 ### Phase `W04.P12` - Modelo Cluster: domain/submission and domain/justificante
 
 Rename FilingFindingSeverity, FilingFinding, FilingDraftLike, DraftLoader, SubmittedFiling under domain/submission, and PdfFilingImportError under domain/justificante. DraftStatus consolidation is the dedicated next phase; here only the prefix renames land.
 
+- [ ] `W04.P12.S121` - Rename FilingFindingSeverity to ModeloFindingSeverity under domain/submission; `src/aeat/domain/submission/_schema.py`.
+- [ ] `W04.P12.S122` - Rename FilingFinding to ModeloFinding under domain/submission; `src/aeat/domain/submission/_schema.py`.
+- [ ] `W04.P12.S123` - Rename FilingDraftLike to ModeloDraftLike under domain/submission; `src/aeat/domain/submission/_protocols.py`.
+- [ ] `W04.P12.S124` - Rename DraftLoader to ModeloDraftLoader under domain/submission; `src/aeat/domain/submission/_protocols.py`.
+- [ ] `W04.P12.S125` - Rename SubmittedFiling to SubmittedModelo under domain/submission; `src/aeat/domain/submission/_schema.py`.
+- [ ] `W04.P12.S126` - Rename PdfFilingImportError to PdfModeloImportError; `src/aeat/domain/justificante/_errors.py`.
 
 ### Phase `W04.P13` - DraftStatus Consolidation to Single ModeloDraftStatus
 
 Per project-lead adjudication of ADR footnote 2, consolidate DraftStatus (domain/submission) and FilingDraftStatus (domain/filing) into a single canonical ModeloDraftStatus enum and remove the duplicate. Single coordinated step; every callsite migrates in the same commit.
+
+- [ ] `W04.P13.S127` - Consolidate DraftStatus (domain/submission) and FilingDraftStatus (domain/filing) into a single canonical ModeloDraftStatus enum, migrating every callsite in the same commit and deleting both legacy enums; `src/aeat/domain/filing/_schema.py`.
+
+## Wave `W05` - Snapshot Service Consolidation and Fincas Rename
+
+Consolidate the five near-clone snapshot services (Borrador legacy retired, Borrador100 base done, Censo, Expedientes, Notifications) under shared SnapshotService/StatelessSnapshotService base classes, and execute the schema-impact Rental-to-Fincas package and SQL rename. The Fincas cluster is a single coordinated SQL migration gated by strict roundtrip-tests with non-default fixture populations.
+
+### Phase `W05.P14` - Snapshot Service Base-Class Consolidation
+
+Introduce a shared SnapshotService[TPayload] base class and a StatelessSnapshotService variant under src/aeat/application/live/_snapshot_base.py, then refactor Censo, Expedientes, and Notifications snapshot services to inherit it. The Borrador100 base class work (Phase 1 of the snapshot proposal) and the legacy _borrador.py retirement are already complete; this phase covers Phases 2, 3, 4 (shared exception hierarchy via SnapshotNotFoundError) and Phase 5 (final retire-legacy validation pass).
+
+- [ ] `W05.P14.S128` - Create the SnapshotService[TPayload] generic base class, StatelessSnapshotService variant, SnapshotLifecycleState, and SnapshotNotFoundError shared exception base in a new _snapshot_base module; `src/aeat/application/live/_snapshot_base.py`.
+
+### Phase `W05.P15` - Rental to Fincas Package and SQL Rename
+
+Rename domain/rental to domain/fincas and execute the coordinated SQL migration for the 11 schema-impact rows: RentalFinca to Finca, RentalContract to Arrendamiento, RentalIncomeRecord to FincaIncomeRecord, RentalExpense to FincaExpense, RentalAmortizationLedger to FincaAmortizationLedger, and each *Row equivalent under adapters/persistence/storage/sql/_orm.py. Income/Expense/Amortization stay English per project-lead adjudication. Strict roundtrip-test gate applies before and after the rename.
