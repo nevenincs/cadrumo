@@ -14,7 +14,7 @@ Three private helpers gate the per-scope ``--filter`` specs:
 
 Previously exercised only indirectly through the per-spec
 :class:`LedgerReviewFilterSpec` / :class:`InvoiceReviewFilterSpec`
-/ :class:`DeclarationReviewFilterSpec` integration tests. A
+/ :class:`DeclaracionReviewFilterSpec` integration tests. A
 regression in the scope-tag composition (e.g. dropping the
 ``duplicate-key-`` prefix) would silently render the CLI repair
 hints ambiguous across scopes; the integration tests do not pin

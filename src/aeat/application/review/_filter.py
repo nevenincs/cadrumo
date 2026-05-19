@@ -13,7 +13,7 @@ flags. Representative invocations:
 The CLI parses the raw argv strings; this module provides the typed
 substrate that turns them into :class:`FilterClause` records and binds
 them to per-scope :class:`LedgerReviewFilterSpec` /
-:class:`InvoiceReviewFilterSpec` / :class:`DeclarationReviewFilterSpec`
+:class:`InvoiceReviewFilterSpec` / :class:`DeclaracionReviewFilterSpec`
 records. Each spec validates its own closed key catalogue, validates
 each value against per-key rules (calendar period parsing, closed enum
 values, identifier-shape checks), and exposes typed accessors the
@@ -39,9 +39,9 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for filter records."""
 
 __all__ = (
-    "DeclarationReviewFilterKey",
-    "DeclarationReviewFilterSpec",
-    "DeclarationReviewStatus",
+    "DeclaracionReviewFilterKey",
+    "DeclaracionReviewFilterSpec",
+    "DeclaracionReviewStatus",
     "FilterClause",
     "FilterParseError",
     "InvoiceReviewFilterKey",
@@ -65,7 +65,7 @@ class FilterClause(BaseModel):
         value: Trimmed value string. Per-key validation lives on the
             owning :class:`LedgerReviewFilterSpec` /
             :class:`InvoiceReviewFilterSpec` /
-            :class:`DeclarationReviewFilterSpec`; this record is the
+            :class:`DeclaracionReviewFilterSpec`; this record is the
             generic substrate.
     """
 
@@ -185,7 +185,7 @@ class InvoiceReviewStatus(StrEnum):
     PAID = "paid"
 
 
-class DeclarationReviewFilterKey(StrEnum):
+class DeclaracionReviewFilterKey(StrEnum):
     """Closed catalogue of modelo status filter keys.
 
     Attributes:
@@ -197,7 +197,7 @@ class DeclarationReviewFilterKey(StrEnum):
     STATUS = "status"
 
 
-class DeclarationReviewStatus(StrEnum):
+class DeclaracionReviewStatus(StrEnum):
     """Closed catalogue of declaration ``status=`` filter values."""
 
     PENDING = "pending"
@@ -412,48 +412,48 @@ class InvoiceReviewFilterSpec(BaseModel):
         return self
 
 
-class DeclarationReviewFilterSpec(BaseModel):
+class DeclaracionReviewFilterSpec(BaseModel):
     """Typed modelo status filter spec.
 
     Attributes:
         clauses: Raw clauses in input order.
-        status: Resolved :class:`DeclarationReviewStatus`.
+        status: Resolved :class:`DeclaracionReviewStatus`.
     """
 
     model_config = _STRICT_FROZEN
 
     clauses: tuple[FilterClause, ...] = ()
-    status: DeclarationReviewStatus | None = None
+    status: DeclaracionReviewStatus | None = None
 
     @classmethod
-    def from_strings(cls, raw: Iterable[str]) -> DeclarationReviewFilterSpec:
+    def from_strings(cls, raw: Iterable[str]) -> DeclaracionReviewFilterSpec:
         """Parse ``--filter`` arguments into a typed declaration spec."""
         clauses = parse_filter_clauses(raw)
-        _ensure_known_keys(clauses, scope="declaration", allowed=DeclarationReviewFilterKey)
+        _ensure_known_keys(clauses, scope="declaration", allowed=DeclaracionReviewFilterKey)
         _ensure_unique_keys(clauses, scope="declaration")
-        status: DeclarationReviewStatus | None = None
+        status: DeclaracionReviewStatus | None = None
         for clause in clauses:
-            if clause.key == DeclarationReviewFilterKey.STATUS:
+            if clause.key == DeclaracionReviewFilterKey.STATUS:
                 status = _enum_value_or_raise(
                     clause,
-                    DeclarationReviewStatus,
+                    DeclaracionReviewStatus,
                     scope="declaration-status",
                 )
         return cls(clauses=clauses, status=status)
 
     @model_validator(mode="after")
-    def _enforce_clause_consistency(self) -> DeclarationReviewFilterSpec:
+    def _enforce_clause_consistency(self) -> DeclaracionReviewFilterSpec:
         """Resolved fields must agree with the clauses tuple."""
         present_keys = {clause.key for clause in self.clauses}
-        if (DeclarationReviewFilterKey.STATUS in present_keys) != (self.status is not None):
+        if (DeclaracionReviewFilterKey.STATUS in present_keys) != (self.status is not None):
             raise ValueError("clauses[status] / status field disagree")
         return self
 
 
 __all__ = [
-    "DeclarationReviewFilterKey",
-    "DeclarationReviewFilterSpec",
-    "DeclarationReviewStatus",
+    "DeclaracionReviewFilterKey",
+    "DeclaracionReviewFilterSpec",
+    "DeclaracionReviewStatus",
     "FilterClause",
     "FilterParseError",
     "InvoiceReviewFilterKey",
