@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from decimal import Decimal
 from pathlib import Path
 
@@ -9,9 +10,9 @@ import pytest
 
 from aeat.core.resources import bundled_path
 
-from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError, load_modelo_file
+from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError
 from ._bindings import CasillaObservation, RegistryModeloObservation
-from ._loader import load_registry_tree
+from ._loader import load_modelo_directory, load_registry_tree
 from ._relations import relation_source_requirements, resolve_relation_values_from_observations
 from ._schema import ModeloDefinition, ModeloRevision
 from ._validate import RegistryValidator
@@ -19,7 +20,13 @@ from ._validate import RegistryValidator
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
-_MODELO_180_FILE = _REGISTRY_ROOT / "modelos" / "180.toml"
+_MODELO_180_DIR = _REGISTRY_ROOT / "modelos" / "180"
+_MODELO_180_FIRST_RELATION_FRAGMENT = (
+    Path("revisions")
+    / "2023-y-siguientes"
+    / "relations"
+    / "0001-modelo-180-rel-115-perceptores-anual.toml"
+)
 
 
 def _committed_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
@@ -41,8 +48,9 @@ def _replace_modelo(
     return tuple(updated if modelo.id == updated.id else modelo for modelo in modelos)
 
 
-def _copy_committed_modelo_180(path: Path) -> None:
-    path.write_text(_MODELO_180_FILE.read_text(encoding="utf-8"), encoding="utf-8")
+def _copy_committed_modelo_180(target: Path) -> Path:
+    shutil.copytree(_MODELO_180_DIR, target)
+    return target
 
 
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
@@ -209,29 +217,29 @@ def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
         )
 
 
-def test_modelo_file_requires_relation_dependency_role(tmp_path: Path) -> None:
-    path = tmp_path / "180.toml"
-    _copy_committed_modelo_180(path)
-    text = path.read_text(encoding="utf-8").replace(
+def test_fragmented_modelo_requires_relation_dependency_role(tmp_path: Path) -> None:
+    directory = _copy_committed_modelo_180(tmp_path / "180")
+    fragment = directory / _MODELO_180_FIRST_RELATION_FRAGMENT
+    text = fragment.read_text(encoding="utf-8").replace(
         'dependency_role = "periodic_to_annual_summary"\n',
         "",
         1,
     )
-    path.write_text(text, encoding="utf-8")
+    fragment.write_text(text, encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="dependency_role"):
-        load_modelo_file(path)
+        load_modelo_directory(directory)
 
 
-def test_modelo_file_rejects_annual_summary_relation_without_summary_role(tmp_path: Path) -> None:
-    path = tmp_path / "180.toml"
-    _copy_committed_modelo_180(path)
-    text = path.read_text(encoding="utf-8").replace(
+def test_fragmented_modelo_rejects_annual_summary_relation_without_summary_role(tmp_path: Path) -> None:
+    directory = _copy_committed_modelo_180(tmp_path / "180")
+    fragment = directory / _MODELO_180_FIRST_RELATION_FRAGMENT
+    text = fragment.read_text(encoding="utf-8").replace(
         'dependency_role = "periodic_to_annual_summary"',
         'dependency_role = "direct_calculation"',
         1,
     )
-    path.write_text(text, encoding="utf-8")
+    fragment.write_text(text, encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="annual summary relation"):
-        load_modelo_file(path)
+        load_modelo_directory(directory)
