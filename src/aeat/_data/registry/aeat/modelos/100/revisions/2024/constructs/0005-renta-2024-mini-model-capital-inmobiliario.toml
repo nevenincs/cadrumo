@@ -1,0 +1,31 @@
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-capital-inmobiliario"
+title = "Modelo 100 2024 capital inmobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+    "renta-2024-atribucion-capital-inmobiliario-suma",
+    "renta-2024-capital-inmobiliario-rendimiento-neto",
+    "renta-2024-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2024-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-2024-inmobiliario-suma-rentas-imputadas",
+    "renta-2024-inmuebles-ganancia-reducida-no-exenta",
+    "renta-2024-inmuebles-ganancias-afectos-suma",
+    "renta-2024-inmuebles-ganancias-no-afectos-suma",
+    "renta-2024-inmuebles-perdidas-transmision-suma",
+    "renta-2024-inmuebles-valor-adquisicion",
+    "renta-2024-inmuebles-valor-transmision",
+    "renta-2024-inmuebles-ganancia-no-exenta-base-general",
+    "renta-2024-inmuebles-perdida-no-exenta-base-general",
+    "renta-2024-inmuebles-ganancia-no-exenta-reducida",
+]

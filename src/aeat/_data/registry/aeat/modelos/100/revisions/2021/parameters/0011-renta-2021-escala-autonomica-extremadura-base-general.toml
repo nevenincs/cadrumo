@@ -1,0 +1,82 @@
+[[revisions."2021".parameters]]
+id = "renta-2021-escala-autonomica-extremadura-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2021-manual-parte1"]
+
+[[revisions."2021".parameters.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.125"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "24200"
+fixed_addition = "2151.50"
+marginal_rate = "0.155"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "24200"
+upper_bound = "35200"
+fixed_addition = "2771.50"
+marginal_rate = "0.165"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4586.50"
+marginal_rate = "0.205"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "80200"
+fixed_addition = "9670.50"
+marginal_rate = "0.235"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "80200"
+upper_bound = "99200"
+fixed_addition = "14417.50"
+marginal_rate = "0.24"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "99200"
+upper_bound = "120200"
+fixed_addition = "18977.50"
+marginal_rate = "0.245"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+
+[[revisions."2021".parameters.brackets]]
+lower_bound = "120200"
+fixed_addition = "24122.50"
+marginal_rate = "0.25"
+valid_from = 2021-01-01
+valid_to = 2021-12-31

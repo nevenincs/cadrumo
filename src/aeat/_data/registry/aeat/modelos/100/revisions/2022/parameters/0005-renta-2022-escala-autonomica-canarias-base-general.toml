@@ -1,0 +1,66 @@
+[[revisions."2022".parameters]]
+id = "renta-2022-escala-autonomica-canarias-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Comunidad Autónoma de Canarias", "escala autonómica"]
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13010"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "13010"
+upper_bound = "18468"
+fixed_addition = "1170.90"
+marginal_rate = "0.115"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "18468"
+upper_bound = "34327"
+fixed_addition = "1798.57"
+marginal_rate = "0.14"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "34327"
+upper_bound = "55276"
+fixed_addition = "4018.83"
+marginal_rate = "0.185"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "55276"
+upper_bound = "90000"
+fixed_addition = "7894.39"
+marginal_rate = "0.235"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "120000"
+fixed_addition = "16054.53"
+marginal_rate = "0.25"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "120000"
+fixed_addition = "23554.53"
+marginal_rate = "0.26"
+valid_from = 2022-01-01
+valid_to = 2022-12-31

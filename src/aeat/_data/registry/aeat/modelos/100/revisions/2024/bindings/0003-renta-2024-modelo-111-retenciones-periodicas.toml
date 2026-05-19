@@ -1,0 +1,12 @@
+[[revisions."2024".bindings]]
+id = "renta-2024-modelo-111-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "111", source_output = "28", relation = "retenciones-trabajo-actividades-premios" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+aeat_prefilled = true
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = ["Modelo 100", "ejercicio 2024"]

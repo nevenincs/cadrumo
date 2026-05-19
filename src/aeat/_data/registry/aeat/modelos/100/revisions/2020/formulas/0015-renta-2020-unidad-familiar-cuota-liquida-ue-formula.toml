@@ -1,0 +1,32 @@
+[[revisions."2020".formulas]]
+id = "renta-2020-unidad-familiar-cuota-liquida-ue-formula"
+target = "0728"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { casilla = "0546" },
+    { casilla = "0548" },
+    { casilla = "0549" },
+    { casilla = "0550" },
+    { casilla = "0551" },
+    { casilla = "0552" },
+    { casilla = "0553" },
+    { casilla = "0554" },
+    { casilla = "0555" },
+    { casilla = "0556" },
+    { casilla = "0557" },
+    { casilla = "0558" },
+    { casilla = "0559" },
+    { casilla = "0560" },
+    { casilla = "0561" },
+    { casilla = "0562" },
+    { casilla = "0563" },
+    { casilla = "0564" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-82", "ley-35-2006:art-83"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]

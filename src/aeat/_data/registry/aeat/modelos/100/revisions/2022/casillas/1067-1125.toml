@@ -1,0 +1,9 @@
+[[revisions."2022".casillas]]
+id = "1125"
+number = "1125"
+label = "NIF/NIE del arrendador 2"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arr"]
+data_type = "text"
+semantic_role = "landlord_or_foreign_id_nif"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

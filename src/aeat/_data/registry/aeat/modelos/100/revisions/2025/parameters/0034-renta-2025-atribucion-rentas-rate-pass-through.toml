@@ -1,0 +1,30 @@
+[[revisions."2025".parameters]]
+id = "renta-2025-atribucion-rentas-rate-pass-through"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["régimen de atribución de rentas", "atribuirán a los socios"]
+
+[[revisions."2025".parameters.values]]
+value = "100"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# -----------------------------------------------------------------------------
+# Mínimo del contribuyente (LIRPF arts. 56 + 57 + 73).
+# The statutory baseline is 5,550 EUR per LIRPF art. 57. Autonomous
+# communities may modify the autonómica portion per LIRPF art. 73.
+# CCAA-specific 2025 uplifts (Madrid / Canarias / Galicia were
+# observed but not verifiable against the AEAT
+# part2-deducciones-autonomicas PDF — the corpus stores only the
+# binary, no plaintext for `required_text` corpus-checks). Until
+# those uplifts are extracted from the manual and properly grounded,
+# the dispatch table routes every CCAA to the statutory baseline.
+# Operators in CCAAs that legislate an uplift can override casilla
+# 0512 manually for now.
+# -----------------------------------------------------------------------------

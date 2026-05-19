@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0977"
+number = "0977"
+label = "Fecha de visado del proyecto de ejecución:"
+section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
+data_type = "text"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

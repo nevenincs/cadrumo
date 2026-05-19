@@ -1,0 +1,7 @@
+[[revisions."2025".constructs]]
+id = "renta-observation-parsing"
+title = "Modelo 100 filed-data observation capture"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-modelo-100-procedure"]
+live_cross_references = ["modelo-100-filed-declarations-read"]
+application_links = ["modelo-100-filed-declarations-observation"]

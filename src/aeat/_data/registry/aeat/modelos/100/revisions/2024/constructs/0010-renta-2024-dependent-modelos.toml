@@ -1,0 +1,34 @@
+[[revisions."2024".constructs]]
+id = "renta-2024-dependent-modelos"
+title = "Modelo 100 2024 retenciones and withholding cross-modelo inputs"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-eha-3435-2007:anexo-ii",
+    "orden-hac-56-2024:art-1",
+    "orden-eha-3377-2011:art-1",
+]
+source_refs = [
+    "aeat-renta-2024-manual-parte1",
+    "boe-modelo-100-2024-form",
+    "boe-modelo-193-2011-form",
+]
+bindings = [
+    "renta-2024-modelo-111-retenciones-periodicas",
+    "renta-2024-modelo-115-retenciones-periodicas",
+    "renta-2024-modelo-123-retenciones-periodicas",
+    "renta-2024-modelo-193-retenciones-anuales",
+]
+relations = [
+    "renta-2024-rel-111-retenciones-trimestrales",
+    "renta-2024-rel-111-retenciones-mensuales",
+    "renta-2024-rel-115-retenciones-trimestrales",
+    "renta-2024-rel-123-retenciones-trimestrales",
+    "renta-2024-rel-193-retenciones-anuales",
+]
+dependency_classifications = [
+    "renta-2024-dep-111",
+    "renta-2024-dep-115",
+    "renta-2024-dep-123",
+    "renta-2024-dep-193",
+]

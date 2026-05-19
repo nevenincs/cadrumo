@@ -1,0 +1,7 @@
+[[revisions."2025".application_links]]
+id = "modelo-100-renta-web-open-cross-reference"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.renta_web_open"
+requires_snapshot = true
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-web-open"]

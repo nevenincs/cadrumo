@@ -1,0 +1,17 @@
+[[revisions."2022".formulas]]
+id = "renta-2022-trabajo-rendimiento-neto-previo"
+target = "0017"
+expression = { op = "sum", args = [
+        { casilla = "0012" },
+        { op = "negate", args = [{ casilla = "0013" }] },
+        { op = "negate", args = [{ casilla = "0014" }] },
+        { op = "negate", args = [{ casilla = "0015" }] },
+        { op = "negate", args = [{ casilla = "0016" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]

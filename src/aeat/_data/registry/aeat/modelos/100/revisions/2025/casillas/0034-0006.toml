@@ -1,0 +1,7 @@
+[[revisions."2025".casillas]]
+id = "0006"
+number = "0006"
+label = "Rendimientos del trabajo en especie. Ingresos a cuenta repercutidos"
+section = ["rendimientos_trabajo"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

@@ -1,0 +1,25 @@
+[[revisions."2025".live_cross_references]]
+id = "modelo-100-renta-web-open"
+evidence_tier = "executable_parity_evidence"
+surface = "open_simulator"
+guard_policy_id = "modelo-100-renta-web-open-read-only"
+allowed_hosts = ["sede.agenciatributaria.gob.es", "www2.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "POST"]
+forbidden_actions = [
+    "authenticated-renta-web",
+    "fiscal-data-read",
+    "borrador-read",
+    "filed-declaration-read",
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+]
+synthetic_data_allowed = true
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-web-open"]

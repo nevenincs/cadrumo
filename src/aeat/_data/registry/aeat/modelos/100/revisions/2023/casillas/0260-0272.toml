@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0272"
+number = "0272"
+label = "Persona o entidad primera cesionaria de los derechos de imagen: NIF (si es residente en territorio español) o denominación"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_derechos_imagen"]
+data_type = "text"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
