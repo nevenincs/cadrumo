@@ -4,8 +4,8 @@ Every test asserts a deeply-populated pydantic model survives a JSON
 round-trip with byte-for-byte structural equality. Tests are deliberately
 strict and fail-fast: when the typed schema does not yet carry a field
 that the boundary needs, the test fails with a typed pydantic error or
-an AttributeError. There are no xfail markers, no ``skip`` calls, no
-mocks, no tautological re-derivations.
+an AttributeError. There are no expected-failure markers, no skip
+calls, no mocks, no tautological re-derivations.
 
 A test that fails today is a measurement that the structural work it
 describes has not landed yet. A test that passes today is a measurement
