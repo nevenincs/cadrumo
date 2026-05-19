@@ -12,7 +12,7 @@ The loader follows the same idiom as
 :mod:`aeat.domain.rental._imputacion_parameters`: a frozen pydantic
 record loaded once at module import time, with an explicit
 :func:`recargo_rate_for` helper that maps from the substrate's
-:class:`VATRateKind` tier to the corresponding recargo Decimal.
+:class:`IvaRateKind` tier to the corresponding recargo Decimal.
 The ``LIVA_ART_161_RECARGO`` accessor is the canonical source for
 recargo de equivalencia rates across the codebase.
 
@@ -36,8 +36,8 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.resources import bundled_path
-from ._schema import VATRateKind
-from .errors import VatCatalogueError, VatValidationError
+from ._schema import IvaRateKind
+from .errors import IvaCatalogueError, IvaValidationError
 
 
 class LivaArt161RecargoRates(BaseModel):
@@ -79,12 +79,12 @@ def _load_rates() -> LivaArt161RecargoRates:
     pattern as direct ``os.environ`` reads.
 
     Raises:
-        VatCatalogueError: If any of the four expected parameter ids is absent.
-        VatValidationError: If any value cannot be parsed as a Decimal.
+        IvaCatalogueError: If any of the four expected parameter ids is absent.
+        IvaValidationError: If any value cannot be parsed as a Decimal.
     """
     # load_legal_parameters_only is the cycle-safe entry point — the full
     # load_registry_tree path pulls in registry._bindings which imports
-    # from aeat.domain.vat, triggering a circular import at this very
+    # from aeat.domain.iva, triggering a circular import at this very
     # module's import time.
     from ..calculations.registry._loader import load_legal_parameters_only
 
@@ -95,7 +95,7 @@ def _load_rates() -> LivaArt161RecargoRates:
         super_reducido_raw = parameters[_SUPER_REDUCIDO_PARAM_ID].value
         tabaco_raw = parameters[_TABACO_PARAM_ID].value
     except KeyError as exc:
-        raise VatCatalogueError(
+        raise IvaCatalogueError(
             "the IVA recargo-equivalencia legal-parameter catalogue is missing "
             f"LIVA art. 161 parameter {exc.args[0]!r}"
         ) from exc
@@ -108,7 +108,7 @@ def _load_rates() -> LivaArt161RecargoRates:
             tabaco_rate=Decimal(tabaco_raw),
         )
     except (ValueError, TypeError) as exc:
-        raise VatValidationError(f"failed to parse recargo rates as Decimal: {exc}") from exc
+        raise IvaValidationError(f"failed to parse recargo rates as Decimal: {exc}") from exc
 
 
 def load_recargo_rates() -> LivaArt161RecargoRates:
@@ -117,13 +117,13 @@ def load_recargo_rates() -> LivaArt161RecargoRates:
     Reads the four art. 161 rate parameters from the bundled
     legal-parameter catalogue and returns the typed
     :class:`LivaArt161RecargoRates` record. Use
-    :func:`recargo_rate_for` for the convenient ``VATRateKind``-
+    :func:`recargo_rate_for` for the convenient ``IvaRateKind``-
     keyed lookup; tobacco callers read ``.tabaco_rate`` directly.
     """
     return _load_rates()
 
 
-def recargo_rate_for(rate_kind: VATRateKind) -> Decimal | None:
+def recargo_rate_for(rate_kind: IvaRateKind) -> Decimal | None:
     """Return the recargo de equivalencia rate aligned with ``rate_kind``.
 
     Args:
@@ -135,16 +135,16 @@ def recargo_rate_for(rate_kind: VATRateKind) -> Decimal | None:
         (recargo de equivalencia does not apply to operations whose
         underlying IVA rate is zero or exempt).
 
-    The tobacco-specific 1.75 % rate is not keyed by ``VATRateKind``;
+    The tobacco-specific 1.75 % rate is not keyed by ``IvaRateKind``;
     callers that handle labores del tabaco read
     ``LIVA_ART_161_RECARGO.tabaco_rate`` directly.
     """
     rates = _load_rates()
-    if rate_kind is VATRateKind.GENERAL:
+    if rate_kind is IvaRateKind.GENERAL:
         return rates.general_rate
-    if rate_kind is VATRateKind.REDUCED:
+    if rate_kind is IvaRateKind.REDUCED:
         return rates.reducido_rate
-    if rate_kind is VATRateKind.SUPER_REDUCED:
+    if rate_kind is IvaRateKind.SUPER_REDUCED:
         return rates.super_reducido_rate
     return None
 

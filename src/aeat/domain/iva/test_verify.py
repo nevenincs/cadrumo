@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from . import VATCatalogue, VATCategory, resolve_catalogue, verify_catalogue
+from . import IvaCatalogue, IvaCategory, resolve_catalogue, verify_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -21,21 +21,21 @@ def test_shipped_catalogue_is_clean() -> None:
 
 
 def test_empty_catalogue_reports_missing_categories() -> None:
-    empty = VATCatalogue()
+    empty = IvaCatalogue()
     report = verify_catalogue(empty)
     codes = {issue.code for issue in report.errors}
     assert "missing_category" in codes
-    assert len(report.errors) >= len(list(VATCategory))
+    assert len(report.errors) >= len(list(IvaCategory))
 
 
 def test_partial_catalogue_reports_only_the_gaps() -> None:
-    reduced = VATCatalogue(
-        regulations={cat: reg for cat, reg in _CATALOGUE.regulations.items() if cat is not VATCategory.UNKNOWN}
+    reduced = IvaCatalogue(
+        regulations={cat: reg for cat, reg in _CATALOGUE.regulations.items() if cat is not IvaCategory.UNKNOWN}
     )
     report = verify_catalogue(reduced)
     missing = [
         issue
         for issue in report.errors
-        if issue.code == "missing_category" and issue.category_id == VATCategory.UNKNOWN.value
+        if issue.code == "missing_category" and issue.category_id == IvaCategory.UNKNOWN.value
     ]
     assert len(missing) == 1

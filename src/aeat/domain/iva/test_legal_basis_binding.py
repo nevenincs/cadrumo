@@ -8,9 +8,9 @@ For each rate, the chain of references is checked end-to-end:
 
 1. The BOE corpus excerpt contains the operative percentage string
    (e.g., "21 por ciento" in LIVA art 90).
-2. The registry parameter / VAT_RATE_TABLE entry stores the matching
+2. The registry parameter / IVA_RATE_TABLE entry stores the matching
    numeric value (Decimal "0.21" = 21 %).
-3. The substrate's typed enum (IvaRate / VATRateKind) maps to the
+3. The substrate's typed enum (IvaRate / IvaRateKind) maps to the
    substrate-resolved percentage.
 4. The pydantic-typed Python wrapper
    (:func:`iva_rate_percentage`) returns the same value.
@@ -35,9 +35,9 @@ import pytest
 from aeat.core.resources import bundled_path
 from aeat.domain.invoices import IvaRate
 from aeat.domain.invoices._enums import iva_rate_percentage
-from aeat.domain.vat import (
+from aeat.domain.iva import (
     EUMemberState,
-    VATRateKind,
+    IvaRateKind,
     load_recargo_rates,
     lookup_rate,
 )
@@ -79,14 +79,14 @@ def test_liva_art_90_corpus_excerpt_quotes_21_per_cent_general_rate() -> None:
 
 
 def test_liva_art_90_substrate_general_rate_resolves_to_21_per_cent_for_es() -> None:
-    rate = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, _BINDING_DATE)
+    rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, _BINDING_DATE)
     assert rate.pct == Decimal("21")
 
 
 def test_iva_rate_21_helper_resolves_to_substrate_general_rate() -> None:
     """IvaRate.RATE_21 wrapper must return the substrate's GENERAL
     rate divided by 100, anchored to LIVA art 90."""
-    expected = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, _BINDING_DATE).pct / Decimal("100")
+    expected = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, _BINDING_DATE).pct / Decimal("100")
     assert iva_rate_percentage(IvaRate.RATE_21, on_date=_BINDING_DATE) == expected
 
 
@@ -110,12 +110,12 @@ def test_liva_art_91_corpus_excerpt_quotes_10_and_4_per_cent_reduced_rates() -> 
 
 
 def test_liva_art_91_substrate_reduced_rate_resolves_to_10_per_cent_for_es() -> None:
-    rate = lookup_rate(EUMemberState.ES, VATRateKind.REDUCED, _BINDING_DATE)
+    rate = lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, _BINDING_DATE)
     assert rate.pct == Decimal("10")
 
 
 def test_iva_rate_10_helper_resolves_to_substrate_reduced_rate() -> None:
-    expected = lookup_rate(EUMemberState.ES, VATRateKind.REDUCED, _BINDING_DATE).pct / Decimal("100")
+    expected = lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, _BINDING_DATE).pct / Decimal("100")
     assert iva_rate_percentage(IvaRate.RATE_10, on_date=_BINDING_DATE) == expected
 
 
@@ -125,12 +125,12 @@ def test_iva_rate_10_helper_resolves_to_substrate_reduced_rate() -> None:
 
 
 def test_liva_art_91_substrate_super_reduced_rate_resolves_to_4_per_cent_for_es() -> None:
-    rate = lookup_rate(EUMemberState.ES, VATRateKind.SUPER_REDUCED, _BINDING_DATE)
+    rate = lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, _BINDING_DATE)
     assert rate.pct == Decimal("4")
 
 
 def test_iva_rate_4_helper_resolves_to_substrate_super_reduced_rate() -> None:
-    expected = lookup_rate(EUMemberState.ES, VATRateKind.SUPER_REDUCED, _BINDING_DATE).pct / Decimal("100")
+    expected = lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, _BINDING_DATE).pct / Decimal("100")
     assert iva_rate_percentage(IvaRate.RATE_4, on_date=_BINDING_DATE) == expected
 
 
@@ -179,9 +179,9 @@ def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
     91 Dos). Each tier has matching IVA + recargo percentages
     declared by separate articles. This test confirms the alignment
     is consistent across the two rate tables."""
-    iva_general = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, _BINDING_DATE).pct
-    iva_reducido = lookup_rate(EUMemberState.ES, VATRateKind.REDUCED, _BINDING_DATE).pct
-    iva_super = lookup_rate(EUMemberState.ES, VATRateKind.SUPER_REDUCED, _BINDING_DATE).pct
+    iva_general = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, _BINDING_DATE).pct
+    iva_reducido = lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, _BINDING_DATE).pct
+    iva_super = lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, _BINDING_DATE).pct
 
     # Sanity: IVA tiers resolve to 21/10/4 per LIVA art 90/91
     assert (iva_general, iva_reducido, iva_super) == (
@@ -219,13 +219,13 @@ def test_lirpf_art_85_imputacion_substrate_matches_boe_text() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Cross-substrate IvaRate / VATRateKind alignment
+# Cross-substrate IvaRate / IvaRateKind alignment
 # ---------------------------------------------------------------------------
 
 
 def test_iva_rate_slot_to_vat_rate_kind_mapping_is_total_and_consistent() -> None:
     """Every IvaRate slot (except NOT_SUBJECT, which is out of scope of
-    IVA) must map to a VATRateKind tier. The mapping is the bridge
+    IVA) must map to a IvaRateKind tier. The mapping is the bridge
     between the invoice-domain rate slots and the substrate's rate
     tiers, anchored to LIVA arts 90-91."""
     from aeat.domain.invoices._enums import _IVA_RATE_TO_VAT_KIND
@@ -237,13 +237,13 @@ def test_iva_rate_slot_to_vat_rate_kind_mapping_is_total_and_consistent() -> Non
         IvaRate.RATE_21,
     }
     # Slot ↔ tier alignment per LIVA art 90 / 91
-    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_21] is VATRateKind.GENERAL
-    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_10] is VATRateKind.REDUCED
-    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_4] is VATRateKind.SUPER_REDUCED
+    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_21] is IvaRateKind.GENERAL
+    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_10] is IvaRateKind.REDUCED
+    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_4] is IvaRateKind.SUPER_REDUCED
 
 
 def test_iva_rate_zero_resolves_to_zero_percent_directly() -> None:
-    """RATE_0 doesn't map through VATRateKind — it's a direct
+    """RATE_0 doesn't map through IvaRateKind — it's a direct
     Decimal('0') return. This is correct: zero-rated supplies don't
     need substrate lookup since the rate is structurally zero."""
     assert iva_rate_percentage(IvaRate.RATE_0, on_date=_BINDING_DATE) == Decimal("0")

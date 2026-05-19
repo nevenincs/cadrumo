@@ -1,7 +1,7 @@
-"""Unit tests for the closed VAT enumerations exposed by :mod:`aeat.domain.vat`.
+"""Unit tests for the closed VAT enumerations exposed by :mod:`aeat.domain.iva`.
 
-Pins membership and round-trip semantics for :class:`VATCategory`,
-:class:`EUMemberState` and :class:`VATRateKind` so accidental additions or
+Pins membership and round-trip semantics for :class:`IvaCategory`,
+:class:`EUMemberState` and :class:`IvaRateKind` so accidental additions or
 removals surface as test failures.
 """
 
@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import pytest
 
-from . import EUMemberState, VATCategory, VATRateKind
+from . import EUMemberState, IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_vat_category_has_every_named_member() -> None:
-    """:class:`VATCategory` must carry exactly the 17 declared members.
+    """:class:`IvaCategory` must carry exactly the 17 declared members.
 
     ``DOMESTIC_REVERSE_CHARGE`` exists to disambiguate
     *inversión del sujeto pasivo* on domestic transactions
@@ -41,13 +41,13 @@ def test_vat_category_has_every_named_member() -> None:
         "ERRONEOUS_INVOICE",
         "UNKNOWN",
     }
-    assert {member.name for member in VATCategory} == expected
+    assert {member.name for member in IvaCategory} == expected
 
 
 def test_vat_category_values_roundtrip_through_strenum() -> None:
-    """Every VATCategory value re-parses to the same member."""
-    for member in VATCategory:
-        assert VATCategory(member.value) is member
+    """Every IvaCategory value re-parses to the same member."""
+    for member in IvaCategory:
+        assert IvaCategory(member.value) is member
 
 
 def test_eu_member_state_has_27_members() -> None:
@@ -56,8 +56,8 @@ def test_eu_member_state_has_27_members() -> None:
 
 
 def test_vat_rate_kind_has_five_tiers() -> None:
-    """VATRateKind covers the five tiers used by the substrate."""
-    assert {m.name for m in VATRateKind} == {
+    """IvaRateKind covers the five tiers used by the substrate."""
+    assert {m.name for m in IvaRateKind} == {
         "GENERAL",
         "REDUCED",
         "SUPER_REDUCED",

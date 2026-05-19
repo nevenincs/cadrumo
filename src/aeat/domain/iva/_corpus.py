@@ -6,18 +6,18 @@ from datetime import date
 
 from ...core.config import Settings
 from ._catalogue import resolve_catalogue
-from ._schema import VATCatalogue
+from ._schema import IvaCatalogue
 
 
-def load_vat_rules_from_manual(
+def load_iva_rules_from_manual(
     year: int,
     *,
     settings: Settings | None = None,
-) -> VATCatalogue:
+) -> IvaCatalogue:
     """Load the reviewed VAT catalogue for ``year``."""
 
     del settings
     return resolve_catalogue(on=date(year, 1, 1))
 
 
-__all__ = ["load_vat_rules_from_manual"]
+__all__ = ["load_iva_rules_from_manual"]
