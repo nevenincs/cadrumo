@@ -12,10 +12,10 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from aeat.adapters.outbound.aeat.sede import (
-    Declaration,
-    FiledDeclarationArtefact,
-    FiledDeclarationObservation,
-    FiledDeclarationObservationStore,
+    Declaracion,
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    FiledDeclaracionObservationStore,
     ObservedCasillaValue,
 )
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
@@ -437,7 +437,7 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
 
 def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(tmp_path: Path) -> None:
     provider = EphemeralMasterKeyProvider()
-    store = FiledDeclarationObservationStore(tmp_path / "observations", master_key_provider=provider)
+    store = FiledDeclaracionObservationStore(tmp_path / "observations", master_key_provider=provider)
     primary, source = _modelo_130_filed_state_observations()
     primary_path = store.persist_observation(primary)
     source_path = store.persist_observation(source)
@@ -458,7 +458,7 @@ def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(
 
 def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: Path) -> None:
     provider = EphemeralMasterKeyProvider()
-    store = FiledDeclarationObservationStore(tmp_path / "observations", master_key_provider=provider)
+    store = FiledDeclaracionObservationStore(tmp_path / "observations", master_key_provider=provider)
     primary, source = _modelo_130_filed_state_observations()
     casillas = tuple(
         item.model_copy(update={"value": str(Decimal(item.value) + Decimal("0.01"))})
@@ -615,7 +615,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
     assert not output_root.exists()
 
 
-def _modelo_130_filed_state_observations() -> tuple[FiledDeclarationObservation, FiledDeclarationObservation]:
+def _modelo_130_filed_state_observations() -> tuple[FiledDeclaracionObservation, FiledDeclaracionObservation]:
     snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
     calculation = calculate_registry_snapshot(
         snapshot,
@@ -665,8 +665,8 @@ def _filed_observation(
     ejercicio: int,
     period: str,
     casilla_values: dict[str, Decimal],
-) -> FiledDeclarationObservation:
-    return FiledDeclarationObservation(
+) -> FiledDeclaracionObservation:
+    return FiledDeclaracionObservation(
         modelo=modelo,
         ejercicio=ejercicio,
         period=period,
@@ -675,7 +675,7 @@ def _filed_observation(
         presented_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(
-            FiledDeclarationArtefact(
+            FiledDeclaracionArtefact(
                 kind="submitted_file",
                 source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
                 content_type="application/octet-stream",
@@ -698,8 +698,8 @@ def _filed_observation(
     )
 
 
-def _declaration(*, expediente_id: str, period: str, modelo: str | None = None) -> Declaration:
-    return Declaration(
+def _declaration(*, expediente_id: str, period: str, modelo: str | None = None) -> Declaracion:
+    return Declaracion(
         modelo=modelo or _first_registry_modelo(),
         ejercicio=2026,
         period=period,
