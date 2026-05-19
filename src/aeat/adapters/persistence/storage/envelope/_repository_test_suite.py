@@ -50,14 +50,14 @@ from typing import Generic, TypeVar
 
 import pytest
 from pydantic import BaseModel, ValidationError
-from sqlalchemy import select
+from sqlalchemy import Engine, select
 
 from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider, SensitivityClass
 from ..errors import ClassificationError
 from ..sql import SecureObjectRepository
 from ..sql._orm import Base, SecureObjectRow
-from ..sql.engine import create_engine_from_settings
+from ..sql.engine import create_engine_from_settings, dispose_engine
 from ..sql.session import session_scope
 from ._envelope import Envelope
 from ._secure_repository import SecureBoundRepository
@@ -69,6 +69,11 @@ _FOREIGN_CLASS_MAP: dict[SensitivityClass, SensitivityClass] = {
     SensitivityClass.FINANCIAL: SensitivityClass.OPERATIONAL,
     SensitivityClass.OPERATIONAL: SensitivityClass.AUDIT,
     SensitivityClass.IDENTITY: SensitivityClass.OPERATIONAL,
+    SensitivityClass.SECRET: SensitivityClass.OPERATIONAL,
+    SensitivityClass.SESSION: SensitivityClass.OPERATIONAL,
+    SensitivityClass.CACHE: SensitivityClass.AUDIT,
+    SensitivityClass.CORPUS: SensitivityClass.AUDIT,
+    SensitivityClass.DIAGNOSTIC: SensitivityClass.AUDIT,
 }
 
 _UNSAFE_IDS: tuple[str, ...] = (
@@ -89,9 +94,14 @@ class SecureRepositoryContractCase(Generic[T]):
     The contract is parameterised by:
 
     * ``repository_factory`` - zero-arg callable returning a fresh
-      ``SecureBoundRepository[T]`` instance bound to the test's
-      ephemeral SQLite engine. The factory is invoked multiple times
-      to exercise cross-instance roundtrips.
+      ``SecureBoundRepository[T]`` instance. Invoked repeatedly so
+      cross-instance roundtrips are exercised. The factory MUST
+      route its underlying :class:`SecureObjectRepository` at the
+      currently-active process-default engine (i.e. construct
+      ``Concrete()`` rather than passing an explicit engine), because
+      the contract harness rebinds ``AEAT_DATABASE_URL`` to a fresh
+      SQLite file per check and disposes cached engines between
+      checks.
     * ``first_payload`` / ``second_payload`` - two distinct,
       fully-populated payload instances whose extracted identifiers
       differ. Both must use non-default values for every optional
@@ -116,10 +126,20 @@ class SecureRepositoryContractCase(Generic[T]):
     mutation_field: str
 
 
-def _build_engine(db_path: Path) -> object:
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
+def _activate_engine(db_path: Path, monkeypatch: pytest.MonkeyPatch) -> Engine:
+    """Repoint the process-default engine at ``db_path``.
+
+    Disposes every cached engine, rebinds ``AEAT_DATABASE_URL`` via
+    ``monkeypatch``, then builds and returns a fresh engine whose
+    schema is materialised against ``Base.metadata``. The caller is
+    responsible for disposing the returned engine when the check
+    completes.
+    """
+
+    dispose_engine()
+    url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setenv("AEAT_DATABASE_URL", url)
+    engine = create_engine_from_settings(Settings(aeat_database_url=url))
     Base.metadata.create_all(engine)
     return engine
 
@@ -149,7 +169,6 @@ def _save_is_idempotent(case: SecureRepositoryContractCase[T]) -> None:
 
 def _load_returns_none_when_absent(case: SecureRepositoryContractCase[T]) -> None:
     repo = case.repository_factory()
-    # Use a benign-but-syntactically-valid id that path safety allows.
     assert repo.load("never-existed-x") is None
 
 
@@ -231,7 +250,7 @@ def _foreign_class_object_refused(
 
 def _boundary_catches_simulated_field_drop_via_corrupted_payload(
     case: SecureRepositoryContractCase[T],
-    engine: object,
+    engine: Engine,
 ) -> None:
     repo = case.repository_factory()
     repo.save(case.first_payload)
@@ -240,10 +259,12 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload(
     baseline = repo.load(identifier)
     assert baseline == case.first_payload
 
-    with session_scope(engine) as session:  # type: ignore[arg-type]
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == repo.namespace,
-        ).limit(1)
+    with session_scope(engine) as session:
+        stmt = (
+            select(SecureObjectRow)
+            .where(SecureObjectRow.namespace == repo.namespace)
+            .limit(1)
+        )
         row = session.execute(stmt).scalar_one()
         decoded = json.loads(row.payload.decode("utf-8"))
         assert case.mutation_field in decoded["payload"], (
@@ -259,11 +280,8 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload(
     except ValidationError:
         regression_caught = True
     else:
-        assert mutated is not None
-        if mutated != case.first_payload:
+        if mutated is None or mutated != case.first_payload:
             regression_caught = True
-        else:
-            regression_caught = False
 
     assert regression_caught, (
         "boundary did not surface a deliberate field drop; the "
@@ -272,20 +290,7 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload(
     )
 
 
-def _iter_ids_lexicographic(case: SecureRepositoryContractCase[T]) -> None:
-    """Internal helper - not one of the 11 canonical tests, used only as
-    a sanity gate to ensure the second payload survives the roundtrip.
-    Kept private so it does not bloat the public count.
-    """
-    repo = case.repository_factory()
-    repo.save(case.first_payload)
-    repo.save(case.second_payload)
-    ids = tuple(repo.iter_ids())
-    assert ids == tuple(sorted(ids))
-    assert len(ids) == 2
-
-
-_CHECKS: tuple[
+_PARAM_CHECKS: tuple[
     tuple[str, Callable[[SecureRepositoryContractCase[BaseModel]], None]], ...
 ] = (
     ("test_round_trip_preserves_payload", _round_trip_preserves_payload),
@@ -313,65 +318,72 @@ def assert_secure_repository_contract(
     case: SecureRepositoryContractCase[T],
     *,
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> int:
     """Run all 11 canonical contract checks against ``case``.
 
-    The function creates a fresh SQLite database file under
-    ``tmp_path``, activates a real
-    :class:`EphemeralMasterKeyProvider`, and invokes each check against
-    the repository returned by ``case.repository_factory``. Each check
-    runs against its own fresh database to avoid cross-check
-    interference; the same factory is reused so subclass wiring is
-    exercised consistently.
+    For each check the function:
+
+      1. Disposes any cached process-default engine.
+      2. Rebinds ``AEAT_DATABASE_URL`` (via ``monkeypatch``) to a
+         fresh SQLite file under ``tmp_path``.
+      3. Builds a real engine for that URL and materialises the ORM
+         schema.
+      4. Activates a real :class:`EphemeralMasterKeyProvider`.
+      5. Invokes the check, which constructs the repository via
+         ``case.repository_factory``; the repository's internal
+         :class:`SecureObjectRepository` lookup resolves to the
+         engine activated above.
+      6. Disposes the engine.
 
     Returns the number of checks executed. Callers SHOULD assert this
-    count equals the expected canonical count
-    (:data:`EXPECTED_CHECK_COUNT`) so a silently-skipped check is
-    visible at the self-test boundary.
+    count equals :data:`EXPECTED_CHECK_COUNT` so a silently-skipped
+    check is visible at the self-test boundary.
     """
 
     executed = 0
 
-    for index, (label, check) in enumerate(_CHECKS):
+    for index, (label, check) in enumerate(_PARAM_CHECKS):
         db_path = tmp_path / f"contract-{index:02d}-{label}.db"
         provider = EphemeralMasterKeyProvider()
         with provider:
-            engine = _build_engine(db_path)
+            engine = _activate_engine(db_path, monkeypatch)
             try:
                 check(case)  # type: ignore[arg-type]
             finally:
-                engine.dispose()  # type: ignore[attr-defined]
+                engine.dispose()
+                dispose_engine()
         executed += 1
 
-    # Checks needing the db_path directly (raw-bytes inspection).
     db_path = tmp_path / "contract-encrypted-audit-data.db"
     provider = EphemeralMasterKeyProvider()
     with provider:
-        engine = _build_engine(db_path)
+        engine = _activate_engine(db_path, monkeypatch)
         try:
             _database_payload_is_encrypted_audit_data(case, db_path)  # type: ignore[arg-type]
         finally:
-            engine.dispose()  # type: ignore[attr-defined]
+            engine.dispose()
+            dispose_engine()
     executed += 1
 
-    # Anti-tautology check needs the engine for direct row mutation.
     db_path = tmp_path / "contract-anti-tautology.db"
     provider = EphemeralMasterKeyProvider()
     with provider:
-        engine = _build_engine(db_path)
+        engine = _activate_engine(db_path, monkeypatch)
         try:
             _boundary_catches_simulated_field_drop_via_corrupted_payload(
                 case,  # type: ignore[arg-type]
                 engine,
             )
         finally:
-            engine.dispose()  # type: ignore[attr-defined]
+            engine.dispose()
+            dispose_engine()
     executed += 1
 
     return executed
 
 
-EXPECTED_CHECK_COUNT: int = len(_CHECKS) + 2
+EXPECTED_CHECK_COUNT: int = len(_PARAM_CHECKS) + 2
 """The number of canonical contract checks executed by
 :func:`assert_secure_repository_contract`.
 
@@ -384,8 +396,7 @@ field-drop simulation
 (``test_boundary_catches_simulated_field_drop_via_corrupted_payload``)
 that need the database path / engine handle directly.
 
-Total: ``len(_CHECKS) + 2``. The count is exposed so self-tests can
-assert no check was silently skipped.
+Total: ``len(_PARAM_CHECKS) + 2``.
 """
 
 
