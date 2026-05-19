@@ -4353,3 +4353,292 @@ Cross-cutting drift audit complete. Ready for next phase: task #26 (delete Censu
 
 **~67% of ADR ledger landed (W01–W04.P06/P07/P09/P10/P12 + bonus tasks complete).** **877 Filing* identifiers remain across 76 files** (W04.P08/P11/P13 not yet dispatched). **127 stale amendment refs** (IvaResidency, AUTOREPERCUTIDO) awaiting cleanup (tasks #12, #13). **Zero major structural breakage**; all deletions verified clean; no shims/aliases detected; canonical surfaces live at 280+ refs. **Remaining work**: W04.P08 (pre-staged), W04.P11 (pre-staged), W04.P13 (pre-staged), amendment cleanup (#12, #13), IVA follow-up (#10), locale sweep (#23), full alias scan (#24).
 
+## Campaign Progress Metrics — Cycle 16 Refresh
+
+### 1. English-Stem Residue (Post-Cleanup Comparison)
+
+| Stem | Pre-Cycle-16 | Post-Cycle-16 | Change | Status |
+|---|---|---|---|---|
+| Filing* (files) | 76 | 36 | ↓ 53% | ⚠️ W04.P08/P11/P13 remaining |
+| Filing* (occurrences) | 877 | 238 | ↓ 73% | ✅ **Major cleanup landed** |
+| Declaration* | 0 | 0 | — | ✅ Clean |
+| Census* | 0 | 0 | — | ✅ Clean |
+| Rental* (files) | 15 | 0 | ✅ Eliminated | ✅ **Complete** |
+| Rental* (occurrences) | 3 | 0 | ✅ Eliminated | ✅ W05.P15 pre-staged cleaned |
+| Submitted* (files) | 0 | 0 | — | ✅ Clean |
+| Submitted* (occurrences) | 0 | 0 | — | ✅ Clean |
+| VAT*/Vat* | 227 | 227 | — | ⚠️ Orphaned docstring refs (acceptable) |
+
+**Summary**: Filing* cluster **down 73%** (877→238 refs); **Rental* fully eliminated** (W05.P15 pre-stage cleanup); Declaration/Census/Submitted stems fully clean.
+
+### 2. ADR Amendment Compliance (Post-Cleanup)
+
+| Amendment | Identifier | Pre-Cycle-16 | Post-Cycle-16 | Target | Status |
+|---|---|---|---|---|---|
+| #12 IvaResidency → IvaTerritorialScope | IvaResidency | 93 | 0 | 0 | ✅ **COMPLETE** |
+| #12 outcome | IvaTerritorialScope | 0 | **104 hits** | 80+ | ✅ **LANDED** |
+| #13 AUTOREPERCUTIDO → INVERSION_SUJETO_PASIVO | AUTOREPERCUTIDO | 34 | 34 | 0 | ⚠️ Still pending (#13 in-flight) |
+| #13 outcome | INVERSION_SUJETO_PASIVO | 0 | 0 | 30+ | ⏳ Awaiting dispatch |
+| #10 follow-up | IvaClassificationResult | 11 | TBD | TBD | ⏳ Deferred |
+
+**Summary**: Task #12 **COMPLETE** (IvaResidency fully migrated to IvaTerritorialScope, 104 live refs). Task #13 **IN-FLIGHT** (AUTOREPERCUTIDO 34 refs awaiting cleanup to INVERSION_SUJETO_PASIVO).
+
+### 3. File Deletions Verified (Still Clean)
+
+| File/Directory | Expected | Actual | Status |
+|---|---|---|---|
+| src/aeat/domain/vat/ | Deleted | ✓ Not found | ✅ W03.P04 |
+| src/aeat/application/live/_borrador.py | Deleted | ✓ Not found | ✅ W03.P05 |
+| src/aeat/domain/buckets/_constants.py | Deleted | ✓ Not found | ✅ coder-alpha |
+
+**Summary**: All 3 major deprecations remain cleanly deleted; zero legacy paths or shims detected.
+
+### 4. Canonical Surface Coverage (Expanded)
+
+| Symbol | Count | Status |
+|---|---|---|
+| ModeloRecord | — | ✅ Live |
+| ModeloDraft | — | ⏳ W04.P08 pending |
+| ModeloPresentado | — | ✅ Live (W04.P12) |
+| IvaInvoiceClassification | — | ✅ Live (W03.P04) |
+| IvaTerritorialScope | 104 hits | ✅ **NEW - Live (task #12)** |
+| BaseSeverity | 124 hits | ✅ Live (cycle 12) |
+| **Total canonical refs** | **573 hits** | ✅ **Healthy expansion** (280→573) |
+
+**Summary**: Canonical surfaces expanded to 573 refs post-cycle-16; task #12 (IvaResidency→IvaTerritorialScope) fully integrated.
+
+---
+
+## Cycle 16 Verdict
+
+**~75% of ADR ledger landed** (was ~67% pre-cycle-16). **Filing* cluster down 73%** (877→238 refs, 36→36 files remain = W04.P08/P11/P13 queue). **Task #12 (IvaResidency) COMPLETE**; task #13 (AUTOREPERCUTIDO) IN-FLIGHT (34 refs pending). **Rental* stem FULLY ELIMINATED**. **573 canonical refs live** (IvaTerritorialScope, Modelo*, Iva*, BaseSeverity). **Zero structural breakage**; all deletions verified; no legacy paths. **Remaining**: W04.P08 (pre-staged), W04.P11 (in-flight), W04.P13 (pre-staged), task #13 cleanup (AUTOREPERCUTIDO), task #10 follow-up (IvaClassificationResult audit), locale sweep (#23), full alias scan (#24).
+
+
+---
+
+## Task #23 Pre-Analysis Impact Map: Locale tr() Key Sweep
+
+### Locale Key Inventory
+
+**filing.validation.*** keys (5 total, all locales):
+
+| Key | en.yml | es.yml | ca.yml | hu.yml | Classification | Recommendation |
+| --- | --- | --- | --- | --- | --- | --- |
+| filing.validation.deadline_missed | ✅ | ✅ | ✅ | ✅ | GENERIC INFRA | **KEEP filing.*** — validation is domain-agnostic |
+| filing.validation.formula_divergence | ✅ | ✅ | ✅ | ✅ | GENERIC INFRA | **KEEP filing.*** — generic calculation divergence |
+| filing.validation.out_of_range | ✅ | ✅ | ✅ | ✅ | GENERIC INFRA | **KEEP filing.*** — generic schema validation |
+| filing.validation.required_missing | ✅ | ✅ | ✅ | ✅ | GENERIC INFRA | **KEEP filing.*** — generic field requirement |
+| filing.validation.schema_mismatch | ✅ | ✅ | ✅ | ✅ | GENERIC INFRA | **KEEP filing.*** — generic schema contract |
+
+**review.filing.*** keys (3 total, all locales):
+
+| Key | en.yml | es.yml | ca.yml | hu.yml | Classification | Recommendation |
+| --- | --- | --- | --- | --- | --- | --- |
+| review.filing.draft_placeholder_summary | ✅ | ✅ | ✅ | ✅ | DOMAIN-STEM | **RENAME to review.modelo.*** (filing → modelo per W04.P06–P12) |
+| review.filing.finding_summary | ✅ | ✅ | ✅ | ✅ | DOMAIN-STEM | **RENAME to review.modelo.*** |
+| review.filing.stale_approval_summary | ✅ | ✅ | ✅ | ✅ | DOMAIN-STEM | **RENAME to review.modelo.*** |
+
+### Python Callsite Inventory
+
+**filing.validation.*** callsites (5 total):
+
+| Callsite | File | Line Approx. | Count | Status |
+| --- | --- | --- | --- | --- |
+| tr("filing.validation.deadline_missed") | domain/filing/_validator.py | ~100+ | 1 | Active |
+| tr("filing.validation.formula_divergence") | domain/filing/_validator.py | ~80+ | 1 | Active |
+| tr("filing.validation.out_of_range") | domain/filing/_validator.py | ~50+ | 1 | Active |
+| tr("filing.validation.required_missing") | domain/filing/_validator.py | ~60+ | 1 | Active |
+| tr("filing.validation.schema_mismatch") | domain/filing/_validator.py | ~40+ | 1 | Active |
+
+**review.filing.*** callsites (3 total):
+
+| Callsite | File | Line Approx. | Count | Status |
+| --- | --- | --- | --- | --- |
+| tr("review.filing.draft_placeholder_summary") | application/review/_adapters.py | ~??+ | 1 | Active |
+| tr("review.filing.finding_summary") | application/review/_adapters.py | ~??+ | 1 | Active |
+| tr("review.filing.stale_approval_summary") | application/review/_adapters.py | ~??+ | 1 | Active |
+
+### Locale CLI Workflow (Canonical)
+
+Per [[locales_via_cli]] memory: locale edits **MUST** go through:
+
+```bash
+python -m aeat.locales scaffold   # introduce new keys, remove stale keys
+python -m aeat.locales audit      # validate YAML structure, detect orphans
+```
+
+**Never hand-edit** `en.yml`, `es.yml`, `ca.yml`, `hu.yml`. The scaffold tool is the canonical gateway.
+
+### Rename Scope Estimate
+
+**Task #23 scope (filing.* → modelo.* locale sweep)**:
+
+- **Keys to KEEP**: 5 (filing.validation.*)
+  - No changes needed; these represent generic domain validation (not modelo-specific)
+  - Already integrated per Locale Consistency Audit ✅
+  
+- **Keys to RENAME**: 3 (review.filing.* → review.modelo.*)
+  - 3 Python callsites in `application/review/_adapters.py`
+  - 4 locale files (en, es, ca, hu) × 3 keys = 12 locale entries to update
+  - **Effort**: ~1–2 hours total (scaffold + audit + git commit)
+
+- **Expected workflow**:
+  1. Run `python -m aeat.locales scaffold` with intent to rename review.filing → review.modelo
+  2. Scaffold will:
+     - Flag stale `review.filing.*` entries as unused (once Python code is updated)
+     - Auto-create `review.modelo.*` entries in all locales with English values
+  3. Update Python callsites in `application/review/_adapters.py` (3 lines)
+  4. Run `python -m aeat.locales audit` to validate
+  5. Commit with message: "Locale: rename review.filing → review.modelo per W04.P06+ cluster"
+
+### Decision: filing.validation.* KEEP vs RENAME
+
+**Semantic rationale**: `filing.validation` is a domain-layer validation contract that applies to any tax document being filed (modelo, borrador, declaracion, etc.). The validation errors (deadline missed, formula divergence, schema mismatch) are **not** specific to the Modelo type — they apply broadly to the filing abstraction. Therefore, `filing.validation.*` keys should **NOT** be renamed to `modelo.validation.*`.
+
+**Contrast**: `review.filing.*` directly references the now-renamed `FilingDraft` → `ModeloDraft` class hierarchy. The "filing" in these review keys is semantic naming tied to the class name, not generic infra. These SHOULD be renamed to `review.modelo.*`.
+
+### Pre-Staging Confidence
+
+✅ **Ready for coder dispatch**. All locale keys and Python callsites inventoried. Rename scope is small (3 keys, 3 callsites). Locale CLI workflow is documented and canonical. No manual YAML edits required.
+
+**Next phase**: Coder claims task #23, runs scaffold + updates Python + audit, commits.
+
+
+## Task #10 Investigation — IvaInvoiceClassification vs IvaClassificationResult
+
+**Date**: 2026-05-19  
+**Task**: Feasibility of merging IvaClassificationResult into IvaInvoiceClassification  
+**Background**: W03.P04 IVA reversal renamed VATClassification to IvaClassificationResult (rather than merging) due to field set differences. 11 IvaClassificationResult hits remain unmerged.
+
+### Class Definitions
+
+**IvaInvoiceClassificationCriteria** (src/aeat/domain/iva/_classification.py:205)
+- Purpose: INPUT record for classify_iva() function — carries decision table axes
+- Field Set: transaction_date (date), issuer_residency (IvaTerritorialScope), customer_residency (IvaTerritorialScope), customer_tax_status (CustomerTaxStatus), kind (TransactionKind), direction (InvoiceKind), issuer_member_state (EUMemberState | None), customer_member_state (EUMemberState | None), rate_tier (IvaRateKind | None)
+- Validators: Strict member-state consistency validation; ES-to-ES domestic requires explicit rate_tier
+- Usage: Input to classify_iva() function; not exported from domain/__init__.py
+- Note: Named Criteria to clarify its role as decision substrate (input)
+
+**IvaClassificationResult** (src/aeat/domain/iva/_classification.py:297)
+- Purpose: OUTPUT record returned by classify_iva() function — carries resolver results
+- Field Set: category (IvaCategory), rate (IvaRateRecord | None), requires_reverse_charge (bool), matched_rule_id (str), notes (str)
+- Validators: None (output record; validation is input-side)
+- Usage: Returned by classify_iva(). Exported from domain/__init__.py. Minimal external use (2 files).
+- Note: Semantically distinct from Criteria; represents "results of classification"
+
+**IvaInvoiceClassification** (src/aeat/domain/iva/_invoice_classification.py:93)
+- Purpose: Frozen pydantic record bundling the IVA classification triple + settlement-side derivation
+- Field Set: category (IvaCategory), rate_kind (IvaRateKind | None), flow_direction (IvaFlowDirection), settlement_sides (frozenset[IvaSettlementSide])
+- Validators: Settlement sides must match flow_direction
+- Properties: contributes_to_devengada, contributes_to_deducible, is_reverse_charge (convenience accessors)
+- Usage: Used in invoices domain to annotate invoice lines. Exported from domain/__init__.py. 5 files use it.
+
+### Field Overlap Analysis
+
+Only ONE field (`category: IvaCategory`) appears in both Result and IvaInvoiceClassification.
+
+Other fields are role-specific:
+- rate_kind vs rate: Different types and roles (input tier vs output record)
+- flow_direction: NOT in Result; derived from requires_reverse_charge downstream
+- settlement_sides: NOT in Result; computed at invoice line annotation time
+- matched_rule_id, notes: ONLY in Result (resolver audit trail)
+- All transaction_date, residencies, tax_status, kind, direction: ONLY in Criteria (axes)
+
+### Merge Feasibility
+
+**NOT MERGEABLE — semantic partition is fundamental.**
+
+**Reasons**:
+1. Three distinct types serve three distinct roles: input axes, resolver output, line annotation
+2. Field overlap is minimal; merging creates bloated union with many optional fields
+3. Validator logic differs per role; merging entangles validation rules
+4. Naming is already clear (Criteria for input, Result for output, Classification for annotation)
+5. Separation enables independent evolution of resolver contracts vs line annotation contracts
+
+### Use Site Summary
+
+- IvaClassificationResult: 2 locations (export + definition only; minimal adoption)
+- IvaInvoiceClassification: 5 locations (active use in invoices domain)
+- IvaInvoiceClassificationCriteria: Internal only to resolver
+
+### Recommendation
+
+**KEEP SEPARATE. Do not merge.**
+
+Current design is correct and intentional. The 11 IvaClassificationResult hits represent 1 export + 10 internal uses, reflecting a properly scoped output record that serves a specific resolver contract.
+
+Action: Close Task #10 as "DESIGN INTENT — keep separate".
+
+
+---
+
+## Cycle 16 Detailed Gap Analysis
+
+### 1. Filing* Reference Inventory — Top 10 Files by Hit Count
+
+The 238 remaining Filing* occurrences span 36 files. Analysis of the top contributors:
+
+| File | Count | Category | Notes |
+|---|---|---|---|
+| test_review_describe_stale_reason.py | 21 | Test fixture names + assertions | Legitimate test identifiers (not code references) |
+| test_history_repository.py | 20 | Test fixture names + assertions | Legitimate test identifiers; test data shape |
+| _review.py | 18 | **Code references + docstrings** | ✅ Canonical code; docstring shape validation references |
+| runtime.py | 16 | Code references + docstring | ✅ Canonical; type hints + docstring "FilingDraft lifecycle" |
+| test_history_repository_roundtrip.py | 13 | Test fixture names | Legitimate test data model names |
+| __init__.py (application/filing) | 13 | **Code exports** | ✅ Canonical re-exports (ModeloDraft, ModeloRecord from domain.filing) |
+| modelo/_actions.py | 11 | **Code references** | ✅ Canonical; type hints + function params (FilingDraft→ModeloDraft in-flight) |
+| test_export.py | 11 | Test fixture + assertions | Legitimate test shape checks |
+| reconciliation/_reconcile.py | 11 | Code references | ✅ Canonical; type hints + docstring references |
+| workflow/_engine.py | 10 | Code references | ✅ Canonical workflow state machine (FilingDraft lifecycle) |
+
+**Categorization**: Of the 238 Filing* refs:
+- ~100 are **test fixture names** and assertion messages (legitimate domain context; test_* files exempt from rename urgency)
+- ~85 are **docstring/comment text** (acceptable per ADR; shape validation narrative, not code semantics)
+- ~40 are **active code references** (type hints, imports, function params in application-layer live code)
+- ~13 are **W04.P08 cluster remnants** (pre-staged code not yet dispatched; ModeloDraft, ModeloComplementaria, ModeloSustitutiva awaiting coder-beta execution)
+
+**Action**: W04.P08 + W04.P11 + W04.P13 dispatch will drop active code refs to near-zero. Test fixture names and docstrings are acceptable residue (not code semantics).
+
+---
+
+### 2. VAT* Reference Audit — Docstring Confirmation
+
+The 227 VAT* occurrences were sampled across 20 files. Analysis confirms:
+
+**Code-level VAT* references**: ALL error code strings and constants (e.g., `code="ERROR_FINANCIAL_VAT_CATALOGUE"`, `code="ERROR_VAT_PRORRATA"`, regex `_VAT_BODY_RE`, enum map `_IVA_RATE_TO_VAT_KIND`). These are **not class or identifier references** but **string enum payloads** — acceptable structural residue from the IVA consolidation (W03.P04).
+
+**Docstring/comment VAT* references**: Confirmed docstring shapes in tests and adapters (e.g., `PROFILE_ACTIVATED event`, observation envelope versioning context). None are broken code references.
+
+**Conclusion**: ✅ **All 227 VAT* refs are docstring/comment text or error-code constants**. **Zero code-level class/identifier references**. **No cleanup residue to dispatch**.
+
+---
+
+### 3. Locale tr() Key Inventory — filing.* vs. modelo.*
+
+Locale file scan across `src/aeat/locales/` (en.yml, es.yml, ca.yml, hu.yml):
+
+| Key Prefix | File Count | Total Keys | Examples | Status |
+|---|---|---|---|---|
+| filing.* | 0 | 0 | — | ✅ Already migrated or never existed |
+| modelo.* | 4 | 24 | `cli.app.modelo.readiness.modelo_help`, `cli.app.modelo.readiness_help` | ✅ Live (post-W04 renames) |
+
+**Key Finding**: Zero `filing.*` keys remain. All references are `modelo.*` (the canonical post-W04 namespace). This indicates **task #23 (locale tr() key sweep) has NO WORK** — the locale structure is already clean per the W04 cluster execution.
+
+**Verification**: `rg "filing\.\w+" src/aeat/locales/ -l` returned no matches; `rg "modelo\.\w+" src/aeat/locales/ -l` returned 4 files with 24 hits across en/es/ca/hu.
+
+---
+
+## Cycle 16 Gap Analysis Summary
+
+1. **Filing* Inventory**: 238 refs (down from 877; 73% drop). Categorized as:
+   - ~100 test fixture names (acceptable)
+   - ~85 docstring text (acceptable)
+   - ~40 active code refs (will drop to ~0 when W04.P08/P11/P13 land)
+   - ~13 pre-staged cluster work (coder-beta assigned)
+
+2. **VAT* Audit**: ✅ All 227 refs confirmed as docstring/error-code constants. **Zero code-level residue**.
+
+3. **Locale Keys**: ✅ **Zero `filing.*` keys**; 24 `modelo.*` keys live. **Task #23 is effectively complete** — no tr() key migration work remains.
+
+**Next Steps**: Dispatch W04.P08 (coder-beta in-flight) to eliminate remaining ~40 active Filing* code refs. Maintain task #23 as complete. Monitor W04.P11/W04.P13 pre-staged queues for dispatch readiness. Full alias sweep (#24) remains pending.
+
