@@ -1,13 +1,24 @@
-"""Application-live persistence for captured Modelo 100 borrador snapshots."""
+"""Application-live persistence for captured Modelo 100 borrador snapshots.
+
+Borrador100 is the proof-of-concept consumer of the shared
+``_snapshot_base`` lifecycle abstraction. The public exception class names
+(``LiveApplicationInputError``-derived), ``Borrador100SnapshotService``
+class identity, storage namespace, object-key layout, and method
+signatures are preserved exactly; only the inline state-machine,
+supersession, and content-id helpers have been routed through the
+shared base.
+
+``Borrador100SnapshotState`` remains exported under its original name and
+is now an alias of :class:`SnapshotLifecycleState`, since the enum value
+names already match the canonical lifecycle vocabulary.
+"""
 
 from __future__ import annotations
 
-import hashlib
-import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
-from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -15,6 +26,12 @@ from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ._errors import LiveApplicationInputError
+from ._snapshot_base import (
+    SnapshotLifecycleState,
+    SnapshotService,
+    derive_snapshot_id_from_json,
+    enforce_snapshot_state_invariants,
+)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 BORRADOR_100_SNAPSHOT_NAMESPACE = "aeat.application.live.borrador_100_snapshot"
@@ -22,12 +39,12 @@ _BORRADOR_100_SNAPSHOT_VERSION = 1
 type _BorradorValue = Decimal | str
 
 
-class Borrador100SnapshotState(StrEnum):
-    """Lifecycle state relevant to calculation-time consumption."""
-
-    ACTIVE = "active"
-    SUPERSEDED = "superseded"
-    DISCARDED = "discarded"
+# Borrador100SnapshotState retained as a named alias so existing imports keep
+# working unchanged. Phase 1 deviation from the proposal: the proposal
+# suggested a subclass enum; the existing Borrador100 enum already uses the
+# canonical value names ("active"/"superseded"/"discarded") so we alias the
+# shared enum directly rather than introducing a duplicate StrEnum.
+Borrador100SnapshotState = SnapshotLifecycleState
 
 
 class Borrador100Snapshot(BaseModel):
@@ -42,7 +59,7 @@ class Borrador100Snapshot(BaseModel):
     period: str = Field(min_length=1, max_length=16)
     captured_at: datetime
     source_url: str = Field(min_length=1, max_length=2048)
-    state: Borrador100SnapshotState
+    state: SnapshotLifecycleState
     binding_values: Mapping[str, _BorradorValue] = Field(default_factory=dict)
     superseded_by_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     discarded_at: datetime | None = None
@@ -51,15 +68,13 @@ class Borrador100Snapshot(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_state_payload(self) -> Borrador100Snapshot:
-        if self.state is Borrador100SnapshotState.ACTIVE and self.superseded_by_snapshot_id is not None:
-            raise LiveApplicationInputError("active borrador snapshots cannot carry supersession pointers")
-        if self.state is Borrador100SnapshotState.SUPERSEDED and self.superseded_by_snapshot_id is None:
-            raise LiveApplicationInputError("superseded borrador snapshots must carry superseded_by_snapshot_id")
-        if self.state is not Borrador100SnapshotState.DISCARDED:
-            if self.discarded_at is not None or self.discarded_by or self.discard_reason:
-                raise LiveApplicationInputError("only discarded borrador snapshots can carry discard metadata")
-        elif self.discarded_at is None or not self.discarded_by.strip():
-            raise LiveApplicationInputError("discarded borrador snapshots require discarded_at and discarded_by")
+        enforce_snapshot_state_invariants(
+            state=self.state,
+            has_supersession_pointer=self.superseded_by_snapshot_id is not None,
+            discarded_at=self.discarded_at,
+            discarded_by=self.discarded_by,
+            discard_reason=self.discard_reason,
+        )
         blank_keys = sorted(key for key in self.binding_values if not key.strip())
         if blank_keys:
             raise LiveApplicationInputError("borrador binding value keys must not be blank")
@@ -86,9 +101,14 @@ def derive_borrador_100_snapshot_id(
     source_url: str,
     binding_values: Mapping[str, _BorradorValue],
 ) -> str:
-    """Return the content-addressed id for one Modelo 100 borrador capture."""
+    """Return the content-addressed id for one Modelo 100 borrador capture.
 
-    canonical = json.dumps(
+    The canonical-JSON shape is preserved exactly so existing on-disk
+    snapshot ids remain valid: routing through
+    ``derive_snapshot_id_from_json`` does not change the hashed bytes.
+    """
+
+    return derive_snapshot_id_from_json(
         {
             "modelo": "100",
             "filing_year": filing_year,
@@ -99,12 +119,8 @@ def derive_borrador_100_snapshot_id(
                 key: format(value, "f") if isinstance(value, Decimal) else value
                 for key, value in sorted(binding_values.items())
             },
-        },
-        ensure_ascii=True,
-        sort_keys=True,
-        separators=(",", ":"),
+        }
     )
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _snapshot_from_record(record: SecureObjectRecord, requested_snapshot_id: str | None = None) -> Borrador100Snapshot:
@@ -224,7 +240,7 @@ class Borrador100SnapshotRepository:
         )
 
 
-class Borrador100SnapshotService:
+class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
     """Canonical backend service for bucket-scoped Modelo 100 borrador snapshots."""
 
     def __init__(
@@ -233,14 +249,12 @@ class Borrador100SnapshotService:
         bucket_id: str,
         repository: Borrador100SnapshotRepository | None = None,
     ) -> None:
-        self._repository = repository or Borrador100SnapshotRepository(bucket_id=bucket_id)
-        if self._repository.bucket_id != bucket_id.strip():
-            raise LiveApplicationInputError(
-                f"borrador service bucket_id={bucket_id!r} does not match repository bucket "
-                f"{self._repository.bucket_id!r}"
-            )
+        resolved_repository = repository or Borrador100SnapshotRepository(bucket_id=bucket_id)
+        super().__init__(bucket_id=bucket_id, repository=resolved_repository)
 
-    def capture(
+    # ---- public API (signatures unchanged for external callers) ----------
+
+    def capture(  # type: ignore[override]
         self,
         *,
         filing_year: int,
@@ -249,47 +263,21 @@ class Borrador100SnapshotService:
         source_url: str,
         binding_values: Mapping[str, _BorradorValue],
     ) -> Borrador100Snapshot:
-        snapshot_id = derive_borrador_100_snapshot_id(
+        return super().capture(
             filing_year=filing_year,
             period=period,
             captured_at=captured_at,
             source_url=source_url,
             binding_values=binding_values,
         )
-        if self._repository.exists(snapshot_id):
-            return self._repository.load(snapshot_id)
-        snapshot = Borrador100Snapshot(
-            snapshot_id=snapshot_id,
-            bucket_id=self._repository.bucket_id,
-            modelo="100",
-            filing_year=filing_year,
-            period=period.strip(),
-            captured_at=captured_at,
-            source_url=source_url,
-            state=Borrador100SnapshotState.ACTIVE,
-            binding_values=dict(binding_values),
-        )
-        active_snapshot = self._latest_active_for_axis(snapshot)
-        if active_snapshot is not None and active_snapshot.captured_at > snapshot.captured_at:
-            snapshot = snapshot.model_copy(
-                update={
-                    "state": Borrador100SnapshotState.SUPERSEDED,
-                    "superseded_by_snapshot_id": active_snapshot.snapshot_id,
-                }
-            )
-            self._repository.save(snapshot)
-            return snapshot
-        self._supersede_current_for_axis(snapshot)
-        self._repository.save(snapshot)
-        return snapshot
 
-    def list_snapshots(
+    def list_snapshots(  # type: ignore[override]
         self,
         *,
         filing_year: int | None = None,
-        state: Borrador100SnapshotState | None = Borrador100SnapshotState.ACTIVE,
+        state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
     ) -> tuple[Borrador100Snapshot, ...]:
-        snapshots = self._repository.list_snapshots()
+        snapshots = super().list_snapshots()
         if filing_year is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.filing_year == filing_year)
         if state is not None:
@@ -297,7 +285,7 @@ class Borrador100SnapshotService:
         return snapshots
 
     def show(self, snapshot_id: str) -> Borrador100Snapshot:
-        return self._repository.resolve(snapshot_id)
+        return self.resolve_snapshot(snapshot_id)
 
     def latest_for_year(self, *, filing_year: int, period: str | None = None) -> Borrador100Snapshot | None:
         snapshots = [
@@ -309,39 +297,51 @@ class Borrador100SnapshotService:
             return None
         return max(snapshots, key=lambda snapshot: snapshot.captured_at)
 
-    def _supersede_current_for_axis(self, replacement: Borrador100Snapshot) -> None:
-        for snapshot in self._repository.list_snapshots():
-            if (
-                snapshot.snapshot_id != replacement.snapshot_id
-                and snapshot.modelo == replacement.modelo
-                and snapshot.filing_year == replacement.filing_year
-                and snapshot.period == replacement.period
-                and snapshot.state is Borrador100SnapshotState.ACTIVE
-            ):
-                self._repository.save(
-                    snapshot.model_copy(
-                        update={
-                            "state": Borrador100SnapshotState.SUPERSEDED,
-                            "superseded_by_snapshot_id": replacement.snapshot_id,
-                        }
-                    )
-                )
+    # ---- SnapshotService[Borrador100Snapshot] hooks ----------------------
 
-    def _latest_active_for_axis(self, snapshot: Borrador100Snapshot) -> Borrador100Snapshot | None:
-        active = [
-            candidate
-            for candidate in self._repository.list_snapshots()
-            if (
-                candidate.snapshot_id != snapshot.snapshot_id
-                and candidate.modelo == snapshot.modelo
-                and candidate.filing_year == snapshot.filing_year
-                and candidate.period == snapshot.period
-                and candidate.state is Borrador100SnapshotState.ACTIVE
-            )
-        ]
-        if not active:
-            return None
-        return max(active, key=lambda candidate: (candidate.captured_at, candidate.snapshot_id))
+    def _derive_snapshot_id(self, **kwargs: Any) -> str:
+        return derive_borrador_100_snapshot_id(
+            filing_year=kwargs["filing_year"],
+            period=kwargs["period"],
+            captured_at=kwargs["captured_at"],
+            source_url=kwargs["source_url"],
+            binding_values=kwargs["binding_values"],
+        )
+
+    def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> Borrador100Snapshot:
+        return Borrador100Snapshot(
+            snapshot_id=snapshot_id,
+            bucket_id=self._repository.bucket_id,
+            modelo="100",
+            filing_year=kwargs["filing_year"],
+            period=kwargs["period"].strip(),
+            captured_at=kwargs["captured_at"],
+            source_url=kwargs["source_url"],
+            state=SnapshotLifecycleState.ACTIVE,
+            binding_values=dict(kwargs["binding_values"]),
+        )
+
+    def _payload_axis_key(self, payload: Borrador100Snapshot) -> tuple[Any, ...]:
+        return (payload.modelo, payload.filing_year, payload.period)
+
+    def _payload_captured_at(self, payload: Borrador100Snapshot) -> datetime:
+        return payload.captured_at
+
+    def _payload_snapshot_id(self, payload: Borrador100Snapshot) -> str:
+        return payload.snapshot_id
+
+    def _payload_state(self, payload: Borrador100Snapshot) -> SnapshotLifecycleState:
+        return payload.state
+
+    def _demote_to_superseded(
+        self, payload: Borrador100Snapshot, *, superseded_by: str
+    ) -> Borrador100Snapshot:
+        return payload.model_copy(
+            update={
+                "state": SnapshotLifecycleState.SUPERSEDED,
+                "superseded_by_snapshot_id": superseded_by,
+            }
+        )
 
 
 __all__ = [
