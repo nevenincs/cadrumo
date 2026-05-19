@@ -127,6 +127,74 @@ def _run_query[T](call: Callable[[], T]) -> T:
         raise typer.BadParameter(str(exc)) from exc
 
 
+@app.command(
+    "readiness",
+    help=tr(
+        "cli.app.modelo.readiness_help",
+        default="Report whether the active profile is ready to file one modelo / year / period.",
+    ),
+)
+def modelo_readiness(
+    ctx: typer.Context,
+    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.readiness.modelo_help", default="Modelo code (e.g. 303)."))],
+    revision_id: Annotated[str, typer.Option("--revision-id", help=tr("cli.app.modelo.readiness.revision_help", default="Registry revision id."))],
+    filing_year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.readiness.year_help", default="Filing year."))],
+    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.readiness.period_help", default="Period token (e.g. Q1, annual)."))] = None,
+) -> None:
+    """Walk the ProfilePreflightService over the active profile for one modelo target.
+
+    Carries the behaviour previously surfaced as
+    ``aeat config profile preflight``. Lives on the modelo surface so
+    the readiness check sits alongside the other modelo verbs that
+    operate on ``(modelo, revision, year, period)`` tuples.
+    """
+
+    from ...application.user_profile._orchestration import (
+        _shared_schema,
+        build_lifecycle_service,
+    )
+    from ...application.user_profile._preflight import ProfilePreflightService
+    from ...application.workflow._models import resolve_active_bucket_id
+    from ...application.workflow._persistence import workflow_state_repository
+    from ...core.i18n import tr as _tr
+    from ...domain.user_profile import ProfileNotFoundError
+    from ._errors import CliRefusedBoundaryError
+
+    state = workflow_state_repository().load()
+    active = resolve_active_bucket_id()
+    if active is None:
+        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+    pointer = state.profiles.get(active)
+    if pointer is None:
+        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        record = service.read(active)
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=active)) from exc
+    preflight = ProfilePreflightService(schema=_shared_schema())
+    report = preflight.report(
+        record=record,
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=filing_year,
+        period=period or "",
+    )
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"profile_id\t{record.profile_id}",
+        f"modelo\t{modelo}",
+        f"revision_id\t{revision_id}",
+        f"filing_year\t{filing_year}",
+        f"period\t{period or ''}",
+        f"ready\t{report.ready}",
+        f"missing\t{len(report.missing)}",
+    ]
+    for requirement in report.missing:
+        lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
+    _emit(ctx, payload, lines)
+
+
 @app.command("list")
 def list_modelos(
     ctx: typer.Context,
