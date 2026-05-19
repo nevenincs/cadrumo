@@ -27,7 +27,7 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.domain.deadlines import (
-    CCAA,
+    CalendarCCAA,
     MODELOS_WITHOUT_SHIFT,
     DeadlineShift,
     Holiday,
@@ -142,14 +142,14 @@ def test_business_day_predicate_recognises_ccaa_only_holiday_in_that_ccaa() -> N
     calendar = load_holiday_calendar(2025)
     diada = date(2025, 9, 11)
     assert diada.weekday() == 3  # Thursday
-    assert is_business_day(diada, calendar=calendar, ccaa_code=CCAA.CATALUNA) is False
-    assert is_business_day(diada, calendar=calendar, ccaa_code=CCAA.MADRID) is True
+    assert is_business_day(diada, calendar=calendar, ccaa_code=CalendarCCAA.CATALUNA) is False
+    assert is_business_day(diada, calendar=calendar, ccaa_code=CalendarCCAA.MADRID) is True
 
 
 def test_business_day_predicate_returns_true_for_plain_weekday() -> None:
     calendar = load_holiday_calendar(2025)
     tuesday = date(2025, 3, 4)  # Tuesday, not a holiday.
-    assert is_business_day(tuesday, calendar=calendar, ccaa_code=CCAA.MADRID) is True
+    assert is_business_day(tuesday, calendar=calendar, ccaa_code=CalendarCCAA.MADRID) is True
 
 
 def test_business_day_predicate_degrades_to_national_only_when_ccaa_is_none() -> None:
@@ -202,7 +202,7 @@ def test_shift_deadline_does_not_move_a_business_day_close() -> None:
     """A close on a plain Tuesday produces an unshifted DeadlineShift."""
 
     tuesday = date(2025, 3, 4)
-    result = shift_deadline(tuesday, modelo="303", ccaa_code=CCAA.MADRID)
+    result = shift_deadline(tuesday, modelo="303", ccaa_code=CalendarCCAA.MADRID)
     assert result.shifted is False
     assert result.shift_days == 0
     assert result.original_close_date == result.adjusted_close_date == tuesday
@@ -214,7 +214,7 @@ def test_shift_deadline_moves_a_saturday_close_to_next_monday() -> None:
 
     # 2025-03-01 is a Saturday with no holiday overlay.
     saturday = date(2025, 3, 1)
-    result = shift_deadline(saturday, modelo="303", ccaa_code=CCAA.MADRID)
+    result = shift_deadline(saturday, modelo="303", ccaa_code=CalendarCCAA.MADRID)
     assert result.shifted is True
     assert result.original_close_date == saturday
     assert result.adjusted_close_date == date(2025, 3, 3)
@@ -227,7 +227,7 @@ def test_shift_deadline_handles_national_holiday_on_weekday() -> None:
     next Monday because Saturday + Sunday follow the holiday."""
 
     viernes_santo = date(2025, 4, 18)
-    result = shift_deadline(viernes_santo, modelo="303", ccaa_code=CCAA.MADRID)
+    result = shift_deadline(viernes_santo, modelo="303", ccaa_code=CalendarCCAA.MADRID)
     assert result.shifted is True
     assert result.adjusted_close_date == date(2025, 4, 21)
     assert HolidayJurisdiction.NATIONAL in result.jurisdictions
@@ -240,13 +240,13 @@ def test_shift_deadline_handles_ccaa_holiday_when_residence_matches() -> None:
     with the same close date does NOT shift."""
 
     diada = date(2025, 9, 11)
-    catalan_result = shift_deadline(diada, modelo="303", ccaa_code=CCAA.CATALUNA)
+    catalan_result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.CATALUNA)
     assert catalan_result.shifted is True
     assert catalan_result.adjusted_close_date == date(2025, 9, 12)
     assert HolidayJurisdiction.CCAA in catalan_result.jurisdictions
     assert "Diada" in catalan_result.shift_reason
 
-    madrid_result = shift_deadline(diada, modelo="303", ccaa_code=CCAA.MADRID)
+    madrid_result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.MADRID)
     assert madrid_result.shifted is False
     assert madrid_result.adjusted_close_date == diada
 
@@ -258,7 +258,7 @@ def test_shift_deadline_modelo_369_does_not_shift_per_oss_exception() -> None:
     regime is governed by an EU-harmonised cutoff."""
 
     saturday = date(2025, 3, 1)
-    result = shift_deadline(saturday, modelo="369", ccaa_code=CCAA.MADRID)
+    result = shift_deadline(saturday, modelo="369", ccaa_code=CalendarCCAA.MADRID)
     assert result.shifted is False
     assert result.adjusted_close_date == saturday
     assert result.shift_reason == "modelo_exception"
@@ -277,7 +277,7 @@ def test_shift_deadline_accepts_externally_supplied_calendar() -> None:
 
     calendar = load_holiday_calendar(2025)
     tuesday = date(2025, 3, 4)
-    result = shift_deadline(tuesday, modelo="303", ccaa_code=CCAA.MADRID, calendar=calendar)
+    result = shift_deadline(tuesday, modelo="303", ccaa_code=CalendarCCAA.MADRID, calendar=calendar)
     assert result.shifted is False
     assert result.adjusted_close_date == tuesday
 
@@ -292,7 +292,7 @@ def test_shift_deadline_records_holiday_refs_for_audit_trail() -> None:
     shift so operator-facing output can explain ``why``."""
 
     diada = date(2025, 9, 11)
-    result = shift_deadline(diada, modelo="303", ccaa_code=CCAA.CATALUNA)
+    result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.CATALUNA)
     assert "Diada Nacional de Cataluña" in result.holiday_refs
 
 
@@ -300,7 +300,7 @@ def test_shift_deadline_handles_saturday_overlap_with_national_holiday() -> None
     """2025-11-01 is Todos los Santos AND a Saturday. The shift result
     cites both the weekend day and the national holiday."""
 
-    result = shift_deadline(date(2025, 11, 1), modelo="303", ccaa_code=CCAA.MADRID)
+    result = shift_deadline(date(2025, 11, 1), modelo="303", ccaa_code=CalendarCCAA.MADRID)
     assert result.shifted is True
     # The reason carries both signals.
     assert "sabado" in result.shift_reason
@@ -347,7 +347,7 @@ def test_ccaa_enum_has_19_members_covering_17_autonomies_plus_2_cities() -> None
     """Spain has 17 autonomous communities and 2 autonomous cities
     (Ceuta + Melilla). All 19 carry ISO 3166-2:ES codes."""
 
-    members = tuple(CCAA)
+    members = tuple(CalendarCCAA)
     assert len(members) == 19
     codes = {m.value for m in members}
     assert "ES-AN" in codes  # Andalucía
