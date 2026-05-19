@@ -14,6 +14,16 @@ from enum import StrEnum
 class UseType(StrEnum):
     """Closed catalogue of finca use types tracked by the rental register.
 
+    Acts as the regime discriminator for the unified :class:`Finca`
+    storage entity. Each member maps to one of three LIRPF treatments:
+
+    * **Rendimiento del capital inmobiliario** (Ley 35/2006 IRPF
+      Arts. 22-24): ``VIVIENDA_ARRENDADA``, ``LOCAL_COMERCIAL``.
+    * **Imputación de rentas inmobiliarias** (Ley 35/2006 IRPF
+      Art. 85): ``OTRO_INMUEBLE_NO_AFECTO``, ``VIVIENDA_DESOCUPADA``.
+    * **No tax effect**: ``VIVIENDA_HABITUAL`` (excluded by Art. 85
+      first paragraph).
+
     Members:
         VIVIENDA_ARRENDADA: Dwelling let to a tenant; feeds rental
             income, expense, amortization, and reduction aggregates
