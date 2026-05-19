@@ -24,7 +24,7 @@ matters.
 
 This is a living document. Each row reflects a corpus reality as
 of the most recent Plan C rollout commit. Total declarations
-recorded today: **758 across 48 distinct roles**.
+recorded today: **765 across 52 distinct roles**.
 
 ## Identity roles (data_type = "nif")
 
@@ -112,6 +112,10 @@ canonical shape per role.
 | `pago_fraccionado_previo` | `money` | `non_negative` | 8 | M130 05, M131 07, M202 30 | Prior-period fractional-payment totals carried into the current declaration. |
 | `cuota_a_ingresar` | `money` | `non_negative` | 4 | M111 30, M115 05, M123 08/14 | Strict "Resultado a ingresar" total. Excludes the signed "o a devolver" form (M100/0700, M200/00599) which carry their own role. |
 | `base_imponible_irpf` | `decimal` | `any` | 12 | M100 0259 (imputada), 0435 (general) | IRPF base imponible across M100's six revisions. Signed because IRPF base can be negative when losses dominate. |
+| `base_intracomunitaria` | `money` | `non_negative` | 3 | M349 op.base-imponible, rect.base-rectificada, rect.base-anterior | Intracomunitario operation amount + rectification pair. |
+| `base_imponible_negativa_is` | `decimal` | `non_positive` | 1 | M200 00027 | IS carry-forward of prior-year base imponible losses. Single-occurrence; legitimately M200-specific. |
+| `resultado_ingresar_o_devolver_irpf` | `decimal` | `any` | 2 | M100 0700 (2024, 2025 only) | Signed cuota for IRPF — refund vs payment. M100 reuses casilla 0700 for an unrelated deduction concept in 2020-2023, so only 2024/2025 carry the role. |
+| `resultado_ingresar_o_devolver_is` | `money` | `any` | 1 | M200 00599 | Signed cuota for IS. Single-modelo because IS has one current revision. |
 
 ## Validator behaviour
 
@@ -146,16 +150,6 @@ proceed:
   `renta-2025-profile-tax-residence-ccaa` binding rather than a
   casilla; rollout deferred until the binding-vs-casilla
   decomposition decision lands.
-- `resultado_ingresar_o_devolver_irpf`,
-  `resultado_ingresar_o_devolver_is` — signed cuota roles for the
-  "Resultado a ingresar o a devolver" cluster (M100/0700 decimal,
-  M200/00599 money). Each is single-modelo; the irpf / is split
-  reflects the data_type divergence the research artefact flagged.
-- `base_imponible_negativa_is` — M200 casilla 00027 (negative-or-
-  zero IS base carry-forward, decimal, sign = non_positive).
-- `base_intracomunitaria` — M349 op.base-imponible /
-  rect.base-rectificada / rect.base-anterior (money, intra-EU
-  operations).
 
 ## OQ-1 deferred casillas
 
