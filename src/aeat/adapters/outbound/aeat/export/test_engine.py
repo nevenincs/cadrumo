@@ -55,7 +55,7 @@ class _Draft(ModeloDraftLike):
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
-    status: ModeloDraftStatus = ModeloDraftStatus.APPROVED
+    status: ModeloDraftStatus = ModeloDraftStatus.APROBADO
     values: dict[str, str] = field(default_factory=dict)
     findings: tuple[ModeloFinding, ...] = ()
 
@@ -108,14 +108,14 @@ def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> Mod
         modelo=modelo,
         period="2026Q1",
         profile_tax_id="X1234567L",
-        status=SubmissionStatus.PENDING,
+        status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
         submitted_at=now,
         attempts=(
             SubmissionAttempt(
                 attempt_id="attempt-1",
                 started_at=now,
                 ended_at=now,
-                status=SubmissionStatus.PENDING,
+                status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
             ),
         ),
     )

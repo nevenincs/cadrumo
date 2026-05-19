@@ -272,7 +272,7 @@ def _build_submission_record(
         attempt_id=f"{submission_id}.1",
         started_at=submitted_at,
         ended_at=submitted_at,
-        status=SubmissionStatus.SUBMITTED,
+        status=SubmissionStatus.PRESENTADA,
     )
     return ModeloPresentado(
         submission_id=submission_id,
@@ -280,7 +280,7 @@ def _build_submission_record(
         modelo=draft.modelo,
         period=draft.period,
         profile_tax_id=draft.profile_tax_id,
-        status=SubmissionStatus.SUBMITTED,
+        status=SubmissionStatus.PRESENTADA,
         justificante_csv=justificante.csv,
         justificante_pdf_path=justificante.source_pdf_path,
         submitted_at=submitted_at,

@@ -24,22 +24,23 @@ class SubmissionStatus(StrEnum):
 
     Values are retained for historical records imported from AEAT,
     even though live AEAT submission is now permanently forbidden.
+    Member names and values mirror the AEAT Sede labels per ADR A7.2.
 
     Attributes:
-        PENDING: Filing recorded but no attempt has run.
-        IN_PROGRESS: An attempt is currently underway.
-        SUBMITTED: Attempt completed; awaiting AEAT acknowledgement.
-        ACKNOWLEDGED: AEAT issued a justificante CSV and PDF.
-        REJECTED: AEAT explicitly rejected the filing.
-        FAILED: Attempt could not complete (transport / browser).
+        PENDIENTE_DE_PRESENTAR: Filing recorded but no attempt has run.
+        EN_TRAMITACION: An attempt is currently underway.
+        PRESENTADA: Attempt completed; awaiting AEAT acknowledgement.
+        ACEPTADA: AEAT issued a justificante CSV and PDF.
+        RECHAZADA: AEAT explicitly rejected the filing.
+        FALLIDA: Attempt could not complete (transport / browser).
     """
 
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    SUBMITTED = "SUBMITTED"
-    ACKNOWLEDGED = "ACKNOWLEDGED"
-    REJECTED = "REJECTED"
-    FAILED = "FAILED"
+    PENDIENTE_DE_PRESENTAR = "PENDIENTE_DE_PRESENTAR"
+    EN_TRAMITACION = "EN_TRAMITACION"
+    PRESENTADA = "PRESENTADA"
+    ACEPTADA = "ACEPTADA"
+    RECHAZADA = "RECHAZADA"
+    FALLIDA = "FALLIDA"
 
 
 class SubmissionAttempt(BaseModel):
@@ -114,14 +115,14 @@ class ModeloPresentado(BaseModel):
 
     @model_validator(mode="after")
     def _check_ack_consistency(self) -> ModeloPresentado:
-        """Enforce ``ACKNOWLEDGED`` ↔ justificante-present invariants."""
-        if self.status is SubmissionStatus.ACKNOWLEDGED:
+        """Enforce ``ACEPTADA`` ↔ justificante-present invariants."""
+        if self.status is SubmissionStatus.ACEPTADA:
             if not self.justificante_csv or not self.justificante_pdf_path:
                 raise SubmissionValidationError(
-                    "status ACKNOWLEDGED requires both justificante_csv and justificante_pdf_path"
+                    "status ACEPTADA requires both justificante_csv and justificante_pdf_path"
                 )
             if not self.acknowledged_at:
-                raise SubmissionValidationError("status ACKNOWLEDGED requires acknowledged_at")
+                raise SubmissionValidationError("status ACEPTADA requires acknowledged_at")
         if self.acknowledged_at and self.acknowledged_at < self.submitted_at:
             raise SubmissionValidationError(
                 f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})"
