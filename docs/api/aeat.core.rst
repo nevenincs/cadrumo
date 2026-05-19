@@ -20,6 +20,7 @@ Subpackages
    aeat.core.identity
    aeat.core.observability
    aeat.core.redaction
+   aeat.core.resources
 
 Submodules
 ----------
@@ -30,9 +31,11 @@ Submodules
    aeat.core.click_context
    aeat.core.config
    aeat.core.env_io
+   aeat.core.external_constants
    aeat.core.file_permissions
    aeat.core.json_contract
    aeat.core.locks
    aeat.core.locks_errors
    aeat.core.logging
+   aeat.core.output_rendering
    aeat.core.paths
