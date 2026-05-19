@@ -20,11 +20,13 @@ aggregation:
       quarter_required: El tipo de periodo trimestral requiere un valor de trimestre.
   per_modelo:
     errors:
-      unsupported_modelo: "Modelo no soportado para la agregación por modelo"
+      unsupported_modelo: Modelo no soportado para la agregación por modelo
     registry:
       errors:
-        invalid_accrued_on: "Fecha de devengo no válida para la observación %{source_object_id}: %{accrued_on}"
-        unsupported_provider: "Proveedor de agregación no soportado para el modelo %{modelo}: %{provider}"
+        invalid_accrued_on: 'Fecha de devengo no válida para la observación %{source_object_id}:
+          %{accrued_on}'
+        unsupported_provider: 'Proveedor de agregación no soportado para el modelo
+          %{modelo}: %{provider}'
   period:
     parse_error: Formato de período no reconocido
   renta_ledger:
@@ -85,66 +87,67 @@ cli:
         yes_help: Confirma la eliminación de la factura cobrable
         yes_required: Debes pasar --yes para eliminar una factura cobrable
       evidence:
-        add_help: "Registra un justificante de factura de compra desde PDF o imagen"
-        evidence_id_help: "Identificador del justificante (o prefijo no ambiguo)"
-        group_help: "Justificantes de facturas de compra en PDF o imagen"
-        invoice_date_help: "Fecha de emisión de la factura (AAAA-MM-DD)"
-        invoice_number_help: "Número de factura del proveedor"
-        iva_amount_help: "Importe de IVA de la factura"
-        iva_rate_help: "Tipo de IVA aplicado como decimal"
-        list_help: "Lista los justificantes de facturas de compra registrados"
-        notes_help: "Notas internas sobre el justificante"
-        remove_help: "Elimina un justificante de factura de compra"
-        source_path_help: "Ruta al PDF o imagen de la factura"
-        supplier_help: "Nombre del proveedor"
-        taxable_base_help: "Base imponible de la factura"
-        update_help: "Actualiza los datos de un justificante de factura de compra"
-        view_help: "Muestra un justificante de factura de compra"
-        yes_help: "Confirma la eliminación del justificante"
-        yes_required: "Debes pasar --yes para eliminar un justificante"
+        add_help: Registra un justificante de factura de compra desde PDF o imagen
+        evidence_id_help: Identificador del justificante (o prefijo no ambiguo)
+        group_help: Justificantes de facturas de compra en PDF o imagen
+        invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
+        invoice_number_help: Número de factura del proveedor
+        iva_amount_help: Importe de IVA de la factura
+        iva_rate_help: Tipo de IVA aplicado como decimal
+        list_help: Lista los justificantes de facturas de compra registrados
+        notes_help: Notas internas sobre el justificante
+        remove_help: Elimina un justificante de factura de compra
+        source_path_help: Ruta al PDF o imagen de la factura
+        supplier_help: Nombre del proveedor
+        taxable_base_help: Base imponible de la factura
+        update_help: Actualiza los datos de un justificante de factura de compra
+        view_help: Muestra un justificante de factura de compra
+        yes_help: Confirma la eliminación del justificante
+        yes_required: Debes pasar --yes para eliminar un justificante
       inventory:
-        actividad_id_help: "Identificador de la actividad económica"
-        create_help: "Crea un libro de existencias para una actividad y ejercicio"
-        group_help: "Libros de existencias por actividad, movimientos y valoración"
-        list_help: "Lista los libros de existencias del bucket activo"
-        movement_add_help: "Añade un movimiento de compra, venta o ajuste al libro"
-        movement_date_help: "Fecha del movimiento (AAAA-MM-DD)"
-        movement_group_help: "Gestiona movimientos del libro de existencias"
-        movement_id_help: "Identificador del movimiento dentro del libro"
-        movement_kind_help: "Tipo de movimiento (purchase, sale, adjustment)"
-        opening_stock_help: "Valor inicial de existencias"
-        quantity_help: "Cantidad del movimiento, positiva o negativa"
-        taxable_base_help: "Base imponible asociada al movimiento"
-        unit_cost_help: "Coste unitario en movimientos de compra"
-        unknown_movement_kind: "Tipo de movimiento desconocido: {kind!r}"
-        valuation_group_help: "Calcula y previsualiza la valoración de existencias"
-        valuation_method_help: "Método de valoración (fifo o pmp)"
-        valuation_preview_help: "Previsualiza existencias finales y coste de ventas"
-        vat_rate_help: "Tipo de IVA en porcentaje"
-        year_help: "Ejercicio fiscal"
+        actividad_id_help: Identificador de la actividad económica
+        create_help: Crea un libro de existencias para una actividad y ejercicio
+        group_help: Libros de existencias por actividad, movimientos y valoración
+        list_help: Lista los libros de existencias del bucket activo
+        movement_add_help: Añade un movimiento de compra, venta o ajuste al libro
+        movement_date_help: Fecha del movimiento (AAAA-MM-DD)
+        movement_group_help: Gestiona movimientos del libro de existencias
+        movement_id_help: Identificador del movimiento dentro del libro
+        movement_kind_help: Tipo de movimiento (purchase, sale, adjustment)
+        opening_stock_help: Valor inicial de existencias
+        quantity_help: Cantidad del movimiento, positiva o negativa
+        taxable_base_help: Base imponible asociada al movimiento
+        unit_cost_help: Coste unitario en movimientos de compra
+        unknown_movement_kind: 'Tipo de movimiento desconocido: {kind!r}'
+        valuation_group_help: Calcula y previsualiza la valoración de existencias
+        valuation_method_help: Método de valoración (fifo o pmp)
+        valuation_preview_help: Previsualiza existencias finales y coste de ventas
+        vat_rate_help: Tipo de IVA en porcentaje
+        year_help: Ejercicio fiscal
       payable_invoice:
-        add_help: "Registra una nueva factura pagable"
-        group_help: "Facturas que debes pagar a un proveedor"
-        invoice_date_help: "Fecha de emisión de la factura (AAAA-MM-DD)"
-        invoice_id_help: "Identificador de la factura (o prefijo no ambiguo)"
-        list_help: "Lista las facturas pagables registradas"
-        remove_help: "Elimina una factura pagable registrada"
-        update_help: "Actualiza los datos de una factura pagable"
-        view_help: "Muestra los datos de una factura pagable"
-        yes_help: "Confirma la eliminación de la factura pagable"
-        yes_required: "Debes pasar --yes para eliminar una factura pagable"
+        add_help: Registra una nueva factura pagable
+        group_help: Facturas que debes pagar a un proveedor
+        invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
+        invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
+        list_help: Lista las facturas pagables registradas
+        remove_help: Elimina una factura pagable registrada
+        update_help: Actualiza los datos de una factura pagable
+        view_help: Muestra los datos de una factura pagable
+        yes_help: Confirma la eliminación de la factura pagable
+        yes_required: Debes pasar --yes para eliminar una factura pagable
       ratios:
-        category_help: "Id de categoría de gasto (p. ej. USAGE_RATIO_VEHICLE)"
-        eligible_help: "Lista las categorías que admiten proporción específica"
-        group_help: "Proporciones de uso profesional por categoría de gasto"
-        list_help: "Lista las proporciones por categoría del bucket activo"
-        no_override_error: "No hay proporción guardada para la categoría {category!r} en el bucket {bucket_id!r}"
-        ratio_help: "Proporción aplicable entre 0 y 1"
-        set_help: "Establece o sustituye la proporción de una categoría"
-        unknown_category: "Categoría de gasto desconocida: {raw!r}"
-        unset_category_help: "Id de categoría cuya proporción quieres limpiar"
-        unset_help: "Elimina la proporción específica de una categoría"
-        validate_help: "Valida las proporciones contra categorías admitidas y límites"
+        category_help: Id de categoría de gasto (p. ej. USAGE_RATIO_VEHICLE)
+        eligible_help: Lista las categorías que admiten proporción específica
+        group_help: Proporciones de uso profesional por categoría de gasto
+        list_help: Lista las proporciones por categoría del bucket activo
+        no_override_error: No hay proporción guardada para la categoría {category!r}
+          en el bucket {bucket_id!r}
+        ratio_help: Proporción aplicable entre 0 y 1
+        set_help: Establece o sustituye la proporción de una categoría
+        unknown_category: 'Categoría de gasto desconocida: {raw!r}'
+        unset_category_help: Id de categoría cuya proporción quieres limpiar
+        unset_help: Elimina la proporción específica de una categoría
+        validate_help: Valida las proporciones contra categorías admitidas y límites
     live:
       app_help: Comandos de observación AEAT en vivo de solo lectura
       borrador:
@@ -159,12 +162,12 @@ cli:
         view_help: Mostrar un snapshot del borrador del modelo 100
       expediente_help: Identificador de expediente AEAT
       expedientes:
-        app_help: "Snapshots de expedientes AEAT de solo lectura"
-        capture_help: "Captura de AEAT el registro de declaraciones y guarda un snapshot"
-        latest_help: "Muestra el snapshot de expedientes más reciente"
-        list_help: "Lista los snapshots de expedientes guardados"
-        snapshot_id_help: "Id del snapshot (o prefijo no ambiguo)"
-        view_help: "Muestra un snapshot de expedientes"
+        app_help: Snapshots de expedientes AEAT de solo lectura
+        capture_help: Captura de AEAT el registro de declaraciones y guarda un snapshot
+        latest_help: Muestra el snapshot de expedientes más reciente
+        list_help: Lista los snapshots de expedientes guardados
+        snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
+        view_help: Muestra un snapshot de expedientes
       filed:
         capture_help: Capturar datos de declaraciones presentadas desde AEAT
         capture_sources_help: Capturar observaciones presentadas requeridas por una
@@ -175,39 +178,40 @@ cli:
       limit_help: Número máximo de filas a capturar
       modelo_help: Código de modelo
       notifications:
-        app_help: "Snapshots de notificaciones DEHú de solo lectura"
-        capture_help: "Captura notificaciones DEHú y guarda un snapshot"
-        list_help: "Lista los snapshots de notificaciones DEHú guardados"
-        snapshot_id_help: "Id del snapshot (o prefijo no ambiguo)"
-        view_help: "Muestra un snapshot de notificaciones DEHú"
+        app_help: Snapshots de notificaciones DEHú de solo lectura
+        capture_help: Captura notificaciones DEHú y guarda un snapshot
+        list_help: Lista los snapshots de notificaciones DEHú guardados
+        snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
+        view_help: Muestra un snapshot de notificaciones DEHú
       output_root_help: Directorio para observaciones capturadas de declaraciones
         presentadas
       period_help: Periodo de presentación
       portals:
-        app_help: "Catálogo local de portales AEAT de solo lectura"
-        category_help: "Filtra por una categoría de portal"
-        list_help: "Lista entradas del catálogo de portales"
-        modelo_help: "Filtra por portales vinculados a un modelo"
-        portal_id_help: "Identificador del portal"
-        view_help: "Muestra una entrada del catálogo de portales"
+        app_help: Catálogo local de portales AEAT de solo lectura
+        category_help: Filtra por una categoría de portal
+        list_help: Lista entradas del catálogo de portales
+        modelo_help: Filtra por portales vinculados a un modelo
+        portal_id_help: Identificador del portal
+        view_help: Muestra una entrada del catálogo de portales
       registry_root_help: Raíz del registro
       source_root_help: Raíz del proyecto
       to_year_help: Último ejercicio de presentación
       verify:
-        app_help: "Registro de auditoría de verificaciones NIF de solo lectura"
-        expected_help: "Resultado esperado opcional (valid, invalid o unknown)"
-        latest_help: "Muestra la observación más reciente para superficie y NIF"
-        latest_nif_help: "NIF que quieres consultar"
-        latest_surface_help: "Superficie de verificación: nif_iva o tgvi"
-        list_help: "Lista observaciones de verificación guardadas"
-        nif_help: "Filtra por un NIF"
-        nif_iva_arg_help: "Valor NIF-IVA (p. ej. ESB12345678)"
-        nif_iva_help: "Verifica un NIF-IVA intracomunitario en AEAT IXVI y guarda la observación"
-        observation_id_help: "Id de observación (o prefijo no ambiguo)"
-        surface_help: "Filtra por superficie: nif_iva o tgvi"
-        tgvi_arg_help: "NIF/NIE español que quieres comprobar"
-        tgvi_help: "Verifica el alta ROI/VIES de un NIF en GROI y guarda la observación"
-        view_help: "Muestra una observación de verificación guardada"
+        app_help: Registro de auditoría de verificaciones NIF de solo lectura
+        expected_help: Resultado esperado opcional (valid, invalid o unknown)
+        latest_help: Muestra la observación más reciente para superficie y NIF
+        latest_nif_help: NIF que quieres consultar
+        latest_surface_help: 'Superficie de verificación: nif_iva o tgvi'
+        list_help: Lista observaciones de verificación guardadas
+        nif_help: Filtra por un NIF
+        nif_iva_arg_help: Valor NIF-IVA (p. ej. ESB12345678)
+        nif_iva_help: Verifica un NIF-IVA intracomunitario en AEAT IXVI y guarda la
+          observación
+        observation_id_help: Id de observación (o prefijo no ambiguo)
+        surface_help: 'Filtra por superficie: nif_iva o tgvi'
+        tgvi_arg_help: NIF/NIE español que quieres comprobar
+        tgvi_help: Verifica el alta ROI/VIES de un NIF en GROI y guarda la observación
+        view_help: Muestra una observación de verificación guardada
       year_help: Ejercicio de presentación
     modelo:
       aggregate:
@@ -314,12 +318,18 @@ cli:
         period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
           ejemplos periodicos incluyen 2026Q1 y 2026-01
       history:
-        modelo_help: "Código de modelo (p. ej. 100, 303)"
-        period_help: "Filtro opcional de periodo (p. ej. Q1, annual)"
-        year_help: "Filtro opcional de ejercicio de presentación"
-      history_help: "Muestra la auditoría cronológica del ciclo de vida de un modelo"
+        modelo_help: Código de modelo (p. ej. 100, 303)
+        period_help: Filtro opcional de periodo (p. ej. Q1, annual)
+        year_help: Filtro opcional de ejercicio de presentación
+      history_help: Muestra la auditoría cronológica del ciclo de vida de un modelo
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
+      readiness:
+        modelo_help: cli.app.modelo.readiness.modelo_help
+        period_help: cli.app.modelo.readiness.period_help
+        revision_help: cli.app.modelo.readiness.revision_help
+        year_help: cli.app.modelo.readiness.year_help
+      readiness_help: cli.app.modelo.readiness_help
       reconcile:
         errors:
           exclusive_source: --from-justificante y --from-declaration son mutuamente
@@ -376,8 +386,10 @@ cli:
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Debe llevar evidencia externa importada (justificante / CSV / captura en
           vivo)
-        history_help: "Muestra todos los eventos del ciclo de vida de una unidad de trabajo"
-        history_work_unit_id_help: "Id de unidad de trabajo cuyo ciclo de vida quieres ver"
+        history_help: Muestra todos los eventos del ciclo de vida de una unidad de
+          trabajo
+        history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
+          ver
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
@@ -398,8 +410,9 @@ cli:
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
-        resume_help: "Valida si puedes reintentar una ejecución de flujo interrumpida sin contactar con AEAT"
-        resume_workflow_run_id_help: "Id de ejecución de flujo de 16 caracteres"
+        resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
+          sin contactar con AEAT
+        resume_workflow_run_id_help: Id de ejecución de flujo de 16 caracteres
         revision_help: Identificador estable de la revisión registrada del modelo
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
@@ -484,10 +497,10 @@ cli:
     google:
       client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
       folder:
-        folder_id_help: "Id de la carpeta de Google Drive"
-        get_help: "Muestra la carpeta raíz de Google Drive configurada"
-        help: "Gestiona la carpeta raíz de Google Drive"
-        set_help: "Vincula una carpeta de Google Drive al perfil activo"
+        folder_id_help: Id de la carpeta de Google Drive
+        get_help: Muestra la carpeta raíz de Google Drive configurada
+        help: Gestiona la carpeta raíz de Google Drive
+        set_help: Vincula una carpeta de Google Drive al perfil activo
       help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
       login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial
         existente)
@@ -539,14 +552,15 @@ cli:
               está disponible, un mapa de salidas esperadas publicadas por AEAT
           verify_help: Comprobación de paridad triple del modelo (oráculo AEAT vs
             motor Decimal local vs hoja de Sheets)
-        help: "Sincroniza datos locales con la carpeta configurada de Google Drive"
-        probe_help: "Comprueba el acceso a la carpeta configurada de Google Drive"
-        probe_read_only_help: "Comprueba Google Drive en modo solo lectura"
-        push_dry_run_help: "Planifica la subida sin enviar archivos"
-        push_help: "Sube los espacios de datos locales a Google Drive"
-        push_limit_help: "Número máximo de archivos que se subirán"
-        push_namespace_help: "Espacio de datos que quieres subir; se puede repetir"
-        root_folder_id_unset: "No hay carpeta raíz de Google Drive configurada; ejecuta `aeat config google folder set <id>` primero"
+        help: Sincroniza datos locales con la carpeta configurada de Google Drive
+        probe_help: Comprueba el acceso a la carpeta configurada de Google Drive
+        probe_read_only_help: Comprueba Google Drive en modo solo lectura
+        push_dry_run_help: Planifica la subida sin enviar archivos
+        push_help: Sube los espacios de datos locales a Google Drive
+        push_limit_help: Número máximo de archivos que se subirán
+        push_namespace_help: Espacio de datos que quieres subir; se puede repetir
+        root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta
+          `aeat config google folder set <id>` primero
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
       auth_provider_help: Authentication provider ID to use for the profile
@@ -562,7 +576,7 @@ cli:
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
       profile_name_help: Unique identifier for this configuration profile
-      quiet_help: "Oculta el mensaje de éxito después de inicializar"
+      quiet_help: Oculta el mensaje de éxito después de inicializar
       submissions_dir_help: Directory to store submitted filing receipts
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
@@ -573,30 +587,33 @@ cli:
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       census:
-        apply_help: "Sobrescribe el perfil con los valores censales comunicados por AEAT"
-        compare_help: "Compara campo a campo el censo AEAT con este perfil"
-        help: "Sincroniza el censo 036 de AEAT con este perfil"
-        refresh_help: "Descarga de AEAT el último censo y guarda un snapshot"
-        show_help: "Muestra el último censo informado por AEAT para este perfil"
-        snapshot_id_help: "Id de snapshot concreto (se aceptan prefijos)"
-      delete_help: "Elimina un perfil y su estado local; --yes confirma"
-      delete_name_help: "Nombre del perfil que quieres eliminar"
-      delete_requires_yes: "La eliminación es destructiva. Vuelve a ejecutar 'aeat config profile delete %{name} --yes' para confirmar."
-      delete_yes_help: "Confirma explícitamente la eliminación"
+        apply_help: Sobrescribe el perfil con los valores censales comunicados por
+          AEAT
+        compare_help: Compara campo a campo el censo AEAT con este perfil
+        help: Sincroniza el censo 036 de AEAT con este perfil
+        refresh_help: Descarga de AEAT el último censo y guarda un snapshot
+        show_help: Muestra el último censo informado por AEAT para este perfil
+        snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
+      create_help: cli.config.profile.create_help
+      delete_help: Elimina un perfil y su estado local; --yes confirma
+      delete_name_help: Nombre del perfil que quieres eliminar
+      delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
+        config profile delete %{name} --yes' para confirmar.
+      delete_yes_help: Confirma explícitamente la eliminación
       duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
         el id de destino)
       duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible
       duplicate_source_help: Id del perfil de origen a duplicar
       duplicate_target_help: Id del perfil de destino para el duplicado
-      edit_help: "Vuelve a ejecutar el asistente sobre un perfil existente"
-      export_help: "Escribe un paquete portátil del perfil en un JSON"
-      export_name_help: "Perfil que quieres exportar; por defecto, el activo"
-      export_out_help: "Ruta de destino para el paquete JSON"
+      edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
+      export_help: Escribe un paquete portátil del perfil en un JSON
+      export_name_help: Perfil que quieres exportar; por defecto, el activo
+      export_out_help: Ruta de destino para el paquete JSON
       help: Gestionar valores de configuración del perfil activo
-      import_help: "Registra un paquete portátil de perfil desde un JSON"
-      import_missing_bundle: "No se encontró el paquete de perfil en %{path}"
-      import_path_help: "Ruta al paquete JSON del perfil"
-      logout_help: "Cierra la sesión del perfil activo limpiando el puntero local"
+      import_help: Registra un paquete portátil de perfil desde un JSON
+      import_missing_bundle: No se encontró el paquete de perfil en %{path}
+      import_path_help: Ruta al paquete JSON del perfil
+      logout_help: Cierra la sesión del perfil activo limpiando el puntero local
       no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
         first.
       preflight_help: Report whether the active profile is ready for one modelo /
@@ -610,14 +627,15 @@ cli:
       remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
         profile remove %{name} --yes' para confirmar.
       remove_yes_help: Confirma explícitamente la operación de retirada
-      rename_display_name_help: "Etiqueta visible para el operador; por defecto, la existente"
-      rename_help: "Renombra un perfil y mueve el puntero activo automáticamente"
-      rename_source_help: "Nombre actual del perfil"
-      rename_target_help: "Nuevo nombre del perfil"
-      show_help: "Muestra los datos de un perfil"
+      rename_display_name_help: Etiqueta visible para el operador; por defecto, la
+        existente
+      rename_help: Renombra un perfil y mueve el puntero activo automáticamente
+      rename_source_help: Nombre actual del perfil
+      rename_target_help: Nuevo nombre del perfil
+      show_help: Muestra los datos de un perfil
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
-      switch_help: "Activa un perfil existente"
-      switch_name_help: "Nombre del perfil que quieres activar"
+      switch_help: Activa un perfil existente
+      switch_name_help: Nombre del perfil que quieres activar
       unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
         list'' para ver los perfiles registrados.'
       use_help: Seleccionar un perfil existente como perfil activo
@@ -686,28 +704,28 @@ cli:
     workflow_help: Mostrar ayuda del flujo de configuración
   ledger:
     add:
-      actor_help: "Nombre del operador registrado en el evento del bucket"
-      amount_help: "Importe firmado de la transacción en la moneda del bucket"
-      attachment_help: "Id de adjunto seguro adicional; se puede repetir"
-      business_pct_help: "Proporción de uso profesional de 0 a 1"
-      category_help: "Id de categoría de gasto o ingreso"
-      classification_help: "Clasificación profesional (BUSINESS, PERSONAL o MIXED)"
-      counterparty_help: "Descripción de la contraparte"
-      currency_help: "Código de moneda ISO 4217 de tres letras"
-      date_help: "Fecha contable de la transacción (AAAA-MM-DD)"
-      description_help: "Descripción no vacía de la transacción"
-      direction_help: "Sentido de la transacción (INCOMING, OUTGOING o INTERNAL_TRANSFER)"
-      help: "Añade una transacción manual al libro del perfil activo"
-      idempotency_key_help: "Clave de idempotencia aportada por el llamador"
-      irpf_category_help: "Categoría de IRPF para cálculos de modelos"
-      iva_amount_help: "Importe de IVA de la transacción"
-      iva_rate_help: "Tipo de IVA como decimal, por ejemplo 0.21"
-      notes_help: "Notas del operador guardadas con la transacción"
-      prorrata_reference_help: "Referencia de prorrata de IVA"
-      purchase_invoice_evidence_help: "Id de justificante de factura de compra"
-      taxable_base_help: "Importe de base imponible"
-      usage_ratio_help: "Id de proporción de uso profesional proporcional"
-      value_date_help: "Fecha valor de la transacción (AAAA-MM-DD)"
+      actor_help: Nombre del operador registrado en el evento del bucket
+      amount_help: Importe firmado de la transacción en la moneda del bucket
+      attachment_help: Id de adjunto seguro adicional; se puede repetir
+      business_pct_help: Proporción de uso profesional de 0 a 1
+      category_help: Id de categoría de gasto o ingreso
+      classification_help: Clasificación profesional (BUSINESS, PERSONAL o MIXED)
+      counterparty_help: Descripción de la contraparte
+      currency_help: Código de moneda ISO 4217 de tres letras
+      date_help: Fecha contable de la transacción (AAAA-MM-DD)
+      description_help: Descripción no vacía de la transacción
+      direction_help: Sentido de la transacción (INCOMING, OUTGOING o INTERNAL_TRANSFER)
+      help: Añade una transacción manual al libro del perfil activo
+      idempotency_key_help: Clave de idempotencia aportada por el llamador
+      irpf_category_help: Categoría de IRPF para cálculos de modelos
+      iva_amount_help: Importe de IVA de la transacción
+      iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
+      notes_help: Notas del operador guardadas con la transacción
+      prorrata_reference_help: Referencia de prorrata de IVA
+      purchase_invoice_evidence_help: Id de justificante de factura de compra
+      taxable_base_help: Importe de base imponible
+      usage_ratio_help: Id de proporción de uso profesional proporcional
+      value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1
@@ -723,7 +741,7 @@ cli:
       help: Archivar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a archivar
       reason_help: Motivo registrado en el historial de ciclo de vida
-      yes_help: "Confirma el archivo de la transacción del libro"
+      yes_help: Confirma el archivo de la transacción del libro
     attach:
       actor_help: Nombre del operador registrado en el evento del bucket
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
@@ -752,11 +770,15 @@ cli:
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro,
         o usa --dry-run primero
       filter_parse_error: Fallo al analizar el filtro del libro
-      id_prefix_collision: "El prefijo de id %{prefix!r} coincide con varias transacciones: %{candidates}. Amplía el prefijo para desambiguar."
-      id_prefix_empty: "El prefijo de id de transacción está vacío; indica al menos un carácter hexadecimal."
-      id_prefix_not_found: "Ninguna transacción coincide con el prefijo de id %{prefix!r}."
-      id_prefix_not_hex: "El prefijo de id %{prefix!r} contiene caracteres no hexadecimales (permitidos: 0-9, a-f)."
-      id_prefix_too_long: "El prefijo de id %{prefix!r} supera los 64 caracteres de un SHA-256 completo."
+      id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
+        %{candidates}. Amplía el prefijo para desambiguar.'
+      id_prefix_empty: El prefijo de id de transacción está vacío; indica al menos
+        un carácter hexadecimal.
+      id_prefix_not_found: Ninguna transacción coincide con el prefijo de id %{prefix!r}.
+      id_prefix_not_hex: 'El prefijo de id %{prefix!r} contiene caracteres no hexadecimales
+        (permitidos: 0-9, a-f).'
+      id_prefix_too_long: El prefijo de id %{prefix!r} supera los 64 caracteres de
+        un SHA-256 completo.
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -765,9 +787,10 @@ cli:
       include_inactive_help: Incluir movimientos archivados y apartados
       output_help: Ruta donde escribir el archivo exportado del libro
     history:
-      help: "Muestra la cadena cronológica de eventos de una transacción"
-      id_help: "Id de la transacción (o prefijo no ambiguo)"
-      include_split_siblings_help: "Incluye transacciones hermanas del mismo grupo de división"
+      help: Muestra la cadena cronológica de eventos de una transacción
+      id_help: Id de la transacción (o prefijo no ambiguo)
+      include_split_siblings_help: Incluye transacciones hermanas del mismo grupo
+        de división
     import:
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
       help: Importar extractos bancarios o registros al libro contable
@@ -783,22 +806,22 @@ cli:
       archived: Archivadas
       bucket: Bucket
       checked: Movimientos comprobados
-      children: "hijas"
+      children: hijas
       created_event_id: Evento bucket de creación
       date: Fecha
       description: Descripción
       dialect: Formato detectado
       dry_run: MODO DE PRUEBA (DRY RUN)
-      event_count: "eventos"
-      event_id: "id_evento"
+      event_count: eventos
+      event_id: id_evento
       export_id: ID de exportación
       id: ID
       imported: Entradas importadas
       lifecycle_state: Estado de ciclo de vida
-      merged_id: "id_fusionado"
+      merged_id: id_fusionado
       'no': 'No'
       output: Salida
-      parent_id: "id_padre"
+      parent_id: id_padre
       pending: Pendientes de revisión
       period: Periodo
       readiness_issues: Incidencias de preparación
@@ -811,7 +834,7 @@ cli:
       sha256: SHA-256
       skipped: Omitidos
       source: Origen
-      split_group_id: "id_grupo_division"
+      split_group_id: id_grupo_division
       stashed: Apartadas
       valid: Válido
       warnings: Avisos
@@ -821,7 +844,8 @@ cli:
       errors:
         cross_bucket_invoice: La factura pertenece a un bucket distinto del perfil
           activo.
-        invoice_not_found: "La factura no existe en el catálogo de facturas del perfil activo."
+        invoice_not_found: La factura no existe en el catálogo de facturas del perfil
+          activo.
         missing_target: Indica al menos uno de --invoice-id o --evidence-id.
       evidence_id_help: Id del registro de evidencia de factura de compra a adjuntar
         al movimiento.
@@ -834,13 +858,13 @@ cli:
       header: MOVIMIENTOS DEL LIBRO CONTABLE
       help: Listar movimientos del libro en el bucket del perfil activo
     merge:
-      actor_help: "Nombre del operador registrado en el evento del bucket"
-      child_id_help: "Id de transacción hija que quieres fusionar; se puede repetir"
+      actor_help: Nombre del operador registrado en el evento del bucket
+      child_id_help: Id de transacción hija que quieres fusionar; se puede repetir
       errors:
-        min_two_children: "Debes indicar al menos dos transacciones hijas para fusionar"
-      help: "Fusiona de nuevo transacciones hijas divididas"
-      reason_help: "Motivo registrado en el historial de ciclo de vida"
-      yes_help: "Confirma la fusión de las transacciones hijas"
+        min_two_children: Debes indicar al menos dos transacciones hijas para fusionar
+      help: Fusiona de nuevo transacciones hijas divididas
+      reason_help: Motivo registrado en el historial de ciclo de vida
+      yes_help: Confirma la fusión de las transacciones hijas
     preflight:
       help: Informa de los datos contables que faltan (categoría, base imponible,
         importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
@@ -867,22 +891,22 @@ cli:
       no_rows: No hay entradas del libro pendientes de revisión
       verbose_help: Mostrar información detallada durante la revisión
     split:
-      actor_help: "Nombre del operador registrado en el evento del bucket"
-      child_amount_help: "Importe de una transacción hija; se puede repetir"
-      child_description_help: "Descripción de una transacción hija; se puede repetir"
+      actor_help: Nombre del operador registrado en el evento del bucket
+      child_amount_help: Importe de una transacción hija; se puede repetir
+      child_description_help: Descripción de una transacción hija; se puede repetir
       errors:
-        child_args_mismatch: "Cada importe hijo debe tener una descripción hija correspondiente"
-        min_two_children: "Debes indicar al menos dos transacciones hijas"
-      help: "Divide una transacción del libro en varias transacciones hijas"
-      id_help: "Id de la transacción que quieres dividir"
-      reason_help: "Motivo registrado en el historial de ciclo de vida"
-      yes_help: "Confirma la división de la transacción"
+        child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
+        min_two_children: Debes indicar al menos dos transacciones hijas
+      help: Divide una transacción del libro en varias transacciones hijas
+      id_help: Id de la transacción que quieres dividir
+      reason_help: Motivo registrado en el historial de ciclo de vida
+      yes_help: Confirma la división de la transacción
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a apartar
       reason_help: Motivo registrado en el historial de ciclo de vida
-      yes_help: "Confirma el envío de la transacción a la reserva"
+      yes_help: Confirma el envío de la transacción a la reserva
     status:
       help: Resumir el estado del libro y la preparación de cálculo del bucket del
         perfil activo
@@ -891,24 +915,24 @@ cli:
       help: Mostrar el linaje de eventos de un movimiento del libro
       transaction_id_help: Id del movimiento del libro a inspeccionar
     update:
-      actor_help: "Nombre del operador registrado en el evento del bucket"
-      amount_help: "Nuevo importe firmado de la transacción"
-      counterparty_help: "Nueva descripción de la contraparte"
-      currency_help: "Nuevo código de moneda ISO 4217"
-      date_help: "Nueva fecha contable (AAAA-MM-DD)"
-      description_help: "Nueva descripción de la transacción"
-      direction_help: "Nuevo sentido de la transacción"
-      help: "Actualiza los datos editables de una transacción del libro"
-      id_help: "Id de la transacción que quieres actualizar"
-      irpf_category_help: "Nueva categoría de IRPF para cálculos de modelos"
-      iva_amount_help: "Nuevo importe de IVA"
-      iva_rate_help: "Nuevo tipo de IVA como decimal"
-      notes_help: "Nuevas notas del operador"
-      taxable_base_help: "Nuevo importe de base imponible"
-      value_date_help: "Nueva fecha valor (AAAA-MM-DD)"
+      actor_help: Nombre del operador registrado en el evento del bucket
+      amount_help: Nuevo importe firmado de la transacción
+      counterparty_help: Nueva descripción de la contraparte
+      currency_help: Nuevo código de moneda ISO 4217
+      date_help: Nueva fecha contable (AAAA-MM-DD)
+      description_help: Nueva descripción de la transacción
+      direction_help: Nuevo sentido de la transacción
+      help: Actualiza los datos editables de una transacción del libro
+      id_help: Id de la transacción que quieres actualizar
+      irpf_category_help: Nueva categoría de IRPF para cálculos de modelos
+      iva_amount_help: Nuevo importe de IVA
+      iva_rate_help: Nuevo tipo de IVA como decimal
+      notes_help: Nuevas notas del operador
+      taxable_base_help: Nuevo importe de base imponible
+      value_date_help: Nueva fecha valor (AAAA-MM-DD)
     view:
-      help: "Muestra una transacción del libro"
-      transaction_id_help: "Id de la transacción (o prefijo no ambiguo)"
+      help: Muestra una transacción del libro
+      transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
@@ -1164,7 +1188,7 @@ cli:
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
 dotted:
-  key: "Clave con puntos"
+  key: Clave con puntos
 errors:
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.

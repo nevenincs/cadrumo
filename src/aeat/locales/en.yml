@@ -19,11 +19,13 @@ aggregation:
       quarter_required: Quarterly period type requires a quarter value.
   per_modelo:
     errors:
-      unsupported_modelo: "Unsupported modelo for per-modelo aggregation"
+      unsupported_modelo: Unsupported modelo for per-modelo aggregation
     registry:
       errors:
-        invalid_accrued_on: "Invalid accrual date for observation %{source_object_id}: %{accrued_on}"
-        unsupported_provider: "Unsupported aggregation provider for modelo %{modelo}: %{provider}"
+        invalid_accrued_on: 'Invalid accrual date for observation %{source_object_id}:
+          %{accrued_on}'
+        unsupported_provider: 'Unsupported aggregation provider for modelo %{modelo}:
+          %{provider}'
   period:
     parse_error: Period format not recognised
   renta_ledger:
@@ -77,66 +79,66 @@ cli:
         yes_help: Confirm deleting the collectible invoice
         yes_required: Pass --yes to delete a collectible invoice
       evidence:
-        add_help: "Register purchase invoice evidence from a PDF or image"
-        evidence_id_help: "Evidence id (or unambiguous prefix)"
-        group_help: "Purchase invoice evidence in PDF or image form"
-        invoice_date_help: "Invoice issue date (YYYY-MM-DD)"
-        invoice_number_help: "Supplier invoice number"
-        iva_amount_help: "Invoice IVA amount"
-        iva_rate_help: "Applied IVA rate as a decimal"
-        list_help: "List registered purchase invoice evidence"
-        notes_help: "Internal notes about the evidence"
-        remove_help: "Delete purchase invoice evidence"
-        source_path_help: "Path to the invoice PDF or image"
-        supplier_help: "Supplier name"
-        taxable_base_help: "Invoice taxable base"
-        update_help: "Update purchase invoice evidence details"
-        view_help: "Show purchase invoice evidence"
-        yes_help: "Confirm deleting the evidence"
-        yes_required: "Pass --yes to delete evidence"
+        add_help: Register purchase invoice evidence from a PDF or image
+        evidence_id_help: Evidence id (or unambiguous prefix)
+        group_help: Purchase invoice evidence in PDF or image form
+        invoice_date_help: Invoice issue date (YYYY-MM-DD)
+        invoice_number_help: Supplier invoice number
+        iva_amount_help: Invoice IVA amount
+        iva_rate_help: Applied IVA rate as a decimal
+        list_help: List registered purchase invoice evidence
+        notes_help: Internal notes about the evidence
+        remove_help: Delete purchase invoice evidence
+        source_path_help: Path to the invoice PDF or image
+        supplier_help: Supplier name
+        taxable_base_help: Invoice taxable base
+        update_help: Update purchase invoice evidence details
+        view_help: Show purchase invoice evidence
+        yes_help: Confirm deleting the evidence
+        yes_required: Pass --yes to delete evidence
       inventory:
-        actividad_id_help: "Economic activity identifier"
-        create_help: "Create an inventory ledger for one activity and tax year"
-        group_help: "Inventory ledgers by activity, movements, and valuation"
-        list_help: "List inventory ledgers in the active bucket"
-        movement_add_help: "Add a purchase, sale, or adjustment movement to the ledger"
-        movement_date_help: "Movement date (YYYY-MM-DD)"
-        movement_group_help: "Manage inventory ledger movements"
-        movement_id_help: "Movement id within the ledger"
-        movement_kind_help: "Movement kind (purchase, sale, adjustment)"
-        opening_stock_help: "Opening stock value"
-        quantity_help: "Movement quantity, positive or negative"
-        taxable_base_help: "Taxable base linked to the movement"
-        unit_cost_help: "Unit cost for purchase movements"
-        unknown_movement_kind: "Unknown movement kind: {kind!r}"
-        valuation_group_help: "Calculate and preview inventory valuation"
-        valuation_method_help: "Valuation method (fifo or pmp)"
-        valuation_preview_help: "Preview closing stock and cost of sales"
-        vat_rate_help: "IVA rate as a percentage"
-        year_help: "Tax year"
+        actividad_id_help: Economic activity identifier
+        create_help: Create an inventory ledger for one activity and tax year
+        group_help: Inventory ledgers by activity, movements, and valuation
+        list_help: List inventory ledgers in the active bucket
+        movement_add_help: Add a purchase, sale, or adjustment movement to the ledger
+        movement_date_help: Movement date (YYYY-MM-DD)
+        movement_group_help: Manage inventory ledger movements
+        movement_id_help: Movement id within the ledger
+        movement_kind_help: Movement kind (purchase, sale, adjustment)
+        opening_stock_help: Opening stock value
+        quantity_help: Movement quantity, positive or negative
+        taxable_base_help: Taxable base linked to the movement
+        unit_cost_help: Unit cost for purchase movements
+        unknown_movement_kind: 'Unknown movement kind: {kind!r}'
+        valuation_group_help: Calculate and preview inventory valuation
+        valuation_method_help: Valuation method (fifo or pmp)
+        valuation_preview_help: Preview closing stock and cost of sales
+        vat_rate_help: IVA rate as a percentage
+        year_help: Tax year
       payable_invoice:
-        add_help: "Register a new payable invoice"
-        group_help: "Invoices you owe a supplier"
-        invoice_date_help: "Invoice issue date (YYYY-MM-DD)"
-        invoice_id_help: "Invoice id (or unambiguous prefix)"
-        list_help: "List registered payable invoices"
-        remove_help: "Delete a registered payable invoice"
-        update_help: "Update payable invoice details"
-        view_help: "Show payable invoice details"
-        yes_help: "Confirm deleting the payable invoice"
-        yes_required: "Pass --yes to delete a payable invoice"
+        add_help: Register a new payable invoice
+        group_help: Invoices you owe a supplier
+        invoice_date_help: Invoice issue date (YYYY-MM-DD)
+        invoice_id_help: Invoice id (or unambiguous prefix)
+        list_help: List registered payable invoices
+        remove_help: Delete a registered payable invoice
+        update_help: Update payable invoice details
+        view_help: Show payable invoice details
+        yes_help: Confirm deleting the payable invoice
+        yes_required: Pass --yes to delete a payable invoice
       ratios:
-        category_help: "Spending category id (e.g. USAGE_RATIO_VEHICLE)"
-        eligible_help: "List categories that accept a specific ratio"
-        group_help: "Business-use ratios by spending category"
-        list_help: "List category ratios in the active bucket"
-        no_override_error: "No saved ratio for category {category!r} in bucket {bucket_id!r}"
-        ratio_help: "Applicable ratio between 0 and 1"
-        set_help: "Set or replace the ratio for a category"
-        unknown_category: "Unknown spending category: {raw!r}"
-        unset_category_help: "Category id whose ratio you want to clear"
-        unset_help: "Remove the specific ratio for a category"
-        validate_help: "Validate ratios against eligible categories and bounds"
+        category_help: Spending category id (e.g. USAGE_RATIO_VEHICLE)
+        eligible_help: List categories that accept a specific ratio
+        group_help: Business-use ratios by spending category
+        list_help: List category ratios in the active bucket
+        no_override_error: No saved ratio for category {category!r} in bucket {bucket_id!r}
+        ratio_help: Applicable ratio between 0 and 1
+        set_help: Set or replace the ratio for a category
+        unknown_category: 'Unknown spending category: {raw!r}'
+        unset_category_help: Category id whose ratio you want to clear
+        unset_help: Remove the specific ratio for a category
+        validate_help: Validate ratios against eligible categories and bounds
     live:
       app_help: Read-only AEAT live observation commands
       borrador:
@@ -150,12 +152,12 @@ cli:
         view_help: Show one Modelo 100 borrador snapshot
       expediente_help: AEAT expediente identifier
       expedientes:
-        app_help: "Read-only AEAT expediente snapshots"
-        capture_help: "Capture AEAT declaration register data and save a snapshot"
-        latest_help: "Show the most recent expediente snapshot"
-        list_help: "List saved expediente snapshots"
-        snapshot_id_help: "Snapshot id (or unambiguous prefix)"
-        view_help: "Show an expediente snapshot"
+        app_help: Read-only AEAT expediente snapshots
+        capture_help: Capture AEAT declaration register data and save a snapshot
+        latest_help: Show the most recent expediente snapshot
+        list_help: List saved expediente snapshots
+        snapshot_id_help: Snapshot id (or unambiguous prefix)
+        view_help: Show an expediente snapshot
       filed:
         capture_help: Capture filed declaration data from AEAT
         capture_sources_help: Capture filed observations required by a target filing
@@ -165,38 +167,39 @@ cli:
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
       notifications:
-        app_help: "Read-only DEHú notification snapshots"
-        capture_help: "Capture DEHú notifications and save a snapshot"
-        list_help: "List saved DEHú notification snapshots"
-        snapshot_id_help: "Snapshot id (or unambiguous prefix)"
-        view_help: "Show a DEHú notification snapshot"
+        app_help: Read-only DEHú notification snapshots
+        capture_help: Capture DEHú notifications and save a snapshot
+        list_help: List saved DEHú notification snapshots
+        snapshot_id_help: Snapshot id (or unambiguous prefix)
+        view_help: Show a DEHú notification snapshot
       output_root_help: Directory for captured filed-declaration observations
       period_help: Filing period
       portals:
-        app_help: "Read-only local AEAT portal catalogue"
-        category_help: "Filter by portal category"
-        list_help: "List portal catalogue entries"
-        modelo_help: "Filter by portals linked to a modelo"
-        portal_id_help: "Portal identifier"
-        view_help: "Show a portal catalogue entry"
+        app_help: Read-only local AEAT portal catalogue
+        category_help: Filter by portal category
+        list_help: List portal catalogue entries
+        modelo_help: Filter by portals linked to a modelo
+        portal_id_help: Portal identifier
+        view_help: Show a portal catalogue entry
       registry_root_help: Registry root
       source_root_help: Project source root
       to_year_help: Last filing year
       verify:
-        app_help: "Read-only NIF verification audit log"
-        expected_help: "Optional expected result (valid, invalid, or unknown)"
-        latest_help: "Show the most recent observation for surface and NIF"
-        latest_nif_help: "NIF to look up"
-        latest_surface_help: "Verification surface: nif_iva or tgvi"
-        list_help: "List saved verification observations"
-        nif_help: "Filter by one NIF"
-        nif_iva_arg_help: "NIF-IVA value (e.g. ESB12345678)"
-        nif_iva_help: "Verify an intra-community NIF-IVA in AEAT IXVI and save the observation"
-        observation_id_help: "Observation id (or unambiguous prefix)"
-        surface_help: "Filter by surface: nif_iva or tgvi"
-        tgvi_arg_help: "Spanish NIF/NIE to check"
-        tgvi_help: "Verify a NIF's ROI/VIES registration in GROI and save the observation"
-        view_help: "Show a saved verification observation"
+        app_help: Read-only NIF verification audit log
+        expected_help: Optional expected result (valid, invalid, or unknown)
+        latest_help: Show the most recent observation for surface and NIF
+        latest_nif_help: NIF to look up
+        latest_surface_help: 'Verification surface: nif_iva or tgvi'
+        list_help: List saved verification observations
+        nif_help: Filter by one NIF
+        nif_iva_arg_help: NIF-IVA value (e.g. ESB12345678)
+        nif_iva_help: Verify an intra-community NIF-IVA in AEAT IXVI and save the
+          observation
+        observation_id_help: Observation id (or unambiguous prefix)
+        surface_help: 'Filter by surface: nif_iva or tgvi'
+        tgvi_arg_help: Spanish NIF/NIE to check
+        tgvi_help: Verify a NIF's ROI/VIES registration in GROI and save the observation
+        view_help: Show a saved verification observation
       year_help: Filing year
     modelo:
       aggregate:
@@ -290,12 +293,18 @@ cli:
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
       history:
-        modelo_help: "Modelo code (e.g. 100, 303)"
-        period_help: "Optional period filter (e.g. Q1, annual)"
-        year_help: "Optional filing year filter"
-      history_help: "Show the chronological lifecycle audit for one modelo"
+        modelo_help: Modelo code (e.g. 100, 303)
+        period_help: Optional period filter (e.g. Q1, annual)
+        year_help: Optional filing year filter
+      history_help: Show the chronological lifecycle audit for one modelo
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
+      readiness:
+        modelo_help: cli.app.modelo.readiness.modelo_help
+        period_help: cli.app.modelo.readiness.period_help
+        revision_help: cli.app.modelo.readiness.revision_help
+        year_help: cli.app.modelo.readiness.year_help
+      readiness_help: cli.app.modelo.readiness_help
       reconcile:
         errors:
           exclusive_source: --from-justificante and --from-declaration are mutually
@@ -344,8 +353,8 @@ cli:
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
-        history_help: "Show every lifecycle event for one work unit"
-        history_work_unit_id_help: "Work unit id whose lifecycle you want to view"
+        history_help: Show every lifecycle event for one work unit
+        history_work_unit_id_help: Work unit id whose lifecycle you want to view
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
@@ -365,8 +374,9 @@ cli:
         relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
         rename_help: Update the display name of a work unit
-        resume_help: "Validate whether you can retry an interrupted workflow run without contacting AEAT"
-        resume_workflow_run_id_help: "16-character workflow run id"
+        resume_help: Validate whether you can retry an interrupted workflow run without
+          contacting AEAT
+        resume_workflow_run_id_help: 16-character workflow run id
         revision_help: Stable id of the targeted registry modelo revision
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
@@ -536,12 +546,13 @@ cli:
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       census:
-        apply_help: "Overwrite the profile with census values reported by AEAT"
-        compare_help: "Compare AEAT census and this profile field by field"
-        help: "Sync AEAT 036 census data with this profile"
-        refresh_help: "Download the latest census from AEAT and save a snapshot"
-        show_help: "Show the latest census AEAT reported for this profile"
-        snapshot_id_help: "Specific snapshot id (prefixes accepted)"
+        apply_help: Overwrite the profile with census values reported by AEAT
+        compare_help: Compare AEAT census and this profile field by field
+        help: Sync AEAT 036 census data with this profile
+        refresh_help: Download the latest census from AEAT and save a snapshot
+        show_help: Show the latest census AEAT reported for this profile
+        snapshot_id_help: Specific snapshot id (prefixes accepted)
+      create_help: cli.config.profile.create_help
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
@@ -561,7 +572,7 @@ cli:
       import_help: Register a portable profile bundle from a JSON file
       import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
-      logout_help: "Sign out of the active profile by clearing the local pointer"
+      logout_help: Sign out of the active profile by clearing the local pointer
       no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
         first.
       preflight_help: Report whether the active profile is ready for one modelo /
@@ -788,7 +799,7 @@ cli:
       errors:
         cross_bucket_invoice: Invoice belongs to a different bucket than the active
           profile.
-        invoice_not_found: "The invoice is not in the active profile invoice catalogue."
+        invoice_not_found: The invoice is not in the active profile invoice catalogue.
         missing_target: Supply at least one of --invoice-id or --evidence-id.
       evidence_id_help: Purchase-invoice evidence record id to attach to the transaction.
       help: Bind a ledger transaction to an invoice and/or a purchase-invoice evidence
@@ -1124,7 +1135,7 @@ cli:
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
 dotted:
-  key: "Dotted key"
+  key: Dotted key
 errors:
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.

@@ -768,7 +768,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_PROFILE_NOT_CONFIGURED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_profile_not_configured",
-            default_suggestion="aeat config profile set tax.residence.ccaa madrid",
+            default_suggestion="aeat config profile edit",
             retryable=False,
             runbook_id=None,
         ),
