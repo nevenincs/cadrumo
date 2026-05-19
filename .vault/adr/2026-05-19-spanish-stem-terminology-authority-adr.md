@@ -400,3 +400,115 @@ The remaining waves (W01 minor symbol segregations, W02 boilerplate consolidatio
 - Within the Fincas cluster, whether Income, Expense, Amortization retain English (generic accounting infra) or take Spanish forms (Rendimiento, Gasto, Amortizacion). The current ledger defaults to English retention pending project lead confirmation.
 - BorradorObservation and DeclaracionObservation already follow the canonical pattern (Spanish stem + English Observation suffix) and are not renamed; confirm this is intentional and not subject to a future consistency follow-up.
 - Whether downstream ADRs that referenced the original VAT-wins direction need supersession or annotation; commission a vault-curate sweep.
+
+## Amendment 2026-05-19: Legal-authority statutory refinements
+
+Legal-authority's Modelo-cluster sanity check identified four statutory refinements and two IVA refinements. PM has adjudicated and accepted all six. This amendment records those decisions and supersedes the affected rows in Section 7 of the ADR body above.
+
+### Statutory refinement A1: IvaResidency → IvaTerritorialScope
+
+Affects: footnote 3 in the Section 7 IVA cluster (currently "IssuerResidency / CustomerResidency collapse to a single IvaResidency enum, deferred to project manager").
+
+Adjudication: collapse to a single canonical enum, but name it `IvaTerritorialScope`, not `IvaResidency`. The IVA statute speaks of "territorio de aplicación del impuesto" (Ley 37/1992 Art. 3.Dos) and "lugar de realización del hecho imponible" (Arts. 68-72), not of residency. "Residency" was statutorily imprecise; the canonical concept is the territorial scope where the taxable event is realised.
+
+Result: replace every Section 7 reference to `IvaResidency` with `IvaTerritorialScope`. `IssuerResidency` becomes `IvaIssuerTerritorialScope` (or is collapsed into the single `IvaTerritorialScope` enum used in two field roles). `CustomerResidency` likewise.
+
+### Statutory refinement A2: IvaFlowDirection.AUTOREPERCUTIDO → INVERSION_SUJETO_PASIVO
+
+Affects: the Section 7 row "IvaFlowDirection | retain as-is (REPERCUTIDO/SOPORTADO/AUTOREPERCUTIDO is IVA-specific)".
+
+Adjudication: the enum is retained but the `AUTOREPERCUTIDO` member is renamed to `INVERSION_SUJETO_PASIVO` verbatim per Ley 37/1992 Art. 84.Uno.2º. `AUTOREPERCUTIDO` is colloquial; `inversión del sujeto pasivo` is the AEAT-canonical statutory term for reverse-charge.
+
+Result: `IvaFlowDirection` keeps `REPERCUTIDO`, `SOPORTADO`, and renames `AUTOREPERCUTIDO` to `INVERSION_SUJETO_PASIVO`. Locale entries follow.
+
+### Statutory refinement A3: FilingDraft → ModeloDraft carve-out for Borrador*
+
+Affects: the Section 7 Modelo cluster rows for `FilingDraft`, `FilingDraftStatus`, `FilingDraftError`, `FilingDraftRepository`, `FilingDraftRef`, `FilingDraftBuilderAdapter`, `RegistryFilingDraftProtocol`, `FilingDraftBuilderProtocol`, `FilingDraftLike`, `_PreviousFilingSelector`-adjacent draft entities, and the Borrador entity disambiguation in Section 4.
+
+Adjudication: distinguish `ModeloDraft` (taxpayer-side local draft) from the `Borrador*` family (AEAT-prepared draft, Ley 35/2006 IRPF Art. 98). The semantic test is who supplies contents:
+
+- Taxpayer-side contents (local draft, not yet AEAT-prepared) ⇒ `ModeloDraft*`.
+- AEAT-side contents (Renta Web borrador, AEAT-prefilled snapshot) ⇒ `Borrador*`.
+
+Carve-out rule: any Modelo-100-borrador entity currently inside a `FilingDraft*` symbol migrates to the `Borrador100*` family, not to `ModeloDraft*`. Coders executing the Modelo rename cluster must inspect each `FilingDraft*` site for AEAT-prepared content before applying the default `FilingDraft* → ModeloDraft*` substitution.
+
+### Statutory refinement A4: FilingObligation → ModeloDeadline (NOT ModeloObligation)
+
+Affects: Section 7 Modelo cluster row "FilingObligation | src/aeat/domain/deadlines/_models.py | ModeloObligation".
+
+Adjudication: rename to `ModeloDeadline`, not `ModeloObligation`. Anchor:
+
+- File path `domain/deadlines/_models.py` is the canonical naming hint: the package is named for the deadline concept, not the obligation concept.
+- LGT Art. 17 names the obligation, not the form. The "obligation" is the statutory duty to file; the "deadline" is the concrete date the obligation crystallises on. The on-disk entity at `_models.py` is the deadline, not the abstract obligation.
+
+Adjacent rows in the same `_models.py` file (`FilingEnrollment`, `FilingIVAProfile`) keep the broader `Modelo` prefix per the Section 7 ledger: `ModeloEnrollment` and `ModeloIvaProfile`. Only `FilingObligation` retargets to `ModeloDeadline`.
+
+Coder-gamma is dispatched to implement.
+
+### Statutory refinement A5: FilingAmendment → split to ModeloComplementaria / ModeloSustitutiva
+
+Affects: Section 7 Modelo cluster rows `FilingAmendment` and `FilingAmendmentError`.
+
+Adjudication: do NOT use a single umbrella `ModeloAmendment` symbol. Per LGT Art. 122 verbatim, an amendment is either a `complementaria` (correcting a prior filing in the taxpayer's favour or against) or a `sustitutiva` (replacing a prior filing wholesale). The two are statutorily distinct and must surface as a discriminated union in the type system.
+
+Concrete shape:
+
+- `BaseAmendment` (or `ModeloAmendmentBase`) carries the common fields.
+- `ModeloComplementaria(BaseAmendment)` and `ModeloSustitutiva(BaseAmendment)` are the two concrete classes.
+- Consumers branch on the concrete type (or on a `kind: Literal["complementaria", "sustitutiva"]` discriminator field whose values are the Spanish strings verbatim).
+- No umbrella `ModeloAmendment` alias class. Operating on an amendment requires choosing the concrete variant; the type system enforces the LGT-Art-122 distinction at every boundary.
+
+`FilingAmendmentError` becomes `ModeloAmendmentError` (the error surface is shared across both variants; the discrimination happens on the entity, not on its error).
+
+### Statutory refinement A6: SubmittedFiling → ModeloPresentado (NOT SubmittedModelo)
+
+Affects: Section 7 Modelo cluster row "SubmittedFiling | src/aeat/domain/submission/ | SubmittedModelo".
+
+Adjudication: rename to `ModeloPresentado` per AEAT Sede verbatim labeling. The AEAT lifecycle label is `Presentada` (feminine, agreeing with `declaración` or `autoliquidación` in the AEAT UI). Code-side the canonical entity prefix is `Modelo*`, yielding `ModeloPresentado`.
+
+The full AEAT-Sede-verbatim lifecycle is:
+
+`Borrador → Pendiente de presentar → Presentada → Aceptada / Rechazada`
+
+English `Submitted/Acknowledged/Accepted/Rejected/Pending` status names elsewhere in the codebase need a coordinated future state-machine rename pass — see Future scope section below.
+
+## Future scope (recorded for follow-up campaigns)
+
+### Future scope F1: state-machine lifecycle rename
+
+Per AEAT Sede verbatim, the canonical filing lifecycle is `Borrador → Pendiente de presentar → Presentada → Aceptada / Rechazada`. Status enums, state-machine transition methods, persisted lifecycle columns, and CLI emit values across the codebase currently use English labels (`Submitted`, `Acknowledged`, `Accepted`, `Rejected`, `Pending`, and adjacent). A coordinated rename pass is required to align every state-machine label with the AEAT Sede vocabulary. Scope is out of this ADR; capture as a follow-up campaign feature once the Modelo cluster lands.
+
+### Future scope F2: SII / libro registro adapter naming
+
+When the SII (Suministro Inmediato de Información) and `libro registro` adapter is built, the boundary identifiers must use the Spanish stems verbatim:
+
+- `factura expedida` / `factura recibida` per RD 1619/2012 (BOE-A-2012-14696).
+- `Libro registro de facturas expedidas` / `Libro registro de facturas recibidas` per RD 596/2016 (BOE-A-2016-11575).
+
+Adapter-side Python identifiers compose these stems with the English infrastructure-suffix list (Repository, Record, etc.) per Section 2: e.g. `FacturaExpedidaRecord`, `LibroRegistroFacturasRecibidasRepository`. Wire-format strings carry the verbatim Spanish phrases at the boundary.
+
+## Open Questions resolved (2026-05-19)
+
+This subsection updates the Section "Open questions deferred to project manager" in the ADR body above.
+
+- **Footnote 1 (FilingRecord vs ModeloRecord collision)**: resolved via the W04.P09 FilingRecord cluster execution. Domain pydantic and SQL row are kept as separate types; `ModeloRecord` (domain) lives alongside `ModeloRow` (SQL). No type collapse.
+- **Footnote 2 (DraftStatus / FilingDraftStatus consolidation)**: resolved to a single `ModeloDraftStatus` enum, pre-staged as task #20.
+- **Footnote 3 (IssuerResidency / CustomerResidency)**: resolved by Amendment A1 above. Collapse to a single `IvaTerritorialScope` enum used in two field roles (issuer and customer).
+- **VATClassification merge into IvaInvoiceClassification**: deferred. Initial pass renamed `VATClassification` to `IvaClassificationResult` due to field-set incompatibility with `IvaInvoiceClassification`; proper merge is tracked as a follow-up (task #10). Recording the deferral here so the open-question rationale is durable.
+- **AUTOREPERCUTIDO retention**: resolved by Amendment A2 above. Member renamed to `INVERSION_SUJETO_PASIVO`.
+- **Modelo-cluster vs Borrador-cluster boundary for FilingDraft\***: resolved by Amendment A3 above. Carve-out rule applies; per-site inspection required during the Modelo rename cluster.
+- **FilingObligation target name**: resolved by Amendment A4 above. Target is `ModeloDeadline`, not `ModeloObligation`. Coder-gamma dispatched.
+- **FilingAmendment shape**: resolved by Amendment A5 above. Discriminated union via `ModeloComplementaria` + `ModeloSustitutiva`; no umbrella class.
+- **SubmittedFiling target name**: resolved by Amendment A6 above. Target is `ModeloPresentado`. Full state-machine lifecycle rename is Future Scope F1.
+- **BorradorObservation and DeclaracionObservation**: confirmed canonical pattern (Spanish stem + English Observation suffix). No rename. Marked resolved.
+- **Fincas cluster Income/Expense/Amortization Spanishness**: still open. Defer to the F-cluster execution agent. Current default per Section 7 remains English (Generic accounting infra).
+- **Downstream ADR supersession sweep**: still open. Capture as a separate vault-curate task.
+
+## Verification addendum (2026-05-19)
+
+The spanish-tax-glossary reference document carries the canonical BOE / AEAT citation list. As of the verification pass that accompanied this amendment, the glossary holds 16 verified citations (14 original + 2 additions):
+
+- Addition: RD 1619/2012 (BOE-A-2012-14696) — reglamento de facturación. Required by Future Scope F2.
+- Addition: RD 596/2016 (BOE-A-2016-11575) — modernización del IVA (libros registro). Required by Future Scope F2.
+
+The glossary section "## Verification addendum (2026-05-19)" carries the verified-citation table. This amendment does not duplicate the table; it cross-references the glossary as the single source of truth for the citation set.
