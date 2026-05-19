@@ -27,7 +27,7 @@ from ._repos import (
     VatCatalogueRepository,
     VatRateTableRepository,
 )
-from ._repos.modelos import ModeloRepository
+from ._repos.modelos import StaticModeloRepository
 
 
 @dataclass(slots=True, frozen=True)
@@ -46,7 +46,7 @@ class ResourceRegistry:
     holiday_calendars: HolidayCalendarRepository = field(default_factory=HolidayCalendarRepository)
     legal_parameters: LegalParameterRepository = field(default_factory=LegalParameterRepository)
     manuals: ManualRepository = field(default_factory=ManualRepository)
-    modelos: ModeloRepository = field(default_factory=ModeloRepository)
+    modelos: StaticModeloRepository = field(default_factory=StaticModeloRepository)
     normatives: NormativeRepository = field(default_factory=NormativeRepository)
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
     topics: TopicCatalogueRepository = field(default_factory=TopicCatalogueRepository)
