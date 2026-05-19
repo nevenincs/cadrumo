@@ -3,9 +3,9 @@
 Per the AEAT registry design contract, every casilla id has
 identical legal responsibilities across every revision of a
 modelo. The `_validate_cross_revision_casilla_consistency` gate
-fails registry load when two revisions disagree on any
+reports drift when two revisions disagree on any
 legally-bound field (label, section, data_type, semantic_role,
-constraints).
+legal_refs).
 """
 
 from __future__ import annotations
@@ -14,9 +14,15 @@ from typing import Any
 
 import pytest
 
-from ._schema import CasillaConstraints, CasillaDefinition
-from ._validate import _validate_cross_revision_casilla_consistency
+from aeat.core.resources import bundled_path
 
+from . import load_registry_tree
+from ._errors import RegistryValidationError
+from ._schema import CasillaDefinition
+from ._validate import (
+    _validate_cross_revision_casilla_consistency,
+    validate_cross_revision_casilla_consistency,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -28,7 +34,7 @@ def _casilla(
     section: tuple[str, ...] = ("test",),
     data_type: str = "money",
     semantic_role: str | None = None,
-    constraints: CasillaConstraints | None = None,
+    legal_refs: tuple[str, ...] = ("ley-58-2003:art-29",),
 ) -> CasillaDefinition:
     return CasillaDefinition(
         id=cid,
@@ -37,8 +43,7 @@ def _casilla(
         section=section,
         data_type=data_type,  # type: ignore[arg-type]
         semantic_role=semantic_role,
-        constraints=constraints,
-        legal_refs=("ley-58-2003:art-29",),
+        legal_refs=legal_refs,
         source_refs=("aeat-manual",),
     )
 
@@ -94,17 +99,12 @@ class TestCrossRevisionConsistency:
         failures = _validate_cross_revision_casilla_consistency([m])
         assert any("semantic_role" in f for f in failures)
 
-    def test_constraints_drift_caught(self) -> None:
-        constrained = CasillaConstraints(
-            sign="non_negative",
-            legal_refs=("ley-58-2003:art-29",),
-            source_refs=("aeat-manual",),
-        )
-        a = _casilla(cid="0700", constraints=constrained)
-        b = _casilla(cid="0700", constraints=None)
+    def test_legal_refs_drift_caught(self) -> None:
+        a = _casilla(cid="0700", legal_refs=("ley-58-2003:art-29",))
+        b = _casilla(cid="0700", legal_refs=("ley-58-2003:art-30",))
         m = _modelo("100", {"2024": [a], "2025": [b]})
         failures = _validate_cross_revision_casilla_consistency([m])
-        assert any("constraints" in f for f in failures)
+        assert any("legal_refs" in f for f in failures)
 
     def test_single_revision_casilla_passes(self) -> None:
         a = _casilla(cid="0700")
@@ -135,3 +135,15 @@ class TestCrossRevisionConsistency:
         assert len(failures) == 1
         assert "2024" in failures[0]
         assert "2025" in failures[0]
+
+
+def test_cross_revision_validator_catches_real_committed_corpus_drift() -> None:
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        validate_cross_revision_casilla_consistency(modelos)
+
+    message = str(exc_info.value)
+    assert "cross-revision casilla drift detected" in message
+    assert "modelo 123 casilla '01'" in message
+    assert "label" in message
