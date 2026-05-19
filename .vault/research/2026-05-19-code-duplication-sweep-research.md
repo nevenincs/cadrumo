@@ -742,3 +742,199 @@ This sweep expands upon the initial findings by conducting a focused AST and enu
 **New Collisions Found**: 5 (items 24-28)
 **Confirmed from Seed**: All 10 class-name collisions verified within domain/ scope.
 **Key Insight**: Enum-value duplications and Protocol overlaps outnumber class-name collisions in domain/ but represent systemic duplication that the seed data did not enumerate.
+
+---
+
+## Adapter ENG/ESP Drift
+
+Findings transcribed from the adapter sweep into this durable record by the project manager because the source agent reported results out-of-band. 13 drift candidates across 4 categories within `src/aeat/adapters/**`.
+
+### Category A: English class names where Spanish tax-domain stems should prevail
+
+| Identifier | Location | Current | Proposed | Risk |
+| --- | --- | --- | --- | --- |
+| `ModeloRecord` | `src/aeat/adapters/persistence/storage/sql/records.py:47` | English suffix `-Record` | confirm vs ADR Specialist (consider `ModeloRow` consolidation, NOT `RegistroModelo` — stem stuttering) | High - boundary layer |
+| `ModeloRow` | `src/aeat/adapters/persistence/storage/sql/_orm.py:36` | English suffix `-Row` | confirm canonical persistence naming (avoid `FilaModelo` — over-translation of generic infra suffix) | High - ORM refactor |
+| `FiledDeclarationArtefact` | `src/aeat/adapters/outbound/aeat/sede/_schema.py:164` | Pure English | `FiledDeclaracionArtefact` (stem only) | High - public API |
+| `FiledDeclarationObservation` | `src/aeat/adapters/outbound/aeat/sede/_schema.py:242` | Pure English | `FiledDeclaracionObservation` (stem only) | High - public API |
+| `Declaration` | `src/aeat/adapters/outbound/aeat/sede/_declarations.py:130` | Pure English | `Declaracion` | High - 50+ refs across adapters |
+| `RentalFincaRow` | `src/aeat/adapters/persistence/storage/sql/_orm.py:176` | Mixed (Renta vs Rental ambiguity) | NEEDS ADR ADJUDICATION — see Renta/Rental finding #10 in research above | High - rental core |
+| `RentalContractRow` | `src/aeat/adapters/persistence/storage/sql/_orm.py:230` | Same | NEEDS ADR ADJUDICATION | High |
+| `RentalIncomeRecordRow` | `src/aeat/adapters/persistence/storage/sql/_orm.py:312` | Mixed Rental+Income+Record+Row | NEEDS ADR ADJUDICATION | High |
+| `RentalExpenseRow` | `src/aeat/adapters/persistence/storage/sql/_orm.py:355` | Same | NEEDS ADR ADJUDICATION | High |
+| `RentalAmortizationLedgerRow` | `src/aeat/adapters/persistence/storage/sql/_orm.py:396` | Same | NEEDS ADR ADJUDICATION | High |
+
+### Category B: Mixed-language identifiers (Spanish stem + English suffix)
+
+| Identifier | Location | Notes |
+| --- | --- | --- |
+| `BorradorParseError` | `src/aeat/adapters/inbound/borrador/_errors.py:14` | Borrador + ParseError; consistent with file location convention; likely accept as-is |
+| `ArtefactNotRecognisedError` | `src/aeat/adapters/inbound/borrador/_errors.py:23` | Borrador-context error; English name; review if stem should be `BorradorArtefactNotRecognisedError` |
+| `DeclaracionParseError` | `src/aeat/adapters/inbound/declaracion/_errors.py:15` | Same pattern as BorradorParseError; accept |
+| `BorradorObservation` | `src/aeat/adapters/inbound/borrador/_schema.py:56` | Spanish stem + English Observation; likely accept (Observation is generic infra) |
+| `DeclaracionObservation` | `src/aeat/adapters/inbound/declaracion/_schema.py:77` | Same; likely accept |
+| `JustificanteRef` | `src/aeat/adapters/outbound/aeat/sede/_schema.py:101` | Justificante + Ref; abbreviation acceptable |
+
+### Category C: Boundary modules with inconsistent naming
+
+- `DeclarationsRegisterSession` at `src/aeat/adapters/outbound/aeat/sede/_declarations.py:217` — English `Declarations` should be `Declaraciones`; suffix `RegisterSession` is OK
+- `FiledDeclarationObservationStore` at `src/aeat/adapters/outbound/aeat/sede/_observation_store.py:26` — same; rename to `FiledDeclaracionObservationStore`
+
+### Category D: Adapter exception classes
+
+- `JustificanteFetchError` at `src/aeat/adapters/outbound/aeat/sede/_errors.py:76` — Justificante + FetchError; likely accept
+
+### Cross-boundary inconsistencies flagged for ADR Specialist
+
+1. **Persistence layer dual-pattern**: `ModeloRecord` (pydantic) vs `ModeloRow` (SQLAlchemy ORM) — same domain entity, two naming patterns in adjacent layers. ADR Specialist must rule on canonical choice.
+2. **Observation pattern**: `BorradorObservation`, `DeclaracionObservation`, `FiledDeclarationObservation` — first two are Spanish-stem, third is English. Standardise.
+3. **Rental domain**: The entire `Rental*Row` cluster is the largest single-domain drift surface. Linked to the `Renta` vs `Rental` semantic split (research item #10). Must be resolved as one coordinated refactor, not piecemeal.
+4. **Outbound sede module**: Lives under `declaraciones` namespace but exposes English `Declaration*` boundary records. Standardise stems to Spanish.
+
+---
+
+## Exception Hierarchy Audit
+
+Findings transcribed by the project manager. Full scan of `src/aeat/**` exception classes.
+
+### Inventory totals
+
+- 251 exception class definitions total
+- 3 exception class name collisions
+- 2 dead exceptions (never raised)
+- 4 escape-to-top exceptions (raised but never caught in production)
+- 1 critical parent-class divergence (the already-inventoried `WorkUnitNotFoundError`)
+
+### A. Exception class collisions (same name, different modules)
+
+| Class | Location 1 | Parent 1 | Location 2 | Parent 2 | Risk |
+| --- | --- | --- | --- | --- | --- |
+| `StorageError` | `src/aeat/adapters/outbound/storage/_errors.py:16` | `AeatError` | `src/aeat/adapters/persistence/storage/errors.py:20` | `AeatError` | **CRITICAL** — same parent, different module, distinct subclass trees; catching one will not catch the other |
+| `StorageValidationError` | `src/aeat/adapters/outbound/storage/_errors.py:20` | `StorageError, ValueError` | `src/aeat/adapters/persistence/storage/errors.py:38` | `PersistenceError, ValueError` | **CRITICAL** — parent chains diverge entirely |
+| `NoActiveBucketError` family | `src/aeat/adapters/persistence/storage/bucket/_errors.py:20` (bucket-scope, never raised in production) | `BucketError` | `src/aeat/domain/transactions/_errors.py:24` (`LedgerNoActiveBucketError`, actively raised + caught) | `LedgerStorageError` | High — three+ "no active bucket" variants across bucket / transaction / master_key / auth scopes; consolidation needed |
+
+### B. Dead exceptions (defined but never raised)
+
+| Class | Definition | Status |
+| --- | --- | --- |
+| `AccessGateSubmissionError` | `src/aeat/core/access_gate/_errors.py:20` | Base-only; only subclasses raised (`LiveSubmitForbiddenError`, `AccessGateSubmissionPreflightError`). Acceptable if intentional base. |
+| `BucketAlreadyPresentError` | `src/aeat/adapters/persistence/storage/bucket/_errors.py:43` | Never instantiated in raise statements. Candidate for deletion. |
+
+### C. Escape-to-top exceptions (raised, never caught in production)
+
+| Class | Definition | Raise sites | Catch sites | Disposition |
+| --- | --- | --- | --- | --- |
+| `RecoveryUnavailableError` | `src/aeat/adapters/persistence/storage/bucket/_errors.py:68` | Test files only | None in production | LOW — remove or activate raise site |
+| `RecoveryVerificationError` | `src/aeat/adapters/persistence/storage/bucket/_errors.py:82` | `master_key/_recovery_facade.py` (2 raises) | Only tests + self-catch in `_recovery_facade.py` | MEDIUM — bubble pattern expected for recovery workflow |
+| `OutputSchemaError` | `src/aeat/core/json_contract.py:43` | 4 raise sites in `json_contract.py` | Never caught; bubbles to CLI boundary | LOW — intentional bubble to CLI error boundary |
+| `BucketLockedError` | `src/aeat/adapters/persistence/storage/bucket/_errors.py:55` | `master_key/_bucket_session.py` (3 raises) | Never caught in production | MEDIUM — intentional lock-contention signal |
+
+### Recommendation
+
+1. Rename outbound `StorageError`/`StorageValidationError` to `OutboundStorageError`/`OutboundStorageValidationError`. This is the most urgent catch-shadow bug in the inventory.
+2. Consolidate the three+ `*NoActiveBucketError` variants into a single hierarchy or establish clear domain ownership.
+3. Delete `BucketAlreadyPresentError` (never used) and decide whether `AccessGateSubmissionError` should remain as a base-only.
+4. Add docstring comments to the intentional-bubble exceptions documenting why they escape top-level handlers.
+
+---
+
+## ENG/ESP Full Inventory (RAW — needs ADR Specialist QC pass)
+
+Findings transcribed by the project manager from the full-codebase cross-cutting sweep. **189 rows. Quality WARNING:** This inventory was produced by a haiku discovery agent and contains known stem-stuttering errors (e.g. `BorradorBorrador`, `RentaRenta`, `FincasFinca`). Treat every "Proposed" value as a *candidate* for ADR Specialist adjudication, not as a directive. Coding agents MUST NOT execute against this list directly.
+
+### Distribution
+
+- `rename-only`: 80 items (42.3%)
+- `public-API-change`: 54 items (28.6%)
+- `schema-impact`: 51 items (27.0%)
+- `cross-module-renames`: 4 items (2.1%)
+
+### Known invalid proposals to filter at QC
+
+- `BorradorSnapshotNotFoundError` → `BorradorBorradorNotFoundError` (stem stuttering)
+- `Borrador100Snapshot` → `Borrador100Borrador` (stem stuttering — Snapshot here is generic infra)
+- `RentaIncomeType` → `RentaRentaType` (stem stuttering)
+- `RentalFinca` → `FincasFinca` (Fincas is a plural noun, wrong as singular-class prefix; also requires Renta/Rental adjudication first)
+- All `Snapshot → Borrador` proposals where Snapshot refers to generic capture/cache state (NOT to AEAT pre-filled Modelo drafts)
+
+### Confirmed KEEP — international standard
+
+- All `VAT*` classes in `src/aeat/domain/vat/_schema.py` and `_classification.py` (VAT is an internationally recognised tax acronym; ADR Specialist will rule whether to migrate to `IVA*` per Spanish-stem mandate, but currently flagged keep)
+
+### Confirmed KEEP — generic infra
+
+- `ProfileSnapshot`, `UserProfileSnapshot`, `AeatGateEnvSnapshot`, `RegistrySnapshot`, `RegistrySnapshotRef`, `RegistrySnapshotError`, `ProfileSnapshotPolicy`, `ProfileSnapshotHashMismatchError`, `ProfileSnapshotNotFoundError` — Snapshot used as generic state-capture pattern, not AEAT-Borrador semantic
+
+### Inventory rows — top-priority refactor targets (clean subset)
+
+The full 189-row table is voluminous and will be persisted by the ADR Specialist after QC. Below is the high-confidence subset that survives an initial PM filter:
+
+#### Filing → Modelo cluster (domain & application)
+
+| Current | Location |
+| --- | --- |
+| `FilingDraft` | `src/aeat/domain/filing/_schema.py:138` |
+| `FilingDraftStatus` | `src/aeat/domain/filing/_schema.py:26` |
+| `FilingValue` / `FilingValueKind` / `FilingBindingValue` / `FilingValidationFinding` / `FilingApprovalBasis` | `src/aeat/domain/filing/_schema.py` |
+| `FilingValidator` | `src/aeat/domain/filing/_validator.py:33` |
+| `FilingAmendment` / `FilingAmendmentError` family | `src/aeat/domain/filing/_amendment.py`, `_errors.py` |
+| `FilingDraftError` / `FilingBuilderError` / `FilingValidationError` / `FilingComputationError` / `FilingImportError` / `FilingExportError` / `FilingExportValidationError` | `src/aeat/domain/filing/_errors.py` |
+| `FilingProfile` | `src/aeat/domain/filing/_protocols.py:171` |
+| `FilingDraftRepository` | `src/aeat/domain/filing/_repository.py:27` |
+| `FilingRecord` / `FilingRecordStatus` / `FilingRecordCatalogue` / `FilingRecordPersistenceError` / `FilingRecordCatalogueRepository` | `src/aeat/domain/modelos/_filing_record.py`, `_filing_repository.py` |
+| `FilingObligation` / `FilingEnrollment` / `FilingIVAProfile` | `src/aeat/domain/deadlines/_models.py` |
+| `FilingScheduleDefinition` | `src/aeat/domain/calculations/registry/_schema.py:1140` |
+| `RegistryFilingObservation` / `OracleFilingObservation` / `RegistryFilingObservationRequirement` / `_PreviousFilingSelector` | `src/aeat/domain/calculations/registry/_bindings.py` |
+| `FilingApplicationError` / `FilingCalculateError` | `src/aeat/application/filing/errors.py` |
+| `FilingHistory` / `FilingHistoryEntry` / `FilingHistoryRepository` | `src/aeat/application/filing/_history_models.py`, `_history_repository.py` |
+| `FilingApprovalStaleReason` | `src/aeat/application/filing/_review.py:52` |
+| `FilingDivergenceKind` / `FilingDraftRef` | `src/aeat/application/filing/reconciliation/` |
+| `FilingOperatorProfile` / `RegistryFilingSubview` / `FilingTestProfile` / `FilingTestDeadlineStatus` / `FilingTestDeadlineChecker` | `src/aeat/application/filing/runtime.py`, `testing.py` |
+| `FilingDraftBuilderAdapter` / `RegistryFilingDraftProtocol` / `FilingDraftBuilderProtocol` / `FilingInputsProviderProtocol` | `src/aeat/application/workflow/_adapters.py`, `_protocols.py` |
+| `FilingRecordNotFoundError` / `ExternalFilingImportError` | `src/aeat/application/modelo/_actions.py` |
+| `FilingFixtureError` | `src/aeat/core/errors/__init__.py:87` |
+| `FilingRecordPayload` / `FilingRecordListResult` / `FilingRecordShowResult` | `src/aeat/entrypoints/cli/_modelo_payloads.py` |
+| `FilingFindingSeverity` / `FilingFinding` / `FilingDraftLike` / `DraftLoader` / `DraftStatus` / `SubmittedFiling` | `src/aeat/domain/submission/` |
+| `PdfFilingImportError` | `src/aeat/domain/justificante/_errors.py:15` |
+
+#### Declaration → Declaracion cluster (outbound + application + domain)
+
+| Current | Location |
+| --- | --- |
+| `Declaration` / `DeclarationsRegisterSession` | `src/aeat/adapters/outbound/aeat/sede/_declarations.py` |
+| `FiledDeclarationArtefact` / `FiledDeclarationObservation` | `src/aeat/adapters/outbound/aeat/sede/_schema.py` |
+| `FiledDeclarationObservationStore` | `src/aeat/adapters/outbound/aeat/sede/_observation_store.py` |
+| `DeclarationCalculateNextAction` / `DeclarationCalculateSummary` | `src/aeat/application/filing/_calculate.py` |
+| `DeclarationExportFormat` / `DeclarationVerifyVerdict` / `DeclarationExportResult` / `DeclarationVerifyResult` | `src/aeat/application/filing/_export.py` |
+| `DeclarationEditSpec` | `src/aeat/application/review/_edit.py:479` |
+| `DeclarationReviewFilterKey` / `DeclarationReviewStatus` / `DeclarationReviewFilterSpec` | `src/aeat/application/review/_filter.py` |
+| `DeclarationPointer` | `src/aeat/application/workflow/_models.py:94` |
+| `DeclarationParseError` | `src/aeat/domain/filing/reconciliation/_errors.py:17` |
+| `ReconciliationDeclarationSourceUnsupportedError` | `src/aeat/application/modelo/_reconcile.py:112` |
+| `CrossReferenceApplicabilityDeclaration` | `src/aeat/domain/calculations/registry/_live_parity.py:513` |
+| `RentaDeclarationType` | `src/aeat/domain/profile/_renta_codes.py:14` |
+
+#### Census → Censo cluster (application + domain + outbound)
+
+| Current | Location |
+| --- | --- |
+| `CensusSyncError` / `CensusNotAvailableError` / `CensusFieldValidationError` / `CensusApplyConflictError` | `src/aeat/application/profile/_census_errors.py` |
+| `CensusComparisonStatus` / `CensusFieldComparison` / `CensusProfileComparison` / `CensusApplyResult` / `CensusSyncService` | `src/aeat/application/profile/_census_sync.py` |
+| `CensusStaleRefusedError` | `src/aeat/domain/modelos/_errors.py:36` |
+| `CensusRatioMismatchError` | `src/aeat/domain/usage_ratios/_errors.py:46` |
+| `RatiosCensusOverrideWarning` | `src/aeat/application/ledger/_ratios.py:187` |
+| `CensusModeloRole` / `CensusModeloEventKind` / `CensusModeloFoundationLogFields` / `CensusModeloOwnership` / `CensusModeloFoundationContract` / `CensusModeloFoundationCommand` / `CensusModeloFoundationResult` | `src/aeat/domain/calculations/registry/_census_modelos.py` |
+| `CensusFactSet` / `CensusParseError` | `src/aeat/adapters/outbound/aeat/sede/_census.py` |
+
+#### Rental cluster (Renta/Rental adjudication required FIRST)
+
+All `Rental*` identifiers in `src/aeat/domain/rental/_models.py`, `_repository.py`, `_aggregates.py`, `_errors.py` and `src/aeat/adapters/persistence/storage/sql/_orm.py` are blocked pending ADR ruling on whether the rental domain becomes:
+- `domain/fincas` (real-estate-property-focused naming), or
+- `domain/alquiler` (rental-contract-focused naming), or
+- stays `domain/rental` because it is operational, not regulatory
+
+ADR Specialist must rule on this BEFORE coding agents touch any of these identifiers.
+
+### Disposition
+
+The full raw table (189 rows) is too long for direct inclusion here without context bloat. The high-priority subset above gives ADR Specialist sufficient surface to build the canonical rename ledger. If a missing identifier is needed during ADR drafting, the project manager has the raw data in conversation state and will inject it on request.
