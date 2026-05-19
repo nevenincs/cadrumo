@@ -6,7 +6,7 @@ centralization audit. Three closed enumerations (:class:`OssIossRegime`,
 periodicity mapping (:data:`REGIME_PERIODICITY`), and the
 LIVA-grounded deductibility predicate
 (:func:`regime_allows_deduction`) live here. The substrate is purely
-additive against the wider :mod:`aeat.domain.vat` package; existing
+additive against the wider :mod:`aeat.domain.iva` package; existing
 rate values, classifier rules, and consumers remain unaffected.
 
 The three regimes track the LIVA chapters that establish them:

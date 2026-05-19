@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 from aeat.core.resources import bundled_path
-from aeat.domain.vat import (
-    InvoiceDirection,
+from aeat.domain.iva import (
+    InvoiceKind,
     IvaFlowDirection,
-    VATCategory,
+    IvaCategory,
     derive_flow_for_classification,
 )
 
@@ -35,18 +35,18 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
 @pytest.mark.parametrize(
     ("category", "direction", "expected"),
     [
-        (VATCategory.DOMESTIC_GENERAL_21, InvoiceDirection.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (VATCategory.DOMESTIC_REDUCED_10, InvoiceDirection.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (VATCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceDirection.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (VATCategory.DOMESTIC_ZERO, InvoiceDirection.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (VATCategory.DOMESTIC_EXEMPT, InvoiceDirection.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (VATCategory.RECARGO_EQUIVALENCIA, InvoiceDirection.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (VATCategory.INTRA_COMMUNITY_SUPPLY, InvoiceDirection.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (VATCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, InvoiceDirection.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.DOMESTIC_REDUCED_10, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.DOMESTIC_ZERO, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.DOMESTIC_EXEMPT, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.INTRA_COMMUNITY_SUPPLY, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
+        (IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
     ],
 )
 def test_derive_flow_classifies_issued_non_reverse_charge_as_repercutido(
-    category: VATCategory, direction: InvoiceDirection, expected: IvaFlowDirection
+    category: IvaCategory, direction: InvoiceKind, expected: IvaFlowDirection
 ) -> None:
     assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
 
@@ -54,44 +54,44 @@ def test_derive_flow_classifies_issued_non_reverse_charge_as_repercutido(
 @pytest.mark.parametrize(
     ("category", "direction", "expected"),
     [
-        (VATCategory.DOMESTIC_GENERAL_21, InvoiceDirection.RECEIVED, IvaFlowDirection.SOPORTADO),
-        (VATCategory.DOMESTIC_REDUCED_10, InvoiceDirection.RECEIVED, IvaFlowDirection.SOPORTADO),
-        (VATCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceDirection.RECEIVED, IvaFlowDirection.SOPORTADO),
-        (VATCategory.IMPORT_THIRD_COUNTRY, InvoiceDirection.RECEIVED, IvaFlowDirection.SOPORTADO),
-        (VATCategory.RECARGO_EQUIVALENCIA, InvoiceDirection.RECEIVED, IvaFlowDirection.SOPORTADO),
+        (IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
+        (IvaCategory.DOMESTIC_REDUCED_10, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
+        (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
+        (IvaCategory.IMPORT_THIRD_COUNTRY, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
+        (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
     ],
 )
 def test_derive_flow_classifies_received_non_reverse_charge_as_soportado(
-    category: VATCategory, direction: InvoiceDirection, expected: IvaFlowDirection
+    category: IvaCategory, direction: InvoiceKind, expected: IvaFlowDirection
 ) -> None:
     assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
 
 
-@pytest.mark.parametrize("direction", [InvoiceDirection.ISSUED, InvoiceDirection.RECEIVED])
+@pytest.mark.parametrize("direction", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
 def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido(
-    direction: InvoiceDirection,
+    direction: InvoiceKind,
 ) -> None:
     """Domestic reverse-charge (LIVA art 84.Uno.2) routes to AUTOREPERCUTIDO
     irrespective of invoice direction; the recipient self-assesses."""
     assert (
         derive_flow_for_classification(
-            category=VATCategory.DOMESTIC_REVERSE_CHARGE,
+            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
             invoice_direction=direction,
         )
         is IvaFlowDirection.AUTOREPERCUTIDO
     )
 
 
-@pytest.mark.parametrize("direction", [InvoiceDirection.ISSUED, InvoiceDirection.RECEIVED])
+@pytest.mark.parametrize("direction", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
 def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(
-    direction: InvoiceDirection,
+    direction: InvoiceKind,
 ) -> None:
     """Intra-community acquisition reverse-charge (LIVA art 84.Uno.2.e)
     self-assesses both the repercutido and soportado entries on the
     same operation."""
     assert (
         derive_flow_for_classification(
-            category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             invoice_direction=direction,
         )
         is IvaFlowDirection.AUTOREPERCUTIDO
@@ -150,7 +150,7 @@ def test_iva_settlement_side_enum_has_two_closed_members() -> None:
     """IVA settlement rests on two cornerstones — devengada (output IVA
     owed to the Treasury) and deducible (input IVA reclaimable from the
     Treasury). The enum must be closed at exactly these two members."""
-    from aeat.domain.vat import IvaSettlementSide
+    from aeat.domain.iva import IvaSettlementSide
 
     assert {s for s in IvaSettlementSide} == {
         IvaSettlementSide.DEVENGADA,
@@ -159,7 +159,7 @@ def test_iva_settlement_side_enum_has_two_closed_members() -> None:
 
 
 def test_iva_settlement_side_string_values_are_kebab_case() -> None:
-    from aeat.domain.vat import IvaSettlementSide
+    from aeat.domain.iva import IvaSettlementSide
 
     assert IvaSettlementSide.DEVENGADA.value == "devengada"
     assert IvaSettlementSide.DEDUCIBLE.value == "deducible"
@@ -168,7 +168,7 @@ def test_iva_settlement_side_string_values_are_kebab_case() -> None:
 def test_repercutido_flow_contributes_to_devengada_only() -> None:
     """LIVA art 88 — repercusión charges output IVA to the customer;
     nothing on the deducible side."""
-    from aeat.domain.vat import IvaSettlementSide, settlement_sides_for_flow
+    from aeat.domain.iva import IvaSettlementSide, settlement_sides_for_flow
 
     sides = settlement_sides_for_flow(IvaFlowDirection.REPERCUTIDO)
     assert sides == frozenset({IvaSettlementSide.DEVENGADA})
@@ -177,7 +177,7 @@ def test_repercutido_flow_contributes_to_devengada_only() -> None:
 def test_soportado_flow_contributes_to_deducible_only() -> None:
     """LIVA art 92 — cuotas tributarias deducibles; the sujeto pasivo
     bears IVA via direct repercusión and may deduct it."""
-    from aeat.domain.vat import IvaSettlementSide, settlement_sides_for_flow
+    from aeat.domain.iva import IvaSettlementSide, settlement_sides_for_flow
 
     sides = settlement_sides_for_flow(IvaFlowDirection.SOPORTADO)
     assert sides == frozenset({IvaSettlementSide.DEDUCIBLE})
@@ -188,14 +188,14 @@ def test_autorepercutido_flow_contributes_to_both_sides() -> None:
     self-assesses BOTH a devengada entry and a matching deducible entry
     on the same operation. The two cancel arithmetically inside Modelo
     303 but both must be booked."""
-    from aeat.domain.vat import IvaSettlementSide, settlement_sides_for_flow
+    from aeat.domain.iva import IvaSettlementSide, settlement_sides_for_flow
 
     sides = settlement_sides_for_flow(IvaFlowDirection.AUTOREPERCUTIDO)
     assert sides == frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE})
 
 
 def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
-    from aeat.domain.vat import DEVENGADA_FLOW_DIRECTIONS, is_devengada_flow
+    from aeat.domain.iva import DEVENGADA_FLOW_DIRECTIONS, is_devengada_flow
 
     assert {
         IvaFlowDirection.REPERCUTIDO,
@@ -206,7 +206,7 @@ def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
 
 
 def test_deducible_flow_directions_set_matches_deducible_predicate() -> None:
-    from aeat.domain.vat import DEDUCIBLE_FLOW_DIRECTIONS, is_deducible_flow
+    from aeat.domain.iva import DEDUCIBLE_FLOW_DIRECTIONS, is_deducible_flow
 
     assert {
         IvaFlowDirection.SOPORTADO,
@@ -220,7 +220,7 @@ def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> Non
     """The intersection of the two cornerstone flow sets is exactly
     AUTOREPERCUTIDO — the only flow that contributes to both sides on
     the same operation."""
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         DEDUCIBLE_FLOW_DIRECTIONS,
         DEVENGADA_FLOW_DIRECTIONS,
     )
@@ -231,7 +231,7 @@ def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> Non
 def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None:
     """Every flow direction contributes to at least one settlement side —
     the union of the two cornerstone sets covers the full taxonomy."""
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         DEDUCIBLE_FLOW_DIRECTIONS,
         DEVENGADA_FLOW_DIRECTIONS,
     )
@@ -242,7 +242,7 @@ def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None
 def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
     """The settlement-side mapping must cover every IvaFlowDirection
     member — no flow falls through to an unclassified state."""
-    from aeat.domain.vat import settlement_sides_for_flow
+    from aeat.domain.iva import settlement_sides_for_flow
 
     assert len(list(IvaFlowDirection)) > 0
     covered: set[IvaFlowDirection] = set()
@@ -259,7 +259,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     This test is a contract gate: if the substrate's devengada set ever
     changes, this test fires unless 303's formula updates in lockstep."""
     from aeat.domain.calculations.registry import load_registry_tree
-    from aeat.domain.vat import (
+    from aeat.domain.iva import (
         DEVENGADA_FLOW_DIRECTIONS,
         IvaFlowDirection,
     )

@@ -1,7 +1,7 @@
 """Reusable IVA classification record for ledger-side categorization.
 
 Bridges the substrate's three IVA classification axes
-(:class:`VATCategory`, :class:`VATRateKind`, :class:`IvaFlowDirection`)
+(:class:`IvaCategory`, :class:`IvaRateKind`, :class:`IvaFlowDirection`)
 into one frozen pydantic record that the ledger and downstream
 filing surfaces can pass around without re-deriving the mapping.
 
@@ -32,8 +32,8 @@ returns a :class:`IvaInvoiceClassification` for the standard
 domestic-IVA case (the most common autónomo operation). For
 reverse-charge, intra-community, OSS / IOSS, and other non-domestic
 cases, callers construct the record directly with the appropriate
-:class:`VATCategory` from the substrate's classifier output
-(:func:`classify_vat`).
+:class:`IvaCategory` from the substrate's classifier output
+(:func:`classify_iva`).
 """
 
 from __future__ import annotations
@@ -44,49 +44,49 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from ..vat import (
+from ._classification import InvoiceKind
+from ._flow import (
     IvaFlowDirection,
     IvaSettlementSide,
-    VATCategory,
-    VATRateKind,
     is_deducible_flow,
     is_devengada_flow,
     settlement_sides_for_flow,
 )
-from ._enums import InvoiceKind, IvaRate
-from ._errors import InvoiceValidationError
+from ._schema import IvaCategory, IvaRateKind
+from ..invoices._enums import IvaRate
+from ..invoices._errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry import IvaLedgerObservation
 
 
-_IVA_RATE_TO_VAT_KIND: dict[IvaRate, VATRateKind] = {
-    IvaRate.RATE_0: VATRateKind.ZERO,
-    IvaRate.RATE_4: VATRateKind.SUPER_REDUCED,
-    IvaRate.RATE_10: VATRateKind.REDUCED,
-    IvaRate.RATE_21: VATRateKind.GENERAL,
-    IvaRate.EXEMPT: VATRateKind.EXEMPT,
+_IVA_RATE_TO_VAT_KIND: dict[IvaRate, IvaRateKind] = {
+    IvaRate.RATE_0: IvaRateKind.ZERO,
+    IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
+    IvaRate.RATE_10: IvaRateKind.REDUCED,
+    IvaRate.RATE_21: IvaRateKind.GENERAL,
+    IvaRate.EXEMPT: IvaRateKind.EXEMPT,
 }
-"""Closed mapping from invoice IvaRate slot to substrate VATRateKind.
+"""Closed mapping from invoice IvaRate slot to substrate IvaRateKind.
 
 NOT_SUBJECT is intentionally absent — operations outside the scope of
 IVA do not carry a rate-tier classification. Callers handling
 NOT_SUBJECT lines must construct the record directly with
-``VATCategory.OPERACION_NO_SUJETA`` and skip the rate-tier axis."""
+``IvaCategory.OPERACION_NO_SUJETA`` and skip the rate-tier axis."""
 
-_IVA_RATE_TO_DOMESTIC_CATEGORY: dict[IvaRate, VATCategory] = {
-    IvaRate.RATE_0: VATCategory.DOMESTIC_ZERO,
-    IvaRate.RATE_4: VATCategory.DOMESTIC_SUPER_REDUCED_4,
-    IvaRate.RATE_10: VATCategory.DOMESTIC_REDUCED_10,
-    IvaRate.RATE_21: VATCategory.DOMESTIC_GENERAL_21,
-    IvaRate.EXEMPT: VATCategory.DOMESTIC_EXEMPT,
+_IVA_RATE_TO_DOMESTIC_CATEGORY: dict[IvaRate, IvaCategory] = {
+    IvaRate.RATE_0: IvaCategory.DOMESTIC_ZERO,
+    IvaRate.RATE_4: IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+    IvaRate.RATE_10: IvaCategory.DOMESTIC_REDUCED_10,
+    IvaRate.RATE_21: IvaCategory.DOMESTIC_GENERAL_21,
+    IvaRate.EXEMPT: IvaCategory.DOMESTIC_EXEMPT,
 }
 """Closed mapping from invoice IvaRate slot to the matching domestic
-:class:`VATCategory` for the standard autónomo case.
+:class:`IvaCategory` for the standard autónomo case.
 
 This mapping covers DOMESTIC operations only. Intra-community,
 export, import, recargo de equivalencia, OSS / IOSS, and reverse-charge
-operations have their own VATCategory values not derivable from
+operations have their own IvaCategory values not derivable from
 IvaRate alone."""
 
 
@@ -95,9 +95,9 @@ class IvaInvoiceClassification(BaseModel):
     plus the derived settlement-side classification.
 
     Attributes:
-        category: Substrate :class:`VATCategory` classifying the
+        category: Substrate :class:`IvaCategory` classifying the
             operation kind.
-        rate_kind: Substrate :class:`VATRateKind` rate tier; ``None``
+        rate_kind: Substrate :class:`IvaRateKind` rate tier; ``None``
             for operations outside the scope of IVA (NOT_SUBJECT,
             ERRONEOUS_INVOICE, UNKNOWN).
         flow_direction: Substrate :class:`IvaFlowDirection` —
@@ -113,8 +113,8 @@ class IvaInvoiceClassification(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    category: VATCategory
-    rate_kind: VATRateKind | None
+    category: IvaCategory
+    rate_kind: IvaRateKind | None
     flow_direction: IvaFlowDirection
     settlement_sides: frozenset[IvaSettlementSide]
 
@@ -170,8 +170,8 @@ def classify_invoice_line_for_iva(
     For reverse-charge, intra-community, export, import, recargo de
     equivalencia, and OSS / IOSS cases, callers construct
     :class:`IvaInvoiceClassification` directly with the appropriate
-    :class:`VATCategory` from the substrate classifier
-    (:func:`aeat.domain.vat.classify_vat`).
+    :class:`IvaCategory` from the substrate classifier
+    (:func:`aeat.domain.iva.classify_iva`).
 
     Args:
         iva_rate: One of the closed :class:`IvaRate` slots.
@@ -193,7 +193,7 @@ def classify_invoice_line_for_iva(
         raise InvoiceValidationError(
             "classify_invoice_line_for_iva does not handle IvaRate.NOT_SUBJECT — "
             "operations outside the scope of IVA must construct "
-            "IvaInvoiceClassification directly with VATCategory.OPERACION_NO_SUJETA"
+            "IvaInvoiceClassification directly with IvaCategory.OPERACION_NO_SUJETA"
         )
 
     category = _IVA_RATE_TO_DOMESTIC_CATEGORY[iva_rate]

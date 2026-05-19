@@ -7,21 +7,21 @@ from typing import cast
 
 import pytest
 
-from aeat.domain.vat import (
+from aeat.domain.iva import (
     REGIME_PERIODICITY,
-    CustomerResidency,
+    IvaResidency,
     CustomerTaxStatus,
     DeductionScope,
     EUMemberState,
-    InvoiceDirection,
+    InvoiceKind,
     IossFilerRole,
-    IssuerResidency,
+    IvaResidency,
     OssIossRegime,
     RegimePeriodicity,
     TransactionKind,
-    VATCategory,
-    VATClassificationCriteria,
-    classify_vat,
+    IvaCategory,
+    IvaInvoiceClassificationCriteria,
+    classify_iva,
     regime_allows_deduction,
 )
 
@@ -74,89 +74,89 @@ def test_regime_allows_deduction_is_true_for_recovery_scopes() -> None:
 
 
 def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:
-    criteria = VATClassificationCriteria(
+    criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IssuerResidency.ES_MAINLAND,
-        customer_residency=CustomerResidency.EU_MEMBER,
+        issuer_residency=IvaResidency.ES_MAINLAND,
+        customer_residency=IvaResidency.EU_MEMBER,
         customer_member_state=EUMemberState.DE,
         customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
         kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
-        direction=InvoiceDirection.ISSUED,
+        direction=InvoiceKind.ISSUED,
     )
-    result = classify_vat(criteria)
+    result = classify_iva(criteria)
     assert result.matched_rule_id == "R17_oss_union_goods_distance_sale"
-    assert result.category is VATCategory.DOMESTIC_NOT_SUBJECT
+    assert result.category is IvaCategory.DOMESTIC_NOT_SUBJECT
 
 
 def test_classifier_routes_oss_union_goods_interface_facilitated_to_r18() -> None:
-    criteria = VATClassificationCriteria(
+    criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IssuerResidency.ES_MAINLAND,
-        customer_residency=CustomerResidency.EU_MEMBER,
+        issuer_residency=IvaResidency.ES_MAINLAND,
+        customer_residency=IvaResidency.EU_MEMBER,
         customer_member_state=EUMemberState.FR,
         customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
         kind=TransactionKind.OSS_UNION_GOODS_INTERFACE_FACILITATED,
-        direction=InvoiceDirection.ISSUED,
+        direction=InvoiceKind.ISSUED,
     )
-    result = classify_vat(criteria)
+    result = classify_iva(criteria)
     assert result.matched_rule_id == "R18_oss_union_goods_interface_facilitated"
-    assert result.category is VATCategory.DOMESTIC_NOT_SUBJECT
+    assert result.category is IvaCategory.DOMESTIC_NOT_SUBJECT
 
 
 def test_classifier_routes_oss_union_services_to_r19() -> None:
-    criteria = VATClassificationCriteria(
+    criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IssuerResidency.ES_MAINLAND,
-        customer_residency=CustomerResidency.EU_MEMBER,
+        issuer_residency=IvaResidency.ES_MAINLAND,
+        customer_residency=IvaResidency.EU_MEMBER,
         customer_member_state=EUMemberState.IT,
         customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
         kind=TransactionKind.OSS_UNION_SERVICES,
-        direction=InvoiceDirection.ISSUED,
+        direction=InvoiceKind.ISSUED,
     )
-    result = classify_vat(criteria)
+    result = classify_iva(criteria)
     assert result.matched_rule_id == "R19_oss_union_services"
-    assert result.category is VATCategory.DOMESTIC_NOT_SUBJECT
+    assert result.category is IvaCategory.DOMESTIC_NOT_SUBJECT
 
 
 def test_classifier_routes_external_scheme_services_to_r16() -> None:
-    criteria = VATClassificationCriteria(
+    criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IssuerResidency.THIRD_COUNTRY,
-        customer_residency=CustomerResidency.EU_MEMBER,
+        issuer_residency=IvaResidency.THIRD_COUNTRY,
+        customer_residency=IvaResidency.EU_MEMBER,
         customer_member_state=EUMemberState.ES,
         customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
         kind=TransactionKind.EXTERNAL_SCHEME_SERVICES,
-        direction=InvoiceDirection.ISSUED,
+        direction=InvoiceKind.ISSUED,
     )
-    result = classify_vat(criteria)
+    result = classify_iva(criteria)
     assert result.matched_rule_id == "R16_external_scheme_services"
-    assert result.category is VATCategory.OPERACION_NO_SUJETA
+    assert result.category is IvaCategory.OPERACION_NO_SUJETA
 
 
 def test_classifier_routes_ioss_low_value_distance_sale_to_r23() -> None:
-    criteria = VATClassificationCriteria(
+    criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IssuerResidency.ES_MAINLAND,
-        customer_residency=CustomerResidency.EU_MEMBER,
+        issuer_residency=IvaResidency.ES_MAINLAND,
+        customer_residency=IvaResidency.EU_MEMBER,
         customer_member_state=EUMemberState.DE,
         customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
         kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
-        direction=InvoiceDirection.ISSUED,
+        direction=InvoiceKind.ISSUED,
     )
-    result = classify_vat(criteria)
+    result = classify_iva(criteria)
     assert result.matched_rule_id == "R23_ioss_distance_sale_low_value"
-    assert result.category is VATCategory.OPERACION_NO_SUJETA
+    assert result.category is IvaCategory.OPERACION_NO_SUJETA
 
 
 def test_classifier_legacy_r14_digital_b2c_oss_still_matches_unchanged() -> None:
-    criteria = VATClassificationCriteria(
+    criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IssuerResidency.ES_MAINLAND,
-        customer_residency=CustomerResidency.EU_MEMBER,
+        issuer_residency=IvaResidency.ES_MAINLAND,
+        customer_residency=IvaResidency.EU_MEMBER,
         customer_member_state=EUMemberState.DE,
         customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
         kind=TransactionKind.SERVICES_DIGITAL_B2C_OSS,
-        direction=InvoiceDirection.ISSUED,
+        direction=InvoiceKind.ISSUED,
     )
-    result = classify_vat(criteria)
+    result = classify_iva(criteria)
     assert result.matched_rule_id == "R14_digital_b2c_oss"

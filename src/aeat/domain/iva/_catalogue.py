@@ -13,10 +13,10 @@ from pydantic import ValidationError
 
 from ...core.i18n import Translatable as tr
 from ...core.resources import bundled_path
-from ._schema import VATCatalogue, VATCategory, VatCitation, VatCitationSource, VATRegulation
-from .errors import VatCatalogueError
+from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationSource, IvaRegulation
+from .errors import IvaCatalogueError
 
-def load_vat_catalogue(path: Path) -> VATCatalogue:
+def load_vat_catalogue(path: Path) -> IvaCatalogue:
     """Load one VAT catalogue TOML file."""
 
     resolved = path.resolve()
@@ -25,40 +25,40 @@ def load_vat_catalogue(path: Path) -> VATCatalogue:
 
 
 @lru_cache(maxsize=32)
-def _load_vat_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> VATCatalogue:
+def _load_vat_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> IvaCatalogue:
     del byte_count, modified_ns
     target = Path(path)
     try:
         with target.open("rb") as fh:
             payload = tomllib.load(fh)
     except tomllib.TOMLDecodeError as exc:
-        raise VatCatalogueError(f"{target}: invalid VAT catalogue TOML: {exc}") from exc
+        raise IvaCatalogueError(f"{target}: invalid VAT catalogue TOML: {exc}") from exc
     except OSError as exc:
-        raise VatCatalogueError(f"{target}: cannot read VAT catalogue: {exc}") from exc
+        raise IvaCatalogueError(f"{target}: cannot read VAT catalogue: {exc}") from exc
 
     raw_regulations = payload.get("regulations")
     if not isinstance(raw_regulations, list) or not raw_regulations:
-        raise VatCatalogueError(f"{target}: missing [[regulations]] entries")
+        raise IvaCatalogueError(f"{target}: missing [[regulations]] entries")
 
-    regulations: dict[VATCategory, VATRegulation] = {}
+    regulations: dict[IvaCategory, IvaRegulation] = {}
     for index, raw_regulation in enumerate(raw_regulations, start=1):
         if not isinstance(raw_regulation, dict):
-            raise VatCatalogueError(f"{target}: regulations[{index}] must be a table")
+            raise IvaCatalogueError(f"{target}: regulations[{index}] must be a table")
         try:
             regulation = _parse_regulation(raw_regulation)
         except (ValidationError, ValueError) as exc:
-            raise VatCatalogueError(f"{target}: invalid regulations[{index}]: {exc}") from exc
+            raise IvaCatalogueError(f"{target}: invalid regulations[{index}]: {exc}") from exc
         if regulation.category in regulations:
-            raise VatCatalogueError(f"{target}: duplicate VAT category {regulation.category.value!r}")
+            raise IvaCatalogueError(f"{target}: duplicate VAT category {regulation.category.value!r}")
         regulations[regulation.category] = regulation
 
-    missing = sorted(category.value for category in set(VATCategory) - set(regulations))
+    missing = sorted(category.value for category in set(IvaCategory) - set(regulations))
     if missing:
-        raise VatCatalogueError(f"{target}: VAT catalogue missing categories: {missing}")
-    return VATCatalogue(regulations=regulations)
+        raise IvaCatalogueError(f"{target}: VAT catalogue missing categories: {missing}")
+    return IvaCatalogue(regulations=regulations)
 
 
-def load_vat_catalogues(root: Path | None = None) -> Mapping[int, VATCatalogue]:
+def load_iva_catalogues(root: Path | None = None) -> Mapping[int, IvaCatalogue]:
     """Load every year-keyed VAT catalogue under ``root``.
 
     Resolves the bundled catalogues directory on every call when
@@ -82,27 +82,27 @@ def _file_fingerprint(path: Path) -> tuple[str, int, int]:
 def _load_vat_catalogues_cached(
     root: str,
     fingerprint: tuple[tuple[str, int, int], ...],
-) -> Mapping[int, VATCatalogue]:
+) -> Mapping[int, IvaCatalogue]:
     root_path = Path(root)
-    catalogues: dict[int, VATCatalogue] = {}
+    catalogues: dict[int, IvaCatalogue] = {}
     for filename, _byte_count, _modified_ns in fingerprint:
         path = root_path / filename
         try:
             year = int(path.stem)
         except ValueError as exc:
-            raise VatCatalogueError(f"{path}: VAT catalogue filename must be a year") from exc
+            raise IvaCatalogueError(f"{path}: VAT catalogue filename must be a year") from exc
         catalogues[year] = load_vat_catalogue(path)
     if not catalogues:
-        raise VatCatalogueError(f"{root_path}: no VAT catalogue TOML files found")
+        raise IvaCatalogueError(f"{root_path}: no VAT catalogue TOML files found")
     return MappingProxyType(catalogues)
 
 
-def resolve_catalogue(*, on: date) -> VATCatalogue:
+def resolve_catalogue(*, on: date) -> IvaCatalogue:
     """Return the exact VAT catalogue for ``on``."""
 
-    catalogue = load_vat_catalogues().get(on.year)
+    catalogue = load_iva_catalogues().get(on.year)
     if catalogue is None:
-        raise VatCatalogueError(f"no VAT catalogue registered for year={on.year}")
+        raise IvaCatalogueError(f"no VAT catalogue registered for year={on.year}")
     return catalogue
 
 
@@ -111,24 +111,24 @@ def _to_str_dict(raw: Mapping) -> dict[str, object]:
     result: dict[str, object] = {}
     for k, v in raw.items():
         if not isinstance(k, str):
-            raise VatCatalogueError("TOML table keys must be strings")
+            raise IvaCatalogueError("TOML table keys must be strings")
         result[k] = v
     return result
 
 
-def _parse_regulation(raw_regulation: object) -> VATRegulation:
+def _parse_regulation(raw_regulation: object) -> IvaRegulation:
     if not isinstance(raw_regulation, dict):
-        raise VatCatalogueError("regulation entry must be a table")
+        raise IvaCatalogueError("regulation entry must be a table")
     data = _to_str_dict(raw_regulation)
-    category = VATCategory(str(data.get("category")))
+    category = IvaCategory(str(data.get("category")))
     raw_citations = data.get("citations", ())
     if not isinstance(raw_citations, list | tuple):
-        raise VatCatalogueError("citations must be a list")
+        raise IvaCatalogueError("citations must be a list")
     raw_boe = data.get("boe_references")
     boe_refs: Sequence[object] = raw_boe if isinstance(raw_boe, list) else []
     raw_manual = data.get("manual_references")
     manual_refs: Sequence[object] = raw_manual if isinstance(raw_manual, list) else []
-    return VATRegulation.model_validate(
+    return IvaRegulation.model_validate(
         {
             "category": category,
             "label": tr(str(data.get("label"))),
@@ -145,12 +145,12 @@ def _parse_regulation(raw_regulation: object) -> VATRegulation:
     )
 
 
-def _parse_citation(raw_citation: object) -> VatCitation:
+def _parse_citation(raw_citation: object) -> IvaCitation:
     if not isinstance(raw_citation, dict):
-        raise VatCatalogueError("citation entry must be a table")
+        raise IvaCatalogueError("citation entry must be a table")
     data = _to_str_dict(raw_citation)
-    source = VatCitationSource(str(data.get("source")))
-    return VatCitation.model_validate(
+    source = IvaCitationSource(str(data.get("source")))
+    return IvaCitation.model_validate(
         {
             "source": source,
             "article": data.get("article"),
@@ -163,6 +163,6 @@ def _parse_citation(raw_citation: object) -> VatCitation:
 
 __all__ = [
     "load_vat_catalogue",
-    "load_vat_catalogues",
+    "load_iva_catalogues",
     "resolve_catalogue",
 ]

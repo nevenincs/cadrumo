@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from . import VATCategory, cite, resolve_catalogue
+from . import IvaCategory, cite, resolve_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -14,7 +14,7 @@ _CATALOGUE = resolve_catalogue(on=date(2025, 1, 1))
 
 
 def test_catalogue_covers_every_vat_category() -> None:
-    assert set(_CATALOGUE.regulations.keys()) == set(VATCategory)
+    assert set(_CATALOGUE.regulations.keys()) == set(IvaCategory)
     assert len(_CATALOGUE) == 17
 
 
@@ -30,7 +30,7 @@ def test_every_citation_has_non_empty_quoted_text() -> None:
 
 
 def test_cite_domestic_general_mentions_ley_37_1992() -> None:
-    rendered = cite(VATCategory.DOMESTIC_GENERAL_21, on=date(2025, 6, 15))
+    rendered = cite(IvaCategory.DOMESTIC_GENERAL_21, on=date(2025, 6, 15))
     assert rendered
     assert "Ley 37/1992" in rendered
 

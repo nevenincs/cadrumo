@@ -1,13 +1,13 @@
 """IVA flow direction enum — repercutido / soportado / autorepercutido.
 
 Codifies the IVA collectability axis the ledger and modelo registries
-need alongside the operation-kind axis (:class:`VATCategory`) and the
-rate axis (:class:`VATRateKind`). Every IVA-bearing ledger line
+need alongside the operation-kind axis (:class:`IvaCategory`) and the
+rate axis (:class:`IvaRateKind`). Every IVA-bearing ledger line
 classifies along all three axes:
 
-* :class:`VATCategory` — operation kind (domestic, intracomunitaria,
+* :class:`IvaCategory` — operation kind (domestic, intracomunitaria,
   recargo, OSS, etc.).
-* :class:`VATRateKind` — rate tier (general / reduced / super-reduced /
+* :class:`IvaRateKind` — rate tier (general / reduced / super-reduced /
   zero / exempt).
 * :class:`IvaFlowDirection` — flow direction (output / input /
   self-assessed reverse charge).
@@ -31,8 +31,8 @@ The three flow directions are anchored to LIVA articles:
   matching IVA soportado entry (input) on the same operation.
 
 The :func:`derive_flow_for_classification` helper computes the flow
-direction from the substrate's :class:`VATCategory` plus the invoice
-:class:`InvoiceDirection` axis so consumers do not have to encode the
+direction from the substrate's :class:`IvaCategory` plus the invoice
+:class:`InvoiceKind` axis so consumers do not have to encode the
 mapping by hand.
 
 ==============================================================
@@ -88,8 +88,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ._classification import InvoiceDirection
-from ._schema import VATCategory
+from ._classification import InvoiceKind
+from ._schema import IvaCategory
 
 
 class IvaFlowDirection(StrEnum):
@@ -118,10 +118,10 @@ class IvaFlowDirection(StrEnum):
     AUTOREPERCUTIDO = "autorepercutido"
 
 
-_REVERSE_CHARGE_CATEGORIES: frozenset[VATCategory] = frozenset(
+_REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {
-        VATCategory.DOMESTIC_REVERSE_CHARGE,
-        VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     }
 )
 """VAT categories that route to ``AUTOREPERCUTIDO`` regardless of the
@@ -132,8 +132,8 @@ acquisitions / EU services received)."""
 
 def derive_flow_for_classification(
     *,
-    category: VATCategory,
-    invoice_direction: InvoiceDirection,
+    category: IvaCategory,
+    invoice_direction: InvoiceKind,
 ) -> IvaFlowDirection:
     """Return the IVA flow direction for a substrate-classified line.
 
@@ -145,14 +145,14 @@ def derive_flow_for_classification(
       invoice direction. The substrate's classifier emits these for
       operations where the recipient self-assesses both output and
       input IVA on the same operation.
-    * Otherwise: :attr:`InvoiceDirection.ISSUED` resolves to
+    * Otherwise: :attr:`InvoiceKind.ISSUED` resolves to
       :attr:`IvaFlowDirection.REPERCUTIDO` (the autónomo charged
-      output IVA on a sale) and :attr:`InvoiceDirection.RECEIVED`
+      output IVA on a sale) and :attr:`InvoiceKind.RECEIVED`
       resolves to :attr:`IvaFlowDirection.SOPORTADO` (the autónomo
       bore input IVA on a purchase).
 
     Args:
-        category: The :class:`VATCategory` resolved by the substrate
+        category: The :class:`IvaCategory` resolved by the substrate
             classifier.
         invoice_direction: Whether the invoice was issued or received
             by the autónomo.
@@ -162,7 +162,7 @@ def derive_flow_for_classification(
     """
     if category in _REVERSE_CHARGE_CATEGORIES:
         return IvaFlowDirection.AUTOREPERCUTIDO
-    if invoice_direction is InvoiceDirection.ISSUED:
+    if invoice_direction is InvoiceKind.ISSUED:
         return IvaFlowDirection.REPERCUTIDO
     return IvaFlowDirection.SOPORTADO
 

@@ -1,12 +1,12 @@
-"""Strict pydantic v2 schema for the :mod:`aeat.domain.vat` subpackage.
+"""Strict pydantic v2 schema for the :mod:`aeat.domain.iva` subpackage.
 
 Every record the subpackage exposes — enumerations, per-rate values,
 citations, regulations, catalogues, verification reports — is defined here.
 The schema is frozen and strict wherever the loader idiom permits it,
 mirroring the pattern established by :mod:`aeat.domain.normatives._schema`.
 
-Closed catalogues (:class:`VATCategory`, :class:`EUMemberState`,
-:class:`VATRateKind`, :class:`VatCitationSource`) are :class:`enum.StrEnum`
+Closed catalogues (:class:`IvaCategory`, :class:`EUMemberState`,
+:class:`IvaRateKind`, :class:`IvaCitationSource`) are :class:`enum.StrEnum`
 subclasses. Multilingual fields use :class:`aeat.core.i18n.tr` to ensure
 the internationalization engine can dynamically resolve the correct locale
 at runtime for UI labels and descriptions. Legal quotes remain Spanish-
@@ -31,10 +31,10 @@ from pydantic import (
 )
 
 from ...core.i18n import Translatable as tr
-from .errors import VatValidationError
+from .errors import IvaValidationError
 
 
-class VATCategory(StrEnum):
+class IvaCategory(StrEnum):
     """Closed catalogue of Spanish VAT (IVA) situations.
 
     The member names and string values are the authoritative identifiers used
@@ -99,8 +99,8 @@ class EUMemberState(StrEnum):
     SK = "sk"
 
 
-class VATRateKind(StrEnum):
-    """Closed catalogue of rate tiers referenced by :class:`VATRate`."""
+class IvaRateKind(StrEnum):
+    """Closed catalogue of rate tiers referenced by :class:`IvaRateRecord`."""
 
     GENERAL = "general"
     REDUCED = "reduced"
@@ -109,7 +109,7 @@ class VATRateKind(StrEnum):
     EXEMPT = "exempt"
 
 
-class VatCitationSource(StrEnum):
+class IvaCitationSource(StrEnum):
     """Closed catalogue of legal/regulatory sources cited by VAT rules."""
 
     LEY_37_1992 = "ley-37-1992"
@@ -162,10 +162,10 @@ def _require_translatable(translatable: tr, field_name: str) -> None:
         :exc:`ValueError`: If the translation key is missing or empty.
     """
     if not translatable:
-        raise VatValidationError(f"{field_name}: missing authoritative translation key")
+        raise IvaValidationError(f"{field_name}: missing authoritative translation key")
 
 
-class _VatStrictFrozen(BaseModel):
+class _IvaStrictFrozen(BaseModel):
     """Shared base config: strict validation, immutable, extras forbidden."""
 
     model_config = ConfigDict(
@@ -175,7 +175,7 @@ class _VatStrictFrozen(BaseModel):
     )
 
 
-class _VatStrictMutable(BaseModel):
+class _IvaStrictMutable(BaseModel):
     """Strict validation but mutable; used for aggregate catalogues that the
     loader populates incrementally."""
 
@@ -186,7 +186,7 @@ class _VatStrictMutable(BaseModel):
     )
 
 
-class VATRate(_VatStrictFrozen):
+class IvaRateRecord(_IvaStrictFrozen):
     """A single VAT rate line item keyed by member state and rate kind.
 
     Attributes:
@@ -201,7 +201,7 @@ class VATRate(_VatStrictFrozen):
     """
 
     member_state: EUMemberState = Field(description="Issuing member state.")
-    kind: VATRateKind = Field(description="Rate tier (general / reduced / ...).")
+    kind: IvaRateKind = Field(description="Rate tier (general / reduced / ...).")
     pct: Decimal = Field(
         ge=Decimal("0"),
         le=Decimal("100"),
@@ -220,18 +220,18 @@ class VATRate(_VatStrictFrozen):
     )
 
     @model_validator(mode="after")
-    def _validate_window(self) -> VATRate:
+    def _validate_window(self) -> IvaRateRecord:
         """Ensure :attr:`effective_from` precedes :attr:`effective_until`."""
         if self.effective_until is not None and self.effective_from > self.effective_until:
-            raise VatValidationError(
-                f"VATRate[{self.member_state.value}/{self.kind.value}]: "
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
                 f"effective_from {self.effective_from} is after effective_until {self.effective_until}"
             )
         return self
 
 
-class VatCitation(_VatStrictFrozen):
-    """A legal or regulatory citation backing a :class:`VATRegulation`.
+class IvaCitation(_IvaStrictFrozen):
+    """A legal or regulatory citation backing a :class:`IvaRegulation`.
 
     The :attr:`quoted_text` field must be an authoritative translation key
     pointing to a non-empty Spanish string. It may be a faithful paraphrase
@@ -247,7 +247,7 @@ class VatCitation(_VatStrictFrozen):
         retrieval_date: Date the citation was retrieved or last reviewed.
     """
 
-    source: VatCitationSource = Field(description="Legal source of the citation.")
+    source: IvaCitationSource = Field(description="Legal source of the citation.")
     article: _ArticleRef = Field(
         description="Article reference, e.g. 'Art. 91.Uno.2.1º'.",
     )
@@ -263,12 +263,12 @@ class VatCitation(_VatStrictFrozen):
     )
 
 
-class VATRegulation(_VatStrictFrozen):
-    """A single codified VAT rule for a :class:`VATCategory`.
+class IvaRegulation(_IvaStrictFrozen):
+    """A single codified VAT rule for a :class:`IvaCategory`.
 
-    Every regulation carries at least one :class:`VatCitation`. The
+    Every regulation carries at least one :class:`IvaCitation`. The
     substrate-level invariant enforced by
-    :func:`aeat.domain.vat.verify_catalogue` additionally requires every
+    :func:`aeat.domain.iva.verify_catalogue` additionally requires every
     shipped regulation to cite real legal articles so downstream tools
     can surface the legal backing of any classification.
 
@@ -285,11 +285,11 @@ class VATRegulation(_VatStrictFrozen):
             :mod:`aeat.domain.normatives`) backing this rule.
         manual_references: Optional Manual práctico IVA rule ids or section
             references.
-        citations: At least one :class:`VatCitation` is required.
+        citations: At least one :class:`IvaCitation` is required.
         notes: Free-form reviewer notes.
     """
 
-    category: VATCategory = Field(description="The VAT situation codified by this rule.")
+    category: IvaCategory = Field(description="The VAT situation codified by this rule.")
     label: tr = Field(description="Short human-readable label key.")
     description: tr = Field(description="One-paragraph plain-language description key.")
     triggers_when: tr = Field(
@@ -310,8 +310,8 @@ class VATRegulation(_VatStrictFrozen):
     manual_references: tuple[_ManualRef, ...] = Field(
         description="Optional Manual práctico IVA rule ids or section refs.",
     )
-    citations: tuple[VatCitation, ...] = Field(
-        description="At least one VatCitation is required.",
+    citations: tuple[IvaCitation, ...] = Field(
+        description="At least one IvaCitation is required.",
     )
     notes: str = Field(
         default="",
@@ -319,63 +319,63 @@ class VATRegulation(_VatStrictFrozen):
     )
 
     @model_validator(mode="after")
-    def _validate(self) -> VATRegulation:
+    def _validate(self) -> IvaRegulation:
         """Enforce the translation-key and at-least-one-citation invariants."""
-        _require_translatable(self.label, f"VATRegulation[{self.category.value}].label")
-        _require_translatable(self.description, f"VATRegulation[{self.category.value}].description")
-        _require_translatable(self.triggers_when, f"VATRegulation[{self.category.value}].triggers_when")
-        _require_translatable(self.iva_treatment, f"VATRegulation[{self.category.value}].iva_treatment")
+        _require_translatable(self.label, f"IvaRegulation[{self.category.value}].label")
+        _require_translatable(self.description, f"IvaRegulation[{self.category.value}].description")
+        _require_translatable(self.triggers_when, f"IvaRegulation[{self.category.value}].triggers_when")
+        _require_translatable(self.iva_treatment, f"IvaRegulation[{self.category.value}].iva_treatment")
         if not self.citations:
-            raise VatValidationError(f"VATRegulation[{self.category.value}]: at least one VatCitation is required")
+            raise IvaValidationError(f"IvaRegulation[{self.category.value}]: at least one IvaCitation is required")
         return self
 
 
-class VATCatalogue(_VatStrictMutable):
-    """Aggregate view over a collection of :class:`VATRegulation` records.
+class IvaCatalogue(_IvaStrictMutable):
+    """Aggregate view over a collection of :class:`IvaRegulation` records.
 
     The aggregate is mutable to keep the loader idiom simple — the loader
-    populates the mapping incrementally. Individual :class:`VATRegulation`
+    populates the mapping incrementally. Individual :class:`IvaRegulation`
     records remain frozen.
 
     Attributes:
         regulations: Regulations keyed by their
-            :class:`VATCategory`.
+            :class:`IvaCategory`.
     """
 
-    regulations: dict[VATCategory, VATRegulation] = Field(
+    regulations: dict[IvaCategory, IvaRegulation] = Field(
         default_factory=dict,
-        description="Regulations keyed by their VATCategory.",
+        description="Regulations keyed by their IvaCategory.",
     )
 
     @model_validator(mode="after")
-    def _check_key_alignment(self) -> VATCatalogue:
-        """Ensure every mapping key matches its record's :attr:`VATRegulation.category`."""
+    def _check_key_alignment(self) -> IvaCatalogue:
+        """Ensure every mapping key matches its record's :attr:`IvaRegulation.category`."""
         for key, regulation in self.regulations.items():
             if key != regulation.category:
-                raise VatValidationError(
-                    f"VATCatalogue: key {key!r} does not match regulation.category {regulation.category!r}"
+                raise IvaValidationError(
+                    f"IvaCatalogue: key {key!r} does not match regulation.category {regulation.category!r}"
                 )
         return self
 
-    def __iter__(self) -> Iterator[VATRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
-        """Iterate over every loaded :class:`VATRegulation`."""
+    def __iter__(self) -> Iterator[IvaRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+        """Iterate over every loaded :class:`IvaRegulation`."""
         return iter(self.regulations.values())
 
     def __len__(self) -> int:
-        """Return the number of loaded :class:`VATRegulation` records."""
+        """Return the number of loaded :class:`IvaRegulation` records."""
         return len(self.regulations)
 
     def __contains__(self, key: object) -> bool:
-        """Return ``True`` when ``key`` names a loaded :class:`VATCategory`."""
+        """Return ``True`` when ``key`` names a loaded :class:`IvaCategory`."""
         return key in self.regulations
 
-    def get(self, category: VATCategory) -> VATRegulation | None:
+    def get(self, category: IvaCategory) -> IvaRegulation | None:
         """Return the regulation for ``category`` or ``None`` if absent."""
         return self.regulations.get(category)
 
 
-class VatVerificationIssue(_VatStrictFrozen):
-    """A single finding produced by :func:`aeat.domain.vat.verify_catalogue`.
+class IvaVerificationIssue(_IvaStrictFrozen):
+    """A single finding produced by :func:`aeat.domain.iva.verify_catalogue`.
 
     Attributes:
         level: Severity, either ``"error"`` or ``"warning"``.
@@ -393,19 +393,19 @@ class VatVerificationIssue(_VatStrictFrozen):
     )
 
 
-class VatVerificationReport(_VatStrictFrozen):
-    """Aggregate verification report for a :class:`VATCatalogue`.
+class IvaVerificationReport(_IvaStrictFrozen):
+    """Aggregate verification report for a :class:`IvaCatalogue`.
 
     Attributes:
         issues: All findings produced by
-            :func:`aeat.domain.vat.verify_catalogue`.
+            :func:`aeat.domain.iva.verify_catalogue`.
     """
 
-    issues: tuple[VatVerificationIssue, ...] = Field(default_factory=tuple)
+    issues: tuple[IvaVerificationIssue, ...] = Field(default_factory=tuple)
 
     @property
-    def errors(self) -> tuple[VatVerificationIssue, ...]:
-        """Return the subset of issues whose :attr:`VatVerificationIssue.level` is ``"error"``."""
+    def errors(self) -> tuple[IvaVerificationIssue, ...]:
+        """Return the subset of issues whose :attr:`IvaVerificationIssue.level` is ``"error"``."""
         return tuple(issue for issue in self.issues if issue.level == "error")
 
     @property

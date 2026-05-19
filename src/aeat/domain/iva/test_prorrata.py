@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.domain.vat._prorrata import (
+from aeat.domain.iva._prorrata import (
     InputClassification,
     ProrrataInputDeduction,
     ProrrataInputs,
@@ -41,7 +41,7 @@ from aeat.domain.vat._prorrata import (
     sum_deductible_amounts,
     validate_prorrata_reference,
 )
-from aeat.domain.vat.errors import ProrrataInputError, ProrrataSectorError
+from aeat.domain.iva.errors import ProrrataInputError, ProrrataSectorError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -588,7 +588,7 @@ def test_sum_deductible_amounts_returns_zero_for_empty_iterable() -> None:
 
 
 def test_no_parallel_prorrata_implementation_exists() -> None:
-    """Only ``aeat.domain.vat._prorrata`` owns prorrata semantics.
+    """Only ``aeat.domain.iva._prorrata`` owns prorrata semantics.
 
     Walk the source tree and assert that ``compute_prorrata_general``,
     ``classify_input_deduction``, ``is_especial_mandatory``, and
@@ -602,7 +602,7 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
 
     repo_root = Path(__file__).resolve().parents[4]
     source_root = repo_root / "src" / "aeat"
-    canonical_module = source_root / "domain" / "vat" / "_prorrata.py"
+    canonical_module = source_root / "domain" / "iva" / "_prorrata.py"
 
     canonical_symbols = (
         "compute_prorrata_general",
@@ -620,12 +620,12 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
             assert f"def {symbol}" not in text, (
                 f"shadow prorrata implementation detected: "
                 f"{py_file} defines `def {symbol}`; the canonical "
-                f"owner is `aeat.domain.vat._prorrata`."
+                f"owner is `aeat.domain.iva._prorrata`."
             )
 
 
 def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
-    """``domain.usage_ratios`` and ``aeat.domain.vat._prorrata`` are
+    """``domain.usage_ratios`` and ``aeat.domain.iva._prorrata`` are
     distinct concepts. No module may translate usage-ratios values into
     prorrata percentages: usage-ratios is the proportional-expense
     allocation surface (LIRPF deductibility), prorrata is the LIVA

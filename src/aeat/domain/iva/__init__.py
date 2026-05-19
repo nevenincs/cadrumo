@@ -7,35 +7,34 @@ behaviour; rates, effective windows, and catalogue text are loaded from
 
 The substrate exposes:
 
-* The closed enumerations :class:`VATCategory`, :class:`EUMemberState`,
-  :class:`VATRateKind` and :class:`VatCitationSource`.
-* The period-keyed catalogue view :data:`VAT_CATALOGUES_BY_YEAR` and lookup
+* The closed enumerations :class:`IvaCategory`, :class:`EUMemberState`,
+  :class:`IvaRateKind` and :class:`IvaCitationSource`.
+* The period-keyed catalogue view :data:`IVA_CATALOGUES_BY_YEAR` and lookup
   helper :func:`resolve_catalogue`.
-* The 27-state :data:`VAT_RATE_TABLE` with a load-time non-overlap invariant
-  that raises :class:`VatRateOverlapError` on drift.
-* A full classification axis stack (:class:`IssuerResidency`,
-  :class:`CustomerResidency`, :class:`CustomerTaxStatus`,
-  :class:`TransactionKind`, :class:`InvoiceDirection`) plus the deterministic
-  resolver :func:`classify_vat` returning :class:`VATClassification`.
+* The 27-state :data:`IVA_RATE_TABLE` with a load-time non-overlap invariant
+  that raises :class:`IvaRateOverlapError` on drift.
+* A full classification axis stack (:class:`IvaResidency` (used for both
+  issuer and customer roles), :class:`CustomerTaxStatus`,
+  :class:`TransactionKind`, :class:`InvoiceKind`) plus the deterministic
+  resolver :func:`classify_iva` returning :class:`IvaClassificationResult`.
 
 Callers from outside this subpackage must import exclusively from
-:mod:`aeat.domain.vat` and must not reach into private modules.
+:mod:`aeat.domain.iva` and must not reach into private modules.
 """
 
 from __future__ import annotations
 
-from ._catalogue import load_vat_catalogues, resolve_catalogue
+from ._catalogue import load_iva_catalogues, resolve_catalogue
 from ._classification import (
-    CustomerResidency,
     CustomerTaxStatus,
-    InvoiceDirection,
-    IssuerResidency,
+    InvoiceKind,
+    IvaClassificationResult,
+    IvaInvoiceClassificationCriteria,
+    IvaResidency,
     TransactionKind,
-    VATClassification,
-    VATClassificationCriteria,
-    classify_vat,
+    classify_iva,
 )
-from ._corpus import load_vat_rules_from_manual
+from ._corpus import load_iva_rules_from_manual
 from ._flow import (
     DEDUCIBLE_FLOW_DIRECTIONS,
     DEVENGADA_FLOW_DIRECTIONS,
@@ -72,7 +71,7 @@ from ._prorrata import (
     sum_deductible_amounts,
     validate_prorrata_reference,
 )
-from ._rates import load_vat_rate_table
+from ._rates import load_iva_rate_table
 from ._recargo_equivalencia import (
     LivaArt161RecargoRates,
     load_recargo_rates,
@@ -80,41 +79,40 @@ from ._recargo_equivalencia import (
 )
 from ._schema import (
     EUMemberState,
-    VATCatalogue,
-    VATCategory,
-    VatCitation,
-    VatCitationSource,
-    VATRate,
-    VATRateKind,
-    VATRegulation,
-    VatVerificationIssue,
-    VatVerificationReport,
+    IvaCatalogue,
+    IvaCategory,
+    IvaCitation,
+    IvaCitationSource,
+    IvaRateRecord,
+    IvaRateKind,
+    IvaRegulation,
+    IvaVerificationIssue,
+    IvaVerificationReport,
 )
 from ._verify import verify_catalogue
 from .errors import (
     ProrrataError,
     ProrrataInputError,
     ProrrataSectorError,
-    VatCatalogueError,
-    VatCategoryNotFoundError,
-    VatClassificationError,
-    VatError,
-    VatRateNotFoundError,
-    VatRateOverlapError,
+    IvaCatalogueError,
+    IvaCategoryNotFoundError,
+    IvaClassificationError,
+    IvaError,
+    IvaRateNotFoundError,
+    IvaRateOverlapError,
 )
 
 __all__ = [
     "DEDUCIBLE_FLOW_DIRECTIONS",
     "DEVENGADA_FLOW_DIRECTIONS",
     "REGIME_PERIODICITY",
-    "CustomerResidency",
     "CustomerTaxStatus",
     "DeductionScope",
     "EUMemberState",
     "InputClassification",
-    "InvoiceDirection",
+    "InvoiceKind",
     "IossFilerRole",
-    "IssuerResidency",
+    "IvaResidency",
     "IvaFlowDirection",
     "IvaSettlementSide",
     "LivaArt161RecargoRates",
@@ -131,26 +129,26 @@ __all__ = [
     "ProrrataSectorError",
     "RegimePeriodicity",
     "TransactionKind",
-    "VATCatalogue",
-    "VATCategory",
-    "VATClassification",
-    "VATClassificationCriteria",
-    "VATRate",
-    "VATRateKind",
-    "VATRegulation",
-    "VatCatalogueError",
-    "VatCategoryNotFoundError",
-    "VatCitation",
-    "VatCitationSource",
-    "VatClassificationError",
-    "VatError",
-    "VatRateNotFoundError",
-    "VatRateOverlapError",
-    "VatVerificationIssue",
-    "VatVerificationReport",
+    "IvaCatalogue",
+    "IvaCategory",
+    "IvaClassificationResult",
+    "IvaInvoiceClassificationCriteria",
+    "IvaRateRecord",
+    "IvaRateKind",
+    "IvaRegulation",
+    "IvaCatalogueError",
+    "IvaCategoryNotFoundError",
+    "IvaCitation",
+    "IvaCitationSource",
+    "IvaClassificationError",
+    "IvaError",
+    "IvaRateNotFoundError",
+    "IvaRateOverlapError",
+    "IvaVerificationIssue",
+    "IvaVerificationReport",
     "cite",
     "classify_input_deduction",
-    "classify_vat",
+    "classify_iva",
     "compute_prorrata_general",
     "compute_sectoral_prorrata",
     "derive_flow_for_classification",
@@ -158,9 +156,9 @@ __all__ = [
     "is_devengada_flow",
     "is_especial_mandatory",
     "load_recargo_rates",
-    "load_vat_catalogues",
-    "load_vat_rate_table",
-    "load_vat_rules_from_manual",
+    "load_iva_catalogues",
+    "load_iva_rate_table",
+    "load_iva_rules_from_manual",
     "lookup_rate",
     "recargo_rate_for",
     "regime_allows_deduction",

@@ -1,7 +1,7 @@
-"""Domain errors for the :mod:`aeat.domain.vat` subpackage.
+"""Domain errors for the :mod:`aeat.domain.iva` subpackage.
 
 Every failure mode raised by the VAT substrate inherits from
-:class:`VatError`, which in turn inherits from
+:class:`IvaError`, which in turn inherits from
 :class:`aeat.core.errors.AeatError`. Downstream callers catch the base class
 when they want to treat the substrate as an opaque unit, or the specific
 subclass when they need to distinguish missing-rate from missing-category or
@@ -13,43 +13,43 @@ from __future__ import annotations
 from ...core.errors import AeatError
 
 
-class VatError(AeatError):
-    """Base error for every :mod:`aeat.domain.vat` failure mode."""
+class IvaError(AeatError):
+    """Base error for every :mod:`aeat.domain.iva` failure mode."""
 
 
-class VatRateNotFoundError(VatError):
-    """Raised when :func:`aeat.domain.vat.lookup_rate` cannot resolve a rate.
+class IvaRateNotFoundError(IvaError):
+    """Raised when :func:`aeat.domain.iva.lookup_rate` cannot resolve a rate.
 
     The lookup fails either because the requested member state is absent from
-    :data:`aeat.domain.vat.VAT_RATE_TABLE`, because no rate of the requested
-    :class:`aeat.domain.vat.VATRateKind` is registered for that member state,
+    :data:`aeat.domain.iva.IVA_RATE_TABLE`, because no rate of the requested
+    :class:`aeat.domain.iva.IvaRateKind` is registered for that member state,
     or because every registered rate's effective window excludes the
     requested date.
     """
 
 
-class VatCategoryNotFoundError(VatError):
+class IvaCategoryNotFoundError(IvaError):
     """Raised when a lookup against a resolved VAT catalogue misses."""
 
 
-class VatCatalogueError(VatError):
+class IvaCatalogueError(IvaError):
     """Raised when a VAT catalogue cannot be loaded, resolved, or validated."""
 
 
-class VatRateOverlapError(VatError):
-    """Raised when two :class:`aeat.domain.vat.VATRate` records share a window.
+class IvaRateOverlapError(IvaError):
+    """Raised when two :class:`aeat.domain.iva.IvaRateRecord` records share a window.
 
     The substrate enforces that for every ``(member_state, kind)`` partition
-    of :data:`aeat.domain.vat.VAT_RATE_TABLE` no two records have overlapping
+    of :data:`aeat.domain.iva.IVA_RATE_TABLE` no two records have overlapping
     ``effective_from`` / ``effective_until`` ranges. Adding a new record that
     violates this invariant raises this error at module import time so the
     regression surfaces in CI rather than silently affecting
-    :func:`aeat.domain.vat.lookup_rate` results.
+    :func:`aeat.domain.iva.lookup_rate` results.
     """
 
 
-class VatClassificationError(VatError):
-    """Raised when :func:`aeat.domain.vat.classify_vat` cannot return a deterministic match.
+class IvaClassificationError(IvaError):
+    """Raised when :func:`aeat.domain.iva.classify_iva` cannot return a deterministic match.
 
     The classifier exposes a closed first-match-wins table; the only
     structural failure is when the input criteria cannot be represented under
@@ -59,11 +59,11 @@ class VatClassificationError(VatError):
     """
 
 
-class VatValidationError(VatError, ValueError):
+class IvaValidationError(IvaError, ValueError):
     """Raised on invalid VAT field values. Inherits from ValueError for Pydantic."""
 
 
-class ProrrataError(VatError):
+class ProrrataError(IvaError):
     """Base error for IVA prorrata calculation failures (LIVA arts. 101-103)."""
 
 
