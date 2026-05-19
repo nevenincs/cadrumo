@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
@@ -335,6 +337,12 @@ class RegistryValidator:
                         f"{prefix}: {fail}"
                         for fail in validate_binding_selector_shape(binding)
                     )
+
+        # Plan C semantic-role validation: walks every casilla across
+        # the corpus and enforces intra-role data_type and constraints
+        # consistency. Typo-twin warnings are emitted out-of-band.
+        failures.extend(_validate_semantic_role_consistency(modelo_tuple))
+        _emit_semantic_role_typo_twin_warnings(modelo_tuple)
 
         if failures:
             _REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, tuple(failures))
@@ -2384,4 +2392,113 @@ def _check_binding_selector_shapes(checker: _IdReferenceChecker, revision: Model
     for binding in revision.bindings:
         checker.failures.extend(
             f"{checker.prefix}: {fail}" for fail in validate_binding_selector_shape(binding)
+        )
+
+
+class _RoleObservation:
+    """One casilla's contribution to a semantic-role consistency check."""
+
+    __slots__ = ("modelo_id", "revision_id", "casilla_id", "data_type", "constraints", "label")
+
+    def __init__(
+        self,
+        modelo_id: str,
+        revision_id: str,
+        casilla: CasillaDefinition,
+    ) -> None:
+        self.modelo_id = modelo_id
+        self.revision_id = revision_id
+        self.casilla_id = casilla.id
+        self.data_type = casilla.data_type
+        self.constraints = casilla.constraints
+        self.label = casilla.label
+
+
+def _collect_role_observations(
+    modelos: Iterable[ModeloDefinition],
+) -> Mapping[str, list[_RoleObservation]]:
+    """Group every casilla declaring a ``semantic_role`` by that role."""
+
+    grouped: dict[str, list[_RoleObservation]] = defaultdict(list)
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            for casilla in revision.casillas:
+                if casilla.semantic_role is None:
+                    continue
+                grouped[casilla.semantic_role].append(
+                    _RoleObservation(modelo.id, revision.id, casilla)
+                )
+    return grouped
+
+
+def _constraints_signature(constraints: object) -> tuple[object, ...]:
+    """Return a hashable signature for compatibility comparison."""
+
+    if constraints is None:
+        return ()
+    fields = (
+        "sign", "min_value", "max_value",
+        "pattern", "min_length", "max_length", "enum",
+    )
+    return tuple(getattr(constraints, name) for name in fields)
+
+
+def _validate_semantic_role_consistency(
+    modelos: Iterable[ModeloDefinition],
+) -> tuple[str, ...]:
+    """Enforce intra-role ``data_type`` and ``constraints`` consistency.
+
+    All casillas sharing a ``semantic_role`` must declare the same
+    ``data_type`` and structurally compatible ``constraints``. The
+    canonical signature is the one declared by the first casilla in
+    document order; subsequent divergences are reported as
+    validation failures.
+    """
+
+    failures: list[str] = []
+    for role, observations in _collect_role_observations(modelos).items():
+        canonical = observations[0]
+        canonical_constraints_sig = _constraints_signature(canonical.constraints)
+        for obs in observations[1:]:
+            if obs.data_type != canonical.data_type:
+                failures.append(
+                    f"semantic_role {role!r}: casilla "
+                    f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
+                    f"data_type {obs.data_type!r} but role canonical "
+                    f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id} "
+                    f"declares data_type {canonical.data_type!r}"
+                )
+            obs_sig = _constraints_signature(obs.constraints)
+            if obs_sig != canonical_constraints_sig:
+                failures.append(
+                    f"semantic_role {role!r}: casilla "
+                    f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
+                    f"constraints incompatible with role canonical "
+                    f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id}"
+                )
+    return tuple(failures)
+
+
+def _emit_semantic_role_typo_twin_warnings(
+    modelos: Iterable[ModeloDefinition],
+) -> None:
+    """Warn when a ``semantic_role`` value appears on exactly one casilla.
+
+    Inline role declaration loses the central-catalogue typo-detection
+    guarantee that a closed enumeration would provide. Single-occurrence
+    role values are most often spelling typos (``taxpayer_nif`` vs
+    ``taxpayer-nif``); this surface flags them without blocking
+    snapshot load.
+    """
+
+    grouped = _collect_role_observations(modelos)
+    for role, observations in grouped.items():
+        if len(observations) != 1:
+            continue
+        obs = observations[0]
+        warnings.warn(
+            f"semantic_role {role!r} appears on exactly one casilla "
+            f"({obs.modelo_id}.{obs.revision_id}.{obs.casilla_id}); "
+            "likely typo or missing role declarations on sibling casillas",
+            stacklevel=2,
         )
