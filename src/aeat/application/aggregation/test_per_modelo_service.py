@@ -17,7 +17,7 @@ from aeat.application.aggregation import (
     CounterpartAggregation,
     CounterpartObservation,
     ForeignAssetClass,
-    ForeignAssetObservation,
+    ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
     PerModeloAggregationCommand,
     PerModeloAggregationLogFields,
@@ -77,8 +77,8 @@ def _asset_obs(
     *,
     source_kind: str = "purchase_invoice_evidence",
     valuation: str = "50000.01",
-) -> ForeignAssetObservation:
-    return ForeignAssetObservation(
+) -> ForeignAssetIngestObservation:
+    return ForeignAssetIngestObservation(
         source_kind=source_kind,
         source_object_id=f"{source_kind}-asset-1",
         asset_class=ForeignAssetClass.ACCOUNT,

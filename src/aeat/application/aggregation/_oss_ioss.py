@@ -44,9 +44,9 @@ from ...domain.calculations.registry import (
 from ...domain.vat import (
     EUMemberState,
     InvoiceKind,
+    IvaRateKind,
     OssIossRegime,
     TransactionKind,
-    IvaRateKind,
     lookup_rate,
 )
 from ._errors import AggregationValidationError, t
