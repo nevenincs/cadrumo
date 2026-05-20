@@ -84,7 +84,7 @@ def test_refresh_captures_active_snapshot(secure_store: SecureObjectRepository) 
     )
 
     assert snapshot.state is SnapshotLifecycleState.ACTIVE
-    assert snapshot.census_facts["census.establecimiento_type"] == "propio"
+    assert snapshot.censo_facts["census.establecimiento_type"] == "propio"
 
 
 def test_refresh_refuses_when_sede_returns_no_facts(secure_store: SecureObjectRepository) -> None:
@@ -139,7 +139,7 @@ def test_compare_diffs_per_field_against_profile(secure_store: SecureObjectRepos
     assert statuses["vivienda_office.total_m2"] is CensoComparisonStatus.CENSUS_ONLY
 
 
-def test_apply_stamps_census_facts_with_provenance_tag(secure_store: SecureObjectRepository) -> None:
+def test_apply_stamps_censo_facts_with_provenance_tag(secure_store: SecureObjectRepository) -> None:
     profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
     profiles.save(
         UserProfileRecord(

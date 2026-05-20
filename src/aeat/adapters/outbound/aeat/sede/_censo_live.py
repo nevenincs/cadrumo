@@ -29,7 +29,7 @@ from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
 from ._censo import CensoFactSet, parse_g313_html
-from ._errors import SedeNavigationError, SedeFailureMode
+from ._errors import SedeFailureMode, SedeNavigationError
 
 if TYPE_CHECKING:
     from ..auth._authenticator import AeatSession

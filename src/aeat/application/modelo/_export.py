@@ -31,8 +31,8 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain import filing as filing_domain
 from ...domain.deadlines import AutonomoProfile
-from ...domain.filing import ModeloExportError as FilingDraftExportError
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -407,7 +407,7 @@ def export_modelo_revision(
             schema_provider=schema_provider,
             approved_at=now,
         )
-    except FilingDraftExportError as exc:
+    except filing_domain.ModeloExportError as exc:
         raise ModeloExportError(
             f"could not approve draft for calculation_revision_id="
             f"{command.calculation_revision_id!r}: {exc}",
@@ -428,7 +428,7 @@ def export_modelo_revision(
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
         receipt = export_draft(approved, output_path=tmp_output, headers=headers)
-    except FilingDraftExportError as exc:
+    except filing_domain.ModeloExportError as exc:
         if tmp_output.exists():
             tmp_output.unlink()
         raise ModeloExportError(

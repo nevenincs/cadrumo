@@ -86,7 +86,7 @@ def _capture_snapshot() -> str:
         profile_id=active,
         captured_at=datetime.now(UTC),
         source_url=_G313,
-        census_facts={
+        censo_facts={
             "census.establecimiento_type": "propio",
             "census.elected_withholding_pct": "15",
             "vivienda_office.total_m2": "120.00",
@@ -151,7 +151,7 @@ def test_compare_reports_per_field_status(cli_runner: CliRunner) -> None:
     assert "census_only\tvivienda_office.total_m2" in result.output
 
 
-def test_apply_writes_census_facts_onto_profile(cli_runner: CliRunner) -> None:
+def test_apply_writes_censo_facts_onto_profile(cli_runner: CliRunner) -> None:
     _seed_active_profile()
     _capture_snapshot()
 
