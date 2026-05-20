@@ -122,11 +122,40 @@ def repair_quarantine(
 
 
 def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
-    """Return the last ``count`` lines from ``path`` without trailing newlines."""
+    """Return the last ``count`` lines from ``path`` without trailing newlines.
+
+    Reads the file from the end in bounded chunks (seek-from-end)
+    rather than materialising the whole file in memory. The previous
+    ``read_text().splitlines()`` implementation raised ``MemoryError``
+    on a large log file (disaster ADR Ruling 6 / fumbler testimony
+    F8). The chunked tail keeps memory proportional to the requested
+    line count, not the file size.
+    """
 
     if count <= 0:
         return ()
-    return tuple(path.read_text(encoding="utf-8", errors="replace").splitlines()[-count:])
+    chunk_size = 8192
+    try:
+        with path.open("rb") as handle:
+            handle.seek(0, 2)  # SEEK_END
+            file_size = handle.tell()
+            blocks: list[bytes] = []
+            newlines_seen = 0
+            position = file_size
+            # Read backwards until we have at least ``count`` newlines
+            # or we have consumed the whole file.
+            while position > 0 and newlines_seen <= count:
+                read_size = min(chunk_size, position)
+                position -= read_size
+                handle.seek(position)
+                block = handle.read(read_size)
+                blocks.append(block)
+                newlines_seen += block.count(b"\n")
+            tail_bytes = b"".join(reversed(blocks))
+    except OSError:
+        return ()
+    text = tail_bytes.decode("utf-8", errors="replace")
+    return tuple(text.splitlines()[-count:])
 
 
 @repair_app.command("reset-state", help=tr("cli.config.repair.reset_state_help"))
@@ -145,6 +174,20 @@ def repair_reset_state(
 
     if not dry_run and not yes:
         raise CliRefusedBoundaryError(tr("cli.config.repair.reset_state_requires_yes"))
+    # Cold-root guard: reset-state is bootstrap-exempt; on a root with
+    # no active profile there is no workflow-state envelope to reset.
+    # Report cleanly rather than crashing on the absent per-bucket
+    # database (disaster ADR Ruling 6).
+    if resolve_active_bucket_id() is None:
+        _emit(
+            ctx,
+            {"reset": False, "reason": "no-active-profile"},
+            (
+                "reset\tfalse",
+                "reason\tno active profile; nothing to reset",
+            ),
+        )
+        return
     if dry_run:
         fingerprint = fingerprint_workflow_state()
         payload = {"dry_run": True, "fingerprint": fingerprint.model_dump(mode="json")}
@@ -835,8 +878,7 @@ def config_status(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
     from ....application.workflow._profile_health import assess_active_profile_health
 
-    state = workflow_state_repository().load()
-    profile_health = assess_active_profile_health(state)
+    profile_health = assess_active_profile_health()
     active_profile = profile_health.active_profile
     if profile_health.status == "dangling_pointer":
         payload = {
@@ -867,13 +909,18 @@ def config_status(ctx: typer.Context) -> None:
             f"profile\t{active_profile}",
             f"readiness\t{profile_health.status}",
             "registered_profile\tpresent",
-            "profile_record\tmissing",
+            (
+                "profile_record\tunreadable"
+                if profile_health.status == "profile_record_unreadable"
+                else "profile_record\tmissing"
+            ),
         ]
         if profile_health.profile_record_error:
             lines.append(f"profile_record_error\t{profile_health.profile_record_error}")
         lines.append(f"next_action\t{profile_health.next_action}")
         _emit(ctx, payload, lines)
         return
+    state = workflow_state_repository().load()
     record = state.active_profile_record()
     values = record_to_path_values(record)
     if not values.get("identity.tax_id") or not values.get("activities.description"):
