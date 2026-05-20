@@ -248,3 +248,33 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m1, m2])
         role_warnings = [w for w in captured if "taxpayer_nif" in str(w.message)]
         assert role_warnings == []
+
+    def test_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
+        aumento = _casilla(
+            cid="a",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+        )
+        disminucion = _casilla(
+            cid="b",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
+        )
+        m = _modelo("200", "2024-y-siguientes", [aumento, disminucion])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_near_duplicate_with_same_axis_still_warns(self) -> None:
+        typo = _casilla(
+            cid="a",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanent_aumento",
+        )
+        canonical = _casilla(
+            cid="b",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+        )
+        m = _modelo("200", "2024-y-siguientes", [typo, canonical])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert any("permanent_aumento" in str(w.message) for w in captured)
