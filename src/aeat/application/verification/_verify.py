@@ -92,9 +92,20 @@ def verify_declaracion(
         for casilla in snapshot.revision.casillas
         if casilla.input_kind != "computed" and casilla.id in extracted
     }
+    # Bindings that feed a `bound` casilla are resolved by the calculation
+    # engine from the casilla input itself, so they are not required as
+    # external `binding_values`. Only bindings consumed purely inside
+    # formulas (no bound casilla) must be supplied by the operator.
+    bound_casilla_binding_ids = {
+        casilla.binding
+        for casilla in snapshot.revision.casillas
+        if casilla.input_kind == "bound" and casilla.binding is not None
+    }
     supplied_bindings = binding_values or {}
     missing_bindings = sorted(
-        binding.id for binding in snapshot.revision.bindings if binding.id not in supplied_bindings
+        binding.id
+        for binding in snapshot.revision.bindings
+        if binding.id not in supplied_bindings and binding.id not in bound_casilla_binding_ids
     )
     if missing_bindings:
         missing = ", ".join(missing_bindings)
