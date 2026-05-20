@@ -101,7 +101,12 @@ def _hash_tree(
     return digest.hexdigest()
 
 
-def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
+def compute_corpus_sha256(
+    vault_dir: Path,
+    settings: Settings,
+    *,
+    env_path: Path | None = None,
+) -> str:
     """Compute a deterministic fingerprint of ``.vault/`` plus Settings plus the on-disk ``.env``.
 
     The hash folds three inputs so replay's drift gate catches every
@@ -127,6 +132,10 @@ def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
     Args:
         vault_dir: Path to the ``.vault/`` directory.
         settings: Active :class:`Settings` instance to fold into the hash.
+        env_path: Path to the ``.env`` dotfile. Defaults to
+            ``PROJECT_ROOT/env/.env``; passed explicitly by tests so the
+            dotfile channel can be exercised against a temp file without
+            patching the ``PROJECT_ROOT`` module constant.
 
     Returns:
         SHA-256 hex digest of the vault tree + Settings snapshot +
@@ -137,8 +146,12 @@ def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
     excluded_vault_subtrees = frozenset({(vault_dir / "data").resolve()})
     tree_digest = _hash_tree(vault_dir, excluded_dirs=excluded_vault_subtrees)
     settings_blob = settings.model_dump_json().encode("utf-8")
-    env_path = PROJECT_ROOT / "env" / ".env"
-    env_digest = _file_sha256(env_path) if env_path.exists() else hashlib.sha256(b"").hexdigest()
+    resolved_env_path = env_path if env_path is not None else PROJECT_ROOT / "env" / ".env"
+    env_digest = (
+        _file_sha256(resolved_env_path)
+        if resolved_env_path.exists()
+        else hashlib.sha256(b"").hexdigest()
+    )
     h = hashlib.sha256()
     h.update(tree_digest.encode("ascii"))
     h.update(b"|settings|")

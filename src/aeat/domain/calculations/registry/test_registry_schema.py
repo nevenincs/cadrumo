@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.core.resources import bundled_path
 
@@ -18,7 +19,13 @@ from . import (
     load_modelo_file,
 )
 from ._loader import load_registry_tree
-from ._schema import ExportFieldDefinition, ModeloDefinition, ModeloRevision, SupportRemovalDecisionDefinition
+from ._schema import (
+    ExportFieldDefinition,
+    FormulaExpression,
+    ModeloDefinition,
+    ModeloRevision,
+    SupportRemovalDecisionDefinition,
+)
 from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -50,6 +57,46 @@ def _with_first_export_field(revision: ModeloRevision, field: ExportFieldDefinit
     updated_record = record.model_copy(update={"fields": (field, *record.fields[1:])})
     updated_layout = layout.model_copy(update={"records": (updated_record, *layout.records[1:])})
     return revision.model_copy(update={"export_layouts": (updated_layout, *revision.export_layouts[1:])})
+
+
+def test_formula_expression_accepts_dispatch_table_entries() -> None:
+    expression = FormulaExpression.model_validate(
+        {
+            "dispatch_table_entries": [
+                {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
+                {"key": "cataluna", "parameter": "renta-2025-escala-autonomica-cataluna-base-general"},
+            ]
+        }
+    )
+
+    assert expression.dispatch_table == {
+        "madrid": "renta-2025-escala-autonomica-madrid-base-general",
+        "cataluna": "renta-2025-escala-autonomica-cataluna-base-general",
+    }
+
+
+def test_formula_expression_rejects_duplicate_dispatch_table_entries() -> None:
+    with pytest.raises(ValidationError, match="duplicate key 'madrid'"):
+        FormulaExpression.model_validate(
+            {
+                "dispatch_table_entries": [
+                    {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
+                    {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
+                ]
+            }
+        )
+
+
+def test_formula_expression_rejects_mixed_dispatch_table_shapes() -> None:
+    with pytest.raises(ValidationError, match="dispatch_table or dispatch_table_entries"):
+        FormulaExpression.model_validate(
+            {
+                "dispatch_table": {"madrid": "renta-2025-escala-autonomica-madrid-base-general"},
+                "dispatch_table_entries": [
+                    {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"}
+                ],
+            }
+        )
 
 
 def _as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
