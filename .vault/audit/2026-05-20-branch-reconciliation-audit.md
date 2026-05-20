@@ -436,6 +436,60 @@ silence — where an ADR does not yet scope the calculation, authoring that
 ADR is part of the row. Row 9 is the only true do-not-port (an accepted
 ADR rejected it); row 10 is deferred pending a new ADR.
 
+## Modelo 200 casilla finding and blast radius
+
+Discovered while executing the port-back backlog (port of the Modelo 200
+cuota formulas). Recorded here as a registry-data finding in its own
+right.
+
+**The finding.** AEAT Modelo 200 casilla numbers are *segment-scoped*:
+in the official Diseño de Registros the same five-digit number recurs
+across record segments (`DP200010` ECPN, `DP200014` Liquidación,
+`DP200032` Banco de España, `DP200042` aseguradoras, `DP200DID`) with a
+different meaning each time — `00562` is "Cuota íntegra" in the
+Liquidación segment and "distribución de dividendos" in the ECPN
+segment. The registry casilla model uses `id == number` and forbids
+duplicate numbers. When an M200 number collides across segments only one
+occurrence survives; the registry kept the ECPN occurrences of
+`00552`/`00558`/`00562`/`00611`/`00621` and **silently dropped the
+Liquidación cuota-chain casillas** (cuota íntegra, tipo de gravamen, base
+imponible liquidación, cuota diferencial). Snapshot-build validation does
+not catch this — it checks duplicate ids and semantic-role consistency,
+not completeness against the Diseño — so M200 loads green while missing
+its filing-grade calculation casillas.
+
+**Blast radius.** A four-agent discovery swarm scoped the reach:
+
+- *Registry data.* Modelo 200 confirmed defective. Modelo 202 was flagged
+  "suspect" but is a false alarm — M202 (pago fraccionado) legitimately
+  has no accounting-statement casillas. Modelos 220/303/347/349/390/190/
+  193/720 carry no casilla data in the registry yet — no present defect,
+  no coverage either. Other modelos (036/100/111/115/123/130/131/232/
+  353/369) are clean.
+- *AEAT source.* Modelo 200 and Modelo 303 are the multi-segment forms
+  that reuse numbers across record segments; M303's reuse sits in the
+  fichero-BOE record layout (the 303 export-layout backlog row) rather
+  than the casilla registry. The ten PDF-only Diseños (145/180/184/190/
+  193/347/349/360/720/840) were not machine-verified.
+- *Code consumers.* Small. The five mis-segmented M200 casillas are
+  referenced only by the M200 export page-bindings (eight export TOML
+  files); no formula, binding, cross-modelo relation, or aggregation
+  depends on them, and the existing `modelo-200-cuota-ejercicio-a-
+  ingresar-devolver` formula is sound. Correcting the registry will not
+  cascade into broken calculations — but the M200 export page-014
+  binding to `00562` currently resolves to the ECPN casilla and must be
+  re-pointed once the Liquidación casillas are registered.
+
+**Root cause is a schema limitation, not bad data.** The registry's
+casilla-identity model (`id == number`, globally unique) structurally
+cannot represent any AEAT form that reuses casilla numbers across record
+segments. This is the architecture question that must be settled by ADR;
+it applies to Modelo 200 now and to Modelo 220 and the multi-segment
+fichero-BOE forms when they enter the registry. The current validation
+passing "green" for M200 is itself a finding: the registry validator
+needs a Diseño-completeness check so a silently-dropped casilla fails
+the gate.
+
 ## Recommendations
 
 1. **Treat 39 of 41 branches as carrying no unique work.** The 33 issue-
@@ -492,7 +546,16 @@ ADR rejected it); row 10 is deferred pending a new ADR.
    separate, deliberate, owner-level decisions and are explicitly out of
    scope for this audit.
 
-7. **Verification reuse.** The reconciliation effort should re-run the
+7. **Settle the registry casilla-identity limitation by ADR, and add a
+   Diseño-completeness validator gate.** The `id == number` casilla model
+   cannot represent multi-segment AEAT forms (Modelo 200 now; 220 and the
+   multi-segment fichero-BOE forms later). An ADR must decide a
+   segment-scoped casilla identity, the Modelo 200 Liquidación casillas
+   must then be registered, and snapshot-build validation must gain a
+   completeness check against the AEAT Diseño so a dropped casilla fails
+   the gate instead of loading green.
+
+8. **Verification reuse.** The reconciliation effort should re-run the
    issue-grep + defining-artifact + anti-trust method per branch rather
    than trusting this audit's table blindly; sub-agent findings are
    inventory, and every branch should be re-confirmed against current
