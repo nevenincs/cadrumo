@@ -778,6 +778,10 @@ cli:
       export_out_help: A JSON-csomag célútvonala
       help: Az aktív profil konfigurációs értékeinek kezelése
       import_help: Regisztrálj hordozható profilcsomagot JSON-fájlból
+      import_label_help: Az importált profil megjelenítendő neve; alapértelmezésben a
+        csomagban tárolt név. Használd egy második példány másik néven történő importjához.
+      import_label_taken: Már létezik %{name} nevű profil. Futtasd újra a `--label
+        ÚJ_NÉV` kapcsolóval, hogy más néven importáld.
       import_missing_bundle: 'Nem található profilcsomag itt: %{path}'
       import_path_help: A profil JSON-csomagjának útvonala
       logout_help: Léptesd ki az aktív profilt a helyi mutató törlésével

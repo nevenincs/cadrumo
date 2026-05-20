@@ -795,6 +795,10 @@ cli:
       export_out_help: Ruta de destinació per al paquet JSON
       help: Gestionar valors de configuració del perfil actiu
       import_help: Registra un paquet portable de perfil des d'un JSON
+      import_label_help: Nom visible per al perfil importat; per defecte el nom desat
+        al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
+      import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
+        amb `--label NOM_NOU` per importar-lo amb un nom diferent.
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
       logout_help: Tanca la sessió del perfil actiu netejant el punter local

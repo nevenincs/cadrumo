@@ -555,3 +555,53 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
         ],
     )
     assert result.exit_code != 0, f"expected case-insensitive refusal, got: {result.output}"
+
+
+# --- profile import --label re-imports an exported profile ---
+
+
+def test_profile_import_label_lands_second_copy_under_new_name(
+    _per_bucket_backend: Path,
+) -> None:
+    """`profile import --label` imports an exported bundle under a fresh name.
+
+    Re-importing an exported profile into a storage root that already
+    carries it must not dead-end on a duplicate-label refusal. `--label`
+    lands the second copy under a new operator-facing name while still
+    minting its own immutable UUID identity.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+
+    runner = CliRunner()
+    _create_via_cli(runner, "operator")
+
+    dispose_engine()
+    bundle_path = _per_bucket_backend / "operator-bundle.json"
+    export_result = runner.invoke(
+        root_app,
+        ["config", "profile", "export", "operator", "--to", str(bundle_path)],
+    )
+    assert export_result.exit_code == 0, export_result.output
+    assert bundle_path.is_file()
+
+    # Re-importing under the original name dead-ends on a refusal.
+    dispose_engine()
+    clash = runner.invoke(root_app, ["config", "profile", "import", str(bundle_path)])
+    assert clash.exit_code != 0, clash.output
+
+    # Re-importing with --label lands a fresh copy.
+    dispose_engine()
+    relabelled = runner.invoke(
+        root_app,
+        ["config", "profile", "import", str(bundle_path), "--label", "operator-restored"],
+    )
+    assert relabelled.exit_code == 0, relabelled.output
+    assert "display_name\toperator-restored" in relabelled.output
+
+    original = read_profile_bucket("operator")
+    restored = read_profile_bucket("operator-restored")
+    assert original is not None
+    assert restored is not None
+    # Distinct buckets, distinct minted UUID identities.
+    assert original.bucket_id != restored.bucket_id
