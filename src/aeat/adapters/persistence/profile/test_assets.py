@@ -1,8 +1,8 @@
-"""Persistence tests for the encrypted asset and amortization ledgers.
+"""Persistence tests for the encrypted asset and amortizacion ledgers.
 
 Verifies that :mod:`aeat.adapters.persistence.profile.assets` round-trips
 records through encrypted FINANCIAL-class envelopes (no plaintext leakage),
-that amortization is persisted to a real ledger, and that recording is
+that amortizacion is persisted to a real ledger, and that recording is
 idempotent for an already-amortized year.
 """
 
@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.profile.assets import AmortizationEntry, AmortizationLedger, AssetClass, AssetRecord
+from ....domain.profile.assets import AmortizacionLedger, AmortizationEntry, AssetClass, AssetRecord
 from ..storage import EphemeralMasterKeyProvider
 from ..storage.sql import dispose_engine
-from .assets import load_amortization_ledger, load_assets, save_amortization_ledger, save_assets
+from .assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -75,9 +75,9 @@ def test_asset_persistence_is_encrypted_financial_secure_object(tmp_path) -> Non
     assert b'"nas"' not in db_bytes
 
 
-def test_amortization_ledger_persistence_round_trip() -> None:
-    ledger = AmortizationLedger(entries=(AmortizationEntry(asset_id="pc", year=2025, amount=Decimal("100.00")),))
+def test_amortizacion_ledger_persistence_round_trip() -> None:
+    ledger = AmortizacionLedger(entries=(AmortizationEntry(asset_id="pc", year=2025, amount=Decimal("100.00")),))
 
-    save_amortization_ledger(ledger)
+    save_amortizacion_ledger(ledger)
 
-    assert load_amortization_ledger() == ledger
+    assert load_amortizacion_ledger() == ledger
