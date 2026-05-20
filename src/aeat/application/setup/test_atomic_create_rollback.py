@@ -1,0 +1,143 @@
+"""Anti-tautology proof: a failed atomic create rolls back cleanly.
+
+Disaster ADR Ruling 3 gives the atomic provisioner an all-or-nothing
+contract: the five-write sequence (directory, manifest, session,
+encrypted record, pointer) must reverse steps 1-3 if the encrypted-
+record write fails, so the operator never sees a half-created profile.
+
+These tests force a *real* failure at the encrypted-record write
+step. The trigger is an incomplete fact set: a record missing a
+schema-required field makes ``ProfileLifecycleService.register``
+raise ``ProfileSchemaValidationError`` before the record is
+persisted. No mock, no patched failure injection — the rejection is
+the genuine schema-validation path that ``register`` runs ahead of
+its ``repository.save`` call.
+
+The anti-tautology guard is the second test: it proves the rollback
+assertions are not vacuously true by showing the *successful* create
+leaves exactly the artifacts the failed create must not. If the
+rollback ever silently no-ops, the first test's "absent" assertions
+would still pass against a phantom bucket — the success-path test is
+what closes that hole.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator, Mapping
+from pathlib import Path
+
+import pytest
+
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
+from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.user_profile._orchestration import (
+    _write_active_profile_pointer,
+    register_active_profile,
+)
+from aeat.application.workflow._persistence import workflow_state_repository
+from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+from aeat.core._bucket_pointer_io import read_pointer
+from aeat.core.config import load_settings
+from aeat.domain.user_profile import ProfileSchemaValidationError, UserProfileFact
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+# The minimum schema-valid fact set the user-profile schema accepts.
+_VALID_FACTS: Mapping[str, str] = {
+    "identity.tax_id": "00000000T",
+    "identity.name": "Test Operator",
+    "tax_residence.ccaa": "madrid",
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "provenance.source": "manual_cli",
+}
+# An incomplete fact set (a required field dropped) makes the schema
+# validator reject the record at the encrypted-record-write step of
+# the atomic create.
+_INCOMPLETE_FACTS: Mapping[str, str] = {
+    key: value for key, value in _VALID_FACTS.items() if key != "iva.regime"
+}
+
+
+@pytest.fixture
+def _backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+    """Per-bucket storage root on the unsecured backend."""
+
+    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    dispose_engine()
+    try:
+        yield tmp_path
+    finally:
+        dispose_engine()
+
+
+def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
+    """Run the atomic create for ``profile_id`` against ``facts``."""
+
+    _write_active_profile_pointer(profile_id)
+    fact_tuple = tuple(UserProfileFact(path=path, value=value) for path, value in facts.items())
+    with EphemeralMasterKeyProvider():
+        workflow_state_repository().update(
+            lambda state: register_active_profile(
+                state,
+                profile_id=profile_id,
+                display_name=profile_id.capitalize(),
+                facts=fact_tuple,
+            )
+        )
+
+
+def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> None:
+    """An encrypted-record-write failure rolls back the manifest and pointer.
+
+    The incomplete fact set makes the schema validator reject the
+    record inside ``ProfileLifecycleService.register`` — the
+    disaster-ADR step-4 failure. The rollback must clear the manifest
+    and the active-profile pointer so neither the manifest scan nor
+    the pointer chain reports a phantom ``victim`` profile.
+    """
+
+    with pytest.raises(ProfileSchemaValidationError):
+        _register("victim", facts=_INCOMPLETE_FACTS)
+
+    root = load_settings().aeat_local_storage_root
+    paths = bucket_paths(root, "victim")
+
+    # The existence claims are gone: no manifest, no pointer.
+    assert not manifest_path(paths).is_file(), "rollback left a manifest behind"
+    assert read_pointer(root) is None, "rollback left a dangling active-profile pointer"
+
+    # The manifest-scan oracle reports no such profile — `profile list`
+    # would show nothing.
+    assert read_profile_bucket("victim") is None, "rollback left a phantom profile in the manifest scan"
+
+
+def test_successful_atomic_create_lands_the_artifacts_a_failure_clears(_backend: Path) -> None:
+    """Anti-tautology proof: a *successful* create lands what a failure must not.
+
+    If the rollback under test silently no-opped, the absent-artifact
+    assertions in :func:`test_failed_atomic_create_raises_and_leaves_no_profile`
+    would still pass against a never-created profile. This test pins
+    the positive contract — manifest present, pointer present,
+    profile visible to the scan — so the failure test's assertions
+    are proven non-vacuous: the artifacts genuinely exist on success
+    and genuinely do not on rollback.
+    """
+
+    _register("survivor", facts=_VALID_FACTS)
+
+    root = load_settings().aeat_local_storage_root
+    paths = bucket_paths(root, "survivor")
+
+    assert manifest_path(paths).is_file()
+    pointer = read_pointer(root)
+    assert pointer is not None
+    assert pointer.bucket_id == "survivor"
+    scanned = read_profile_bucket("survivor")
+    assert scanned is not None
+    assert scanned.bucket_id == "survivor"
