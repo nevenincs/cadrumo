@@ -14,17 +14,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def isolated_language_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
     monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    # Per-bucket storage: the seeded profile writes a bucket manifest,
+    # an encrypted record, and the active-profile pointer under the
+    # storage root — redirect it into tmp so the test stays isolated.
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'language.db').as_posix()}")
-    try:
-        yield
-    finally:
-        dispose_engine()
+    # The column-encrypt path requires an active bucket session even
+    # for seeding; an ephemeral provider supplies one for the test.
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _seed_profile_language(language: str) -> None:

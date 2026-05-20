@@ -43,7 +43,7 @@ def test_registry_root_is_a_directory() -> None:
         ("registry", "aeat", "modelos", "036.toml"),
         ("registry", "aeat", "modelos", "100", "manifest.toml"),
         ("registry", "aeat", "legal", "iva-flow.toml"),
-        ("registry", "aeat", "vat", "rates.toml"),
+        ("registry", "aeat", "iva", "rates.toml"),
         ("registry", "aeat", "calendars", "festivos-2025.toml"),
         ("registry", "aeat", "user_profile", "schema.toml"),
     ],
