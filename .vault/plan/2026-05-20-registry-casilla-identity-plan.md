@@ -132,7 +132,7 @@ Refocus the load-blocking completeness gate from full-Diseno coverage to calcula
 - [x] `P06.S26` - Refocus the completeness gate from declared == manifest to manifest-required subset-of declared, adding the (segmento, number) identity check and the legal_refs / source_refs grounding check on each manifest casilla per the ADR amendment; `src/aeat/domain/calculations/registry/_validate.py`.
 - [x] `P06.S27` - Refocus the manifest schema model so it represents the calculation-closure required casilla set (Diseno-sourced identity, bounded to the calculation surface) rather than the full-Diseno coverage set; `src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `P06.S28` - Refocus the derivation tool to derive the calculation closure intersected with the Diseno, and retain the full-Diseno extraction as a separate off-load-path coverage-report producer; `src/aeat/domain/calculations/registry/_record_design.py`.
-- [ ] `P06.S29` - Update the gate tests to the refocused manifest-required subset-of declared plus identity and grounding semantics, replacing the declared == manifest assertions; `src/aeat/domain/calculations/registry/test_referential_integrity.py`.
+- [x] `P06.S29` - Update the gate tests to the refocused manifest-required subset-of declared plus identity and grounding semantics, replacing the declared == manifest assertions; `src/aeat/domain/calculations/registry/test_referential_integrity.py`.
 - [ ] `P06.S30` - Update the drift / coverage test so the full-Diseno extraction is exercised as an advisory coverage report rather than a load-blocking gate; `src/aeat/domain/calculations/registry/test_record_design.py`.
 
 ### Phase `P05` - Verification and rollout
