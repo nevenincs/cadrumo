@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from ...core.config import load_settings
 from ...domain.user_profile import UserProfileFact
@@ -51,7 +53,7 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
     #    exists is refused; the workspace is already initialized in
     #    that case, so the refusal is a no-op.
     repository = workflow_state_repository()
-    try:
+    with contextlib.suppress(ProfileAlreadyRegisteredError):
         repository.update(
             lambda state: register_active_profile(
                 state,
@@ -60,8 +62,6 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
                 facts=tuple(facts),
             )
         )
-    except ProfileAlreadyRegisteredError:
-        pass
 
     # 2. Configure auth
     auth_configured = False

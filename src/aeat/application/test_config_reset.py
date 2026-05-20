@@ -83,9 +83,11 @@ def test_reset_config_refuses_without_confirmation(
     """The function must raise ConfigResetUnconfirmedError when confirmed=False."""
     from .config_reset import ConfigResetScope, ConfigResetUnconfirmedError, reset_config
 
-    with _isolated_workflow(monkeypatch, tmp_path):
-        with pytest.raises(ConfigResetUnconfirmedError, match=r"config reset|confirmed must be True"):
-            reset_config(ConfigResetScope.ALL, confirmed=False)
+    with (
+        _isolated_workflow(monkeypatch, tmp_path),
+        pytest.raises(ConfigResetUnconfirmedError, match=r"config reset|confirmed must be True"),
+    ):
+        reset_config(ConfigResetScope.ALL, confirmed=False)
 
 
 def test_reset_profile_only_clears_active_profile_record(
