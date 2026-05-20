@@ -78,8 +78,8 @@ class TestEnvelopeRoundTrip:
     def test_plaintext_round_trip(self, tmp_path: Path) -> None:
         env = Envelope[_DemoPayloadV1](
             schema_version=1,
-            written_at=_now_utc(),
-            classification=SensitivityClass.OPERATIONAL,
+            written_at=datetime(2026, 1, 15, 10, 30, 0, tzinfo=UTC),
+            classification=SensitivityClass.FINANCIAL,
             payload=_DemoPayloadV1(name="hola", count=42),
         )
         target = tmp_path / "envelope.json"
@@ -87,11 +87,10 @@ class TestEnvelopeRoundTrip:
         loaded = load_envelope(
             target,
             Envelope[_DemoPayloadV1],
-            expected_class=SensitivityClass.OPERATIONAL,
+            expected_class=SensitivityClass.FINANCIAL,
             max_supported_version=1,
         )
-        assert loaded.payload == env.payload
-        assert loaded.schema_version == 1
+        assert loaded == env
 
     def test_load_round_trips_timezone(self, tmp_path: Path) -> None:
         explicit = datetime(2026, 4, 27, 12, 0, 0, tzinfo=UTC)

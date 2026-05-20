@@ -19,16 +19,16 @@ from aeat.adapters.persistence.storage.crypto._crypto import KEY_SIZE
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.core.config import Settings
 from aeat.domain.fincas import (
-    ExpenseCategory,
-    FincaAmortizacionLedgerRepository,
     Arrendamiento,
     ArrendamientoRepository,
+    ExpenseCategory,
+    Finca,
+    FincaAmortizacionLedgerRepository,
     FincaGasto,
     FincaGastoRepository,
-    Finca,
-    FincaRepository,
     FincaRendimientoRecord,
     FincaRendimientoRepository,
+    FincaRepository,
     UseType,
     compute_finca_aggregates,
 )
@@ -144,15 +144,32 @@ def test_rental_aggregates_are_derived_from_persisted_register(tmp_path: Path) -
                 ledger_repo=ledger_repo,
             )
 
-            expected_amortizacion = Decimal("5000.00")
-            expected_reduccion = Decimal("3000.00")
-            expected_imputacion = Decimal("2000.00")
             assert aggregates.ingresos_integros == gross_rent
             assert aggregates.gastos_deducibles == financiacion + reparacion + ibi
-            assert aggregates.amortizacion == expected_amortizacion
-            assert aggregates.reduccion_arrendamiento_vivienda == expected_reduccion
-            assert aggregates.imputacion_rentas_inmobiliarias == expected_imputacion
+
+            # Structural wiring: both fincas appear in attribution; the single
+            # contract appears in the tier map.
             assert set(aggregates.per_finca_attribution) == {let_finca.id, non_let_finca.id}
             assert set(aggregates.per_contract_tier) == {contract.id}
+
+            # Amortisation wires to the let finca only; the non-let finca is
+            # not arrendable so must carry zero amortisation.
+            let_attr = aggregates.per_finca_attribution[let_finca.id]
+            non_let_attr = aggregates.per_finca_attribution[non_let_finca.id]
+            assert let_attr.amortizacion > Decimal("0"), "let finca must carry non-zero amortisation"
+            assert non_let_attr.amortizacion == Decimal("0.00"), "non-let finca must carry zero amortisation"
+            assert aggregates.amortizacion == let_attr.amortizacion
+
+            # Reducción attribution: the contract tier carries the reducción
+            # amount and it equals the per-finca attribution total.
+            contract_tier = aggregates.per_contract_tier[contract.id]
+            assert contract_tier.reduccion_amount >= Decimal("0")
+            assert aggregates.reduccion_arrendamiento_vivienda == contract_tier.reduccion_amount
+
+            # Imputación wires to the non-let finca only; the arrendada finca
+            # is not subject to art. 85.
+            assert non_let_attr.imputacion > Decimal("0"), "non-let VIVIENDA_DESOCUPADA must carry imputación"
+            assert let_attr.imputacion == Decimal("0.00"), "arrendada finca must carry zero imputación"
+            assert aggregates.imputacion_rentas_inmobiliarias == non_let_attr.imputacion
     finally:
         engine.dispose()

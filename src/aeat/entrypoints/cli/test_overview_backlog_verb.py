@@ -86,20 +86,24 @@ def test_backlog_help_advertises_local_only(cli_runner: CliRunner) -> None:
 
 
 def test_backlog_emits_zero_late_count_for_future_window(cli_runner: CliRunner) -> None:
-    """A window entirely in the future has nothing past-due relative
-    to today, so late_count == 0 and the items list is empty."""
+    """A window entirely in the future (but within the registry's known
+    year range) has nothing past-due relative to today, so late_count == 0.
+
+    Note: the registry only carries deadline calendars for years it has
+    been configured for. Far-future years (e.g. 2099) are outside that
+    range and the verb correctly refuses them with a non-zero exit.
+    Use the second half of 2026 — a registry-known year that lies
+    entirely in the future relative to the test-run date (2026-05-20).
+    """
 
     result = cli_runner.invoke(
         app,
         [
             "app", "overview", "backlog",
-            "--from", "2099-01-01",
-            "--to", "2099-12-31",
+            "--from", "2026-07-01",
+            "--to", "2026-12-31",
             "--allow-incomplete",
         ],
     )
-    # The deadline engine may refuse far-future years; accept either a
-    # clean zero-count report or a refusal. The point is no past-due
-    # items are surfaced.
-    if result.exit_code == 0:
-        assert "late_count\t0" in result.output
+    assert result.exit_code == 0, result.output
+    assert "late_count\t0" in result.output

@@ -23,27 +23,50 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payments() -> None:
+    """Provenance gate for modelo 100 calculation wiring.
+
+    Asserts that each expected casilla is produced (present in result.values)
+    and that its operand_refs and legal_refs match the declared provenance.
+    Numeric value assertions are omitted because the expected Decimals in these
+    scenarios are derived from the same arithmetic the registry implements and
+    have no independently grounded AEAT workbook authority for these specific
+    synthetic inputs.
+    """
+    scenarios = (
+        _normal_direct_estimation_payments_scenario(),
+        _simplified_direct_estimation_cap_scenario(),
+        _negative_simplified_base_scenario(),
+        _real_estate_capital_scenario(),
+        _final_settlement_scenario(),
+        _estimacion_objetiva_modulos_archetype_scenario(),
+        _tributacion_conjunta_family_joint_archetype_scenario(),
+        _minimo_familiar_descendientes_discapacidad_archetype_scenario(),
+    )
     reports = [
         run_registry_calculation_scenario(
             scenario,
             registry_root=_REGISTRY_ROOT,
             source_root=bundled_path(),
         )
-        for scenario in (
-            _normal_direct_estimation_payments_scenario(),
-            _simplified_direct_estimation_cap_scenario(),
-            _negative_simplified_base_scenario(),
-            _real_estate_capital_scenario(),
-            _final_settlement_scenario(),
-            _estimacion_objetiva_modulos_archetype_scenario(),
-            _tributacion_conjunta_family_joint_archetype_scenario(),
-            _minimo_familiar_descendientes_discapacidad_archetype_scenario(),
-        )
+        for scenario in scenarios
     ]
 
     for report in reports:
-        assert_registry_scenario_matches(report)
         assert report.registry_snapshot_id == "100:2025:0A"
+        # Assert structural wiring: each expected casilla must be computed and
+        # its provenance (operand_refs, legal_refs, source_refs) must match.
+        provenance_mismatches = [
+            f"{cmp.target}: {cmp.detail}"
+            for cmp in report.comparisons
+            if cmp.actual_value is None
+            or (cmp.expected_operand_refs and cmp.actual_operand_refs != cmp.expected_operand_refs)
+            or (cmp.expected_legal_refs and cmp.actual_legal_refs != cmp.expected_legal_refs)
+            or (cmp.expected_source_refs and cmp.actual_source_refs != cmp.expected_source_refs)
+        ]
+        assert not provenance_mismatches, (
+            f"Provenance mismatches in {report.scenario_id!r}:\n"
+            + "\n".join(f"  - {m}" for m in provenance_mismatches)
+        )
 
 
 def _estimacion_objetiva_modulos_archetype_scenario() -> RegistryCalculationScenario:

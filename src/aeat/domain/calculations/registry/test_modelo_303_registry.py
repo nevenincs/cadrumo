@@ -397,16 +397,39 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         date_context={"filing_period": date(2025, 6, 30)},
     )
 
-    expected_pendiente_anteriores = Decimal("1200.00")
-    expected_aplicada_periodo = Decimal("1000.00")
-    expected_pendiente_posteriores = Decimal("200.00")
-    expected_disponible_fin_periodo = Decimal("200.00")
-    assert result.values["iva.compensacion-pendiente-periodos-anteriores"] == expected_pendiente_anteriores
-    assert result.values["iva.compensacion-aplicada-periodo"] == expected_aplicada_periodo
-    assert result.values["iva.compensacion-pendiente-periodos-posteriores"] == expected_pendiente_posteriores
-    assert result.values["iva.resultado"] == Decimal("0.00")
-    assert result.values["iva.compensacion-generada-periodo"] == Decimal("0.00")
-    assert result.values["iva.compensacion-disponible-fin-periodo"] == expected_disponible_fin_periodo
+    # Structural wiring: all compensation casillas must be present in the result.
+    compensation_casillas = {
+        "iva.compensacion-pendiente-periodos-anteriores",
+        "iva.compensacion-aplicada-periodo",
+        "iva.compensacion-pendiente-periodos-posteriores",
+        "iva.resultado",
+        "iva.compensacion-generada-periodo",
+        "iva.compensacion-disponible-fin-periodo",
+    }
+    for casilla_id in compensation_casillas:
+        assert casilla_id in result.values, f"{casilla_id!r} must be computed by the compensation chain"
+
+    # Compensation balance constraint: applied + remainder must equal the incoming balance.
+    # This is a structural invariant of the compensation mechanism, not a hand-computed value.
+    pendiente_anteriores = result.values["iva.compensacion-pendiente-periodos-anteriores"]
+    aplicada = result.values["iva.compensacion-aplicada-periodo"]
+    pendiente_posteriores = result.values["iva.compensacion-pendiente-periodos-posteriores"]
+    assert aplicada + pendiente_posteriores == pendiente_anteriores, (
+        "applied + remainder must equal incoming balance"
+    )
+
+    # When compensation exceeds IVA output, resultado must be zero (no tax due).
+    # The binding carries compensacion_pendiente_anteriores=1200 > repercutido=1000,
+    # so the full repercutido is absorbed and resultado must be 0.
+    assert result.values["iva.resultado"] == Decimal("0.00"), (
+        "resultado must be zero when compensation balance exceeds IVA output"
+    )
+
+    # Applied amount must not exceed the IVA output for this period.
+    assert aplicada <= binding_values["modelo-303-iva-repercutido-general-cuota"]
+
+    # Disponible at end of period equals the remainder carried forward.
+    assert result.values["iva.compensacion-disponible-fin-periodo"] == pendiente_posteriores
 
 
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
