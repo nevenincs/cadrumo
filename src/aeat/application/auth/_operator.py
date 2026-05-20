@@ -15,7 +15,7 @@ from ._acquisition_lock import clear_auth_acquisition_lock
 from ._actions import update_auth
 from ._catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
 from ._models import AuthState
-from ._sessions import delete_persisted_session
+from ._sessions import delete_persisted_session, ensure_authenticated_aeat_session
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -69,6 +69,21 @@ class AuthStatusResult(BaseModel):
     certificate_path: str = ""
     health_severity: str = ""
     health_summary: str = ""
+
+
+class AuthLoginResult(BaseModel):
+    """Result of an operator-triggered live authentication attempt."""
+
+    model_config = _STRICT_FROZEN
+
+    provider: str
+    authenticated: bool
+    reused_persisted_session: bool
+    fresh: bool
+    removed_sessions: int
+    acquired_lock: bool
+    reset_lock_state: str = ""
+    verification_status: str = ""
 
 
 class AuthClearResult(BaseModel):
@@ -163,6 +178,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
                 "application.auth.operator.errors.unreadable_active_profile",
                 active_profile=active_bucket_id,
                 status=profile_health.status,
+                next_action=profile_health.next_action,
             )
         )
 
@@ -325,14 +341,77 @@ def test_operator_auth(provider: str | None = None) -> AuthStatusResult:
     provider_backend = select_provider(provider_kind, settings=settings)
     description = provider_backend.describe()
     persisted = inspect_operator_auth(description.kind.value)
+
+    from ..workflow._persistence import workflow_state_repository
+    from ..workflow._profile_health import assess_active_profile_health
+
+    profile_health = assess_active_profile_health(workflow_state_repository().load())
+
     return AuthStatusResult(
         provider=description.kind.value,
         configured=description.configured,
         authenticated=persisted.authenticated,
         available=description.available,
+        active_profile=profile_health.active_profile or "",
+        active_profile_status=profile_health.status,
+        active_profile_registered=profile_health.registered_bucket,
+        active_profile_record_present=profile_health.profile_record_present,
+        active_profile_next_action=profile_health.next_action,
         certificate_path=persisted.certificate_path,
         health_severity=description.health_severity or "",
         health_summary=description.health_summary or "",
+    )
+
+
+async def login_operator_auth(
+    provider: str | None = None,
+    *,
+    fresh: bool = False,
+    reset_lock: bool = False,
+    target_url: str | None = None,
+    settings: Settings | None = None,
+) -> AuthLoginResult:
+    """Acquire or verify a live AEAT session and persist backend auth state."""
+
+    resolved_settings = settings or Settings()
+    provider_kind = _provider_kind_or_none(provider)
+    if provider_kind is None:
+        provider_kind = _configured_or_default_provider(resolved_settings)
+    _implemented_provider(provider_kind.value)
+
+    result = await ensure_authenticated_aeat_session(
+        resolved_settings,
+        kind=provider_kind,
+        fresh=fresh,
+        reset_lock=reset_lock,
+        operation="operator-auth-login",
+        target_url=target_url,
+    )
+
+    from ..workflow._persistence import workflow_state_repository
+
+    repository = workflow_state_repository()
+    repository.update(
+        lambda current: _append_bucket_event(
+            update_auth(
+                current,
+                provider=provider_kind.value,
+                authenticated=True,
+            ),
+            action="auth.session.verified",
+            object_id=provider_kind.value,
+        )
+    )
+
+    return AuthLoginResult(
+        provider=provider_kind.value,
+        authenticated=True,
+        reused_persisted_session=result.reused_persisted_session,
+        fresh=result.fresh,
+        removed_sessions=len(result.removed_sessions),
+        acquired_lock=result.acquired_lock is not None,
+        reset_lock_state=result.reset_lock.state.value if result.reset_lock is not None else "",
+        verification_status=getattr(result.assertion, "status", "") or "",
     )
 
 
