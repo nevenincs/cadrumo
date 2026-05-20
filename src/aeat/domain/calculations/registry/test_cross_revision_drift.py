@@ -164,12 +164,8 @@ def test_singleton_semantic_role_warning_count_does_not_regress() -> None:
         and "appears on exactly one casilla" in str(item.message)
     ]
 
-    # Re-baselined after the schema-hardening semantic-correctness sweep
-    # (2026-05-20). The sweep reviewed every role against full labels and
-    # split coarse roles into precise per-concept roles; single-revision
-    # modelos (notably M200) intrinsically yield one casilla per concept,
-    # so a single-occurrence role is the expected shape, not a typo. Every
-    # singleton was verified against a near-duplicate (edit-distance) check
-    # and confirmed to be a distinct concept. The guard still catches a
-    # future accidental regression above the reviewed baseline.
-    assert len(singleton_warnings) <= 560, singleton_warnings[:10]
+    # Re-baselined after the 2026-05-20 indexed typo scan and
+    # semantic-axis sibling filter. Remaining warnings are still active
+    # hardening work; this guard prevents the unresolved inventory from
+    # growing while those groups are classified.
+    assert len(singleton_warnings) <= 84, singleton_warnings[:10]
