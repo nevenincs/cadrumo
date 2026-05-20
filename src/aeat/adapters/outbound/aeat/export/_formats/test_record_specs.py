@@ -43,14 +43,14 @@ from aeat.domain.calculations.registry import ValidatedRegistryAuthority
 
 from . import RecordFieldSpec, validate_record_specs
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
+
 # ---------------------------------------------------------------------------
 # Module discovery
 # ---------------------------------------------------------------------------
 
 _FORMATS_PKG = "aeat.adapters.outbound.aeat.export._formats"
 _FORMATS_DIR = Path(__file__).parent
-
-pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 def _discover_spec_modules() -> list[ModuleType]:

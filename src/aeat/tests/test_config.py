@@ -79,7 +79,7 @@ class TestEnvExampleAlignment:
 
         settings = IsolatedSettings()
         assert settings.aeat_base_url == "https://sede.agenciatributaria.gob.es"
-        assert settings.aeat_output_language == "en"
+        assert settings.aeat_output_language == "es"
 
 
 class TestAuthProviderEnum:

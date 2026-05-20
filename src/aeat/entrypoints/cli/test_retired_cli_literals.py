@@ -4,8 +4,9 @@ from pathlib import Path
 
 import pytest
 
-PROJECT_ROOT = Path(__file__).resolve().parents[4]
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
 RUNTIME_SURFACES = (
     PROJECT_ROOT / "src" / "aeat",
     PROJECT_ROOT / "env",

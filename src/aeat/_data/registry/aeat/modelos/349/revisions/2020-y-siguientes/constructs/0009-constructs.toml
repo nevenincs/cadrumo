@@ -1,0 +1,120 @@
+[[revisions."2020-y-siguientes".constructs]]
+id = "modelo-349-informative"
+title = "Modelo 349 informative intra-community operations declaration"
+legal_refs = [
+    "orden-eha-769-2010:art-1",
+    "orden-eha-769-2010:art-2",
+    "orden-eha-769-2010:art-10",
+    "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-349-2020-current",
+    "aeat-vies-gestiones-procedure",
+    "aeat-modelo-349-procedure",
+    "boe-modelo-349-form-2010",
+]
+bindings = [
+    "vat-349-declarante-numero-operadores",
+    "vat-349-declarante-importe-operaciones",
+    "vat-349-declarante-numero-rectificaciones",
+    "vat-349-declarante-importe-rectificaciones",
+    "vat-349-operador-row-codigo-pais",
+    "vat-349-operador-row-nif",
+    "vat-349-operador-row-apellidos",
+    "vat-349-operador-row-clave",
+    "vat-349-operador-row-base",
+    "vat-349-rectificacion-row-codigo-pais",
+    "vat-349-rectificacion-row-nif",
+    "vat-349-rectificacion-row-apellidos",
+    "vat-349-rectificacion-row-clave",
+    "vat-349-rectificacion-row-ejercicio",
+    "vat-349-rectificacion-row-periodo",
+    "vat-349-rectificacion-row-base-rectificada",
+    "vat-349-rectificacion-row-base-anterior",
+]
+casillas = [
+    "decl.numero-operadores",
+    "decl.importe-operaciones",
+    "decl.numero-rectificaciones",
+    "decl.importe-rectificaciones",
+    "op.codigo-pais",
+    "op.nif-comunitario",
+    "op.apellidos-razon-social",
+    "op.clave-operacion",
+    "op.base-imponible",
+    "rect.ejercicio-rectificado",
+    "rect.periodo-rectificado",
+    "rect.base-rectificada",
+    "rect.base-anterior",
+]
+workbook_parity_refs = ["modelo-349-dr-pdf-2020"]
+export_layouts = ["modelo-349-fichero-2020"]
+extraction_profiles = ["modelo-349-declaracion-pdf", "modelo-349-submitted-file"]
+live_cross_references = [
+    "modelo-349-static-documentation",
+    "modelo-349-filed-declarations-read",
+    "modelo-349-groi-spanish-counterparty-check",
+    "modelo-349-ixvi-foreign-counterparty-check",
+]
+application_links = [
+    "modelo-349-portal",
+    "modelo-349-filed-declarations-observation",
+    "modelo-349-filing",
+    "modelo-349-deadline",
+    "modelo-349-export",
+    "modelo-349-extractor",
+]
+filing_schedules = ["modelo-349-trimestral", "modelo-349-mensual"]
+deadline_windows = [
+    "modelo-349-2024-01",
+    "modelo-349-2024-02",
+    "modelo-349-2024-03",
+    "modelo-349-2024-04",
+    "modelo-349-2024-05",
+    "modelo-349-2024-06",
+    "modelo-349-2024-07",
+    "modelo-349-2024-08",
+    "modelo-349-2024-09",
+    "modelo-349-2024-10",
+    "modelo-349-2024-11",
+    "modelo-349-2024-12",
+    "modelo-349-2024-1t",
+    "modelo-349-2024-2t",
+    "modelo-349-2024-3t",
+    "modelo-349-2024-4t",
+    "modelo-349-2025-01",
+    "modelo-349-2025-02",
+    "modelo-349-2025-03",
+    "modelo-349-2025-04",
+    "modelo-349-2025-05",
+    "modelo-349-2025-06",
+    "modelo-349-2025-07",
+    "modelo-349-2025-08",
+    "modelo-349-2025-09",
+    "modelo-349-2025-10",
+    "modelo-349-2025-11",
+    "modelo-349-2025-12",
+    "modelo-349-2025-1t",
+    "modelo-349-2025-2t",
+    "modelo-349-2025-3t",
+    "modelo-349-2025-4t",
+    "modelo-349-2026-01",
+    "modelo-349-2026-02",
+    "modelo-349-2026-03",
+    "modelo-349-2026-04",
+    "modelo-349-2026-05",
+    "modelo-349-2026-06",
+    "modelo-349-2026-07",
+    "modelo-349-2026-08",
+    "modelo-349-2026-09",
+    "modelo-349-2026-10",
+    "modelo-349-2026-11",
+    "modelo-349-2026-12",
+    "modelo-349-2026-1t",
+    "modelo-349-2026-2t",
+    "modelo-349-2026-3t",
+    "modelo-349-2026-4t",
+]
+# --- Deadline windows (2024-2026 monthly + quarterly periods) ---
+

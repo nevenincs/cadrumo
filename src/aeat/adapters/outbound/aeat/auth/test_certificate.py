@@ -360,11 +360,12 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
 # ── Browserless backends ────────────────────────────────────────────────────
 
 
-def test_httpx_fallback_preload_raises_not_implemented(
+def test_httpx_fallback_preload_rejects_browser_path(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
+    from ._errors import AuthConfigurationError
 
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(
@@ -373,7 +374,7 @@ def test_httpx_fallback_preload_raises_not_implemented(
         backend=CertificateBackend.HTTPX_FALLBACK,
     )
     loaded = load_certificate(bundle)
-    with pytest.raises(RuntimeError, match="HTTPX_FALLBACK has no browser path"):
+    with pytest.raises(AuthConfigurationError, match="HTTPX_FALLBACK has no browser path"):
         HttpxFallbackBackend().preload(loaded, object())
 
 

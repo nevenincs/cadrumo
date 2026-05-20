@@ -18,11 +18,11 @@ from decimal import Decimal
 import pytest
 
 from . import SpendingCategory, load_category_profiles_from_manual, resolve_category_profiles
-
-_PROFILES_2025 = resolve_category_profiles(2025)
 from ._proportionality import ProportionalityKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_PROFILES_2025 = resolve_category_profiles(2025)
 
 
 def test_registry_covers_every_spending_category() -> None:

@@ -1,0 +1,24 @@
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-111-total-retenciones-ingresos"
+target = "28"
+expression = { op = "add", args = [{ casilla = "03" }, { casilla = "06" }, { casilla = "09" }, { casilla = "12" }, { casilla = "15" }, { casilla = "18" }, { casilla = "21" }, { casilla = "24" }, { casilla = "27" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casilla 28", "suma de las retenciones e ingresos a cuenta", "por todos los conceptos"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-111-resultado-ingresar"
+target = "30"
+expression = { op = "subtract", args = [{ casilla = "28" }, { casilla = "29" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casilla 30", "resultado de efectuar la", "dicho resultado"]
+

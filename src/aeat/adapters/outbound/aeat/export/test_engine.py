@@ -8,15 +8,16 @@ these tests pin that contract structurally.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel, ConfigDict, Field
 
+from .....adapters.persistence.storage import EphemeralMasterKeyProvider
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....application.auth import AuthProviderDescription, AuthProviderKind
-from .....core.config import Settings
+from .....core.config import Settings, override_settings
 from .....domain.submission import (
     SubmissionAttempt,
     SubmissionEngine,
@@ -28,7 +29,6 @@ from .....domain.submission import (
 )
 from . import (
     ModeloDraftStatus,
-    ModeloDraftLike,
     ModeloFinding,
 )
 
@@ -36,27 +36,39 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 @pytest.fixture(autouse=True)
-def _secure_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Run historical-record tests against a per-test secure-object database."""
+def _secure_database(tmp_path: Path) -> Iterator[None]:
+    """Run historical-record tests against a per-test secure-object database.
+
+    Opens a real :class:`EphemeralMasterKeyProvider` so the column-level
+    encrypt path resolves an active bucket session, mirroring the
+    canonical roundtrip-test fixture pattern.
+    """
 
     dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    try:
-        yield
-    finally:
-        dispose_engine()
+    db_path = tmp_path / "aeat.db"
+    with EphemeralMasterKeyProvider(), override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"):
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
-@dataclass
-class _Draft(ModeloDraftLike):
-    """Minimal :class:`ModeloDraftLike` test double for engine inputs."""
+class _Draft(BaseModel):
+    """Frozen Protocol-conforming test double for ``ModeloDraftLike``.
+
+    Structural conformance only — ``ModeloDraftLike`` declares read-only
+    properties, so a frozen pydantic model satisfies it without
+    inheritance.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     draft_id: str = "draft-ut"
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO
-    values: dict[str, str] = field(default_factory=dict)
+    values: dict[str, str] = Field(default_factory=dict)
     findings: tuple[ModeloFinding, ...] = ()
 
 

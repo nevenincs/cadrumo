@@ -1,0 +1,65 @@
+[[revisions."2020-y-siguientes".filing_schedules]]
+id = "modelo-349-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
+field = "does_intracomunitario"
+op = "equals"
+value = true
+explanation = "Modelo 349 aplica cuando existen operaciones intracomunitarias declarables."
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
+field = "iva.intracommunity_operations_exceed_50000_eur"
+op = "equals"
+value = false
+explanation = "Modelo 349 trimestral cuando el importe total de entregas intracomunitarias y prestaciones de servicios no supera el umbral de 50.000 euros, IVA excluido, en el trimestre de referencia ni en los cuatro trimestres naturales anteriores."
+legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".filing_schedules]]
+id = "modelo-349-mensual"
+period_kind = "monthly"
+periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+profile_condition_mode = "all"
+legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
+field = "does_intracomunitario"
+op = "equals"
+value = true
+explanation = "Modelo 349 aplica cuando existen operaciones intracomunitarias declarables."
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
+field = "iva.intracommunity_operations_exceed_50000_eur"
+op = "equals"
+value = true
+explanation = "Modelo 349 mensual cuando el importe total de entregas intracomunitarias y prestaciones de servicios supera el umbral de 50.000 euros, IVA excluido, en el trimestre de referencia o en cualquiera de los cuatro trimestres naturales anteriores."
+legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+# --- Per-direction invoice-source bindings ---
+#
+# Modelo 349 reports declarant-side intracomunitario operations across
+# 10 claves. Each binding is keyed by the canonical source kind that
+# matches the direction of the underlying operation:
+#   - `collectible_invoice` for outbound claves where the declarant
+#     issued the invoice: E entregas, M modificaciones a entregas,
+#     T triangulares (Spanish supplier as intermediary), S servicios
+#     prestados, R referidos por residentes en otros Estados
+#   - `payable_invoice` for inbound claves where the declarant
+#     received the invoice: A adquisiciones, I servicios recibidos,
+#     D devoluciones de adquisiciones, H hidden triangular receipts
+# Clave C (correcciones) can correct prior declarations of either
+# direction and therefore appears in both bindings; the calculation
+# runtime de-duplicates by operation id when unioning per-binding
+# results behind a single casilla.
+

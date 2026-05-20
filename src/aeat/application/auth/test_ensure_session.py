@@ -9,9 +9,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import BrowserSessionFactory
-
 import pytest
 
 from ...core.config import Settings
@@ -20,6 +17,9 @@ from ._acquisition_lock import inspect_auth_acquisition_lock
 from ._sessions import AuthSessionUnavailableError, ensure_authenticated_aeat_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.auth import BrowserSessionFactory
 
 
 class _Provider:
