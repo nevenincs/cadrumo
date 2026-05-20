@@ -30,7 +30,7 @@ def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) ->
             aeat_local_storage_root=tmp_path,
             aeat_active_profile=None,
         ):
-            _ensure_profile_bucket_manifest("operator")
+            _ensure_profile_bucket_manifest("operator", label="Operator")
             write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
 
             health = assess_active_profile_health()
@@ -58,7 +58,7 @@ def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
             aeat_local_storage_root=tmp_path,
             aeat_active_profile=None,
         ):
-            _ensure_profile_bucket_manifest("operator")
+            _ensure_profile_bucket_manifest("operator", label="Operator")
             write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
 
             dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)

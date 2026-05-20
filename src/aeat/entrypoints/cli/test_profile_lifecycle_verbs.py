@@ -66,7 +66,7 @@ def test_config_profile_switch_refuses_unknown_profile(cli_runner: CliRunner) ->
 def test_config_profile_switch_reports_manifest_without_profile_record(cli_runner: CliRunner) -> None:
     from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
 
-    _ensure_profile_bucket_manifest("operator")
+    _ensure_profile_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(profile_app, ["switch", "operator"])
 
@@ -79,7 +79,7 @@ def test_config_profile_switch_reports_manifest_without_profile_record(cli_runne
 def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runner: CliRunner) -> None:
     from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
 
-    _ensure_profile_bucket_manifest("operator")
+    _ensure_profile_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(profile_app, ["show", "operator"])
 
@@ -92,7 +92,7 @@ def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runn
 def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunner) -> None:
     from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
 
-    _ensure_profile_bucket_manifest("operator")
+    _ensure_profile_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(
         profile_app,
@@ -123,7 +123,7 @@ def test_repair_profile_named_active_clear_active_clears_pointer(cli_runner: Cli
     )
     from aeat.core._bucket_pointer_io import read_pointer
 
-    _ensure_profile_bucket_manifest("operator")
+    _ensure_profile_bucket_manifest("operator", label="operator")
     _write_active_profile_pointer("operator")
 
     result = cli_runner.invoke(repair_app, ["profile", "--profile", "operator", "--clear-active", "--yes"])
@@ -245,16 +245,22 @@ def test_config_profile_delete_tombstones_with_yes(cli_runner: CliRunner) -> Non
 
 
 def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> None:
+    import re
+
     _seed("operator")
     result = cli_runner.invoke(
         profile_app,
         ["duplicate", "operator", "operator-spouse", "--display-name", "Spouse"],
     )
     assert result.exit_code == 0, result.output
-    assert "target_profile_id\toperator-spouse" in result.output
+    # The duplicate lands under a freshly minted UUID identity and the
+    # supplied --display-name as its operator label.
+    uuid_re = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    match = re.search(r"target_profile_id\t(\S+)", result.output)
+    assert match and re.fullmatch(uuid_re, match.group(1)), result.output
     assert "display_name\tSpouse" in result.output
     from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
-    assert read_profile_bucket("operator-spouse") is not None
+    assert read_profile_bucket("Spouse") is not None
 
 
 def test_config_profile_duplicate_refuses_existing_target(cli_runner: CliRunner) -> None:
@@ -395,18 +401,17 @@ def test_config_profile_create_nif_error_does_not_leak_internal_keys(cli_runner:
     assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
 
 
-# --- Fix (batch 2): profile rename is atomic ---
+# --- profile rename is a label-only edit ---
 
 
 @pytest.fixture
 def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """Fixture that sets up per-bucket storage (no global AEAT_DATABASE_URL).
+    """Per-bucket storage (no global AEAT_DATABASE_URL).
 
-    ``profile rename`` depends on per-bucket path resolution: the SQLite
-    file lives at ``<root>/buckets/<id>/db/aeat.db`` and shutil.move must
-    be able to move it.  Tests that use this fixture must NOT also use the
-    autouse ``_isolated_backend`` fixture that hard-wires
-    ``AEAT_DATABASE_URL`` to a single test file.
+    Each profile bucket resolves its own SQLite file from the
+    active-profile pointer chain, the production cold-start path.
+    Tests using this fixture must NOT also rely on the autouse
+    ``_isolated_backend`` fixture that hard-wires ``AEAT_DATABASE_URL``.
     """
     from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 
@@ -421,176 +426,131 @@ def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iter
         dispose_engine()
 
 
-def test_profile_rename_succeeds_and_profile_list_shows_only_target(
-    _per_bucket_backend: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """``profile rename A B`` must fully succeed atomically.
-
-    Before fix: WinError 32 on the shutil.move (SQLite file still open)
-    left the registry with a ghost B record but the bucket directory still
-    named A.  ``profile list`` then showed both A (on disk) and B (in DB).
-
-    After fix: the rename either fully succeeds (only B visible) or fully
-    no-ops (only A visible).  A ghost entry must never appear.
-    """
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-    from aeat.entrypoints.cli._config import profile_app
-    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
-
-    runner = CliRunner()
-
-    # Create the source profile using the full CLI create path (wizard).
+def _create_via_cli(runner: CliRunner, name: str) -> None:
     result = runner.invoke(
         root_app,
         [
-            "config", "profile", "create", "alpha",
+            "config", "profile", "create", name,
             "--quiet",
             "--tax-id", "12345678Z",
-            "--name", "Tester",
+            "--name", name.capitalize(),
             "--activity", "design",
             "--iva-regime", "GENERAL",
         ],
     )
-    assert result.exit_code == 0, f"create failed: {result.output}"
+    assert result.exit_code == 0, f"create {name!r} failed: {result.output}"
 
-    # Rename alpha -> beta.
+
+def test_profile_rename_is_label_only_and_keeps_uuid_directory_and_key(
+    _per_bucket_backend: Path,
+) -> None:
+    """``profile rename A B`` changes only the operator label.
+
+    Profile identity is an immutable UUID. After a rename the UUID,
+    the bucket directory, and the secure-object record key are all
+    unchanged; only ``display_name`` on the record and ``label`` on
+    the manifest move from A to B.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+
+    pointer_before = read_profile_bucket("alpha")
+    assert pointer_before is not None
+    uuid_before = pointer_before.bucket_id
+    bucket_dir = _per_bucket_backend / "buckets" / uuid_before
+    assert bucket_dir.is_dir()
+
     dispose_engine()
     result = runner.invoke(root_app, ["config", "profile", "rename", "alpha", "beta"])
     assert result.exit_code == 0, f"rename failed: {result.output}"
-    assert "target_profile_id\tbeta" in result.output
+    assert "display_name\tbeta" in result.output
+    assert "previous_display_name\talpha" in result.output
 
-    # Registry must show exactly one profile (beta), no ghost alpha.
-    assert read_profile_bucket("beta") is not None, "beta not registered after rename"
-    assert read_profile_bucket("alpha") is None, "alpha still in registry after rename (ghost)"
-
-    # profile list must confirm the same view.
     dispose_engine()
-    list_result = runner.invoke(root_app, ["--format", "json", "config", "profile", "list"])
-    assert list_result.exit_code == 0, list_result.output
-    payload = json.loads(list_result.output)
-    names = [p["name"] for p in payload["profiles"]]
-    assert names == ["beta"], f"expected only beta, got {names}"
-    assert payload["active_profile"] == "beta"
+    # The old label no longer resolves; the new label resolves to the
+    # SAME immutable UUID and the SAME on-disk directory.
+    assert read_profile_bucket("alpha") is None
+    pointer_after = read_profile_bucket("beta")
+    assert pointer_after is not None
+    assert pointer_after.bucket_id == uuid_before
+    assert pointer_after.label == "beta"
+    assert bucket_dir.is_dir()
+    assert (_per_bucket_backend / "buckets" / uuid_before).is_dir()
 
 
-def test_profile_rename_no_ghost_on_failure(
+def test_profile_rename_keeps_record_readable_under_unchanged_key(
     _per_bucket_backend: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """When the directory move fails, the registry must not show a ghost target.
+    """After a label-only rename the profile record reads back unchanged.
 
-    Simulates the WinError 32 scenario by making shutil.move raise; the
-    rollback must reverse the DB changes so profile list shows only the
-    original source profile.
-    """
-    import shutil
-
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
-
-    runner = CliRunner()
-
-    result = runner.invoke(
-        root_app,
-        [
-            "config", "profile", "create", "src_profile",
-            "--quiet",
-            "--tax-id", "12345678Z",
-            "--name", "Source",
-            "--activity", "design",
-            "--iva-regime", "GENERAL",
-        ],
-    )
-    assert result.exit_code == 0, f"create failed: {result.output}"
-
-    original_move = shutil.move
-
-    def _failing_move(src, dst):
-        raise OSError(32, "Simulated WinError 32: file in use")
-
-    monkeypatch.setattr(shutil, "move", _failing_move)
-
-    dispose_engine()
-    result = runner.invoke(root_app, ["config", "profile", "rename", "src_profile", "dst_profile"])
-
-    monkeypatch.setattr(shutil, "move", original_move)
-
-    # Must fail with a non-zero exit code.
-    assert result.exit_code != 0, f"expected failure, got: {result.output}"
-
-    # Registry must have no ghost dst_profile.
-    dispose_engine()
-    assert read_profile_bucket("dst_profile") is None, "ghost dst_profile in registry after failed rename"
-    # src_profile must still exist (rollback succeeded).
-    assert read_profile_bucket("src_profile") is not None, "src_profile was deleted by failed rename"
-
-
-def test_profile_rename_target_record_is_healthy(
-    _per_bucket_backend: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Regression: ``profile rename A B`` must leave B with a readable profile record.
-
-    Before fix: the encrypted record was stored with object_key
-    ``user-profile:A:B`` (source bucket_id embedded).  After shutil.move
-    the DB was at buckets/B/db/aeat.db; a reader queried
-    ``user-profile:B:B`` (target bucket_id) and found nothing, yielding
-    readiness ``missing_profile_record``.
-
-    After fix: the re-keying step rewrites the record to
-    ``user-profile:B:B`` before the manifest update, so ``profile show B``
-    and ``profile status`` both report ``profile_record present`` and
-    ``readiness ready``.
+    The secure-object key is single-segment on the immutable UUID, so
+    no re-key happens; ``profile show`` and the lifecycle service both
+    still find the record, now carrying the new display label.
     """
     from aeat.adapters.persistence.storage.sql.engine import dispose_engine
     from aeat.application.user_profile._orchestration import build_lifecycle_service
     from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
 
     runner = CliRunner()
+    _create_via_cli(runner, "alice")
+    uuid_before = read_profile_bucket("alice").bucket_id
 
-    # Create source profile via the full CLI wizard path.
-    create_result = runner.invoke(
-        root_app,
-        [
-            "config", "profile", "create", "alice",
-            "--quiet",
-            "--tax-id", "12345678Z",
-            "--name", "Alice",
-            "--activity", "design",
-            "--iva-regime", "GENERAL",
-        ],
-    )
-    assert create_result.exit_code == 0, f"create failed: {create_result.output}"
-
-    # Rename alice -> bob.
     dispose_engine()
     rename_result = runner.invoke(root_app, ["config", "profile", "rename", "alice", "bob"])
     assert rename_result.exit_code == 0, f"rename failed: {rename_result.output}"
 
-    # Registry: bob present, alice gone.
     dispose_engine()
-    assert read_profile_bucket("bob") is not None, "bob not in registry after rename"
-    assert read_profile_bucket("alice") is None, "alice still in registry after rename (ghost)"
+    svc = build_lifecycle_service(bucket_id=uuid_before)
+    record = svc.read(uuid_before)
+    # The identity is unchanged; only the label moved.
+    assert record.profile_id == uuid_before
+    assert record.display_name == "bob"
 
-    # The critical assertion: the profile record must be readable via the
-    # target bucket_id.  Before the fix this raised ProfileNotFoundError
-    # because the object_key was keyed to the source bucket_id.
-    dispose_engine()
-    svc = build_lifecycle_service(bucket_id="bob")
-    record = svc.read("bob")
-    assert record.profile_id == "bob", f"unexpected profile_id: {record.profile_id!r}"
-
-    # profile show bob must exit 0 and report readiness ready (not missing_profile_record).
     dispose_engine()
     show_result = runner.invoke(root_app, ["config", "profile", "show", "bob"])
     assert show_result.exit_code == 0, f"show failed: {show_result.output}"
     assert "readiness\tready" in show_result.output, show_result.output
     assert "missing_profile_record" not in show_result.output, show_result.output
+    assert f"profile_id\t{uuid_before}" in show_result.output
 
-    # repair profile --profile bob must report profile_record present (explicit record health check).
+
+def test_profile_rename_refuses_a_label_taken_by_another_live_profile(
+    _per_bucket_backend: Path,
+) -> None:
+    """``profile rename A B`` is refused when label B already belongs to a profile."""
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+    _create_via_cli(runner, "beta")
+
     dispose_engine()
-    repair_result = runner.invoke(root_app, ["config", "repair", "profile", "--profile", "bob"])
-    assert repair_result.exit_code == 0, f"repair failed: {repair_result.output}"
-    assert "profile_record\tpresent" in repair_result.output, repair_result.output
-    assert "readiness\tready" in repair_result.output, repair_result.output
+    result = runner.invoke(root_app, ["config", "profile", "rename", "alpha", "beta"])
+    assert result.exit_code != 0, f"expected refusal, got: {result.output}"
+
+
+def test_profile_create_refuses_case_insensitive_duplicate_label(
+    _per_bucket_backend: Path,
+) -> None:
+    """Display-name uniqueness is enforced case-insensitively across live profiles."""
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    runner = CliRunner()
+    _create_via_cli(runner, "operator")
+
+    dispose_engine()
+    result = runner.invoke(
+        root_app,
+        [
+            "config", "profile", "create", "OPERATOR",
+            "--quiet",
+            "--tax-id", "12345678Z",
+            "--name", "Operator2",
+            "--activity", "design",
+            "--iva-regime", "GENERAL",
+        ],
+    )
+    assert result.exit_code != 0, f"expected case-insensitive refusal, got: {result.output}"

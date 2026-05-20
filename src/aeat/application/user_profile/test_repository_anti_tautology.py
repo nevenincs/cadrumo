@@ -46,13 +46,17 @@ from ._repository import UserProfileLifecycleRepository
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
+# The immutable UUIDv4 profile identity, distinct from the label.
+_PROFILE_UUID = "c7f3a1b2-9d4e-4a5f-8b6c-1e2d3f4a5b6c"
+
+
 def _populated_record() -> UserProfileRecord:
     created = datetime(2024, 1, 4, 9, 0, 0, tzinfo=UTC)
     updated = datetime(2024, 6, 15, 14, 32, 17, tzinfo=UTC)
     return UserProfileRecord(
         schema_id="aeat.user_profile",
         schema_version=2,
-        profile_id="probe.subject-2024",
+        profile_id=_PROFILE_UUID,
         display_name="Gergely Wootsch - 2024 IRPF",
         status=UserProfileStatus.ACTIVE,
         facts=(

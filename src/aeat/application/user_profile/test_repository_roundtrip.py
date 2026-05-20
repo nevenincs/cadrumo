@@ -2,10 +2,15 @@
 
 Two IDENTITY-class encrypted namespaces are exercised:
 
-- ``aeat.application.user_profile.value`` — live aggregate per
-  ``(bucket_id, profile_id)``.
+- ``aeat.application.user_profile.value`` — live aggregate keyed by
+  the immutable UUIDv4 ``profile_id`` (one record per bucket).
 - ``aeat.application.user_profile.snapshot`` — immutable filing
-  snapshot per ``(bucket_id, snapshot_id)``.
+  snapshot per ``(profile_id, snapshot_id)``.
+
+The profile identity is a generated UUIDv4, fully decoupled from the
+operator-chosen ``display_name``. The fixture below uses a UUID
+``profile_id`` and a distinct ``display_name`` so the roundtrip proves
+both survive the encrypted boundary independently.
 
 Anti-tautology: the fixture populates every defaultable field on
 :class:`UserProfileRecord` with non-default values
@@ -41,13 +46,19 @@ from ._repository import UserProfileLifecycleRepository, UserProfileSnapshotRepo
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
+# A fixed UUIDv4 in the canonical hyphenated form: the immutable
+# profile identity, deliberately distinct in shape from the
+# operator-chosen display name.
+_PROFILE_UUID = "c7f3a1b2-9d4e-4a5f-8b6c-1e2d3f4a5b6c"
+
+
 def _populated_record() -> UserProfileRecord:
     created = datetime(2024, 1, 4, 9, 0, 0, tzinfo=UTC)
     updated = datetime(2024, 6, 15, 14, 32, 17, tzinfo=UTC)
     return UserProfileRecord(
         schema_id="aeat.user_profile",
         schema_version=2,
-        profile_id="contributor.gw-2024",
+        profile_id=_PROFILE_UUID,
         display_name="Gergely Wootsch - 2024 IRPF",
         status=UserProfileStatus.ACTIVE,
         facts=(
@@ -111,6 +122,11 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
             loaded_record = lifecycle.load(original_record.profile_id)
 
             assert loaded_record == original_record
+            # The UUID identity and the operator label survive the
+            # encrypted boundary as independent fields.
+            assert loaded_record.profile_id == _PROFILE_UUID
+            assert loaded_record.display_name == "Gergely Wootsch - 2024 IRPF"
+            assert loaded_record.profile_id != loaded_record.display_name
             assert len(loaded_record.facts) == 5
             assert tuple(f.path for f in loaded_record.facts) == (
                 "identity.given_name",
