@@ -24,8 +24,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _articulo(numero: str = "32") -> Articulo:
     return Articulo(
         numero=numero,
-        titulo="normatives.test_schema.titulo_908834",
-        summary="normatives.test_schema.summary_296440",
+        titulo={"es": "Reducciones"},
+        summary={"es": "Resumen del artículo."},
         permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
     )
 
@@ -39,7 +39,7 @@ def _reference(
         id=ref_id,
         kind=NormativeKind.LEY,
         number="35/2006",
-        title="normatives.test_schema.title_440480",
+        title={"es": "Ley 35/2006 del IRPF"},
         published_at=date(2006, 11, 29),
         boe_url=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"),
         boe_id="BOE-A-2006-20764",
@@ -59,16 +59,13 @@ class TestArticulo:
         assert articulo.titulo  # populated translation key, not asserted on its rendered value
 
     def test_missing_spanish_title_rejected(self) -> None:
-        # _require_spanish raises on empty / whitespace-only input. The test
-        # previously passed a non-empty literal "translation" and expected
-        # rejection — that silently DID NOT RAISE because _require_spanish
-        # only gates on emptiness. Empty input now actually triggers the
-        # validator path the test claims to exercise.
+        # A localized-text mapping without the authoritative 'es' entry
+        # is rejected by the _require_spanish model validator.
         with pytest.raises(ValidationError, match=r"titulo: missing authoritative Spanish"):
             Articulo(
                 numero="32",
-                titulo="",
-                summary="normatives.test_schema.summary_132271",
+                titulo={"en": "Reductions"},
+                summary={"es": "Resumen del artículo."},
                 permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
             )
 
@@ -76,8 +73,8 @@ class TestArticulo:
         with pytest.raises(ValidationError, match=r"summary: missing authoritative Spanish"):
             Articulo(
                 numero="32",
-                titulo="normatives.test_schema.titulo_466358",
-                summary="",
+                titulo={"es": "Reducciones"},
+                summary={"en": "Article summary."},
                 permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
             )
 
@@ -102,8 +99,8 @@ class TestNormativeReference:
     def test_permalink_without_boe_id_rejected(self) -> None:
         bad = Articulo(
             numero="99",
-            titulo="normatives.test_schema.titulo_446515",
-            summary="normatives.test_schema.summary_391415",
+            titulo={"es": "Artículo de otra norma"},
+            summary={"es": "Resumen de otra norma."},
             permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a99"),
         )
         with pytest.raises(ValidationError, match=r"does not reference boe_id"):

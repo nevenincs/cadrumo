@@ -515,32 +515,52 @@
     },
     {
       "numero": "86",
-      "titulo": "Régimen de atribución",
-      "summary": "Las rentas correspondientes a las entidades en régimen de atribución de rentas se atribuirán a los socios, herederos, comuneros o partícipes, respectivamente, de acuerdo con lo establecido en esta Sección 2.ª del Título X (artículos 86 a 90 LIRPF). El régimen de atribución de rentas no será aplicable a las sociedades agrarias de transformación que tributarán por el Impuesto sobre Sociedades.",
+      "titulo": {
+        "es": "Régimen de atribución"
+      },
+      "summary": {
+        "es": "Las rentas correspondientes a las entidades en régimen de atribución de rentas se atribuirán a los socios, herederos, comuneros o partícipes, respectivamente, de acuerdo con lo establecido en esta Sección 2.ª del Título X (artículos 86 a 90 LIRPF). El régimen de atribución de rentas no será aplicable a las sociedades agrarias de transformación que tributarán por el Impuesto sobre Sociedades."
+      },
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a86"
     },
     {
       "numero": "87",
-      "titulo": "Entidades en régimen de atribución de rentas",
-      "summary": "Tendrán la consideración de entidades en régimen de atribución de rentas las sociedades civiles que no tengan objeto mercantil, herencias yacentes, comunidades de bienes y demás entidades a que se refiere el artículo 35.4 de la Ley General Tributaria. Las entidades constituidas en el extranjero cuya naturaleza jurídica sea idéntica o análoga a la de las entidades en atribución de rentas constituidas conforme a las leyes españolas también tributarán bajo este régimen.",
+      "titulo": {
+        "es": "Entidades en régimen de atribución de rentas"
+      },
+      "summary": {
+        "es": "Tendrán la consideración de entidades en régimen de atribución de rentas las sociedades civiles que no tengan objeto mercantil, herencias yacentes, comunidades de bienes y demás entidades a que se refiere el artículo 35.4 de la Ley General Tributaria. Las entidades constituidas en el extranjero cuya naturaleza jurídica sea idéntica o análoga a la de las entidades en atribución de rentas constituidas conforme a las leyes españolas también tributarán bajo este régimen."
+      },
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a87"
     },
     {
       "numero": "88",
-      "titulo": "Calificación de la renta atribuida",
-      "summary": "Las rentas de las entidades en régimen de atribución de rentas atribuidas a los socios, herederos, comuneros o partícipes tendrán la naturaleza derivada de la actividad o fuente de donde procedan para cada uno de ellos.",
+      "titulo": {
+        "es": "Calificación de la renta atribuida"
+      },
+      "summary": {
+        "es": "Las rentas de las entidades en régimen de atribución de rentas atribuidas a los socios, herederos, comuneros o partícipes tendrán la naturaleza derivada de la actividad o fuente de donde procedan para cada uno de ellos."
+      },
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a88"
     },
     {
       "numero": "89",
-      "titulo": "Cálculo de la renta atribuible y pagos a cuenta",
-      "summary": "Para el cálculo de las rentas a atribuir a cada uno de los socios, herederos, comuneros o partícipes se aplicarán las siguientes reglas: las rentas se determinarán con arreglo a las normas del IRPF y no serán aplicables las reducciones previstas en los artículos 23.2, 23.3, 26.2 y 32 LIRPF. La parte de renta atribuible a los socios, herederos, comuneros o partícipes contribuyentes del IS o del IRNR con establecimiento permanente se determinará con arreglo a las normas del Impuesto sobre Sociedades. Las retenciones e ingresos a cuenta soportados por la entidad se atribuirán a sus socios, herederos, comuneros o partícipes en la misma proporción en que se atribuyan las rentas correspondientes.",
+      "titulo": {
+        "es": "Cálculo de la renta atribuible y pagos a cuenta"
+      },
+      "summary": {
+        "es": "Para el cálculo de las rentas a atribuir a cada uno de los socios, herederos, comuneros o partícipes se aplicarán las siguientes reglas: las rentas se determinarán con arreglo a las normas del IRPF y no serán aplicables las reducciones previstas en los artículos 23.2, 23.3, 26.2 y 32 LIRPF. La parte de renta atribuible a los socios, herederos, comuneros o partícipes contribuyentes del IS o del IRNR con establecimiento permanente se determinará con arreglo a las normas del Impuesto sobre Sociedades. Las retenciones e ingresos a cuenta soportados por la entidad se atribuirán a sus socios, herederos, comuneros o partícipes en la misma proporción en que se atribuyan las rentas correspondientes."
+      },
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a89"
     },
     {
       "numero": "91",
-      "titulo": "Imputación de rentas en régimen de transparencia fiscal internacional",
-      "summary": "Establece el régimen de imputación de rentas obtenidas por entidades no residentes (sociedades, patrimonios, fondos de inversión u otras entidades) cuando los contribuyentes del IRPF posean en ellas una participación significativa que les atribuya control de hecho. Las rentas pasivas (intereses, dividendos, ganancias patrimoniales, rentas inmobiliarias, actividades crediticias y financieras) generadas por la entidad no residente y no distribuidas se imputan al contribuyente residente en proporción a su participación. Aplica salvo que la entidad no residente tribute en su país por un impuesto análogo al IS español a un tipo nominal de al menos el 75 por ciento del que correspondería conforme a la normativa española, o salvo que se demuestre que dispone de los medios materiales y personales necesarios para realizar la actividad. El régimen evita diferimientos artificiales mediante la interposición de entidades en jurisdicciones de baja tributación.",
+      "titulo": {
+        "es": "Imputación de rentas en régimen de transparencia fiscal internacional"
+      },
+      "summary": {
+        "es": "Establece el régimen de imputación de rentas obtenidas por entidades no residentes (sociedades, patrimonios, fondos de inversión u otras entidades) cuando los contribuyentes del IRPF posean en ellas una participación significativa que les atribuya control de hecho. Las rentas pasivas (intereses, dividendos, ganancias patrimoniales, rentas inmobiliarias, actividades crediticias y financieras) generadas por la entidad no residente y no distribuidas se imputan al contribuyente residente en proporción a su participación. Aplica salvo que la entidad no residente tribute en su país por un impuesto análogo al IS español a un tipo nominal de al menos el 75 por ciento del que correspondería conforme a la normativa española, o salvo que se demuestre que dispone de los medios materiales y personales necesarios para realizar la actividad. El régimen evita diferimientos artificiales mediante la interposición de entidades en jurisdicciones de baja tributación."
+      },
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a91"
     },
     {

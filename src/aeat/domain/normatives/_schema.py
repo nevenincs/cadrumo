@@ -12,7 +12,7 @@ enforced at load time on every title and summary.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import date
 from enum import StrEnum
 from typing import Annotated
@@ -26,6 +26,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from .errors import NormativeValidationError
 
 
@@ -108,17 +109,33 @@ _BoeIdField = Annotated[
 """BOE-A identifier shape, e.g. ``BOE-A-2006-20764``."""
 
 
-def _require_spanish(translatable: str, field_name: str) -> None:
-    """Assert a translatable carries the authoritative ``es`` key.
+LocalizedText = Mapping[str, str]
+"""Multilingual content mapping, one entry per codified output language.
+
+The authoritative ``es`` entry is mandatory; the remaining codified
+languages (``en``, ``ca``, ``hu``) are optional translations. Unknown
+language codes are rejected so corpus drift is caught at load time.
+"""
+
+
+def _require_spanish(translatable: LocalizedText, field_name: str) -> None:
+    """Assert a localized-text mapping carries the authoritative ``es`` key.
 
     Args:
-        translatable: The translatable mapping under validation.
+        translatable: The localized-text mapping under validation.
         field_name: Dotted field name surfaced in the error message.
 
     Raises:
-        ValueError: If the ``es`` key is missing or empty.
+        NormativeValidationError: If the ``es`` key is missing or empty,
+            or if the mapping carries an unknown language code.
     """
-    if not translatable:
+    unknown = set(translatable) - set(SUPPORTED_OUTPUT_LANGUAGES)
+    if unknown:
+        raise NormativeValidationError(
+            f"{field_name}: unknown language code(s) {sorted(unknown)!r} "
+            f"(codified languages are {sorted(SUPPORTED_OUTPUT_LANGUAGES)!r})"
+        )
+    if not translatable.get("es", "").strip():
         raise NormativeValidationError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
@@ -152,8 +169,8 @@ class Articulo(_NormativeStrictFrozen):
     """
 
     numero: _ArticuloNumero = Field(description="Article number, e.g. '32' or '32.1.a'.")
-    titulo: str = Field(description="Article title in all supplied languages.")
-    summary: str = Field(description="One-paragraph plain-language article summary.")
+    titulo: LocalizedText = Field(description="Article title in all supplied languages.")
+    summary: LocalizedText = Field(description="One-paragraph plain-language article summary.")
     permalink: AnyHttpUrl = Field(description="BOE deep link to the article (fragment-addressed).")
     notes: str = Field(default="", description="Free-form reviewer notes.")
 
@@ -171,7 +188,7 @@ class NormativeReference(_NormativeStrictFrozen):
     id: _StableId = Field(description="Stable kebab-case id, e.g. 'ley-35-2006'.")
     kind: NormativeKind = Field(description="Legal-act kind.")
     number: _NormativeNumber = Field(description="Normative number, e.g. '35/2006' or 'HAC/242/2025'.")
-    title: str = Field(description="Full normative title in all supplied languages.")
+    title: LocalizedText = Field(description="Full normative title in all supplied languages.")
     published_at: date = Field(description="BOE publication date.")
     boe_url: AnyHttpUrl = Field(description="Canonical BOE consolidated-text URL.")
     boe_id: _BoeIdField = Field(description="BOE-A identifier, e.g. 'BOE-A-2006-20764'.")

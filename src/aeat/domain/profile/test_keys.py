@@ -32,9 +32,9 @@ def test_required_and_optional_partition_covers_registry() -> None:
 
 
 def test_get_profile_key_returns_canonical_record() -> None:
-    entry = get_profile_key("tax.id")
+    entry = get_profile_key("identity.tax_id")
     assert isinstance(entry, ProfileKey)
-    assert entry.key == "tax.id"
+    assert entry.key == "identity.tax_id"
     assert entry.requirement is ProfileKeyRequirement.REQUIRED
     assert entry.description
     assert entry.description
@@ -90,27 +90,33 @@ def test_profile_key_conditional_requirement_fields_must_be_paired() -> None:
 
 
 def test_spouse_profile_keys_are_conditionally_required_for_joint_taxation() -> None:
-    for key in ("spouse.tax.id", "spouse.name", "spouse.surnames", "spouse.birth_date", "spouse.sex"):
+    for key in (
+        "renta_spouse.tax_id",
+        "renta_spouse.name",
+        "renta_spouse.surnames",
+        "renta_spouse.birth_date",
+        "renta_spouse.sex",
+    ):
         entry = get_profile_key(key)
         assert entry.requirement is ProfileKeyRequirement.OPTIONAL
-        assert entry.required_when_key == "declaration.type"
+        assert entry.required_when_key == "filing_export.declaration_type"
         assert entry.required_when_value == "2"
 
 
 def test_renta_family_profile_keys_cover_official_scalar_family_fields() -> None:
     expected = {
-        "taxpayer.disability_grade",
-        "taxpayer.death_date",
-        "spouse.disability_grade",
-        "spouse.non_resident_irpf",
-        "spouse.eu_eea_resident",
-        "spouse.eu_eea_country",
-        "family.descendants_eu_eea_deduction",
-        "family.minor_children_in_unit",
+        "renta_taxpayer.disability_grade",
+        "renta_taxpayer.death_date",
+        "renta_spouse.disability_grade",
+        "renta_spouse.non_resident_irpf",
+        "renta_spouse.eu_eea_resident",
+        "renta_spouse.eu_eea_country",
+        "renta_family.descendants_eu_eea_deduction",
+        "renta_family.minor_children_in_unit",
     }
 
     assert expected.issubset({entry.key for entry in optional_profile_keys()})
-    assert get_profile_key("spouse.eu_eea_resident").required_when_key == "spouse.non_resident_irpf"
-    assert get_profile_key("spouse.eu_eea_resident").required_when_value == "true"
-    assert get_profile_key("spouse.eu_eea_country").required_when_key == "spouse.eu_eea_resident"
-    assert get_profile_key("spouse.eu_eea_country").required_when_value == "true"
+    assert get_profile_key("renta_spouse.eu_eea_resident").required_when_key == "renta_spouse.non_resident_irpf"
+    assert get_profile_key("renta_spouse.eu_eea_resident").required_when_value == "true"
+    assert get_profile_key("renta_spouse.eu_eea_country").required_when_key == "renta_spouse.eu_eea_resident"
+    assert get_profile_key("renta_spouse.eu_eea_country").required_when_value == "true"
