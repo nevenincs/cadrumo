@@ -10,129 +10,148 @@ related: []
 
 ## Scope
 
-P06 re-test gate of the profile-lifecycle disaster-recovery campaign. Five
-blind operator personas (newcomer, returning, dual, fumbler, curious)
-each operated the `aeat` CLI in an isolated clean install with no source
-access, scoring operator friction 0 (effortless) to 10 (blocked). The
-goal criterion is the campaign's close condition: operator pain reduced
-from the original "heavy" baseline toward zero. This document also
-records the three-axis semantic audit swarm (persistence-boundary
-identity, cross-domain handoffs, calculation grounding) run after the
+P06 re-test gate of the profile-lifecycle disaster-recovery campaign.
+Five blind operator personas each operated the `aeat` CLI in an
+isolated clean install with no source access, scoring operator
+friction 0 (effortless) to 10 (blocked). The campaign's close
+condition is operator pain reduced from the original "heavy" baseline
+toward zero. This document is the closing synthesis (P06.S42-S47); it
+also records the three-axis semantic audit swarm run after the
 reconciliation campaign's structural refactor.
-
-Status: re-test in progress — three persona testimonials recorded
-below; newcomer and curious pending; S47 closing synthesis to follow.
 
 ## Findings
 
 ### Persona re-test — pain scores
 
-- returning (Monday-morning re-orientation): overall pain 6/10.
-- dual (two-client bookkeeper): overall pain 4/10.
-- fumbler (error-prone usage): overall pain 2/10.
-- newcomer: pending.
-- curious: pending.
+- newcomer (first-time freelancer): 6/10.
+- returning (Monday-morning re-orientation): 6/10.
+- dual (two-client bookkeeper): 4/10.
+- fumbler (error-prone usage): 2/10.
+- curious (full-surface explorer): 5/10.
+- Mean: ~4.6/10 — "moderate". Down from the original "heavy"
+  baseline, but not zero.
 
-### Real defects (operator-facing bugs)
+### What is genuinely fixed (the original campaign's worst axes)
 
-HIGH — `aeat config profile edit --quiet` is a destructive full
-rewrite, not a patch. Fields not explicitly supplied silently revert
-to their defaults; the returning persona's `preferences.output_language`
-flipped from `en` to `es` with no warning while changing an unrelated
-field. There is no `--set key=value` / `--patch` mode. Corroborated
-independently by the returning and dual personas. For a tax tool,
-silent mutation of stored data on a single-field edit is a data-integrity
-defect.
+- Error paths: the fumbler recorded 13 of 14 deliberately-wrong
+  inputs producing a clean, translated, actionable refusal, with
+  ZERO raw Python tracebacks across the session. Did-you-mean fires
+  at every command-tree level; every state guard names the bad value
+  and the exact remedy command. Error handling — the heaviest
+  original pain point — is now a strength.
+- Cold-start refusal / no-active-profile guards: every persona hit a
+  profile-data command with no profile and got a clean refusal with
+  the exact create command, not a crash.
+- Destructive-action safety: `delete` / `repair quarantine` /
+  `reset-state` consistently refuse without `--yes` and print the
+  exact re-run command; human-worded, not bureaucratic.
+- Command-surface map: the two-root (`config` / `app`) structure is
+  stated up front; `aeat` no-args and `overview status` give a real
+  onboarding map.
 
-HIGH — postcode `08001` is stored as `8001`. The leading zero is
-stripped by an integer coercion; Spanish postcodes are 5-digit strings
-and `8001` is invalid. No warning shown. Surfaced by the returning
-persona.
+### Real defects — HIGH
 
-MEDIUM — `aeat config profile create` silently promotes the new
-profile to active with no line in its output saying so. The dual
-persona created a second profile and was then operating under it
-without knowing. `create` output should emit the active-profile line
-that `switch` already emits.
+- `aeat config profile edit --quiet` is a destructive full rewrite,
+  not a patch: unsupplied fields silently revert to defaults;
+  `output_language` flipped `en`->`es` while editing an unrelated
+  field. No `--set` / patch mode. Corroborated by returning + dual.
+- Postcode `08001` stored as `8001` — integer coercion strips the
+  leading zero; the field must be a 5-digit string.
+- `aeat config profile create` can leave a torn / split-state
+  profile — pointer file present, encrypted DB record absent
+  (`repair profile` reports `missing_profile_record`). The curious
+  persona's first-run profile then failed `duplicate` with "Perfil
+  desconocido". The atomic-create contract (all-or-nothing with
+  rollback) is not holding on every path; #33 hardened
+  `initialize_workspace`, but the wizard `profile create` path can
+  still strand a pointer without a record.
+- `aeat --version` / `--help` cold start ~6 seconds — the fast-path
+  (disaster-plan P04) has regressed; trivial dispatch eagerly imports
+  the browser adapter and constructs pydantic-settings.
 
-MEDIUM — the `--activity` flag accepts arbitrary free text. The
-fumbler persona created a profile with activity `pizza-delivery`; no
-enumeration, no validation, no warning. If activity drives downstream
-IAE-epigrafe lookups or modelo bindings it will fail silently far
-later.
+### Real defects — MEDIUM
 
-### UX and i18n friction
+- `profile create` silently promotes the new profile to active with
+  no line in its output (dual + newcomer).
+- `--activity` accepts arbitrary free text with no validation
+  (fumbler created activity `pizza-delivery`).
+- UTF-8 encoding corruption in `modelo casillas 303` output
+  (`deducciXX` — UTF-8 bytes shown as Latin-1); operator-visible.
+- `repair logs` emits a SQLAlchemy traceback to stdout mixed with the
+  successful path output when run without an active session.
+- `profile import` has no `--target-id`; re-importing an exported
+  profile into the same storage root dead-ends on "ya existe".
+- Help tables truncate long flag names (`--address-postco...`),
+  making the real flag name unreadable.
+- The post-create workflow is undiscoverable: `work create` returns
+  an opaque 64-char SHA-256 id with no short alias / active-unit
+  concept; `calculate` dead-ends with no casilla-id discovery path.
+- `live portals list` emits raw i18n keys instead of resolved labels.
 
-MEDIUM — help-text tables truncate every long flag name to roughly
-twenty characters (`--address-postco...`, `--tax-residence-...`), so
-the actual invocable flag name is unreadable. The only discovery path
-is to type a wrong truncated form, read the error's did-you-mean
-suggestion, and retry.
+### Real defects — LOW
 
-LOW — the `profile list` subcommand help text wrongly says it lists
-all config keys and their values; it lists profiles.
+- `profile list` help text wrongly says it lists config keys.
+- NIF validation error leaks the internal key path
+  `wizard.setup.profile.tax-id.prompt`.
+- Refusal text rendered in Spanish under an `output_language=en`
+  profile (entangled with the edit-rewrite defect).
+- `repair integrity` description is English-only — the lone i18n gap.
+- The interactive-wizard refusal is the default onboarding path; the
+  `--quiet` escape is buried below two irrelevant suggestions.
+- Silent `iva.regime=GENERAL` / `tax_residence.ccaa=madrid` defaults.
+- Tombstoned profiles still appear in `profile list`.
 
-LOW — a NIF validation error leaks the internal translation-key path
-`wizard.setup.profile.tax-id.prompt` into the operator-facing message.
+### Cross-campaign / transient
 
-LOW — error text rendered in Spanish under a profile whose
-`output_language` is `en` (entangled with the edit-rewrite defect
-above, which reverts the language preference).
-
-### Robustness note
-
-The dual persona hit a raw Pydantic `ValidationError` traceback on
-`profile switch` once (`ExternalConstants` schema mismatch —
-`auth_gate_4033` missing / `auth_gate_path_marker` extra), then an
-identical retry succeeded. Verified non-reproducing now (`import aeat`
-clean across repeated runs): it was transient drift from a concurrent
-external-constants edit. The latent concern stands — a module-import-time
-`_Settings()` / `_BROWSER_DEFAULTS` construction can surface a raw
-traceback on an unrelated command during concurrent config edits;
-lazy initialisation would remove that failure class.
-
-### Error-path quality — the campaign's original worst axis
-
-The fumbler persona recorded 13 of 14 deliberately-wrong inputs
-producing a clean, translated, actionable refusal, with zero raw
-Python tracebacks across the whole session. Did-you-mean fires at
-every level of the command tree; every state guard names the bad
-value and gives the exact remedy command. The original campaign's
-heaviest pain point — error handling — is now a strength.
+- A raw Pydantic `ExternalConstants` `ValidationError` traceback on
+  `--help` of several lifecycle verbs (`profile census`,
+  `modelo work verify` / `file` / `audit` / `filing-record` /
+  `verification-report`). dual, newcomer, and curious all hit it;
+  curious saw two different missing fields (`auth_gate_4033`,
+  `census_g313_launcher`) across runs — the external-constants
+  schema-hardening campaign is actively editing the model and the
+  bundled data, which transiently disagree. Verified non-reproducing
+  after that campaign settled. Latent fragility stands: a
+  module-import-time `_Settings()` / `_BROWSER_DEFAULTS` must not be
+  able to crash an unrelated command — lazy initialisation removes
+  the failure class. Flag to the external-constants campaign.
 
 ### Semantic audit swarm
 
-- persistence-boundary identity: clean. Persisted namespace/table/key
-  strings stable across the campaign's renames; 87 roundtrip tests
-  with anti-tautology proofs; typed `Envelope` version discipline
-  across 18 repositories; SHA-256 identity helpers sound.
-- cross-domain handoffs: two HIGH findings, both fixed — a
-  silently-empty cross-domain snapshot check, and two re-broken
-  import-linter contracts. All four layered contracts now enforced.
-- calculation grounding: clean — provenance chain, casilla coverage,
-  referential integrity intact; one reported test-coverage gap
-  verified moot (the roundtrip test exists).
+- persistence-boundary identity: clean — persisted strings stable
+  across renames; 87 roundtrip tests with anti-tautology proofs;
+  typed `Envelope` version discipline; SHA-256 identity helpers.
+- cross-domain handoffs: two HIGH findings, both fixed (a
+  silently-empty cross-domain check; two re-broken import-linter
+  contracts). All four layered contracts now enforced.
+- calculation grounding: clean — provenance, casilla coverage,
+  referential integrity intact; one reported test gap verified moot.
 
 ## Recommendations
 
-The re-test confirms error-path quality is excellent but the
-mutation/edit surface still carries real defects, so the campaign
-does not close yet. Drive the fix wave (tracked as the P06 re-test
-fix-wave task) after the disaster-plan tail lands, sequenced:
+The re-test verdict: operator pain fell from "heavy" to "moderate"
+(~4.6/10). The campaign does NOT close — the close criterion is
+near-zero pain. The mutation/edit surface and the post-create
+workflow discoverability carry the residual friction. Drive a
+bounded fix wave (tracked task: P06 re-test fix wave):
 
-1. `profile edit` becomes a true patch — only explicitly-supplied
-   fields are written; unsupplied fields are preserved. Add a
-   `--set key=value` style targeted edit.
-2. `contact.postcode` (and any zero-significant identifier field)
-   typed and stored as a string, not coerced through `int`.
-3. `profile create` emits the active-profile line in its output.
-4. `--activity` validated against the IAE / activity catalogue, or
-   the free-text contract made explicit.
-5. UX: stop truncating flag names in help; fix the `profile list`
-   description; strip the internal translation-key path from the NIF
-   error; honour `output_language` on every refusal message.
-6. Robustness: make `ExternalConstants` / browser-defaults
-   initialisation lazy so it cannot crash an unrelated command.
-
-The S47 closing synthesis will append the newcomer and curious
-testimonials and the before/after pain-score comparison.
+1. `profile edit` becomes a true patch — write only explicitly
+   supplied fields; preserve the rest. Add `--set key=value`.
+2. Zero-significant identifier fields (postcode) typed and stored as
+   strings, never `int`-coerced.
+3. Audit the wizard `profile create` atomic-create path for the
+   pointer-without-record torn state; guarantee all-or-nothing.
+4. Restore the `--version` / `--help` fast-path (P04) — bypass
+   browser-adapter and settings construction for trivial dispatch.
+5. `profile create` emits the active-profile line; validate
+   `--activity`; fix the `modelo casillas` UTF-8 encoding; gate
+   `repair logs` DB-read behind a session; add `profile import
+   --target-id`; resolve `live portals list` labels.
+6. UX: stop truncating flag names; fix `profile list` description;
+   strip the internal key path from the NIF error; honour
+   `output_language` on every refusal; translate `repair integrity`;
+   reorder the wizard-refusal recovery hint.
+7. Robustness: make `ExternalConstants` / browser-defaults
+   initialisation lazy (flag to the external-constants campaign).
+8. After the fix wave, re-run the 5-persona blind re-test; the
+   campaign closes when mean pain is near zero.
