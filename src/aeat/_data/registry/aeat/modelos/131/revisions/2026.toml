@@ -1455,28 +1455,6 @@ source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 [[revisions."2026".formulas.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = ["Resultados negativos"]
-[[revisions."2026".relations]]
-id = "modelo-131-2026-rel-self-prior-quarter-negative"
-kind = "previous_period"
-dependency_role = "direct_calculation"
-source_modelo = "131"
-source_revision_selector = { filing_year_delta = 0 }
-source_output = "saldo-negativo-fin-periodo"
-target_binding = "modelo-131-2026-resultados-negativos-anteriores"
-period_alignment = { mode = "previous_quarter" }
-target_periods = ["2T", "3T", "4T"]
-source_periods = ["1T", "2T", "3T"]
-aggregation = { op = "copy" }
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions"]
-[[revisions."2026".dependency_classifications]]
-id = "modelo-131-2026-dep-self-prior-quarter"
-source_modelo = "131"
-treatment = "factual_evidence"
-target_constructs = ["modelo-131-2026-objective-estimation-instalment"]
-relation_refs = ["modelo-131-2026-rel-self-prior-quarter-negative"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2026".constructs]]
 id = "modelo-131-2026-objective-estimation-instalment"
 title = "Modelo 131 objective-estimation instalment filing for 2026"
@@ -1501,8 +1479,6 @@ formulas = [
 ]
 parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
 bindings = ["modelo-131-2026-resultados-negativos-anteriores"]
-relations = ["modelo-131-2026-rel-self-prior-quarter-negative"]
-dependency_classifications = ["modelo-131-2026-dep-self-prior-quarter"]
 export_layouts = ["modelo-131-fichero-boe"]
 extraction_profiles = ["modelo-131-declaracion-pdf", "modelo-131-submitted-file"]
 live_cross_references = ["modelo-131-static-official", "modelo-131-filed-declarations-read"]

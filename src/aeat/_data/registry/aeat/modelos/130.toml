@@ -365,29 +365,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 source_ref = "aeat-modelo-130-instructions"
 required_text = ["Resultados negativos"]
 
-[[revisions."2019-y-siguientes".relations]]
-id = "modelo-130-rel-self-prior-quarter-negative"
-kind = "previous_period"
-dependency_role = "direct_calculation"
-source_modelo = "130"
-source_revision_selector = { filing_year_delta = 0 }
-source_output = "saldo-negativo-fin-periodo"
-target_binding = "modelo-130-resultados-negativos-anteriores"
-period_alignment = { mode = "previous_quarter" }
-target_periods = ["2T", "3T", "4T"]
-source_periods = ["1T", "2T", "3T"]
-aggregation = { op = "copy" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
-source_refs = ["aeat-modelo-130-instructions"]
-
-[[revisions."2019-y-siguientes".dependency_classifications]]
-id = "modelo-130-dep-self-prior-quarter"
-source_modelo = "130"
-treatment = "factual_evidence"
-target_constructs = ["modelo-130-direct-estimation-instalment"]
-relation_refs = ["modelo-130-rel-self-prior-quarter-negative"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
-source_refs = ["aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-rendimiento-neto"
@@ -1396,8 +1373,6 @@ formulas = [
 ]
 parameters = ["irpf.direct_estimation_fractional_payment_rate", "irpf.agriculture_fractional_payment_rate"]
 bindings = ["irpf.previous_year_economic_activity_net_income", "modelo-130-resultados-negativos-anteriores"]
-relations = ["modelo-130-rel-self-prior-quarter-negative"]
-dependency_classifications = ["modelo-130-dep-self-prior-quarter"]
 export_layouts = ["modelo-130-fichero-boe"]
 extraction_profiles = ["modelo-130-declaracion-pdf"]
 live_cross_references = ["modelo-130-static-official", "modelo-130-filed-declarations-read"]
