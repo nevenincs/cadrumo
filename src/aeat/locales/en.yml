@@ -754,6 +754,10 @@ cli:
       export_out_help: Destination path for the JSON bundle
       help: Manage active profile configuration values
       import_help: Register a portable profile bundle from a JSON file
+      import_label_help: Display name for the imported profile; defaults to the name
+        stored in the bundle. Use it to import a second copy under a fresh label.
+      import_label_taken: A profile named %{name} already exists. Re-run with `--label
+        NEW_NAME` to import it under a different name.
       import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
       logout_help: Sign out of the active profile by clearing the local pointer

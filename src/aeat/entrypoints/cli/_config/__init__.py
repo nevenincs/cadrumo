@@ -1122,6 +1122,11 @@ def config_profile_import(
     path: Path = typer.Argument(
         ..., help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle.")
     ),
+    label: str | None = typer.Option(
+        None,
+        "--label",
+        help=tr("cli.config.profile.import_label_help"),
+    ),
 ) -> None:
     """Read a portable profile bundle from a JSON file and register it.
 
@@ -1131,6 +1136,12 @@ def config_profile_import(
     in one all-or-nothing sequence. The imported bundle is recovery
     from a backup archive, so it becomes the new active profile. A
     crash mid-import rolls every write back, leaving no phantom bucket.
+
+    ``--label`` overrides the operator-facing display name. Re-importing
+    an exported profile into a storage root that already carries it
+    would otherwise dead-end on a duplicate-label refusal; ``--label``
+    lands the second copy under a fresh, non-colliding label while
+    still minting its own immutable UUID identity.
     """
 
     from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
@@ -1150,25 +1161,29 @@ def config_profile_import(
     # An imported bundle becomes a fresh local profile with its own
     # minted UUID identity; the bundle's stored profile_id was the
     # identity on the originating machine and is not reused. The
-    # operator-facing label must not collide with a live profile.
-    if read_profile_bucket(record.display_name) is not None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=record.display_name))
+    # operator-facing label must not collide with a live profile —
+    # `--label` lets the operator land a second copy under a new name.
+    target_label = label.strip() if label is not None and label.strip() else record.display_name
+    if read_profile_bucket(target_label) is not None:
+        raise CliRefusedBoundaryError(
+            tr("cli.config.profile.import_label_taken", name=target_label)
+        )
     try:
-        target_id = _atomic_create_profile(display_name=record.display_name, facts=record.facts)
+        target_id = _atomic_create_profile(display_name=target_label, facts=record.facts)
     except ProfileAlreadyRegisteredError as exc:
         raise CliRefusedBoundaryError(
-            tr("cli.config.profile.already_exists", name=record.display_name)
+            tr("cli.config.profile.already_exists", name=target_label)
         ) from exc
     _emit(
         ctx,
         {
             "profile_id": target_id,
-            "display_name": record.display_name,
+            "display_name": target_label,
             "schema_version": bundle.bundle_schema_version,
         },
         (
             f"profile_id\t{target_id}",
-            f"display_name\t{record.display_name}",
+            f"display_name\t{target_label}",
             f"schema_version\t{bundle.bundle_schema_version}",
         ),
     )
