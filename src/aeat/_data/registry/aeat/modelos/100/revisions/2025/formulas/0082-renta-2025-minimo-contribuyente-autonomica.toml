@@ -4,7 +4,23 @@ target = "0512"
 expression = { op = "lookup_parameter_by_entity_type", args = [
     { literal = "0" },
     { binding = "renta-2025-profile-tax-residence-ccaa" },
-    { dispatch_table = { andalucia = "renta-2025-minimo-contribuyente-base-2025", aragon = "renta-2025-minimo-contribuyente-base-2025", asturias = "renta-2025-minimo-contribuyente-base-2025", baleares = "renta-2025-minimo-contribuyente-base-2025", canarias = "renta-2025-minimo-contribuyente-base-2025", cantabria = "renta-2025-minimo-contribuyente-base-2025", castilla_la_mancha = "renta-2025-minimo-contribuyente-base-2025", castilla_y_leon = "renta-2025-minimo-contribuyente-base-2025", cataluna = "renta-2025-minimo-contribuyente-base-2025", comunidad_valenciana = "renta-2025-minimo-contribuyente-base-2025", extremadura = "renta-2025-minimo-contribuyente-base-2025", galicia = "renta-2025-minimo-contribuyente-base-2025", la_rioja = "renta-2025-minimo-contribuyente-base-2025", madrid = "renta-2025-minimo-contribuyente-base-2025", murcia = "renta-2025-minimo-contribuyente-base-2025" } },
+    { dispatch_table_entries = [
+        { key = "andalucia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "aragon", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "asturias", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "baleares", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "canarias", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "cantabria", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "castilla_la_mancha", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "castilla_y_leon", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "cataluna", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "comunidad_valenciana", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "extremadura", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "galicia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "la_rioja", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "madrid", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "murcia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+    ] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-73", "orden-hac-277-2026:art-3"]
