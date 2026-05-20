@@ -1,8 +1,8 @@
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-ejercicio-a-ingresar-devolver"
-target = "00599"
+target = "DP200014B:00599"
 expression = { op = "subtract", args = [
-    { casilla = "00592" },
+    { casilla = "DP200014B:00592" },
     { relation = "modelo-200-2024-rel-202-pagos-fraccionados" },
 ] }
 rounding = "money-2"
