@@ -317,6 +317,7 @@ bounds.
 - [x] `W07.P17.S123` - add generic same-id fragment merging for large export-record field lists and construct membership lists so M200 can be split below the 2,000-line fragment target without model-specific loader rules.
 - [x] `W07.P17.S124` - split the oversized M200 2024+ export-record field fragments and foundation construct membership fragment into ordered part files; the committed-corpus fragment-size gate now caps TOML fragments at 2,200 lines, with M111/M349 revision files identified as the remaining blockers to a 2,000-line cap.
 - [x] `W07.P17.S125` - split the M111 and M349 revision files into generic top-level revision fragments; the committed-corpus fragment-size gate now caps all TOML fragments at 2,000 lines.
+- [x] `W07.P17.S131` - migrate the remaining M190 long formula rows to multiline TOML expression authoring and tighten the committed-corpus TOML row cap to 600 characters; `uv run pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py src/aeat/domain/calculations/registry/test_modelo_190_registry.py --tb=short` passed with 23 tests.
 
 ## Wave `W08` - fail-fast exception handling
 
