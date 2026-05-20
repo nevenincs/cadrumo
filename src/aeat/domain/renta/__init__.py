@@ -7,6 +7,11 @@ layer extractors) use to tag a Renta domain value.
 
 from __future__ import annotations
 
+# Importing this module registers the first-slice routing referential-
+# integrity check with the registry validator (Protocol-based dependency
+# inversion -- the registry never imports renta). Imported for the
+# registration side effect; no symbols are re-exported.
+from . import _first_slice_routing_integrity as _first_slice_routing_integrity
 from ._ledger_expenses import (
     LEDGER_RENTA_EXPENSE_SOURCE,
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,

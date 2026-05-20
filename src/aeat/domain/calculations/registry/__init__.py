@@ -208,7 +208,11 @@ from ._schema import (
 )
 from ._snapshot import build_snapshot
 from ._sources import verify_source_catalogue, verify_source_file
-from ._validate import RegistryValidator
+from ._validate import (
+    CrossDomainSnapshotCheck,
+    RegistryValidator,
+    register_cross_domain_snapshot_check,
+)
 from ._workbook_parity import (
     SyntheticInputSet,
     SyntheticInputValue,
@@ -261,6 +265,7 @@ __all__ = [
     "ConstructDefinition",
     "CounterpartAggregationObservation",
     "CounterpartObservationRequirement",
+    "CrossDomainSnapshotCheck",
     "CrossReferenceApplicability",
     "CrossReferenceApplicabilityDeclaracion",
     "DataBindingDefinition",
@@ -413,6 +418,7 @@ __all__ = [
     "previous_filing_observation_requirements",
     "profile_condition_matches",
     "read_parameter",
+    "register_cross_domain_snapshot_check",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
     "replay_parity_tape",
