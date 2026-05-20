@@ -91,12 +91,12 @@ Remove every state read from the help/version surfaces.
 Operator-facing error legibility. Every error names a recovery verb
 that actually works.
 
-- [ ] `P05.S35` - audit every `raise CliUnexpectedBoundaryError` site and map each to a named `CliRefusedBoundaryError` subclass with a translated message and a working suggestion; `src/aeat/entrypoints/cli/`.
-- [ ] `P05.S36` - retire `CliUnexpectedBoundaryError` as a runtime catch-all; `keep top-level `except Exception` only for genuinely unexpected exceptions with a stderr log + structured exit code + `python -m aeat.diagnostics report` pointer; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `P05.S37` - add structural test asserting every `AeatError` subclass has a registry entry; `src/aeat/core/errors/test_registry_completeness.py`.
+- [x] `P05.S35` - audit every `raise CliUnexpectedBoundaryError` site and map each to a named `CliRefusedBoundaryError` subclass with a translated message and a working suggestion; `src/aeat/entrypoints/cli/`.
+- [x] `P05.S36` - retire `CliUnexpectedBoundaryError` as a runtime catch-all; `keep top-level `except Exception` only for genuinely unexpected exceptions with a stderr log + structured exit code + `python -m aeat.diagnostics report` pointer; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `P05.S37` - add structural test asserting every `AeatError` subclass has a registry entry; `src/aeat/core/errors/test_registry_completeness.py`.
 - [ ] `P05.S38` - rewrite `aeat config repair reset-state` to delete via SQL DELETE-by-key without a load-then-delete pattern; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `P05.S39` - rewrite `aeat config repair logs` as a streaming tail (seek-from-end, last N lines); `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P05.S40` - mark every `repair` family verb as bootstrap-exempt; `src/aeat/entrypoints/cli/_bootstrap_exempt.py`.
+- [x] `P05.S40` - mark every `repair` family verb as bootstrap-exempt; `src/aeat/entrypoints/cli/_bootstrap_exempt.py`.
 - [ ] `P05.S41` - add roundtrip test asserting every `repair` verb runs cleanly without an active session on a fresh storage root; `src/aeat/entrypoints/cli/test_repair_bootstrap_exempt.py`.
 
 ### Phase `P06` - re-test gate (final verification)
