@@ -155,3 +155,107 @@ bounded fix wave (tracked task: P06 re-test fix wave):
    initialisation lazy (flag to the external-constants campaign).
 8. After the fix wave, re-run the 5-persona blind re-test; the
    campaign closes when mean pain is near zero.
+
+## Round 2 re-test — invalidated
+
+The round-2 re-test (post-#49 fix wave) scored a mean ~7.2/10, a
+regression from round 1. The regression was conclusively attributed
+to two foreign concurrent-campaign crashes, not the feature: a
+CLI-wide `ExternalConstants` model/data drift crash (tracked and
+fixed as #55) and a transient `ImportError` from the
+profile-UUID-identity campaign's mid-edit working tree. Every round-2
+persona independently confirmed the #49 fixes themselves were sound
+in-scenario (edit-patch worked, postcode `08001` preserved, data
+isolation held, error paths clean). Round 2 is therefore discarded as
+a feature measurement; round 3 is the genuine post-#49 reading.
+
+## Round 3 re-test — close measurement
+
+Five blind operator personas, each in an isolated clean install
+(`AEAT_LOCAL_STORAGE_ROOT` set to a fresh directory — no stale
+buckets), operated the `aeat` CLI after the #55 crash fix and the
+round-2 non-crash UX fix wave (#56) had landed.
+
+### Pain scores
+
+- newcomer: 2/10.
+- returning: 2/10.
+- dual: 3/10.
+- fumbler: 2/10.
+- curious: 2/10.
+- Mean: 2.2/10 — "low". Down from the round-1 4.6 "moderate" and the
+  original "heavy" baseline.
+
+### What is confirmed fixed
+
+- Zero raw Python tracebacks across all five sessions, including the
+  fumbler's 30+ deliberate abuse cases. Error handling is a settled
+  strength.
+- `ExternalConstants` crash gone — `--help` on every lifecycle verb
+  (`profile census`, `modelo work verify` / `file` / `audit` /
+  `amend`) returns clean help, no `ValidationError`.
+- Portal catalogue resolved — all 42 portals show real translated
+  names; zero raw `Label NNNNNN` stubs.
+- `profile edit` is a true single-field patch — unsupplied fields
+  preserved, `output_language` not flipped, confirmed with and
+  without `--accept-defaults`.
+- Postcode `08001` round-trips with its leading zero intact.
+- Profiles are identified by display name; the UUID is a secondary
+  field, not the display identity.
+- `overview status` renders in English under an `output_language=en`
+  profile.
+- Numeric-enum flags carry inline legends; help tables no longer
+  truncate flag names; data isolation between profiles holds; atomic
+  create leaves no torn pointer-without-record state.
+
+### Residual findings — MEDIUM
+
+- `modelo work create` accepts a nonexistent modelo code (`999`) and
+  a nonexistent revision id without registry validation; `calculate`
+  then silently falls back to modelo-303 defaults. A data-integrity
+  gap — work-unit creation must validate modelo and revision against
+  the registry.
+- A year out of range (`1899`) is silently prepended to the period
+  token and surfaces only the generic "command input failed
+  validation — run `aeat config repair`" message, in English, never
+  naming the year as the bad value.
+- Two profiles can be created with the same tax id; no duplicate-NIF
+  detection.
+- The postcode field accepts arbitrary text (`BADPOST`, `99999`); no
+  Spanish 5-digit postcode format validation.
+- Creation-time errors render in Spanish even when `--output-language
+  en` is supplied on the create command line — the flag is available
+  at parse time and should be honoured before the profile exists.
+- `did-you-mean` does not fire for `modify` (-> `edit`) or
+  `aeat app status` (-> `aeat app overview status`).
+- `overview status` prose appends the raw UUID in parentheses next to
+  the display name — noise for an end user.
+- `config repair connectivity` row keys render with a trailing
+  "label" word (`Target label`, `State label`) — an i18n key
+  `.label` suffix bleeding into the resolved string.
+
+### Residual findings — LOW
+
+- `aeat config profile` with no subcommand exits 2 instead of
+  defaulting to a useful view.
+- `modelo work discard` has no confirmation gate, asymmetric with
+  `delete`.
+- `modelo work amend` reports missing required options one at a time.
+- `modelo describe --period 0A` rejects `0A` though the modelo-100
+  registry declares `0A` as a valid period.
+- `--tax-residence-ccaa` choice list wraps mid-bracket in the help
+  table.
+- `modelo list` titles render without accents (`declaracion`) —
+  registry source-data issue, cross-campaign to schema-hardening, not
+  a display encoding bug.
+
+## Verdict
+
+Operator pain fell from "heavy" to 4.6 (round 1) to 2.2 (round 3).
+The campaign has not reached the near-zero close criterion: every
+persona scored 2-3, a consistent residual band of UX polish plus a
+small number of MEDIUM validation / data-integrity gaps. Drive one
+more bounded fix wave (tracked task: R3 residual fix wave) over the
+MEDIUM and LOW findings above, excluding the cross-campaign
+registry-data accent issue, then re-run the 5-persona blind re-test.
+The campaign closes when mean pain is near zero.
