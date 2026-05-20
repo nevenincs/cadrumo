@@ -308,3 +308,112 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
+
+    def test_legal_reference_axis_roles_do_not_warn_as_typos(self) -> None:
+        article = _casilla(
+            cid="a",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+        )
+        transitional = _casilla(
+            cid="b",
+            semantic_role="is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+        )
+        m = _modelo("200", "2024-y-siguientes", [article, transitional])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_optional_legal_regime_roles_do_not_warn_as_typos(self) -> None:
+        rdleg = _casilla(
+            cid="a",
+            semantic_role="is_deduccion_di_internacional_rdleg_pendiente",
+        )
+        current = _casilla(
+            cid="b",
+            semantic_role="is_deduccion_di_internacional_pendiente",
+        )
+        m = _modelo("200", "2024-y-siguientes", [rdleg, current])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_scope_token_sibling_roles_do_not_warn_as_typos(self) -> None:
+        detalle = _casilla(
+            cid="a",
+            semantic_role="is_correccion_detalle_correcciones_resultado_permanente_disminucion",
+        )
+        otras = _casilla(
+            cid="b",
+            semantic_role="is_correccion_otras_correcciones_resultado_permanente_disminucion",
+        )
+        m = _modelo("200", "2024-y-siguientes", [detalle, otras])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_numeric_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
+        first_window = _casilla(cid="a", semantic_role="irpf_red_prevision_social_exceso_2015_2019")
+        second_window = _casilla(cid="b", semantic_role="irpf_red_prevision_social_exceso_2016_2020")
+        m = _modelo("100", "2021", [first_window, second_window])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_relationship_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
+        descendant = _casilla(cid="a", semantic_role="irpf_descendiente_fecha_nacimiento")
+        ascendant = _casilla(cid="b", semantic_role="irpf_ascendiente_fecha_nacimiento")
+        m = _modelo("100", "2025", [descendant, ascendant])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
+        listed = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
+        general = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
+        m = _modelo("100", "2025", [listed, general])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_multiple_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
+        scoped = _casilla(cid="a", semantic_role="irpf_ganancia_premios_juegos_pub_valoracion_b")
+        general = _casilla(cid="b", semantic_role="irpf_ganancia_premios_juegos_valoracion")
+        m = _modelo("100", "2025", [scoped, general])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_optional_numeric_axis_roles_do_not_warn_as_typos(self) -> None:
+        annual_line = _casilla(cid="a", semantic_role="irpf_deduccion_cantabria_generado_2025_pendiente_2")
+        general_line = _casilla(cid="b", semantic_role="irpf_deduccion_cantabria_generado_pendiente")
+        m = _modelo("100", "2025", [annual_line, general_line])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_ccaa_axis_roles_do_not_warn_as_typos(self) -> None:
+        murcia = _casilla(cid="a", semantic_role="irpf_deduccion_murcia_vehiculo_importe")
+        asturias = _casilla(cid="b", semantic_role="irpf_deduccion_asturias_vehiculo_importe")
+        m = _modelo("100", "2025", [murcia, asturias])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_optional_field_scope_axis_roles_do_not_warn_as_typos(self) -> None:
+        parent = _casilla(cid="a", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo")
+        year = _casilla(cid="b", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo_anio")
+        price = _casilla(cid="c", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo_precio")
+        m = _modelo("100", "2025", [parent, year, price])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []

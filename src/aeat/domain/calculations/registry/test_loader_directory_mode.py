@@ -32,6 +32,9 @@ from ._loader import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
+_MAX_SINGLE_FILE_MODELO_LINES = 2_000
+_MAX_TOML_FRAGMENT_LINES = 4_000
+_MAX_TOML_ROW_CHARS = 1_200
 
 
 def _build_directory_layout(
@@ -405,6 +408,22 @@ def test_fragmented_modelos_do_not_keep_stale_single_file_siblings() -> None:
     assert offenders == []
 
 
+def test_multi_revision_modelos_do_not_use_single_file_layout() -> None:
+    """Multi-revision modelos must use directory layout, not inline copy-per-revision TOML."""
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    offenders: list[str] = []
+    for source in discover_modelo_sources(modelos_dir):
+        if source.layout != "single_file":
+            continue
+        modelo = load_modelo_source(source)
+        if len(modelo.revisions) <= 1:
+            continue
+        offenders.append(f"{source.modelo_id}: {len(modelo.revisions)} revisions in {source.path.name}")
+
+    assert offenders == []
+
+
 def test_fragmented_revision_directories_are_schema_owned() -> None:
     """Every committed revision fragment directory has a schema manifest and loads."""
 
@@ -423,3 +442,32 @@ def test_fragmented_revision_directories_are_schema_owned() -> None:
             assert not (source.path / "revisions" / f"{revision_source.revision_id}.toml").exists()
 
     assert checked, "at least one committed revision must use fragment-directory layout"
+
+
+def test_committed_registry_toml_files_stay_reviewable() -> None:
+    """Registry TOML files must not regress toward monolithic artifacts."""
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    oversized_single_file_modelos: list[str] = []
+    oversized_fragments: list[str] = []
+    oversized_rows: list[str] = []
+
+    for path in sorted(modelos_dir.rglob("*.toml")):
+        relative_path = path.relative_to(modelos_dir).as_posix()
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if path.parent == modelos_dir and len(lines) > _MAX_SINGLE_FILE_MODELO_LINES:
+            oversized_single_file_modelos.append(
+                f"{relative_path}: {len(lines)} lines > {_MAX_SINGLE_FILE_MODELO_LINES}"
+            )
+        if len(lines) > _MAX_TOML_FRAGMENT_LINES:
+            oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {_MAX_TOML_FRAGMENT_LINES}")
+        for line_number, line in enumerate(lines, start=1):
+            if len(line) <= _MAX_TOML_ROW_CHARS:
+                continue
+            oversized_rows.append(
+                f"{relative_path}:{line_number}: {len(line)} chars > {_MAX_TOML_ROW_CHARS}"
+            )
+
+    assert oversized_single_file_modelos == []
+    assert oversized_fragments == []
+    assert oversized_rows == []

@@ -168,17 +168,27 @@ def _root(
 def _activate_active_bucket_session(ctx: typer.Context) -> None:
     """Active-gate the CLI session against the bootstrap-exempt registry.
 
-    Bootstrap-exempt verbs (``profile create``, ``profile import``,
-    ``config repair`` family) run without a session. Every other
-    verb either opens the pointed-at bucket's session (when
-    ``resolve_active_bucket_id`` returns a name) or refuses with a
-    translated :class:`CliRefusedBoundaryError` that names
-    ``profile create`` / ``profile switch`` as next actions.
+    Three outcomes:
 
-    The refusal path replaces the silent-skip pattern that previously
-    let every non-exempt verb raise ``NoActiveBucketSessionError``
-    from inside its own body — the F1 / F2 cold-start deadlock the
-    2026-05-19 operator testimonies catalogued.
+    - Bootstrap-exempt verbs (``profile create``, ``profile import``,
+      ``config repair`` family) run without a session — return early.
+    - No active profile resolves — return without opening a session.
+      Each non-exempt verb carries its own
+      ``resolve_active_bucket_id() is None`` guard that refuses with a
+      translated message; opening a session here against an absent
+      per-bucket database would pre-empt that cleaner per-verb refusal
+      and break the bare-invocation landing card.
+    - An active profile resolves — open its bucket session (unless one
+      is already active) so the verb body can decrypt stored records.
+
+    The per-verb guards are the primary refusal surface. A non-exempt
+    verb that still reaches its body without a session surfaces a
+    clean translated refusal regardless: ``NoActiveBucketSessionError``
+    is an :class:`AeatError` and the CLI error decorator renders it. A
+    centralized refusal here is intentionally not used —
+    :func:`_full_invocation_verb_path` reads ``sys.argv``, which the
+    Typer test runner does not populate, so a centralized refusal
+    mis-fires on bootstrap-exempt verbs under test.
     """
 
     from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
