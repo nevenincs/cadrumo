@@ -510,19 +510,52 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     )
     assert set(relation_values) == {"modelo-200-2024-rel-202-pagos-fraccionados"}
 
+    # The modelo-202 instalment relation drives the
+    # ``modelo-200-2024-pagos-fraccionados-anuales`` binding rather than
+    # a direct formula operand. The instalment netting required by Ley
+    # 27/2014 art. 41 is realised by the cuota-diferencial formula,
+    # which subtracts the three pago-fraccionado casillas (00601 first,
+    # 00603 second, 00605 third instalment to the Estado) from the
+    # cuota del ejercicio a ingresar o a devolver (00599).
+    diferencial_formula = next(
+        formula for formula in revision.formulas if formula.target == "DP200014B:00611"
+    )
+    assert diferencial_formula.id == "modelo-200-cuota-diferencial"
+    assert diferencial_formula.expression.op == "subtract"
+    assert "ley-27-2014:art-41" in diferencial_formula.legal_refs
+
+    # Graph-wiring assertion: the netting subtracts the aggregated
+    # pagos fraccionados from the cuota del ejercicio. The pago-
+    # fraccionado casillas are manual inputs populated from the modelo
+    # 202 quarterly instalments via the previous-filing binding.
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={"00592": Decimal("12000")},
+        inputs={
+            "DP200014B:00592": Decimal("12000"),
+            "DP200014B:00601": Decimal("1200"),
+            "DP200014B:00603": Decimal("1500"),
+            "DP200014B:00605": Decimal("1800"),
+        },
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=relation_values,
     )
     entries = {entry.target: entry for entry in result.entries}
-    assert "00599" in entries
-    assert set(entries["00599"].operand_refs) == {"00592", "modelo-200-2024-rel-202-pagos-fraccionados"}
-    entries = {entry.target: entry for entry in result.entries}
-    assert entries["00599"].operand_refs == (
-        "00592",
-        "modelo-200-2024-rel-202-pagos-fraccionados",
+    assert "DP200014B:00599" in entries
+    assert "DP200014B:00611" in entries
+    diferencial_entry = entries["DP200014B:00611"]
+    assert diferencial_entry.formula_id == "modelo-200-cuota-diferencial"
+    assert diferencial_entry.op == "subtract"
+    assert set(diferencial_entry.operand_refs) == {
+        "DP200014B:00599",
+        "DP200014B:00601",
+        "DP200014B:00603",
+        "DP200014B:00605",
+    }
+    assert diferencial_entry.operand_refs == (
+        "DP200014B:00599",
+        "DP200014B:00601",
+        "DP200014B:00603",
+        "DP200014B:00605",
     )
 
 
