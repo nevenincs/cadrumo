@@ -140,8 +140,10 @@ from ._queries import (
 )
 from ._record_design import (
     DerivedDisenoCasilla,
+    DisenoCoverageReport,
     RecordDesignField,
     RecordDesignSheet,
+    build_diseno_coverage_report,
     calculation_closure_numbers,
     derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
@@ -280,6 +282,7 @@ __all__ = [
     "DeadlineWindowDefinition",
     "DependencyClassificationDefinition",
     "DerivedDisenoCasilla",
+    "DisenoCoverageReport",
     "EvidenceTier",
     "EvidenceTierCoverageGate",
     "ExportFieldDefinition",
@@ -380,6 +383,7 @@ __all__ = [
     "assert_workbook_scan_clean",
     "audit_registry_model_law_coverage",
     "build_censo_modelo_foundation_contract",
+    "build_diseno_coverage_report",
     "build_model_law_coverage_ledger",
     "build_snapshot",
     "calculate_registry_snapshot",
