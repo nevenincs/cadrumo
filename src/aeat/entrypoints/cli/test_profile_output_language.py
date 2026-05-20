@@ -84,12 +84,13 @@ def test_config_profile_create_writes_profile_output_language(
         from aeat.application.user_profile._orchestration import fact_value
 
         assert fact_value(record, "preferences.output_language") == "en"
-        assert ("profile.created", "default", "default") in [
+        profile_id = record.profile_id
+        assert ("profile.created", profile_id, profile_id) in [
             (event.action, event.bucket_id, event.object_id) for event in state.bucket_events
         ]
         assert any(
             event.action == "profile.values.updated"
-            and event.bucket_id == "default"
+            and event.bucket_id == profile_id
             and event.object_id is not None
             and event.object_id.startswith("keys:")
             for event in state.bucket_events
