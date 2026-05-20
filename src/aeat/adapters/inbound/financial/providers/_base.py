@@ -153,7 +153,10 @@ class FinancialProvider(ABC):
         """Read the raw source bytes once for validation and provenance."""
         resolved = path.resolve()
         if not resolved.exists() or not resolved.is_file():
-            raise InvalidFinancialSourceError(f"source file does not exist: {resolved}")
+            raise InvalidFinancialSourceError(
+                translated_message="errors.financial.source_file_not_found",
+                context={"path": str(resolved)},
+            )
         return resolved.read_bytes()
 
     @staticmethod
