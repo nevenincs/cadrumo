@@ -215,7 +215,7 @@ def test_non_help_invocation_leaves_columns_untouched(monkeypatch: pytest.Monkey
     """Ordinary command output keeps the real terminal width.
 
     The widening is scoped to `--help`; piping a non-help command into
-    another tool must not see an inflated 200-column render.
+    another tool must not see an inflated help-width render.
     """
 
     monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "list"])

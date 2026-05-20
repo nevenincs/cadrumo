@@ -862,15 +862,17 @@ cli:
       key_help: A beállítandó kulcs (pl. iva.regime)
       value_help: A beállítandó érték (szöveg, true/false, összeg a kulcstól függően)
     setup:
-      accept_defaults_help: A leíró alapértelmezett értékeinek elfogadása kérdezés
-        nélkül
+      accept_defaults_help: Minden meg nem adott flag-et a leíró alapértelmezéseiből
+        tölt ki, kérdés nélkül. Használd a --quiet mellett, vagy önmagában a teljesen
+        alapértelmezett létrehozáshoz.
       errors:
         missing_required_flags: Hiányoznak a kötelező kapcsolók a --quiet módhoz;
           adj meg értéket minden kötelező kérdéshez.
       help: Az adóprofil vezetett kezdeti beállítása
       profile_name_help: A profil neve, ahova a válaszok kerülnek
-      quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit
-        használva
+      quiet_help: Interakció nélküli futtatás csak a megadott flag-értékekkel; a megadás
+        nélkül hagyott kötelező flag-ek hibát okoznak. Önmagában elegendő; az --accept-defaults-szal
+        kombinálva a többi mezőt az alapértelmezésekből tölti ki.
       success:
         next_step: 'Következő lépés: `aeat app overview status` futtatása a munkaterület
           ellenőrzéséhez.'
@@ -1965,7 +1967,9 @@ wizard:
       spouse-birth-date:
         help: A házastárs születési dátuma
       spouse-disability-grade:
-        help: A házastárs fogyatékossági foka (ha alkalmazandó)
+        help: 'A házastárs rokkantsági fokozata (ha alkalmazható): 1 = 33%-64%, 2
+          = 65% vagy magasabb, 3 = bírósági cselekvőképtelenség, 4 = harmadik fél
+          segítsége vagy csökkent mozgásképesség.'
       spouse-eu-eea-country:
         help: A házastárs EU/EGT országa
       spouse-eu-eea-resident:
@@ -1975,7 +1979,7 @@ wizard:
       spouse-non-resident-irpf:
         help: Házastárs nem rezidens IRPF
       spouse-sex:
-        help: A házastárs neme
+        help: 'A házastárs neme: H = férfi, M = nő.'
       spouse-surnames:
         help: A házastárs vezetéknevei
       spouse-tax-id:
@@ -1987,17 +1991,20 @@ wizard:
       tax-residence-ccaa:
         help: Adóügyi rezidens autonóm közösség
       taxation-type:
-        help: Adózási típus kódja
+        help: 'A jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
       taxpayer-birth-date:
         help: Az első adózó születési dátuma
       taxpayer-death-date:
         help: Az első adózó halálozási dátuma
       taxpayer-disability-grade:
-        help: Az első adózó fogyatékossági kódja
+        help: 'Az első adózó rokkantsági fokozata: 1 = 33%-64%, 2 = 65% vagy magasabb,
+          3 = bírósági cselekvőképtelenség, 4 = harmadik fél segítsége vagy csökkent
+          mozgásképesség.'
       taxpayer-marital-status:
-        help: Az első adózó családi állapota
+        help: 'Az első adózó családi állapota: 1 = egyedülálló, 2 = házas, 3 = özvegy,
+          4 = külön élő vagy elvált.'
       taxpayer-sex:
-        help: Az első adózó neme
+        help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
         help: Harmadik felekkel folytatott műveletek meghaladják a Modelo 347 küszöböt
       uses-objective-estimation-irpf:

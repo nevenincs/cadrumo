@@ -894,14 +894,18 @@ cli:
       key_help: Clave a asignar (ej. iva.regime)
       value_help: Valor a asignar (texto, true/false, importe segun la clave)
     setup:
-      accept_defaults_help: Aceptar los valores por defecto del descriptor sin preguntar
+      accept_defaults_help: Rellena con los valores por defecto del descriptor todos
+        los flags no indicados, sin preguntar. Úsalo junto a --quiet, o por sí solo
+        para una creación con todo por defecto.
       errors:
         missing_required_flags: Faltan banderas obligatorias para el modo --quiet;
           proporciona un valor para cada pregunta obligatoria.
       help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
-      quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
-        banderas
+      quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados;
+        los flags requeridos sin valor provocan un error. Suficiente por sí solo;
+        combínalo con --accept-defaults para rellenar el resto con los valores por
+        defecto.
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
           tu espacio de trabajo.'
@@ -2011,7 +2015,9 @@ wizard:
       spouse-birth-date:
         help: Fecha de nacimiento del cónyuge
       spouse-disability-grade:
-        help: Grado de discapacidad del cónyuge (si aplica)
+        help: 'Grado de discapacidad del cónyuge (si procede): 1 = 33%-64%, 2 = 65%
+          o superior, 3 = incapacidad judicial, 4 = ayuda de terceros o movilidad
+          reducida.'
       spouse-eu-eea-country:
         help: País UE/EEE del cónyuge
       spouse-eu-eea-resident:
@@ -2021,7 +2027,7 @@ wizard:
       spouse-non-resident-irpf:
         help: Cónyuge no residente IRPF
       spouse-sex:
-        help: Sexo del cónyuge
+        help: 'Sexo del cónyuge: H = hombre, M = mujer.'
       spouse-surnames:
         help: Apellidos del cónyuge
       spouse-tax-id:
@@ -2033,17 +2039,20 @@ wizard:
       tax-residence-ccaa:
         help: Comunidad autónoma de residencia fiscal
       taxation-type:
-        help: Código del tipo de tributación
+        help: 'Tipo de declaración de Renta: 1 = individual, 2 = conjunta (unidad
+          familiar).'
       taxpayer-birth-date:
         help: Fecha de nacimiento del primer declarante
       taxpayer-death-date:
         help: Fecha de fallecimiento del primer declarante
       taxpayer-disability-grade:
-        help: Clave de discapacidad del primer declarante
+        help: 'Grado de discapacidad del primer declarante: 1 = 33%-64%, 2 = 65% o
+          superior, 3 = incapacidad judicial, 4 = ayuda de terceros o movilidad reducida.'
       taxpayer-marital-status:
-        help: Estado civil del primer declarante
+        help: 'Estado civil del primer declarante: 1 = soltero/a, 2 = casado/a, 3
+          = viudo/a, 4 = separado/a o divorciado/a.'
       taxpayer-sex:
-        help: Sexo del primer declarante
+        help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
         help: Operaciones con terceros superan el umbral del Modelo 347
       uses-objective-estimation-irpf:

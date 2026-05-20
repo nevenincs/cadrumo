@@ -834,13 +834,17 @@ cli:
       key_help: Key to assign (e.g. iva.regime)
       value_help: Value to assign (text, true/false, amount depending on the key)
     setup:
-      accept_defaults_help: Accept the descriptor's defaults without prompting
+      accept_defaults_help: Fill every unsupplied flag from the descriptor defaults,
+        without prompting. Use alongside --quiet, or on its own for an all-defaults
+        create.
       errors:
         missing_required_flags: Missing required flags for --quiet wizard run; supply
           a value for every required question.
       help: Initialize the active tax profile and storage bucket
       profile_name_help: Profile name to write the answers into
-      quiet_help: Run the flow non-interactively using only the supplied flag values
+      quiet_help: Run non-interactively using only the supplied flag values; required
+        flags left unset cause an error. Sufficient on its own; combine with --accept-defaults
+        to fill the rest from descriptor defaults.
       success:
         next_step: 'Next step: run `aeat app overview status` to review your workspace.'
         saved: Profile '%{profile_name}' saved.
@@ -1938,7 +1942,8 @@ wizard:
       spouse-birth-date:
         help: Spouse birth date
       spouse-disability-grade:
-        help: Spouse disability grade (if applicable)
+        help: 'Spouse disability grade (if applicable): 1 = 33%-64%, 2 = 65% or higher,
+          3 = judicial incapacity, 4 = third-party assistance or reduced mobility.'
       spouse-eu-eea-country:
         help: Spouse EU/EEA country
       spouse-eu-eea-resident:
@@ -1948,7 +1953,7 @@ wizard:
       spouse-non-resident-irpf:
         help: Spouse is non-resident IRPF
       spouse-sex:
-        help: Spouse sex code
+        help: 'Spouse sex: H = male, M = female.'
       spouse-surnames:
         help: Spouse surnames
       spouse-tax-id:
@@ -1960,17 +1965,19 @@ wizard:
       tax-residence-ccaa:
         help: Tax-residence autonomous community
       taxation-type:
-        help: Taxation type code
+        help: 'Income-tax return type: 1 = individual, 2 = joint (family unit).'
       taxpayer-birth-date:
         help: First taxpayer birth date
       taxpayer-death-date:
         help: First taxpayer death date
       taxpayer-disability-grade:
-        help: First taxpayer disability code
+        help: 'First taxpayer disability grade: 1 = 33%-64%, 2 = 65% or higher, 3
+          = judicial incapacity, 4 = third-party assistance or reduced mobility.'
       taxpayer-marital-status:
-        help: First taxpayer marital status
+        help: 'First taxpayer marital status: 1 = single, 2 = married, 3 = widowed,
+          4 = separated or divorced.'
       taxpayer-sex:
-        help: First taxpayer sex code
+        help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
         help: Third-party transactions exceed Modelo 347 threshold
       uses-objective-estimation-irpf:

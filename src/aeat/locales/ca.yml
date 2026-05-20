@@ -879,14 +879,17 @@ cli:
       key_help: Clau a assignar (ex. iva.regime)
       value_help: Valor a assignar (text, true/false, import segons la clau)
     setup:
-      accept_defaults_help: Acceptar els valors per defecte del descriptor sense preguntar
+      accept_defaults_help: Omple amb els valors per defecte del descriptor tots els
+        flags no indicats, sense preguntar. Usa'l amb --quiet, o per si sol per a
+        una creació amb tot per defecte.
       errors:
         missing_required_flags: Falten banderes obligatòries per al mode --quiet;
           proporciona un valor per a cada pregunta obligatòria.
       help: Configuració inicial guiada del perfil tributari
       profile_name_help: Nom del perfil on s'escriuen les respostes
-      quiet_help: Executar el flux sense interacció utilitzant només els valors de
-        les banderes
+      quiet_help: Executa sense interacció usant només els valors dels flags indicats;
+        els flags requerits sense valor provoquen un error. Suficient per si sol;
+        combina amb --accept-defaults per omplir la resta amb els valors per defecte.
       success:
         next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai
           de treball.'
@@ -1983,7 +1986,8 @@ wizard:
       spouse-birth-date:
         help: Data de naixement del cònjuge
       spouse-disability-grade:
-        help: Grau de discapacitat del cònjuge (si aplica)
+        help: 'Grau de discapacitat del cònjuge (si escau): 1 = 33%-64%, 2 = 65% o
+          superior, 3 = incapacitat judicial, 4 = ajuda de tercers o mobilitat reduïda.'
       spouse-eu-eea-country:
         help: País UE/EEE del cònjuge
       spouse-eu-eea-resident:
@@ -1993,7 +1997,7 @@ wizard:
       spouse-non-resident-irpf:
         help: Cònjuge no resident IRPF
       spouse-sex:
-        help: Sexe del cònjuge
+        help: 'Sexe del cònjuge: H = home, M = dona.'
       spouse-surnames:
         help: Cognoms del cònjuge
       spouse-tax-id:
@@ -2005,17 +2009,20 @@ wizard:
       tax-residence-ccaa:
         help: Comunitat autònoma de residència fiscal
       taxation-type:
-        help: Codi del tipus de tributació
+        help: 'Tipus de declaració de Renda: 1 = individual, 2 = conjunta (unitat
+          familiar).'
       taxpayer-birth-date:
         help: Data de naixement del primer declarant
       taxpayer-death-date:
         help: Data de defunció del primer declarant
       taxpayer-disability-grade:
-        help: Clau de discapacitat del primer declarant
+        help: 'Grau de discapacitat del primer declarant: 1 = 33%-64%, 2 = 65% o superior,
+          3 = incapacitat judicial, 4 = ajuda de tercers o mobilitat reduïda.'
       taxpayer-marital-status:
-        help: Estat civil del primer declarant
+        help: 'Estat civil del primer declarant: 1 = solter/a, 2 = casat/da, 3 = vidu/a,
+          4 = separat/da o divorciat/da.'
       taxpayer-sex:
-        help: Sexe del primer declarant
+        help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
         help: Operacions amb tercers superen el llindar del Modelo 347
       uses-objective-estimation-irpf:
