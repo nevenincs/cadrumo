@@ -1060,14 +1060,20 @@ def test_casilla_segmento_rejects_empty_string() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test: Diseño-completeness gate
+# Test: calculation-completeness gate
 # ---------------------------------------------------------------------------
+#
+# The gate enforces `manifest-required ⊆ declared` plus a
+# `(segmento, number)` identity check and a `legal_refs` / `source_refs`
+# grounding check on each required casilla. A casilla the revision
+# declares but the manifest does not list (a pure accounting-statement
+# field) is NOT a failure.
 
 
 def _completeness_manifest(
     casillas: tuple[CalculationCompletenessCasilla, ...],
 ) -> CalculationCompletenessManifest:
-    """A minimal Diseño-completeness manifest grounded on the dummy catalogues."""
+    """A minimal calculation-completeness manifest grounded on the dummy catalogues."""
     return CalculationCompletenessManifest(
         source_ref=_DUMMY_SOURCE_ID,
         casillas=casillas,
@@ -1092,11 +1098,12 @@ def test_revision_without_manifest_passes_completeness_gate() -> None:
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
 
-def test_completeness_gate_passes_when_manifest_matches_declared_casillas() -> None:
-    """A revision whose declared casillas exactly match its manifest validates.
+def test_completeness_gate_passes_when_manifest_required_subset_of_declared() -> None:
+    """A revision whose declared casillas cover the manifest's required set validates.
 
-    The manifest enumerates the single declared casilla number; declared
-    and expected casilla sets are identical, so the gate raises nothing.
+    The manifest enumerates a single required casilla number; the
+    revision declares exactly that casilla, so the required set is a
+    subset of the declared set and the gate raises nothing.
     """
     from ._validate import RegistryValidator
 
@@ -1109,12 +1116,33 @@ def test_completeness_gate_passes_when_manifest_matches_declared_casillas() -> N
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
 
-def test_completeness_gate_fails_on_missing_casilla() -> None:
-    """A manifest expecting a casilla the revision omits hard-fails the gate.
+def test_completeness_gate_passes_when_revision_declares_extra_accounting_casilla() -> None:
+    """A declared casilla absent from the calculation manifest is not a failure.
 
-    The manifest enumerates casilla numbers '01' and '02' but the
-    revision declares only '01'. The completeness gate must report the
-    missing '02' as a hard RegistryValidationError.
+    The refocused gate enforces `manifest-required ⊆ declared`, not
+    `declared == manifest`. The manifest requires only calculation-closure
+    casilla '01'; the revision additionally declares casilla '02', a pure
+    accounting-statement data-entry field outside the calculation closure.
+    The extra casilla must NOT red the gate — a modelo can clear the gate
+    without an exhaustive full-Diseño backfill.
+    """
+    from ._validate import RegistryValidator
+
+    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
+    revision = _minimal_revision(
+        casillas=(_minimal_casilla("01"), _minimal_casilla("02"))
+    ).model_copy(update={"completeness_manifest": manifest})
+    modelo = _minimal_modelo(revision)
+    # A clean return proves the extra accounting casilla does not fail.
+    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_fails_on_missing_required_casilla() -> None:
+    """A manifest requiring a casilla the revision omits hard-fails the gate.
+
+    The manifest requires calculation-closure casilla numbers '01' and
+    '02' but the revision declares only '01'. The completeness gate must
+    report the missing required '02' as a hard RegistryValidationError.
     """
     from ._validate import RegistryValidator
 
@@ -1127,41 +1155,26 @@ def test_completeness_gate_fails_on_missing_casilla() -> None:
     modelo = _minimal_modelo(revision)
     with pytest.raises(
         RegistryValidationError,
-        match=r"manifest expects casilla number '02' but the revision does not declare it",
+        match=(
+            r"calculation-completeness manifest requires casilla number '02' "
+            r"but the revision does not declare it"
+        ),
     ):
         RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
 
-def test_completeness_gate_fails_on_extra_casilla() -> None:
-    """A casilla the revision declares but the manifest omits hard-fails the gate.
+def test_completeness_gate_fails_on_mis_segmented_required_casilla() -> None:
+    """A required casilla declared under the wrong segmento hard-fails the gate.
 
-    The revision declares casilla numbers '01' and '02' but the manifest
-    enumerates only '01'. The completeness gate must report the extra
-    '02' as a hard RegistryValidationError.
-    """
-    from ._validate import RegistryValidator
+    The manifest requires casilla 00562 under segmento DP200032; the
+    revision declares casilla 00562 but under segmento DP200014. The
+    identity pairs (DP200032, 00562) and (DP200014, 00562) are distinct,
+    so no casilla is declared at the manifest's required identity and the
+    gate reports the mis-segmented casilla as missing at that identity.
 
-    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
-    revision = _minimal_revision(
-        casillas=(_minimal_casilla("01"), _minimal_casilla("02"))
-    ).model_copy(update={"completeness_manifest": manifest})
-    modelo = _minimal_modelo(revision)
-    with pytest.raises(
-        RegistryValidationError,
-        match=r"revision declares casilla number '02' absent from the Diseño-completeness manifest",
-    ):
-        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
-
-
-def test_completeness_gate_fails_on_diverging_segment_qualified_manifest() -> None:
-    """A multi-segment manifest that diverges on a (segmento, number) pair fails.
-
-    Both the manifest and the revision use segment-qualified casillas.
-    The revision declares casilla 00562 under segmento DP200014; the
-    manifest expects 00562 under DP200032. The pairs (DP200014, 00562)
-    and (DP200032, 00562) are distinct identities, so the gate reports
-    both the missing manifest pair and the extra declared pair,
-    segment-qualified.
+    The wrongly-segmented (DP200014, 00562) casilla, being absent from
+    the manifest, is NOT separately reported — the refocused gate's
+    subset semantics never red an unrequested declared casilla.
     """
     from ._validate import RegistryValidator
 
@@ -1174,14 +1187,57 @@ def test_completeness_gate_fails_on_diverging_segment_qualified_manifest() -> No
     )
     modelo = _minimal_modelo(revision)
     failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
-    missing = [f for f in failures if "expects casilla number '00562' within segmento 'DP200032'" in f]
-    extra = [
+    missing = [
         f
         for f in failures
-        if "declares casilla number '00562' within segmento 'DP200014' absent" in f
+        if "manifest requires casilla number '00562' within segmento 'DP200032'" in f
     ]
-    assert missing, f"diverging manifest must report the missing segment pair; got: {failures}"
-    assert extra, f"diverging manifest must report the extra segment pair; got: {failures}"
+    extra = [f for f in failures if "within segmento 'DP200014' absent" in f]
+    assert missing, f"mis-segmented required casilla must be reported missing; got: {failures}"
+    assert not extra, (
+        "the wrongly-segmented declared casilla, being absent from the manifest, "
+        f"must NOT be reported under subset semantics; got: {failures}"
+    )
+
+
+def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
+    """A required casilla declared without legal/source grounding hard-fails the gate.
+
+    The manifest requires calculation-closure casilla '01'. The revision
+    declares casilla '01' but without `legal_refs` and `source_refs` — a
+    casilla constructed via ``model_construct`` to bypass the schema's
+    non-empty-refs validator and reach the gate's defensive grounding
+    branch. The gate must report the required casilla as ungrounded.
+
+    This proves the gate's grounding check is load-bearing: the ADR
+    amendment requires every calculation-closure casilla to carry its
+    `legal_refs` / `source_refs` provenance, and the gate enforces that
+    independently of the schema-level field constraint.
+    """
+    from ._validate import RegistryValidator
+
+    ungrounded = CasillaDefinition.model_construct(
+        id="01",
+        number="01",
+        segmento=None,
+        label="Casilla 01",
+        section=("test",),
+        input_kind="manual",
+        legal_refs=(),
+        source_refs=(),
+    )
+    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
+    revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(
+        update={"completeness_manifest": manifest, "casillas": (ungrounded,)}
+    )
+    modelo = _minimal_modelo(revision)
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
+    legal = [f for f in failures if "casilla number '01'" in f and "without legal_refs" in f]
+    source = [f for f in failures if "casilla number '01'" in f and "without source_refs" in f]
+    assert legal, f"ungrounded required casilla must be reported without legal_refs; got: {failures}"
+    assert source, (
+        f"ungrounded required casilla must be reported without source_refs; got: {failures}"
+    )
 
 
 def test_filing_modelo_with_formula_passes_invariant() -> None:
