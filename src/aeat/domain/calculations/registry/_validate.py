@@ -2677,12 +2677,14 @@ _SEMANTIC_ROLE_AXIS_SUFFIXES: tuple[tuple[str, ...], ...] = (
 def _semantic_roles_are_axis_siblings(left: str, right: str) -> bool:
     left_stem, left_axis = _split_semantic_role_axis_suffix(left)
     right_stem, right_axis = _split_semantic_role_axis_suffix(right)
-    return (
+    if (
         left_stem is not None
         and right_stem is not None
         and left_stem == right_stem
         and left_axis != right_axis
-    )
+    ):
+        return True
+    return _semantic_roles_are_axis_token_siblings(left, right)
 
 
 def _split_semantic_role_axis_suffix(role: str) -> tuple[tuple[str, ...] | None, tuple[str, ...] | None]:
@@ -2693,6 +2695,45 @@ def _split_semantic_role_axis_suffix(role: str) -> tuple[tuple[str, ...] | None,
         if parts[-len(suffix):] == suffix:
             return parts[: -len(suffix)], suffix
     return None, None
+
+
+_SEMANTIC_ROLE_AXIS_TOKEN_GROUPS: tuple[frozenset[str], ...] = (
+    frozenset({"clave", "subclave"}),
+    frozenset({"count", "amount"}),
+    frozenset({"anteriores", "posteriores"}),
+    frozenset({"interna", "internacional"}),
+    frozenset({"i", "ii", "iii", "iv"}),
+)
+
+
+def _semantic_roles_are_axis_token_siblings(left: str, right: str) -> bool:
+    left_parts = tuple(left.split("_"))
+    right_parts = tuple(right.split("_"))
+    if len(left_parts) == len(right_parts):
+        differing = [
+            (left_part, right_part)
+            for left_part, right_part in zip(left_parts, right_parts, strict=True)
+            if left_part != right_part
+        ]
+        return len(differing) == 1 and _semantic_role_tokens_share_axis(*differing[0])
+
+    return _semantic_role_optional_negation_siblings(left_parts, right_parts)
+
+
+def _semantic_role_tokens_share_axis(left: str, right: str) -> bool:
+    return any(left in group and right in group for group in _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS)
+
+
+def _semantic_role_optional_negation_siblings(left: tuple[str, ...], right: tuple[str, ...]) -> bool:
+    if abs(len(left) - len(right)) != 1:
+        return False
+    longer, shorter = (left, right) if len(left) > len(right) else (right, left)
+    for index, part in enumerate(longer):
+        if part != "sin":
+            continue
+        if longer[:index] + longer[index + 1:] == shorter:
+            return True
+    return False
 
 
 # Plan C W05 validator hard-flip surface (semantic_role requirement).

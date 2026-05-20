@@ -278,3 +278,33 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("permanent_aumento" in str(w.message) for w in captured)
+
+    def test_token_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
+        anteriores = _casilla(
+            cid="a",
+            semantic_role="iva_compensacion_pendiente_anteriores",
+        )
+        posteriores = _casilla(
+            cid="b",
+            semantic_role="iva_compensacion_pendiente_posteriores",
+        )
+        m = _modelo("303", "2009-y-siguientes", [anteriores, posteriores])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_optional_negation_sibling_roles_do_not_warn_as_typos(self) -> None:
+        con_mantenimiento = _casilla(
+            cid="a",
+            semantic_role="is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+        )
+        sin_mantenimiento = _casilla(
+            cid="b",
+            semantic_role="is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+        )
+        m = _modelo("200", "2024-y-siguientes", [con_mantenimiento, sin_mantenimiento])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
