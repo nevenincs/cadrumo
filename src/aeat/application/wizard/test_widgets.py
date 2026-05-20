@@ -215,3 +215,47 @@ def test_invalid_tax_id_error_does_not_leak_internal_key_path() -> None:
     assert "wizard.setup.profile.tax-id.prompt" not in error.translated_message
     assert error.context is not None
     assert error.context["prompt_key"] != "wizard.setup.profile.tax-id.prompt"
+
+
+def _postcode_question() -> WizardQuestion:
+    return WizardQuestion(
+        id="address-postcode",
+        profile_key="contact.postcode",
+        widget=WizardWidget.TEXT,
+        prompt="wizard.setup.profile.address-postcode.prompt",
+        choices=(),
+        required=False,
+        visible_when=None,
+        answer_type=str,
+    )
+
+
+@pytest.mark.parametrize("postcode", ["28013", "01001", "08001", "52001"])
+def test_postcode_accepts_valid_spanish_postcodes(postcode: str) -> None:
+    """Valid Spanish postcodes pass and keep their leading zeros as strings."""
+
+    question = _postcode_question()
+    assert validate_widget_answer(question, postcode) == postcode
+
+
+@pytest.mark.parametrize("postcode", ["BADPOST", "99999", "1234", "123456", "00999"])
+def test_postcode_rejects_malformed_values(postcode: str) -> None:
+    """Arbitrary text and out-of-range province codes are refused.
+
+    Before fix: the postcode field accepted any text (``BADPOST``,
+    ``99999``). After fix: only the 5-digit province-code 01-52 form
+    passes.
+    """
+
+    question = _postcode_question()
+    with pytest.raises(WizardValidationError, match=r"invalid_postcode"):
+        validate_widget_answer(question, postcode)
+
+
+def test_postcode_preserves_leading_zero_string() -> None:
+    """The postcode answer is a string; a leading-zero value is not int-coerced."""
+
+    question = _postcode_question()
+    result = validate_widget_answer(question, "01001")
+    assert isinstance(result, str)
+    assert result == "01001"

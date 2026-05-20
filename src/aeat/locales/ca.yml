@@ -1902,6 +1902,8 @@ wizard:
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Codi postal no vàlid per a %{prompt_key}: %{raw}. Un codi postal
+      espanyol té 5 dígits (codi de província 01-52 seguit de tres dígits).'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'

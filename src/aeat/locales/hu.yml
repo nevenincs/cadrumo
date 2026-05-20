@@ -1512,7 +1512,7 @@ cli:
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
     errors:
-      did_you_mean_command: "Erre gondolt: '%{command}'?"
+      did_you_mean_command: 'Erre gondolt: ''%{command}''?'
     format_help: A parancseredmények kimeneti formátuma
     help_help: Show workflow-oriented help
     landing:
@@ -1885,6 +1885,8 @@ wizard:
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Érvénytelen irányítószám ehhez: %{prompt_key}: %{raw}. A spanyol
+      irányítószám 5 számjegy (01-52 tartományi kód, majd három számjegy).'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
