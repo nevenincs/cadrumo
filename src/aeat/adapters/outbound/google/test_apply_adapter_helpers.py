@@ -33,9 +33,9 @@ from ._calc_sheets_apply import (
     _input_message_for_constraint,
 )
 
-_Sign = Literal["any", "non_negative", "non_positive"]
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
+_Sign = Literal["any", "non_negative", "non_positive"]
 
 
 def _make_constraint(

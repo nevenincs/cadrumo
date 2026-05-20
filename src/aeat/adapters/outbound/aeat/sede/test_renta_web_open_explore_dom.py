@@ -20,9 +20,6 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Final
 
-if TYPE_CHECKING:
-    from playwright.async_api import Page
-
 import pytest
 
 from .....core.config import Settings
@@ -32,6 +29,9 @@ from .....entrypoints.cli._live import requires_live_enabled
 from ..browser import default_browser_session_factory
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
+
+if TYPE_CHECKING:
+    from playwright.async_api import Page
 
 _DOM_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-dom.html"
 _BUTTONS_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-buttons.txt"
