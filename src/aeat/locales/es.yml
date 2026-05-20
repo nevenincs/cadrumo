@@ -561,6 +561,9 @@ cli:
           periodo, revisión)
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
+        discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
+          a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
+        discard_yes_help: Confirmar explícitamente la operación de descarte
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         from_filing_record_help: Identificador estable del filing record base a amendar.
@@ -607,8 +610,8 @@ cli:
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
-        year_out_of_range: 'El ejercicio fiscal %{year} está fuera de rango; indique
-          un año entre %{minimum} y %{maximum}.'
+        year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
+          un año entre %{minimum} y %{maximum}.
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)

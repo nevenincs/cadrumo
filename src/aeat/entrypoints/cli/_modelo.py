@@ -1062,6 +1062,10 @@ def work_discard(
         str | None,
         typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),
     ] = None,
+    confirmed: Annotated[
+        bool,
+        typer.Option("--yes", help=tr("cli.app.modelo.work.discard_yes_help")),
+    ] = False,
 ) -> None:
     """Transition a work unit to discarded state.
 
@@ -1070,9 +1074,20 @@ def work_discard(
     with actor + reason captured, and subsequent mutations are
     rejected. Discarded units are excluded from default
     ``aeat app modelo work list`` output.
+
+    The transition is gated by ``--yes``, symmetric with
+    ``config profile delete``: an unconfirmed run is refused with
+    the exact re-run command.
     """
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
+    if not confirmed:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.discard_requires_yes",
+                work_unit_id=work_unit_id,
+            )
+        )
     try:
         unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
