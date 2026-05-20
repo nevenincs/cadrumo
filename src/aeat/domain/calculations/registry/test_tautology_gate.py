@@ -26,6 +26,7 @@ structural / graph-wiring assertions, and Python primitive contracts.
 from __future__ import annotations
 
 import ast
+import shutil
 from decimal import Decimal
 from itertools import combinations
 from pathlib import Path
@@ -34,7 +35,12 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import load_modelo_directory
+from aeat.domain.calculations.registry import (
+    RegistryValidationError,
+    RegistryValidator,
+    load_modelo_directory,
+    load_registry_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -408,3 +414,89 @@ def test_no_hand_summed_aggregation_tests_across_codebase() -> None:
             "mechanically reproduces.\n\n" + "\n".join(f"  - {f}" for f in flagged)
         )
         pytest.fail(message)
+
+
+# ---------------------------------------------------------------------------
+# Anti-tautology proof for the (segmento, number) casilla-identity gate
+# ---------------------------------------------------------------------------
+#
+# The registry validator enforces casilla identity as the pair
+# (segmento, number), not the bare number. An anti-tautology proof must
+# show the gate distinguishes a sound registry from a broken one: the
+# committed Modelo 200 tree validates clean, and a single on-disk
+# mutation that collides two casilla identities makes the same gate
+# hard-fail. The mutation is applied to a copied fragment tree and the
+# registry is reloaded through the real loader and the real validator —
+# no schema-authority objects are constructed in this file, so the
+# schema-hygiene gate does not need an allowlist entry.
+#
+# Modelo 200 is the multi-segment modelo the segment-scoped identity
+# model exists for: it declares casilla 00562 twice, as the ECPN-segment
+# occurrence (segmento unset) and as the Liquidación-segment occurrence
+# (segmento "DP200014"). The two casillas carry distinct ids and distinct
+# (segmento, number) identities, so the committed tree is sound. Dropping
+# the segmento line from the Liquidación 00562 fragment collapses its
+# identity to (None, "00562"), colliding with the ECPN occurrence — and
+# because both casillas keep distinct ids, only the (segmento, number)
+# uniqueness gate can catch the collision.
+
+
+_MODELO_200_DIRECTORY = bundled_path("registry", "aeat", "modelos", "200")
+_MODELO_200_LIQUIDACION_00562_FRAGMENT = (
+    "revisions/2024-y-siguientes/casillas/liquidacion-00562-cuota-integra.toml"
+)
+
+
+def test_committed_modelo_200_clears_the_segmento_number_identity_gate() -> None:
+    """The unmutated Modelo 200 tree validates clean under the identity gate.
+
+    This is the sound-registry half of the anti-tautology proof: the
+    committed Modelo 200, which declares casilla 00562 under two distinct
+    ``(segmento, number)`` identities, must validate without error. If
+    this failed, the colliding-mutation test below would prove nothing —
+    the gate would be rejecting everything.
+    """
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = load_modelo_directory(_MODELO_200_DIRECTORY)
+
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_dropping_segmento_to_collide_casilla_identity_hard_fails_the_gate(
+    tmp_path: Path,
+) -> None:
+    """Colliding two casilla identities by dropping segmento hard-fails the gate.
+
+    The Modelo 200 fragment tree is copied to a temporary directory and
+    the ``segmento = "DP200014"`` line is deleted from the Liquidación
+    casilla 00562 fragment. That collapses the Liquidación occurrence's
+    identity from ``("DP200014", "00562")`` to ``(None, "00562")``, which
+    now collides with the unset-segmento ECPN occurrence of the same
+    number. The two casillas still carry distinct ``id`` values, so the
+    duplicate-``id`` check cannot fire; only the generalised
+    ``(segmento, number)`` uniqueness gate can catch the collision.
+
+    Reloading the mutated tree through the real loader and running the
+    real ``RegistryValidator`` must raise ``RegistryValidationError``
+    naming the duplicate casilla number. Paired with the sound-registry
+    test above, this proves the identity gate is load-bearing: it accepts
+    the committed tree and rejects the deliberately collided one.
+    """
+    mutated_root = tmp_path / "200"
+    shutil.copytree(_MODELO_200_DIRECTORY, mutated_root)
+    fragment_path = mutated_root / _MODELO_200_LIQUIDACION_00562_FRAGMENT
+    original = fragment_path.read_text(encoding="utf-8")
+    mutated = "\n".join(
+        line for line in original.splitlines() if not line.strip().startswith("segmento =")
+    )
+    assert mutated != original, (
+        "the Liquidación 00562 fragment must declare a segmento line for the "
+        "mutation to drop; the test fixture is stale if it does not"
+    )
+    fragment_path.write_text(mutated, encoding="utf-8")
+
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = load_modelo_directory(mutated_root)
+
+    with pytest.raises(RegistryValidationError, match=r"duplicate casilla number '00562'"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
