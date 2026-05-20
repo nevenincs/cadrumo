@@ -409,6 +409,7 @@ def test_import_refuses_discarded_work_unit(repos) -> None:
         work_unit.work_unit_id,
         actor="operator-A",
         repository=wu_repo,
+        bucket_event_repository=bv_repo,
         clock=_T1,
     )
 

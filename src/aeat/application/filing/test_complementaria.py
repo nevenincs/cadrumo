@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ...domain.filing import ModeloDraftStatus, ModeloValue, ModeloValueKind
-from ...domain.submission import SubmissionAttempt, SubmissionStatus, ModeloPresentado
+from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from . import (
     ModeloAmendmentError,
     ModeloBuilderError,
@@ -144,7 +144,6 @@ class TestBuildComplementaria:
                 "08": Decimal("2000"),
                 "10": Decimal("10"),
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-                "13": Decimal("0"),
                 "15": Decimal("0"),
                 "16": Decimal("0"),
                 "18": Decimal("0"),
@@ -217,10 +216,10 @@ class TestBuildComplementaria:
             )
         assert not (tmp_path / "submissions" / "amendments").exists()
 
-    def test_modelo_303_requires_registry_definition(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        original_draft = _draft("303", "2024Q2", {"69": Decimal("1900.00")})
+    def test_unknown_modelo_requires_registry_definition(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        original_draft = _draft("999", "2024Q2", {"69": Decimal("1900.00")})
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
-        original = _submitted_filing(original_draft, submission_id="sub-303")
+        original = _submitted_filing(original_draft, submission_id="sub-999")
 
         with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
             build_complementaria(
@@ -230,10 +229,12 @@ class TestBuildComplementaria:
             )
         assert not (tmp_path / "submissions" / "amendments").exists()
 
-    def test_modelo_390_requires_registry_definition(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        original_draft = _draft("390", "2024A", {"109": Decimal("8400.00")})
+    def test_unknown_annual_modelo_requires_registry_definition(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        original_draft = _draft("998", "2024A", {"109": Decimal("8400.00")})
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
-        original = _submitted_filing(original_draft, submission_id="sub-390")
+        original = _submitted_filing(original_draft, submission_id="sub-998")
 
         with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
             build_complementaria(

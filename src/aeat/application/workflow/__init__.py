@@ -44,6 +44,7 @@ from ._models import (
 
 # ---- persistence (depends on _models only) ----------------------------------
 from ._persistence import (
+    WorkflowRunRepository,
     WorkflowStateRepository,
     list_runs,
     load_run,
@@ -91,6 +92,7 @@ __all__ = [
     "WorkflowResult",
     "WorkflowResumeContext",
     "WorkflowResumeRefusedError",
+    "WorkflowRunRepository",
     "WorkflowStage",
     "WorkflowState",
     "WorkflowStateRepository",

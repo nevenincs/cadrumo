@@ -27,6 +27,12 @@ class BucketEventHistoryRepository:
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         self._objects = objects or SecureObjectRepository()
 
+    @property
+    def secure_object_repository(self) -> SecureObjectRepository:
+        """Return the secure-object backend used by this catalogue."""
+
+        return self._objects
+
     def exists(self) -> bool:
         return self._objects.exists(_NAMESPACE, _OBJECT_KEY)
 
