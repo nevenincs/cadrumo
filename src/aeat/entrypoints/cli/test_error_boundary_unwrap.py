@@ -95,9 +95,11 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
 
     wrapped = command_error_boundary(_callback)
 
-    with caplog.at_level(logging.ERROR, logger="aeat.entrypoints.cli._errors"):
-        with pytest.raises(typer.Exit) as exit_info:
-            wrapped()
+    with (
+        caplog.at_level(logging.ERROR, logger="aeat.entrypoints.cli._errors"),
+        pytest.raises(typer.Exit) as exit_info,
+    ):
+        wrapped()
 
     # Exit code is the typed refusal's category code, never the
     # unexpected-error code.
@@ -124,9 +126,11 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
 
     wrapped = command_error_boundary(_callback)
 
-    with caplog.at_level(logging.ERROR, logger="aeat.entrypoints.cli._errors"):
-        with pytest.raises(typer.Exit):
-            wrapped()
+    with (
+        caplog.at_level(logging.ERROR, logger="aeat.entrypoints.cli._errors"),
+        pytest.raises(typer.Exit),
+    ):
+        wrapped()
 
     assert any(
         "unexpected exception" in record.message for record in caplog.records
