@@ -19,6 +19,7 @@ from ...domain.user_profile import (
     UserProfileStatus,
 )
 from ..workflow._models import WorkflowState
+from ..workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
 from ._orchestration import (
     read_active_profile,
     register_active_profile,
@@ -78,7 +79,14 @@ def test_register_active_profile_threads_state_and_emits_events(secure_objects, 
         schema=schema,
     )
     assert resolve_active_bucket_id() == "default"
-    assert "default" in updated.profiles
+    # The bucket directory is named by the UUID identity ("default"
+    # here); its manifest carries the decoupled operator label.
+    by_id = read_profile_bucket_by_id("default")
+    assert by_id is not None
+    assert by_id.bucket_id == "default"
+    assert by_id.label == "Default operator"
+    # The operator-facing label resolves back to the same bucket.
+    assert read_profile_bucket("Default operator") == by_id
     actions = tuple(event.action for event in updated.bucket_events)
     assert actions == ("profile.created", "profile.selected", "profile.values.updated")
 

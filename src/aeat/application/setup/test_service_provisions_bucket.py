@@ -3,10 +3,12 @@
 Pins the post-init bucket-provisioning contract: after a successful
 workspace init, the per-bucket directory tree (`<aeat-root>/buckets/<id>/`
 with `db/`, `blobs/`, `audit/` subdirectories) AND the
-`<bucket-dir>/manifest.toml` must exist on disk. The manifest
-carries the OWASP-baseline Argon2id KDF parameters under a fresh
-salt; `recovery_enrolled=False` until the recovery enrollment
-flow runs.
+`<bucket-dir>/manifest.toml` must exist on disk. The bucket directory
+is named by the immutable UUID profile identity; the manifest carries
+that UUID as `bucket_id` and the operator-chosen name as a decoupled
+`label`. The manifest also carries the OWASP-baseline Argon2id KDF
+parameters under a fresh salt; `recovery_enrolled=False` until the
+recovery enrollment flow runs.
 """
 
 from __future__ import annotations
@@ -24,11 +26,13 @@ from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path,
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.application.setup._contracts import InitializeWorkspaceCommand
-from aeat.application.setup._errors import WorkspaceBucketTornError
 from aeat.application.setup._service import initialize_workspace
+from aeat.application.user_profile._orchestration import ProfileAlreadyRegisteredError
 from aeat.core.config import Settings, load_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_UUID_RE = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
 
 
 @pytest.fixture
@@ -48,9 +52,11 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def test_initialize_workspace_provisions_bucket_directory_and_manifest(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """A successful init lays out the bucket dir and writes the manifest."""
+    """A successful init lays out the UUID-named bucket dir and manifest."""
 
-    initialize_workspace(
+    import re
+
+    result = initialize_workspace(
         InitializeWorkspaceCommand(
             profile_name="catering",
             tax_id="12345678Z",
@@ -60,8 +66,12 @@ def test_initialize_workspace_provisions_bucket_directory_and_manifest(
         )
     )
 
+    # The profile identity is a generated UUID, distinct from the name.
+    assert re.fullmatch(_UUID_RE, result.profile_id)
+    assert result.profile_id == result.bucket_id
+
     settings = load_settings()
-    paths = bucket_paths(settings.aeat_local_storage_root, "catering")
+    paths = bucket_paths(settings.aeat_local_storage_root, result.profile_id)
     assert paths.bucket_dir.is_dir()
     assert paths.db_dir.is_dir()
     assert paths.blobs_dir.is_dir()
@@ -69,12 +79,12 @@ def test_initialize_workspace_provisions_bucket_directory_and_manifest(
     assert manifest_path(paths).is_file()
 
 
-def test_initialize_workspace_writes_manifest_with_baseline_kdf_params(
+def test_initialize_workspace_writes_manifest_with_uuid_id_and_name_label(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """The manifest records OWASP-baseline Argon2id params + a fresh salt."""
+    """The manifest records the UUID identity, the operator label, and KDF params."""
 
-    initialize_workspace(
+    result = initialize_workspace(
         InitializeWorkspaceCommand(
             profile_name="catering",
             tax_id="12345678Z",
@@ -85,11 +95,13 @@ def test_initialize_workspace_writes_manifest_with_baseline_kdf_params(
     )
 
     settings = load_settings()
-    paths = bucket_paths(settings.aeat_local_storage_root, "catering")
+    paths = bucket_paths(settings.aeat_local_storage_root, result.profile_id)
     manifest = read_manifest(paths)
 
-    assert manifest.bucket_id == "catering"
+    # bucket_id is the immutable UUID; label is the decoupled operator name.
+    assert manifest.bucket_id == result.profile_id
     assert manifest.label == "catering"
+    assert manifest.bucket_id != manifest.label
     assert manifest.recovery_enrolled is False
     assert manifest.kdf_params.algorithm == "argon2id"
     assert manifest.kdf_params.memory_cost == 19_456
@@ -99,116 +111,14 @@ def test_initialize_workspace_writes_manifest_with_baseline_kdf_params(
     assert len(manifest.kdf_params.salt) == 16
 
 
-def _write_manifest_only_bucket(profile_name: str, *, salt: bytes) -> Path:
-    """Provision a bucket directory + manifest WITHOUT a profile record.
-
-    Reproduces a torn bucket: a crash between disaster-ADR Ruling-3
-    step 2 (manifest write) and step 4 (encrypted profile record
-    write) leaves the manifest claiming the profile exists while no
-    decryptable record backs it.
-    """
-
-    from datetime import UTC, datetime
-
-    from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
-    from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
-    from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
-
-    settings = load_settings()
-    paths = provision_bucket_directory(settings.aeat_local_storage_root, profile_name)
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=profile_name,
-            label=profile_name,
-            created_at=datetime.now(UTC),
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=0x13,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=salt,
-                output_length=32,
-            ),
-            recovery_enrolled=False,
-            schema_version=1,
-        ),
-    )
-    return manifest_path(paths).parent
-
-
-def test_initialize_workspace_refuses_torn_bucket(
+def test_initialize_workspace_refuses_a_duplicate_operator_name(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """A manifest without its profile record is a torn bucket; init refuses.
+    """A second init with the same operator name is refused as a duplicate label.
 
-    The bucket-directory + manifest provisioning runs ahead of the
-    profile-record write. A manifest present without the encrypted
-    ``UserProfileRecord`` is the disaster-ADR torn case: the manifest
-    scan reports the profile as existing, but no decryptable record
-    backs it. ``initialize_workspace`` must detect this with a
-    no-decryption DB-existence check and raise
-    :class:`WorkspaceBucketTornError` rather than silently overlaying
-    new profile data into degraded storage.
-    """
-
-    _write_manifest_only_bucket("catering", salt=b"\x42" * 16)
-
-    with pytest.raises(WorkspaceBucketTornError):
-        initialize_workspace(
-            InitializeWorkspaceCommand(
-                profile_name="catering",
-                tax_id="12345678Z",
-                activity="catering",
-                iva_regime="GENERAL",
-                auth_provider="none",
-            )
-        )
-
-
-def test_initialize_workspace_torn_bucket_refusal_preserves_manifest_salt(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """The torn-bucket refusal does not clobber the existing manifest salt.
-
-    The provisioner detects the existing manifest and skips the
-    write; the torn-bucket guard then refuses. The bucket's KDF salt
-    must survive the refusal so a later repair + recreate against the
-    same salt remains possible.
-    """
-
-    pinned_salt = b"\x42" * 16
-    bucket_dir = _write_manifest_only_bucket("catering", salt=pinned_salt)
-    paths = bucket_paths(load_settings().aeat_local_storage_root, "catering")
-
-    with pytest.raises(WorkspaceBucketTornError):
-        initialize_workspace(
-            InitializeWorkspaceCommand(
-                profile_name="catering",
-                tax_id="12345678Z",
-                activity="catering",
-                iva_regime="GENERAL",
-                auth_provider="none",
-            )
-        )
-
-    assert bucket_dir.is_dir()
-    assert read_manifest(paths).kdf_params.salt == pinned_salt
-
-
-def test_initialize_workspace_idempotent_for_genuinely_initialized_workspace(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """A re-run against a fully-initialized workspace is a benign no-op.
-
-    The first ``initialize_workspace`` writes both the manifest and
-    the encrypted profile record. A second run hits
-    ``ProfileAlreadyRegisteredError`` from the lifecycle service, but
-    the no-decryption DB-existence check finds the record present, so
-    the run returns normally instead of raising the torn-bucket
-    error.
+    Profile identity is a fresh UUID per creation, so there is no
+    name-derived idempotent re-run: a name already carried by a live
+    profile is a genuine duplicate-label collision.
     """
 
     command = InitializeWorkspaceCommand(
@@ -218,10 +128,39 @@ def test_initialize_workspace_idempotent_for_genuinely_initialized_workspace(
         iva_regime="GENERAL",
         auth_provider="none",
     )
+    initialize_workspace(command)
 
-    first = initialize_workspace(command)
-    second = initialize_workspace(command)
+    with pytest.raises(ProfileAlreadyRegisteredError):
+        initialize_workspace(command)
 
-    assert first.profile_id == "catering"
-    assert second.profile_id == "catering"
-    assert second.bucket_id == "catering"
+
+def test_initialize_workspace_two_distinct_names_get_distinct_uuids(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Two profiles with different names land in two UUID-named buckets."""
+
+    first = initialize_workspace(
+        InitializeWorkspaceCommand(
+            profile_name="catering",
+            tax_id="12345678Z",
+            activity="catering",
+            iva_regime="GENERAL",
+            auth_provider="none",
+        )
+    )
+    second = initialize_workspace(
+        InitializeWorkspaceCommand(
+            profile_name="consulting",
+            tax_id="87654321X",
+            activity="consulting",
+            iva_regime="GENERAL",
+            auth_provider="none",
+        )
+    )
+
+    assert first.profile_id != second.profile_id
+    settings = load_settings()
+    first_manifest = read_manifest(bucket_paths(settings.aeat_local_storage_root, first.profile_id))
+    second_manifest = read_manifest(bucket_paths(settings.aeat_local_storage_root, second.profile_id))
+    assert first_manifest.label == "catering"
+    assert second_manifest.label == "consulting"

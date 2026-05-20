@@ -91,8 +91,11 @@ def test_config_create_then_config_show_round_trips_iva_regime(
 
     with get_master_key_provider():
         workflow_state_repository().load()
-        assert read_profile_bucket("default") is not None
-        record = UserProfileLifecycleRepository(bucket_id="default").load("default")
+        # The bucket directory is named by the minted UUID; resolve it
+        # from the operator label "default" carried in the manifest.
+        pointer = read_profile_bucket("default")
+        assert pointer is not None
+        record = UserProfileLifecycleRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
         assert fact_value(record, "iva.regime") == "GENERAL"
 
 
