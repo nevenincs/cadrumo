@@ -1456,7 +1456,7 @@ def work_verify(
     """Verify a draft calculation revision against the verified-complete contract.
 
     Produces a structured verification report. On success, the
-    revision transitions to ``verified_complete``. On failure, the
+    revision transitions to ``verificado_completo``. On failure, the
     revision is not mutated and the report explains the missing
     inputs or blocking findings.
     """
