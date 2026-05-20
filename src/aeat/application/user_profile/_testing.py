@@ -10,6 +10,7 @@ composes only canonical surfaces.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -17,8 +18,26 @@ from ...domain.user_profile import ProfileAlreadyExistsError, UserProfileFact
 from ..workflow._models import WorkflowState
 from ._orchestration import register_active_profile, select_profile, set_active_fields
 
+#: NIF control-letter table, indexed by ``8-digit-number % 23``.
+_NIF_CONTROL_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
+
+
+def _distinct_valid_nif(profile_id: str) -> str:
+    """Return a valid Spanish NIF derived deterministically from ``profile_id``.
+
+    ``ProfileRepository.create`` refuses two profiles that share a tax
+    id, so a test registering several profiles needs a distinct — and
+    checksum-valid — NIF per profile. The 8-digit body is a stable hash
+    of ``profile_id``; the control letter is computed so the result
+    passes the NIF checksum validator.
+    """
+
+    digest = hashlib.sha256(profile_id.encode("utf-8")).hexdigest()
+    number = int(digest, 16) % 100_000_000
+    return f"{number:08d}{_NIF_CONTROL_LETTERS[number % 23]}"
+
+
 _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {
-    "identity.tax_id": "00000000T",
     "identity.name": "Test Operator",
     "tax_residence.ccaa": "madrid",
     "tax_residence.jurisdiction_scope": "common_regime",
@@ -53,6 +72,10 @@ def register_minimal_profile(
     """
 
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
+    # Default the tax id to a profile-unique valid NIF so two
+    # ``register_minimal_profile`` calls never collide on the
+    # duplicate-tax-id refusal; an explicit override still wins.
+    merged["identity.tax_id"] = _distinct_valid_nif(profile_id)
     if overrides:
         merged.update(overrides)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value)
