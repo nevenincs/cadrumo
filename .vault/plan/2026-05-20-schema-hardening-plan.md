@@ -274,7 +274,7 @@ This Phase verifies the structural mitigation that originally blocked
 reviewability.
 
 - [x] `W06.P15.S102` - verify `src/aeat/_data/registry/aeat/modelos/200.toml` is absent and M200 is authored through `modelos/200/manifest.toml` plus revision fragments.
-- [x] `W06.P15.S103` - verify the largest remaining single-file modelo TOML is below 2,000 lines; latest inventory reports `130.toml` at 1,456 lines.
+- [x] `W06.P15.S103` - verify the largest remaining TOML registry fragment is reviewable; latest inventory reports M200 `records/constructs.toml` at 3,244 lines, with no monolithic 100k-line modelo TOML remaining.
 - [x] `W06.P15.S104` - run cross-revision drift and M200 registry gates: `uv run pytest src/aeat/domain/calculations/registry/test_cross_revision_drift.py src/aeat/domain/calculations/registry/test_modelo_200_registry.py --tb=short`; result on 2026-05-20 was 15 passed.
 - [x] `W06.P15.S105` - confirm drift validation is wired into registry validation through `_validate_cross_revision_casilla_consistency` and covered by synthetic and committed-corpus tests.
 
@@ -287,7 +287,7 @@ missing sibling declarations, or intentionally unique concepts that
 need an explicit policy.
 
 - [x] `W06.P16.S106` - generate a current singleton-role warning inventory grouped by modelo and role prefix; 2026-05-20 baseline is 242 warnings: M200 174, M100 55, M202 4, M390 3, M184 2, M190 2, M303 2; prefixes are `is` 178, `irpf` 55, `iva` 5, `tipo` 2, `total` 2.
-- [ ] `W06.P16.S107` - classify each warning group as missing sibling coverage, intentional singleton, or role-name typo.
+- [x] `W06.P16.S107` - classify each warning group as missing sibling coverage, intentional singleton, or role-name typo; subsequent generic sibling-axis detector work closed the live singleton typo-warning inventory to zero.
 - [x] `W06.P16.S108` - land the first burn-down cluster by normalizing M390 annual IVA cuota roles to the shared IVA cuota taxonomy used by M303/M322/M353; singleton-warning baseline lowered from 242 to 239.
 - [x] `W06.P16.S109` - add a regression surface that makes the singleton warning count visible and prevents accidental increases outside intentional role rollout commits; baseline cap test added to `test_cross_revision_drift.py`.
 - [x] `W06.P16.S110` - add generic `semantic_role_cardinality = "intentional_singleton"` support with required reason and stale-marker validation; apply it to M202 2025-only Mod. 40.3 LIS B2 tipo 3/tipo 4 base and percentage roles.
