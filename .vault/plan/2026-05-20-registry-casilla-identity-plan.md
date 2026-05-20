@@ -87,7 +87,7 @@ Add the optional segmento field to CasillaDefinition under strict-pydantic disci
 Change the casilla-uniqueness invariant from id to (segmento, number) and define segment-aware reference resolution for formula, export, and relation args keyed on a bare casilla number.
 
 - [x] `P02.S04` - Generalise the casilla duplicate-id invariant to (segmento, number) uniqueness per modelo revision so a casilla with segmento unset reproduces today's bare-number uniqueness exactly; `src/aeat/domain/calculations/registry/_validate.py`.
-- [ ] `P02.S05` - Define segment-aware reference resolution so a bare-number formula, export, or relation arg resolves within its segment context and only genuinely cross-segment references need the composed id; `src/aeat/domain/calculations/registry/_validate.py`.
+- [x] `P02.S05` - Define segment-aware reference resolution so a bare-number formula, export, or relation arg resolves within its segment context and only genuinely cross-segment references need the composed id; `src/aeat/domain/calculations/registry/_validate.py`.
 - [ ] `P02.S06` - Apply segment-aware casilla lookup to the runtime graph dependency walk so expression_casilla_refs resolves multi-segment numbers correctly; `src/aeat/domain/calculations/registry/_runtime_graph.py`.
 - [ ] `P02.S07` - Add validator tests covering (segmento, number) uniqueness, the single-segment (None, number) collision still failing, and segment-aware reference resolution; `src/aeat/domain/calculations/registry/test_referential_integrity.py`.
 
