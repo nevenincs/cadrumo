@@ -346,3 +346,24 @@ self-reference check, the formula-consumption `required` set, and the
 Lesson logged: a relation-removal "same structural violation" pattern
 match must be validated against each modelo's own test suite before
 being applied - structural similarity does not imply redundancy.
+
+## Campaign closeout (2026-05-20)
+
+Full `src/aeat/domain/calculations/registry/` test suite: **1608 passed,
+0 failed** (25m run). Baseline at R9 was 1572 pass / 10 fail; all 10
+R10 regressions resolved, and the R7 semantic sweep landed under green
+gates.
+
+Final corpus state:
+- 14,971 casilla declarations, 100% `semantic_role` coverage, 26 modelos.
+- ~2,426 distinct roles after the semantic-correctness sweep.
+- 0 intra-role `data_type` divergences, 0 constraints divergences.
+- Cross-revision drift gate, semantic-role consistency, required-role
+  hard-flip, cross-dependency contract: all green.
+
+Remediation R1-R10 all DONE. Honest residual: the harness still lists
+9 type-vs-label candidates - all verified false positives or
+documented needs-review (the `Indique si ... NIF` boolean flags; the
+0831/0834/00559 amounts) - and the role namespace carries legitimate
+single-revision singletons (re-baselined, typo-twin heuristic improved,
+zero actual typos found). No FATAL validator or test failure remains.
