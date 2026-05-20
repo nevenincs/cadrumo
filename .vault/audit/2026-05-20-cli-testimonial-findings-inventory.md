@@ -589,3 +589,74 @@ These are missing functionality, needing design, not quick takeovers:
 The safe, contained bug-fix loop is exhausted. The remainder is
 feature implementation - a distinct scoped effort (research -> design
 -> build), not reflexive bug-fixing.
+
+## profile rename root-cause + fix
+
+### Root cause
+
+`aeat config profile rename A B` silently left profile B with
+`readiness: missing_profile_record` / `profile_record: missing`.
+
+The bug is a secure-object key mismatch after the bucket directory
+move. The rename sequence was:
+
+1. `service = build_lifecycle_service(bucket_id=source)` — repo with
+   `_bucket_id = "A"`.
+2. `service.rename(source="A", target="B")` — saves the record with
+   object_key `user-profile:A:B` (bucket_id=A embedded).
+3. `shutil.move(buckets/A/, buckets/B/)` — DB now lives at
+   `buckets/B/db/aeat.db`.
+4. Reader calls `build_lifecycle_service(bucket_id="B")` and queries
+   `user-profile:B:B` — NOT FOUND. Record is at `user-profile:A:B`.
+
+`user_profile_value_object_key` (file: `src/aeat/application/user_profile/_repository.py:84`)
+encodes both `bucket_id` AND `profile_id` in the key:
+`f"user-profile:{bucket_id}:{profile_id}"`. The rename service was
+always built with the SOURCE bucket_id, so after the directory move
+the key was stale.
+
+### Fix applied
+
+Two changes in `src/aeat/entrypoints/cli/_config/__init__.py`:
+
+**1. Re-key step after directory move (lines ~988–1022 after patch)**
+
+After `shutil.move` succeeds, a re-keying block opens the moved DB
+(now at `buckets/target/`) with a source-scoped repo, loads the
+miskeyed record (`user-profile:source:target`), re-saves via a
+target-scoped repo (`user-profile:target:target`), then deletes the
+stale key. All three operations share one SQLAlchemy engine pointed at
+the target DB path so no cross-DB confusion occurs.
+
+**2. Defence-in-depth health probe with rollback**
+
+After the re-keying, manifest update, and active-pointer write,
+`build_lifecycle_service(bucket_id=target).read(target)` is called.
+If it raises, the bucket directory is moved back and the active pointer
+restored, and a `CliRefusedBoundaryError` is raised — so rename can
+never exit 0 with a broken profile.
+
+### Regression test added
+
+`test_profile_rename_target_record_is_healthy` in
+`src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py` creates
+profile `alice`, renames to `bob`, then asserts:
+- `read_profile_bucket("bob")` is not None (registered)
+- `read_profile_bucket("alice")` is None (no ghost)
+- `build_lifecycle_service(bucket_id="bob").read("bob")` succeeds
+- `profile show bob` exits 0 with `readiness\tready`
+- `repair profile --profile bob` reports `profile_record\tpresent` and
+  `readiness\tready`
+
+### Verification
+
+Live CLI run with `AEAT_LOCAL_STORAGE_ROOT=.vault-scratch/fix-rename`:
+- `profile create A` → exit 0
+- `profile rename A B` → exit 0, `target_profile_id\tB`
+- `profile status` → exit 0, shows B's facts, `Próximo paso: aeat app overview status`
+
+Command log: `.vault-scratch/fix-rename-cmdlog.txt`
+
+### Test results
+
+73/73 passed (`test_profile_lifecycle_verbs.py` + `user_profile/` suite).

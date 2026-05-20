@@ -985,6 +985,42 @@ def config_profile_rename(
             pass  # best-effort rollback; surface the original move error
         raise CliRefusedBoundaryError(f"Failed to rename bucket directory: {move_exc}") from move_exc
 
+    # Re-key the encrypted profile record so its secure-object identity
+    # matches the target bucket id.  After shutil.move the DB lives at
+    # buckets/target/db/aeat.db, but the object_key inside is
+    # "user-profile:<source>:<target>" because service.rename() was built
+    # with bucket_id=source.  A reader that opens the target bucket derives
+    # "user-profile:<target>:<target>" and finds nothing — the silent
+    # missing_profile_record bug.  Fix: open the moved DB with a
+    # source-scoped repo (to load the miskeyed record), then re-save via a
+    # target-scoped repo (correct key), then delete the stale key.
+    try:
+        from ....adapters.persistence.storage.sql import create_engine_from_settings
+        from ....application.user_profile._repository import (
+            UserProfileLifecycleRepository,
+            _secure_objects_for_bucket,
+        )
+        from ....core.config import Settings
+
+        target_db_path = target_paths.bucket_dir / "db" / "aeat.db"
+        rekey_engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{target_db_path.as_posix()}"),
+        )
+        from ....adapters.persistence.storage.sql import SecureObjectRepository
+
+        rekey_objects = SecureObjectRepository(engine=rekey_engine)
+        # Load via source-scoped repo (record key = "user-profile:source:target")
+        source_repo = UserProfileLifecycleRepository(bucket_id=source, objects=rekey_objects)
+        migrated_record = source_repo.load(target)
+        # Re-save via target-scoped repo (record key = "user-profile:target:target")
+        target_repo = UserProfileLifecycleRepository(bucket_id=target, objects=rekey_objects)
+        target_repo.save(migrated_record)
+        # Remove the stale source-keyed entry
+        source_repo.delete(target)
+        rekey_engine.dispose()
+    except Exception as exc:
+        raise CliRefusedBoundaryError(f"Failed to re-key profile record after bucket move: {exc}") from exc
+
     try:
         manifest = read_manifest(target_paths)
         manifest = manifest.model_copy(update={"bucket_id": target, "label": target})
@@ -1003,6 +1039,37 @@ def config_profile_rename(
     # `repository` object still holds the old (now-disposed) engine.
     if was_active:
         _write_active_profile_pointer(target)
+
+    # Defence-in-depth: verify the target profile record is readable before
+    # reporting success.  A broken rename must never exit 0.  If the
+    # re-keying above somehow failed silently, this probe detects it and
+    # rolls back the filesystem and registry state so the operator is left
+    # with a healthy source profile rather than an unrecoverable target.
+    try:
+        _health_svc = build_lifecycle_service(bucket_id=target)
+        _health_svc.read(target)
+        _health_engine = getattr(
+            getattr(getattr(_health_svc, "_repository", None), "_objects", None), "_engine", None
+        )
+        if _health_engine is not None:
+            _health_engine.dispose()
+    except Exception as health_exc:
+        # Roll back: move the bucket directory back to source, restore active
+        # pointer, and swap the DB record back to source keying.
+        try:
+            shutil.move(target_paths.bucket_dir, source_paths.bucket_dir)
+        except Exception:
+            pass
+        try:
+            if was_active:
+                _write_active_profile_pointer(source)
+        except Exception:
+            pass
+        raise CliRefusedBoundaryError(
+            f"Rename aborted: target profile {target!r} is not readable after rename "
+            f"({health_exc}); source profile {source!r} has been restored."
+        ) from health_exc
+
     _profile_state().update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
     _emit(
         ctx,
