@@ -524,3 +524,73 @@ def test_profile_rename_no_ghost_on_failure(
     assert read_profile_bucket("dst_profile") is None, "ghost dst_profile in registry after failed rename"
     # src_profile must still exist (rollback succeeded).
     assert read_profile_bucket("src_profile") is not None, "src_profile was deleted by failed rename"
+
+
+def test_profile_rename_target_record_is_healthy(
+    _per_bucket_backend: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: ``profile rename A B`` must leave B with a readable profile record.
+
+    Before fix: the encrypted record was stored with object_key
+    ``user-profile:A:B`` (source bucket_id embedded).  After shutil.move
+    the DB was at buckets/B/db/aeat.db; a reader queried
+    ``user-profile:B:B`` (target bucket_id) and found nothing, yielding
+    readiness ``missing_profile_record``.
+
+    After fix: the re-keying step rewrites the record to
+    ``user-profile:B:B`` before the manifest update, so ``profile show B``
+    and ``profile status`` both report ``profile_record present`` and
+    ``readiness ready``.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.application.user_profile._orchestration import build_lifecycle_service
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+
+    runner = CliRunner()
+
+    # Create source profile via the full CLI wizard path.
+    create_result = runner.invoke(
+        root_app,
+        [
+            "config", "profile", "create", "alice",
+            "--quiet",
+            "--tax-id", "12345678Z",
+            "--name", "Alice",
+            "--activity", "design",
+            "--iva-regime", "GENERAL",
+        ],
+    )
+    assert create_result.exit_code == 0, f"create failed: {create_result.output}"
+
+    # Rename alice -> bob.
+    dispose_engine()
+    rename_result = runner.invoke(root_app, ["config", "profile", "rename", "alice", "bob"])
+    assert rename_result.exit_code == 0, f"rename failed: {rename_result.output}"
+
+    # Registry: bob present, alice gone.
+    dispose_engine()
+    assert read_profile_bucket("bob") is not None, "bob not in registry after rename"
+    assert read_profile_bucket("alice") is None, "alice still in registry after rename (ghost)"
+
+    # The critical assertion: the profile record must be readable via the
+    # target bucket_id.  Before the fix this raised ProfileNotFoundError
+    # because the object_key was keyed to the source bucket_id.
+    dispose_engine()
+    svc = build_lifecycle_service(bucket_id="bob")
+    record = svc.read("bob")
+    assert record.profile_id == "bob", f"unexpected profile_id: {record.profile_id!r}"
+
+    # profile show bob must exit 0 and report readiness ready (not missing_profile_record).
+    dispose_engine()
+    show_result = runner.invoke(root_app, ["config", "profile", "show", "bob"])
+    assert show_result.exit_code == 0, f"show failed: {show_result.output}"
+    assert "readiness\tready" in show_result.output, show_result.output
+    assert "missing_profile_record" not in show_result.output, show_result.output
+
+    # repair profile --profile bob must report profile_record present (explicit record health check).
+    dispose_engine()
+    repair_result = runner.invoke(root_app, ["config", "repair", "profile", "--profile", "bob"])
+    assert repair_result.exit_code == 0, f"repair failed: {repair_result.output}"
+    assert "profile_record\tpresent" in repair_result.output, repair_result.output
+    assert "readiness\tready" in repair_result.output, repair_result.output
