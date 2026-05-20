@@ -227,8 +227,14 @@ def test_chain_behaviour_scenarios_are_not_tautological() -> None:
 
     formulas = _load_modelo_100_formulas_2025()
     test_path = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
-    if not test_path.exists():
-        pytest.skip("chain-behaviour test file not present")
+    # The chain-behaviour suite is a permanent, committed part of the
+    # registry test surface. If it ever vanishes this gate is no longer
+    # protecting anything — fail loudly rather than silently skip, so a
+    # delete/rename cannot quietly disable the tautology check.
+    assert test_path.exists(), (
+        f"chain-behaviour test file missing at {test_path}; the tautology "
+        f"gate has nothing to scan — restore the file or update this gate."
+    )
     text = test_path.read_text(encoding="utf-8")
     scenarios = _extract_scenarios(text)
     tautologies: list[str] = []
