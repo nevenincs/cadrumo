@@ -30,8 +30,8 @@ from ...domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
-from ..workflow._bucket_pointer import BucketPointer
-from ..workflow._bucket_pointer_io import write_pointer
+from ...core._bucket_pointer import BucketPointer
+from ...core._bucket_pointer_io import write_pointer
 from ..workflow._models import WorkflowEvent, WorkflowState
 from ..workflow._utils import utc_now
 from . import (
@@ -119,8 +119,8 @@ def _clear_active_profile_pointer() -> None:
     pointing at a tombstoned record.
     """
 
+    from ...core._bucket_pointer_io import pointer_path
     from ...core.config import load_settings
-    from ..workflow._bucket_pointer_io import pointer_path
 
     settings = load_settings()
     target = pointer_path(settings.aeat_local_storage_root)

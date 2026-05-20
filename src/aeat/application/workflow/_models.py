@@ -208,8 +208,8 @@ def resolve_active_bucket_id() -> str | None:
     fourth precedence rung.
     """
 
+    from ...core._bucket_pointer_io import read_pointer
     from ...core.config import load_settings
-    from ._bucket_pointer_io import read_pointer
 
     settings = load_settings()
     override = (settings.aeat_active_profile or "").strip()

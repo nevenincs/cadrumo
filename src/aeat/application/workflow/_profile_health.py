@@ -6,10 +6,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core._bucket_pointer_io import pointer_path, read_pointer
 from ...core.config import load_settings
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile._projections import record_to_path_values
-from ._bucket_pointer_io import pointer_path, read_pointer
 from ._models import WorkflowState
 from ._persistence import workflow_state_repository
 from ._profile_bucket_scan import read_profile_bucket

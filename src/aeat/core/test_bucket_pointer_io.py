@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.application.workflow._bucket_pointer import BucketPointer
-from aeat.application.workflow._bucket_pointer_io import (
+from aeat.core._bucket_pointer import BucketPointer
+from aeat.core._bucket_pointer_io import (
     pointer_path,
     read_pointer,
     write_pointer,
