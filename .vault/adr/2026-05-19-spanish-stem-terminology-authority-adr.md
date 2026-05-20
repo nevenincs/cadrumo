@@ -593,3 +593,92 @@ Inspection found no enum value for the AEAT Sede intermediate state `En trámite
 ### A7.7 Supersession note
 
 The "Future scope F1" paragraph in the "Future scope" section above is superseded by this amendment. The scope is now in-scope. The vocabulary table in A7.2 is the single authoritative source for all executing agents on this rename pass.
+
+## Amendment A8 (2026-05-20): Surviving Filing* class-name adjudication — rename ledger
+
+### Context
+
+Task #44 PM-grep found approximately 20 `Filing*` class names surviving after the W04.P08–P13 rename cluster. This amendment adjudicates each surviving name against the entity-vs-workflow heuristic (is `Filing` denoting the modelo *entity* or the filing *act/service-layer*?), verifies code-side presence, and produces the rename ledger for coder execution.
+
+Key heuristic applied: if the name pairs with an already-renamed `Modelo*` sibling, or if the Section 7 ledger already assigned a `Modelo*` replacement, it is RESIDUE. If it names a service-layer error, workflow act, or generic infrastructure concept where English "filing" is the correct generic term, it is LEGITIMATE.
+
+### A8.1 Adjudication of names already present in Section 7 ledger
+
+All of the following were listed in the Section 7 Modelo cluster table with an approved `Modelo*` replacement. Their surviving presence in the codebase confirms the W04 execution passes missed them. Verdict: **RESIDUE** — execute per Section 7 ledger (with A3 carve-out rule applied site-by-site for `FilingDraft*` items).
+
+| Current name | File | Verdict | Replacement | Rationale |
+| --- | --- | --- | --- | --- |
+| `RegistryFilingDraftProtocol` | `application/workflow/_protocols.py` | RESIDUE | `RegistryModeloDraftProtocol` | Section 7 row; pairs with `ModeloDraftLike` base. A3 carve-out: inspect each site — if entity is AEAT-prepared, migrate to `Borrador*`; otherwise `ModeloDraft*`. |
+| `FilingDraftBuilderProtocol` | `application/workflow/_protocols.py` | RESIDUE | `ModeloDraftBuilderProtocol` | Section 7 row; builds taxpayer-side local draft. A3 applies. |
+| `FilingInputsProviderProtocol` | `application/workflow/_protocols.py` | RESIDUE | `ModeloInputsProviderProtocol` | Section 7 row; provides inputs for local draft construction. A3 applies. |
+| `FilingDraftBuilderAdapter` | `application/workflow/_adapters.py` | RESIDUE | `ModeloDraftBuilderAdapter` | Section 7 row; concrete adapter implementing the builder protocol. A3 applies. |
+| `FilingHistoryRepository` | `application/filing/_history_repository.py` | RESIDUE | `ModeloHistoryRepository` | Section 7 row; repository holding submitted-modelo history. |
+| `FilingHistoryEntry` | `application/filing/_history_models.py` | RESIDUE | `ModeloHistoryEntry` | Section 7 row; one entry in the submitted-modelo history. |
+| `FilingHistory` | `application/filing/_history_models.py` | RESIDUE | `ModeloHistory` | Section 7 row; full submitted-modelo history aggregate. |
+| `FilingTestProfile` | `application/filing/testing.py` | RESIDUE | `ModeloTestProfile` | Section 7 row; test fixture for the modelo-filing application layer. |
+| `FilingTestDeadlineStatus` | `application/filing/testing.py` | RESIDUE | `ModeloTestDeadlineStatus` | Section 7 row; pairs with production `DeadlineStatus` in the modelo deadline domain. |
+| `FilingTestDeadlineChecker` | `application/filing/testing.py` | RESIDUE | `ModeloTestDeadlineChecker` | Section 7 row; test stub implementing `DeadlineChecker` for modelo deadline tests. |
+| `FilingOperatorProfile` | `application/filing/runtime.py` | RESIDUE | `ModeloOperatorProfile` | Section 7 row; operator profile projected for a modelo filing session. |
+| `RegistryFilingSubview` | `application/filing/runtime.py` | RESIDUE | `RegistryModeloSubview` | Section 7 row; schema projection of a single modelo registry definition. |
+| `FilingApplicationError` | `application/filing/errors.py` | RESIDUE | `ModeloApplicationError` | Section 7 row; base error for the modelo application layer. Already inherits `ModeloDraftError`. |
+| `FilingCalculateError` | `application/filing/errors.py` | RESIDUE | `ModeloCalculateError` | Section 7 row; calculation error in the modelo application layer. |
+| `FilingApprovalStaleReason` | `application/filing/_review.py` | RESIDUE | `ModeloApprovalStaleReason` | Section 7 row; enum values describe why a modelo draft approval went stale. |
+| `FilingDraftRef` | `application/filing/reconciliation/_schema.py` | RESIDUE | `ModeloDraftRef` | Section 7 row; reference to a local modelo draft in the reconciliation schema. A3 applies. |
+| `FilingDivergenceKind` | `application/filing/reconciliation/_kind.py` | RESIDUE | `ModeloDivergenceKind` | Section 7 row; enum of divergence kinds when reconciling a submitted modelo against local draft. |
+| `ExternalFilingImportError` | `application/modelo/_actions.py` | RESIDUE | `ExternalModeloImportError` | Section 7 row; raised when an externally-imported payload fails modelo import. The `External` prefix is a legitimate infra qualifier; `Filing` here means the modelo entity, not the filing act. |
+
+### A8.2 Adjudication of names NOT in the Section 7 ledger
+
+Two surviving names were not present in the Section 7 ledger and require fresh adjudication.
+
+#### `FilingYear` — `domain/calculations/registry/_schema.py`
+
+`FilingYear` is a pydantic `Annotated[int, ...]` type alias used as the canonical fiscal-year integer at the registry boundary. Its docstring reads: "Mirrors the `RegistrySnapshotRef.filing_year` bound so a casilla declaring `data_type = 'year'` and the snapshot coordinate agree on the supported window."
+
+The `filing_year` concept is the tax year a modelo belongs to — directly in the modelo entity domain, not the generic filing-act layer. The registry is the modelo-schema registry; `FilingYear` quantifies which year a casilla definition applies to. This is an entity-domain type alias, not a service-layer concept.
+
+**Verdict: RESIDUE. Replacement: `ModeloYear`.**
+
+The internal helper `_coerce_filing_year` renames to `_coerce_modelo_year` in lockstep. The `RegistrySnapshotRef.filing_year` field name is a separate callsite; coders must grep for `filing_year` as a field name and rename those too (they are persistence-boundary fields — roundtrip-test gate applies).
+
+#### `TestFilingYearAccepts` / `TestFilingYearRejects` — `domain/calculations/registry/test_year_data_type.py`
+
+Test class names that derive directly from the subject under test (`FilingYear`). Once `FilingYear` → `ModeloYear` is executed, these test class names rename to `TestModeloYearAccepts` / `TestModeloYearRejects` in lockstep.
+
+**Verdict: RESIDUE (derived from `FilingYear`). Replacement: `TestModeloYearAccepts` / `TestModeloYearRejects`.**
+
+### A8.3 Complete rename ledger (all surviving Filing* class names)
+
+| Current name | File | Verdict | Replacement | Rationale |
+| --- | --- | --- | --- | --- |
+| `RegistryFilingDraftProtocol` | `src/aeat/application/workflow/_protocols.py` | RESIDUE | `RegistryModeloDraftProtocol` | Section 7 ADR; A3 carve-out applies |
+| `FilingDraftBuilderProtocol` | `src/aeat/application/workflow/_protocols.py` | RESIDUE | `ModeloDraftBuilderProtocol` | Section 7 ADR; A3 carve-out applies |
+| `FilingInputsProviderProtocol` | `src/aeat/application/workflow/_protocols.py` | RESIDUE | `ModeloInputsProviderProtocol` | Section 7 ADR; A3 carve-out applies |
+| `FilingDraftBuilderAdapter` | `src/aeat/application/workflow/_adapters.py` | RESIDUE | `ModeloDraftBuilderAdapter` | Section 7 ADR; A3 carve-out applies |
+| `FilingHistoryRepository` | `src/aeat/application/filing/_history_repository.py` | RESIDUE | `ModeloHistoryRepository` | Section 7 ADR |
+| `FilingHistoryEntry` | `src/aeat/application/filing/_history_models.py` | RESIDUE | `ModeloHistoryEntry` | Section 7 ADR |
+| `FilingHistory` | `src/aeat/application/filing/_history_models.py` | RESIDUE | `ModeloHistory` | Section 7 ADR |
+| `FilingTestProfile` | `src/aeat/application/filing/testing.py` | RESIDUE | `ModeloTestProfile` | Section 7 ADR |
+| `FilingTestDeadlineStatus` | `src/aeat/application/filing/testing.py` | RESIDUE | `ModeloTestDeadlineStatus` | Section 7 ADR |
+| `FilingTestDeadlineChecker` | `src/aeat/application/filing/testing.py` | RESIDUE | `ModeloTestDeadlineChecker` | Section 7 ADR |
+| `FilingOperatorProfile` | `src/aeat/application/filing/runtime.py` | RESIDUE | `ModeloOperatorProfile` | Section 7 ADR |
+| `RegistryFilingSubview` | `src/aeat/application/filing/runtime.py` | RESIDUE | `RegistryModeloSubview` | Section 7 ADR |
+| `FilingApplicationError` | `src/aeat/application/filing/errors.py` | RESIDUE | `ModeloApplicationError` | Section 7 ADR; already inherits `ModeloDraftError` |
+| `FilingCalculateError` | `src/aeat/application/filing/errors.py` | RESIDUE | `ModeloCalculateError` | Section 7 ADR |
+| `FilingApprovalStaleReason` | `src/aeat/application/filing/_review.py` | RESIDUE | `ModeloApprovalStaleReason` | Section 7 ADR |
+| `FilingDraftRef` | `src/aeat/application/filing/reconciliation/_schema.py` | RESIDUE | `ModeloDraftRef` | Section 7 ADR; A3 carve-out applies |
+| `FilingDivergenceKind` | `src/aeat/application/filing/reconciliation/_kind.py` | RESIDUE | `ModeloDivergenceKind` | Section 7 ADR |
+| `ExternalFilingImportError` | `src/aeat/application/modelo/_actions.py` | RESIDUE | `ExternalModeloImportError` | Section 7 ADR; `Filing` here denotes the modelo entity |
+| `FilingYear` | `src/aeat/domain/calculations/registry/_schema.py` | RESIDUE | `ModeloYear` | Not in Section 7 — adjudicated A8.2; fiscal year of a modelo entity |
+| `_coerce_filing_year` | `src/aeat/domain/calculations/registry/_schema.py` | RESIDUE | `_coerce_modelo_year` | Private helper renamed in lockstep with `FilingYear` |
+| `TestFilingYearAccepts` | `src/aeat/domain/calculations/registry/test_year_data_type.py` | RESIDUE | `TestModeloYearAccepts` | Test class derived from `FilingYear`; renames in lockstep |
+| `TestFilingYearRejects` | `src/aeat/domain/calculations/registry/test_year_data_type.py` | RESIDUE | `TestModeloYearRejects` | Test class derived from `FilingYear`; renames in lockstep |
+
+**LEGITIMATE count: 0.** No surviving `Filing*` class name encodes the generic filing-act or service-layer concept independently of the modelo entity. The `application/filing/` package path itself is a workflow/act container and stays; only the class names inside it that denote modelo entities are RESIDUE.
+
+### A8.4 Coder execution notes
+
+- Apply Amendment A3 carve-out at every `FilingDraft*` site: inspect whether the entity is AEAT-prepared content (→ `Borrador*`) or taxpayer-side local draft content (→ `ModeloDraft*`) before substituting.
+- `FilingYear` rename also requires grepping `filing_year` as a field name across `RegistrySnapshotRef` and any persistence column that encodes the string `"filing_year"`. Those field renames are persistence-boundary changes; roundtrip-test gate required.
+- `__all__` exports in each file must be updated in lockstep with class renames.
+- No shims, no deprecation aliases, no compatibility layers per architecture-boundaries rule.
