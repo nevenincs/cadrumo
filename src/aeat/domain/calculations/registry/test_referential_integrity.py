@@ -18,6 +18,7 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
+from ....core._toml import freeze_toml
 from ....core.classification import SensitivityClass
 from ....core.resources import bundled_path
 from . import RegistryValidationError
@@ -1057,6 +1058,55 @@ def test_casilla_segmento_rejects_empty_string() -> None:
     """An empty segmento is rejected so 'unset' stays distinct from 'empty'."""
     with pytest.raises(ValidationError, match="segmento"):
         CasillaDefinition.model_validate({**_single_segment_casilla().model_dump(), "segmento": ""})
+
+
+def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
+    """A casilla carrying a non-default segmento survives the real load cycle.
+
+    A multi-segment CasillaDefinition is fully populated — every
+    defaultable field set to a non-default value, including the
+    additive ``segmento`` field set to a real AEAT record-segment code —
+    then pushed through the registry's genuine on-disk load transform:
+    ``model_dump`` to the fragment payload shape, ``freeze_toml`` (the
+    exact normalisation ``_merge_revision_fragment`` applies to every
+    TOML fragment it reads), then ``model_validate`` back across the
+    strict / frozen / ``extra="forbid"`` boundary. Strict pydantic
+    equality across that boundary proves the additive ``segmento`` field
+    is neither dropped on serialise nor re-defaulted on load.
+
+    Populating the defaultable fields is deliberate: a
+    save-drops-field / load-re-defaults-field regression on ``segmento``
+    is invisible if the fixture leaves it at the ``None`` default, which
+    is exactly the gap the existing segmento-unset roundtrip test cannot
+    close.
+    """
+    casilla = CasillaDefinition(
+        id="DP200014:00562",
+        number="00562",
+        segmento="DP200014",
+        label="Liquidación III - Base imponible - Cuota íntegra [00562]",
+        section=("liquidacion_iii", "base_imponible"),
+        data_type="money",
+        semantic_role="is_liquidacion_iii_cuota_integra",
+        semantic_role_cardinality="intentional_singleton",
+        semantic_role_cardinality_reason=(
+            "Liquidación III cuota íntegra is the single cuota-chain "
+            "integral-quota casilla within the modelo revision."
+        ),
+        required=False,
+        input_kind="manual",
+        export_refs=("modelo-200-page-014-casilla-00562",),
+        legal_refs=("ley-27-2014:art-30", "ley-27-2014:art-29"),
+        source_refs=("aeat-dr-200-2025", "aeat-modelo-200-manual-2024"),
+    )
+    assert casilla.segmento == "DP200014"
+
+    frozen_payload = freeze_toml(casilla.model_dump(mode="python"))
+    round_tripped = CasillaDefinition.model_validate(frozen_payload)
+
+    assert round_tripped == casilla
+    assert round_tripped.segmento == "DP200014"
+    assert round_tripped.semantic_role == "is_liquidacion_iii_cuota_integra"
 
 
 # ---------------------------------------------------------------------------
