@@ -34,17 +34,18 @@ def cli_runner() -> CliRunner:
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+
     audit_dir = tmp_path / "audit"
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'audit-verbs.db').as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_AUDIT_DIR", str(audit_dir))
     dispose_engine()
-    try:
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
-        yield audit_dir
-    finally:
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+            yield audit_dir
+        finally:
+            dispose_engine()
 
 
 def _seed_bundle() -> str:
