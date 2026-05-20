@@ -25,13 +25,13 @@ from ._authority import ValidatedRegistryAuthority
 from ._loader import load_registry_tree
 from ._schema import (
     ApplicationLinkDefinition,
+    CalculationCompletenessCasilla,
+    CalculationCompletenessManifest,
     CasillaDefinition,
     ConstructDefinition,
     DataBindingDefinition,
     DeadlineWindowDefinition,
     DependencyClassificationDefinition,
-    DisenoCompletenessCasilla,
-    DisenoCompletenessManifest,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
@@ -1065,10 +1065,10 @@ def test_casilla_segmento_rejects_empty_string() -> None:
 
 
 def _completeness_manifest(
-    casillas: tuple[DisenoCompletenessCasilla, ...],
-) -> DisenoCompletenessManifest:
+    casillas: tuple[CalculationCompletenessCasilla, ...],
+) -> CalculationCompletenessManifest:
     """A minimal Diseño-completeness manifest grounded on the dummy catalogues."""
-    return DisenoCompletenessManifest(
+    return CalculationCompletenessManifest(
         source_ref=_DUMMY_SOURCE_ID,
         casillas=casillas,
         legal_refs=(_DUMMY_LEGAL_ID,),
@@ -1101,7 +1101,7 @@ def test_completeness_gate_passes_when_manifest_matches_declared_casillas() -> N
     from ._validate import RegistryValidator
 
     casilla = _minimal_casilla("01")
-    manifest = _completeness_manifest((DisenoCompletenessCasilla(number="01"),))
+    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
     revision = _minimal_revision(casillas=(casilla,)).model_copy(
         update={"completeness_manifest": manifest}
     )
@@ -1119,7 +1119,7 @@ def test_completeness_gate_fails_on_missing_casilla() -> None:
     from ._validate import RegistryValidator
 
     manifest = _completeness_manifest(
-        (DisenoCompletenessCasilla(number="01"), DisenoCompletenessCasilla(number="02"))
+        (CalculationCompletenessCasilla(number="01"), CalculationCompletenessCasilla(number="02"))
     )
     revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(
         update={"completeness_manifest": manifest}
@@ -1141,7 +1141,7 @@ def test_completeness_gate_fails_on_extra_casilla() -> None:
     """
     from ._validate import RegistryValidator
 
-    manifest = _completeness_manifest((DisenoCompletenessCasilla(number="01"),))
+    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
     revision = _minimal_revision(
         casillas=(_minimal_casilla("01"), _minimal_casilla("02"))
     ).model_copy(update={"completeness_manifest": manifest})
@@ -1167,7 +1167,7 @@ def test_completeness_gate_fails_on_diverging_segment_qualified_manifest() -> No
 
     declared = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     manifest = _completeness_manifest(
-        (DisenoCompletenessCasilla(number="00562", segmento="DP200032"),)
+        (CalculationCompletenessCasilla(number="00562", segmento="DP200032"),)
     )
     revision = _minimal_revision(casillas=(declared,)).model_copy(
         update={"completeness_manifest": manifest}
