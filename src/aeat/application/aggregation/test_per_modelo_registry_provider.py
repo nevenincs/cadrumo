@@ -30,7 +30,7 @@ def _counterpart_obs(
     operation_kind: OperationKind349,
     base: str,
     name: str,
-    source_kind: str = "ledger_transaction",
+    source_kind: str = "collectible_invoice",
     groi_verified: bool = False,
     nif_iva_verified: bool = True,
 ) -> CounterpartObservation:
