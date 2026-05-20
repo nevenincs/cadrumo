@@ -1574,13 +1574,20 @@ class CasillaDefinition(RegistryModel):
         return self
 
 
-class DisenoCompletenessCasilla(RegistryModel):
-    """One expected ``(segmento, number)`` casilla in a Diseño-completeness manifest.
+class CalculationCompletenessCasilla(RegistryModel):
+    """One required ``(segmento, number)`` casilla in a calculation-completeness manifest.
 
     A casilla's identity is the pair ``(segmento, number)``. A
     single-segment modelo leaves ``segmento`` unset, so the pair degrades
     to ``(None, number)`` and the manifest enumerates bare numbers
     exactly as the AEAT Diseño de Registros declares them.
+
+    The manifest enumerates only the casillas inside a modelo's
+    *calculation closure* — formula targets, the casillas referenced
+    inside any formula expression, binding and relation endpoint
+    casillas, and verification-expectation operands. Pure
+    accounting-statement data-entry fields that feed no calculation are
+    intentionally absent from this required set.
     """
 
     number: str = Field(min_length=1, max_length=32)
@@ -1600,14 +1607,26 @@ class DisenoCompletenessCasilla(RegistryModel):
         return (self.segmento, self.number)
 
 
-class DisenoCompletenessManifest(RegistryModel):
-    """The expected ``(segmento, number)`` casilla set for a modelo revision.
+class CalculationCompletenessManifest(RegistryModel):
+    """The required calculation-closure casilla set for a modelo revision.
 
-    Derived from the official AEAT Diseño de Registros corpus (an
-    off-load-path extraction step, never parsed on the snapshot-build
-    hot path) and checked into the registry as reviewed data. The
-    registry validator compares a revision's declared casillas against
-    this manifest and hard-errors on any missing or extra casilla.
+    Enumerates the ``(segmento, number)`` casillas in a modelo's
+    *calculation closure* — the casillas the cross-connecting
+    calculation engine traverses: every formula target, every casilla
+    referenced inside a formula expression, every binding and relation
+    endpoint casilla, and every verification-expectation operand. It is
+    derived from the official AEAT Diseño de Registros *intersected
+    with* the modelo's calculation surface — Diseño-authoritative on
+    each casilla's segment, number, and label, but bounded to what the
+    engine needs (an off-load-path derivation step, never parsed on the
+    snapshot-build hot path) and checked into the registry as reviewed
+    data.
+
+    The registry validator enforces ``manifest-required ⊆ declared``
+    plus a ``(segmento, number)`` identity check and a
+    ``legal_refs`` / ``source_refs`` grounding check on each required
+    casilla. A casilla the revision declares but the manifest does not
+    list (a pure accounting-statement field) is *not* a failure.
 
     ``manual_extraction`` flags a manifest authored from a manual read
     of a PDF-only Diseño that resists machine extraction; the
@@ -1619,16 +1638,18 @@ class DisenoCompletenessManifest(RegistryModel):
     source_ref: SourceRefId = Field(
         description="Catalogue source id of the AEAT Diseño de Registros the manifest was derived from."
     )
-    casillas: tuple[DisenoCompletenessCasilla, ...]
+    casillas: tuple[CalculationCompletenessCasilla, ...]
     manual_extraction: bool = False
     manual_extraction_reason: str | None = Field(default=None, min_length=1, max_length=512)
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
     @model_validator(mode="after")
-    def _validate_manifest(self) -> DisenoCompletenessManifest:
+    def _validate_manifest(self) -> CalculationCompletenessManifest:
         if not self.casillas:
-            raise RegistryValidationError("Diseño-completeness manifest must enumerate at least one casilla")
+            raise RegistryValidationError(
+                "calculation-completeness manifest must enumerate at least one casilla"
+            )
         identities = [casilla.identity() for casilla in self.casillas]
         duplicates = sorted({pair for pair in identities if identities.count(pair) > 1})
         if duplicates:
@@ -1637,24 +1658,26 @@ class DisenoCompletenessManifest(RegistryModel):
                 for segmento, number in duplicates
             )
             raise RegistryValidationError(
-                f"Diseño-completeness manifest declares duplicate casilla identities: {rendered}"
+                f"calculation-completeness manifest declares duplicate casilla identities: {rendered}"
             )
         if self.source_ref not in self.source_refs:
             raise RegistryValidationError(
-                "Diseño-completeness manifest source_ref must be included in source_refs"
+                "calculation-completeness manifest source_ref must be included in source_refs"
             )
         if self.manual_extraction and self.manual_extraction_reason is None:
             raise RegistryValidationError(
-                "Diseño-completeness manifest with manual_extraction must declare manual_extraction_reason"
+                "calculation-completeness manifest with manual_extraction must declare "
+                "manual_extraction_reason"
             )
         if not self.manual_extraction and self.manual_extraction_reason is not None:
             raise RegistryValidationError(
-                "Diseño-completeness manifest declares manual_extraction_reason without manual_extraction"
+                "calculation-completeness manifest declares manual_extraction_reason "
+                "without manual_extraction"
             )
         return self
 
     def identities(self) -> frozenset[tuple[str | None, str]]:
-        """Return the frozenset of expected ``(segmento, number)`` identity pairs."""
+        """Return the frozenset of required ``(segmento, number)`` identity pairs."""
         return frozenset(casilla.identity() for casilla in self.casillas)
 
 
@@ -1918,7 +1941,7 @@ class ModeloRevision(RegistryModel):
     support_removal_decisions: tuple[SupportRemovalDecisionDefinition, ...] = ()
     constructs: tuple[ConstructDefinition, ...] = ()
     dependency_classifications: tuple[DependencyClassificationDefinition, ...] = ()
-    completeness_manifest: DisenoCompletenessManifest | None = None
+    completeness_manifest: CalculationCompletenessManifest | None = None
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
