@@ -7,6 +7,7 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from ._authority import ValidatedRegistryAuthority
+from ._errors import RegistryValidationError
 from ._queries import RegistryQueryService, parse_modelo_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -59,3 +60,30 @@ def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision
     assert formulas.code == "303"
     assert formulas.rows
     assert any(row.input_casillas or row.input_bindings or row.input_parameters for row in formulas.rows)
+
+
+def test_describe_accepts_bare_registry_period_token() -> None:
+    """``describe`` resolves a bare registry period token to a declaring revision.
+
+    Modelo 100 declares ``0A`` (annual) as its only period. The
+    operator passing ``--period 0A`` must select a 100 revision rather
+    than be rejected because the token carries no filing year.
+    """
+
+    service = _service()
+
+    described = service.describe_modelo("100", period="0A")
+
+    assert described.code == "100"
+    assert described.period == "0A"
+    assert "0A" in described.periods
+    assert described.filing_year is None
+
+
+def test_describe_rejects_bare_period_not_declared_by_modelo() -> None:
+    """A bare token no revision declares is refused naming the declared set."""
+
+    service = _service()
+
+    with pytest.raises(RegistryValidationError, match="not declared by any revision"):
+        service.describe_modelo("303", period="0A")
