@@ -102,7 +102,7 @@ def iva_wallet_pull_cmd(
         ctx,
         report,
         (
-            _metric_line("taxpayer_nif", report.taxpayer_nif),
+            _metric_line("taxpayer_ref", report.taxpayer_ref),
             _metric_line("target_year", report.target_year),
             _metric_line("target_period", report.target_period),
             _metric_line("row_count", report.row_count),
@@ -529,6 +529,10 @@ app.add_typer(portals_app, name="portals")
 
 
 def _portal_row(metadata) -> dict[str, object]:
+    # `metadata.label` and `metadata.purpose` are Translatable
+    # translation keys (e.g. `entries.portal_sede_root.label`). A bare
+    # `str()` dumps the raw key path at the operator; route them
+    # through `tr()` so the resolved label is emitted instead.
     return {
         "portal": metadata.portal.value,
         "category": metadata.category.value,
@@ -536,8 +540,8 @@ def _portal_row(metadata) -> dict[str, object]:
         "url": str(metadata.url),
         "auth_methods": ",".join(sorted(method.value for method in metadata.auth_methods)),
         "url_stability": metadata.url_stability.value,
-        "label": str(metadata.label),
-        "purpose": str(metadata.purpose),
+        "label": tr(str(metadata.label)),
+        "purpose": tr(str(metadata.purpose)),
         "active": metadata.active,
     }
 
