@@ -111,6 +111,21 @@ def repair_quarantine(
 
     if not yes:
         raise CliRefusedBoundaryError(tr("cli.config.repair.quarantine_requires_yes"))
+    # Cold-root guard: quarantine is bootstrap-exempt; on a root with no
+    # active profile there is no per-bucket database to scan. Report
+    # cleanly rather than crashing on the absent database URL
+    # (disaster ADR Ruling 6).
+    if resolve_active_bucket_id() is None:
+        _emit(
+            ctx,
+            {"quarantined": 0, "retained": 0, "reason": "no-active-profile"},
+            (
+                "quarantined\t0",
+                "retained\t0",
+                "reason\tno active profile; nothing to quarantine",
+            ),
+        )
+        return
     report = quarantine_unreadable_secure_objects()
     _emit(
         ctx,
@@ -242,8 +257,10 @@ def repair_profile(
     if profile is not None and not clear_active:
         _emit_profile_record_status(ctx, profile)
         return
-    if profile is not None and profile != resolve_active_bucket_id():
-        raise CliRefusedBoundaryError(tr("cli.config.repair.profile_clear_active_mismatch", profile=profile))
+    if profile is not None:
+        resolved = _resolve_profile_by_label(profile)
+        if resolved.bucket_id != resolve_active_bucket_id():
+            raise CliRefusedBoundaryError(tr("cli.config.repair.profile_clear_active_mismatch", profile=profile))
     if clear_active and not yes:
         raise CliRefusedBoundaryError(tr("cli.config.repair.profile_requires_yes"))
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=yes)
@@ -266,30 +283,34 @@ def repair_profile(
     _emit(ctx, payload, lines)
 
 
-def _profile_record_missing_next_action(profile_id: str) -> str:
+def _profile_record_missing_next_action(profile_id: str, *, label: str) -> str:
     if profile_id == resolve_active_bucket_id():
         return "aeat config repair profile --clear-active --yes"
-    return f"aeat config repair profile --profile {profile_id}"
+    return f"aeat config repair profile --profile {label}"
 
 
-def _emit_profile_record_status(ctx: typer.Context, profile_id: str) -> None:
-    """Emit a non-secret status report for one registered profile bucket."""
+def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
+    """Emit a non-secret status report for one registered profile bucket.
+
+    ``label`` is the operator-facing profile name; it resolves to the
+    immutable bucket UUID via the manifest scan.
+    """
 
     from ....domain.user_profile import ProfileNotFoundError
 
-    pointer = read_profile_bucket(profile_id)
-    if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=profile_id))
+    pointer = _resolve_profile_by_label(label)
+    profile_id = pointer.bucket_id
     try:
-        record = _read_profile_record(profile_id=profile_id, bucket_id=pointer.bucket_id)
+        record = _read_profile_record(profile_id=profile_id, bucket_id=profile_id)
     except ProfileNotFoundError:
         payload = {
             "profile_id": profile_id,
             "bucket_id": pointer.bucket_id,
+            "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
             "status": "missing_profile_record",
-            "next_action": _profile_record_missing_next_action(profile_id),
+            "next_action": _profile_record_missing_next_action(profile_id, label=pointer.label),
         }
         _emit(
             ctx,
@@ -298,6 +319,7 @@ def _emit_profile_record_status(ctx: typer.Context, profile_id: str) -> None:
                 "readiness\tmissing_profile_record",
                 f"profile_id\t{profile_id}",
                 f"bucket_id\t{pointer.bucket_id}",
+                f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tmissing",
                 f"next_action\t{payload['next_action']}",
@@ -308,11 +330,12 @@ def _emit_profile_record_status(ctx: typer.Context, profile_id: str) -> None:
         payload = {
             "profile_id": profile_id,
             "bucket_id": pointer.bucket_id,
+            "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
             "status": "profile_record_unreadable",
             "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
-            "next_action": _profile_record_unreadable_next_action(profile_id),
+            "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
         }
         _emit(
             ctx,
@@ -321,6 +344,7 @@ def _emit_profile_record_status(ctx: typer.Context, profile_id: str) -> None:
                 "readiness\tprofile_record_unreadable",
                 f"profile_id\t{profile_id}",
                 f"bucket_id\t{pointer.bucket_id}",
+                f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tunreadable",
                 f"next_action\t{payload['next_action']}",
@@ -330,10 +354,11 @@ def _emit_profile_record_status(ctx: typer.Context, profile_id: str) -> None:
     payload = {
         "profile_id": record.profile_id,
         "bucket_id": pointer.bucket_id,
+        "display_name": record.display_name,
         "registered_bucket": True,
         "profile_record_present": True,
         "status": record.status.value,
-        "next_action": f"aeat config profile switch {profile_id}",
+        "next_action": f"aeat config profile switch {pointer.label}",
     }
     _emit(
         ctx,
@@ -350,14 +375,24 @@ def _emit_profile_record_status(ctx: typer.Context, profile_id: str) -> None:
     )
 
 
-@repair_app.command(
-    "integrity",
+integrity_app = typer.Typer(
+    name="integrity",
     help=tr(
         "cli.config.repair.integrity_help",
+        default="Probe secure-object and registry integrity.",
+    ),
+    no_args_is_help=True,
+)
+
+
+@integrity_app.command(
+    "objects",
+    help=tr(
+        "cli.config.repair.integrity_objects_help",
         default="Probe AES-256-GCM tag verification across one namespace (or all).",
     ),
 )
-def repair_integrity(
+def repair_integrity_objects(
     ctx: typer.Context,
     namespace: str | None = typer.Option(
         None,
@@ -372,6 +407,22 @@ def repair_integrity(
 
     from ....application.repair_integrity import build_repair_integrity_report
 
+    # Cold-root guard: integrity is bootstrap-exempt; on a root with no
+    # active profile there is no per-bucket database whose secure-object
+    # rows could be probed. Report cleanly rather than crashing on the
+    # absent database URL (disaster ADR Ruling 6).
+    if resolve_active_bucket_id() is None:
+        _emit(
+            ctx,
+            {"readable": 0, "unreadable": 0, "status": "ok", "reason": "no-active-profile"},
+            (
+                "readable\t0",
+                "unreadable\t0",
+                "status\tok",
+                "reason\tno active profile; nothing to probe",
+            ),
+        )
+        return
     report = build_repair_integrity_report(namespace=namespace)
     payload = report.model_dump(mode="json")
     lines = [
@@ -383,6 +434,41 @@ def repair_integrity(
     for ns in report.namespaces:
         lines.append(f"{ns.namespace}\treadable={ns.readable}\tunreadable={ns.unreadable}")
     _emit(ctx, payload, lines)
+
+
+@integrity_app.command(
+    "registry",
+    help=tr(
+        "cli.config.repair.integrity_registry_help",
+        default="Run full registry validation (the opt-in cross-domain integrity probe).",
+    ),
+)
+def repair_integrity_registry(ctx: typer.Context) -> None:
+    """Run full registry validation as an explicit, opt-in verb.
+
+    Disaster ADR Ruling 4 moves the full registry TOML parse +
+    cross-domain referential-integrity gate off the ``--version``
+    and bare-invocation surfaces, where it caused a multi-minute
+    cold-start hang. The validation is engineer-facing and runs only
+    when the operator explicitly asks for it here.
+    """
+
+    from ....application.diagnostics import build_registry_integrity_report
+
+    report = build_registry_integrity_report()
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"status\t{report.check.status}",
+        f"summary\t{report.check.summary}",
+    ]
+    if report.check.detail:
+        lines.append(f"detail\t{report.check.detail}")
+    if report.check.next_action:
+        lines.append(f"next_action\t{report.check.next_action}")
+    _emit(ctx, payload, lines)
+
+
+repair_app.add_typer(integrity_app, name="integrity")
 
 
 @repair_app.command("connectivity", help=tr("cli.config.repair.connectivity_help"))
@@ -417,29 +503,54 @@ def _profile_state():
     return workflow_state_repository()
 
 
-def _atomic_create_profile(*, profile_id, display_name, facts):
+def _resolve_profile_by_label(name: str):
+    """Resolve an operator-supplied profile label to its bucket pointer.
+
+    Raises :class:`CliRefusedBoundaryError` when no live profile carries
+    ``name`` or when the label is ambiguous. Returns a
+    :class:`ProfileBucketPointer` carrying the immutable UUID
+    ``bucket_id`` and the ``label``.
+    """
+
+    try:
+        pointer = read_profile_bucket(name)
+    except ValueError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
+    return pointer
+
+
+def _resolve_active_profile_pointer():
+    """Resolve the active profile (by UUID) to its bucket pointer or ``None``."""
+
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+
+    active = resolve_active_bucket_id()
+    if active is None:
+        return None
+    return read_profile_bucket_by_id(active)
+
+
+def _atomic_create_profile(*, display_name, facts) -> str:
     """Provision a new profile bucket through the canonical atomic-create.
 
     Both ``config profile import`` (recovery from a backup) and
-    ``config profile create --copy-from`` / ``config profile
-    duplicate`` route here so every create path lands on the single
-    atomic provisioner ``register_active_profile`` (disaster ADR
-    Ruling 3): bucket directory + manifest + encrypted record +
-    active-profile pointer in one all-or-nothing sequence with
-    rollback.
+    ``config profile duplicate`` route here so every create path lands
+    on the single atomic provisioner ``register_active_profile``:
+    bucket directory + manifest + encrypted record + active-profile
+    pointer in one all-or-nothing sequence with rollback.
 
-    The cold-start chicken-and-egg the disaster ADR catalogues:
-    ``workflow_state_repository().update`` resolves its SQLAlchemy
-    engine URL from the active-profile pointer, so the pointer must
-    exist *before* the repository opens its engine, and a master-key
-    session must be active before ``register_active_profile`` can
-    encrypt the profile record. The wizard ``profile create`` path
-    pre-writes the pointer and wraps the update in
-    ``activate_master_key_provider`` for exactly this reason; this
-    helper keeps the import / duplicate paths consistent with it.
-    ``register_active_profile`` re-writes the pointer and manifest
-    idempotently and owns the rollback contract for the
-    encrypted-record write.
+    A fresh immutable UUID profile identity is minted here; ``display_name``
+    is the operator-chosen label. The minted UUID is returned so the
+    caller can report it.
+
+    The cold-start chicken-and-egg: ``workflow_state_repository().update``
+    resolves its SQLAlchemy engine URL from the active-profile pointer,
+    so the pointer must exist *before* the repository opens its engine,
+    and a master-key session must be active before
+    ``register_active_profile`` can encrypt the profile record. The
+    pointer carries the profile UUID.
     """
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
@@ -447,7 +558,9 @@ def _atomic_create_profile(*, profile_id, display_name, facts):
         _write_active_profile_pointer,
         register_active_profile,
     )
+    from ....domain.user_profile import new_profile_id
 
+    profile_id = new_profile_id()
     _write_active_profile_pointer(profile_id)
     provider = get_master_key_provider()
     with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
@@ -460,6 +573,7 @@ def _atomic_create_profile(*, profile_id, display_name, facts):
                 facts=facts,
             )
         )
+    return profile_id
 
 
 @profile_app.command("list", help=tr("cli.config.list.help"))
@@ -478,21 +592,26 @@ def config_list(ctx: typer.Context) -> None:
 
     active = resolve_active_bucket_id()
     buckets = list_profile_buckets()
-    sorted_names = sorted(buckets)
+    rows = sorted(buckets.values(), key=lambda pointer: pointer.label.casefold())
+    active_label = next((p.label for p in rows if p.bucket_id == active), None)
     payload = {
-        "active_profile": active,
+        "active_profile": active_label,
         "profiles": [
-            {"name": name, "bucket_id": buckets[name].bucket_id, "active": name == active}
-            for name in sorted_names
+            {
+                "name": pointer.label,
+                "bucket_id": pointer.bucket_id,
+                "active": pointer.bucket_id == active,
+            }
+            for pointer in rows
         ],
     }
-    if not sorted_names:
-        lines = [f"active_profile\t{active or '<none>'}", "profiles\t<none>"]
+    if not rows:
+        lines = [f"active_profile\t{active_label or '<none>'}", "profiles\t<none>"]
     else:
-        lines = [f"active_profile\t{active or '<none>'}"]
-        for name in sorted_names:
-            marker = "*" if name == active else " "
-            lines.append(f"{marker}\t{name}")
+        lines = [f"active_profile\t{active_label or '<none>'}"]
+        for pointer in rows:
+            marker = "*" if pointer.bucket_id == active else " "
+            lines.append(f"{marker}\t{pointer.label}")
     _emit(ctx, payload, lines)
 
 
@@ -510,44 +629,50 @@ def config_profile_switch(
     pointer = read_profile_bucket(name)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
-    _assert_profile_record_present(ctx, profile_id=name, bucket_id=pointer.bucket_id)
+    _assert_profile_record_present(
+        ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
+    )
     try:
-        with override_settings(aeat_active_profile=name):
+        with override_settings(aeat_active_profile=pointer.bucket_id):
             repository = _profile_state()
-            repository.update(lambda current: select_profile(current, profile_id=name))
+            repository.update(lambda current: select_profile(current, profile_id=pointer.bucket_id))
     except ProfileNotFoundError as exc:
-        _emit_profile_record_missing(ctx, profile_id=name, bucket_id=pointer.bucket_id)
+        _emit_profile_record_missing(
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
+        )
         raise typer.Exit(code=2) from exc
-    active = resolve_active_bucket_id()
-    _emit_profile_activated_event(profile_id=name, active_profile=active)
+    _emit_profile_activated_event(profile_id=pointer.bucket_id, active_profile=resolve_active_bucket_id())
     _emit(
         ctx,
-        {"active_profile": active},
-        (f"active_profile\t{active or ''}",),
+        {"active_profile": pointer.label},
+        (f"active_profile\t{pointer.label}",),
     )
 
 
-def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucket_id: str) -> None:
+def _assert_profile_record_present(
+    ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str
+) -> None:
     from ....domain.user_profile import ProfileNotFoundError
 
     try:
         _read_profile_record(profile_id=profile_id, bucket_id=bucket_id)
     except ProfileNotFoundError:
-        _emit_profile_record_missing(ctx, profile_id=profile_id, bucket_id=bucket_id)
+        _emit_profile_record_missing(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label)
         raise typer.Exit(code=2) from None
     except Exception as exc:
-        _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, error=exc)
+        _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=exc)
         raise typer.Exit(code=2) from exc
 
 
-def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str) -> None:
+def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
     payload = {
         "profile_id": profile_id,
         "bucket_id": bucket_id,
+        "display_name": label,
         "registered_bucket": True,
         "profile_record_present": False,
         "configured": False,
-        "next_action": _profile_record_missing_next_action(profile_id),
+        "next_action": _profile_record_missing_next_action(profile_id, label=label),
     }
     _emit(
         ctx,
@@ -556,6 +681,7 @@ def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_
             "readiness\tmissing_profile_record",
             f"profile_id\t{profile_id}",
             f"bucket_id\t{bucket_id}",
+            f"display_name\t{label}",
             "registered_bucket\tpresent",
             "profile_record\tmissing",
             f"next_action\t{payload['next_action']}",
@@ -563,10 +689,10 @@ def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_
     )
 
 
-def _profile_record_unreadable_next_action(profile_id: str) -> str:
+def _profile_record_unreadable_next_action(profile_id: str, *, label: str) -> str:
     if profile_id == resolve_active_bucket_id():
         return "aeat config repair profile --clear-active --yes"
-    return f"aeat config repair profile --profile {profile_id}"
+    return f"aeat config repair profile --profile {label}"
 
 
 def _emit_profile_record_unreadable(
@@ -574,17 +700,19 @@ def _emit_profile_record_unreadable(
     *,
     profile_id: str,
     bucket_id: str,
+    label: str,
     error: Exception,
 ) -> None:
     message = str(error).splitlines()[0] if str(error) else type(error).__name__
     payload = {
         "profile_id": profile_id,
         "bucket_id": bucket_id,
+        "display_name": label,
         "registered_bucket": True,
         "profile_record_present": False,
         "status": "profile_record_unreadable",
         "error": f"{type(error).__name__}: {message}",
-        "next_action": _profile_record_unreadable_next_action(profile_id),
+        "next_action": _profile_record_unreadable_next_action(profile_id, label=label),
     }
     _emit(
         ctx,
@@ -593,6 +721,7 @@ def _emit_profile_record_unreadable(
             "readiness\tprofile_record_unreadable",
             f"profile_id\t{profile_id}",
             f"bucket_id\t{bucket_id}",
+            f"display_name\t{label}",
             "registered_bucket\tpresent",
             "profile_record\tunreadable",
             f"next_action\t{payload['next_action']}",
@@ -693,20 +822,24 @@ def config_profile_show(
     from ....application.user_profile._projections import record_to_path_values
     from ....domain.user_profile import ProfileNotFoundError
 
-    target = name or resolve_active_bucket_id()
-    if target is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = read_profile_bucket(target)
-    if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
+    if name is not None:
+        pointer = _resolve_profile_by_label(name)
+    else:
+        pointer = _resolve_active_profile_pointer()
+        if pointer is None:
+            raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = _read_profile_record(profile_id=target, bucket_id=pointer.bucket_id)
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
-        _emit_profile_record_missing(ctx, profile_id=target, bucket_id=pointer.bucket_id)
+        _emit_profile_record_missing(
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
+        )
         raise typer.Exit(code=2) from exc
     except Exception as exc:
-        _emit_profile_record_unreadable(ctx, profile_id=target, bucket_id=pointer.bucket_id, error=exc)
+        _emit_profile_record_unreadable(
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=exc
+        )
         raise typer.Exit(code=2) from exc
     report = service._validator.validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
@@ -755,20 +888,26 @@ def config_profile_delete(
         raise CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
     repository = _profile_state()
     repository.load()
-    pointer = read_profile_bucket(name)
-    if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
+    pointer = _resolve_profile_by_label(name)
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        result = service.remove(RemoveProfileCommand(profile_id=name))
+        result = service.remove(RemoveProfileCommand(profile_id=pointer.bucket_id))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    if resolve_active_bucket_id() == name:
+    if resolve_active_bucket_id() == pointer.bucket_id:
         _clear_active_profile_pointer()
     _emit(
         ctx,
-        {"profile_id": result.profile.profile_id, "status": result.profile.status.value},
-        (f"profile_id\t{result.profile.profile_id}", f"status\t{result.profile.status.value}"),
+        {
+            "profile_id": result.profile.profile_id,
+            "display_name": result.profile.display_name,
+            "status": result.profile.status.value,
+        },
+        (
+            f"profile_id\t{result.profile.profile_id}",
+            f"display_name\t{result.profile.display_name}",
+            f"status\t{result.profile.status.value}",
+        ),
     )
 
 
@@ -796,23 +935,21 @@ def config_profile_duplicate(
         ProfileAlreadyRegisteredError,
         build_lifecycle_service,
     )
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....domain.user_profile import ProfileNotFoundError
 
-    source_pointer = read_profile_bucket(source)
-    if source_pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
+    source_pointer = _resolve_profile_by_label(source)
     if read_profile_bucket(target) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
 
     source_service = build_lifecycle_service(bucket_id=source_pointer.bucket_id)
     try:
-        source_record = source_service.read(source)
+        source_record = source_service.read(source_pointer.bucket_id)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
 
     try:
-        _atomic_create_profile(
-            profile_id=target,
+        target_id = _atomic_create_profile(
             display_name=display_name or target,
             facts=source_record.facts,
         )
@@ -822,13 +959,13 @@ def config_profile_duplicate(
     _emit(
         ctx,
         {
-            "source_profile_id": source,
-            "target_profile_id": target,
+            "source_profile_id": source_pointer.bucket_id,
+            "target_profile_id": target_id,
             "display_name": display_name or target,
         },
         (
-            f"source_profile_id\t{source}",
-            f"target_profile_id\t{target}",
+            f"source_profile_id\t{source_pointer.bucket_id}",
+            f"target_profile_id\t{target_id}",
             f"display_name\t{display_name or target}",
         ),
     )
@@ -861,7 +998,7 @@ _config_profile_edit_callback = profile_app.command(
     "rename",
     help=tr(
         "cli.config.profile.rename_help",
-        default="Rename a profile in place. The active-profile pointer follows automatically.",
+        default="Rename a profile by updating its display label.",
     ),
 )
 def config_profile_rename(
@@ -872,199 +1009,41 @@ def config_profile_rename(
     target: str = typer.Argument(
         ..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")
     ),
-    display_name: str | None = typer.Option(
-        None,
-        "--display-name",
-        help=tr(
-            "cli.config.profile.rename_display_name_help",
-            default="Operator-visible label; defaults to the existing display name.",
-        ),
-    ),
 ) -> None:
-    """Rename a profile by source NAME to target NEW NAME."""
+    """Rename a profile by changing its operator-visible label.
 
-    from ....application.user_profile import RenameProfileCommand
+    Profile identity is an immutable UUID, so a rename is a pure label
+    edit: the encrypted record display name and the plaintext bucket
+    manifest label are updated, and nothing else moves. The bucket
+    directory, keystore directory, secure-object key, and active-profile
+    pointer are untouched.
+    """
+
     from ....application.user_profile._orchestration import (
-        _write_active_profile_pointer,
-        build_lifecycle_service,
+        ProfileAlreadyRegisteredError,
+        rename_profile,
     )
-    from ....application.workflow._utils import utc_now
-    from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
+    from ....domain.user_profile import ProfileNotFoundError
 
-    repository = _profile_state()
-    repository.load()
-    pointer = read_profile_bucket(source)
-    if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
-    if target != source and read_profile_bucket(target) is not None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    pointer = _resolve_profile_by_label(source)
     try:
-        result = service.rename(
-            RenameProfileCommand(
-                source_profile_id=source,
-                target_profile_id=target,
-                target_display_name=display_name,
-            )
-        )
-    except ProfileAlreadyExistsError as exc:
+        record = rename_profile(profile_id=pointer.bucket_id, new_label=target)
+    except ProfileAlreadyRegisteredError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
 
-    was_active = resolve_active_bucket_id() == source
-
-    import gc
-    import shutil
-
-    from ....adapters.persistence.storage.bucket._layout import bucket_paths
-    from ....adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
-    from ....core.config import load_settings
-
-    settings = load_settings()
-    source_paths = bucket_paths(settings.aeat_local_storage_root, source)
-    target_paths = bucket_paths(settings.aeat_local_storage_root, target)
-
-    # Dispose every open SQLAlchemy engine before the directory move.
-    # On Windows, SQLite holds the .db file open; shutil.move raises
-    # WinError 32 if any connection pool still references it.
-    # _secure_objects_for_bucket creates a per-bucket engine that is NOT
-    # tracked in the global _engines dict, so it must be disposed
-    # through the service's repository object directly.
-    _svc_engine = getattr(
-        getattr(getattr(service, "_repository", None), "_objects", None), "_engine", None
-    )
-    if _svc_engine is not None:
-        _svc_engine.dispose()
-    dispose_engine()
-    gc.collect()  # release any lingering reference-counted connections
-
-    try:
-        shutil.move(source_paths.bucket_dir, target_paths.bucket_dir)
-    except Exception as move_exc:
-        # Directory move failed (e.g. file lock still held on Windows).
-        # The DB record was already mutated by service.rename(); roll it back
-        # so the registry never shows a ghost target with no bucket on disk.
-        # Build a fresh service against the source bucket (still in place)
-        # and swap the rename back.
-        try:
-            rollback_service = build_lifecycle_service(bucket_id=source)
-            rollback_service.rename(
-                RenameProfileCommand(
-                    source_profile_id=target,
-                    target_profile_id=source,
-                    target_display_name=display_name,
-                )
-            )
-            _rb_engine = getattr(
-                getattr(getattr(rollback_service, "_repository", None), "_objects", None),
-                "_engine",
-                None,
-            )
-            if _rb_engine is not None:
-                _rb_engine.dispose()
-        except Exception:
-            pass  # best-effort rollback; surface the original move error
-        raise CliRefusedBoundaryError(f"Failed to rename bucket directory: {move_exc}") from move_exc
-
-    # Re-key the encrypted profile record so its secure-object identity
-    # matches the target bucket id.  After shutil.move the DB lives at
-    # buckets/target/db/aeat.db, but the object_key inside is
-    # "user-profile:<source>:<target>" because service.rename() was built
-    # with bucket_id=source.  A reader that opens the target bucket derives
-    # "user-profile:<target>:<target>" and finds nothing — the silent
-    # missing_profile_record bug.  Fix: open the moved DB with a
-    # source-scoped repo (to load the miskeyed record), then re-save via a
-    # target-scoped repo (correct key), then delete the stale key.
-    try:
-        from ....adapters.persistence.storage.sql import create_engine_from_settings
-        from ....application.user_profile._repository import (
-            UserProfileLifecycleRepository,
-            _secure_objects_for_bucket,
-        )
-        from ....core.config import Settings
-
-        target_db_path = target_paths.bucket_dir / "db" / "aeat.db"
-        rekey_engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{target_db_path.as_posix()}"),
-        )
-        from ....adapters.persistence.storage.sql import SecureObjectRepository
-
-        rekey_objects = SecureObjectRepository(engine=rekey_engine)
-        # Load via source-scoped repo (record key = "user-profile:source:target")
-        source_repo = UserProfileLifecycleRepository(bucket_id=source, objects=rekey_objects)
-        migrated_record = source_repo.load(target)
-        # Re-save via target-scoped repo (record key = "user-profile:target:target")
-        target_repo = UserProfileLifecycleRepository(bucket_id=target, objects=rekey_objects)
-        target_repo.save(migrated_record)
-        # Remove the stale source-keyed entry
-        source_repo.delete(target)
-        rekey_engine.dispose()
-    except Exception as exc:
-        raise CliRefusedBoundaryError(f"Failed to re-key profile record after bucket move: {exc}") from exc
-
-    try:
-        manifest = read_manifest(target_paths)
-        manifest = manifest.model_copy(update={"bucket_id": target, "label": target})
-        write_manifest(target_paths, manifest)
-    except Exception as exc:
-        raise CliRefusedBoundaryError(f"Failed to update bucket manifest: {exc}") from exc
-
-    # WorkflowState.profiles retired; renaming the bucket directory on
-    # disk is what removes ``source`` and registers ``target`` in the
-    # manifest-scan view. Only the updated_at stamp needs to advance.
-    # Update the active-profile pointer BEFORE calling repository.update()
-    # so that the engine URL resolves to the moved (target) bucket path.
-    # dispose_engine() cleared the cached engine; the next DB access will
-    # open a fresh engine against the URL derived from the active pointer.
-    # A fresh repository reference is required here — the original
-    # `repository` object still holds the old (now-disposed) engine.
-    if was_active:
-        _write_active_profile_pointer(target)
-
-    # Defence-in-depth: verify the target profile record is readable before
-    # reporting success.  A broken rename must never exit 0.  If the
-    # re-keying above somehow failed silently, this probe detects it and
-    # rolls back the filesystem and registry state so the operator is left
-    # with a healthy source profile rather than an unrecoverable target.
-    try:
-        _health_svc = build_lifecycle_service(bucket_id=target)
-        _health_svc.read(target)
-        _health_engine = getattr(
-            getattr(getattr(_health_svc, "_repository", None), "_objects", None), "_engine", None
-        )
-        if _health_engine is not None:
-            _health_engine.dispose()
-    except Exception as health_exc:
-        # Roll back: move the bucket directory back to source, restore active
-        # pointer, and swap the DB record back to source keying.
-        try:
-            shutil.move(target_paths.bucket_dir, source_paths.bucket_dir)
-        except Exception:
-            pass
-        try:
-            if was_active:
-                _write_active_profile_pointer(source)
-        except Exception:
-            pass
-        raise CliRefusedBoundaryError(
-            f"Rename aborted: target profile {target!r} is not readable after rename "
-            f"({health_exc}); source profile {source!r} has been restored."
-        ) from health_exc
-
-    _profile_state().update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
     _emit(
         ctx,
         {
-            "source_profile_id": source,
-            "target_profile_id": result.profile.profile_id,
-            "display_name": result.profile.display_name,
+            "profile_id": record.profile_id,
+            "previous_display_name": source,
+            "display_name": record.display_name,
         },
         (
-            f"source_profile_id\t{source}",
-            f"target_profile_id\t{result.profile.profile_id}",
-            f"display_name\t{result.profile.display_name}",
+            f"profile_id	{record.profile_id}",
+            f"previous_display_name	{source}",
+            f"display_name	{record.display_name}",
         ),
     )
 
@@ -1100,25 +1079,31 @@ def config_profile_export(
     from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
 
     _profile_state().load()
-    target = name or resolve_active_bucket_id()
-    if target is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = read_profile_bucket(target)
-    if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
+    if name is not None:
+        pointer = _resolve_profile_by_label(name)
+    else:
+        pointer = _resolve_active_profile_pointer()
+        if pointer is None:
+            raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(target)
+        record = service.read(pointer.bucket_id)
     except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target)) from exc
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=pointer.label)) from exc
     bundle = UserProfilePortableExport(profile=record)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
     _emit(
         ctx,
-        {"profile_id": target, "out": str(out), "schema_version": bundle.bundle_schema_version},
+        {
+            "profile_id": pointer.bucket_id,
+            "display_name": pointer.label,
+            "out": str(out),
+            "schema_version": bundle.bundle_schema_version,
+        },
         (
-            f"profile_id\t{target}",
+            f"profile_id\t{pointer.bucket_id}",
+            f"display_name\t{pointer.label}",
             f"out\t{out}",
             f"schema_version\t{bundle.bundle_schema_version}",
         ),
@@ -1149,6 +1134,7 @@ def config_profile_import(
     """
 
     from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....domain.user_profile import UserProfilePortableExport
 
     if not path.is_file():
@@ -1161,13 +1147,18 @@ def config_profile_import(
         )
     bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
     record = bundle.profile
-    target_id = record.profile_id
-    if read_profile_bucket(target_id) is not None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id))
+    # An imported bundle becomes a fresh local profile with its own
+    # minted UUID identity; the bundle's stored profile_id was the
+    # identity on the originating machine and is not reused. The
+    # operator-facing label must not collide with a live profile.
+    if read_profile_bucket(record.display_name) is not None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=record.display_name))
     try:
-        _atomic_create_profile(profile_id=target_id, display_name=record.display_name, facts=record.facts)
+        target_id = _atomic_create_profile(display_name=record.display_name, facts=record.facts)
     except ProfileAlreadyRegisteredError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id)) from exc
+        raise CliRefusedBoundaryError(
+            tr("cli.config.profile.already_exists", name=record.display_name)
+        ) from exc
     _emit(
         ctx,
         {
@@ -1214,10 +1205,15 @@ def config_status(ctx: typer.Context) -> None:
     from ....application.wizard._catalogue import SETUP_FLOW
     from ....application.wizard._persistence import project_answers
     from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
     from ....application.workflow._profile_health import assess_active_profile_health
 
     profile_health = assess_active_profile_health()
-    active_profile = profile_health.active_profile
+    # The health snapshot carries the profile UUID; operators address
+    # profiles by their label, so resolve it for every display line.
+    active_uuid = profile_health.active_profile
+    _active_pointer = read_profile_bucket_by_id(active_uuid) if active_uuid else None
+    active_profile = _active_pointer.label if _active_pointer is not None else active_uuid
     if profile_health.status == "none":
         payload = {
             "active_profile": None,

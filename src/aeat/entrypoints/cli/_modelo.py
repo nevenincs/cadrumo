@@ -173,7 +173,7 @@ def modelo_readiness(
     )
     from ...application.user_profile._preflight import ProfilePreflightService
     from ...application.workflow._models import resolve_active_bucket_id
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ...application.workflow._profile_bucket_scan import read_profile_bucket_by_id
     from ...core.i18n import tr as _tr
     from ...domain.user_profile import ProfileNotFoundError
     from ._errors import CliRefusedBoundaryError
@@ -181,7 +181,7 @@ def modelo_readiness(
     active = resolve_active_bucket_id()
     if active is None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    pointer = read_profile_bucket(active)
+    pointer = read_profile_bucket_by_id(active)
     if pointer is None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)

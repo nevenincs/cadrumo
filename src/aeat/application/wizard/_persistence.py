@@ -80,6 +80,7 @@ def persist_answers(
     *,
     state: WorkflowState,
     profile_name: str,
+    profile_id: str,
     mode: WizardPersistMode,
 ) -> WorkflowState:
     """Persist ``answers`` into the profile bucket and return updated state.
@@ -87,14 +88,18 @@ def persist_answers(
     Each profile-bound question contributes one canonical-token entry to
     the profile bucket.
 
+    ``profile_id`` is the immutable UUID profile identity; ``profile_name``
+    is the operator-chosen display label. For ``"create"`` the caller
+    mints a fresh UUID; for ``"edit"`` the caller resolves the existing
+    profile's UUID from its label.
+
     ``mode`` is the create-vs-edit discriminator and is the wizard
     verb itself, not a runtime-detected fact. ``"create"`` routes to
-    :func:`register_active_profile`, which refuses a name that already
-    has a manifest. ``"edit"`` routes to :func:`set_active_fields`,
-    which upserts facts on the active profile and surfaces
-    :class:`ProfileNotFoundError` when no such profile exists. The
-    caller guards both refusals before the wizard runs; this branch
-    only selects the persistence pathway.
+    :func:`register_active_profile`, which refuses a label that already
+    belongs to a live profile. ``"edit"`` routes to
+    :func:`set_active_fields`, which upserts facts on the active
+    profile. The caller guards both refusals before the wizard runs;
+    this branch only selects the persistence pathway.
     """
 
     from ...domain.user_profile import UserProfileFact
@@ -104,7 +109,7 @@ def persist_answers(
     if mode == "create":
         return register_active_profile(
             state,
-            profile_id=profile_name,
+            profile_id=profile_id,
             display_name=profile_name,
             facts=facts,
         )

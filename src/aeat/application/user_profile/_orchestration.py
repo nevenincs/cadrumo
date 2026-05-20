@@ -2,13 +2,14 @@
 
 The lifecycle service handles secure-DB persistence and BucketEvent
 emission per profile. This module threads :class:`WorkflowState`
-pointers (``profiles``, ``active_profile``) and the workflow-level
+pointers (``active_profile``) and the workflow-level
 :class:`WorkflowEvent` audit stream around those calls so CLI surfaces
 do not duplicate that wiring.
 
-Bucket identity convention: ``bucket_id == profile_id``. The
-orchestration helpers below are the single place that conflation
-lives.
+Profile identity is an immutable UUIDv4 minted at creation. The bucket
+directory, keystore directory, secure-object key, and active-profile
+pointer all key on that UUID; the operator-chosen display name is a
+fully decoupled mutable label carried in the bucket manifest.
 """
 
 from __future__ import annotations
@@ -19,8 +20,10 @@ from datetime import UTC, date, datetime
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from ...adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
-from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, write_manifest
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core._bucket_pointer import BucketPointer
+from ...core._bucket_pointer_io import write_pointer
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...domain.user_profile import (
@@ -30,8 +33,7 @@ from ...domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
-from ...core._bucket_pointer import BucketPointer
-from ...core._bucket_pointer_io import write_pointer
+from ...domain.user_profile._errors import UserProfileValidationError
 from ..workflow._models import WorkflowEvent, WorkflowState
 from ..workflow._utils import utc_now
 from . import (
@@ -39,6 +41,7 @@ from . import (
     ProfileValidationService,
     RegisterProfileCommand,
     RemoveProfileCommand,
+    RenameProfileCommand,
     UserProfileLifecycleRepository,
 )
 from ._lifecycle import ProfileLifecycleService
@@ -149,36 +152,41 @@ def register_active_profile(
 ) -> WorkflowState:
     """Atomically register a new profile and make it the active one.
 
-    Five writes in sequence; failure at any step reverts the
-    bucket directory and manifest so the operator never sees a
-    half-created profile in ``profile list``:
+    ``profile_id`` is the immutable UUIDv4 profile identity, minted by
+    the caller (see :func:`aeat.domain.user_profile.new_profile_id`).
+    ``display_name`` is the operator-chosen label; it is carried in the
+    bucket manifest and the encrypted record and plays no role in any
+    key or path.
 
-    1. Refuse-if-exists: the bucket manifest must NOT exist on
-       disk. Duplicate-name protection per the disaster ADR
-       Ruling 3.
-    2. Provision ``<root>/buckets/<id>/`` + manifest.
+    Five writes in sequence; failure at any step reverts the bucket
+    directory and manifest so the operator never sees a half-created
+    profile in ``profile list``:
+
+    1. Refuse-if-duplicate-label: no live profile may already carry
+       ``display_name`` (case-insensitive).
+    2. Provision ``<root>/buckets/<profile_id>/`` + manifest
+       (``bucket_id`` = UUID, ``label`` = display name).
     3. ``service.register`` writes the encrypted
        :class:`UserProfileRecord` via the lifecycle service.
     4. Append the workflow events.
-    5. Write the active-profile pointer file.
+    5. Write the active-profile pointer file (the UUID).
 
     On failure at step 3-5 the bucket directory + manifest are
     removed via the trash-rename pattern so a crashed create
     never leaves a phantom profile in the manifest scan.
     """
 
-    _refuse_duplicate_profile(profile_id)
+    _refuse_duplicate_label(display_name)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    # Atomic-create ordering (disaster ADR Ruling 3): the bucket
-    # directory + manifest land first, THEN the active-profile
-    # pointer, THEN the encrypted record. The pointer must precede
-    # `service.register` because `service.register` opens the
-    # per-bucket SQLAlchemy engine, and `Settings.aeat_database_url`
-    # resolves the engine URL from the active-profile pointer chain.
-    # Writing the pointer last (the prior ordering) left the URL
-    # empty during the first-run create — the F3 cold-start
+    # Atomic-create ordering: the bucket directory + manifest land
+    # first, THEN the active-profile pointer, THEN the encrypted
+    # record. The pointer must precede `service.register` because
+    # `service.register` opens the per-bucket SQLAlchemy engine, and
+    # `Settings.aeat_database_url` resolves the engine URL from the
+    # active-profile pointer chain. Writing the pointer last left the
+    # URL empty during the first-run create — the cold-start
     # chicken-and-egg the operator testimonies catalogued.
-    _ensure_profile_bucket_manifest(profile_id)
+    _ensure_profile_bucket_manifest(profile_id, label=display_name)
     _write_active_profile_pointer(profile_id)
     try:
         service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
@@ -186,8 +194,16 @@ def register_active_profile(
         # Rollback reverts the directory + manifest AND clears the
         # pointer so a crashed create leaves no phantom profile in
         # the manifest scan and no dangling active-profile pointer.
-        # Directory removal is best-effort here: a residual bucket
-        # must not mask the original registration failure being raised.
+        # The per-bucket SQLAlchemy engine opened by `service.register`
+        # is disposed first: on Windows an open SQLite handle refuses
+        # the trash-rename and leaves a residual `db/aeat.db` behind,
+        # so the directory tree only fully unwinds once the engine
+        # releases its file handle. Directory removal stays best-effort
+        # — a residual bucket must not mask the original registration
+        # failure being raised.
+        from ...adapters.persistence.storage.sql.engine import dispose_engine
+
+        dispose_engine()
         try:
             remove_profile_bucket_directory(profile_id)
         except OSError:
@@ -206,20 +222,21 @@ def register_active_profile(
     return updated
 
 
-def _refuse_duplicate_profile(
-    profile_id: str,
+def _refuse_duplicate_label(
+    display_name: str,
 ) -> None:
-    """Refuse a ``profile create`` when the manifest already exists.
+    """Refuse a ``profile create`` when a live profile carries the label.
 
-    The manifest is the existence claim. A manifest-only bucket is
-    degraded state, not an invitation to recreate in place; recovery
-    must use explicit repair verbs so the operator does not silently
-    mix new profile data into a torn bucket.
+    Display names (labels) are unique among live profiles, compared
+    case-insensitively. A bucket manifest already carrying ``display_name``
+    is an existence claim; recreating in place would silently mix new
+    profile data into the existing bucket, so the create is refused and
+    the operator is routed to ``switch`` or ``delete``.
     """
 
     from ..workflow._profile_bucket_scan import read_profile_bucket
 
-    if read_profile_bucket(profile_id) is None:
+    if read_profile_bucket(display_name) is None:
         return
     raise ProfileAlreadyRegisteredError(
         tr(
@@ -228,29 +245,27 @@ def _refuse_duplicate_profile(
                 "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
                 "to activate it or `aeat config profile delete NAME` first."
             ),
-            profile=profile_id,
+            profile=display_name,
         ),
     )
 
 
-def _require_registered_profile(profile_id: str) -> None:
-    """Refuse a ``profile edit`` when no manifest exists for the name.
+def _require_registered_label(display_name: str) -> None:
+    """Refuse a ``profile edit`` when no live profile carries the label.
 
-    Symmetric to :func:`_refuse_duplicate_profile`: ``profile edit``
-    re-runs the wizard against an *existing* profile, so a missing
-    manifest is an operator error, not an implicit create. The
-    manifest-scan helper is the canonical "is this profile
-    registered?" oracle (disaster ADR Ruling 2).
+    Symmetric to :func:`_refuse_duplicate_label`: ``profile edit``
+    re-runs the wizard against an *existing* profile, so an unknown
+    label is an operator error, not an implicit create.
     """
 
     from ..workflow._profile_bucket_scan import read_profile_bucket
 
-    if read_profile_bucket(profile_id) is None:
+    if read_profile_bucket(display_name) is None:
         raise ProfileNotFoundError(
             tr(
                 "application.user_profile.errors.profile_not_registered",
                 default="Profile '%{profile}' does not exist; run `aeat config profile create NAME` to create it.",
-                profile=profile_id,
+                profile=display_name,
             ),
         )
 
@@ -298,8 +313,13 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     shutil.rmtree(trash, ignore_errors=True)
 
 
-def _ensure_profile_bucket_manifest(profile_id: str) -> None:
-    """Ensure manifest-scan profile discovery can see the profile bucket."""
+def _ensure_profile_bucket_manifest(profile_id: str, *, label: str) -> None:
+    """Ensure manifest-scan profile discovery can see the profile bucket.
+
+    Writes the plaintext manifest with ``bucket_id`` set to the
+    immutable UUID ``profile_id`` and ``label`` set to the
+    operator-chosen display name.
+    """
 
     root = load_settings().aeat_local_storage_root
     try:
@@ -312,7 +332,7 @@ def _ensure_profile_bucket_manifest(profile_id: str) -> None:
         paths,
         BucketManifest(
             bucket_id=profile_id,
-            label=profile_id,
+            label=label,
             created_at=datetime.now(UTC),
             last_unlocked_at=None,
             kdf_params=ManifestKdfParams(
@@ -469,12 +489,67 @@ def _require_active(state: WorkflowState) -> str:
     return bucket_id
 
 
+def rename_profile(
+    *,
+    profile_id: str,
+    new_label: str,
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> UserProfileRecord:
+    """Rename a profile by updating its display label only.
+
+    The profile identity (``profile_id``), bucket directory, keystore
+    directory, and secure-object key are immutable and never move. This
+    helper updates the operator-visible label in two places that hold a
+    copy of it: the encrypted :class:`UserProfileRecord.display_name`
+    and the plaintext bucket manifest ``label``. No directory move, no
+    re-key, no rollback machinery — a label is a pure metadata edit.
+
+    Refuses if ``new_label`` is already carried by another live profile
+    (case-insensitive uniqueness).
+    """
+
+    from ..workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
+
+    pointer = read_profile_bucket_by_id(profile_id)
+    if pointer is None:
+        raise ProfileNotFoundError(f"profile {profile_id!r} has no registered bucket")
+
+    trimmed = new_label.strip()
+    if not trimmed:
+        raise UserProfileValidationError("profile label must not be blank")
+
+    if trimmed.casefold() != pointer.label.casefold():
+        clash = read_profile_bucket(trimmed)
+        if clash is not None and clash.bucket_id != profile_id:
+            raise ProfileAlreadyRegisteredError(
+                tr(
+                    "application.user_profile.errors.profile_already_exists",
+                    default=(
+                        "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
+                        "to activate it or `aeat config profile delete NAME` first."
+                    ),
+                    profile=trimmed,
+                ),
+            )
+
+    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+    result = service.rename(RenameProfileCommand(profile_id=profile_id, target_display_name=trimmed))
+
+    root = load_settings().aeat_local_storage_root
+    paths = bucket_paths(root, profile_id)
+    manifest = read_manifest(paths)
+    write_manifest(paths, manifest.model_copy(update={"label": trimmed}))
+    return result.profile
+
+
 __all__ = [
     "build_lifecycle_service",
     "fact_value",
     "read_active_profile",
     "register_active_profile",
     "remove_active_profile",
+    "rename_profile",
     "select_profile",
     "set_active_field",
     "set_active_fields",
