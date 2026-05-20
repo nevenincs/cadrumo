@@ -227,50 +227,76 @@ def _emit_completeness_gate_failures(
     prefix: str,
     revision: ModeloRevision,
 ) -> None:
-    """Append a failure for every divergence from the Diseño-completeness manifest.
+    """Append a failure for every calculation-completeness manifest violation.
 
-    The completeness gate compares the revision's declared
-    ``(segmento, number)`` casilla set against the expected set in the
-    revision's checked-in Diseño-completeness manifest, derived
-    off-load-path from the official AEAT Diseño de Registros corpus.
+    The completeness gate verifies that every casilla in a modelo's
+    *calculation closure* — formula targets, the casillas referenced
+    inside any formula expression, binding and relation endpoint
+    casillas, and verification-expectation operand casillas — is
+    declared in the registry, at the correct ``(segmento, number)``
+    identity, and carrying its legal and source grounding. That closure
+    is the casilla set the cross-connecting calculation engine
+    traverses; a gap there is a calculation-correctness defect.
 
-    The gate is **rollout-staged and per-modelo**. A revision that
-    declares a ``completeness_manifest`` is enforced strictly: a casilla
-    the manifest expects but the revision does not declare, or a casilla
-    the revision declares but the manifest does not list, is a hard
-    failure. A revision with no manifest declared yet is NOT a failure
-    here — manifest authoring is a staged migration, and a casilla-bearing
+    Gate semantics are ``manifest-required ⊆ declared`` plus the
+    identity and grounding checks — *not* ``declared == manifest``. A
+    casilla the revision declares but the manifest does not list is a
+    pure accounting-statement field and is **not** a failure: a modelo
+    can clear the gate without an exhaustive full-Diseño backfill.
+
+    For each calculation-completeness manifest casilla the gate emits a
+    failure when (1) no casilla is declared at the manifest's
+    ``(segmento, number)`` identity, or (2) the declared casilla at that
+    identity does not carry non-empty ``legal_refs`` and ``source_refs``.
+
+    The gate is **rollout-staged and per-modelo**. A revision with no
+    ``completeness_manifest`` declared yet is NOT a failure here —
+    manifest authoring is a staged migration, and a casilla-bearing
     revision is allowed to load while its manifest is still being
     authored. The fail-closed flip (missing manifest is itself a hard
-    error) lands once every casilla-bearing modelo carries a manifest.
+    error) lands once every calculation-bearing modelo carries a
+    manifest.
     """
 
     manifest = revision.completeness_manifest
     if manifest is None:
         return
-    expected = manifest.identities()
-    declared = frozenset((casilla.segmento, casilla.number) for casilla in revision.casillas)
-    for segmento, number in sorted(expected - declared, key=lambda pair: (pair[0] or "", pair[1])):
-        if segmento is None:
+    declared_by_identity = {
+        (casilla.segmento, casilla.number): casilla for casilla in revision.casillas
+    }
+    for manifest_casilla in sorted(
+        manifest.casillas, key=lambda item: (item.segmento or "", item.number)
+    ):
+        identity = manifest_casilla.identity()
+        segmento, number = identity
+        declared = declared_by_identity.get(identity)
+        if declared is None:
+            if segmento is None:
+                failures.append(
+                    f"{prefix}: calculation-completeness manifest requires casilla number "
+                    f"{number!r} but the revision does not declare it"
+                )
+            else:
+                failures.append(
+                    f"{prefix}: calculation-completeness manifest requires casilla number "
+                    f"{number!r} within segmento {segmento!r} but the revision does not "
+                    "declare it at that identity"
+                )
+            continue
+        identity_label = (
+            f"casilla number {number!r}"
+            if segmento is None
+            else f"casilla number {number!r} within segmento {segmento!r}"
+        )
+        if not declared.legal_refs:
             failures.append(
-                f"{prefix}: Diseño-completeness manifest expects casilla number {number!r} "
-                "but the revision does not declare it"
+                f"{prefix}: calculation-completeness manifest {identity_label} "
+                "is declared without legal_refs grounding"
             )
-        else:
+        if not declared.source_refs:
             failures.append(
-                f"{prefix}: Diseño-completeness manifest expects casilla number {number!r} "
-                f"within segmento {segmento!r} but the revision does not declare it"
-            )
-    for segmento, number in sorted(declared - expected, key=lambda pair: (pair[0] or "", pair[1])):
-        if segmento is None:
-            failures.append(
-                f"{prefix}: revision declares casilla number {number!r} "
-                "absent from the Diseño-completeness manifest"
-            )
-        else:
-            failures.append(
-                f"{prefix}: revision declares casilla number {number!r} within segmento "
-                f"{segmento!r} absent from the Diseño-completeness manifest"
+                f"{prefix}: calculation-completeness manifest {identity_label} "
+                "is declared without source_refs grounding"
             )
 
 
@@ -2139,8 +2165,8 @@ class RegistryValidator:
             return [f"{scope}: {owner} parser {dotted_path!r} cannot import module {module_name!r}: {exc}"]
         try:
             resolved = getattr(module, attribute)
-        except AttributeError:
-            return [f"{scope}: {owner} parser {dotted_path!r} does not resolve attribute {attribute!r}"]
+        except AttributeError as exc:
+            return [f"{scope}: {owner} parser {dotted_path!r} does not resolve attribute {attribute!r}: {exc}"]
         if not callable(resolved):
             return [f"{scope}: {owner} parser {dotted_path!r} is not callable"]
         return []
@@ -2563,9 +2589,26 @@ def _check_cross_domain_snapshot_routing(checker: _IdReferenceChecker, snapshot:
     Protocol only. Concrete checks (such as the renta first-slice
     routing gate) are injected by their owning domain at import time
     via :func:`register_cross_domain_snapshot_check`.
+
+    Modelo 100 has a known-required cross-domain gate -- the renta
+    first-slice routing referential-integrity check owned by
+    :mod:`aeat.domain.renta`. That check registers itself only as an
+    import side effect of the ``renta`` package. A ``build_snapshot``
+    caller that never imports ``renta`` would otherwise validate an
+    M100 snapshot with the gate silently absent. Rather than skip a
+    known-required gate, fail loudly so the missing registration
+    surfaces at snapshot build instead of as a later runtime KeyError.
     """
 
     casilla_ids = frozenset(checker.casilla_ids)
+    if snapshot.modelo.id == "100" and not _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+        checker.failures.append(
+            f"{checker.prefix}: modelo 100 requires the renta first-slice "
+            "routing cross-domain snapshot check, but no cross-domain checks "
+            "are registered -- import aeat.domain.renta at the composition "
+            "point that builds the snapshot so register_cross_domain_snapshot_check "
+            "runs before validation"
+        )
     for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
         for failure in check(snapshot.modelo.id, casilla_ids):
             checker.failures.append(f"{checker.prefix}: {failure}")

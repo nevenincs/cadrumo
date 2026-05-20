@@ -27,7 +27,6 @@ from ..application.wizard._errors import WizardValidationError
 from ..application.wizard._widgets import validate_widget_answer
 from ..application.workflow._models import resolve_active_bucket_id
 from ..application.workflow._persistence import workflow_state_repository
-from ..application.workflow._profile_bucket_scan import read_profile_bucket
 from ..domain.profile import get_profile_key
 from ..domain.user_profile import ProfileNotFoundError, UserProfileFact
 
@@ -43,20 +42,40 @@ def _question_for_profile_key(profile_key: str):
     return None
 
 
-def _resolve_target_profile(profile: str | None) -> str:
-    """Resolve the bucket id to operate on: explicit override or the active pointer."""
+def _resolve_target_profile(profile: str | None):
+    """Resolve the profile bucket to operate on.
+
+    An explicit ``--profile`` value is an operator label and resolves
+    through the manifest scan; otherwise the active-profile pointer (a
+    UUID) resolves directly. Returns a ``ProfileBucketPointer`` carrying
+    the immutable UUID ``bucket_id`` and the operator ``label``.
+    """
+
+    from ..application.workflow._profile_bucket_scan import (
+        read_profile_bucket,
+        read_profile_bucket_by_id,
+    )
 
     if profile is not None:
         target = profile.strip()
         if not target:
             raise typer.BadParameter("--profile must not be empty when supplied.")
-        return target
+        try:
+            pointer = read_profile_bucket(target)
+        except ValueError as exc:
+            raise typer.BadParameter(f"ambiguous profile label: {target}") from exc
+        if pointer is None:
+            raise typer.BadParameter(f"unknown profile: {target}")
+        return pointer
     active = resolve_active_bucket_id()
     if active is None:
         raise typer.BadParameter(
             "No active profile and no --profile NAME supplied; run `aeat config profile switch NAME` first."
         )
-    return active
+    pointer = read_profile_bucket_by_id(active)
+    if pointer is None:
+        raise typer.BadParameter(f"unknown profile: {active}")
+    return pointer
 
 
 def register(app: typer.Typer) -> None:
@@ -77,15 +96,12 @@ def register(app: typer.Typer) -> None:
             get_profile_key(key)
         except KeyError as exc:
             raise typer.BadParameter(f"unknown profile key: {key}") from exc
-        target = _resolve_target_profile(profile)
-        pointer = read_profile_bucket(target)
-        if pointer is None:
-            raise typer.BadParameter(f"unknown profile: {target}")
+        pointer = _resolve_target_profile(profile)
         service = build_lifecycle_service(bucket_id=pointer.bucket_id)
         try:
-            record = service.read(target)
+            record = service.read(pointer.bucket_id)
         except ProfileNotFoundError as exc:
-            raise typer.BadParameter(f"unknown profile: {target}") from exc
+            raise typer.BadParameter(f"unknown profile: {pointer.label}") from exc
         value = fact_value(record, key) or ""
         typer.echo(f"{key}\t{value or '<unset>'}")
 
@@ -111,17 +127,18 @@ def register(app: typer.Typer) -> None:
                 raise typer.BadParameter(
                     f"{translated} ({choices})" if choices else translated
                 ) from exc
-        target = _resolve_target_profile(profile)
+        pointer = _resolve_target_profile(profile)
         fact = UserProfileFact(path=canonical_key, value=coerced)
         repository = workflow_state_repository()
         updated = repository.update(lambda current: set_active_field(current, fact))
-        record = updated.active_profile_record() if target == resolve_active_bucket_id() else None
+        record = (
+            updated.active_profile_record()
+            if pointer.bucket_id == resolve_active_bucket_id()
+            else None
+        )
         if record is None:
-            pointer = read_profile_bucket(target)
-            if pointer is None:
-                raise typer.BadParameter(f"unknown profile: {target}")
             service = build_lifecycle_service(bucket_id=pointer.bucket_id)
-            record = service.read(target)
+            record = service.read(pointer.bucket_id)
         stored_value = fact_value(record, canonical_key) or ""
         typer.echo(f"{canonical_key}\t{stored_value}")
 

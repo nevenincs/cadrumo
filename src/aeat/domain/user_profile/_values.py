@@ -41,7 +41,14 @@ _Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, 
 type ProfileFactValue = str | bool | int | Decimal | date | None
 
 
-_DECIMAL_STRING_RE = re.compile(r"^-?\d+(?:\.\d+)?$")
+# A JSON-encoded canonical Decimal never carries an insignificant leading
+# zero: ``Decimal`` normalises ``08001`` to ``8001`` and ``model_dump(mode=
+# "json")`` emits that normalised form. A multi-digit string whose integer
+# part starts with ``0`` (``08001``) is therefore never a round-tripped
+# Decimal — it is a zero-significant identifier such as a Spanish 5-digit
+# postcode, and must stay a ``str``. The integer-part alternative below
+# matches a lone ``0`` or any digit run that does not start with ``0``.
+_DECIMAL_STRING_RE = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?$")
 _DATE_STRING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -76,6 +83,20 @@ class UserProfileStatus(StrEnum):
 
     ACTIVE = "active"
     TOMBSTONED = "tombstoned"
+
+
+def new_profile_id() -> str:
+    """Mint a fresh immutable profile identity.
+
+    A profile's identity is a generated UUIDv4 in the canonical
+    hyphenated 36-character form. It is created once at profile
+    creation and never changes — the bucket directory, keystore
+    directory, secure-object key, and active-profile pointer all key
+    on it. The operator-chosen display name is a fully decoupled
+    mutable label with no role in any key or path.
+    """
+
+    return str(uuid4())
 
 
 def new_profile_snapshot_id(profile_id: str, *, created_at: datetime | None = None) -> str:

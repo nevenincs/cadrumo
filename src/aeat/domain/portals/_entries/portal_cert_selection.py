@@ -20,7 +20,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CERTIFICATE,),
     url_stability=UrlStability.VOLATILE_APP_PATH,
-    label="entries.portal_cert_selection.label_714926",
+    label="entries.portal_cert_selection.label",
     purpose="entries.portal_cert_selection.purpose",
     notes=("entries.portal_cert_selection.notes.0",),
 )

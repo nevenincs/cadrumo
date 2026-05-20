@@ -24,12 +24,12 @@ from .._errors import CliRefusedBoundaryError
 
 def _active_pointer() -> tuple[ProfileName, ProfileName]:
     from ....application.workflow._models import resolve_active_bucket_id
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     active = resolve_active_bucket_id()
     if active is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    pointer = read_profile_bucket(active)
+    pointer = read_profile_bucket_by_id(active)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     return active, pointer.bucket_id

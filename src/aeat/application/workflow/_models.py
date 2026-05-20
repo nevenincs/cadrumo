@@ -107,18 +107,24 @@ class DeclaracionPointer(BaseModel):
 
 
 class ProfileBucketPointer(BaseModel):
-    """Pointer from workflow state to a secure profile bucket."""
+    """Pointer to a secure profile bucket.
+
+    ``bucket_id`` is the immutable UUIDv4 profile identity and the
+    name of the bucket directory on disk. ``label`` is the decoupled
+    mutable operator-chosen display name read from the bucket manifest.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     bucket_id: str = Field(min_length=1, max_length=128)
+    label: str = Field(min_length=1, max_length=160)
 
-    @field_validator("bucket_id")
+    @field_validator("bucket_id", "label")
     @classmethod
-    def _trim_bucket_id(cls, value: str) -> str:
+    def _trim_text(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("bucket_id must not be blank")
+            raise ValueError("value must not be blank")
         return trimmed
 
 

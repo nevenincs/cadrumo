@@ -107,18 +107,29 @@ def test_no_duplicate_casilla_ids_within_a_revision() -> None:
 
 
 def test_no_duplicate_casilla_numbers_within_a_revision() -> None:
-    """Within a single modelo revision, every casilla number must be unique."""
+    """Within a single modelo revision, every ``(segmento, number)`` casilla identity must be unique.
+
+    AEAT casilla identity is ``(segmento, number)``, not ``number`` alone.
+    A multi-segment modelo (e.g. Modelo 200) legitimately reuses the same
+    five-digit form-field number across distinct record segments: number
+    ``00552`` is the ECPN ``Acciones y participaciones`` field in the
+    default segment and the Liquidación III ``Base imponible`` field in
+    segment ``DP200014``. Both are real AEAT form fields with their own
+    export bindings. The duplicate this gate forbids is the same number
+    appearing twice *within one segment* — a genuine copy artifact.
+    """
 
     offences: list[str] = []
     for modelo in _all_modelos():
         for revision_id, revision in modelo.revisions.items():
-            counts = Counter(c.number for c in revision.casillas)
-            duplicates = {number: count for number, count in counts.items() if count > 1}
-            for number, count in duplicates.items():
+            counts = Counter((c.segmento, c.number) for c in revision.casillas)
+            duplicates = {identity: count for identity, count in counts.items() if count > 1}
+            for (segmento, number), count in duplicates.items():
                 offences.append(
-                    f"modelo {modelo.id} revision {revision_id} declares casilla number {number!r} {count} times"
+                    f"modelo {modelo.id} revision {revision_id} declares casilla number "
+                    f"{number!r} under segmento {segmento!r} {count} times"
                 )
-    assert not offences, "duplicate casilla numbers per revision:\n  " + "\n  ".join(offences)
+    assert not offences, "duplicate casilla (segmento, number) identities per revision:\n  " + "\n  ".join(offences)
 
 
 def test_section_paths_are_non_empty() -> None:

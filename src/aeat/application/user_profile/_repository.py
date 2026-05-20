@@ -2,10 +2,12 @@
 
 Two namespaces are owned by this module:
 
-- ``aeat.application.user_profile.value`` — live profile aggregate per
-  ``(bucket_id, profile_id)``.
+- ``aeat.application.user_profile.value`` — live profile aggregate keyed
+  by the immutable ``profile_id`` (a UUIDv4). There is exactly one live
+  profile-value record per profile bucket.
 - ``aeat.application.user_profile.snapshot`` — immutable filing-time
-  snapshots per ``(bucket_id, snapshot_id)``.
+  snapshots keyed by ``(profile_id, snapshot_id)``: a profile owns many
+  filing snapshots.
 
 Both namespaces ride the active-bucket plumbing: every read and write
 resolves through a profile bucket so two operators never share profile
@@ -81,28 +83,34 @@ def _clear_output_language_cache() -> None:
     clear_output_language_cache()
 
 
-def user_profile_value_object_key(bucket_id: str, profile_id: str) -> str:
-    """Return the secure-object key for one bucket's profile aggregate."""
+def user_profile_value_object_key(profile_id: str) -> str:
+    """Return the secure-object key for a profile's live aggregate.
 
-    trimmed_bucket = bucket_id.strip()
+    A profile bucket holds exactly one live profile-value record, so
+    the key is single-segment: the immutable ``profile_id`` (UUIDv4).
+    """
+
     trimmed_profile = profile_id.strip()
-    if not trimmed_bucket:
-        raise ValueError("bucket_id must not be blank")
     if not trimmed_profile:
         raise ValueError("profile_id must not be blank")
-    return f"user-profile:{trimmed_bucket}:{trimmed_profile}"
+    return f"user-profile:{trimmed_profile}"
 
 
-def user_profile_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
-    """Return the secure-object key for one bucket's filing-time snapshot."""
+def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
+    """Return the secure-object key for one of a profile's filing snapshots.
 
-    trimmed_bucket = bucket_id.strip()
+    A profile owns many immutable filing snapshots, so the key retains
+    the ``snapshot_id`` discriminator; the first segment is the
+    immutable ``profile_id`` (UUIDv4).
+    """
+
+    trimmed_profile = profile_id.strip()
     trimmed_snapshot = snapshot_id.strip()
-    if not trimmed_bucket:
-        raise ValueError("bucket_id must not be blank")
+    if not trimmed_profile:
+        raise ValueError("profile_id must not be blank")
     if not trimmed_snapshot:
         raise ValueError("snapshot_id must not be blank")
-    return f"user-profile-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
+    return f"user-profile-snapshot:{trimmed_profile}:{trimmed_snapshot}"
 
 
 class UserProfileLifecycleRepository:
@@ -124,13 +132,13 @@ class UserProfileLifecycleRepository:
     def exists(self, profile_id: str) -> bool:
         return self._objects.exists(
             USER_PROFILE_VALUE_NAMESPACE,
-            user_profile_value_object_key(self._bucket_id, profile_id),
+            user_profile_value_object_key(profile_id),
         )
 
     def load(self, profile_id: str) -> UserProfileRecord:
         record = self._objects.load(
             USER_PROFILE_VALUE_NAMESPACE,
-            user_profile_value_object_key(self._bucket_id, profile_id),
+            user_profile_value_object_key(profile_id),
             expected_class=SensitivityClass.IDENTITY,
             max_supported_version=_USER_PROFILE_VALUE_VERSION,
         )
@@ -158,7 +166,7 @@ class UserProfileLifecycleRepository:
         )
         self._objects.save(
             namespace=USER_PROFILE_VALUE_NAMESPACE,
-            object_key=user_profile_value_object_key(self._bucket_id, record.profile_id),
+            object_key=user_profile_value_object_key(record.profile_id),
             classification=SensitivityClass.IDENTITY,
             schema_version=_USER_PROFILE_VALUE_VERSION,
             written_at=envelope.written_at,
@@ -187,7 +195,7 @@ class UserProfileLifecycleRepository:
     def delete(self, profile_id: str) -> bool:
         deleted = self._objects.delete(
             USER_PROFILE_VALUE_NAMESPACE,
-            user_profile_value_object_key(self._bucket_id, profile_id),
+            user_profile_value_object_key(profile_id),
         )
         if deleted:
             _clear_output_language_cache()

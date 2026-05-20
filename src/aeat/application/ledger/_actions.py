@@ -22,6 +22,8 @@ from ...adapters.inbound.financial.providers import (
 )
 from ...adapters.inbound.pdf._utils import sha256_file
 from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...core.errors import resolve_error_message
+from ...core.i18n import tr
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
@@ -330,7 +332,10 @@ def import_ledger_source(
     try:
         raw_transactions = tuple(provider.ingest(command.path))
     except FinancialProviderError as exc:
-        raise TransactionValidationError(f"The ledger file cannot be imported: {exc}") from exc
+        raise TransactionValidationError(
+            translated_message="errors.transaction.ledger_import_failed",
+            context={"reason": resolve_error_message(exc)},
+        ) from exc
     repository = (
         _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
         if command.bucket_id is not None
@@ -365,7 +370,9 @@ def import_ledger_source(
             diagnostics=diagnostics,
         )
     if command.bucket_id is None:
-        raise TransactionValidationError("ledger source import requires a bucket_id unless dry_run is true")
+        raise TransactionValidationError(
+            translated_message="errors.transaction.ledger_import_requires_bucket",
+        )
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
     result = import_ledger_transactions(
@@ -1830,10 +1837,18 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProvider:
 
 
 def _validate_import_source(provider: FinancialProvider, path: Path) -> ProviderValidation:
+    if not path.exists() or not path.is_file():
+        raise TransactionValidationError(
+            translated_message="errors.financial.source_file_not_found",
+            context={"path": str(path)},
+        )
     validation = provider.validate_source(path)
     if not validation.is_valid:
-        reason = "; ".join(validation.warnings) or "invalid source"
-        raise TransactionValidationError(f"The ledger file cannot be imported: {reason}")
+        reason = "; ".join(validation.warnings) or tr("errors.transaction.import_source_invalid")
+        raise TransactionValidationError(
+            translated_message="errors.transaction.ledger_import_failed",
+            context={"reason": reason},
+        )
     return validation
 
 

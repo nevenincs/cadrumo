@@ -26,7 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_mi_area_personal.label_684631",
+    label="entries.portal_mi_area_personal.label",
     purpose="entries.portal_mi_area_personal.purpose",
 )
 """Portal entry for the taxpayer's personal area (authenticated landing)."""

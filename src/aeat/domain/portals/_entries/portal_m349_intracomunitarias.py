@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m349_intracomunitarias.label_740192",
+    label="entries.portal_m349_intracomunitarias.label",
     purpose="entries.portal_m349_intracomunitarias.purpose",
 )
 """Portal entry for Modelo 349 (intra-EU recapitulative VAT statement)."""

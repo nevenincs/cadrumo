@@ -27,7 +27,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.REFERENCE_NUMBER,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_renta_web_borrador.label_255206",
+    label="entries.portal_renta_web_borrador.label",
     purpose="entries.portal_renta_web_borrador.purpose",
     notes=("entries.portal_renta_web_borrador.notes.0",),
 )

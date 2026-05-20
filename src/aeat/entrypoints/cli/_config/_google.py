@@ -26,8 +26,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import typer
 from pydantic import ValidationError
@@ -38,6 +39,12 @@ if TYPE_CHECKING:
         RegistryCalculationResult,
     )
     from ....domain.calculations.registry._schema import RegistrySnapshot
+
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check with the registry validator. build_snapshot
+# of a Modelo 100 revision fails loudly if that check is unregistered, so
+# the M100 routing referential-integrity gate runs on this CLI path.
+import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
 from ....adapters.outbound.google import (
     GoogleAuthClientNotRegisteredError,
@@ -79,6 +86,7 @@ from ....application.storage.calc_sheets import (
     build_export_plan,
 )
 from ....core.config import load_settings
+from ....core.i18n import tr
 from ....core.resources import bundled_path
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
@@ -88,7 +96,6 @@ from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.calculations.registry._snapshot import build_snapshot
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
-from ....core.i18n import tr
 
 google_app = typer.Typer(
     name="google",
@@ -931,7 +938,6 @@ def google_sync_calc_pull(
     """
 
     from ....adapters.outbound.google._calc_sheets_pull import (
-        PullResult,
         compute_from_pull,
         pull_operator_edits,
     )

@@ -26,7 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.CLAVE_PERMANENTE,
     ),
     url_stability=UrlStability.RETIRED,
-    label="entries.portal_m037_censal_simplificada.label_500048",
+    label="entries.portal_m037_censal_simplificada.label",
     purpose="entries.portal_m037_censal_simplificada.purpose",
     active=False,
     replaced_by=Portal.PORTAL_M036_CENSAL,

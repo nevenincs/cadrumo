@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 _MAX_SINGLE_FILE_MODELO_LINES = 2_000
 _MAX_TOML_FRAGMENT_LINES = 2_000
-_MAX_TOML_ROW_CHARS = 800
+_MAX_TOML_ROW_CHARS = 600
 
 
 def _build_directory_layout(
@@ -597,6 +597,76 @@ record_type = "2"
     )
 
     with pytest.raises(RegistryLoadError, match="field 'record_type' conflicts"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_duplicate_export_field_ids_after_record_merge(tmp_path: Path) -> None:
+    """Same-id record fragments must not create ambiguous nested field ids."""
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "export").mkdir(parents=True)
+    (target / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    duplicate_field_fragment = """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+required = true
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field"
+offset = 1
+length = 1
+kind = "literal"
+literal = "A"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip()
+    (target / "revisions" / "2025" / "export" / "record-a.toml").write_text(
+        duplicate_field_fragment,
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export" / "record-b.toml").write_text(
+        duplicate_field_fragment,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="appends duplicate ids"):
         load_modelo_directory(target)
 
 

@@ -46,45 +46,50 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def test_object_key_helpers_reject_blank_inputs() -> None:
-    with pytest.raises(ValueError, match="bucket_id must not be blank"):
-        user_profile_value_object_key("  ", "operator")
     with pytest.raises(ValueError, match="profile_id must not be blank"):
-        user_profile_value_object_key("bucket", "  ")
-    with pytest.raises(ValueError, match="bucket_id must not be blank"):
+        user_profile_value_object_key("  ")
+    with pytest.raises(ValueError, match="profile_id must not be blank"):
         user_profile_snapshot_object_key(" ", "snap-1")
     with pytest.raises(ValueError, match="snapshot_id must not be blank"):
-        user_profile_snapshot_object_key("bucket", "")
+        user_profile_snapshot_object_key("a4f1c2e0-1111-4222-8333-444455556666", "")
 
 
 def test_object_key_helpers_compose_canonical_keys() -> None:
-    assert user_profile_value_object_key("bucket-1", "operator") == "user-profile:bucket-1:operator"
+    profile_id = "a4f1c2e0-1111-4222-8333-444455556666"
+    # The profile-value key is single-segment: a profile bucket holds
+    # exactly one live profile-value record, keyed on the immutable UUID.
+    assert user_profile_value_object_key(profile_id) == f"user-profile:{profile_id}"
+    # The snapshot key keeps the snapshot discriminator: a profile owns
+    # many filing snapshots.
     assert (
-        user_profile_snapshot_object_key("bucket-1", "operator:2026.snap")
-        == "user-profile-snapshot:bucket-1:operator:2026.snap"
+        user_profile_snapshot_object_key(profile_id, "snap:2026")
+        == f"user-profile-snapshot:{profile_id}:snap:2026"
     )
 
 
-def test_lifecycle_round_trip_isolates_by_bucket(secure_objects: SecureObjectRepository) -> None:
+def test_lifecycle_round_trip_carries_record(secure_objects: SecureObjectRepository) -> None:
+    profile_id = "a4f1c2e0-1111-4222-8333-444455556666"
     profile = UserProfileRecord(
-        profile_id="operator",
+        profile_id=profile_id,
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    bucket_a = UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects)
-    bucket_b = UserProfileLifecycleRepository(bucket_id="bucket-b", objects=secure_objects)
+    repository = UserProfileLifecycleRepository(bucket_id=profile_id, objects=secure_objects)
 
-    bucket_a.save(profile)
-    assert bucket_a.exists("operator") is True
-    assert bucket_b.exists("operator") is False
+    assert repository.exists(profile_id) is False
+    repository.save(profile)
+    assert repository.exists(profile_id) is True
 
-    reloaded = bucket_a.load("operator")
-    assert reloaded.profile_id == "operator"
+    reloaded = repository.load(profile_id)
+    assert reloaded.profile_id == profile_id
     assert reloaded.facts == profile.facts
 
 
 def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path) -> None:
+    profile_a = "a4f1c2e0-1111-4222-8333-444455556666"
+    profile_b = "b5e2d3f1-2222-4333-8444-555566667777"
     profile = UserProfileRecord(
-        profile_id="operator",
+        profile_id=profile_a,
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -96,14 +101,14 @@ def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path
             aeat_active_profile=None,
         ),
     ):
-        bucket_a = UserProfileLifecycleRepository(bucket_id="bucket-a")
-        bucket_b = UserProfileLifecycleRepository(bucket_id="bucket-b")
+        bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
+        bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
 
         bucket_a.save(profile)
 
-        assert bucket_a.exists("operator") is True
-        assert bucket_b.exists("operator") is False
-        assert (tmp_path / "buckets" / "bucket-a" / "db" / "aeat.db").is_file()
+        assert bucket_a.exists(profile_a) is True
+        assert bucket_b.exists(profile_a) is False
+        assert (tmp_path / "buckets" / profile_a / "db" / "aeat.db").is_file()
         assert not (tmp_path / "active-profile.db").exists()
 
 

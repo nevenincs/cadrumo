@@ -24,7 +24,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_mis_documentos_pendientes_firma.label_128262",
+    label="entries.portal_mis_documentos_pendientes_firma.label",
     purpose="entries.portal_mis_documentos_pendientes_firma.purpose",
 )
 """Portal entry for the portafirmas (documents awaiting electronic signature)."""

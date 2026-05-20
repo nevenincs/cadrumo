@@ -10,11 +10,11 @@ aggregates or touch the secure repository directly.
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 import hashlib
 from collections.abc import Iterable
 from datetime import date, datetime
 
+from ...core.errors import BaseSeverity
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -186,51 +186,41 @@ class ProfileLifecycleService:
         return ProfileLifecycleResult(profile=tombstoned, applied_at=tombstoned.updated_at)
 
     def rename(self, command: RenameProfileCommand) -> ProfileLifecycleResult:
-        """Rename a live profile in place.
+        """Update a live profile's display label.
 
-        Reads the source record, saves it under the target id with the
-        optional new display name, and deletes the old secure-object
-        key in the same call. Refuses if the target id is already in
-        use or the source is tombstoned. Emits ``PROFILE_RENAMED``
-        with the source-id payload so the audit trail records the
-        rename rather than a delete-plus-create pair.
+        Profile identity is an immutable UUID, so a rename touches only
+        the operator-visible ``display_name``: the record is loaded,
+        its label updated, and re-saved under the **same** secure-object
+        key. There is no re-key, no directory move, and no rollback
+        machinery. Refuses if the profile is tombstoned. Emits
+        ``PROFILE_RENAMED`` carrying the prior label so the audit trail
+        records the relabel.
 
-        The orchestration layer is responsible for the parallel
-        rename of `WorkflowState.profiles` keys and the plaintext
-        active-profile pointer file if the renamed profile is active;
-        the service contract is record-only.
+        The orchestration layer updates the parallel copy of the label
+        held in the plaintext bucket manifest; the service contract is
+        record-only.
         """
 
-        if command.source_profile_id == command.target_profile_id:
-            return ProfileLifecycleResult(
-                profile=self._repository.load(command.source_profile_id),
-                applied_at=utc_now(),
-            )
-        if self._repository.exists(command.target_profile_id):
-            raise ProfileAlreadyExistsError(
-                f"profile {command.target_profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
-            )
-        source = self._repository.load(command.source_profile_id)
+        source = self._repository.load(command.profile_id)
         if source.status is not UserProfileStatus.ACTIVE:
             raise ProfileNotFoundError(
-                f"source profile {command.source_profile_id!r} is tombstoned; cannot rename",
+                f"profile {command.profile_id!r} is tombstoned; cannot rename",
             )
+        if command.target_display_name == source.display_name:
+            return ProfileLifecycleResult(profile=source, applied_at=utc_now())
         now = utc_now()
-        target_display_name = command.target_display_name or source.display_name
         target = source.model_copy(
             update={
-                "profile_id": command.target_profile_id,
-                "display_name": target_display_name,
+                "display_name": command.target_display_name,
                 "updated_at": now,
             }
         )
         self._repository.save(target)
-        self._repository.delete(command.source_profile_id)
         self._emit_event(
             event_type=BucketEventType.PROFILE_RENAMED,
             object_id=target.profile_id,
             occurred_at=now,
-            payload={"source_profile_id": source.profile_id},
+            payload={"previous_display_name": source.display_name},
         )
         return ProfileLifecycleResult(profile=target, applied_at=now)
 

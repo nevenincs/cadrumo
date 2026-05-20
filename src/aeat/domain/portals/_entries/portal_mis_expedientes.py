@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_mis_expedientes.label_909741",
+    label="entries.portal_mis_expedientes.label",
     purpose="entries.portal_mis_expedientes.purpose",
 )
 """Portal entry for administrative case-file status consultation."""

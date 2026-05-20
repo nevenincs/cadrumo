@@ -63,6 +63,46 @@ def test_profile_fact_rejects_invalid_effective_window() -> None:
         )
 
 
+def test_leading_zero_identifier_stays_a_string() -> None:
+    """A zero-significant identifier (a 5-digit postcode) must not be int-coerced.
+
+    The JSON-restoration validator inspects bare digit strings to recover
+    Decimal facts lost across ``model_dump_json``. A Spanish postcode such
+    as ``08001`` is all-digits but is never a canonical Decimal — Decimal
+    normalises away the leading zero (``08001`` -> ``8001``), so a
+    round-tripped Decimal fact never carries one. The validator must leave
+    ``08001`` as a ``str`` end to end.
+    """
+
+    fact = UserProfileFact(path="contact.postcode", value="08001")
+    assert fact.value == "08001"
+    assert isinstance(fact.value, str)
+
+    reloaded = UserProfileFact.model_validate_json(fact.model_dump_json())
+    assert reloaded.value == "08001"
+    assert isinstance(reloaded.value, str)
+    assert reloaded == fact
+
+
+def test_json_restoration_still_recovers_canonical_decimal_and_zero() -> None:
+    """A genuine round-tripped Decimal (and a lone ``0``) is still restored.
+
+    The leading-zero exclusion must not regress the original purpose of the
+    restoration validator: a Decimal fact dumped to JSON as a string is
+    reparsed back to ``Decimal``, and a canonical ``0`` integer-part value
+    is a legitimate Decimal shape.
+    """
+
+    decimal_fact = UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50"))
+    reloaded = UserProfileFact.model_validate_json(decimal_fact.model_dump_json())
+    assert reloaded.value == Decimal("0.50")
+    assert isinstance(reloaded.value, Decimal)
+
+    zero_fact = UserProfileFact.model_validate_json('{"path": "usage_ratios.business_ratio", "value": "0"}')
+    assert zero_fact.value == Decimal("0")
+    assert isinstance(zero_fact.value, Decimal)
+
+
 def test_snapshot_is_canonical_and_rejects_tombstoned_profiles() -> None:
     created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
     profile = UserProfileRecord(

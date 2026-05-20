@@ -4,13 +4,12 @@ Every `aeat config google ...` command and every secure-store read or
 write the OAuth flow performs is scoped to a single AEAT profile.
 This module exposes one entry point — `resolve_active_profile` —
 that the CLI surface and the secure-store accessors call to obtain
-that profile name. Resolution flows through the operator-facing
-precedence chain in
+that profile's immutable UUID identity. Resolution flows through the
+operator-facing precedence chain in
 `application/workflow/_models.resolve_active_bucket_id`
 (Settings override > plaintext pointer file); per-invocation
 `--profile` overrides on `aeat config google` verbs are removed
-per the profile-bucket-lifecycle ADR so profile selection is one
-chain, one source of truth.
+so profile selection is one chain, one source of truth.
 
 There is no global Google session, no shared cross-profile token, and
 no multi-account binding within a single profile. The whole-package
@@ -24,10 +23,11 @@ from ._errors import GoogleAuthProfileUnboundError
 
 
 def resolve_active_profile() -> str:
-    """Return the AEAT profile name backing this Google OAuth call.
+    """Return the AEAT profile UUID backing this Google OAuth call.
 
     Returns:
-        The resolved AEAT profile name. Always a non-empty string.
+        The resolved profile's immutable UUID identity. Always a
+        non-empty string.
 
     Raises:
         GoogleAuthProfileUnboundError: When the operator-facing

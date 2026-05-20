@@ -59,6 +59,15 @@ def _exit(code: int) -> None:
 
 
 def _state() -> WorkflowState:
+    from ...application.workflow._models import resolve_active_bucket_id
+
+    # Without an active profile there is no bucket database to open;
+    # workflow_state_repository().load() would raise a raw StorageError
+    # ("aeat_database_url is empty") that leaks internal plumbing to the
+    # operator. Refuse early with the operator-facing no-active-profile
+    # message instead.
+    if resolve_active_bucket_id() is None:
+        raise _bad(tr("cli.common.errors.no_active_profile"))
     return workflow_state_repository().load()
 
 
@@ -66,7 +75,6 @@ def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
     """Return (state, active_profile_name) or exit code 2 with a typed payload."""
     from ...application.workflow._models import resolve_active_bucket_id
 
-    current = _state()
     active = resolve_active_bucket_id()
     if active is None:
         _emit(
@@ -75,7 +83,7 @@ def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
             ["error\tno-active-profile", "next\taeat config profile create NAME"],
         )
         _exit(2)
-    return current, active
+    return _state(), active
 
 
 def _description_for(entry: AuthProviderListing | ProfileKey) -> str:

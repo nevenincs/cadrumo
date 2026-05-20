@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_domiciliacion_bancaria.label_231897",
+    label="entries.portal_domiciliacion_bancaria.label",
     purpose="entries.portal_domiciliacion_bancaria.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the bank direct-debit page."""

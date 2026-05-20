@@ -8,14 +8,17 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
+from ....core.config import Settings
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
 
+_SEDE_PATHS = Settings.external_constants().aeat.sede_paths
+
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_MIS_DATOS_CENSALES,
-    path="/Sede/procedimientoini/G313.shtml",
+    path=_SEDE_PATHS.census_g313_launcher,
     subdomain=Subdomain.SEDE,
     category=PortalCategory.CONSULTATION,
     auth_methods=(
@@ -25,7 +28,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_mis_datos_censales.label_558126",
+    label="entries.portal_mis_datos_censales.label",
     purpose="entries.portal_mis_datos_censales.purpose",
 )
 """Portal entry for census-data consultation and light modification."""

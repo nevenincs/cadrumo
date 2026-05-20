@@ -100,6 +100,16 @@ def _default_sede_expedientes_path() -> str:
     return load_external_constants().aeat.sede_paths.expedientes_resumen
 
 
+def _default_aeat_sede_origin() -> str:
+    from .external_constants import load_external_constants
+
+    return load_external_constants().aeat.domains.sede
+
+
+def _default_aeat_sede_origin_with_slash() -> str:
+    return f"{_default_aeat_sede_origin()}/"
+
+
 class JustificanteParserBackendSetting(StrEnum):
     """Settings-shape selector for the justificante PDF parsing backend."""
 
@@ -127,7 +137,7 @@ class Settings(BaseSettings):
 
     # ── AEAT ────────────────────────────────────────────────────────────────
     aeat_base_url: str = Field(
-        default="https://sede.agenciatributaria.gob.es",
+        default_factory=_default_aeat_sede_origin,
         description="AEAT sede electrónica base URL",
     )
     aeat_log_level: str = Field(
@@ -570,7 +580,7 @@ class Settings(BaseSettings):
 
     # ── Site-health detection ───────────────────────────────────────────────
     site_health_probe_url: str = Field(
-        default="https://sede.agenciatributaria.gob.es/",
+        default_factory=_default_aeat_sede_origin_with_slash,
         description="AEAT Sede URL the site-health probe navigates to",
     )
     site_health_rate_limit_retry_after_default: int = Field(
@@ -597,7 +607,7 @@ class Settings(BaseSettings):
         description="Which certificate backend to use: playwright_context or httpx_fallback",
     )
     aeat_certificate_verify_url: str = Field(
-        default="https://sede.agenciatributaria.gob.es/",
+        default_factory=_default_aeat_sede_origin_with_slash,
         description="Target URL for aeat.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test",
     )
     aeat_auth_timeout_ms: int = Field(
@@ -892,7 +902,7 @@ class Settings(BaseSettings):
                 from ._bucket_pointer_io import read_pointer
 
                 pointer = read_pointer(self.aeat_local_storage_root)
-            except Exception:  # noqa: BLE001 - resolver failure leaves URL empty
+            except Exception:
                 pointer = None
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()

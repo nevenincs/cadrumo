@@ -15,6 +15,7 @@ from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.user_profile import (
     ProfileAlreadyExistsError,
+    ProfileNotFoundError,
     ProfileSchemaValidationError,
     UserProfileFact,
     UserProfileStatus,
@@ -26,6 +27,7 @@ from . import (
     ProfileValidationService,
     RegisterProfileCommand,
     RemoveProfileCommand,
+    RenameProfileCommand,
     UserProfileLifecycleRepository,
 )
 
@@ -160,6 +162,56 @@ def test_duplicate_copies_to_a_new_id(secure_objects, schema) -> None:
     assert result.profile.profile_id == "operator-spouse"
     assert result.profile.display_name == "Spouse"
     assert result.profile.status is UserProfileStatus.ACTIVE
+
+
+def test_rename_updates_label_only(secure_objects, schema) -> None:
+    """``rename`` changes ``display_name`` and nothing else.
+
+    Profile identity is immutable: ``profile_id``, status, facts, and
+    ``created_at`` must all survive a rename unchanged; only
+    ``display_name`` moves to the new label.
+    """
+
+    svc = _service(secure_objects, schema)
+    registered = svc.register(
+        RegisterProfileCommand(
+            profile_id="operator",
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        )
+    )
+
+    result = svc.rename(
+        RenameProfileCommand(profile_id="operator", target_display_name="Renamed Operator")
+    )
+
+    assert result.profile.profile_id == "operator"
+    assert result.profile.display_name == "Renamed Operator"
+    assert result.profile.status is UserProfileStatus.ACTIVE
+    assert result.profile.facts == registered.profile.facts
+    assert result.profile.created_at == registered.profile.created_at
+
+    # The persisted record reflects only the label change.
+    reloaded = svc.read("operator")
+    assert reloaded.profile_id == "operator"
+    assert reloaded.display_name == "Renamed Operator"
+
+
+def test_rename_refuses_a_tombstoned_profile(secure_objects, schema) -> None:
+    """``rename`` on a tombstoned profile is refused — only live profiles relabel."""
+
+    svc = _service(secure_objects, schema)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id="operator",
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        )
+    )
+    svc.remove(RemoveProfileCommand(profile_id="operator"))
+
+    with pytest.raises(ProfileNotFoundError, match="tombstoned"):
+        svc.rename(RenameProfileCommand(profile_id="operator", target_display_name="New Label"))
 
 
 def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:

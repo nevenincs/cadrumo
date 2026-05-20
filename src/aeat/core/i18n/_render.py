@@ -8,6 +8,7 @@ can render translatable keys without reaching into the CLI entrypoints.
 from __future__ import annotations
 
 import importlib.resources
+import os
 import re
 from collections.abc import Callable, Mapping
 from functools import lru_cache
@@ -83,6 +84,14 @@ def clear_output_language_cache() -> None:
     _cached_output_language.cache_clear()
 
 
+_OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
+    "AEAT_OUTPUT_LANGUAGE",
+    "AEAT_DATABASE_URL",
+    "AEAT_SECRET_STORE_BACKEND",
+    "AEAT_ALLOW_UNENCRYPTED",
+)
+
+
 def _output_language_cache_key() -> tuple[object, ...]:
     override = _settings_override.get()
     if override is not None:
@@ -92,23 +101,21 @@ def _output_language_cache_key() -> tuple[object, ...]:
         env_mtime_ns = env_file.stat().st_mtime_ns
     except OSError:
         env_mtime_ns = None
-    # Cache key derives from Settings field values, not raw os.environ. Going
-    # through Settings preserves the .env+os.environ merge order Pydantic
-    # enforces and keeps every config read auditable through a single surface.
-    try:
-        settings = load_settings()
-    except (KeyError, ValueError, AttributeError):
-        settings_signature: tuple[object, ...] = ("settings-load-failed",)
-    else:
-        settings_signature = (
-            settings.aeat_output_language if "aeat_output_language" in settings.model_fields_set else None,
-            str(settings.aeat_database_url),
-            settings.aeat_secret_store_backend,
-            settings.aeat_allow_unencrypted,
-        )
+    # The cache key is computed from raw ``os.environ`` plus the ``.env``
+    # file mtime — the two inputs Pydantic merges into ``Settings``. The
+    # prior implementation constructed a full ``Settings`` instance on
+    # every ``tr()`` call purely to read four field values; a help-screen
+    # render fires ~100 ``tr()`` calls, so that was ~100 Settings builds
+    # (the disaster-ADR Ruling 4 fast-path regression for ``--help``).
+    # Sampling the raw env vars + the ``.env`` mtime varies the key
+    # whenever either input changes, so a cache miss still rebuilds
+    # ``Settings`` inside ``_cached_output_language`` with the correct
+    # .env+os.environ merge order. The key only needs to *change* when
+    # the effective value could change; it does not need the merged value.
+    env_signature = tuple(os.environ.get(name) for name in _OUTPUT_LANGUAGE_KEY_ENV_VARS)
     return (
         "env",
-        *settings_signature,
+        *env_signature,
         env_mtime_ns,
         _OUTPUT_LANGUAGE_CACHE_VERSION,
     )

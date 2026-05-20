@@ -2,13 +2,28 @@
 
 from __future__ import annotations
 
+import tomllib
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
 from aeat.core.config import Settings
-from aeat.core.external_constants import ExternalConstants, load_external_constants
+from aeat.core.errors import CoreValidationError
+from aeat.core.external_constants import (
+    AeatSection,
+    ExternalConstants,
+    load_external_constants,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+
+
+def _registry_toml_payload() -> dict[str, object]:
+    """Return the bundled ``external_constants.toml`` parsed to a mapping."""
+
+    toml_path = Path(__file__).with_name("external_constants.toml")
+    return tomllib.loads(toml_path.read_text(encoding="utf-8"))
 
 
 def test_load_external_constants_returns_typed_model() -> None:
@@ -36,6 +51,7 @@ def test_aeat_domains_are_absolute_https_urls() -> None:
 
     domains = load_external_constants().aeat.domains
 
+    assert domains.host_suffix == "agenciatributaria.gob.es"
     for value in (domains.sede, domains.www1, domains.www2, domains.www6, domains.clave, domains.boe):
         assert value.startswith("https://")
         assert "://" in value
@@ -47,6 +63,7 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
     paths = load_external_constants().aeat.sede_paths
 
     for value in (
+        paths.auth_gate_4033,
         paths.expedientes_resumen,
         paths.declarations_listing,
         paths.cotejo_query,
@@ -54,6 +71,7 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
         paths.notifications_summary,
         paths.notifications_query,
         paths.certificate_selector,
+        paths.census_g313_launcher,
         paths.notificaciones,
         paths.iva_compensation_wallet,
     ):
@@ -70,11 +88,104 @@ def test_clave_movil_surface_constants_are_typed() -> None:
     assert surface.dialogo_representacion_path_marker
     assert surface.obtener_clave_movil_path_marker
     assert surface.obtener_clave_movil_qr_path_marker
+    assert surface.cancelar_clave_movil_path_marker
     assert surface.authorize_button_selector.startswith("button")
     assert surface.non_qr_link_selector.startswith("a[")
     assert surface.verification_code_selector.startswith("#")
     assert surface.wait_text_markers
     assert surface.pending_petition_text_markers
+
+
+def test_pre303_surface_constants_are_typed() -> None:
+    """Pre303 wallet route, documentation, and parser markers live in the external registry."""
+
+    surface = load_external_constants().aeat.pre303
+
+    for path in (
+        surface.presentation_service_path,
+        surface.access_help_path,
+        surface.faq_general_path,
+        surface.faq_specific_path,
+        surface.functionalities_path,
+        surface.procedures_path,
+    ):
+        assert path.startswith("/")
+    assert "forigen=pre303" in surface.presentation_service_path
+    assert "erro4033" in load_external_constants().aeat.sede_paths.auth_gate_4033
+    assert "ejercicio" in surface.iva_wallet_header_tokens
+    assert "pend" in surface.iva_wallet_header_tokens
+    assert "cartera" in surface.iva_wallet_empty_page_tokens
+    assert surface.wallet_form_selector.startswith("form")
+    assert surface.wallet_execute_submit_selector.startswith("input")
+    assert surface.representation_own_name_selector.startswith("input")
+    assert "clave PIN" in surface.official_access_auth_methods
+
+
+def test_missing_pre303_block_does_not_poison_registry_parsing() -> None:
+    """A registry payload with no ``[aeat.pre303]`` block still validates.
+
+    Regression guard: the ``pre303`` section is the most volatile part of
+    the registry (AEAT-portal scraping selectors). It must validate
+    lazily so a half-landed change that adds pre303 model fields without
+    the matching TOML data cannot break registry parsing — and therefore
+    cannot break the ``Settings()`` construction that resolves AEAT-URL
+    defaults through :func:`load_external_constants`.
+    """
+
+    payload = _registry_toml_payload()
+    payload["aeat"].pop("pre303", None)  # type: ignore[union-attr]
+
+    constants = ExternalConstants.model_validate(payload)
+
+    assert isinstance(constants, ExternalConstants)
+    assert constants.aeat.domains.sede.startswith("https://")
+
+
+def test_missing_pre303_block_keeps_settings_construction_alive() -> None:
+    """``Settings()`` survives even when the volatile pre303 block is absent.
+
+    Drives the real failure mode reported as a CLI-wide crash: a
+    pre303-less registry must not raise a raw ``ValidationError`` out of
+    a ``Settings()`` default factory. Selector-free commands such as
+    ``config profile status`` and ``modelo list`` never touch pre303.
+    """
+
+    payload = _registry_toml_payload()
+    payload["aeat"].pop("pre303", None)  # type: ignore[union-attr]
+    section = AeatSection.model_validate(payload["aeat"])
+
+    # The AEAT-URL default factories Settings() depends on only read
+    # domains / sede_paths / clave_movil — all present without pre303.
+    assert section.domains.sede.startswith("https://")
+    assert section.sede_paths.expedientes_resumen.startswith("/")
+    assert "{target}" in section.clave_movil.selector_access_url_template
+
+    settings = Settings()
+    assert settings.aeat_base_url.startswith("https://")
+
+
+def test_malformed_pre303_block_surfaces_clean_translated_error() -> None:
+    """Accessing a malformed pre303 surface raises a clean ``CoreValidationError``.
+
+    Anti-tautology proof: without lazy validation a malformed pre303
+    block raises a raw ``pydantic.ValidationError`` during registry
+    parsing. With the lazy boundary in place, registry parsing succeeds
+    and the failure is deferred to — and only to — the consumers that
+    actually access ``.aeat.pre303``, wrapped in the structured
+    :class:`CoreValidationError` contract.
+    """
+
+    payload = _registry_toml_payload()
+    payload["aeat"]["pre303"] = {"presentation_service_path": ""}  # type: ignore[index]
+
+    constants = ExternalConstants.model_validate(payload)
+    assert isinstance(constants, ExternalConstants)  # parsing must not raise
+
+    with pytest.raises(CoreValidationError) as excinfo:
+        _ = constants.aeat.pre303
+
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["section"] == "aeat.pre303"
 
 
 def test_renta_web_open_template_has_year_placeholder() -> None:

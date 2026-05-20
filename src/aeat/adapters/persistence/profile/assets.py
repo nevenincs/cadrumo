@@ -26,7 +26,7 @@ ASSETS_LEDGER_FILENAME = "assets-ledger.secure-object"
 ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
 _SECURE_OBJECT_VERSION = 1
 _ASSETS_NAMESPACE = "aeat.persistence.profile.assets"
-_AMORTIZATION_NAMESPACE = "aeat.persistence.profile.assets.amortization"
+_AMORTIZACION_NAMESPACE = "aeat.persistence.profile.assets.amortization"
 _LEDGER_OBJECT_KEY = "default"
 
 
@@ -208,13 +208,13 @@ class AmortizacionLedgerRepository:
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
 
-        return Path("db://secure_objects") / _AMORTIZATION_NAMESPACE / ASSETS_AMORTIZATION_LEDGER_FILENAME
+        return Path("db://secure_objects") / _AMORTIZACION_NAMESPACE / ASSETS_AMORTIZATION_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
 
-        return Path("db://secure_objects") / _AMORTIZATION_NAMESPACE / "assets-amortization-ledger.lock"
+        return Path("db://secure_objects") / _AMORTIZACION_NAMESPACE / "assets-amortization-ledger.lock"
 
     def load(self) -> AmortizacionLedger:
         """Load the ledger, returning an empty document when absent.
@@ -229,7 +229,7 @@ class AmortizacionLedgerRepository:
 
         try:
             record = self._objects.load(
-                _AMORTIZATION_NAMESPACE,
+                _AMORTIZACION_NAMESPACE,
                 self._object_key,
                 expected_class=SensitivityClass.FINANCIAL,
                 max_supported_version=_SECURE_OBJECT_VERSION,
@@ -257,7 +257,7 @@ class AmortizacionLedgerRepository:
         from datetime import UTC, datetime
 
         self._objects.save(
-            namespace=_AMORTIZATION_NAMESPACE,
+            namespace=_AMORTIZACION_NAMESPACE,
             object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_SECURE_OBJECT_VERSION,

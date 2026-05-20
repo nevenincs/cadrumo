@@ -23,7 +23,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m200_sociedades_anual.label_979781",
+    label="entries.portal_m200_sociedades_anual.label",
     purpose="entries.portal_m200_sociedades_anual.purpose",
 )
 """Portal entry for Modelo 200 (annual corporate-income-tax self-assessment)."""

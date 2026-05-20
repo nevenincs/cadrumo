@@ -603,7 +603,18 @@ source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 [[revisions."2025-y-siguientes".formulas]]
 id = "modelo-190-total-percepciones"
 target = "decl.total-percepciones"
-expression = { op = "add", args = [{ relation = "modelo-190-rel-111-trabajo-dinerario-percepciones-anual" }, { relation = "modelo-190-rel-111-trabajo-especie-percepciones-anual" }, { relation = "modelo-190-rel-111-actividades-dinerario-percepciones-anual" }, { relation = "modelo-190-rel-111-actividades-especie-percepciones-anual" }, { relation = "modelo-190-rel-111-premios-dinerario-percepciones-anual" }, { relation = "modelo-190-rel-111-premios-especie-percepciones-anual" }, { relation = "modelo-190-rel-111-ganancias-dinerario-percepciones-anual" }, { relation = "modelo-190-rel-111-ganancias-especie-percepciones-anual" }, { relation = "modelo-190-rel-111-derechos-imagen-percepciones-anual" }] }
+expression.op = "add"
+expression.args = [
+    { relation = "modelo-190-rel-111-trabajo-dinerario-percepciones-anual" },
+    { relation = "modelo-190-rel-111-trabajo-especie-percepciones-anual" },
+    { relation = "modelo-190-rel-111-actividades-dinerario-percepciones-anual" },
+    { relation = "modelo-190-rel-111-actividades-especie-percepciones-anual" },
+    { relation = "modelo-190-rel-111-premios-dinerario-percepciones-anual" },
+    { relation = "modelo-190-rel-111-premios-especie-percepciones-anual" },
+    { relation = "modelo-190-rel-111-ganancias-dinerario-percepciones-anual" },
+    { relation = "modelo-190-rel-111-ganancias-especie-percepciones-anual" },
+    { relation = "modelo-190-rel-111-derechos-imagen-percepciones-anual" },
+]
 rounding = "integer"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
@@ -615,7 +626,18 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 [[revisions."2025-y-siguientes".formulas]]
 id = "modelo-190-percepciones-total"
 target = "decl.percepciones-total"
-expression = { op = "add", args = [{ relation = "modelo-190-rel-111-trabajo-dinerario-importe-anual" }, { relation = "modelo-190-rel-111-trabajo-especie-importe-anual" }, { relation = "modelo-190-rel-111-actividades-dinerario-importe-anual" }, { relation = "modelo-190-rel-111-actividades-especie-importe-anual" }, { relation = "modelo-190-rel-111-premios-dinerario-importe-anual" }, { relation = "modelo-190-rel-111-premios-especie-importe-anual" }, { relation = "modelo-190-rel-111-ganancias-dinerario-importe-anual" }, { relation = "modelo-190-rel-111-ganancias-especie-importe-anual" }, { relation = "modelo-190-rel-111-derechos-imagen-importe-anual" }] }
+expression.op = "add"
+expression.args = [
+    { relation = "modelo-190-rel-111-trabajo-dinerario-importe-anual" },
+    { relation = "modelo-190-rel-111-trabajo-especie-importe-anual" },
+    { relation = "modelo-190-rel-111-actividades-dinerario-importe-anual" },
+    { relation = "modelo-190-rel-111-actividades-especie-importe-anual" },
+    { relation = "modelo-190-rel-111-premios-dinerario-importe-anual" },
+    { relation = "modelo-190-rel-111-premios-especie-importe-anual" },
+    { relation = "modelo-190-rel-111-ganancias-dinerario-importe-anual" },
+    { relation = "modelo-190-rel-111-ganancias-especie-importe-anual" },
+    { relation = "modelo-190-rel-111-derechos-imagen-importe-anual" },
+]
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]

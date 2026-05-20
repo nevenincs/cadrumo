@@ -180,11 +180,6 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
-  setup:
-    errors:
-      workspace_bucket_torn: Profile bucket '%{profile}' has a manifest but no profile
-        record; initialization did not complete. Run `aeat config repair profile --clear-active
-        --yes`, then create the profile again.
   user_profile:
     errors:
       no_active_profile_selected: No active profile selected.
@@ -726,7 +721,7 @@ cli:
       tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
-      help: List every configuration key with its current value
+      help: List every registered profile and mark the active one
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       census:
@@ -754,6 +749,10 @@ cli:
       export_out_help: Destination path for the JSON bundle
       help: Manage active profile configuration values
       import_help: Register a portable profile bundle from a JSON file
+      import_label_help: Display name for the imported profile; defaults to the name
+        stored in the bundle. Use it to import a second copy under a fresh label.
+      import_label_taken: A profile named %{name} already exists. Re-run with `--label
+        NEW_NAME` to import it under a different name.
       import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
       logout_help: Sign out of the active profile by clearing the local pointer
@@ -790,9 +789,12 @@ cli:
       connectivity_target_help: Connectivity target to probe
       help: Diagnose and repair local configuration, registry, profile, auth, and
         logs
-      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
-        all).
+      integrity_help: Probe secure-object and registry integrity.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
+      integrity_objects_help: Probe AES-256-GCM tag verification across one namespace
+        (or all).
+      integrity_registry_help: Run full registry validation (the opt-in cross-domain
+        integrity probe).
       list_all_help: Return every key, including unreadable.
       list_conflicting_flags: --all and --unreadable cannot be combined; pass one
         or neither.
@@ -832,13 +834,17 @@ cli:
       key_help: Key to assign (e.g. iva.regime)
       value_help: Value to assign (text, true/false, amount depending on the key)
     setup:
-      accept_defaults_help: Accept the descriptor's defaults without prompting
+      accept_defaults_help: Fill every unsupplied flag from the descriptor defaults,
+        without prompting. Use alongside --quiet, or on its own for an all-defaults
+        create.
       errors:
         missing_required_flags: Missing required flags for --quiet wizard run; supply
           a value for every required question.
       help: Initialize the active tax profile and storage bucket
       profile_name_help: Profile name to write the answers into
-      quiet_help: Run the flow non-interactively using only the supplied flag values
+      quiet_help: Run non-interactively using only the supplied flag values; required
+        flags left unset cause an error. Sufficient on its own; combine with --accept-defaults
+        to fill the rest from descriptor defaults.
       success:
         next_step: 'Next step: run `aeat app overview status` to review your workspace.'
         saved: Profile '%{profile_name}' saved.
@@ -1514,6 +1520,145 @@ cli:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
 dotted:
   key: Dotted key
+entries:
+  portal_calendario_contribuyente:
+    label: Taxpayer Calendar
+    purpose: Annual calendar of tax deadlines and obligations.
+  portal_cert_selection:
+    label: Electronic Certificate Selection
+    notes:
+      '0': The browser must have the certificate installed in its store.
+    purpose: Gateway for selecting the digital certificate used to authenticate.
+  portal_cert_validation_rest:
+    label: Electronic Certificate Validation
+    purpose: Service that checks the validity of digital certificates.
+  portal_clave_gestiones:
+    label: Cl@ve PIN — Procedures
+    purpose: Management and issuance of the temporary Cl@ve PIN credential.
+  portal_clave_idp_root:
+    label: Cl@ve — Electronic Identification
+    purpose: Cl@ve identity provider for authentication with the AEAT.
+  portal_clave_sede_entry:
+    label: Sign in with Cl@ve
+    purpose: Electronic Office entry point using the Cl@ve system.
+  portal_consulta_pagos:
+    label: Payment and Refund Lookup
+    purpose: Review of the status of tax payments and refunds.
+  portal_dnie_sede_entry:
+    label: Sign in with the Electronic ID Card
+    purpose: Electronic Office entry point using the Spanish electronic ID card.
+  portal_domiciliacion_bancaria:
+    label: Set Up Direct Debit for Payments
+    purpose: Direct-debit setup for self-assessments and tax payments.
+  portal_m036_censal:
+    label: Form 036 — Census Declaration
+    purpose: Registration, amendment and deregistration in the census of businesses
+      and professionals.
+  portal_m037_censal_simplificada:
+    label: Form 037 — Simplified Census Declaration (retired)
+    notes:
+      '0': Abolished by Order HAC/1526/2024, effective from 2025-02-03.
+      '1': Use Form 036 for any subsequent census procedure.
+    purpose: Simplified census declaration for sole traders, abolished in 2025.
+  portal_m100_renta:
+    label: Form 100 — Personal Income Tax Return
+    purpose: Annual personal income tax (IRPF) return.
+  portal_m111_retenciones_trabajo:
+    label: Form 111 — Withholdings on Employment Income
+    purpose: Self-assessment of IRPF withholdings and payments on account for employment
+      income.
+  portal_m115_retenciones_arrendamientos:
+    label: Form 115 — Withholdings on Property Rental
+    purpose: Self-assessment of IRPF withholdings on urban property rentals.
+  portal_m123_retenciones_capital:
+    label: Form 123 — Withholdings on Investment Income
+    purpose: Self-assessment of IRPF withholdings on investment income.
+  portal_m130_pago_fraccionado_ed:
+    label: Form 130 — IRPF Instalment Payment (direct assessment)
+    purpose: Quarterly IRPF instalment payment for sole traders under direct assessment.
+  portal_m131_pago_fraccionado_eo:
+    label: Form 131 — IRPF Instalment Payment (objective assessment)
+    purpose: Quarterly IRPF instalment payment for sole traders under objective assessment
+      (modules).
+  portal_m180_resumen_arrendamientos:
+    label: Form 180 — Annual Summary of Property Rentals
+    purpose: Annual summary of withholdings on urban property rentals.
+  portal_m190_resumen_trabajo:
+    label: Form 190 — Annual Summary of Employment Withholdings
+    purpose: Annual summary of withholdings and payments on account for employment
+      income.
+  portal_m193_resumen_capital:
+    label: Form 193 — Annual Summary of Investment Withholdings
+    purpose: Annual summary of withholdings on investment income.
+  portal_m200_sociedades_anual:
+    label: Form 200 — Corporate Income Tax Return
+    purpose: Annual corporate income tax return.
+  portal_m202_sociedades_fraccionado:
+    label: Form 202 — Corporate Income Tax Instalment Payment
+    purpose: Instalment payment on account of corporate income tax.
+  portal_m232_vinculadas:
+    label: Form 232 — Related-Party Transactions
+    purpose: Informational return of transactions with related persons or entities.
+  portal_m303_iva_autoliquidacion:
+    label: Form 303 — VAT Self-Assessment
+    purpose: Periodic value added tax (VAT) self-assessment.
+  portal_m347_operaciones_terceros:
+    label: Form 347 — Transactions with Third Parties
+    purpose: Annual informational return of transactions with third parties above
+      EUR 3,005.06.
+  portal_m349_intracomunitarias:
+    label: Form 349 — Intra-Community Transactions
+    purpose: Recapitulative statement of intra-Community supplies of goods and services.
+  portal_m369_oss_ioss:
+    label: Form 369 — VAT One-Stop Shop (OSS/IOSS)
+    purpose: VAT self-assessment under the OSS and IOSS one-stop-shop schemes.
+  portal_m390_resumen_iva:
+    label: Form 390 — Annual VAT Summary
+    purpose: Annual summary return for value added tax.
+  portal_m720_bienes_extranjero:
+    label: Form 720 — Assets and Rights Held Abroad
+    purpose: Informational return of assets and rights located abroad.
+  portal_m840_iae:
+    label: Form 840 — Tax on Economic Activities
+    purpose: Return for the tax on economic activities (IAE).
+  portal_mi_area_personal:
+    label: My Personal Area
+    purpose: Authenticated taxpayer personal area in the Electronic Office.
+  portal_mis_datos_censales:
+    label: My Census Data
+    purpose: Review of the taxpayer's registered census data.
+  portal_mis_documentos_pendientes_firma:
+    label: Documents Awaiting Signature
+    purpose: Signature portfolio with documents awaiting electronic signature.
+  portal_mis_expedientes:
+    label: My Case Files
+    purpose: Review of the status of the taxpayer's case files and procedures.
+  portal_mis_notificaciones:
+    label: My Notifications
+    purpose: Electronic mailbox for AEAT notifications and communications.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pay Self-Assessment by Bank Account Charge
+    purpose: Payment of self-assessments by charge to a bank account.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pay Self-Assessment by Card or Bizum
+    purpose: Payment of self-assessments by bank card or Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pay Assessments and Debts
+    purpose: Payment of assessments raised by the AEAT and tax debts.
+  portal_pre303_ayuda:
+    label: Pre303 — Form 303 Assistance Service
+    purpose: Pre303 assistance service for preparing the Form 303 draft.
+  portal_presentar_consultar_index:
+    label: File and Review Tax Returns
+    purpose: Index of forms for filing or reviewing tax returns.
+  portal_renta_web_borrador:
+    label: Renta WEB — Income Tax Draft
+    notes:
+      '0': The draft is generated from the tax data held by the AEAT.
+    purpose: Renta WEB service to review and file the personal income tax draft.
+  portal_sede_root:
+    label: AEAT Electronic Office
+    purpose: Landing page of the AEAT Electronic Office.
 errors:
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
@@ -1541,6 +1686,13 @@ errors:
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
+  financial:
+    source_file_not_found: 'Source file does not exist: {path}'
+  transaction:
+    import_source_invalid: the source is not a valid ledger document
+    ledger_import_failed: 'The ledger file cannot be imported: {reason}'
+    ledger_import_requires_bucket: Ledger source import requires an active profile
+      unless dry-run mode is used.
 filing:
   validation:
     deadline_missed: Submission deadline has passed
@@ -1790,7 +1942,8 @@ wizard:
       spouse-birth-date:
         help: Spouse birth date
       spouse-disability-grade:
-        help: Spouse disability grade (if applicable)
+        help: 'Spouse disability grade (if applicable): 1 = 33%-64%, 2 = 65% or higher,
+          3 = judicial incapacity, 4 = third-party assistance or reduced mobility.'
       spouse-eu-eea-country:
         help: Spouse EU/EEA country
       spouse-eu-eea-resident:
@@ -1800,7 +1953,7 @@ wizard:
       spouse-non-resident-irpf:
         help: Spouse is non-resident IRPF
       spouse-sex:
-        help: Spouse sex code
+        help: 'Spouse sex: H = male, M = female.'
       spouse-surnames:
         help: Spouse surnames
       spouse-tax-id:
@@ -1812,17 +1965,19 @@ wizard:
       tax-residence-ccaa:
         help: Tax-residence autonomous community
       taxation-type:
-        help: Taxation type code
+        help: 'Income-tax return type: 1 = individual, 2 = joint (family unit).'
       taxpayer-birth-date:
         help: First taxpayer birth date
       taxpayer-death-date:
         help: First taxpayer death date
       taxpayer-disability-grade:
-        help: First taxpayer disability code
+        help: 'First taxpayer disability grade: 1 = 33%-64%, 2 = 65% or higher, 3
+          = judicial incapacity, 4 = third-party assistance or reduced mobility.'
       taxpayer-marital-status:
-        help: First taxpayer marital status
+        help: 'First taxpayer marital status: 1 = single, 2 = married, 3 = widowed,
+          4 = separated or divorced.'
       taxpayer-sex:
-        help: First taxpayer sex code
+        help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
         help: Third-party transactions exceed Modelo 347 threshold
       uses-objective-estimation-irpf:

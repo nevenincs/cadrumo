@@ -697,12 +697,12 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.setup._errors.WorkspaceBucketTornError",
+        "aeat.application.user_profile._integrity.ProfileIntegrityError",
         ErrorCode(
-            code="REFUSED_WORKSPACE_BUCKET_TORN",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.workspace_bucket_torn",
-            default_suggestion="aeat config repair profile --clear-active --yes",
+            code="ERROR_PROFILE_CROSS_STORE_DRIFT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_cross_store_drift",
+            default_suggestion="aeat config repair profile",
             retryable=False,
             runbook_id=None,
         ),

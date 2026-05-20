@@ -74,8 +74,9 @@ def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> N
 
 
 def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
-    """Pick up ``tr(...)`` / ``t(...)`` direct calls and ``*Error``/``*Exception``
-    constructor positional / keyword translation keys."""
+    """Pick up ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
+    constructor translation keys, and ``build_entry(...)`` portal-catalogue
+    translation keys."""
 
     name = _callee_name(node.func)
     if name is None:
@@ -83,12 +84,34 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
     if name in {"tr", "t"}:
         _add_first_dotted_arg(node, findings)
         return
+    if name == "build_entry":
+        _collect_build_entry_keys(node, findings)
+        return
     if not (name.endswith("Error") or name.endswith("Exception")):
         return
     _add_first_dotted_arg(node, findings)
     for kw in node.keywords:
         if kw.arg in {"message_key", "translated_message"} and _is_dotted_literal_constant(kw.value):
             findings.add(kw.value.value)
+
+
+def _collect_build_entry_keys(node: ast.Call, findings: set[str]) -> None:
+    """Pick up portal-catalogue translation keys passed to ``build_entry``.
+
+    ``aeat.domain.portals._entries`` modules construct each portal entry
+    through :func:`build_entry`, passing the multilingual ``label`` and
+    ``purpose`` keys (and an optional ``notes`` tuple of keys) as keyword
+    arguments rather than through a ``tr(...)`` call. The regex scanner
+    and the ``tr``/``t`` call-site path both miss them, so resolve those
+    keyword arguments explicitly here."""
+
+    for kw in node.keywords:
+        if kw.arg in {"label", "purpose"} and _is_dotted_literal_constant(kw.value):
+            findings.add(kw.value.value)
+        elif kw.arg == "notes" and isinstance(kw.value, ast.Tuple | ast.List):
+            for element in kw.value.elts:
+                if _is_dotted_literal_constant(element):
+                    findings.add(element.value)
 
 
 def _callee_name(callee: ast.expr) -> str | None:

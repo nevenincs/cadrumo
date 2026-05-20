@@ -31,10 +31,24 @@ _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 
 
 def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardValidationError:
-    """Build a translated :class:`WizardValidationError` for ``question``."""
+    """Build a translated :class:`WizardValidationError` for ``question``.
+
+    ``question.prompt`` carries a translation *key*
+    (``wizard.setup.profile.tax-id.prompt``), not a resolved label.
+    The operator-facing error string interpolates ``prompt_key``, so
+    the key path must be resolved through :func:`tr` first — otherwise
+    the internal key leaks verbatim into the refusal message
+    (``Invalid NIF/NIE/CIF for wizard.setup.profile.tax-id.prompt``).
+    The raw key path is intentionally not carried in the context; the
+    operator-facing surface only needs the resolved field label.
+    """
 
     message_key = f"wizard.errors.{reason}"
-    full_context: dict[str, object] = {"prompt_key": str(question.prompt), "question_id": question.id}
+    field_label = tr(str(question.prompt))
+    full_context: dict[str, object] = {
+        "prompt_key": field_label,
+        "question_id": question.id,
+    }
     full_context.update(context)
     translated = tr(message_key, **full_context)
     return WizardValidationError(message_key, context=full_context, translated_message=translated)

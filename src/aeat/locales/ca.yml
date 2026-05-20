@@ -201,12 +201,6 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
-  setup:
-    errors:
-      workspace_bucket_torn: El bucket de perfil '%{profile}' té un manifest però
-        no té cap registre de perfil; la inicialització no s'ha completat. Executa
-        `aeat config repair profile --clear-active --yes` i després crea el perfil
-        de nou.
   user_profile:
     errors:
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
@@ -636,17 +630,22 @@ cli:
       diagnostics:
         help: Inspecciona els diagnòstics d'autenticació xifrats.
         id_help: Identificador del diagnòstic.
-        invalid_phone_state: 'Estat de telèfon no vàlid ''%{phone_state}''. S''esperava un de: %{choices}.'
+        invalid_phone_state: 'Estat de telèfon no vàlid ''%{phone_state}''. S''esperava
+          un de: %{choices}.'
         list_help: Llista els diagnòstics d'autenticació Cl@ve xifrats.
         not_found: 'Diagnòstic d''autenticació no trobat: %{diagnostic_id}.'
-        phone_state_help: 'Un de: app_prompted_and_accepted, app_prompted_not_accepted, app_did_not_prompt, operator_did_not_check.'
-        report_help: 'Registrar l''estat de l''app Cl@ve observat per l''operador per a un diagnòstic d''autenticació.'
+        phone_state_help: 'Un de: app_prompted_and_accepted, app_prompted_not_accepted,
+          app_did_not_prompt, operator_did_not_check.'
+        report_help: Registrar l'estat de l'app Cl@ve observat per l'operador per
+          a un diagnòstic d'autenticació.
         show_help: Mostra un diagnòstic d'autenticació xifrat i redactat.
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
-      login_fresh_help: 'Forçar una nova autenticació en viu en lloc de reutilitzar una sessió AEAT desada.'
-      login_help: 'Adquirir o verificar una sessió AEAT en viu.'
-      login_reset_lock_help: 'Eliminar un bloqueig d''adquisició d''autenticació obsolet abans de començar.'
+      login_fresh_help: Forçar una nova autenticació en viu en lloc de reutilitzar
+        una sessió AEAT desada.
+      login_help: Adquirir o verificar una sessió AEAT en viu.
+      login_reset_lock_help: Eliminar un bloqueig d'adquisició d'autenticació obsolet
+        abans de començar.
       no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config profile
         create NAME' abans de configurar l'autenticació.
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
@@ -767,7 +766,7 @@ cli:
       tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
-      help: Llistar totes les claus de configuració amb el seu valor actual
+      help: Llistar tots els perfils registrats i marcar l'actiu
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
@@ -795,6 +794,10 @@ cli:
       export_out_help: Ruta de destinació per al paquet JSON
       help: Gestionar valors de configuració del perfil actiu
       import_help: Registra un paquet portable de perfil des d'un JSON
+      import_label_help: Nom visible per al perfil importat; per defecte el nom desat
+        al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
+      import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
+        amb `--label NOM_NOU` per importar-lo amb un nom diferent.
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
@@ -830,9 +833,12 @@ cli:
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
       help: Diagnosticar i reparar configuració local, registre, perfil, autenticació
         i logs
-      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
-        all).
+      integrity_help: Comprovar la integritat dels objectes segurs i del registre.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
+      integrity_objects_help: Comprova la verificació d'etiquetes AES-256-GCM en un
+        espai de noms (o en tots).
+      integrity_registry_help: Executa la validació completa del registre (la comprovació
+        d'integritat opcional entre dominis).
       list_all_help: Return every key, including unreadable.
       list_conflicting_flags: --all and --unreadable cannot be combined; pass one
         or neither.
@@ -843,9 +849,10 @@ cli:
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
       profile_clear_active_help: Netejar un perfil actiu de fitxer-punter només quan
         apunta a estat de perfil il·legible.
-      profile_clear_active_mismatch: '--clear-active només pot esborrar el punter del perfil actiu; ''%{profile}'' no està actiu.'
+      profile_clear_active_mismatch: --clear-active només pot esborrar el punter del
+        perfil actiu; '%{profile}' no està actiu.
       profile_help: Inspeccionar i reparar el punter de perfil actiu.
-      profile_name_help: 'Inspeccionar un bucket de perfil registrat concret.'
+      profile_name_help: Inspeccionar un bucket de perfil registrat concret.
       profile_requires_yes: Passa --yes per netejar el punter de perfil actiu.
       quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu;
         requereix --yes)
@@ -872,14 +879,17 @@ cli:
       key_help: Clau a assignar (ex. iva.regime)
       value_help: Valor a assignar (text, true/false, import segons la clau)
     setup:
-      accept_defaults_help: Acceptar els valors per defecte del descriptor sense preguntar
+      accept_defaults_help: Omple amb els valors per defecte del descriptor tots els
+        flags no indicats, sense preguntar. Usa'l amb --quiet, o per si sol per a
+        una creació amb tot per defecte.
       errors:
         missing_required_flags: Falten banderes obligatòries per al mode --quiet;
           proporciona un valor per a cada pregunta obligatòria.
       help: Configuració inicial guiada del perfil tributari
       profile_name_help: Nom del perfil on s'escriuen les respostes
-      quiet_help: Executar el flux sense interacció utilitzant només els valors de
-        les banderes
+      quiet_help: Executa sense interacció usant només els valors dels flags indicats;
+        els flags requerits sense valor provoquen un error. Suficient per si sol;
+        combina amb --accept-defaults per omplir la resta amb els valors per defecte.
       success:
         next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai
           de treball.'
@@ -1552,6 +1562,144 @@ cli:
       slug: Identificador del tema (kebab-case, ex. iva-regime)
 dotted:
   key: Clau amb punts
+entries:
+  portal_calendario_contribuyente:
+    label: Calendari del contribuent
+    purpose: Calendari anual de terminis i obligacions tributàries.
+  portal_cert_selection:
+    label: Selecció de certificat electrònic
+    notes:
+      '0': El navegador ha de tenir el certificat instal·lat al seu magatzem.
+    purpose: Passarel·la de selecció del certificat digital per autenticar-se.
+  portal_cert_validation_rest:
+    label: Validació de certificats electrònics
+    purpose: Servei de comprovació de validesa de certificats digitals.
+  portal_clave_gestiones:
+    label: Cl@ve PIN — Gestions
+    purpose: Gestió i obtenció del Cl@ve PIN d'accés temporal.
+  portal_clave_idp_root:
+    label: Cl@ve — Identificació electrònica
+    purpose: Proveïdor d'identitat Cl@ve per a l'autenticació davant l'AEAT.
+  portal_clave_sede_entry:
+    label: Accés amb Cl@ve
+    purpose: Punt d'accés a la Seu mitjançant el sistema Cl@ve.
+  portal_consulta_pagos:
+    label: Consulta de pagaments i devolucions
+    purpose: Consulta de l'estat de pagaments i devolucions tributàries.
+  portal_dnie_sede_entry:
+    label: Accés amb DNI electrònic
+    purpose: Punt d'accés a la Seu mitjançant el DNIe.
+  portal_domiciliacion_bancaria:
+    label: Domiciliació bancària de pagaments
+    purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
+  portal_m036_censal:
+    label: Model 036 — Declaració censal
+    purpose: Alta, modificació i baixa en el cens d'empresaris i professionals.
+  portal_m037_censal_simplificada:
+    label: Model 037 — Declaració censal simplificada (retirat)
+    notes:
+      '0': Suprimit per l'Ordre HAC/1526/2024, amb efecte des de 2025-02-03.
+      '1': Utilitzeu el Model 036 per a qualsevol tràmit censal posterior.
+    purpose: Declaració censal simplificada per a autònoms, suprimida el 2025.
+  portal_m100_renta:
+    label: Model 100 — Declaració de la Renda (IRPF)
+    purpose: Declaració anual de l'Impost sobre la Renda de les Persones Físiques.
+  portal_m111_retenciones_trabajo:
+    label: Model 111 — Retencions del treball i activitats
+    purpose: Autoliquidació de retencions i ingressos a compte de l'IRPF sobre rendiments
+      del treball.
+  portal_m115_retenciones_arrendamientos:
+    label: Model 115 — Retencions per arrendament d'immobles
+    purpose: Autoliquidació de retencions de l'IRPF per lloguer d'immobles urbans.
+  portal_m123_retenciones_capital:
+    label: Model 123 — Retencions del capital mobiliari
+    purpose: Autoliquidació de retencions de l'IRPF sobre rendiments del capital mobiliari.
+  portal_m130_pago_fraccionado_ed:
+    label: Model 130 — Pagament fraccionat IRPF (estimació directa)
+    purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
+      directa.
+  portal_m131_pago_fraccionado_eo:
+    label: Model 131 — Pagament fraccionat IRPF (estimació objectiva)
+    purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
+      objectiva (mòduls).
+  portal_m180_resumen_arrendamientos:
+    label: Model 180 — Resum anual d'arrendaments
+    purpose: Resum anual de retencions per arrendament d'immobles urbans.
+  portal_m190_resumen_trabajo:
+    label: Model 190 — Resum anual de retencions del treball
+    purpose: Resum anual de retencions i ingressos a compte sobre rendiments del treball.
+  portal_m193_resumen_capital:
+    label: Model 193 — Resum anual de retencions del capital
+    purpose: Resum anual de retencions sobre rendiments del capital mobiliari.
+  portal_m200_sociedades_anual:
+    label: Model 200 — Impost sobre Societats
+    purpose: Declaració anual de l'Impost sobre Societats.
+  portal_m202_sociedades_fraccionado:
+    label: Model 202 — Pagament fraccionat de l'Impost sobre Societats
+    purpose: Pagament fraccionat a compte de l'Impost sobre Societats.
+  portal_m232_vinculadas:
+    label: Model 232 — Operacions vinculades
+    purpose: Declaració informativa d'operacions amb persones o entitats vinculades.
+  portal_m303_iva_autoliquidacion:
+    label: Model 303 — Autoliquidació de l'IVA
+    purpose: Autoliquidació periòdica de l'Impost sobre el Valor Afegit.
+  portal_m347_operaciones_terceros:
+    label: Model 347 — Operacions amb terceres persones
+    purpose: Declaració informativa anual d'operacions amb tercers superiors a 3.005,06
+      €.
+  portal_m349_intracomunitarias:
+    label: Model 349 — Operacions intracomunitàries
+    purpose: Declaració recapitulativa d'operacions intracomunitàries de béns i serveis.
+  portal_m369_oss_ioss:
+    label: Model 369 — Finestreta única IVA (OSS/IOSS)
+    purpose: Autoliquidació de l'IVA en els règims de finestreta única OSS i IOSS.
+  portal_m390_resumen_iva:
+    label: Model 390 — Resum anual de l'IVA
+    purpose: Declaració resum anual de l'Impost sobre el Valor Afegit.
+  portal_m720_bienes_extranjero:
+    label: Model 720 — Béns i drets a l'estranger
+    purpose: Declaració informativa de béns i drets situats a l'estranger.
+  portal_m840_iae:
+    label: Model 840 — Impost sobre Activitats Econòmiques
+    purpose: Declaració de l'Impost sobre Activitats Econòmiques (IAE).
+  portal_mi_area_personal:
+    label: La Meva Àrea Personal
+    purpose: Àrea personal autenticada del contribuent a la Seu.
+  portal_mis_datos_censales:
+    label: Les meves dades censals
+    purpose: Consulta de les dades censals registrades del contribuent.
+  portal_mis_documentos_pendientes_firma:
+    label: Documents pendents de signatura
+    purpose: Portasignatures amb els documents pendents de signatura electrònica.
+  portal_mis_expedientes:
+    label: Els meus expedients
+    purpose: Consulta de l'estat dels expedients i tràmits del contribuent.
+  portal_mis_notificaciones:
+    label: Les meves notificacions
+    purpose: Bústia electrònica de notificacions i comunicacions de l'AEAT.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pagament d'autoliquidació per càrrec en compte
+    purpose: Pagament d'autoliquidacions mitjançant càrrec en compte bancari.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pagament d'autoliquidació amb targeta o Bizum
+    purpose: Pagament d'autoliquidacions amb targeta bancària o Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pagament de liquidacions i deutes
+    purpose: Pagament de liquidacions practicades per l'AEAT i deutes tributaris.
+  portal_pre303_ayuda:
+    label: Pre303 — Servei d'ajuda al Model 303
+    purpose: Servei d'ajuda Pre303 per preparar l'esborrany del Model 303.
+  portal_presentar_consultar_index:
+    label: Presentar i consultar declaracions
+    purpose: Índex de models per presentar o consultar declaracions.
+  portal_renta_web_borrador:
+    label: Renta WEB — Esborrany IRPF
+    notes:
+      '0': L'esborrany es genera a partir de les dades fiscals de l'AEAT.
+    purpose: Servei Renta WEB per revisar i presentar l'esborrany de l'IRPF.
+  portal_sede_root:
+    label: AEAT Seu Electrònica
+    purpose: Pàgina d'inici de la Seu Electrònica de l'AEAT.
 errors:
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
@@ -1581,6 +1729,13 @@ errors:
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
+  financial:
+    source_file_not_found: 'El fitxer d''origen no existeix: {path}'
+  transaction:
+    import_source_invalid: l'origen no és un extracte bancari vàlid
+    ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'
+    ledger_import_requires_bucket: La importació d'un extracte bancari requereix un
+      perfil actiu, llevat del mode de prova.
 filing:
   validation:
     deadline_missed: Termini de presentació vençut
@@ -1831,7 +1986,8 @@ wizard:
       spouse-birth-date:
         help: Data de naixement del cònjuge
       spouse-disability-grade:
-        help: Grau de discapacitat del cònjuge (si aplica)
+        help: 'Grau de discapacitat del cònjuge (si escau): 1 = 33%-64%, 2 = 65% o
+          superior, 3 = incapacitat judicial, 4 = ajuda de tercers o mobilitat reduïda.'
       spouse-eu-eea-country:
         help: País UE/EEE del cònjuge
       spouse-eu-eea-resident:
@@ -1841,7 +1997,7 @@ wizard:
       spouse-non-resident-irpf:
         help: Cònjuge no resident IRPF
       spouse-sex:
-        help: Sexe del cònjuge
+        help: 'Sexe del cònjuge: H = home, M = dona.'
       spouse-surnames:
         help: Cognoms del cònjuge
       spouse-tax-id:
@@ -1853,17 +2009,20 @@ wizard:
       tax-residence-ccaa:
         help: Comunitat autònoma de residència fiscal
       taxation-type:
-        help: Codi del tipus de tributació
+        help: 'Tipus de declaració de Renda: 1 = individual, 2 = conjunta (unitat
+          familiar).'
       taxpayer-birth-date:
         help: Data de naixement del primer declarant
       taxpayer-death-date:
         help: Data de defunció del primer declarant
       taxpayer-disability-grade:
-        help: Clau de discapacitat del primer declarant
+        help: 'Grau de discapacitat del primer declarant: 1 = 33%-64%, 2 = 65% o superior,
+          3 = incapacitat judicial, 4 = ajuda de tercers o mobilitat reduïda.'
       taxpayer-marital-status:
-        help: Estat civil del primer declarant
+        help: 'Estat civil del primer declarant: 1 = solter/a, 2 = casat/da, 3 = vidu/a,
+          4 = separat/da o divorciat/da.'
       taxpayer-sex:
-        help: Sexe del primer declarant
+        help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
         help: Operacions amb tercers superen el llindar del Modelo 347
       uses-objective-estimation-irpf:

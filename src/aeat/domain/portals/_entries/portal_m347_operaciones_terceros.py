@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m347_operaciones_terceros.label_293185",
+    label="entries.portal_m347_operaciones_terceros.label",
     purpose="entries.portal_m347_operaciones_terceros.purpose",
 )
 """Portal entry for Modelo 347 (annual third-party transactions return)."""

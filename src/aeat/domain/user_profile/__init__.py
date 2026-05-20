@@ -16,7 +16,7 @@ from ._errors import (
     ProfileSnapshotNotFoundError,
     UserProfileSchemaLoadError,
 )
-from ._loader import  load_user_profile_schema
+from ._loader import load_user_profile_schema
 from ._registry_contract import (
     UserProfileRegistryContractIssue,
     UserProfileRegistryContractReport,
@@ -40,11 +40,11 @@ from ._values import (
     UserProfileRecord,
     UserProfileSnapshot,
     UserProfileStatus,
+    new_profile_id,
     new_profile_snapshot_id,
 )
 
 __all__ = [
-    "",
     "ProfileAlreadyExistsError",
     "ProfileFactValue",
     "ProfileFieldDefinition",
@@ -70,6 +70,7 @@ __all__ = [
     "UserProfileStatus",
     "build_user_profile_selector_index",
     "load_user_profile_schema",
+    "new_profile_id",
     "new_profile_snapshot_id",
     "validate_user_profile_registry_contract",
 ]

@@ -201,12 +201,6 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
-  setup:
-    errors:
-      workspace_bucket_torn: El bucket de perfil '%{profile}' tiene un manifiesto
-        pero no tiene un registro de perfil; la inicialización no se completó. Ejecuta
-        `aeat config repair profile --clear-active --yes` y después crea el perfil
-        de nuevo.
   user_profile:
     errors:
       no_active_profile_selected: No hay un perfil activo seleccionado.
@@ -649,17 +643,22 @@ cli:
       diagnostics:
         help: Inspecciona los diagnósticos de autenticación cifrados.
         id_help: Identificador del diagnóstico.
-        invalid_phone_state: 'Estado de teléfono no válido ''%{phone_state}''. Se esperaba uno de: %{choices}.'
+        invalid_phone_state: 'Estado de teléfono no válido ''%{phone_state}''. Se
+          esperaba uno de: %{choices}.'
         list_help: Lista los diagnósticos de autenticación Cl@ve cifrados.
         not_found: 'Diagnóstico de autenticación no encontrado: %{diagnostic_id}.'
-        phone_state_help: 'Uno de: app_prompted_and_accepted, app_prompted_not_accepted, app_did_not_prompt, operator_did_not_check.'
-        report_help: 'Registrar el estado de la app Cl@ve observado por el operador para un diagnóstico de autenticación.'
+        phone_state_help: 'Uno de: app_prompted_and_accepted, app_prompted_not_accepted,
+          app_did_not_prompt, operator_did_not_check.'
+        report_help: Registrar el estado de la app Cl@ve observado por el operador
+          para un diagnóstico de autenticación.
         show_help: Muestra un diagnóstico de autenticación cifrado y redactado.
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
-      login_fresh_help: 'Forzar una nueva autenticación en vivo en lugar de reutilizar una sesión AEAT guardada.'
-      login_help: 'Adquirir o verificar una sesión AEAT en vivo.'
-      login_reset_lock_help: 'Eliminar un bloqueo de adquisición de autenticación obsoleto antes de empezar.'
+      login_fresh_help: Forzar una nueva autenticación en vivo en lugar de reutilizar
+        una sesión AEAT guardada.
+      login_help: Adquirir o verificar una sesión AEAT en vivo.
+      login_reset_lock_help: Eliminar un bloqueo de adquisición de autenticación obsoleto
+        antes de empezar.
       no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config profile
         create NAME' antes de configurar la autenticación.
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
@@ -781,7 +780,7 @@ cli:
       tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
-      help: Listar todas las claves de configuración y sus valores actuales
+      help: Listar todos los perfiles registrados y marcar el activo
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       census:
@@ -809,6 +808,10 @@ cli:
       export_out_help: Ruta de destino para el paquete JSON
       help: Gestionar valores de configuración del perfil activo
       import_help: Registra un paquete portátil de perfil desde un JSON
+      import_label_help: Nombre visible para el perfil importado; por defecto el nombre
+        guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
+      import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
+        con `--label NUEVO_NOMBRE` para importarlo con un nombre distinto.
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
@@ -845,9 +848,12 @@ cli:
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
       help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
         y logs
-      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
-        all).
+      integrity_help: Comprobar la integridad de los objetos seguros y del registro.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
+      integrity_objects_help: Comprueba la verificación de etiquetas AES-256-GCM en
+        un espacio de nombres (o en todos).
+      integrity_registry_help: Ejecuta la validación completa del registro (la comprobación
+        de integridad opcional entre dominios).
       list_all_help: Return every key, including unreadable.
       list_conflicting_flags: --all and --unreadable cannot be combined; pass one
         or neither.
@@ -858,9 +864,10 @@ cli:
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
       profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
         cuando apunta a estado de perfil ilegible.
-      profile_clear_active_mismatch: '--clear-active solo puede borrar el puntero del perfil activo; ''%{profile}'' no está activo.'
+      profile_clear_active_mismatch: --clear-active solo puede borrar el puntero del
+        perfil activo; '%{profile}' no está activo.
       profile_help: Inspeccionar y reparar el puntero de perfil activo.
-      profile_name_help: 'Inspeccionar un bucket de perfil registrado concreto.'
+      profile_name_help: Inspeccionar un bucket de perfil registrado concreto.
       profile_requires_yes: Pasa --yes para limpiar el puntero de perfil activo.
       quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
         destructiva, requiere --yes)
@@ -887,14 +894,18 @@ cli:
       key_help: Clave a asignar (ej. iva.regime)
       value_help: Valor a asignar (texto, true/false, importe segun la clave)
     setup:
-      accept_defaults_help: Aceptar los valores por defecto del descriptor sin preguntar
+      accept_defaults_help: Rellena con los valores por defecto del descriptor todos
+        los flags no indicados, sin preguntar. Úsalo junto a --quiet, o por sí solo
+        para una creación con todo por defecto.
       errors:
         missing_required_flags: Faltan banderas obligatorias para el modo --quiet;
           proporciona un valor para cada pregunta obligatoria.
       help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
-      quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
-        banderas
+      quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados;
+        los flags requeridos sin valor provocan un error. Suficiente por sí solo;
+        combínalo con --accept-defaults para rellenar el resto con los valores por
+        defecto.
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
           tu espacio de trabajo.'
@@ -1577,6 +1588,146 @@ cli:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
 dotted:
   key: Clave con puntos
+entries:
+  portal_calendario_contribuyente:
+    label: Calendario del contribuyente
+    purpose: Calendario anual de plazos y obligaciones tributarias.
+  portal_cert_selection:
+    label: Selección de certificado electrónico
+    notes:
+      '0': El navegador debe tener instalado el certificado en su almacén.
+    purpose: Pasarela de selección del certificado digital para autenticarse.
+  portal_cert_validation_rest:
+    label: Validación de certificados electrónicos
+    purpose: Servicio de comprobación de validez de certificados digitales.
+  portal_clave_gestiones:
+    label: Cl@ve PIN — Gestiones
+    purpose: Gestión y obtención del Cl@ve PIN de acceso temporal.
+  portal_clave_idp_root:
+    label: Cl@ve — Identificación electrónica
+    purpose: Proveedor de identidad Cl@ve para autenticación ante la AEAT.
+  portal_clave_sede_entry:
+    label: Acceso con Cl@ve
+    purpose: Punto de acceso a la Sede mediante el sistema Cl@ve.
+  portal_consulta_pagos:
+    label: Consulta de pagos y devoluciones
+    purpose: Consulta del estado de pagos y devoluciones tributarias.
+  portal_dnie_sede_entry:
+    label: Acceso con DNI electrónico
+    purpose: Punto de acceso a la Sede mediante DNIe.
+  portal_domiciliacion_bancaria:
+    label: Domiciliación bancaria de pagos
+    purpose: Domiciliación bancaria de autoliquidaciones y pagos tributarios.
+  portal_m036_censal:
+    label: Modelo 036 — Declaración censal
+    purpose: Alta, modificación y baja en el censo de empresarios y profesionales.
+  portal_m037_censal_simplificada:
+    label: Modelo 037 — Declaración censal simplificada (retirado)
+    notes:
+      '0': Suprimido por la Orden HAC/1526/2024, con efecto desde 2025-02-03.
+      '1': Use el Modelo 036 para cualquier trámite censal posterior.
+    purpose: Declaración censal simplificada para autónomos, suprimida en 2025.
+  portal_m100_renta:
+    label: Modelo 100 — Declaración de la Renta (IRPF)
+    purpose: Declaración anual del Impuesto sobre la Renta de las Personas Físicas.
+  portal_m111_retenciones_trabajo:
+    label: Modelo 111 — Retenciones del trabajo y actividades
+    purpose: Autoliquidación de retenciones e ingresos a cuenta del IRPF sobre rendimientos
+      del trabajo.
+  portal_m115_retenciones_arrendamientos:
+    label: Modelo 115 — Retenciones por arrendamiento de inmuebles
+    purpose: Autoliquidación de retenciones del IRPF por alquiler de inmuebles urbanos.
+  portal_m123_retenciones_capital:
+    label: Modelo 123 — Retenciones del capital mobiliario
+    purpose: Autoliquidación de retenciones del IRPF sobre rendimientos del capital
+      mobiliario.
+  portal_m130_pago_fraccionado_ed:
+    label: Modelo 130 — Pago fraccionado IRPF (estimación directa)
+    purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación directa.
+  portal_m131_pago_fraccionado_eo:
+    label: Modelo 131 — Pago fraccionado IRPF (estimación objetiva)
+    purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación objetiva
+      (módulos).
+  portal_m180_resumen_arrendamientos:
+    label: Modelo 180 — Resumen anual de arrendamientos
+    purpose: Resumen anual de retenciones por arrendamiento de inmuebles urbanos.
+  portal_m190_resumen_trabajo:
+    label: Modelo 190 — Resumen anual de retenciones del trabajo
+    purpose: Resumen anual de retenciones e ingresos a cuenta sobre rendimientos del
+      trabajo.
+  portal_m193_resumen_capital:
+    label: Modelo 193 — Resumen anual de retenciones del capital
+    purpose: Resumen anual de retenciones sobre rendimientos del capital mobiliario.
+  portal_m200_sociedades_anual:
+    label: Modelo 200 — Impuesto sobre Sociedades
+    purpose: Declaración anual del Impuesto sobre Sociedades.
+  portal_m202_sociedades_fraccionado:
+    label: Modelo 202 — Pago fraccionado del Impuesto sobre Sociedades
+    purpose: Pago fraccionado a cuenta del Impuesto sobre Sociedades.
+  portal_m232_vinculadas:
+    label: Modelo 232 — Operaciones vinculadas
+    purpose: Declaración informativa de operaciones con personas o entidades vinculadas.
+  portal_m303_iva_autoliquidacion:
+    label: Modelo 303 — Autoliquidación del IVA
+    purpose: Autoliquidación periódica del Impuesto sobre el Valor Añadido.
+  portal_m347_operaciones_terceros:
+    label: Modelo 347 — Operaciones con terceras personas
+    purpose: Declaración informativa anual de operaciones con terceros superiores
+      a 3.005,06 €.
+  portal_m349_intracomunitarias:
+    label: Modelo 349 — Operaciones intracomunitarias
+    purpose: Declaración recapitulativa de operaciones intracomunitarias de bienes
+      y servicios.
+  portal_m369_oss_ioss:
+    label: Modelo 369 — Ventanilla única IVA (OSS/IOSS)
+    purpose: Autoliquidación del IVA en los regímenes de ventanilla única OSS e IOSS.
+  portal_m390_resumen_iva:
+    label: Modelo 390 — Resumen anual del IVA
+    purpose: Declaración resumen anual del Impuesto sobre el Valor Añadido.
+  portal_m720_bienes_extranjero:
+    label: Modelo 720 — Bienes y derechos en el extranjero
+    purpose: Declaración informativa de bienes y derechos situados en el extranjero.
+  portal_m840_iae:
+    label: Modelo 840 — Impuesto sobre Actividades Económicas
+    purpose: Declaración del Impuesto sobre Actividades Económicas (IAE).
+  portal_mi_area_personal:
+    label: Mi Área Personal
+    purpose: Área personal autenticada del contribuyente en la Sede.
+  portal_mis_datos_censales:
+    label: Mis datos censales
+    purpose: Consulta de los datos censales registrados del contribuyente.
+  portal_mis_documentos_pendientes_firma:
+    label: Documentos pendientes de firma
+    purpose: Portafirmas con los documentos pendientes de firma electrónica.
+  portal_mis_expedientes:
+    label: Mis expedientes
+    purpose: Consulta del estado de los expedientes y trámites del contribuyente.
+  portal_mis_notificaciones:
+    label: Mis notificaciones
+    purpose: Buzón electrónico de notificaciones y comunicaciones de la AEAT.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pago de autoliquidación por cargo en cuenta
+    purpose: Pago de autoliquidaciones mediante cargo en cuenta bancaria.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pago de autoliquidación con tarjeta o Bizum
+    purpose: Pago de autoliquidaciones con tarjeta bancaria o Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pago de liquidaciones y deudas
+    purpose: Pago de liquidaciones practicadas por la AEAT y deudas tributarias.
+  portal_pre303_ayuda:
+    label: Pre303 — Servicio de ayuda al Modelo 303
+    purpose: Servicio de ayuda Pre303 para preparar el borrador del Modelo 303.
+  portal_presentar_consultar_index:
+    label: Presentar y consultar declaraciones
+    purpose: Índice de modelos para presentar o consultar declaraciones.
+  portal_renta_web_borrador:
+    label: Renta WEB — Borrador IRPF
+    notes:
+      '0': El borrador se genera a partir de los datos fiscales de la AEAT.
+    purpose: Servicio Renta WEB para revisar y presentar el borrador del IRPF.
+  portal_sede_root:
+    label: AEAT Sede Electrónica
+    purpose: Página de inicio de la Sede Electrónica de la AEAT.
 errors:
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
@@ -1606,6 +1757,13 @@ errors:
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
+  financial:
+    source_file_not_found: 'El archivo de origen no existe: {path}'
+  transaction:
+    import_source_invalid: el origen no es un extracto bancario válido
+    ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'
+    ledger_import_requires_bucket: La importación de un extracto bancario requiere
+      un perfil activo, salvo en modo de prueba.
 filing:
   validation:
     deadline_missed: Plazo de presentación vencido
@@ -1857,7 +2015,9 @@ wizard:
       spouse-birth-date:
         help: Fecha de nacimiento del cónyuge
       spouse-disability-grade:
-        help: Grado de discapacidad del cónyuge (si aplica)
+        help: 'Grado de discapacidad del cónyuge (si procede): 1 = 33%-64%, 2 = 65%
+          o superior, 3 = incapacidad judicial, 4 = ayuda de terceros o movilidad
+          reducida.'
       spouse-eu-eea-country:
         help: País UE/EEE del cónyuge
       spouse-eu-eea-resident:
@@ -1867,7 +2027,7 @@ wizard:
       spouse-non-resident-irpf:
         help: Cónyuge no residente IRPF
       spouse-sex:
-        help: Sexo del cónyuge
+        help: 'Sexo del cónyuge: H = hombre, M = mujer.'
       spouse-surnames:
         help: Apellidos del cónyuge
       spouse-tax-id:
@@ -1879,17 +2039,20 @@ wizard:
       tax-residence-ccaa:
         help: Comunidad autónoma de residencia fiscal
       taxation-type:
-        help: Código del tipo de tributación
+        help: 'Tipo de declaración de Renta: 1 = individual, 2 = conjunta (unidad
+          familiar).'
       taxpayer-birth-date:
         help: Fecha de nacimiento del primer declarante
       taxpayer-death-date:
         help: Fecha de fallecimiento del primer declarante
       taxpayer-disability-grade:
-        help: Clave de discapacidad del primer declarante
+        help: 'Grado de discapacidad del primer declarante: 1 = 33%-64%, 2 = 65% o
+          superior, 3 = incapacidad judicial, 4 = ayuda de terceros o movilidad reducida.'
       taxpayer-marital-status:
-        help: Estado civil del primer declarante
+        help: 'Estado civil del primer declarante: 1 = soltero/a, 2 = casado/a, 3
+          = viudo/a, 4 = separado/a o divorciado/a.'
       taxpayer-sex:
-        help: Sexo del primer declarante
+        help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
         help: Operaciones con terceros superan el umbral del Modelo 347
       uses-objective-estimation-irpf:

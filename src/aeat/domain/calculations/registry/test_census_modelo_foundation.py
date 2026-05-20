@@ -99,7 +99,7 @@ def test_modelo_037_is_historical_metadata_superseded_by_036() -> None:
 def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_source() -> None:
     authority = resources().modelos.authority
 
-    with pytest.raises(RegistrySnapshotError):
+    with pytest.raises(RegistrySnapshotError, match="not present in the calculation registry"):
         authority.validate_modelo("037")
 
     assert "boe-modelo-037-historical-suppression" in authority.catalogues.sources

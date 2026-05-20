@@ -122,21 +122,20 @@ class DuplicateProfileCommand(BaseModel):
 
 
 class RenameProfileCommand(BaseModel):
-    """Rename a live profile in place.
+    """Update a live profile's display label.
 
-    The source record is read, re-saved under ``target_profile_id``
-    (a new secure-object key), and the old key is deleted in the
-    same lifecycle service call. The orchestration layer handles
-    the parallel update of the workflow-state ``profiles`` map and
-    the plaintext active-profile pointer file when the renamed
-    profile is the active one.
+    Profile identity is an immutable UUID, so a rename is a pure
+    label edit: the live record's ``display_name`` is updated and the
+    record is re-saved under the same secure-object key. There is no
+    directory move, no re-key, and no rollback machinery. The
+    orchestration layer updates the parallel copy of the label in the
+    plaintext bucket manifest.
     """
 
     model_config = _STRICT_FROZEN
 
-    source_profile_id: str = Field(min_length=1, max_length=96)
-    target_profile_id: str = Field(min_length=1, max_length=96)
-    target_display_name: str | None = Field(default=None, max_length=160)
+    profile_id: str = Field(min_length=1, max_length=96)
+    target_display_name: str = Field(min_length=1, max_length=160)
 
 
 # ---------------------------------------------------------------------------

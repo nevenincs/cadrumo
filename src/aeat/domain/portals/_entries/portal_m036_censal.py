@@ -26,7 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m036_censal.label_771260",
+    label="entries.portal_m036_censal.label",
     purpose="entries.portal_m036_censal.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 036 census procedure page."""

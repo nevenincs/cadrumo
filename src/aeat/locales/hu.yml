@@ -195,12 +195,6 @@ application:
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.
-  setup:
-    errors:
-      workspace_bucket_torn: A(z) '%{profile}' profil bucket manifesttel rendelkezik,
-        de nincs profilrekordja; az inicializálás nem fejeződött be. Futtasd az `aeat
-        config repair profile --clear-active --yes` parancsot, majd hozd létre újra
-        a profilt.
   user_profile:
     errors:
       no_active_profile_selected: Nincs kiválasztva aktív profil.
@@ -622,17 +616,21 @@ cli:
       diagnostics:
         help: Titkosított hitelesítési diagnosztikák vizsgálata.
         id_help: Diagnosztika azonosítója.
-        invalid_phone_state: 'Érvénytelen telefonállapot: ''%{phone_state}''. A várt értékek egyike: %{choices}.'
+        invalid_phone_state: 'Érvénytelen telefonállapot: ''%{phone_state}''. A várt
+          értékek egyike: %{choices}.'
         list_help: Titkosított Cl@ve hitelesítési diagnosztikák listázása.
         not_found: 'Hitelesítési diagnosztika nem található: %{diagnostic_id}.'
-        phone_state_help: 'Az alábbiak egyike: app_prompted_and_accepted, app_prompted_not_accepted, app_did_not_prompt, operator_did_not_check.'
-        report_help: 'A kezelő által megfigyelt Cl@ve alkalmazásállapot rögzítése egy hitelesítési diagnosztikához.'
+        phone_state_help: 'Az alábbiak egyike: app_prompted_and_accepted, app_prompted_not_accepted,
+          app_did_not_prompt, operator_did_not_check.'
+        report_help: A kezelő által megfigyelt Cl@ve alkalmazásállapot rögzítése egy
+          hitelesítési diagnosztikához.
         show_help: Egy szerkesztett, titkosított hitelesítési diagnosztika megjelenítése.
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
       help: Az aktív hitelesítési szolgáltató beállítása
-      login_fresh_help: 'Új élő hitelesítés kényszerítése mentett AEAT-munkamenet újrafelhasználása helyett.'
-      login_help: 'Élő AEAT-munkamenet megszerzése vagy ellenőrzése.'
-      login_reset_lock_help: 'Elavult hitelesítési zárolás törlése indítás előtt.'
+      login_fresh_help: Új élő hitelesítés kényszerítése mentett AEAT-munkamenet újrafelhasználása
+        helyett.
+      login_help: Élő AEAT-munkamenet megszerzése vagy ellenőrzése.
+      login_reset_lock_help: Elavult hitelesítési zárolás törlése indítás előtt.
       no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config profile
         create NAME' parancsot a hitelesítés beállítása előtt.
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
@@ -751,7 +749,7 @@ cli:
       tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
-      help: Az összes konfigurációs kulcs és aktuális értékének listázása
+      help: Az összes regisztrált profil listázása, az aktív megjelölésével
     profile:
       already_exists: A(z) %{name} profil már létezik. Válassz másik cél-azonosítót.
       census:
@@ -778,6 +776,10 @@ cli:
       export_out_help: A JSON-csomag célútvonala
       help: Az aktív profil konfigurációs értékeinek kezelése
       import_help: Regisztrálj hordozható profilcsomagot JSON-fájlból
+      import_label_help: Az importált profil megjelenítendő neve; alapértelmezésben
+        a csomagban tárolt név. Használd egy második példány másik néven történő importjához.
+      import_label_taken: Már létezik %{name} nevű profil. Futtasd újra a `--label
+        ÚJ_NÉV` kapcsolóval, hogy más néven importáld.
       import_missing_bundle: 'Nem található profilcsomag itt: %{path}'
       import_path_help: A profil JSON-csomagjának útvonala
       logout_help: Léptesd ki az aktív profilt a helyi mutató törlésével
@@ -816,9 +818,12 @@ cli:
       connectivity_target_help: Ellenőrizendő kapcsolati cél
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
         és javítása
-      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
-        all).
+      integrity_help: A biztonságos objektumok és a nyilvántartás integritásának ellenőrzése.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
+      integrity_objects_help: AES-256-GCM címke-ellenőrzés futtatása egy névtérben
+        (vagy az összesben).
+      integrity_registry_help: Teljes registry-érvényesítés futtatása (az opcionális,
+        tartományközi integritásellenőrzés).
       list_all_help: Return every key, including unreadable.
       list_conflicting_flags: --all and --unreadable cannot be combined; pass one
         or neither.
@@ -829,9 +834,10 @@ cli:
       logs_lines_help: Megjelenítendő friss naplósorok száma
       profile_clear_active_help: Mutatófájlból származó aktív profil törlése csak
         akkor, ha olvashatatlan profilállapotra mutat.
-      profile_clear_active_mismatch: 'A --clear-active csak az aktív profilmutatót törölheti; a(z) ''%{profile}'' nem aktív.'
+      profile_clear_active_mismatch: A --clear-active csak az aktív profilmutatót
+        törölheti; a(z) '%{profile}' nem aktív.
       profile_help: Az aktív profilmutató vizsgálata és javítása.
-      profile_name_help: 'Egy adott regisztrált profil-bucket vizsgálata.'
+      profile_name_help: Egy adott regisztrált profil-bucket vizsgálata.
       profile_requires_yes: Add meg a --yes kapcsolót az aktív profilmutató törléséhez.
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
         --yes szükséges)
@@ -856,15 +862,17 @@ cli:
       key_help: A beállítandó kulcs (pl. iva.regime)
       value_help: A beállítandó érték (szöveg, true/false, összeg a kulcstól függően)
     setup:
-      accept_defaults_help: A leíró alapértelmezett értékeinek elfogadása kérdezés
-        nélkül
+      accept_defaults_help: Minden meg nem adott flag-et a leíró alapértelmezéseiből
+        tölt ki, kérdés nélkül. Használd a --quiet mellett, vagy önmagában a teljesen
+        alapértelmezett létrehozáshoz.
       errors:
         missing_required_flags: Hiányoznak a kötelező kapcsolók a --quiet módhoz;
           adj meg értéket minden kötelező kérdéshez.
       help: Az adóprofil vezetett kezdeti beállítása
       profile_name_help: A profil neve, ahova a válaszok kerülnek
-      quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit
-        használva
+      quiet_help: Interakció nélküli futtatás csak a megadott flag-értékekkel; a megadás
+        nélkül hagyott kötelező flag-ek hibát okoznak. Önmagában elegendő; az --accept-defaults-szal
+        kombinálva a többi mezőt az alapértelmezésekből tölti ki.
       success:
         next_step: 'Következő lépés: `aeat app overview status` futtatása a munkaterület
           ellenőrzéséhez.'
@@ -1536,6 +1544,143 @@ cli:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
 dotted:
   key: Pontozott kulcs
+entries:
+  portal_calendario_contribuyente:
+    label: Adózói naptár
+    purpose: Az adóhatáridők és kötelezettségek éves naptára.
+  portal_cert_selection:
+    label: Elektronikus tanúsítvány kiválasztása
+    notes:
+      '0': A böngészőnek a tanúsítványt a tárolójában telepítve kell tartania.
+    purpose: A hitelesítéshez használt digitális tanúsítvány kiválasztási átjárója.
+  portal_cert_validation_rest:
+    label: Elektronikus tanúsítványok érvényesítése
+    purpose: Digitális tanúsítványok érvényességét ellenőrző szolgáltatás.
+  portal_clave_gestiones:
+    label: Cl@ve PIN — ügyintézés
+    purpose: Az ideiglenes Cl@ve PIN belépési kód kezelése és kiállítása.
+  portal_clave_idp_root:
+    label: Cl@ve — elektronikus azonosítás
+    purpose: Cl@ve azonosságszolgáltató az AEAT-hitelesítéshez.
+  portal_clave_sede_entry:
+    label: Belépés Cl@ve-val
+    purpose: Belépési pont a portálra a Cl@ve rendszerrel.
+  portal_consulta_pagos:
+    label: Befizetések és visszatérítések lekérdezése
+    purpose: Az adóbefizetések és -visszatérítések állapota.
+  portal_dnie_sede_entry:
+    label: Belépés elektronikus személyi igazolvánnyal
+    purpose: Belépési pont a portálra a spanyol elektronikus személyivel.
+  portal_domiciliacion_bancaria:
+    label: Befizetések csoportos beszedési megbízása
+    purpose: Önadózások és adóbefizetések csoportos beszedési megbízásának beállítása.
+  portal_m036_censal:
+    label: 036-os nyomtatvány — nyilvántartásba vételi nyilatkozat
+    purpose: Bejelentkezés, módosítás és kijelentkezés a vállalkozói nyilvántartásba.
+  portal_m037_censal_simplificada:
+    label: 037-es nyomtatvány — egyszerűsített nyilvántartási nyilatkozat (visszavont)
+    notes:
+      '0': A HAC/1526/2024 rendelet szüntette meg, 2025-02-03-tól hatályos.
+      '1': Bármely további nyilvántartási ügyhöz a 036-os nyomtatványt használja.
+    purpose: Egyéni vállalkozók egyszerűsített nyilvántartási nyilatkozata, 2025-ben
+      megszüntetve.
+  portal_m100_renta:
+    label: 100-as nyomtatvány — személyijövedelemadó-bevallás
+    purpose: A személyi jövedelemadó (IRPF) éves bevallása.
+  portal_m111_retenciones_trabajo:
+    label: 111-es nyomtatvány — munkajövedelem-levonások
+    purpose: Az IRPF munkajövedelmi levonásainak és előlegeinek önadózása.
+  portal_m115_retenciones_arrendamientos:
+    label: 115-ös nyomtatvány — ingatlanbérleti levonások
+    purpose: Az IRPF városi ingatlanbérleti levonásainak önadózása.
+  portal_m123_retenciones_capital:
+    label: 123-as nyomtatvány — tőkejövedelem-levonások
+    purpose: Az IRPF tőkejövedelmi levonásainak önadózása.
+  portal_m130_pago_fraccionado_ed:
+    label: 130-as nyomtatvány — IRPF részletfizetés (közvetlen megállapítás)
+    purpose: Negyedéves IRPF részletfizetés közvetlen megállapítás alatt álló egyéni
+      vállalkozóknak.
+  portal_m131_pago_fraccionado_eo:
+    label: 131-es nyomtatvány — IRPF részletfizetés (objektív megállapítás)
+    purpose: Negyedéves IRPF részletfizetés objektív megállapítás (modulok) alatt
+      álló egyéni vállalkozóknak.
+  portal_m180_resumen_arrendamientos:
+    label: 180-as nyomtatvány — ingatlanbérlet éves összesítő
+    purpose: A városi ingatlanbérleti levonások éves összesítője.
+  portal_m190_resumen_trabajo:
+    label: 190-es nyomtatvány — munkajövedelmi levonások éves összesítő
+    purpose: A munkajövedelmi levonások és előlegek éves összesítője.
+  portal_m193_resumen_capital:
+    label: 193-as nyomtatvány — tőkejövedelmi levonások éves összesítő
+    purpose: A tőkejövedelmi levonások éves összesítője.
+  portal_m200_sociedades_anual:
+    label: 200-as nyomtatvány — társaságiadó-bevallás
+    purpose: A társasági adó éves bevallása.
+  portal_m202_sociedades_fraccionado:
+    label: 202-es nyomtatvány — társasági adó részletfizetés
+    purpose: A társasági adó előlegrészlete.
+  portal_m232_vinculadas:
+    label: 232-es nyomtatvány — kapcsolt felek közötti ügyletek
+    purpose: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek adatbevallása.
+  portal_m303_iva_autoliquidacion:
+    label: 303-as nyomtatvány — áfa-önadózás
+    purpose: Az általános forgalmi adó (áfa) időszaki önadózása.
+  portal_m347_operaciones_terceros:
+    label: 347-es nyomtatvány — harmadik felekkel folytatott ügyletek
+    purpose: Harmadik felekkel folytatott, 3 005,06 EUR feletti ügyletek éves adatbevallása.
+  portal_m349_intracomunitarias:
+    label: 349-es nyomtatvány — Közösségen belüli ügyletek
+    purpose: Közösségen belüli termék- és szolgáltatásügyletek összesítő nyilatkozata.
+  portal_m369_oss_ioss:
+    label: 369-es nyomtatvány — áfa egyablakos rendszer (OSS/IOSS)
+    purpose: Áfa-önadózás az OSS és IOSS egyablakos rendszerekben.
+  portal_m390_resumen_iva:
+    label: 390-es nyomtatvány — éves áfa-összesítő
+    purpose: Az általános forgalmi adó éves összesítő bevallása.
+  portal_m720_bienes_extranjero:
+    label: 720-as nyomtatvány — külföldi vagyon és jogok
+    purpose: Külföldön található vagyon és jogok adatbevallása.
+  portal_m840_iae:
+    label: 840-es nyomtatvány — gazdasági tevékenységek adója
+    purpose: A gazdasági tevékenységek adójának (IAE) bevallása.
+  portal_mi_area_personal:
+    label: Saját személyes terület
+    purpose: Az adózó hitelesített személyes területe a portálon.
+  portal_mis_datos_censales:
+    label: Saját nyilvántartási adatok
+    purpose: Az adózó nyilvántartásba vett adatainak megtekintése.
+  portal_mis_documentos_pendientes_firma:
+    label: Aláírásra váró dokumentumok
+    purpose: Aláírási mappa az elektronikus aláírásra váró dokumentumokkal.
+  portal_mis_expedientes:
+    label: Saját ügyiratok
+    purpose: Az adózó ügyiratainak és eljárásainak állapota.
+  portal_mis_notificaciones:
+    label: Saját értesítések
+    purpose: Az AEAT értesítéseinek és közleményeinek elektronikus postafiókja.
+  portal_pago_autoliquidacion_cuenta:
+    label: Önadózás befizetése bankszámláról
+    purpose: Önadózások befizetése bankszámla-terheléssel.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Önadózás befizetése kártyával vagy Bizummal
+    purpose: Önadózások befizetése bankkártyával vagy Bizummal.
+  portal_pago_liquidaciones_deudas:
+    label: Adómegállapítások és tartozások befizetése
+    purpose: Az AEAT által kivetett megállapítások és adótartozások befizetése.
+  portal_pre303_ayuda:
+    label: Pre303 — 303-as nyomtatvány segédszolgáltatás
+    purpose: Pre303 segédszolgáltatás a 303-as nyomtatvány tervezetének elkészítéséhez.
+  portal_presentar_consultar_index:
+    label: Adóbevallások benyújtása és megtekintése
+    purpose: Adóbevallások benyújtására és megtekintésére szolgáló űrlapindex.
+  portal_renta_web_borrador:
+    label: Renta WEB — jövedelemadó-tervezet
+    notes:
+      '0': A tervezet az AEAT által tárolt adóadatokból készül.
+    purpose: Renta WEB szolgáltatás a jövedelemadó-tervezet áttekintéséhez és benyújtásához.
+  portal_sede_root:
+    label: AEAT elektronikus ügyintézési portál
+    purpose: Az AEAT elektronikus ügyintézési portáljának kezdőlapja.
 errors:
   calc:
     binding_value_missing: A {binding_id} kötés nem rendelkezik értékkel.
@@ -1564,6 +1709,13 @@ errors:
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} reláció nem rendelkezik értékkel.
     unknown_input_casillas: 'Ismeretlen cellaazonosítók a bemenetben: {casilla_ids}.'
+  financial:
+    source_file_not_found: 'A forrásfájl nem létezik: {path}'
+  transaction:
+    import_source_invalid: a forrás nem érvényes könyvelési dokumentum
+    ledger_import_failed: 'A könyvelési fájl nem importálható: {reason}'
+    ledger_import_requires_bucket: A könyvelési forrás importálásához aktív profil
+      szükséges, kivéve próbafuttatási módban.
 filing:
   validation:
     deadline_missed: A benyújtási határidő lejárt
@@ -1815,7 +1967,9 @@ wizard:
       spouse-birth-date:
         help: A házastárs születési dátuma
       spouse-disability-grade:
-        help: A házastárs fogyatékossági foka (ha alkalmazandó)
+        help: 'A házastárs rokkantsági fokozata (ha alkalmazható): 1 = 33%-64%, 2
+          = 65% vagy magasabb, 3 = bírósági cselekvőképtelenség, 4 = harmadik fél
+          segítsége vagy csökkent mozgásképesség.'
       spouse-eu-eea-country:
         help: A házastárs EU/EGT országa
       spouse-eu-eea-resident:
@@ -1825,7 +1979,7 @@ wizard:
       spouse-non-resident-irpf:
         help: Házastárs nem rezidens IRPF
       spouse-sex:
-        help: A házastárs neme
+        help: 'A házastárs neme: H = férfi, M = nő.'
       spouse-surnames:
         help: A házastárs vezetéknevei
       spouse-tax-id:
@@ -1837,17 +1991,20 @@ wizard:
       tax-residence-ccaa:
         help: Adóügyi rezidens autonóm közösség
       taxation-type:
-        help: Adózási típus kódja
+        help: 'A jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
       taxpayer-birth-date:
         help: Az első adózó születési dátuma
       taxpayer-death-date:
         help: Az első adózó halálozási dátuma
       taxpayer-disability-grade:
-        help: Az első adózó fogyatékossági kódja
+        help: 'Az első adózó rokkantsági fokozata: 1 = 33%-64%, 2 = 65% vagy magasabb,
+          3 = bírósági cselekvőképtelenség, 4 = harmadik fél segítsége vagy csökkent
+          mozgásképesség.'
       taxpayer-marital-status:
-        help: Az első adózó családi állapota
+        help: 'Az első adózó családi állapota: 1 = egyedülálló, 2 = házas, 3 = özvegy,
+          4 = külön élő vagy elvált.'
       taxpayer-sex:
-        help: Az első adózó neme
+        help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
         help: Harmadik felekkel folytatott műveletek meghaladják a Modelo 347 küszöböt
       uses-objective-estimation-irpf:

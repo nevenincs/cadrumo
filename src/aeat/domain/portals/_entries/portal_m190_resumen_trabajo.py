@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m190_resumen_trabajo.label_059630",
+    label="entries.portal_m190_resumen_trabajo.label",
     purpose="entries.portal_m190_resumen_trabajo.purpose",
 )
 """Portal entry for Modelo 190 (annual summary of labour withholdings)."""

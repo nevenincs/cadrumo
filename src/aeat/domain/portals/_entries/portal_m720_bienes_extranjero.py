@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m720_bienes_extranjero.label_396501",
+    label="entries.portal_m720_bienes_extranjero.label",
     purpose="entries.portal_m720_bienes_extranjero.purpose",
 )
 """Portal entry for Modelo 720 (foreign assets and rights informational return)."""

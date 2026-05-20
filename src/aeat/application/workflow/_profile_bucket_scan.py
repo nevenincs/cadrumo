@@ -1,17 +1,18 @@
 """Manifest-scan discovery for profile bucket pointers.
 
-The 2026-05-14 ``profile-bucket-lifecycle`` ADR §1 mandates a 1:1
-profile↔bucket cardinality, and §4 mandates that
-``aeat config profile list`` enumerate buckets via filesystem scan of
-``<aeat-root>/buckets/*/manifest.toml`` without unlocking any bucket.
-This module exposes the scanner that replaces the retired
-``WorkflowState.profiles`` mapping for every consumer that previously
-looked up "does this profile name exist? and what is its bucket id?".
+A profile bucket lives at ``<aeat-root>/buckets/<profile-id>/`` where
+``<profile-id>`` is the immutable UUIDv4 profile identity. The
+plaintext ``manifest.toml`` inside carries that ``bucket_id`` (the
+UUID) and a decoupled mutable ``label`` (the operator-chosen display
+name). The bucket directory name and the profile identity are one and
+the same; the operator never sees the UUID and addresses profiles by
+their label.
 
-Under the 1:1 cardinality the bucket id equals the profile id, so the
-returned :class:`ProfileBucketPointer` simply records the profile name
-as the bucket id. The scanner reads plaintext manifest files only and
-never opens the encrypted database engine.
+This module exposes the scanner that enumerates profile buckets by
+reading those plaintext manifests. It never opens the encrypted
+database engine. ``read_profile_bucket`` resolves an operator label to
+a bucket pointer (UUID + label); ``list_profile_buckets`` returns every
+registered pointer keyed by UUID.
 """
 
 from __future__ import annotations
@@ -19,46 +20,79 @@ from __future__ import annotations
 from pathlib import Path
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
-from ...adapters.persistence.storage.bucket._manifest_io import manifest_path
+from ...adapters.persistence.storage.bucket._manifest import BucketManifest
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
 from ._models import ProfileBucketPointer
 
 _BUCKETS_DIRNAME = "buckets"
 
 
-def read_profile_bucket(profile_name: str, *, root: Path | None = None) -> ProfileBucketPointer | None:
-    """Return the bucket pointer for ``profile_name`` if its bucket exists.
+def read_profile_bucket(label: str, *, root: Path | None = None) -> ProfileBucketPointer | None:
+    """Return the bucket pointer for the profile whose label is ``label``.
 
-    Resolves ``<root>/buckets/<profile_name>/manifest.toml``; when the
-    manifest is present, returns a :class:`ProfileBucketPointer` whose
-    ``bucket_id`` equals ``profile_name`` per the 1:1 cardinality. When
-    the manifest is absent (no such profile / no such bucket) returns
-    ``None``.
+    Scans every ``<root>/buckets/*/manifest.toml`` and matches the
+    manifest ``label`` against ``label`` case-insensitively. Returns a
+    :class:`ProfileBucketPointer` carrying the UUID ``bucket_id`` and
+    the manifest ``label`` when exactly one profile matches; returns
+    ``None`` when no profile carries the label.
 
     Args:
-        profile_name: Operator-facing profile name. Must be non-empty.
+        label: Operator-facing profile label. Must be non-empty.
         root: Optional AEAT root override. When ``None``, resolves
             ``Settings.aeat_local_storage_root`` via ``load_settings``.
+
+    Raises:
+        ValueError: when two live profiles share the label (an
+            ambiguous resolution the name-uniqueness guard should have
+            prevented at creation time).
     """
 
-    if not profile_name:
+    if not label or not label.strip():
+        return None
+    needle = label.strip().casefold()
+    matches = [
+        pointer
+        for pointer in list_profile_buckets(root=root).values()
+        if pointer.label.casefold() == needle
+    ]
+    if not matches:
+        return None
+    if len(matches) > 1:
+        raise ValueError(
+            f"profile label {label!r} is ambiguous: {len(matches)} buckets carry it"
+        )
+    return matches[0]
+
+
+def read_profile_bucket_by_id(profile_id: str, *, root: Path | None = None) -> ProfileBucketPointer | None:
+    """Return the bucket pointer for the profile whose UUID is ``profile_id``.
+
+    Resolves ``<root>/buckets/<profile_id>/manifest.toml`` directly.
+    Returns ``None`` when the manifest is absent.
+    """
+
+    if not profile_id or not profile_id.strip():
         return None
     resolved_root = _resolve_root(root)
     try:
-        paths = bucket_paths(resolved_root, profile_name)
+        paths = bucket_paths(resolved_root, profile_id.strip())
     except ValueError:
         return None
     target = manifest_path(paths)
     if not target.is_file():
         return None
-    return ProfileBucketPointer(bucket_id=profile_name)
+    manifest = read_manifest(paths)
+    return ProfileBucketPointer(bucket_id=manifest.bucket_id, label=manifest.label)
 
 
 def list_profile_buckets(*, root: Path | None = None) -> dict[str, ProfileBucketPointer]:
-    """Return every registered profile-bucket pointer keyed by profile name.
+    """Return every registered profile-bucket pointer keyed by profile UUID.
 
     Scans ``<root>/buckets/*/manifest.toml`` for every directory that
-    carries a manifest file. Directories without a manifest are
-    treated as torn or pre-provisioned state and skipped.
+    carries a manifest file, parses each manifest, and returns a
+    pointer carrying the manifest ``bucket_id`` (UUID) and ``label``
+    (operator name). Directories without a manifest are treated as torn
+    or pre-provisioned state and skipped.
 
     Args:
         root: Optional AEAT root override. When ``None``, resolves
@@ -79,7 +113,11 @@ def list_profile_buckets(*, root: Path | None = None) -> dict[str, ProfileBucket
             continue
         if not manifest_path(paths).is_file():
             continue
-        result[entry.name] = ProfileBucketPointer(bucket_id=entry.name)
+        manifest: BucketManifest = read_manifest(paths)
+        result[manifest.bucket_id] = ProfileBucketPointer(
+            bucket_id=manifest.bucket_id,
+            label=manifest.label,
+        )
     return result
 
 
@@ -91,4 +129,4 @@ def _resolve_root(root: Path | None) -> Path:
     return load_settings().aeat_local_storage_root
 
 
-__all__ = ["list_profile_buckets", "read_profile_bucket"]
+__all__ = ["list_profile_buckets", "read_profile_bucket", "read_profile_bucket_by_id"]

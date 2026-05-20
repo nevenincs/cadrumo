@@ -295,8 +295,9 @@ def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -
 def _historical_037_ownership_from_registry(authority: ValidatedRegistryAuthority) -> CensoModeloOwnership:
     try:
         authority.validate_modelo(_HISTORICAL_CENSUS_MODELO)
-    except RegistrySnapshotError:
-        pass
+    except RegistrySnapshotError as exc:
+        if "is not present in the calculation registry" not in str(exc):
+            raise
     else:
         raise RegistryValidationError("historical census modelo 037 must not have an active registry definition")
     if _HISTORICAL_037_SOURCE_REF not in authority.catalogues.sources:
