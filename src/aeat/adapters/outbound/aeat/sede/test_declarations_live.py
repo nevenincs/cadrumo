@@ -19,7 +19,7 @@ import pytest
 from aeat.adapters.outbound.aeat.sede._declarations import Declaracion, capture_declaration, walk_declarations_register
 from aeat.adapters.outbound.aeat.sede._errors import SedeError
 from aeat.adapters.outbound.aeat.sede._schema import SedeCapture
-from aeat.entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

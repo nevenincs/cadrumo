@@ -29,7 +29,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....domain.calculations.registry import RentaWebOpenLivePayload, RentaWebOpenSyntheticProfile
-from .....entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 from ._renta_web_open import collect_renta_web_open_observation
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]

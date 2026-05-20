@@ -16,7 +16,7 @@ import pytest
 
 from aeat.adapters.outbound.aeat.verify import verify_csv
 from aeat.domain.justificante import JustificanteVerificationError
-from aeat.entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

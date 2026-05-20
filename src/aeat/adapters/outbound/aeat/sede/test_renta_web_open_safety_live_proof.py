@@ -27,7 +27,7 @@ import pytest
 
 from .....core.config import Settings
 from .....domain.calculations.registry import RentaWebOpenLivePayload
-from .....entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 from ..browser import default_browser_session_factory
 from ._errors import SedeNavigationError
 from ._renta_web_open_safety import install_page_safety_net
