@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.workflow._bucket_pointer import BucketPointer
-from aeat.application.workflow._bucket_pointer_io import write_pointer
 from aeat.application.workflow._models import resolve_active_bucket_id
+from aeat.core._bucket_pointer import BucketPointer
+from aeat.core._bucket_pointer_io import write_pointer
 from aeat.core.config import override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

@@ -889,9 +889,7 @@ class Settings(BaseSettings):
             # one-resolver invariant the disaster ADR Ruling 2
             # mandates.
             try:
-                from ..application.workflow._bucket_pointer_io import (
-                    read_pointer,
-                )
+                from ._bucket_pointer_io import read_pointer
 
                 pointer = read_pointer(self.aeat_local_storage_root)
             except Exception:  # noqa: BLE001 - resolver failure leaves URL empty
