@@ -8,6 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage import (
+    activate_master_key_provider,
+    get_master_key_provider,
+)
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.workflow._models import WorkflowState
@@ -24,6 +28,7 @@ def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> It
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
@@ -36,14 +41,34 @@ def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> It
 
 
 def _seed_workflow_state() -> None:
-    """Persist a non-empty workflow state so reset has something to discard."""
+    """Create an active profile so a workflow-state envelope exists.
 
-    repository = workflow_state_repository()
-    repository.save(WorkflowState())
+    ``config profile create`` is bootstrap-exempt: it provisions the
+    profile bucket, opens its session, and writes the workflow-state
+    secure-object row that ``reset-state`` later discards.
+    """
+
+    created = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--iva-regime",
+            "GENERAL",
+        ]
+    )
+    assert created.exit_code == 0, created.output
 
 
 def _row_exists() -> bool:
-    return SecureObjectRepository().exists("aeat.workflow", "state")
+    with activate_master_key_provider(get_master_key_provider()):
+        return SecureObjectRepository().exists("aeat.workflow", "state")
 
 
 def test_reset_state_dry_run_returns_fingerprint_without_deleting_row() -> None:
@@ -72,7 +97,8 @@ def test_reset_state_without_yes_or_dry_run_raises_refusal_and_keeps_row() -> No
 
 def test_reset_state_with_yes_deletes_row_emits_event_and_reload_is_empty() -> None:
     _seed_workflow_state()
-    history_before = len(BucketEventHistoryRepository().load().events)
+    with activate_master_key_provider(get_master_key_provider()):
+        history_before = len(BucketEventHistoryRepository().load().events)
 
     result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-state", "--yes"])
 
@@ -83,15 +109,14 @@ def test_reset_state_with_yes_deletes_row_emits_event_and_reload_is_empty() -> N
 
     assert not _row_exists()
 
-    catalogue = BucketEventHistoryRepository().load()
-    reset_events = [
-        event for event in catalogue.events.values() if event.event_type is BucketEventType.WORKFLOW_STATE_RESET
-    ]
-    assert len(reset_events) == 1
-    assert len(catalogue.events) == history_before + 1
+    with activate_master_key_provider(get_master_key_provider()):
+        catalogue = BucketEventHistoryRepository().load()
+        reset_events = [
+            event for event in catalogue.events.values() if event.event_type is BucketEventType.WORKFLOW_STATE_RESET
+        ]
+        assert len(reset_events) == 1
+        assert len(catalogue.events) == history_before + 1
 
-    reloaded = workflow_state_repository().load()
+        reloaded = workflow_state_repository().load()
     fresh = WorkflowState()
     assert reloaded.model_dump(exclude={"updated_at"}) == fresh.model_dump(exclude={"updated_at"})
-    assert reloaded.active_profile is None
-    assert reloaded.profiles == {}

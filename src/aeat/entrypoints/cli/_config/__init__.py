@@ -1474,9 +1474,7 @@ def apoderado_scopes_list(ctx: typer.Context) -> None:
 )
 def apoderado_status(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoService
-    from ....application.workflow._persistence import workflow_state_repository
 
-    workflow_state_repository().load()
     if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
