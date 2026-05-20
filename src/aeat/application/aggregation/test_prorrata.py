@@ -1,6 +1,6 @@
 """Real-behaviour tests for the IVA prorrata application aggregator.
 
-Tests prove the aggregator threads ``VatOperation`` records into the
+Tests prove the aggregator threads ``IvaOperation`` records into the
 correct prorrata pool per LIVA arts. 101-104, that art. 104 exclusions
 do NOT contribute to either pool, and that the provisional/definitiva
 orchestrators route the aggregator output into
@@ -26,8 +26,8 @@ from aeat.application.aggregation import (
     AggregationPeriodError,
     AggregationValidationError,
     ProrrataAggregation,
-    VatOperation,
-    VatOperationKind,
+    IvaOperation,
+    IvaOperationKind,
     aggregate_definitiva_prorrata,
     aggregate_prorrata_inputs,
     aggregate_provisional_prorrata,
@@ -42,10 +42,10 @@ def _op(
     *,
     year: int,
     base_amount: str,
-    kind: VatOperationKind,
+    kind: IvaOperationKind,
     classification_source: str = "vat-classify:test",
-) -> VatOperation:
-    return VatOperation(
+) -> IvaOperation:
+    return IvaOperation(
         operation_id=operation_id,
         operation_date=date(year, 6, 15),
         base_amount=Decimal(base_amount),
@@ -65,8 +65,8 @@ def test_grants_deduction_operations_route_to_con_derecho_pool() -> None:
 
     aggregation = aggregate_prorrata_inputs(
         (
-            _op("inv-1", year=2025, base_amount="10000.00", kind=VatOperationKind.GRANTS_DEDUCTION),
-            _op("inv-2", year=2025, base_amount="5000.00", kind=VatOperationKind.GRANTS_DEDUCTION),
+            _op("inv-1", year=2025, base_amount="10000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
+            _op("inv-2", year=2025, base_amount="5000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
         ),
         year=2025,
     )
@@ -86,7 +86,7 @@ def test_exempt_without_deduction_operations_route_to_sin_derecho_pool() -> None
                 "inv-rent",
                 year=2025,
                 base_amount="8000.00",
-                kind=VatOperationKind.EXEMPT_WITHOUT_DEDUCTION,
+                kind=IvaOperationKind.EXEMPT_WITHOUT_DEDUCTION,
                 classification_source="liva-art-20.1.23-rental",
             ),
         ),
@@ -104,12 +104,12 @@ def test_art_104_excluded_operations_do_not_contribute_to_either_pool() -> None:
 
     aggregation = aggregate_prorrata_inputs(
         (
-            _op("inv-1", year=2025, base_amount="10000.00", kind=VatOperationKind.GRANTS_DEDUCTION),
+            _op("inv-1", year=2025, base_amount="10000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
             _op(
                 "subv-1",
                 year=2025,
                 base_amount="50000.00",
-                kind=VatOperationKind.EXCLUDED_BY_ART_104,
+                kind=IvaOperationKind.EXCLUDED_BY_ART_104,
                 classification_source="liva-art-104.dos.2-subvencion-no-vinculada",
             ),
         ),
@@ -129,9 +129,9 @@ def test_operations_outside_target_year_are_filtered_out() -> None:
 
     aggregation = aggregate_prorrata_inputs(
         (
-            _op("prior", year=2024, base_amount="9999.00", kind=VatOperationKind.GRANTS_DEDUCTION),
-            _op("target", year=2025, base_amount="7777.00", kind=VatOperationKind.GRANTS_DEDUCTION),
-            _op("next", year=2026, base_amount="5555.00", kind=VatOperationKind.GRANTS_DEDUCTION),
+            _op("prior", year=2024, base_amount="9999.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
+            _op("target", year=2025, base_amount="7777.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
+            _op("next", year=2026, base_amount="5555.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
         ),
         year=2025,
     )
@@ -159,8 +159,8 @@ def test_aggregation_inputs_are_correctly_carried_into_the_result() -> None:
 
     aggregation = aggregate_prorrata_inputs(
         (
-            _op("a", year=2025, base_amount="40000.00", kind=VatOperationKind.GRANTS_DEDUCTION),
-            _op("b", year=2025, base_amount="10000.00", kind=VatOperationKind.EXEMPT_WITHOUT_DEDUCTION),
+            _op("a", year=2025, base_amount="40000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
+            _op("b", year=2025, base_amount="10000.00", kind=IvaOperationKind.EXEMPT_WITHOUT_DEDUCTION),
         ),
         year=2025,
     )
@@ -189,8 +189,8 @@ def test_provisional_orchestrator_uses_prior_year_inputs_and_current_year_stamp(
     operations were aggregated."""
 
     prior_ops = (
-        _op("p-1", year=2024, base_amount="60000.00", kind=VatOperationKind.GRANTS_DEDUCTION),
-        _op("p-2", year=2024, base_amount="40000.00", kind=VatOperationKind.EXEMPT_WITHOUT_DEDUCTION),
+        _op("p-1", year=2024, base_amount="60000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
+        _op("p-2", year=2024, base_amount="40000.00", kind=IvaOperationKind.EXEMPT_WITHOUT_DEDUCTION),
     )
     result, aggregation = aggregate_provisional_prorrata(
         prior_ops,
@@ -210,7 +210,7 @@ def test_provisional_orchestrator_uses_prior_year_inputs_and_current_year_stamp(
 def test_provisional_orchestrator_rejects_non_advancing_year_pair() -> None:
     """current_year must be strictly greater than prior_year."""
 
-    ops = (_op("p", year=2024, base_amount="10000.00", kind=VatOperationKind.GRANTS_DEDUCTION),)
+    ops = (_op("p", year=2024, base_amount="10000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),)
     with pytest.raises(AggregationValidationError, match=r"prior_year|current_year|advance"):
         aggregate_provisional_prorrata(ops, prior_year=2024, current_year=2024, period="Q1")
     with pytest.raises(AggregationValidationError, match=r"prior_year|current_year|advance"):
@@ -221,7 +221,7 @@ def test_provisional_orchestrator_rejects_annual_period_token() -> None:
     """``annual`` is the definitiva period token; provisional must be
     quarterly (Qn) or monthly (Mnn)."""
 
-    ops = (_op("p", year=2024, base_amount="10000.00", kind=VatOperationKind.GRANTS_DEDUCTION),)
+    ops = (_op("p", year=2024, base_amount="10000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),)
     with pytest.raises(AggregationValidationError, match=r"period|annual|provisional|monthly|quarterly"):
         aggregate_provisional_prorrata(ops, prior_year=2024, current_year=2025, period="annual")
 
@@ -235,8 +235,8 @@ def test_definitiva_orchestrator_uses_current_year_actuals() -> None:
     """LIVA art. 109: definitiva uses the year's actual operations."""
 
     ops = (
-        _op("a", year=2025, base_amount="80000.00", kind=VatOperationKind.GRANTS_DEDUCTION),
-        _op("b", year=2025, base_amount="20000.00", kind=VatOperationKind.EXEMPT_WITHOUT_DEDUCTION),
+        _op("a", year=2025, base_amount="80000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
+        _op("b", year=2025, base_amount="20000.00", kind=IvaOperationKind.EXEMPT_WITHOUT_DEDUCTION),
     )
     result, aggregation = aggregate_definitiva_prorrata(ops, year=2025)
     assert aggregation.year == 2025
@@ -250,8 +250,8 @@ def test_definitiva_orchestrator_skips_other_year_operations() -> None:
     when they are passed in."""
 
     ops = (
-        _op("noise", year=2024, base_amount="9999.00", kind=VatOperationKind.GRANTS_DEDUCTION),
-        _op("target", year=2025, base_amount="50000.00", kind=VatOperationKind.GRANTS_DEDUCTION),
+        _op("noise", year=2024, base_amount="9999.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
+        _op("target", year=2025, base_amount="50000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),
     )
     _result, aggregation = aggregate_definitiva_prorrata(ops, year=2025)
     assert aggregation.inputs.operaciones_con_derecho_deduccion == Decimal("50000.00")
@@ -265,27 +265,27 @@ def test_definitiva_orchestrator_skips_other_year_operations() -> None:
 
 def test_vat_operation_rejects_negative_base_amount() -> None:
     with pytest.raises(ValidationError, match=r"base_amount|greater than|negative"):
-        VatOperation(
+        IvaOperation(
             operation_id="op",
             operation_date=date(2025, 1, 1),
             base_amount=Decimal("-1"),
-            kind=VatOperationKind.GRANTS_DEDUCTION,
+            kind=IvaOperationKind.GRANTS_DEDUCTION,
             classification_source="test",
         )
 
 
 def test_vat_operation_is_frozen_and_forbids_extras() -> None:
-    op = _op("op", year=2025, base_amount="100.00", kind=VatOperationKind.GRANTS_DEDUCTION)
+    op = _op("op", year=2025, base_amount="100.00", kind=IvaOperationKind.GRANTS_DEDUCTION)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         setattr(op, "base_amount", Decimal("0"))  # noqa: B010 — exercise frozen-model __setattr__
     with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         extra: dict[str, object] = {"unexpected": True}
-        VatOperation.model_validate(
+        IvaOperation.model_validate(
             {
                 "operation_id": "op",
                 "operation_date": date(2025, 1, 1),
                 "base_amount": Decimal("100"),
-                "kind": VatOperationKind.GRANTS_DEDUCTION,
+                "kind": IvaOperationKind.GRANTS_DEDUCTION,
                 "classification_source": "test",
                 **extra,
             }
@@ -294,11 +294,11 @@ def test_vat_operation_is_frozen_and_forbids_extras() -> None:
 
 def test_vat_operation_rejects_empty_operation_id() -> None:
     with pytest.raises(ValidationError, match=r"operation_id|at least 1 character"):
-        VatOperation(
+        IvaOperation(
             operation_id="",
             operation_date=date(2025, 1, 1),
             base_amount=Decimal("10.00"),
-            kind=VatOperationKind.GRANTS_DEDUCTION,
+            kind=IvaOperationKind.GRANTS_DEDUCTION,
             classification_source="test",
         )
 

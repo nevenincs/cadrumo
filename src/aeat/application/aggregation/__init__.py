@@ -52,8 +52,8 @@ from ._oss_ioss import (
 )
 from ._prorrata import (
     ProrrataAggregation,
-    VatOperation,
-    VatOperationKind,
+    IvaOperation,
+    IvaOperationKind,
     aggregate_definitiva_prorrata,
     aggregate_prorrata_inputs,
     aggregate_provisional_prorrata,
@@ -135,8 +135,8 @@ __all__ = [
     "RetencionPerceptorRollup",
     "RetencionScheme",
     "RetencionesAggregation",
-    "VatOperation",
-    "VatOperationKind",
+    "IvaOperation",
+    "IvaOperationKind",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
     "aggregate_definitiva_prorrata",
