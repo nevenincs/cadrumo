@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 from .....core.logging import get_logger
 from ..errors import RepositoryError
 from . import _orm
-from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
+from .records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 
 _log = get_logger(__name__)
 
@@ -104,15 +104,15 @@ class Repository[RecordT](ABC):
         """
 
 
-class ModeloRepository(Repository[ModeloRecord]):
-    """Repository for :class:`ModeloRecord`."""
+class ModeloRepository(Repository[ModeloCatalogueRecord]):
+    """Repository for :class:`ModeloCatalogueRecord`."""
 
-    def list_all(self) -> list[ModeloRecord]:
+    def list_all(self) -> list[ModeloCatalogueRecord]:
         """Return every record in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.ModeloRow).order_by(_orm.ModeloRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
-    def get(self, record_id: int) -> ModeloRecord:
+    def get(self, record_id: int) -> ModeloCatalogueRecord:
         """Return the record with surrogate id ``record_id``.
 
         Raises:
@@ -123,7 +123,7 @@ class ModeloRepository(Repository[ModeloRecord]):
             raise RepositoryError(f"modelo id={record_id} not found")
         return self._to_record(row)
 
-    def upsert(self, record: ModeloRecord) -> ModeloRecord:
+    def upsert(self, record: ModeloCatalogueRecord) -> ModeloCatalogueRecord:
         """Insert or update ``record`` and return the persisted entity."""
         row: _orm.ModeloRow | None = None
         if record.id is not None:
@@ -152,8 +152,8 @@ class ModeloRepository(Repository[ModeloRecord]):
         _flush_or_wrap(self._session, "modelo")
 
     @staticmethod
-    def _to_record(row: _orm.ModeloRow) -> ModeloRecord:
-        return ModeloRecord(id=row.id, identifier=row.identifier, name=row.name)
+    def _to_record(row: _orm.ModeloRow) -> ModeloCatalogueRecord:
+        return ModeloCatalogueRecord(id=row.id, identifier=row.identifier, name=row.name)
 
 
 class PortalRepository(Repository[PortalRecord]):

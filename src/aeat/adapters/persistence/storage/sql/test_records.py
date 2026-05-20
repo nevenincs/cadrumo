@@ -2,7 +2,7 @@
 
 Asserts the strict-mode validation, frozen-mutation refusal, enum
 coercion, and length invariants on the SQL-layer record types
-(:class:`ModeloRecord`, :class:`PortalRecord`,
+(:class:`ModeloCatalogueRecord`, :class:`PortalRecord`,
 :class:`CorpusArtifactRecord`).
 """
 
@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from . import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
+from . import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -21,12 +21,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 def test_modelo_record_strict_rejects_coercion() -> None:
     """Strict mode must refuse silent int→str coercion."""
     with pytest.raises(ValidationError):
-        ModeloRecord.model_validate({"id": 1, "identifier": 130, "name": "Pagos fraccionados"})
+        ModeloCatalogueRecord.model_validate({"id": 1, "identifier": 130, "name": "Pagos fraccionados"})
 
 
 def test_records_are_frozen() -> None:
     """Frozen records must reject mutation."""
-    record = ModeloRecord(identifier="MODELO_130", name="Pagos fraccionados")
+    record = ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos fraccionados")
     with pytest.raises(ValidationError):
         setattr(record, "identifier", "MODELO_303")  # noqa: B010 — exercise frozen-model __setattr__
 
