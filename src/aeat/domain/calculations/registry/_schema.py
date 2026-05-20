@@ -1502,9 +1502,29 @@ class CasillaConstraints(RegistryModel):
 
 
 class CasillaDefinition(RegistryModel):
+    """A single AEAT casilla within a modelo revision.
+
+    A casilla's identity is the pair ``(segmento, number)``. For
+    single-segment modelos ``segmento`` is unset and ``number`` alone is
+    unique within the revision. Multi-segment AEAT modelos (e.g. Modelo
+    200) reuse the same five-digit ``number`` across distinct record
+    segments with a different meaning in each; those casillas carry the
+    AEAT record-segment code in ``segmento`` to disambiguate.
+    """
+
     id: CasillaId
     number: str
-    segmento: str | None = Field(default=None, min_length=1, max_length=32)
+    segmento: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=32,
+        description=(
+            "AEAT record-segment code (e.g. 'DP200014') for multi-segment "
+            "modelos that reuse a casilla number across record segments. "
+            "Unset for single-segment modelos; a casilla's identity is the "
+            "pair (segmento, number)."
+        ),
+    )
     label: str
     section: tuple[str, ...]
     data_type: Literal[
