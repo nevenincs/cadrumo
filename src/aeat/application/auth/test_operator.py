@@ -12,7 +12,7 @@ from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ._operator import configure_operator_auth, test_operator_auth
+from ._operator import configure_operator_auth, inspect_operator_auth, test_operator_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -145,6 +145,54 @@ def test_configure_operator_auth_reserved_provider_emits_no_event() -> None:
         if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
     ]
     assert typed_auth_events == []
+
+
+def test_inspect_operator_auth_configured_is_false_without_certificate_path() -> None:
+    """``inspect_operator_auth`` must report ``configured: False`` when the
+    certificate provider is selected but no ``--file`` path has been
+    supplied.
+
+    Regression for the self-contradictory ``auth status`` output where
+    ``configured: True`` co-existed with ``health_summary: certificate
+    path not configured``.  The ``configured`` field must reflect
+    operational readiness, not merely that a provider was *selected*;
+    for the certificate provider that means a file path must be present
+    in workflow state.
+    """
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+
+    configure_operator_auth("certificate")  # no certificate_path argument
+
+    result = inspect_operator_auth()
+
+    assert result.provider == "certificate"
+    assert result.configured is False, (
+        "configured must be False when certificate_path is absent — "
+        f"got configured={result.configured!r}, certificate_path={result.certificate_path!r}, "
+        f"health_summary={result.health_summary!r}"
+    )
+    assert result.certificate_path == ""
+
+
+def test_inspect_operator_auth_configured_is_true_with_certificate_path(tmp_path: Path) -> None:
+    """``inspect_operator_auth`` must report ``configured: True`` when the
+    certificate provider is selected and a ``--file`` path is recorded
+    in workflow state."""
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    cert_path = tmp_path / "operator.p12"
+    cert_path.write_bytes(b"placeholder cert")
+
+    configure_operator_auth("certificate", certificate_path=cert_path)
+
+    result = inspect_operator_auth()
+
+    assert result.provider == "certificate"
+    assert result.configured is True, (
+        f"configured must be True when certificate_path is set — got {result.configured!r}"
+    )
+    assert result.certificate_path == str(cert_path)
 
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:

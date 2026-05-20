@@ -1,4 +1,4 @@
-"""CLI surface tests for `aeat config profile {switch, show, delete, duplicate}`."""
+"""CLI surface tests for `aeat config profile {switch, show, delete, duplicate, rename}`."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from typer.testing import CliRunner, Result
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.entrypoints.cli._config import profile_app, repair_app
+from aeat.entrypoints.cli import app as root_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -392,3 +393,134 @@ def test_config_profile_create_nif_error_does_not_leak_internal_keys(cli_runner:
     assert "question_id" not in result.output
     # The plain-language diagnostic must be present.
     assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
+
+
+# --- Fix (batch 2): profile rename is atomic ---
+
+
+@pytest.fixture
+def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+    """Fixture that sets up per-bucket storage (no global AEAT_DATABASE_URL).
+
+    ``profile rename`` depends on per-bucket path resolution: the SQLite
+    file lives at ``<root>/buckets/<id>/db/aeat.db`` and shutil.move must
+    be able to move it.  Tests that use this fixture must NOT also use the
+    autouse ``_isolated_backend`` fixture that hard-wires
+    ``AEAT_DATABASE_URL`` to a single test file.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    dispose_engine()
+    try:
+        yield tmp_path
+    finally:
+        dispose_engine()
+
+
+def test_profile_rename_succeeds_and_profile_list_shows_only_target(
+    _per_bucket_backend: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``profile rename A B`` must fully succeed atomically.
+
+    Before fix: WinError 32 on the shutil.move (SQLite file still open)
+    left the registry with a ghost B record but the bucket directory still
+    named A.  ``profile list`` then showed both A (on disk) and B (in DB).
+
+    After fix: the rename either fully succeeds (only B visible) or fully
+    no-ops (only A visible).  A ghost entry must never appear.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.entrypoints.cli._config import profile_app
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+
+    runner = CliRunner()
+
+    # Create the source profile using the full CLI create path (wizard).
+    result = runner.invoke(
+        root_app,
+        [
+            "config", "profile", "create", "alpha",
+            "--quiet",
+            "--tax-id", "12345678Z",
+            "--name", "Tester",
+            "--activity", "design",
+            "--iva-regime", "GENERAL",
+        ],
+    )
+    assert result.exit_code == 0, f"create failed: {result.output}"
+
+    # Rename alpha -> beta.
+    dispose_engine()
+    result = runner.invoke(root_app, ["config", "profile", "rename", "alpha", "beta"])
+    assert result.exit_code == 0, f"rename failed: {result.output}"
+    assert "target_profile_id\tbeta" in result.output
+
+    # Registry must show exactly one profile (beta), no ghost alpha.
+    assert read_profile_bucket("beta") is not None, "beta not registered after rename"
+    assert read_profile_bucket("alpha") is None, "alpha still in registry after rename (ghost)"
+
+    # profile list must confirm the same view.
+    dispose_engine()
+    list_result = runner.invoke(root_app, ["--format", "json", "config", "profile", "list"])
+    assert list_result.exit_code == 0, list_result.output
+    payload = json.loads(list_result.output)
+    names = [p["name"] for p in payload["profiles"]]
+    assert names == ["beta"], f"expected only beta, got {names}"
+    assert payload["active_profile"] == "beta"
+
+
+def test_profile_rename_no_ghost_on_failure(
+    _per_bucket_backend: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When the directory move fails, the registry must not show a ghost target.
+
+    Simulates the WinError 32 scenario by making shutil.move raise; the
+    rollback must reverse the DB changes so profile list shows only the
+    original source profile.
+    """
+    import shutil
+
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        root_app,
+        [
+            "config", "profile", "create", "src_profile",
+            "--quiet",
+            "--tax-id", "12345678Z",
+            "--name", "Source",
+            "--activity", "design",
+            "--iva-regime", "GENERAL",
+        ],
+    )
+    assert result.exit_code == 0, f"create failed: {result.output}"
+
+    original_move = shutil.move
+
+    def _failing_move(src, dst):
+        raise OSError(32, "Simulated WinError 32: file in use")
+
+    monkeypatch.setattr(shutil, "move", _failing_move)
+
+    dispose_engine()
+    result = runner.invoke(root_app, ["config", "profile", "rename", "src_profile", "dst_profile"])
+
+    monkeypatch.setattr(shutil, "move", original_move)
+
+    # Must fail with a non-zero exit code.
+    assert result.exit_code != 0, f"expected failure, got: {result.output}"
+
+    # Registry must have no ghost dst_profile.
+    dispose_engine()
+    assert read_profile_bucket("dst_profile") is None, "ghost dst_profile in registry after failed rename"
+    # src_profile must still exist (rollback succeeded).
+    assert read_profile_bucket("src_profile") is not None, "src_profile was deleted by failed rename"

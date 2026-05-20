@@ -248,6 +248,13 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     requested_provider = provider.strip().lower() if provider is not None else None
     configured_provider = requested_provider or auth.provider or ""
     configured = bool(auth.provider) and (requested_provider is None or auth.provider == requested_provider)
+    # For certificate-based auth, ``configured`` requires a path on disk
+    # recorded in workflow state via ``auth configure --file``.  Selecting
+    # the provider without supplying a file leaves the slot empty; report
+    # ``configured: False`` so the field is consistent with
+    # ``health_summary: certificate path not configured``.
+    if configured and auth.provider == AuthProviderKind.CERTIFICATE.value:
+        configured = bool(auth.certificate_path)
     backend_configured = False
     backend_available = False
     health_severity = ""
