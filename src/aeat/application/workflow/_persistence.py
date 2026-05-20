@@ -10,7 +10,12 @@ from typing import Self
 from pydantic import ValidationError
 
 from ...adapters.persistence.storage.envelope._envelope import Envelope
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import (
+    ClassificationError,
+    EnvelopeVersionError,
+    SecretStoreError,
+    StorageError,
+)
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.classification import SensitivityClass
 from ...core.config import Settings
@@ -124,16 +129,43 @@ class WorkflowStateRepository:
         Reads row-level metadata only; never decrypts the payload. When
         no envelope is persisted the fingerprint records empty metadata
         and the supplied ``reason_class`` for the emitted event.
+
+        The ``repair reset-state`` recovery verb is bootstrap-exempt
+        and may run on a cold root where ``aeat_database_url`` does
+        not resolve (no active profile). In that case there is no
+        state envelope to reset; the fingerprint records empty
+        metadata rather than crashing on the absent database
+        (disaster ADR Ruling 6).
         """
 
-        metadata = self._objects.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
+        try:
+            metadata = self._objects.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
+        except StorageError:
+            return WorkflowStateResetFingerprint(
+                schema_version=None,
+                written_at=None,
+                byte_length=None,
+                reason_class=reason_class,
+                recovered_bucket_id=None,
+            )
         recovered_bucket_id: str | None = None
         try:
             state = self.load()
-        except (WorkflowError, ClassificationError, EnvelopeVersionError, ValidationError):
+        except (
+            WorkflowError,
+            ClassificationError,
+            EnvelopeVersionError,
+            ValidationError,
+            SecretStoreError,
+        ):
             # The fingerprint path is the recovery route for an unreadable
             # envelope; surfacing the envelope failure here would defeat
-            # the purpose. Fall back to row-level metadata only.
+            # the purpose. ``SecretStoreError`` covers the
+            # bootstrap-exempt ``repair reset-state`` case where no
+            # active session is bound (``NoActiveBucketSessionError``)
+            # or the session has expired (``SessionExpiredError``) —
+            # the recovery verb must still delete the row by key.
+            # Fall back to row-level metadata only.
             state = None
         if state is not None:
             recovered_bucket_id = state.active_profile_bucket_id()
