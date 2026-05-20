@@ -1,0 +1,116 @@
+---
+tags:
+  - '#audit'
+  - '#schema-hardening'
+date: '2026-05-20'
+related:
+  - "[[2026-05-19-schema-hardening-role-taxonomy-reference]]"
+  - "[[2026-05-20-schema-hardening-plan]]"
+  - "[[2026-05-18-schema-hardening-adr]]"
+---
+
+# `schema-hardening` verification ledger
+
+Living tracking document for the post-enrollment verification and
+remediation campaign. The enrollment campaign reached 100% structural
+coverage (every casilla carries a `semantic_role`); this ledger drives
+it toward genuine **type, label, and semantic correctness**.
+
+Every change is recorded here with before/after counts so progress is
+measurable rather than asserted.
+
+## Honest scope statement
+
+"100% coverage" means every one of 14,971 casillas carries a
+`semantic_role` string. It does **not** mean every string is correct.
+Roughly 3,700 of this campaign's assignments came from classification
+agents reading section + label data and were applied by script. The
+snapshot-build validators enforce *structural* consistency (per-id
+cross-revision identity; per-role `data_type`/`constraints` identity)
+— they do **not** verify that a role is the semantically correct
+concept for its casilla. That gap is what this ledger closes.
+
+## Known contamination
+
+- **Escaped-quote label truncation.** The cluster-dump scripts that fed
+  the classification agents extracted labels with the regex
+  `label = "([^"]*)"`, which truncates at the first escaped quote.
+  **561 casillas** (559 M100, 2 M200) have a `"` in their true label
+  and were therefore classified on truncated input
+  (e.g. `Marque una \` instead of
+  `Marque una "X" si en la casilla [0077] ha consignado un NIF...`).
+  These need re-verification against true labels. The registry TOML
+  files themselves are valid and intact; only the extraction was wrong.
+- **Parallel paired-cluster dispatch.** M200 `correcciones-a/-b` and
+  `deducciones-a/-b` were dispatched concurrently with an instruction
+  for half-B to read half-A's audit for naming consistency — physically
+  impossible. Result: `correcciones-a` 231 casillas -> 18 roles vs
+  `correcciones-b` 231 casillas -> 214 roles, **zero shared roles**.
+  `deducciones-a/-b`: 1 shared role of ~50.
+
+## Verification harness
+
+`.vault-scratch/verify_roles.py` parses every casilla with `tomllib`
+(no regex truncation) and reports high-confidence structural signals.
+It deliberately does **not** emit a name-vs-label "semantic" count:
+role names are bilingual conceptual summaries and legitimately diverge
+from AEAT label wording; token matching cannot adjudicate that. True
+semantic correctness is verified by agent review.
+
+## Baseline (2026-05-20)
+
+| Signal | Count | Notes |
+|---|---:|---|
+| casillas total | 14,971 | |
+| roled | 14,971 (100%) | structural coverage |
+| distinct roles | 2,143 | |
+| TOML parse errors | 0 | files are valid |
+| T type-vs-label candidates | 14 | ~5 confirmed defects, rest false-positive or needs-review |
+| C incoherent roles | 6 | ~3 real outliers, rest coarse-but-valid roles |
+| S singleton roles | 458 | each enforces no consistency; needs review |
+| escaped-quote contaminated casillas | 561 | classified on truncated labels |
+
+### T - confirmed type defects (percentage stored as money)
+
+`ratio` is the registry's proportion type (`percentage` is not a valid
+`data_type`). These five casillas hold a percentage but declare `money`:
+
+- M100 `0063` "Propiedad (%)" - role `irpf_inmueble_porcentaje_propiedad`
+- M100 `0064` "Usufructo (%)" - role `irpf_inmueble_porcentaje_usufructo`
+- M100 `0087` "Indique el porcentaje (%) del inmueble a disposicion..."
+- M100 `0710` "Porcentaje del importe total del prestamo hipotecario..."
+- M100 `1564` "Porcentaje de participacion del contribuyente en la entidad"
+
+All five are manual-input leaves with no `formula`, `binding`, or
+`export_refs` in the registry graph - low blast radius. Status: OPEN.
+
+### T - false positives / needs-review
+
+- M100 `0619/0621/0630/0634/0653/0657` boolean flagged as nif: labels
+  are "Indique si ... y en su caso el NIF del cedente" - the casilla is
+  the yes/no flag; `boolean` is correct. Needs confirmation a sibling
+  NIF casilla exists. Status: NEEDS-REVIEW.
+- M100 `0831/0834`, M200 `00559`: labels are amounts ("Importe...",
+  "Base imponible...") that mention a percentage incidentally;
+  `money` is correct. Status: FALSE POSITIVE.
+
+## Remediation tracker
+
+| # | Item | State | Before | After |
+|---|---|---|---|---|
+| R1 | Verification harness | DONE | - | - |
+| R2 | T percentage type defects (5) | OPEN | 5 | - |
+| R3 | M200 correcciones-a/-b reconciliation | OPEN | 0 shared roles | - |
+| R4 | M200 deducciones-a/-b reconciliation | OPEN | 1 shared role | - |
+| R5 | 561 escaped-quote re-verification | OPEN | 561 | - |
+| R6 | 458 singleton-role review | OPEN | 458 | - |
+| R7 | Full semantic-correctness agent sweep | OPEN | - | - |
+| R8 | Source-data changes re-verification | OPEN | 5 changes | - |
+| R9 | Downstream test suite (calc/export/roundtrip) | IN PROGRESS | - | - |
+
+## Change log
+
+Records every registry source modification made during remediation,
+with rationale and blast-radius assessment.
+
+(none yet)
