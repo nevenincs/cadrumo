@@ -741,39 +741,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AssetRecordError",
-        ErrorCode(
-            code="ERROR_PROFILE_ASSET_RECORD",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_profile_asset_record",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.profile.errors.AmortizacionLedgerError",
-        ErrorCode(
-            code="ERROR_PROFILE_AMORTIZATION_LEDGER",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_profile_amortization_ledger",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.profile.errors.InventoryLedgerError",
-        ErrorCode(
-            code="ERROR_PROFILE_INVENTORY_LEDGER",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_profile_inventory_ledger",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.profile._errors.TaxResidenceProfileError",
         ErrorCode(
             code="ERROR_PROFILE_TAX_RESIDENCE",
