@@ -49,7 +49,7 @@ _DOWNSTREAM_STATUSES = frozenset(
 )
 
 
-class FilingApprovalStaleReason(StrEnum):
+class ModeloApprovalStaleReason(StrEnum):
     """Stable reason codes surfaced when a draft approval becomes stale.
 
     Attributes:
@@ -68,12 +68,12 @@ class FilingApprovalStaleReason(StrEnum):
             has changed since approval.
     """
 
-    APPROVAL_BASIS_VERSION_CHANGED = "APPROVAL_BASIS_VERSION_CHANGED"
-    DRAFT_PAYLOAD_CHANGED = "DRAFT_PAYLOAD_CHANGED"
-    DRAFT_REVIEW_CHANGED = "DRAFT_REVIEW_CHANGED"
-    TRANSACTION_CATALOGUE_CHANGED = "TRANSACTION_CATALOGUE_CHANGED"
-    CATEGORY_PROFILES_CHANGED = "CATEGORY_PROFILES_CHANGED"
-    SCHEMA_FORMULA_CHANGED = "SCHEMA_FORMULA_CHANGED"
+    APPROVAL_BASIS_VERSION_CHANGED = "BASE_APROBACION_VERSION_CAMBIADA"
+    DRAFT_PAYLOAD_CHANGED = "BORRADOR_CONTENIDO_CAMBIADO"
+    DRAFT_REVIEW_CHANGED = "BORRADOR_REVISION_CAMBIADA"
+    TRANSACTION_CATALOGUE_CHANGED = "CATALOGO_TRANSACCIONES_CAMBIADO"
+    CATEGORY_PROFILES_CHANGED = "PERFILES_CATEGORIA_CAMBIADOS"
+    SCHEMA_FORMULA_CHANGED = "ESQUEMA_FORMULA_CAMBIADO"
 
 
 def compute_current_approval_basis(
@@ -135,7 +135,7 @@ def approval_stale_reasons(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
-) -> tuple[FilingApprovalStaleReason, ...]:
+) -> tuple[ModeloApprovalStaleReason, ...]:
     """Return the ordered stale reasons for ``draft``.
 
     The return value is empty when the draft has no approval metadata
@@ -150,7 +150,7 @@ def approval_stale_reasons(
         category_profiles: Optional category profile map override.
 
     Returns:
-        Tuple of :class:`FilingApprovalStaleReason` values in
+        Tuple of :class:`ModeloApprovalStaleReason` values in
         evaluation order; empty when the basis is fresh.
     """
 
@@ -164,20 +164,20 @@ def approval_stale_reasons(
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
     )
-    reasons: list[FilingApprovalStaleReason] = []
+    reasons: list[ModeloApprovalStaleReason] = []
     stored_basis = draft.approval_basis
     if stored_basis.version != current_basis.version:
-        reasons.append(FilingApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED)
+        reasons.append(ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED)
     if stored_basis.draft_payload_fingerprint != current_basis.draft_payload_fingerprint:
-        reasons.append(FilingApprovalStaleReason.DRAFT_PAYLOAD_CHANGED)
+        reasons.append(ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED)
     if stored_basis.draft_review_fingerprint != current_basis.draft_review_fingerprint:
-        reasons.append(FilingApprovalStaleReason.DRAFT_REVIEW_CHANGED)
+        reasons.append(ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED)
     if stored_basis.transaction_catalogue_fingerprint != current_basis.transaction_catalogue_fingerprint:
-        reasons.append(FilingApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED)
+        reasons.append(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED)
     if stored_basis.category_profiles_fingerprint != current_basis.category_profiles_fingerprint:
-        reasons.append(FilingApprovalStaleReason.CATEGORY_PROFILES_CHANGED)
+        reasons.append(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED)
     if stored_basis.schema_formula_fingerprint != current_basis.schema_formula_fingerprint:
-        reasons.append(FilingApprovalStaleReason.SCHEMA_FORMULA_CHANGED)
+        reasons.append(ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED)
     return tuple(reasons)
 
 
@@ -379,28 +379,28 @@ def refresh_review_status(
     )
 
 
-def describe_stale_reason(reason: FilingApprovalStaleReason) -> str:
+def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
     """Return a short user-facing English explanation for ``reason``.
 
     Args:
-        reason: The :class:`FilingApprovalStaleReason` to describe.
+        reason: The :class:`ModeloApprovalStaleReason` to describe.
 
     Returns:
         A lowercase imperative phrase suitable for inline UI display.
     """
 
     match reason:
-        case FilingApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED:
+        case ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED:
             return "approval basis version changed"
-        case FilingApprovalStaleReason.DRAFT_PAYLOAD_CHANGED:
+        case ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED:
             return "draft payload changed"
-        case FilingApprovalStaleReason.DRAFT_REVIEW_CHANGED:
+        case ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED:
             return "draft validation surface changed"
-        case FilingApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED:
+        case ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED:
             return "transaction catalogue changed"
-        case FilingApprovalStaleReason.CATEGORY_PROFILES_CHANGED:
+        case ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED:
             return "category profiles changed"
-        case FilingApprovalStaleReason.SCHEMA_FORMULA_CHANGED:
+        case ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED:
             return "schema or formula provenance changed"
     return reason.value.lower().replace("_", " ")
 

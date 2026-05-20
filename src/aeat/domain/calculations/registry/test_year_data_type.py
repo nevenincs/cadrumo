@@ -1,12 +1,12 @@
-"""Roundtrip tests for the `year` data_type and `FilingYear` alias.
+"""Roundtrip tests for the `year` data_type and `ModeloYear` alias.
 
 The `year` variant on `CasillaDefinition.data_type` plus the
-`FilingYear` `Annotated` alias on the schema module carry the
+`ModeloYear` `Annotated` alias on the schema module carry the
 registry's fiscal-year contract. These tests exercise the alias
 against valid years in the supported window, the boundary cases at
 2000 and 2099, and rejection paths for out-of-range, blank,
 non-integer, boolean, and float inputs. The window matches
-`RegistrySnapshotRef.filing_year`.
+`RegistrySnapshotRef.modelo_year`.
 """
 
 from __future__ import annotations
@@ -15,13 +15,13 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ._errors import RegistryValidationError
-from ._schema import CasillaDefinition, FilingYear, _coerce_filing_year
+from ._schema import CasillaDefinition, ModeloYear, _coerce_modelo_year
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-_YEAR_ADAPTER: TypeAdapter[int] = TypeAdapter(FilingYear)
+_YEAR_ADAPTER: TypeAdapter[int] = TypeAdapter(ModeloYear)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
@@ -36,8 +36,8 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
     )
 
 
-class TestFilingYearAccepts:
-    """`FilingYear` accepts integers and digit strings within the window."""
+class TestModeloYearAccepts:
+    """`ModeloYear` accepts integers and digit strings within the window."""
 
     @pytest.mark.parametrize(
         "raw,canonical",
@@ -53,8 +53,8 @@ class TestFilingYearAccepts:
         assert _YEAR_ADAPTER.validate_python(raw) == canonical
 
 
-class TestFilingYearRejects:
-    """`FilingYear` rejects out-of-range, malformed, and wrong-type inputs."""
+class TestModeloYearRejects:
+    """`ModeloYear` rejects out-of-range, malformed, and wrong-type inputs."""
 
     @pytest.mark.parametrize("raw", [1999, 2100, "1999", "2100"])
     def test_out_of_range_rejected(self, raw: object) -> None:
@@ -76,11 +76,11 @@ class TestFilingYearRejects:
 
     def test_blank_string_raises_registry_validation_error_at_validator(self) -> None:
         with pytest.raises(RegistryValidationError):
-            _coerce_filing_year("")
+            _coerce_modelo_year("")
 
     def test_boolean_raises_registry_validation_error_at_validator(self) -> None:
         with pytest.raises(RegistryValidationError):
-            _coerce_filing_year(True)
+            _coerce_modelo_year(True)
 
 
 class TestCasillaDefinitionDataType:

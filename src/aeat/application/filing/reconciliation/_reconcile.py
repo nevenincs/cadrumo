@@ -11,7 +11,7 @@ declaration requires a modelo-specific parser and is intentionally out
 of scope for this module.
 
 The reconciler is read-only — it never mutates either side. See
-:class:`FilingDivergenceKind` for the closed taxonomy of divergence
+:class:`ModeloDivergenceKind` for the closed taxonomy of divergence
 reasons and :class:`ReconciliationReport` for the returned record shape.
 """
 
@@ -25,10 +25,10 @@ from typing import TYPE_CHECKING, Final, Protocol
 
 from ....core.logging import get_logger
 from ....domain.filing import ModeloBuilderError
-from ._kind import FilingDivergenceKind
+from ._kind import ModeloDivergenceKind
 from ._schema import (
     FieldMismatch,
-    FilingDraftRef,
+    ModeloDraftRef,
     JustificanteRefSummary,
     ReconciliationReport,
     ReconciliationStatus,
@@ -83,7 +83,7 @@ def reconcile(
     :class:`aeat.domain.justificante.Justificante` against the
     corresponding fields on a local
     :class:`aeat.domain.filing.ModeloDraft`, classifying each
-    disagreement using :class:`FilingDivergenceKind`.
+    disagreement using :class:`ModeloDivergenceKind`.
 
     Args:
         draft: Local approved :class:`aeat.domain.filing.ModeloDraft`.
@@ -106,7 +106,7 @@ def reconcile(
     """
     subview = _require_registry_reconciliation_surface(draft, schema_provider=schema_provider)
     reconciled_at = now or datetime.now(tz=UTC)
-    draft_ref = FilingDraftRef(
+    draft_ref = ModeloDraftRef(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
@@ -126,7 +126,7 @@ def reconcile(
             justificante=None,
             mismatches=(
                 FieldMismatch(
-                    kind=FilingDivergenceKind.FILING_NOT_YET_FOUND,
+                    kind=ModeloDivergenceKind.FILING_NOT_YET_FOUND,
                     field_name="justificante",
                     draft_value=f"modelo={draft.modelo} period={draft.period}",
                     remote_value="<no record>",
@@ -142,7 +142,7 @@ def reconcile(
     if draft.modelo != remote.modelo:
         mismatches.append(
             FieldMismatch(
-                kind=FilingDivergenceKind.MODELO_MISMATCH,
+                kind=ModeloDivergenceKind.MODELO_MISMATCH,
                 field_name="modelo",
                 draft_value=draft.modelo,
                 remote_value=remote.modelo,
@@ -157,7 +157,7 @@ def reconcile(
     ):
         mismatches.append(
             FieldMismatch(
-                kind=FilingDivergenceKind.PERIOD_MISMATCH,
+                kind=ModeloDivergenceKind.PERIOD_MISMATCH,
                 field_name="period",
                 draft_value=draft.period,
                 remote_value=remote.period,
@@ -167,7 +167,7 @@ def reconcile(
     if _canonical_tax_id(draft.profile_tax_id) != _canonical_tax_id(remote.tax_id):
         mismatches.append(
             FieldMismatch(
-                kind=FilingDivergenceKind.TAX_ID_MISMATCH,
+                kind=ModeloDivergenceKind.TAX_ID_MISMATCH,
                 field_name="tax_id",
                 draft_value=draft.profile_tax_id,
                 remote_value=remote.tax_id,
@@ -185,7 +185,7 @@ def reconcile(
     ):
         mismatches.append(
             FieldMismatch(
-                kind=FilingDivergenceKind.TOTAL_INGRESAR_MISMATCH,
+                kind=ModeloDivergenceKind.TOTAL_INGRESAR_MISMATCH,
                 field_name="total_a_ingresar",
                 draft_value=_format_decimal(draft_totals.ingresar),
                 remote_value=_format_decimal(remote.total_a_ingresar),
@@ -198,7 +198,7 @@ def reconcile(
     ):
         mismatches.append(
             FieldMismatch(
-                kind=FilingDivergenceKind.TOTAL_DEVOLVER_MISMATCH,
+                kind=ModeloDivergenceKind.TOTAL_DEVOLVER_MISMATCH,
                 field_name="total_a_devolver",
                 draft_value=_format_decimal(draft_totals.devolver),
                 remote_value=_format_decimal(remote.total_a_devolver),

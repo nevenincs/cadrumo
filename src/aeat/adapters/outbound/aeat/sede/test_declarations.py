@@ -26,7 +26,7 @@ from reportlab.pdfgen import canvas
 from aeat.adapters.outbound.aeat.browser import Profile, opened_browser_page, shared_playwright_runtime
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.application.filing import (
-    FilingOperatorProfile,
+    ModeloOperatorProfile,
     ModeloDraftStatus,
     build_draft,
     build_runtime_schema_provider,
@@ -267,7 +267,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
     draft = build_draft(
         modelo="123",
         period=f"{filing_year}Q{period[0]}",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Submitted file registry test",
         ),
@@ -975,7 +975,7 @@ class TestSubmittedFileObservation:
         assert store.load_artefact(encrypted_artefact.storage_ref) == body
 
 
-class TestDeclarationPdfObservation:
+class TestDeclaracionPdfObservation:
     """Verify declaration-copy PDFs are interpreted through registry profiles."""
 
     def test_declaration_pdf_values_become_observed_casillas(self) -> None:

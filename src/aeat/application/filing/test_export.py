@@ -17,7 +17,7 @@ from . import (
     DeclaracionVerifyResult,
     DeclaracionVerifyVerdict,
     ModeloDraftStatus,
-    FilingOperatorProfile,
+    ModeloOperatorProfile,
     build_draft,
     build_runtime_schema_provider,
     export_draft,
@@ -63,7 +63,7 @@ def _approved_registry_draft():
     draft = build_draft(
         modelo="130",
         period="2026Q1",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -98,7 +98,7 @@ def _approved_modelo_131_registry_draft():
     draft = build_draft(
         modelo="131",
         period="2026Q1",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -120,7 +120,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
     draft = build_draft(
         modelo="131",
         period="2026Q1",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -141,7 +141,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
     draft = build_draft(
         modelo="131",
         period="2026Q1",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -159,7 +159,7 @@ def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_pr
     draft = build_draft(
         modelo="131",
         period=f"{filing_year}Q1",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -182,7 +182,7 @@ def _approved_modelo_131_historical_registry_draft():
     draft = build_draft(
         modelo="131",
         period="2023Q4",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -206,7 +206,7 @@ def _approved_modelo_111_registry_draft():
     draft = build_draft(
         modelo="111",
         period="2026Q1",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -241,7 +241,7 @@ def _approved_modelo_115_registry_draft():
     draft = build_draft(
         modelo="115",
         period="2026Q1",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -269,7 +269,7 @@ def _approved_modelo_123_registry_draft():
     draft = build_draft(
         modelo="123",
         period="2026Q1",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
@@ -303,7 +303,7 @@ def _approved_modelo_123_2019_registry_draft():
     draft = build_draft(
         modelo="123",
         period="2023Q4",
-        profile=FilingOperatorProfile(
+        profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
         ),

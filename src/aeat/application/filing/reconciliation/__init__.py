@@ -16,11 +16,11 @@ Examples:
 
 from __future__ import annotations
 
-from ._kind import FilingDivergenceKind
+from ._kind import ModeloDivergenceKind
 from ._reconcile import reconcile
 from ._schema import (
     FieldMismatch,
-    FilingDraftRef,
+    ModeloDraftRef,
     JustificanteRefSummary,
     ReconciliationReport,
     ReconciliationStatus,
@@ -28,8 +28,8 @@ from ._schema import (
 
 __all__ = [
     "FieldMismatch",
-    "FilingDivergenceKind",
-    "FilingDraftRef",
+    "ModeloDivergenceKind",
+    "ModeloDraftRef",
     "JustificanteRefSummary",
     "ReconciliationReport",
     "ReconciliationStatus",

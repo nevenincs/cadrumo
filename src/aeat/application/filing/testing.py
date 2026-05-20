@@ -16,7 +16,7 @@ from ...core.errors import FixtureProvisioningError
 from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 
-class FilingTestProfile(BaseModel):
+class ModeloTestProfile(BaseModel):
     """A frozen :class:`aeat.application.filing.ModeloProfile`-conforming record."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -25,7 +25,7 @@ class FilingTestProfile(BaseModel):
     display_name: str
 
 
-class FilingTestDeadlineStatus(BaseModel):
+class ModeloTestDeadlineStatus(BaseModel):
     """A frozen :class:`aeat.application.filing.DeadlineStatus`-conforming record."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -34,28 +34,28 @@ class FilingTestDeadlineStatus(BaseModel):
     is_overdue: bool
 
 
-class FilingTestDeadlineChecker(BaseModel):
+class ModeloTestDeadlineChecker(BaseModel):
     """A frozen :class:`aeat.application.filing.DeadlineChecker`-conforming record.
 
-    The checker returns the same :class:`FilingTestDeadlineStatus`
+    The checker returns the same :class:`ModeloTestDeadlineStatus`
     for every ``(modelo, period)`` query, which keeps tests
     deterministic.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    status: FilingTestDeadlineStatus
+    status: ModeloTestDeadlineStatus
 
-    def check(self, modelo: str, period: str) -> FilingTestDeadlineStatus:
-        """Return the configured :class:`FilingTestDeadlineStatus`."""
+    def check(self, modelo: str, period: str) -> ModeloTestDeadlineStatus:
+        """Return the configured :class:`ModeloTestDeadlineStatus`."""
         del modelo, period
         return self.status
 
 
 __all__ = [
-    "FilingTestDeadlineChecker",
-    "FilingTestDeadlineStatus",
-    "FilingTestProfile",
+    "ModeloTestDeadlineChecker",
+    "ModeloTestDeadlineStatus",
+    "ModeloTestProfile",
     "FixtureProvisioningError",
     "build_registry_filing_draft",
     "build_registry_filing_draft_from_decimals",

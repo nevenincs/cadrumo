@@ -1875,7 +1875,7 @@ def filing_record_import(
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
     from ...application.modelo import (
-        ExternalFilingImportError,
+        ExternalModeloImportError,
         import_external_filing_evidence,
     )
     from ...domain.modelos._filing_record import ExternalEvidenceKind
@@ -1904,7 +1904,7 @@ def filing_record_import(
     except (
         WorkUnitNotFoundError,
         WorkUnitMutationRefusedError,
-        ExternalFilingImportError,
+        ExternalModeloImportError,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 

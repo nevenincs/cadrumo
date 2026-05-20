@@ -42,9 +42,9 @@ from ._errors import WorkflowError
 from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
-    FilingDraftBuilderProtocol,
-    FilingInputsProviderProtocol,
-    RegistryFilingDraftProtocol,
+    ModeloDraftBuilderProtocol,
+    ModeloInputsProviderProtocol,
+    RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
 )
 
@@ -69,7 +69,7 @@ class DeadlineEngineAdapter:
         return self._engine.compute(profile, year, today=today)
 
 
-class FilingDraftBuilderAdapter:
+class ModeloDraftBuilderAdapter:
     """Wrap :func:`aeat.application.filing.build_draft` as a workflow Protocol.
 
     A schema provider is stored on construction so the narrow
@@ -89,7 +89,7 @@ class FilingDraftBuilderAdapter:
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ) -> RegistryFilingDraftProtocol:
+    ) -> RegistryModeloDraftProtocol:
         """Delegate to :func:`build_draft`.
 
         ``cast`` is used for ``profile`` because :class:`AutonomoProfile`
@@ -107,7 +107,7 @@ class FilingDraftBuilderAdapter:
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        return cast(RegistryFilingDraftProtocol, draft)
+        return cast(RegistryModeloDraftProtocol, draft)
 
 
 class SubmissionEngineAdapter:
@@ -122,7 +122,7 @@ class SubmissionEngineAdapter:
         """Store the wrapped :class:`SubmissionEngine`."""
         self._engine = engine
 
-    def preflight(self, draft: RegistryFilingDraftProtocol, *, today: date) -> None:
+    def preflight(self, draft: RegistryModeloDraftProtocol, *, today: date) -> None:
         """Delegate to the engine's public preflight method."""
         self._engine.preflight(draft, today=today)
 
@@ -131,10 +131,10 @@ def default_engine(
     *,
     submission_engine: SubmissionEngineProtocol,
     deadline_engine: DeadlineEngineProtocol | None = None,
-    filing_draft_builder: FilingDraftBuilderProtocol | None = None,
+    filing_draft_builder: ModeloDraftBuilderProtocol | None = None,
     session: AeatSession | None = None,
     certificate_bundle: CertificateBundleProtocol | None = None,
-    inputs_provider: FilingInputsProviderProtocol | None = None,
+    inputs_provider: ModeloInputsProviderProtocol | None = None,
     settings: Settings | None = None,
 ) -> WorkflowEngine:
     """Build a :class:`WorkflowEngine` wired to the production components.
@@ -188,7 +188,7 @@ def default_engine(
 # :mod:`aeat.adapters.outbound.aeat.export` for an isinstance check.
 __all__ = [
     "DeadlineEngineAdapter",
-    "FilingDraftBuilderAdapter",
+    "ModeloDraftBuilderAdapter",
     "SubmissionEngineAdapter",
     "SubmissionPreflightError",
     "default_engine",

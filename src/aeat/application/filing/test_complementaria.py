@@ -19,7 +19,7 @@ from . import (
     build_runtime_schema_provider,
     load_amendment,
 )
-from .testing import FilingTestProfile
+from .testing import ModeloTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -122,7 +122,7 @@ def _registry_draft(*, casillas: dict[str, Decimal]) -> ModeloDraft:
     return build_draft(
         modelo="130",
         period="2024Q1",
-        profile=FilingTestProfile(
+        profile=ModeloTestProfile(
             tax_id="00000000T",
             display_name="Complementaria registry test",
         ),

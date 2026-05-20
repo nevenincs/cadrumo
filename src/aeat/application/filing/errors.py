@@ -5,9 +5,9 @@ from __future__ import annotations
 from ...domain.filing import ModeloDraftError
 
 
-class FilingApplicationError(ModeloDraftError):
+class ModeloApplicationError(ModeloDraftError):
     """Base class for every error raised in the filing application layer."""
 
 
-class FilingCalculateError(FilingApplicationError, ValueError):
+class ModeloCalculateError(ModeloApplicationError, ValueError):
     """Raised when summarizing or calculating a filing fails invariants."""
