@@ -2165,8 +2165,8 @@ class RegistryValidator:
             return [f"{scope}: {owner} parser {dotted_path!r} cannot import module {module_name!r}: {exc}"]
         try:
             resolved = getattr(module, attribute)
-        except AttributeError:
-            return [f"{scope}: {owner} parser {dotted_path!r} does not resolve attribute {attribute!r}"]
+        except AttributeError as exc:
+            return [f"{scope}: {owner} parser {dotted_path!r} does not resolve attribute {attribute!r}: {exc}"]
         if not callable(resolved):
             return [f"{scope}: {owner} parser {dotted_path!r} is not callable"]
         return []
