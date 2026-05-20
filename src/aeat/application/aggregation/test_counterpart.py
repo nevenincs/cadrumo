@@ -141,11 +141,18 @@ class TestAggregate349:
 
 class TestInvariants:
     def test_unregistered_modelo_raises_domain_error(self) -> None:
-        from aeat.application.aggregation._counterpart import _filter_observations_for_modelo
+        from aeat.application.aggregation._counterpart import _MODELO_KIND_CATALOGUE
         from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
+        from aeat.application.aggregation._grouping import filter_observations_for_modelo
 
         with pytest.raises(AggregationUnsupportedModeloError, match="modelo '720'"):
-            _filter_observations_for_modelo((), modelo="720")
+            filter_observations_for_modelo(
+                (),
+                modelo="720",
+                catalogue=_MODELO_KIND_CATALOGUE,
+                attribute_fn=lambda obs: obs.operation_kind,
+                aggregator_label="counterpart aggregator",
+            )
 
     def test_totals_must_match_rollups(self) -> None:
         from pydantic import ValidationError

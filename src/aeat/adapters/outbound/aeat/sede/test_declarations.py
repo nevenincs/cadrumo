@@ -26,8 +26,8 @@ from reportlab.pdfgen import canvas
 from aeat.adapters.outbound.aeat.browser import Profile, opened_browser_page, shared_playwright_runtime
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.application.filing import (
-    ModeloOperatorProfile,
     ModeloDraftStatus,
+    ModeloOperatorProfile,
     build_draft,
     build_runtime_schema_provider,
     export_draft,

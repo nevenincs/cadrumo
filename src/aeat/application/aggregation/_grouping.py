@@ -14,8 +14,10 @@ shared.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Container, Iterable, Mapping
 from typing import TypeVar
+
+from ._errors import AggregationUnsupportedModeloError, t
 
 T = TypeVar("T")
 GroupKey = TypeVar("GroupKey", bound=tuple[object, ...])
@@ -63,4 +65,47 @@ def group_and_collect_names[T, GroupKey: tuple[object, ...], IdentityKey: tuple[
     return grouped, names
 
 
-__all__ = ["group_and_collect_names"]
+def filter_observations_for_modelo[T, AttrValue](
+    observations: tuple[T, ...],
+    *,
+    modelo: str,
+    catalogue: Mapping[str, Container[AttrValue]],
+    attribute_fn: Callable[[T], AttrValue],
+    aggregator_label: str,
+) -> tuple[T, ...]:
+    """Keep observations whose classifying attribute is in-scope for ``modelo``.
+
+    Shared by both per-modelo aggregators: ``_counterpart`` filters on
+    ``operation_kind`` against an :class:`OperationKind347` / ``349``
+    catalogue; ``_retenciones`` filters on ``scheme`` against a
+    :class:`RetencionScheme` catalogue. The only per-domain inputs are
+    the catalogue, the attribute getter, and the label used in the
+    unsupported-modelo error.
+
+    Args:
+        observations: Typed observation records to filter.
+        modelo: The requested modelo code; must key into ``catalogue``.
+        catalogue: Maps each supported modelo code to the container of
+            eligible attribute values.
+        attribute_fn: Extracts the classifying attribute from each
+            observation.
+        aggregator_label: Human-readable aggregator name for the
+            :class:`AggregationUnsupportedModeloError` message.
+
+    Raises:
+        AggregationUnsupportedModeloError: When ``modelo`` is not a key
+            in ``catalogue``.
+
+    Returns:
+        The observations whose classifying attribute is eligible for
+        ``modelo``, in input order.
+    """
+    if modelo not in catalogue:
+        raise AggregationUnsupportedModeloError(
+            t(f"{aggregator_label} for modelo {modelo!r} is not registered"),
+        )
+    eligible = catalogue[modelo]
+    return tuple(o for o in observations if attribute_fn(o) in eligible)
+
+
+__all__ = ["filter_observations_for_modelo", "group_and_collect_names"]
