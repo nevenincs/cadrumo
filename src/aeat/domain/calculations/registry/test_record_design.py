@@ -13,7 +13,7 @@ from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree, resolve_export_layout
 from ._record_design import (
-    derive_diseno_completeness_casillas,
+    derive_diseno_coverage_casillas,
     extract_record_design,
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
@@ -332,7 +332,7 @@ def test_completeness_manifests_match_their_corpus_diseno() -> None:
             multi_segment = any(casilla.segmento is not None for casilla in manifest.casillas)
             derived = frozenset(
                 (casilla.segmento, casilla.number)
-                for casilla in derive_diseno_completeness_casillas(corpus_path, multi_segment=multi_segment)
+                for casilla in derive_diseno_coverage_casillas(corpus_path, multi_segment=multi_segment)
             )
             assert derived == manifest.identities(), (
                 f"modelo {modelo.id} revision {revision.id}: Diseño-completeness manifest "
@@ -351,7 +351,7 @@ def test_completeness_manifests_match_their_corpus_diseno() -> None:
 def test_completeness_manifest_derivation_machinery_detects_corpus_casillas() -> None:
     """The drift-derivation machinery extracts real casillas from a corpus Diseño.
 
-    Exercises the same `derive_diseno_completeness_casillas` derivation
+    Exercises the same `derive_diseno_coverage_casillas` derivation
     the drift re-verification depends on, directly against the Modelo 200
     2024 corpus Diseño. This proves the re-verification is load-bearing:
     if the derivation could not extract casillas, the drift test above
@@ -369,7 +369,7 @@ def test_completeness_manifest_derivation_machinery_detects_corpus_casillas() ->
     )
     corpus_path = bundled_path() / catalogues.sources[source_ref].corpus_path
 
-    derived = derive_diseno_completeness_casillas(corpus_path, multi_segment=True)
+    derived = derive_diseno_coverage_casillas(corpus_path, multi_segment=True)
 
     derived_pairs = frozenset((casilla.segmento, casilla.number) for casilla in derived)
     dp200014 = {number for segmento, number in derived_pairs if segmento == "DP200014"}

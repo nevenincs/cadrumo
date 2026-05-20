@@ -23,7 +23,8 @@ from xlrd.sheet import Sheet as XlrdSheet
 
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
-from ._schema import RegistryModel
+from ._runtime_graph import expression_casilla_refs
+from ._schema import ModeloRevision, RegistryModel
 
 _log = get_logger(__name__)
 
@@ -1214,17 +1215,32 @@ _REVERSED_VISUAL_CHART_TOKENS = {
 
 
 # ---------------------------------------------------------------------------
-# Diseño-completeness manifest derivation (off-load-path)
+# Diseño extraction and calculation-completeness manifest derivation
+# (off-load-path)
 # ---------------------------------------------------------------------------
 #
-# The completeness gate compares a modelo revision's declared casillas
-# against a checked-in manifest. The manifest itself is derived once, off
-# the snapshot-build hot path, by running record-design extraction
-# against the official AEAT Diseño de Registros corpus and collecting the
-# five-digit casilla tags AEAT embeds in each field description. The
-# manifest-derivation helpers below are the off-load-path tool: they are
-# called by manifest-authoring scripts and by the drift re-verification
-# test, never by the registry loader.
+# Two off-load-path derivations live below; neither runs on the
+# snapshot-build hot path. Both parse the multi-megabyte official AEAT
+# Diseño de Registros corpus and are called only by manifest-authoring
+# scripts, the off-load-path coverage report, and the drift
+# re-verification test.
+#
+# - ``derive_calculation_completeness_casillas`` derives the
+#   *calculation-completeness manifest* casilla set: the modelo's
+#   calculation closure (formula targets, formula-expression casilla
+#   references, binding and relation endpoint casillas, and
+#   verification-expectation operands) intersected with the AEAT Diseño.
+#   The Diseño is authoritative on each casilla's record segment; the
+#   closure bounds the set to what the cross-connecting calculation
+#   engine traverses. This is the set the load-blocking completeness
+#   gate enforces.
+#
+# - ``derive_diseno_coverage_casillas`` extracts the *full* Diseño
+#   casilla set — every five-digit casilla tag AEAT embeds in a field
+#   description, accounting-statement data-entry fields included. It is
+#   the input to the off-load-path advisory coverage report that
+#   inventories form-level data coverage; it is NOT a load-blocking
+#   gate.
 
 _CASILLA_TAG_RE = re.compile(r"\[(\d{5})\]")
 """Matches the five-digit casilla tag AEAT embeds in Diseño field text.
@@ -1232,14 +1248,14 @@ _CASILLA_TAG_RE = re.compile(r"\[(\d{5})\]")
 The official AEAT Diseño de Registros workbooks annotate every casilla
 field with its five-digit casilla number in square brackets within the
 field description (e.g. ``Liquidación III - ... - Base imponible
-[00552]``). This regex extracts those tags so the completeness manifest
-can enumerate the expected ``(segmento, number)`` casilla set.
+[00552]``). This regex extracts those tags so a derivation can enumerate
+the ``(segmento, number)`` casilla set.
 """
 
 
 @dataclass(frozen=True)
-class DerivedManifestCasilla:
-    """One ``(segmento, number)`` casilla derived from a Diseño workbook.
+class DerivedDisenoCasilla:
+    """One ``(segmento, number)`` casilla derived from an AEAT Diseño workbook.
 
     ``segmento`` carries the AEAT record-segment code (the workbook sheet
     name) for multi-segment modelos and is ``None`` for single-segment
@@ -1250,16 +1266,140 @@ class DerivedManifestCasilla:
     number: str
 
 
-def derive_diseno_completeness_casillas(
+def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
+    """Return the bare casilla numbers in a revision's calculation closure.
+
+    The *calculation closure* is the set of casillas the cross-connecting
+    calculation engine traverses for one modelo revision:
+
+    - every ``formula.target`` casilla;
+    - every casilla referenced inside any ``formula.expression``, walked
+      transitively via the runtime-graph ``expression_casilla_refs``
+      walker;
+    - every casilla that declares a ``formula`` (a computed endpoint) or
+      a ``binding`` (a bound endpoint) — the engine-visible casillas;
+    - every binding source casilla named in a binding selector
+      (``source_casillas`` / ``source_output``);
+    - every relation source-output casilla;
+    - every verification-expectation operand casilla
+      (``computed_casillas`` and the ``reconciliation_totals`` targets).
+
+    References are reduced to bare casilla numbers: a reference token may
+    be either a casilla ``id`` or a bare ``number``, and a declared
+    casilla's ``id`` is mapped back to its ``number`` so the closure is
+    expressed in the AEAT bare-number vocabulary the Diseño uses. A
+    reference token that matches no declared casilla is kept verbatim so
+    a calculation that names a casilla the registry never declared — the
+    Modelo 200 defect class — still surfaces in the closure.
+    """
+
+    id_to_number = {casilla.id: casilla.number for casilla in revision.casillas}
+    number_set = {casilla.number for casilla in revision.casillas}
+
+    def _as_number(token: str) -> str:
+        if token in id_to_number:
+            return id_to_number[token]
+        return token
+
+    closure: set[str] = set()
+    for casilla in revision.casillas:
+        if casilla.formula is not None or casilla.binding is not None:
+            closure.add(casilla.number)
+    for formula in revision.formulas:
+        closure.add(_as_number(formula.target))
+        for ref in expression_casilla_refs(formula.expression):
+            closure.add(_as_number(ref))
+    for binding in revision.bindings:
+        source_casillas = binding.selector.get("source_casillas")
+        if isinstance(source_casillas, tuple):
+            for token in source_casillas:
+                if isinstance(token, str):
+                    closure.add(_as_number(token))
+        source_output = binding.selector.get("source_output")
+        if isinstance(source_output, str):
+            closure.add(_as_number(source_output))
+    for relation in revision.relations:
+        closure.add(_as_number(relation.source_output))
+    for expectation in revision.verification_expectations:
+        for ref in expectation.computed_casillas:
+            closure.add(_as_number(ref))
+        for ref in expectation.reconciliation_totals.values():
+            closure.add(_as_number(ref))
+    # Bare ``id``-only tokens that happen to equal a declared number are
+    # already folded in; tokens that are pure ids with no number mapping
+    # were kept verbatim above. Drop nothing — number_set is consulted by
+    # callers, not used to prune the closure.
+    del number_set
+    return frozenset(closure)
+
+
+def derive_calculation_completeness_casillas(
+    path: Path,
+    revision: ModeloRevision,
+    *,
+    multi_segment: bool,
+) -> tuple[DerivedDisenoCasilla, ...]:
+    """Return the calculation-completeness manifest casilla set for a revision.
+
+    Derives the modelo's *calculation closure*
+    (:func:`calculation_closure_numbers`) and intersects it with the
+    official AEAT Diseño de Registros at ``path``: the Diseño is
+    authoritative on each casilla's record segment and the closure
+    bounds the result to the casillas the calculation engine traverses.
+
+    For a ``multi_segment`` modelo every Diseño casilla carries the
+    workbook sheet name as its ``segmento``; a closure number that the
+    Diseño places in two record segments yields two distinct identity
+    pairs, both required (the calculation may legitimately traverse the
+    same number under two segments). For a single-segment modelo
+    ``segmento`` is left unset and the bare number alone identifies the
+    casilla.
+
+    A closure number absent from the Diseño is omitted: the Diseño is the
+    identity authority, and a number the official form does not declare
+    cannot be assigned a segment. Such a gap is surfaced by the
+    drift / coverage tests rather than silently invented here.
+
+    This is an off-load-path tool: it parses the multi-megabyte Diseño
+    corpus and must never run on the snapshot-build path.
+    """
+
+    closure = calculation_closure_numbers(revision)
+    sheets = extract_record_design(path)
+    seen: set[tuple[str | None, str]] = set()
+    ordered: list[DerivedDisenoCasilla] = []
+    for sheet in sheets:
+        for number in _sheet_casilla_numbers(sheet):
+            if number not in closure:
+                continue
+            segmento = sheet.name if multi_segment else None
+            identity = (segmento, number)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number))
+    return tuple(ordered)
+
+
+def derive_diseno_coverage_casillas(
     path: Path,
     *,
     multi_segment: bool,
-) -> tuple[DerivedManifestCasilla, ...]:
-    """Return the ``(segmento, number)`` casilla set declared by a Diseño.
+) -> tuple[DerivedDisenoCasilla, ...]:
+    """Return the full ``(segmento, number)`` casilla set declared by a Diseño.
 
     Runs read-only record-design extraction against the official AEAT
-    Diseño de Registros source at ``path`` and collects every five-digit
-    casilla tag embedded in the field descriptions.
+    Diseño de Registros source at ``path`` and collects *every*
+    five-digit casilla tag embedded in the field descriptions — including
+    the accounting-statement data-entry fields that feed no calculation.
+
+    This is the input to the off-load-path advisory coverage report that
+    inventories form-level data coverage. It is intentionally NOT a
+    load-blocking gate: a modelo whose registry is not yet exhaustively
+    backfilled against the full Diseño is reported as having a coverage
+    gap, not failed at load. The load-blocking gate is keyed on the
+    bounded calculation closure
+    (:func:`derive_calculation_completeness_casillas`) instead.
 
     For a ``multi_segment`` modelo (e.g. Modelo 200, which reuses the
     same casilla number across distinct record segments) every casilla
@@ -1277,23 +1417,23 @@ def derive_diseno_completeness_casillas(
     sheets = extract_record_design(path)
     if multi_segment:
         seen: set[tuple[str | None, str]] = set()
-        ordered: list[DerivedManifestCasilla] = []
+        ordered: list[DerivedDisenoCasilla] = []
         for sheet in sheets:
             for number in _sheet_casilla_numbers(sheet):
                 identity = (sheet.name, number)
                 if identity in seen:
                     continue
                 seen.add(identity)
-                ordered.append(DerivedManifestCasilla(segmento=sheet.name, number=number))
+                ordered.append(DerivedDisenoCasilla(segmento=sheet.name, number=number))
         return tuple(ordered)
     seen_numbers: set[str] = set()
-    bare: list[DerivedManifestCasilla] = []
+    bare: list[DerivedDisenoCasilla] = []
     for sheet in sheets:
         for number in _sheet_casilla_numbers(sheet):
             if number in seen_numbers:
                 continue
             seen_numbers.add(number)
-            bare.append(DerivedManifestCasilla(segmento=None, number=number))
+            bare.append(DerivedDisenoCasilla(segmento=None, number=number))
     return tuple(bare)
 
 
@@ -1316,10 +1456,12 @@ def _sheet_casilla_numbers(sheet: RecordDesignSheet) -> tuple[str, ...]:
 
 
 __all__ = [
-    "DerivedManifestCasilla",
+    "DerivedDisenoCasilla",
     "RecordDesignField",
     "RecordDesignSheet",
-    "derive_diseno_completeness_casillas",
+    "calculation_closure_numbers",
+    "derive_calculation_completeness_casillas",
+    "derive_diseno_coverage_casillas",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",
