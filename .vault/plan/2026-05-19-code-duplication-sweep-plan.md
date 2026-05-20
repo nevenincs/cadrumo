@@ -141,24 +141,24 @@ Rename the 22 Census-prefixed identifiers to Censo across application profile sy
 
 Rename the Filing-prefixed identifiers under src/aeat/domain/filing/ to their Modelo equivalents: schema records, validators, amendment models, errors, protocols, and the FilingDraftRepository. Self-contained domain package; no cross-domain ripple within this phase.
 
-- [ ] `W04.P08.S66` - Rename FilingDraft to ModeloDraft in the filing schema; `src/aeat/domain/filing/_schema.py`.
-- [ ] `W04.P08.S67` - Rename FilingValue to ModeloValue in the filing schema; `src/aeat/domain/filing/_schema.py`.
-- [ ] `W04.P08.S68` - Rename FilingValueKind to ModeloValueKind in the filing schema; `src/aeat/domain/filing/_schema.py`.
-- [ ] `W04.P08.S69` - Rename FilingBindingValue to ModeloBindingValue in the filing schema; `src/aeat/domain/filing/_schema.py`.
-- [ ] `W04.P08.S70` - Rename FilingValidationFinding to ModeloValidationFinding in the filing schema; `src/aeat/domain/filing/_schema.py`.
-- [ ] `W04.P08.S71` - Rename FilingApprovalBasis to ModeloApprovalBasis in the filing schema; `src/aeat/domain/filing/_schema.py`.
-- [ ] `W04.P08.S72` - Rename FilingValidator to ModeloValidator; `src/aeat/domain/filing/_validator.py`.
-- [ ] `W04.P08.S73` - Rename FilingAmendment to ModeloAmendment; `src/aeat/domain/filing/_amendment.py`.
-- [ ] `W04.P08.S74` - Rename FilingAmendmentError to ModeloAmendmentError; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W04.P08.S75` - Rename FilingDraftError to ModeloDraftError; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W04.P08.S76` - Rename FilingBuilderError to ModeloBuilderError; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W04.P08.S77` - Rename FilingValidationError to ModeloValidationError; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W04.P08.S78` - Rename FilingComputationError to ModeloComputationError; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W04.P08.S79` - Rename FilingImportError to ModeloImportError; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W04.P08.S80` - Rename FilingExportError to ModeloExportError; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W04.P08.S81` - Rename FilingExportValidationError to ModeloExportValidationError; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W04.P08.S82` - Rename FilingProfile protocol to ModeloProfile; `src/aeat/domain/filing/_protocols.py`.
-- [ ] `W04.P08.S83` - Rename FilingDraftRepository to ModeloDraftRepository; `src/aeat/domain/filing/_repository.py`.
+- [x] `W04.P08.S66` - Rename FilingDraft to ModeloDraft in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [x] `W04.P08.S67` - Rename FilingValue to ModeloValue in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [x] `W04.P08.S68` - Rename FilingValueKind to ModeloValueKind in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [x] `W04.P08.S69` - Rename FilingBindingValue to ModeloBindingValue in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [x] `W04.P08.S70` - Rename FilingValidationFinding to ModeloValidationFinding in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [x] `W04.P08.S71` - Rename FilingApprovalBasis to ModeloApprovalBasis in the filing schema; `src/aeat/domain/filing/_schema.py`.
+- [x] `W04.P08.S72` - Rename FilingValidator to ModeloValidator; `src/aeat/domain/filing/_validator.py`.
+- [x] `W04.P08.S73` - Rename FilingAmendment to ModeloAmendment; `src/aeat/domain/filing/_amendment.py`.
+- [x] `W04.P08.S74` - Rename FilingAmendmentError to ModeloAmendmentError; `src/aeat/domain/filing/_errors.py`.
+- [x] `W04.P08.S75` - Rename FilingDraftError to ModeloDraftError; `src/aeat/domain/filing/_errors.py`.
+- [x] `W04.P08.S76` - Rename FilingBuilderError to ModeloBuilderError; `src/aeat/domain/filing/_errors.py`.
+- [x] `W04.P08.S77` - Rename FilingValidationError to ModeloValidationError; `src/aeat/domain/filing/_errors.py`.
+- [x] `W04.P08.S78` - Rename FilingComputationError to ModeloComputationError; `src/aeat/domain/filing/_errors.py`.
+- [x] `W04.P08.S79` - Rename FilingImportError to ModeloImportError; `src/aeat/domain/filing/_errors.py`.
+- [x] `W04.P08.S80` - Rename FilingExportError to ModeloExportError; `src/aeat/domain/filing/_errors.py`.
+- [x] `W04.P08.S81` - Rename FilingExportValidationError to ModeloExportValidationError; `src/aeat/domain/filing/_errors.py`.
+- [x] `W04.P08.S82` - Rename FilingProfile protocol to ModeloProfile; `src/aeat/domain/filing/_protocols.py`.
+- [x] `W04.P08.S83` - Rename FilingDraftRepository to ModeloDraftRepository; `src/aeat/domain/filing/_repository.py`.
 
 ### Phase `W04.P09` - Modelo Cluster: domain/modelos FilingRecord Consolidation
 
@@ -188,46 +188,46 @@ Rename FilingObligation, FilingEnrollment, FilingIVAProfile under domain/deadlin
 
 Rename Filing-prefixed identifiers across the application layer: filing errors, history, review, reconciliation, runtime, testing harnesses, workflow adapters and protocols, and modelo action errors. The CLI _modelo_payloads renames are public-API and coordinate with operator-facing locale refresh.
 
-- [ ] `W04.P11.S98` - Rename FilingApplicationError to ModeloApplicationError; `src/aeat/application/filing/errors.py`.
-- [ ] `W04.P11.S99` - Rename FilingCalculateError to ModeloCalculateError; `src/aeat/application/filing/errors.py`.
-- [ ] `W04.P11.S100` - Rename FilingHistory to ModeloHistory; `src/aeat/application/filing/_history_models.py`.
-- [ ] `W04.P11.S101` - Rename FilingHistoryEntry to ModeloHistoryEntry; `src/aeat/application/filing/_history_models.py`.
-- [ ] `W04.P11.S102` - Rename FilingHistoryRepository to ModeloHistoryRepository; `src/aeat/application/filing/_history_repository.py`.
-- [ ] `W04.P11.S103` - Rename FilingApprovalStaleReason to ModeloApprovalStaleReason; `src/aeat/application/filing/_review.py`.
-- [ ] `W04.P11.S104` - Rename FilingDivergenceKind to ModeloDivergenceKind in the reconciliation surface; `src/aeat/application/filing/reconciliation/_models.py`.
-- [ ] `W04.P11.S105` - Rename FilingDraftRef to ModeloDraftRef in the reconciliation surface; `src/aeat/application/filing/reconciliation/_models.py`.
-- [ ] `W04.P11.S106` - Rename FilingOperatorProfile to ModeloOperatorProfile; `src/aeat/application/filing/runtime.py`.
-- [ ] `W04.P11.S107` - Rename RegistryFilingSubview to RegistryModeloSubview; `src/aeat/application/filing/runtime.py`.
-- [ ] `W04.P11.S108` - Rename FilingTestProfile to ModeloTestProfile; `src/aeat/application/filing/testing.py`.
-- [ ] `W04.P11.S109` - Rename FilingTestDeadlineStatus to ModeloTestDeadlineStatus; `src/aeat/application/filing/testing.py`.
-- [ ] `W04.P11.S110` - Rename FilingTestDeadlineChecker to ModeloTestDeadlineChecker; `src/aeat/application/filing/testing.py`.
-- [ ] `W04.P11.S111` - Rename FilingDraftBuilderAdapter to ModeloDraftBuilderAdapter; `src/aeat/application/workflow/_adapters.py`.
-- [ ] `W04.P11.S112` - Rename RegistryFilingDraftProtocol to RegistryModeloDraftProtocol; `src/aeat/application/workflow/_protocols.py`.
-- [ ] `W04.P11.S113` - Rename FilingDraftBuilderProtocol to ModeloDraftBuilderProtocol; `src/aeat/application/workflow/_protocols.py`.
-- [ ] `W04.P11.S114` - Rename FilingInputsProviderProtocol to ModeloInputsProviderProtocol; `src/aeat/application/workflow/_protocols.py`.
-- [ ] `W04.P11.S115` - Rename FilingRecordNotFoundError to ModeloRecordNotFoundError; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P11.S116` - Rename ExternalFilingImportError to ExternalModeloImportError; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P11.S117` - Rename FilingFixtureError to ModeloFixtureError; `src/aeat/core/errors/__init__.py`.
-- [ ] `W04.P11.S118` - Rename FilingRecordPayload to ModeloRecordPayload (public-API; `refresh operator locales); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P11.S119` - Rename FilingRecordListResult to ModeloRecordListResult (public-API); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P11.S120` - Rename FilingRecordShowResult to ModeloRecordShowResult (public-API); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P11.S98` - Rename FilingApplicationError to ModeloApplicationError; `src/aeat/application/filing/errors.py`.
+- [x] `W04.P11.S99` - Rename FilingCalculateError to ModeloCalculateError; `src/aeat/application/filing/errors.py`.
+- [x] `W04.P11.S100` - Rename FilingHistory to ModeloHistory; `src/aeat/application/filing/_history_models.py`.
+- [x] `W04.P11.S101` - Rename FilingHistoryEntry to ModeloHistoryEntry; `src/aeat/application/filing/_history_models.py`.
+- [x] `W04.P11.S102` - Rename FilingHistoryRepository to ModeloHistoryRepository; `src/aeat/application/filing/_history_repository.py`.
+- [x] `W04.P11.S103` - Rename FilingApprovalStaleReason to ModeloApprovalStaleReason; `src/aeat/application/filing/_review.py`.
+- [x] `W04.P11.S104` - Rename FilingDivergenceKind to ModeloDivergenceKind in the reconciliation surface; `src/aeat/application/filing/reconciliation/_models.py`.
+- [x] `W04.P11.S105` - Rename FilingDraftRef to ModeloDraftRef in the reconciliation surface; `src/aeat/application/filing/reconciliation/_models.py`.
+- [x] `W04.P11.S106` - Rename FilingOperatorProfile to ModeloOperatorProfile; `src/aeat/application/filing/runtime.py`.
+- [x] `W04.P11.S107` - Rename RegistryFilingSubview to RegistryModeloSubview; `src/aeat/application/filing/runtime.py`.
+- [x] `W04.P11.S108` - Rename FilingTestProfile to ModeloTestProfile; `src/aeat/application/filing/testing.py`.
+- [x] `W04.P11.S109` - Rename FilingTestDeadlineStatus to ModeloTestDeadlineStatus; `src/aeat/application/filing/testing.py`.
+- [x] `W04.P11.S110` - Rename FilingTestDeadlineChecker to ModeloTestDeadlineChecker; `src/aeat/application/filing/testing.py`.
+- [x] `W04.P11.S111` - Rename FilingDraftBuilderAdapter to ModeloDraftBuilderAdapter; `src/aeat/application/workflow/_adapters.py`.
+- [x] `W04.P11.S112` - Rename RegistryFilingDraftProtocol to RegistryModeloDraftProtocol; `src/aeat/application/workflow/_protocols.py`.
+- [x] `W04.P11.S113` - Rename FilingDraftBuilderProtocol to ModeloDraftBuilderProtocol; `src/aeat/application/workflow/_protocols.py`.
+- [x] `W04.P11.S114` - Rename FilingInputsProviderProtocol to ModeloInputsProviderProtocol; `src/aeat/application/workflow/_protocols.py`.
+- [x] `W04.P11.S115` - Rename FilingRecordNotFoundError to ModeloRecordNotFoundError; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P11.S116` - Rename ExternalFilingImportError to ExternalModeloImportError; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P11.S117` - Rename FilingFixtureError to ModeloFixtureError; `src/aeat/core/errors/__init__.py`.
+- [x] `W04.P11.S118` - Rename FilingRecordPayload to ModeloRecordPayload (public-API; `refresh operator locales); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P11.S119` - Rename FilingRecordListResult to ModeloRecordListResult (public-API); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P11.S120` - Rename FilingRecordShowResult to ModeloRecordShowResult (public-API); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
 
 ### Phase `W04.P12` - Modelo Cluster: domain/submission and domain/justificante
 
 Rename FilingFindingSeverity, FilingFinding, FilingDraftLike, DraftLoader, SubmittedFiling under domain/submission, and PdfFilingImportError under domain/justificante. DraftStatus consolidation is the dedicated next phase; here only the prefix renames land.
 
-- [ ] `W04.P12.S121` - Rename FilingFindingSeverity to ModeloFindingSeverity under domain/submission; `src/aeat/domain/submission/_schema.py`.
-- [ ] `W04.P12.S122` - Rename FilingFinding to ModeloFinding under domain/submission; `src/aeat/domain/submission/_schema.py`.
-- [ ] `W04.P12.S123` - Rename FilingDraftLike to ModeloDraftLike under domain/submission; `src/aeat/domain/submission/_protocols.py`.
-- [ ] `W04.P12.S124` - Rename DraftLoader to ModeloDraftLoader under domain/submission; `src/aeat/domain/submission/_protocols.py`.
-- [ ] `W04.P12.S125` - Rename SubmittedFiling to SubmittedModelo under domain/submission; `src/aeat/domain/submission/_schema.py`.
-- [ ] `W04.P12.S126` - Rename PdfFilingImportError to PdfModeloImportError; `src/aeat/domain/justificante/_errors.py`.
+- [x] `W04.P12.S121` - Rename FilingFindingSeverity to ModeloFindingSeverity under domain/submission; `src/aeat/domain/submission/_schema.py`.
+- [x] `W04.P12.S122` - Rename FilingFinding to ModeloFinding under domain/submission; `src/aeat/domain/submission/_schema.py`.
+- [x] `W04.P12.S123` - Rename FilingDraftLike to ModeloDraftLike under domain/submission; `src/aeat/domain/submission/_protocols.py`.
+- [x] `W04.P12.S124` - Rename DraftLoader to ModeloDraftLoader under domain/submission; `src/aeat/domain/submission/_protocols.py`.
+- [x] `W04.P12.S125` - Rename SubmittedFiling to SubmittedModelo under domain/submission; `src/aeat/domain/submission/_schema.py`.
+- [x] `W04.P12.S126` - Rename PdfFilingImportError to PdfModeloImportError; `src/aeat/domain/justificante/_errors.py`.
 
 ### Phase `W04.P13` - DraftStatus Consolidation to Single ModeloDraftStatus
 
 Per project-lead adjudication of ADR footnote 2, consolidate DraftStatus (domain/submission) and FilingDraftStatus (domain/filing) into a single canonical ModeloDraftStatus enum and remove the duplicate. Single coordinated step; every callsite migrates in the same commit.
 
-- [ ] `W04.P13.S127` - Consolidate DraftStatus (domain/submission) and FilingDraftStatus (domain/filing) into a single canonical ModeloDraftStatus enum, migrating every callsite in the same commit and deleting both legacy enums; `src/aeat/domain/filing/_schema.py`.
+- [x] `W04.P13.S127` - Consolidate DraftStatus (domain/submission) and FilingDraftStatus (domain/filing) into a single canonical ModeloDraftStatus enum, migrating every callsite in the same commit and deleting both legacy enums; `src/aeat/domain/filing/_schema.py`.
 
 ## Wave `W05` - Snapshot Service Consolidation and Fincas Rename
 
