@@ -299,3 +299,15 @@ need an explicit policy.
 - [x] `W06.P16.S116` - extend the generic sibling detector to token-axis pairs (`clave`/`subclave`, `count`/`amount`, prior/future, internal/international, roman buckets) and optional `sin` legal variants; live baseline lowered from 84 to 64 warnings.
 - [x] `W06.P16.S117` - extend the generic sibling detector to legal-reference axes (`art*`, `dt*`, `rdleg`, `lis`) and detail/other scope axes; M200 singleton warning inventory is now clean and the live baseline is 49 M100-only warnings.
 - [x] `W06.P16.S118` - extend the generic sibling detector to M100 year, relationship, optional field/scope, numeric slot, and CCAA axes; singleton typo-warning inventory is now zero and the regression cap requires zero warnings.
+
+## Wave `W07` - registry layout size regression gates
+
+This Wave prevents the registry from drifting back into reviewability
+hazards after the fragmentation work. The guard is intentionally
+layout-level: it does not change schema semantics or loader behaviour,
+but it fails if TOML files or individual rows grow past reviewable
+bounds.
+
+### Phase `W07.P17` - file and row size gates
+
+- [x] `W07.P17.S119` - add a committed-corpus layout test capping single-file modelo TOMLs at 2,000 lines, any TOML fragment at 4,000 lines, and any TOML row at 1,200 characters.
