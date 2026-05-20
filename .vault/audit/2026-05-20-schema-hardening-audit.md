@@ -52,44 +52,45 @@ segment-qualified scheme is staged in the working tree against
 it is correct against committed registry HEAD and is uncommitted
 pending the formula adjudication below.
 
-### M202 relation dropped from the `00599` formula — HIGH
+### M202 relation relocated, not dropped — RESOLVED, was HIGH
 
-Uncommitted working-tree WIP in the M200 records
-`formulas.toml` (modelo 200, 2024-y-siguientes revision) rewrites the
-`DP200014B:00599` formula. The committed-HEAD form is
+Initial review of the then-uncommitted `formulas.toml` WIP feared the
+`DP200014B:00599` rewrite had dropped the modelo-202 pago-fraccionado
+relation: the committed-HEAD form was
 `subtract(DP200014B:00592, modelo-200-2024-rel-202-pagos-fraccionados)`
-— a direct M200 to M202 cross-modelo relation. The WIP form is a
-multi-term `multiply(DP200026:00625 / 100, subtract-chain(DP200014B:00592, 01766, 01784))`
-which contains no reference to `modelo-200-2024-rel-202-pagos-fraccionados`.
+and the WIP form is a multi-term
+`multiply(DP200026:00625 / 100, subtract-chain(...))` carrying no
+reference to `modelo-200-2024-rel-202-pagos-fraccionados` on `00599`.
 
-The modelo-202 relation is the only operand binding the modelo 200
-final settlement to the in-year pago-fraccionado instalments. Dropping
-it means the computed cuota del ejercicio a ingresar would not net out
-instalments already paid — a double-charge against the taxpayer.
-Ley 27/2014 art. 41 requires the IS self-assessment to deduct the
-pagos fraccionados from the cuota. The WIP `00599` formula, as it
-currently stands, would compute an unlawful settlement figure.
+The WIP has since landed as commit `aae1bb60c` ("M200: correct
+page-14 cuota chain against AEAT Manual de Sociedades 2024"). Review
+of the committed registry confirms the M202 relation was NOT dropped
+— it was relocated. `modelo-200-2024-rel-202-pagos-fraccionados` is
+still defined in `relations.toml`, classified in
+`dependency_classifications.toml`, and declared on a construct in
+`constructs.part-002.toml`. The M200 to M202 netting required by
+Ley 27/2014 art. 41 remains modelled; the schema-hardening campaign
+grounded the restructure against the AEAT official manual. No
+unlawful-settlement regression. The remaining work is purely to
+re-point the cross-dependency test to the relation's new casilla and
+formula location.
 
 ## Recommendations
 
-The schema-hardening campaign owner of the M200 `formulas.toml` WIP
-must adjudicate, with grounding in the AEAT modelo 200 official form
-layout and Ley 27/2014:
+The adjudication this finding originally called for is resolved by
+commit `aae1bb60c`: the M202 relation moved rather than dropped, so
+the only remaining action is test alignment.
 
-1. If the M202 pago-fraccionado relation belongs on `00599`, reinstate
-   `modelo-200-2024-rel-202-pagos-fraccionados` as an operand of the
-   new multi-term formula. The staged cross-dependency test edit then
-   lands green alongside that commit.
-2. If the new `00599` term structure relocates the M200 to M202
-   linkage to a different casilla, the formula change and the
-   cross-dependency test must update together so the handoff stays
-   covered by exactly one assertion — the test must not be deleted or
-   weakened to a shape that no longer defends the netting.
-3. Either way, the M200 to M202 netting must remain enforced by a
-   graph-wiring cross-dependency test. Do not close the test as
-   tautological or drop it; the relation it defends is a legal
-   requirement, not an arbitrary numeric expectation.
-
-Until adjudicated, the staged test id-modernisation must not be
-committed in isolation — its `operand_refs` assertion encodes the
-M202 relation whose fate this finding decides.
+1. Re-point the cross-dependency test
+   (`test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados`)
+   to assert the M200 to M202 pago-fraccionado netting at the
+   relation's new casilla and formula location — segment-qualified
+   ids, current formula `operand_refs`. Tracked as task #51.
+2. The test must remain a graph-wiring / aggregation-linkage
+   assertion. Do not close it as tautological or weaken it to a shape
+   that no longer defends the netting — the M200 to M202 linkage is a
+   Ley 27/2014 art. 41 legal requirement, not an arbitrary numeric
+   expectation.
+3. No further registry-data action is required; the schema-hardening
+   restructure is grounded against the AEAT Manual de Sociedades 2024
+   and the registry is internally coherent.
