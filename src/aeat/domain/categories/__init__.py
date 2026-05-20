@@ -18,7 +18,7 @@ BOE / Manual práctico stays intact.
 from __future__ import annotations
 
 from ._corpus import load_category_profiles_from_manual
-from ._profile import CategoryProfile, VatCategory
+from ._profile import CategoryProfile, IvaCategory
 from ._proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -52,7 +52,7 @@ __all__ = [
     "SpendingCategoryFamily",
     "StatutoryCapPeriod",
     "StatutoryCapVariant",
-    "VatCategory",
+    "IvaCategory",
     "categories_for_family",
     "effective_usage_ratio",
     "family_for",
