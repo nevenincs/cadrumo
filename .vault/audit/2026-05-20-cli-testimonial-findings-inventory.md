@@ -547,3 +547,45 @@ Result pending — suite was running at time of writing. All 13 targeted
 tests (fix 2 + fix 3 regressions) passed in isolation. Bug 1 rename
 regression tests (2 tests) passed in isolation (29.54s). See command
 log at `.vault-scratch/fix2-command-log.txt` for verbatim CLI output.
+
+---
+
+# Remediation scoreboard (2026-05-20)
+
+## Fixed and committed (9, each with regression tests)
+
+| Bug | Severity | Fix |
+|---|---|---|
+| `auth test` ignored active profile | blocker | resolve profile via assess_active_profile_health |
+| `allocate` silently BUSINESS->MIXED | blocker | derive classification from business_pct |
+| `profile rename` non-atomic / ghost profiles | blocker | dispose bucket engines + rollback on move failure |
+| silent `profile create` | major | emit confirmation line |
+| `work create` accepts invalid period | major | validate period token at create time |
+| `profile status` exit 0 on bad health | major | exit 2 for dangling/missing/unreadable |
+| `auth status` configured/health contradiction | major | configured reflects real readiness |
+| error field leakage (prompt_key etc.) | minor | scrub internal context keys |
+| accented-error console mojibake | major | Windows console UTF-8 codepage |
+
+## Corrected by direct reproduction (not real defects)
+
+- Diego "legal refs absent" - provenance IS in `observations[]`.
+- "failures exit 0" for rename/repair - they exit 2/6; the original
+  repro piped to `tail` and read tail's exit code.
+- "mojibake" is a Windows console-codepage display issue, not data
+  corruption (emitted bytes are valid UTF-8) - fixed at the console
+  layer regardless.
+
+## Open - feature-gap work, not safe small fixes
+
+These are missing functionality, needing design, not quick takeovers:
+
+- No deadline / filing-obligation surface (blocker)
+- `verify -> export` unreachable: no obligation-register verb (blocker)
+- `attach` unreachable: no evidence-id creation surface (blocker)
+- `repair profile` loops without repairing (blocker)
+- unfiltered `modelo list`; no individual-vs-company profile type;
+  M303 bindings `borrador_capable: False` (major)
+
+The safe, contained bug-fix loop is exhausted. The remainder is
+feature implementation - a distinct scoped effort (research -> design
+-> build), not reflexive bug-fixing.
