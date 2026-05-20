@@ -43,15 +43,19 @@ def test_app_does_not_register_deadlines_subgroup() -> None:
 
 
 def test_modelo_audit_export_remains_distinct_from_modelo_export() -> None:
-    """The audit subgroup carries its own `export` verb; the modelo
-    noun group must NOT register a sibling `aeat app modelo export`
-    that could be confused with the audit-bundle exporter."""
+    """`aeat app modelo export` (fichero-BOE exporter) and
+    `aeat app modelo audit export` (evidence-bundle exporter) are
+    distinct sibling verbs. Both must resolve, and each must carry
+    its own purpose-specific help so operators are not confused."""
 
     audit_help = invoke_cached_cli(["app", "modelo", "audit", "export", "--help"])
     assert audit_help.exit_code == 0, audit_help.output
 
-    sibling = invoke_cached_cli(["app", "modelo", "export", "--help"])
-    assert sibling.exit_code != 0, sibling.output
+    modelo_export_help = invoke_cached_cli(["app", "modelo", "export", "--help"])
+    assert modelo_export_help.exit_code == 0, modelo_export_help.output
+
+    assert "fichero-BOE" in modelo_export_help.output
+    assert "fichero-BOE" not in audit_help.output
 
 
 def test_root_does_not_register_bare_audit_alias() -> None:
