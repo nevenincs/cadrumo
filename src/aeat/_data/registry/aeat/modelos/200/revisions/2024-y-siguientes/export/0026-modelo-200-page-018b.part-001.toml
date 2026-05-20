@@ -2,14 +2,14 @@
 id = "modelo-200-fichero-boe"
 
 [[revisions."2024-y-siguientes".export_layouts.records]]
-id = "modelo-200-page-020c"
-record_type = "page_020c"
-order = 31
+id = "modelo-200-page-018b"
+record_type = "page_018b"
+order = 25
 encoding = "latin-1"
 line_ending = "none"
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-filler-pos-1"
+id = "modelo-200-page-018b-filler-pos-1"
 offset = 1
 length = 2
 kind = "filler"
@@ -22,7 +22,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-filler-pos-3"
+id = "modelo-200-page-018b-filler-pos-3"
 offset = 3
 length = 3
 kind = "filler"
@@ -35,7 +35,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-filler-pos-6"
+id = "modelo-200-page-018b-filler-pos-6"
 offset = 6
 length = 5
 kind = "filler"
@@ -48,7 +48,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-filler-pos-11"
+id = "modelo-200-page-018b-filler-pos-11"
 offset = 11
 length = 1
 kind = "filler"
@@ -61,7 +61,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-filler-pos-12"
+id = "modelo-200-page-018b-filler-pos-12"
 offset = 12
 length = 1
 kind = "filler"
@@ -74,11 +74,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01524"
+id = "modelo-200-page-018b-casilla-03523"
 offset = 13
 length = 17
 kind = "casilla"
-casilla = "01524"
+casilla = "03523"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -88,11 +88,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01525"
+id = "modelo-200-page-018b-casilla-03524"
 offset = 30
 length = 17
 kind = "casilla"
-casilla = "01525"
+casilla = "03524"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -102,11 +102,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01526"
+id = "modelo-200-page-018b-casilla-03525"
 offset = 47
 length = 17
 kind = "casilla"
-casilla = "01526"
+casilla = "03525"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -116,11 +116,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01527"
+id = "modelo-200-page-018b-casilla-03526"
 offset = 64
 length = 17
 kind = "casilla"
-casilla = "01527"
+casilla = "03526"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -130,11 +130,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01528"
+id = "modelo-200-page-018b-casilla-03527"
 offset = 81
 length = 17
 kind = "casilla"
-casilla = "01528"
+casilla = "03527"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -144,11 +144,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01529"
+id = "modelo-200-page-018b-casilla-03528"
 offset = 98
 length = 17
 kind = "casilla"
-casilla = "01529"
+casilla = "03528"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -158,11 +158,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01530"
+id = "modelo-200-page-018b-casilla-03529"
 offset = 115
 length = 17
 kind = "casilla"
-casilla = "01530"
+casilla = "03529"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -172,11 +172,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01590"
+id = "modelo-200-page-018b-casilla-03530"
 offset = 132
 length = 17
 kind = "casilla"
-casilla = "01590"
+casilla = "03530"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -186,11 +186,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01591"
+id = "modelo-200-page-018b-casilla-03531"
 offset = 149
 length = 17
 kind = "casilla"
-casilla = "01591"
+casilla = "03531"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -200,11 +200,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01531"
+id = "modelo-200-page-018b-casilla-01683"
 offset = 166
 length = 17
 kind = "casilla"
-casilla = "01531"
+casilla = "01683"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -214,11 +214,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01532"
+id = "modelo-200-page-018b-casilla-01684"
 offset = 183
 length = 17
 kind = "casilla"
-casilla = "01532"
+casilla = "01684"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -228,11 +228,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01533"
+id = "modelo-200-page-018b-casilla-01685"
 offset = 200
 length = 17
 kind = "casilla"
-casilla = "01533"
+casilla = "01685"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -242,11 +242,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01534"
+id = "modelo-200-page-018b-casilla-00634"
 offset = 217
 length = 17
 kind = "casilla"
-casilla = "01534"
+casilla = "00634"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -256,11 +256,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01535"
+id = "modelo-200-page-018b-casilla-00635"
 offset = 234
 length = 17
 kind = "casilla"
-casilla = "01535"
+casilla = "00635"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -270,11 +270,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01536"
+id = "modelo-200-page-018b-casilla-00636"
 offset = 251
 length = 17
 kind = "casilla"
-casilla = "01536"
+casilla = "00636"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -284,11 +284,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01537"
+id = "modelo-200-page-018b-casilla-00831"
 offset = 268
 length = 17
 kind = "casilla"
-casilla = "01537"
+casilla = "00831"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -298,11 +298,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01538"
+id = "modelo-200-page-018b-casilla-00588"
 offset = 285
 length = 17
 kind = "casilla"
-casilla = "01538"
+casilla = "00588"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -312,11 +312,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01539"
+id = "modelo-200-page-018b-casilla-00832"
 offset = 302
 length = 17
 kind = "casilla"
-casilla = "01539"
+casilla = "00832"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -326,11 +326,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01540"
+id = "modelo-200-page-018b-casilla-01284"
 offset = 319
 length = 17
 kind = "casilla"
-casilla = "01540"
+casilla = "01284"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -340,11 +340,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01541"
+id = "modelo-200-page-018b-casilla-01287"
 offset = 336
 length = 17
 kind = "casilla"
-casilla = "01541"
+casilla = "01287"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -354,11 +354,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01542"
+id = "modelo-200-page-018b-casilla-01288"
 offset = 353
 length = 17
 kind = "casilla"
-casilla = "01542"
+casilla = "01288"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -368,11 +368,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01543"
+id = "modelo-200-page-018b-casilla-01289"
 offset = 370
 length = 17
 kind = "casilla"
-casilla = "01543"
+casilla = "01289"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -382,11 +382,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01544"
+id = "modelo-200-page-018b-casilla-01290"
 offset = 387
 length = 17
 kind = "casilla"
-casilla = "01544"
+casilla = "01290"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -396,11 +396,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01545"
+id = "modelo-200-page-018b-casilla-01291"
 offset = 404
 length = 17
 kind = "casilla"
-casilla = "01545"
+casilla = "01291"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -410,11 +410,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01546"
+id = "modelo-200-page-018b-casilla-01292"
 offset = 421
 length = 17
 kind = "casilla"
-casilla = "01546"
+casilla = "01292"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -424,11 +424,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01547"
+id = "modelo-200-page-018b-casilla-01293"
 offset = 438
 length = 17
 kind = "casilla"
-casilla = "01547"
+casilla = "01293"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -438,11 +438,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01548"
+id = "modelo-200-page-018b-casilla-01294"
 offset = 455
 length = 17
 kind = "casilla"
-casilla = "01548"
+casilla = "01294"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -452,11 +452,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01549"
+id = "modelo-200-page-018b-casilla-01295"
 offset = 472
 length = 17
 kind = "casilla"
-casilla = "01549"
+casilla = "01295"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -466,11 +466,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01550"
+id = "modelo-200-page-018b-casilla-01296"
 offset = 489
 length = 17
 kind = "casilla"
-casilla = "01550"
+casilla = "01296"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -480,11 +480,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01551"
+id = "modelo-200-page-018b-casilla-01297"
 offset = 506
 length = 17
 kind = "casilla"
-casilla = "01551"
+casilla = "01297"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -494,11 +494,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01552"
+id = "modelo-200-page-018b-casilla-02312"
 offset = 523
 length = 17
 kind = "casilla"
-casilla = "01552"
+casilla = "02312"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -508,11 +508,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01553"
+id = "modelo-200-page-018b-casilla-02313"
 offset = 540
 length = 17
 kind = "casilla"
-casilla = "01553"
+casilla = "02313"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -522,11 +522,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01554"
+id = "modelo-200-page-018b-casilla-02353"
 offset = 557
 length = 17
 kind = "casilla"
-casilla = "01554"
+casilla = "02353"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -536,11 +536,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01555"
+id = "modelo-200-page-018b-casilla-00297"
 offset = 574
 length = 17
 kind = "casilla"
-casilla = "01555"
+casilla = "00297"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -550,11 +550,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01556"
+id = "modelo-200-page-018b-casilla-00298"
 offset = 591
 length = 17
 kind = "casilla"
-casilla = "01556"
+casilla = "00298"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -564,11 +564,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01753"
+id = "modelo-200-page-018b-casilla-00299"
 offset = 608
 length = 17
 kind = "casilla"
-casilla = "01753"
+casilla = "00299"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -578,11 +578,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01557"
+id = "modelo-200-page-018b-casilla-03532"
 offset = 625
 length = 17
 kind = "casilla"
-casilla = "01557"
+casilla = "03532"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -592,11 +592,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01558"
+id = "modelo-200-page-018b-casilla-03533"
 offset = 642
 length = 17
 kind = "casilla"
-casilla = "01558"
+casilla = "03533"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -606,11 +606,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01559"
+id = "modelo-200-page-018b-casilla-03534"
 offset = 659
 length = 17
 kind = "casilla"
-casilla = "01559"
+casilla = "03534"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -620,11 +620,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01560"
+id = "modelo-200-page-018b-casilla-01298"
 offset = 676
 length = 17
 kind = "casilla"
-casilla = "01560"
+casilla = "01298"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -634,11 +634,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01754"
+id = "modelo-200-page-018b-casilla-02315"
 offset = 693
 length = 17
 kind = "casilla"
-casilla = "01754"
+casilla = "02315"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -648,11 +648,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01755"
+id = "modelo-200-page-018b-casilla-01304"
 offset = 710
 length = 17
 kind = "casilla"
-casilla = "01755"
+casilla = "01304"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -662,11 +662,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01756"
+id = "modelo-200-page-018b-casilla-01931"
 offset = 727
 length = 17
 kind = "casilla"
-casilla = "01756"
+casilla = "01931"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -676,11 +676,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01757"
+id = "modelo-200-page-018b-casilla-01932"
 offset = 744
 length = 17
 kind = "casilla"
-casilla = "01757"
+casilla = "01932"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -690,11 +690,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01758"
+id = "modelo-200-page-018b-casilla-01933"
 offset = 761
 length = 17
 kind = "casilla"
-casilla = "01758"
+casilla = "01933"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -704,11 +704,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01994"
+id = "modelo-200-page-018b-casilla-01937"
 offset = 778
 length = 17
 kind = "casilla"
-casilla = "01994"
+casilla = "01937"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -718,11 +718,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01759"
+id = "modelo-200-page-018b-casilla-01938"
 offset = 795
 length = 17
 kind = "casilla"
-casilla = "01759"
+casilla = "01938"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -732,11 +732,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01760"
+id = "modelo-200-page-018b-casilla-01939"
 offset = 812
 length = 17
 kind = "casilla"
-casilla = "01760"
+casilla = "01939"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -746,11 +746,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01761"
+id = "modelo-200-page-018b-casilla-01940"
 offset = 829
 length = 17
 kind = "casilla"
-casilla = "01761"
+casilla = "01940"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -760,11 +760,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01762"
+id = "modelo-200-page-018b-casilla-01941"
 offset = 846
 length = 17
 kind = "casilla"
-casilla = "01762"
+casilla = "01941"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -774,11 +774,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02100"
+id = "modelo-200-page-018b-casilla-01942"
 offset = 863
 length = 17
 kind = "casilla"
-casilla = "02100"
+casilla = "01942"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -788,11 +788,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02101"
+id = "modelo-200-page-018b-casilla-01943"
 offset = 880
 length = 17
 kind = "casilla"
-casilla = "02101"
+casilla = "01943"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -802,11 +802,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02102"
+id = "modelo-200-page-018b-casilla-01944"
 offset = 897
 length = 17
 kind = "casilla"
-casilla = "02102"
+casilla = "01944"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -816,11 +816,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02103"
+id = "modelo-200-page-018b-casilla-01945"
 offset = 914
 length = 17
 kind = "casilla"
-casilla = "02103"
+casilla = "01945"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -830,11 +830,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02104"
+id = "modelo-200-page-018b-casilla-01946"
 offset = 931
 length = 17
 kind = "casilla"
-casilla = "02104"
+casilla = "01946"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -844,11 +844,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02267"
+id = "modelo-200-page-018b-casilla-01947"
 offset = 948
 length = 17
 kind = "casilla"
-casilla = "02267"
+casilla = "01947"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -858,11 +858,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02105"
+id = "modelo-200-page-018b-casilla-01948"
 offset = 965
 length = 17
 kind = "casilla"
-casilla = "02105"
+casilla = "01948"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -872,11 +872,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02106"
+id = "modelo-200-page-018b-casilla-01949"
 offset = 982
 length = 17
 kind = "casilla"
-casilla = "02106"
+casilla = "01949"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -886,11 +886,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02107"
+id = "modelo-200-page-018b-casilla-02109"
 offset = 999
 length = 17
 kind = "casilla"
-casilla = "02107"
+casilla = "02109"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -900,11 +900,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02108"
+id = "modelo-200-page-018b-casilla-02110"
 offset = 1016
 length = 17
 kind = "casilla"
-casilla = "02108"
+casilla = "02110"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -914,11 +914,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02268"
+id = "modelo-200-page-018b-casilla-02111"
 offset = 1033
 length = 17
 kind = "casilla"
-casilla = "02268"
+casilla = "02111"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -928,11 +928,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02269"
+id = "modelo-200-page-018b-casilla-02112"
 offset = 1050
 length = 17
 kind = "casilla"
-casilla = "02269"
+casilla = "02112"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -942,11 +942,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02270"
+id = "modelo-200-page-018b-casilla-02128"
 offset = 1067
 length = 17
 kind = "casilla"
-casilla = "02270"
+casilla = "02128"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -956,11 +956,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02271"
+id = "modelo-200-page-018b-casilla-02129"
 offset = 1084
 length = 17
 kind = "casilla"
-casilla = "02271"
+casilla = "02129"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -970,11 +970,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02272"
+id = "modelo-200-page-018b-casilla-02130"
 offset = 1101
 length = 17
 kind = "casilla"
-casilla = "02272"
+casilla = "02130"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -984,11 +984,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02417"
+id = "modelo-200-page-018b-casilla-02131"
 offset = 1118
 length = 17
 kind = "casilla"
-casilla = "02417"
+casilla = "02131"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -998,11 +998,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02273"
+id = "modelo-200-page-018b-casilla-02132"
 offset = 1135
 length = 17
 kind = "casilla"
-casilla = "02273"
+casilla = "02132"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1012,11 +1012,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02274"
+id = "modelo-200-page-018b-casilla-02133"
 offset = 1152
 length = 17
 kind = "casilla"
-casilla = "02274"
+casilla = "02133"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1026,11 +1026,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02275"
+id = "modelo-200-page-018b-casilla-02134"
 offset = 1169
 length = 17
 kind = "casilla"
-casilla = "02275"
+casilla = "02134"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1040,11 +1040,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02276"
+id = "modelo-200-page-018b-casilla-02135"
 offset = 1186
 length = 17
 kind = "casilla"
-casilla = "02276"
+casilla = "02135"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1054,11 +1054,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02418"
+id = "modelo-200-page-018b-casilla-02136"
 offset = 1203
 length = 17
 kind = "casilla"
-casilla = "02418"
+casilla = "02136"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1068,11 +1068,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02419"
+id = "modelo-200-page-018b-casilla-02137"
 offset = 1220
 length = 17
 kind = "casilla"
-casilla = "02419"
+casilla = "02137"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1082,11 +1082,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02420"
+id = "modelo-200-page-018b-casilla-02138"
 offset = 1237
 length = 17
 kind = "casilla"
-casilla = "02420"
+casilla = "02138"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1096,11 +1096,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02421"
+id = "modelo-200-page-018b-casilla-02139"
 offset = 1254
 length = 17
 kind = "casilla"
-casilla = "02421"
+casilla = "02139"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1110,11 +1110,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02422"
+id = "modelo-200-page-018b-casilla-02140"
 offset = 1271
 length = 17
 kind = "casilla"
-casilla = "02422"
+casilla = "02140"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1124,11 +1124,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01116"
+id = "modelo-200-page-018b-casilla-02141"
 offset = 1288
 length = 17
 kind = "casilla"
-casilla = "01116"
+casilla = "02141"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1138,11 +1138,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02423"
+id = "modelo-200-page-018b-casilla-02142"
 offset = 1305
 length = 17
 kind = "casilla"
-casilla = "02423"
+casilla = "02142"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1152,11 +1152,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02424"
+id = "modelo-200-page-018b-casilla-02143"
 offset = 1322
 length = 17
 kind = "casilla"
-casilla = "02424"
+casilla = "02143"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1166,11 +1166,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02425"
+id = "modelo-200-page-018b-casilla-02354"
 offset = 1339
 length = 17
 kind = "casilla"
-casilla = "02425"
+casilla = "02354"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1180,11 +1180,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02426"
+id = "modelo-200-page-018b-casilla-02355"
 offset = 1356
 length = 17
 kind = "casilla"
-casilla = "02426"
+casilla = "02355"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1194,11 +1194,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01117"
+id = "modelo-200-page-018b-casilla-02437"
 offset = 1373
 length = 17
 kind = "casilla"
-casilla = "01117"
+casilla = "02437"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1208,11 +1208,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01118"
+id = "modelo-200-page-018b-casilla-02443"
 offset = 1390
 length = 17
 kind = "casilla"
-casilla = "01118"
+casilla = "02443"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1222,11 +1222,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01119"
+id = "modelo-200-page-018b-casilla-00315"
 offset = 1407
 length = 17
 kind = "casilla"
-casilla = "01119"
+casilla = "00315"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1236,11 +1236,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01120"
+id = "modelo-200-page-018b-casilla-00316"
 offset = 1424
 length = 17
 kind = "casilla"
-casilla = "01120"
+casilla = "00316"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1250,11 +1250,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01121"
+id = "modelo-200-page-018b-casilla-00319"
 offset = 1441
 length = 17
 kind = "casilla"
-casilla = "01121"
+casilla = "00319"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1264,11 +1264,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01413"
+id = "modelo-200-page-018b-casilla-00320"
 offset = 1458
 length = 17
 kind = "casilla"
-casilla = "01413"
+casilla = "00320"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1278,11 +1278,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01122"
+id = "modelo-200-page-018b-casilla-03535"
 offset = 1475
 length = 17
 kind = "casilla"
-casilla = "01122"
+casilla = "03535"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1292,11 +1292,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01131"
+id = "modelo-200-page-018b-casilla-03536"
 offset = 1492
 length = 17
 kind = "casilla"
-casilla = "01131"
+casilla = "03536"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1306,11 +1306,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01132"
+id = "modelo-200-page-018b-casilla-03537"
 offset = 1509
 length = 17
 kind = "casilla"
-casilla = "01132"
+casilla = "03537"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1320,11 +1320,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01133"
+id = "modelo-200-page-018b-casilla-03538"
 offset = 1526
 length = 17
 kind = "casilla"
-casilla = "01133"
+casilla = "03538"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1334,11 +1334,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01414"
+id = "modelo-200-page-018b-casilla-02144"
 offset = 1543
 length = 17
 kind = "casilla"
-casilla = "01414"
+casilla = "02144"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1348,11 +1348,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01415"
+id = "modelo-200-page-018b-casilla-01039"
 offset = 1560
 length = 17
 kind = "casilla"
-casilla = "01415"
+casilla = "01039"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1362,11 +1362,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01416"
+id = "modelo-200-page-018b-casilla-01892"
 offset = 1577
 length = 17
 kind = "casilla"
-casilla = "01416"
+casilla = "01892"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1376,11 +1376,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01417"
+id = "modelo-200-page-018b-casilla-02147"
 offset = 1594
 length = 17
 kind = "casilla"
-casilla = "01417"
+casilla = "02147"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1390,11 +1390,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01418"
+id = "modelo-200-page-018b-casilla-02148"
 offset = 1611
 length = 17
 kind = "casilla"
-casilla = "01418"
+casilla = "02148"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1404,11 +1404,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02785"
+id = "modelo-200-page-018b-casilla-02149"
 offset = 1628
 length = 17
 kind = "casilla"
-casilla = "02785"
+casilla = "02149"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1418,11 +1418,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01419"
+id = "modelo-200-page-018b-casilla-02150"
 offset = 1645
 length = 17
 kind = "casilla"
-casilla = "01419"
+casilla = "02150"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1432,11 +1432,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01420"
+id = "modelo-200-page-018b-casilla-02151"
 offset = 1662
 length = 17
 kind = "casilla"
-casilla = "01420"
+casilla = "02151"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1446,11 +1446,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01421"
+id = "modelo-200-page-018b-casilla-02152"
 offset = 1679
 length = 17
 kind = "casilla"
-casilla = "01421"
+casilla = "02152"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1460,11 +1460,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01422"
+id = "modelo-200-page-018b-casilla-02153"
 offset = 1696
 length = 17
 kind = "casilla"
-casilla = "01422"
+casilla = "02153"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1474,11 +1474,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02786"
+id = "modelo-200-page-018b-casilla-02154"
 offset = 1713
 length = 17
 kind = "casilla"
-casilla = "02786"
+casilla = "02154"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1488,11 +1488,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02787"
+id = "modelo-200-page-018b-casilla-02155"
 offset = 1730
 length = 17
 kind = "casilla"
-casilla = "02787"
+casilla = "02155"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1502,11 +1502,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02788"
+id = "modelo-200-page-018b-casilla-02156"
 offset = 1747
 length = 17
 kind = "casilla"
-casilla = "02788"
+casilla = "02156"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1516,11 +1516,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02789"
+id = "modelo-200-page-018b-casilla-02157"
 offset = 1764
 length = 17
 kind = "casilla"
-casilla = "02789"
+casilla = "02157"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1530,11 +1530,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02790"
+id = "modelo-200-page-018b-casilla-02158"
 offset = 1781
 length = 17
 kind = "casilla"
-casilla = "02790"
+casilla = "02158"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1544,11 +1544,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00479"
+id = "modelo-200-page-018b-casilla-02159"
 offset = 1798
 length = 17
 kind = "casilla"
-casilla = "00479"
+casilla = "02159"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1558,11 +1558,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02792"
+id = "modelo-200-page-018b-casilla-02160"
 offset = 1815
 length = 17
 kind = "casilla"
-casilla = "02792"
+casilla = "02160"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1572,11 +1572,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02793"
+id = "modelo-200-page-018b-casilla-02161"
 offset = 1832
 length = 17
 kind = "casilla"
-casilla = "02793"
+casilla = "02161"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1586,11 +1586,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02794"
+id = "modelo-200-page-018b-casilla-02162"
 offset = 1849
 length = 17
 kind = "casilla"
-casilla = "02794"
+casilla = "02162"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1600,11 +1600,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02795"
+id = "modelo-200-page-018b-casilla-02163"
 offset = 1866
 length = 17
 kind = "casilla"
-casilla = "02795"
+casilla = "02163"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1614,11 +1614,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00481"
+id = "modelo-200-page-018b-casilla-02164"
 offset = 1883
 length = 17
 kind = "casilla"
-casilla = "00481"
+casilla = "02164"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1628,11 +1628,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00499"
+id = "modelo-200-page-018b-casilla-02165"
 offset = 1900
 length = 17
 kind = "casilla"
-casilla = "00499"
+casilla = "02165"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1642,11 +1642,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00502"
+id = "modelo-200-page-018b-casilla-02166"
 offset = 1917
 length = 17
 kind = "casilla"
-casilla = "00502"
+casilla = "02166"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1656,11 +1656,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00503"
+id = "modelo-200-page-018b-casilla-02167"
 offset = 1934
 length = 17
 kind = "casilla"
-casilla = "00503"
+casilla = "02167"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1670,11 +1670,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00504"
+id = "modelo-200-page-018b-casilla-02168"
 offset = 1951
 length = 17
 kind = "casilla"
-casilla = "00504"
+casilla = "02168"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1684,11 +1684,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03603"
+id = "modelo-200-page-018b-casilla-02169"
 offset = 1968
 length = 17
 kind = "casilla"
-casilla = "03603"
+casilla = "02169"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1698,11 +1698,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00511"
+id = "modelo-200-page-018b-casilla-02170"
 offset = 1985
 length = 17
 kind = "casilla"
-casilla = "00511"
+casilla = "02170"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1712,11 +1712,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00513"
+id = "modelo-200-page-018b-casilla-02171"
 offset = 2002
 length = 17
 kind = "casilla"
-casilla = "00513"
+casilla = "02171"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1726,11 +1726,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00812"
+id = "modelo-200-page-018b-casilla-02172"
 offset = 2019
 length = 17
 kind = "casilla"
-casilla = "00812"
+casilla = "02172"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1740,11 +1740,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00816"
+id = "modelo-200-page-018b-casilla-02173"
 offset = 2036
 length = 17
 kind = "casilla"
-casilla = "00816"
+casilla = "02173"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1754,11 +1754,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03604"
+id = "modelo-200-page-018b-casilla-02174"
 offset = 2053
 length = 17
 kind = "casilla"
-casilla = "03604"
+casilla = "02174"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1768,11 +1768,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03605"
+id = "modelo-200-page-018b-casilla-02175"
 offset = 2070
 length = 17
 kind = "casilla"
-casilla = "03605"
+casilla = "02175"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1782,11 +1782,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", 
 source_refs = ["aeat-dr-200-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03606"
+id = "modelo-200-page-018b-casilla-01309"
 offset = 2087
 length = 17
 kind = "casilla"
-casilla = "03606"
+casilla = "01309"
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -1795,560 +1795,3 @@ signed = true
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03607"
-offset = 2104
-length = 17
-kind = "casilla"
-casilla = "03607"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03608"
-offset = 2121
-length = 17
-kind = "casilla"
-casilla = "03608"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03609"
-offset = 2138
-length = 17
-kind = "casilla"
-casilla = "03609"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03610"
-offset = 2155
-length = 17
-kind = "casilla"
-casilla = "03610"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03611"
-offset = 2172
-length = 17
-kind = "casilla"
-casilla = "03611"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03612"
-offset = 2189
-length = 17
-kind = "casilla"
-casilla = "03612"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01561"
-offset = 2206
-length = 17
-kind = "casilla"
-casilla = "01561"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01562"
-offset = 2223
-length = 17
-kind = "casilla"
-casilla = "01562"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01563"
-offset = 2240
-length = 17
-kind = "casilla"
-casilla = "01563"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01564"
-offset = 2257
-length = 17
-kind = "casilla"
-casilla = "01564"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01565"
-offset = 2274
-length = 17
-kind = "casilla"
-casilla = "01565"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01566"
-offset = 2291
-length = 17
-kind = "casilla"
-casilla = "01566"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01567"
-offset = 2308
-length = 17
-kind = "casilla"
-casilla = "01567"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01568"
-offset = 2325
-length = 17
-kind = "casilla"
-casilla = "01568"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01569"
-offset = 2342
-length = 17
-kind = "casilla"
-casilla = "01569"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01570"
-offset = 2359
-length = 17
-kind = "casilla"
-casilla = "01570"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00393"
-offset = 2376
-length = 17
-kind = "casilla"
-casilla = "00393"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00150"
-offset = 2393
-length = 17
-kind = "casilla"
-casilla = "00150"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00506"
-offset = 2410
-length = 17
-kind = "casilla"
-casilla = "00506"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01423"
-offset = 2427
-length = 17
-kind = "casilla"
-casilla = "01423"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01424"
-offset = 2444
-length = 17
-kind = "casilla"
-casilla = "01424"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01425"
-offset = 2461
-length = 17
-kind = "casilla"
-casilla = "01425"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02796"
-offset = 2478
-length = 17
-kind = "casilla"
-casilla = "02796"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02797"
-offset = 2495
-length = 17
-kind = "casilla"
-casilla = "02797"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02798"
-offset = 2512
-length = 17
-kind = "casilla"
-casilla = "02798"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-02799"
-offset = 2529
-length = 17
-kind = "casilla"
-casilla = "02799"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00817"
-offset = 2546
-length = 17
-kind = "casilla"
-casilla = "00817"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00878"
-offset = 2563
-length = 17
-kind = "casilla"
-casilla = "00878"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00879"
-offset = 2580
-length = 17
-kind = "casilla"
-casilla = "00879"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-00882"
-offset = 2597
-length = 17
-kind = "casilla"
-casilla = "00882"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03613"
-offset = 2614
-length = 17
-kind = "casilla"
-casilla = "03613"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03614"
-offset = 2631
-length = 17
-kind = "casilla"
-casilla = "03614"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03615"
-offset = 2648
-length = 17
-kind = "casilla"
-casilla = "03615"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-03616"
-offset = 2665
-length = 17
-kind = "casilla"
-casilla = "03616"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01579"
-offset = 2682
-length = 17
-kind = "casilla"
-casilla = "01579"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01580"
-offset = 2699
-length = 17
-kind = "casilla"
-casilla = "01580"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01581"
-offset = 2716
-length = 17
-kind = "casilla"
-casilla = "01581"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-casilla-01582"
-offset = 2733
-length = 17
-kind = "casilla"
-casilla = "01582"
-data_type = "money"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = true
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-filler-pos-2750"
-offset = 2750
-length = 200
-kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-200-page-020c-filler-pos-2950"
-offset = 2950
-length = 12
-kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025"]

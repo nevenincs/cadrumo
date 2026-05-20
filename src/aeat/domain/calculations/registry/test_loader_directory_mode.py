@@ -33,7 +33,7 @@ from ._loader import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 _MAX_SINGLE_FILE_MODELO_LINES = 2_000
-_MAX_TOML_FRAGMENT_LINES = 4_000
+_MAX_TOML_FRAGMENT_LINES = 2_200
 _MAX_TOML_ROW_CHARS = 800
 
 
