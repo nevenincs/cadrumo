@@ -164,4 +164,4 @@ def test_singleton_semantic_role_warning_count_does_not_regress() -> None:
         and "appears on exactly one casilla" in str(item.message)
     ]
 
-    assert len(singleton_warnings) <= 239, singleton_warnings[:10]
+    assert len(singleton_warnings) <= 235, singleton_warnings[:10]

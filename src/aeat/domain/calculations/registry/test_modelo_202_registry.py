@@ -25,6 +25,18 @@ def test_committed_modelo_202_validates_against_catalogues() -> None:
     assert set(modelo.revisions) == {"2019-2022", "2023-2024", "2025-y-siguientes"}
 
 
+def test_committed_modelo_202_marks_2025_only_b2_rate_bands_as_intentional_singletons() -> None:
+    modelo, _catalogues = _load_modelo_202()
+    revision = modelo.revisions["2025-y-siguientes"]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+
+    for casilla_id in ("61", "62", "64", "65"):
+        casilla = casillas_by_id[casilla_id]
+        assert casilla.semantic_role_cardinality == "intentional_singleton"
+        assert casilla.semantic_role_cardinality_reason is not None
+        assert "2025-only" in casilla.semantic_role_cardinality_reason
+
+
 def test_committed_modelo_202_static_cross_reference_and_construct_are_declared() -> None:
     modelo, catalogues = _load_modelo_202()
     snapshot = build_snapshot(

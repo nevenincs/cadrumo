@@ -290,3 +290,5 @@ need an explicit policy.
 - [ ] `W06.P16.S107` - classify each warning group as missing sibling coverage, intentional singleton, or role-name typo.
 - [x] `W06.P16.S108` - land the first burn-down cluster by normalizing M390 annual IVA cuota roles to the shared IVA cuota taxonomy used by M303/M322/M353; singleton-warning baseline lowered from 242 to 239.
 - [x] `W06.P16.S109` - add a regression surface that makes the singleton warning count visible and prevents accidental increases outside intentional role rollout commits; baseline cap test added to `test_cross_revision_drift.py`.
+- [x] `W06.P16.S110` - add generic `semantic_role_cardinality = "intentional_singleton"` support with required reason and stale-marker validation; apply it to M202 2025-only Mod. 40.3 LIS B2 tipo 3/tipo 4 base and percentage roles.
+- [ ] `W06.P16.S111` - restore full-corpus warning inventory once concurrent dirty M100 semantic-role WIP is repaired; current full registry validation is blocked by M100 `irpf_*_nif` data_type drift and required-role gate failures for `base_imponible_irpf`.

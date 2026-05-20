@@ -1486,6 +1486,8 @@ class CasillaDefinition(RegistryModel):
     constraints: CasillaConstraints | None = None
     form_number: str | None = Field(default=None, min_length=1, max_length=16)
     semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
+    semantic_role_cardinality: Literal["shared", "intentional_singleton"] = "shared"
+    semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
     aliases: tuple[CasillaAlias, ...] = ()
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -1500,6 +1502,20 @@ class CasillaDefinition(RegistryModel):
             raise RegistryValidationError(f"bound casilla {self.id!r} must declare binding")
         if self.input_kind == "bound" and self.formula is not None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
+        if self.semantic_role_cardinality == "intentional_singleton":
+            if self.semantic_role is None:
+                raise RegistryValidationError(
+                    f"casilla {self.id!r} declares intentional singleton role cardinality without semantic_role"
+                )
+            if self.semantic_role_cardinality_reason is None:
+                raise RegistryValidationError(
+                    f"casilla {self.id!r} declares intentional singleton role cardinality without reason"
+                )
+        elif self.semantic_role_cardinality_reason is not None:
+            raise RegistryValidationError(
+                f"casilla {self.id!r} declares semantic_role_cardinality_reason "
+                "without intentional singleton cardinality"
+            )
         return self
 
 
