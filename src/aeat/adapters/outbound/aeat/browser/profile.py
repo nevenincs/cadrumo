@@ -7,7 +7,28 @@ from pathlib import Path
 
 from .....core.config import Settings as _Settings
 
-_BROWSER_DEFAULTS = _Settings()
+
+def _browser_locale_default() -> str | None:
+    """Resolve the default browser locale lazily.
+
+    ``Settings()`` constructs the full pydantic-settings object,
+    which validates the external-constants payload. Building it at
+    module-import time meant a transient external-constants /
+    model disagreement could crash an unrelated command — even
+    ``--help`` of a verb that never touches the browser — with a raw
+    ``ExternalConstants`` ``ValidationError``. Deferring the
+    construction to first use (when a ``Profile`` is actually
+    instantiated) confines any settings-data drift to the code path
+    that genuinely needs the browser adapter.
+    """
+
+    return _Settings().aeat_browser_locale
+
+
+def _browser_timezone_default() -> str | None:
+    """Resolve the default browser timezone lazily (see :func:`_browser_locale_default`)."""
+
+    return _Settings().aeat_browser_timezone
 
 
 @dataclass
@@ -26,8 +47,8 @@ class Profile:
     name: str
     storage_state_path: Path
     user_agent: str | None = None
-    locale: str | None = field(default_factory=lambda: _BROWSER_DEFAULTS.aeat_browser_locale)
-    timezone_id: str | None = field(default_factory=lambda: _BROWSER_DEFAULTS.aeat_browser_timezone)
+    locale: str | None = field(default_factory=_browser_locale_default)
+    timezone_id: str | None = field(default_factory=_browser_timezone_default)
 
     def ensure_storage_dir(self) -> None:
         """Create the parent directory for the storage state if it doesn't exist."""
