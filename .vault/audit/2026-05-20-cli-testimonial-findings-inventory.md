@@ -128,3 +128,85 @@ broken readiness checks, missing operator surfaces, help/runtime
 drift. The calculation core is sound; the operator-facing shell around
 it has real gaps - most importantly the absent deadline surface and
 the unreachable verify->file path.
+
+---
+
+# Round 2 - deeper-path personas (2026-05-20)
+
+Three further personas exercised paths the first round did not reach:
+Teresa (export / filed records), Pablo (profile lifecycle / repair),
+Nuria (deep ledger grooming). CLI confirmed healthy at dispatch
+(import-smoke: 685 modules, 0 failures).
+
+## Round-2 blockers
+
+R2-1. **The `create -> calculate -> verify -> export` path is
+unreachable.** [verified] `aeat app modelo work verify` dead-ends at
+`NO_PENDING_OBLIGATION`, and there is **no CLI command anywhere in
+`app` to register a filing obligation** (confirmed by command-surface
+grep). Hit independently by Elena and Teresa. The tool can compute a
+draft but cannot carry it through to a fileable/exportable state. This
+is the central product-completeness gap. The `modelo export` command
+itself is well-built - but structurally unreachable.
+
+R2-2. **`profile rename` is non-atomic and corrupts the registry.**
+[verified] `rename alpha beta` fails on a Windows SQLite file-lock
+(`WinError 32` on `aeat.db`) AFTER registering `beta` - `profile list`
+then shows both `alpha` and `beta`. The ghost profile cannot be
+deleted (`profile delete` rejects it as unknown). **Exit code 0
+despite the failure.**
+
+R2-3. **`allocate --business-pct 1.0` silently downgrades BUSINESS to
+MIXED** (Nuria) - a 100%-business allocation is silently recorded as
+mixed-use, i.e. silent tax-treatment corruption.
+
+R2-4. **`ledger attach` is unreachable** (Nuria) - no CLI surface
+creates the blob/evidence id it requires.
+
+R2-5. **`repair profile` loops on `missing_profile_record` without
+repairing**, and **`repair reset-state --dry-run` crashes** [verified]
+dumping a raw SQL fragment, exit 0. The recovery tooling does not
+recover.
+
+## Round-2 major
+
+- `modelo readiness` reports `ready: True` while `verify` blocks the
+  same profile - contradictory readiness signals (Teresa).
+- M303 bindings are all `borrador_capable: False` - no declaration
+  draft is generatable from the binding path (Nuria).
+- `ledger view` does not surface classification / IVA / allocation
+  state after grooming (Nuria); `allocate` without prior `classify`
+  silently marks transactions reviewed.
+- `repair reset-state --dry-run` should preview, not crash; creating a
+  second profile silently switches the active context (Pablo).
+- `AEAT_LIVE_TESTS_ENABLED` accepts `1` but not `true` (Teresa);
+  `--force` export bypass absent; period tokens validated late.
+- Spouse fields supplied at `profile create` are absent from
+  `profile show` - no round-trip verification (Pablo).
+
+## Cross-cutting themes (rounds 1 + 2, 9 personas)
+
+1. **Failures exit 0.** `profile rename`, `repair reset-state`,
+   `auth`-refusals all return exit 0 on failure - no script or wrapper
+   can detect them. Systemic.
+2. **Silent success.** `profile create` confirms nothing - every
+   persona flagged it.
+3. **Help / runtime flag drift.** `--help` flag names differ from the
+   accepted flags across `profile create`, `modelo work`, export
+   (Diego, Elena, Teresa, Pablo).
+4. **Internal field leakage.** `prompt_key`, `question_id`, `raw`,
+   raw SQL fragments surface in user-facing errors.
+5. **The operator shell is thinner than the engine.** The calculation
+   core is sound (M130, M303 compute correctly); the surrounding
+   workflow - obligations, deadlines, verify->export, repair - has
+   real holes.
+
+## Disposition
+
+These are verified findings, not speculation - the central blockers
+were reproduced directly against the live CLI. They are recorded here
+as an actionable inventory. Fixes were deliberately NOT applied in
+this pass: the CLI / persistence / `core.resources` / `workflow`
+layers are under concurrent refactor by other campaigns in this shared
+worktree (the tree was observed in a broken import state mid-session),
+so editing them now would collide. The inventory is the handoff.
