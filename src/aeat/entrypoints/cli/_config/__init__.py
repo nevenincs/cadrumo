@@ -221,6 +221,11 @@ def repair_reset_state(
 )
 def repair_profile(
     ctx: typer.Context,
+    profile: str | None = typer.Option(
+        None,
+        "--profile",
+        help=tr("cli.config.repair.profile_name_help"),
+    ),
     clear_active: bool = typer.Option(
         False,
         "--clear-active",
@@ -228,10 +233,16 @@ def repair_profile(
     ),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
 ) -> None:
-    """Inspect or safely clear a degraded active-profile pointer."""
+    """Inspect profile health or safely clear a degraded active-profile pointer."""
 
+    from ....application.workflow._models import resolve_active_bucket_id
     from ....application.workflow._profile_health import repair_active_profile_pointer
 
+    if profile is not None and not clear_active:
+        _emit_profile_record_status(ctx, profile)
+        return
+    if profile is not None and profile != resolve_active_bucket_id():
+        raise CliRefusedBoundaryError(tr("cli.config.repair.profile_clear_active_mismatch", profile=profile))
     if clear_active and not yes:
         raise CliRefusedBoundaryError(tr("cli.config.repair.profile_requires_yes"))
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=yes)
@@ -252,6 +263,90 @@ def repair_profile(
     if health.next_action:
         lines.append(f"next_action\t{health.next_action}")
     _emit(ctx, payload, lines)
+
+
+def _profile_record_missing_next_action(profile_id: str) -> str:
+    if profile_id == resolve_active_bucket_id():
+        return "aeat config repair profile --clear-active --yes"
+    return f"aeat config repair profile --profile {profile_id}"
+
+
+def _emit_profile_record_status(ctx: typer.Context, profile_id: str) -> None:
+    """Emit a non-secret status report for one registered profile bucket."""
+
+    from ....domain.user_profile import ProfileNotFoundError
+
+    pointer = read_profile_bucket(profile_id)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=profile_id))
+    try:
+        record = _read_profile_record(profile_id=profile_id, bucket_id=pointer.bucket_id)
+    except ProfileNotFoundError:
+        payload = {
+            "profile_id": profile_id,
+            "bucket_id": pointer.bucket_id,
+            "registered_bucket": True,
+            "profile_record_present": False,
+            "status": "missing_profile_record",
+            "next_action": _profile_record_missing_next_action(profile_id),
+        }
+        _emit(
+            ctx,
+            payload,
+            (
+                "readiness\tmissing_profile_record",
+                f"profile_id\t{profile_id}",
+                f"bucket_id\t{pointer.bucket_id}",
+                "registered_bucket\tpresent",
+                "profile_record\tmissing",
+                f"next_action\t{payload['next_action']}",
+            ),
+        )
+        raise typer.Exit(code=2) from None
+    except Exception as exc:
+        payload = {
+            "profile_id": profile_id,
+            "bucket_id": pointer.bucket_id,
+            "registered_bucket": True,
+            "profile_record_present": False,
+            "status": "profile_record_unreadable",
+            "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
+            "next_action": _profile_record_unreadable_next_action(profile_id),
+        }
+        _emit(
+            ctx,
+            payload,
+            (
+                "readiness\tprofile_record_unreadable",
+                f"profile_id\t{profile_id}",
+                f"bucket_id\t{pointer.bucket_id}",
+                "registered_bucket\tpresent",
+                "profile_record\tunreadable",
+                f"next_action\t{payload['next_action']}",
+            ),
+        )
+        raise typer.Exit(code=2) from exc
+    payload = {
+        "profile_id": record.profile_id,
+        "bucket_id": pointer.bucket_id,
+        "registered_bucket": True,
+        "profile_record_present": True,
+        "status": record.status.value,
+        "next_action": f"aeat config profile switch {profile_id}",
+    }
+    _emit(
+        ctx,
+        payload,
+        (
+            "readiness\tready",
+            f"profile_id\t{record.profile_id}",
+            f"bucket_id\t{pointer.bucket_id}",
+            "registered_bucket\tpresent",
+            "profile_record\tpresent",
+            f"status\t{record.status.value}",
+            f"next_action\t{payload['next_action']}",
+        ),
+    )
 
 
 @repair_app.command(
@@ -363,13 +458,20 @@ def config_profile_switch(
     """Select an existing profile as the active profile."""
 
     from ....application.user_profile._orchestration import select_profile
+    from ....core.config import override_settings
     from ....domain.user_profile import ProfileNotFoundError
 
-    repository = _profile_state()
+    pointer = read_profile_bucket(name)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
+    _assert_profile_record_present(ctx, profile_id=name, bucket_id=pointer.bucket_id)
     try:
-        repository.update(lambda current: select_profile(current, profile_id=name))
+        with override_settings(aeat_active_profile=name):
+            repository = _profile_state()
+            repository.update(lambda current: select_profile(current, profile_id=name))
     except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
+        _emit_profile_record_missing(ctx, profile_id=name, bucket_id=pointer.bucket_id)
+        raise typer.Exit(code=2) from exc
     active = resolve_active_bucket_id()
     _emit_profile_activated_event(profile_id=name, active_profile=active)
     _emit(
@@ -377,6 +479,99 @@ def config_profile_switch(
         {"active_profile": active},
         (f"active_profile\t{active or ''}",),
     )
+
+
+def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucket_id: str) -> None:
+    from ....domain.user_profile import ProfileNotFoundError
+
+    try:
+        _read_profile_record(profile_id=profile_id, bucket_id=bucket_id)
+    except ProfileNotFoundError:
+        _emit_profile_record_missing(ctx, profile_id=profile_id, bucket_id=bucket_id)
+        raise typer.Exit(code=2) from None
+    except Exception as exc:
+        _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, error=exc)
+        raise typer.Exit(code=2) from exc
+
+
+def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str) -> None:
+    payload = {
+        "profile_id": profile_id,
+        "bucket_id": bucket_id,
+        "registered_bucket": True,
+        "profile_record_present": False,
+        "configured": False,
+        "next_action": _profile_record_missing_next_action(profile_id),
+    }
+    _emit(
+        ctx,
+        payload,
+        (
+            "readiness\tmissing_profile_record",
+            f"profile_id\t{profile_id}",
+            f"bucket_id\t{bucket_id}",
+            "registered_bucket\tpresent",
+            "profile_record\tmissing",
+            f"next_action\t{payload['next_action']}",
+        ),
+    )
+
+
+def _profile_record_unreadable_next_action(profile_id: str) -> str:
+    if profile_id == resolve_active_bucket_id():
+        return "aeat config repair profile --clear-active --yes"
+    return f"aeat config repair profile --profile {profile_id}"
+
+
+def _emit_profile_record_unreadable(
+    ctx: typer.Context,
+    *,
+    profile_id: str,
+    bucket_id: str,
+    error: Exception,
+) -> None:
+    message = str(error).splitlines()[0] if str(error) else type(error).__name__
+    payload = {
+        "profile_id": profile_id,
+        "bucket_id": bucket_id,
+        "registered_bucket": True,
+        "profile_record_present": False,
+        "status": "profile_record_unreadable",
+        "error": f"{type(error).__name__}: {message}",
+        "next_action": _profile_record_unreadable_next_action(profile_id),
+    }
+    _emit(
+        ctx,
+        payload,
+        (
+            "readiness\tprofile_record_unreadable",
+            f"profile_id\t{profile_id}",
+            f"bucket_id\t{bucket_id}",
+            "registered_bucket\tpresent",
+            "profile_record\tunreadable",
+            f"next_action\t{payload['next_action']}",
+        ),
+    )
+
+
+def _read_profile_record(*, profile_id: str, bucket_id: str):
+    """Read a profile record under a bucket session scoped to that profile."""
+
+    from ....adapters.persistence.storage import (
+        activate_master_key_provider,
+        get_master_key_provider,
+        has_active_bucket_session,
+    )
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.workflow._models import resolve_active_bucket_id
+    from ....core.config import override_settings
+
+    if bucket_id == resolve_active_bucket_id() and has_active_bucket_session():
+        return build_lifecycle_service(bucket_id=bucket_id).read(profile_id)
+    with override_settings(aeat_active_profile=bucket_id):
+        service = build_lifecycle_service(bucket_id=bucket_id)
+        with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=bucket_id):
+            return service.read(profile_id)
 
 
 def _emit_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
@@ -452,7 +647,6 @@ def config_profile_show(
     from ....application.user_profile._projections import record_to_path_values
     from ....domain.user_profile import ProfileNotFoundError
 
-    _profile_state().load()
     target = name or resolve_active_bucket_id()
     if target is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
@@ -461,9 +655,13 @@ def config_profile_show(
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(target)
+        record = _read_profile_record(profile_id=target, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target)) from exc
+        _emit_profile_record_missing(ctx, profile_id=target, bucket_id=pointer.bucket_id)
+        raise typer.Exit(code=2) from exc
+    except Exception as exc:
+        _emit_profile_record_unreadable(ctx, profile_id=target, bucket_id=pointer.bucket_id, error=exc)
+        raise typer.Exit(code=2) from exc
     report = service._validator.validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     values = record_to_path_values(record)
@@ -924,6 +1122,21 @@ def config_status(ctx: typer.Context) -> None:
 
     profile_health = assess_active_profile_health()
     active_profile = profile_health.active_profile
+    if profile_health.status == "none":
+        payload = {
+            "active_profile": None,
+            "registered_profile": False,
+            "configured": False,
+        }
+        _emit(
+            ctx,
+            payload,
+            (
+                tr("cli.config.status.empty_profile"),
+                f"next_action\t{profile_health.next_action}",
+            ),
+        )
+        return
     if profile_health.status == "dangling_pointer":
         payload = {
             "active_profile": active_profile,
