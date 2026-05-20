@@ -10,9 +10,9 @@ removed or metadata flipped without surfacing as a load error.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ....application.storage.calc_sheets._records import (
     SheetCellAddress,
@@ -27,7 +27,6 @@ from ._calc_sheets_pull import (
     PullCoverageDiscrepancy,
     PullMetadata,
     PullResult,
-    RelationEdit,
     RowSetCellEdit,
     RowSetEdit,
     verify_pull_coverage,
@@ -170,7 +169,7 @@ def test_pull_coverage_discrepancy_model_is_strict_frozen_forbid_extras() -> Non
         expected="x",
         observed="y",
     )
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         PullCoverageDiscrepancy.model_validate(
             {
                 "kind": "metadata_mismatch",
