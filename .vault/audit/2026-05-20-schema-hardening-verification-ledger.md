@@ -104,7 +104,8 @@ All five are manual-input leaves with no `formula`, `binding`, or
 | R4 | M200 deducciones coherence | DONE (no defect) | suspected fracture | 853 casillas, 62 roles, 0 incoherent |
 | R5 | 561 escaped-quote re-verification | IN PROGRESS | 561 | 114 boolean-flag clean; AEIP family defect found |
 | R6 | singleton-role review | OPEN | 506 | - |
-| R7 | Full semantic-correctness agent sweep | IN PROGRESS | - | M200 done (1250 corrections); M100 consolidating |
+| R7 | Full semantic-correctness agent sweep | DONE | - | M200 1250 + M100 2155 corrections applied |
+| R10 | M123/130/131 calc-test regressions | IN PROGRESS | 10 | 7 stale tests fixed; 3 registry bugs pending |
 | R8 | Source-data changes re-verification | DONE | 5 change groups | all verified safe |
 | R9 | Downstream test suite (registry) | DONE | - | 1572 pass, 10 fail (pre-date this session) |
 | R10 | M123/130/131 calculation-test regressions | OPEN | 10 | - |
@@ -208,6 +209,50 @@ grupo-fiscal group-exit; `actividades_economicas` amortization family
 was actually I+D-specific), `_flag` suffix on money/decimal fields,
 over-coarse roles lumping distinct LIS concepts, and outlier casillas
 swept in from adjacent sections.
+
+### 2026-05-20 - R7 M100 semantic sweep applied
+
+All 1,560 M100 roles reviewed by 12 semantic-review agents against full
+labels across all 6 revisions. ~24% flagged; a consolidation agent
+resolved 8 cross-batch conflicts into 2,155 per-(id,revision)
+corrections (1,302 renames, 809 split rows, 44 outliers). Applied.
+
+Two integration issues surfaced and were resolved:
+- **Required-role gate conflict.** R7 split `base_imponible_irpf`, but
+  the `_REQUIRED_ROLE_LABEL_PATTERNS` hard-flip rule pins casillas
+  labelled "Base imponible general/imputada" to that exact role. The
+  12 affected casillas (0259/0435 x 6 revisions) were reverted to
+  `base_imponible_irpf`; the rest of the split stands.
+- **Foreign-id type split.** Renaming `landlord_nif`/`tenant_nif` to
+  `irpf_arrendador_nif`/`irpf_inmueble_arrendatario_nif` merged the
+  strict-`nif` casillas with the `text`-typed foreign-fiscal-id-capable
+  variants. The 38 `text` casillas were split into
+  `irpf_arrendador_nif_o_id_extranjero` /
+  `irpf_inmueble_arrendatario_nif_o_id_extranjero`.
+
+Post-state: 0 data_type divergences, 0 constraints divergences, all 13
+drift-gate tests pass.
+
+### 2026-05-20 - singleton-role guard re-baselined
+
+The comprehensive R7 sweep split coarse roles into precise per-concept
+roles. Single-revision modelos (M200) intrinsically produce one casilla
+per concept, so single-occurrence roles are the expected shape. The
+`test_singleton_semantic_role_warning_count_does_not_regress` threshold
+was re-baselined 235 -> 560. Justification recorded: all 541 current
+singletons were checked by an edit-distance near-duplicate scan; the 49
+lexically-close pairs are genuine distinctions (`ascendiente` vs
+`descendiente`, numbered catastral slots) - zero actual typos.
+
+### 2026-05-20 - R10 stale calculation tests fixed
+
+7 of the 10 R10 failures were stale tests (registry correct): the M130
++ M131 `result.entries` assertions did not include the
+`saldo-negativo-fin-periodo` computed casilla added by feature commit
+`eb4306024`; the M123 test used pre-fragmentation casilla ids. Updated
+all 7 assertions to match the correct registry. The remaining 3 (a
+malformed self-referencing carry-forward relation) are a genuine
+registry structural bug, tracked open.
 
 ### 2026-05-20 - R9 registry test suite (honest finding)
 
