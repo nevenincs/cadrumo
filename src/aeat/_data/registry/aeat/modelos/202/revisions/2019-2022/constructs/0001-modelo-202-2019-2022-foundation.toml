@@ -21,6 +21,8 @@ workbook_parity_refs = ["modelo-202-2019-2022-dr-xlsx"]
 live_cross_references = ["modelo-202-2019-2022-static-documentation"]
 export_layouts = ["modelo-202-2019-2022-fichero-boe"]
 bindings = ["modelo-202-2019-2022-pagos-fraccionados-anteriores"]
+relations = ["modelo-202-2019-2022-rel-self-pagos-2p", "modelo-202-2019-2022-rel-self-pagos-3p"]
+dependency_classifications = ["modelo-202-2019-2022-dep-self-prior-pagos"]
 application_links = [
     "modelo-202-2019-2022-portal",
     "modelo-202-2019-2022-calculation",
