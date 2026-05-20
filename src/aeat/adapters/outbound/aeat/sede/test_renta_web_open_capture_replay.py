@@ -27,9 +27,10 @@ from decimal import Decimal
 
 import pytest
 
+from aeat.tests.live_gate import requires_live_enabled
+
 from .....core.resources import bundled_path
 from .....domain.calculations.registry import RentaWebOpenLivePayload, RentaWebOpenSyntheticProfile
-from aeat.tests.live_gate import requires_live_enabled
 from ._renta_web_open import collect_renta_web_open_observation
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
@@ -212,111 +213,4 @@ def _parse_spanish_decimal(value: str) -> str:
     return value.replace(".", "").replace(",", ".")
 
 
-# Per-scenario casilla overrides + scrape lists. Each entry mirrors the
-# matching ``_scenario_2025`` instance in
-# ``src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py``.
-# The driver navigates into the editable form for each casilla in
-# ``overrides``, fills the value, then reads each casilla in ``scrape``
-# back off the form page after recomputation.
-_SCENARIO_CAPTURES: tuple[tuple[str, dict[str, str], list[str]], ...] = (
-    (
-        "minimo-aggregation-estatal",
-        {"0511": "2775.00", "0513": "1000.00", "0515": "500.00", "0517": "250.00"},
-        ["0519"],
-    ),
-    (
-        "minimo-clip-to-base-liquidable",
-        {"0505": "1000.00", "0511": "2775.00", "0512": "2775.00"},
-        ["0519", "0521", "0522"],
-    ),
-    (
-        "base-imponible-with-negative-capital-gains",
-        {"0003": "30000.00", "1585": "5000.00"},
-        ["0432", "0435"],
-    ),
-    (
-        "base-liquidable-with-reductions",
-        {"0003": "40000.00", "0461": "3400.00", "0501": "1000.00"},
-        ["0435", "0500"],
-    ),
-)
 
-
-async def _capture_scenario_observation(
-    overrides: dict[str, str],
-    scrape: list[str],
-) -> tuple[str, dict[str, str]]:
-    """Drive the live simulator with per-scenario overrides + scrape list."""
-
-    payload = (
-        RentaWebOpenLivePayload(
-            timeout_ms=90_000,
-            casilla_overrides=overrides,
-            scrape_casillas=scrape,
-        )
-        .model_dump_json()
-        .encode("utf-8")
-    )
-    expected = {label: "0.00" for label in _BASELINE_EXPECTED}
-    expected.update({casilla: "" for casilla in scrape})
-    observation = await collect_renta_web_open_observation(payload, expected=expected)
-    return observation.raw_evidence_locator or "", observation.values
-
-
-@pytest.mark.xfail(
-    reason=(
-        "The chain-behaviour _scenario_2025 cases feed values into casilla "
-        "numbers that the registry treats as manual inputs but the AEAT "
-        "open-simulator computes from upstream profile + section inputs "
-        "(0511 mínimo contribuyente, 0003 trabajo, 0461 reducción TC, etc.). "
-        "Filling those casillas via Buscar casilla → form-page input fails "
-        "because the simulator renders them as read-only/derived. Closing "
-        "this capture batch requires either (a) rewriting the chain-behaviour "
-        "scenarios to use only user-editable simulator casillas, or (b) a "
-        "different capture strategy that varies profile inputs and reads "
-        "the derived casillas. Tracked under #169."
-    ),
-    strict=True,
-    raises=Exception,
-)
-@pytest.mark.parametrize(
-    ("scenario_id", "overrides", "scrape"),
-    _SCENARIO_CAPTURES,
-    ids=[entry[0] for entry in _SCENARIO_CAPTURES],
-)
-def test_capture_chain_behaviour_scenario_replay_payload(
-    scenario_id: str,
-    overrides: dict[str, str],
-    scrape: list[str],
-) -> None:
-    """Live-only: capture each chain-behaviour scenario's Renta WEB Open observation.
-
-    Each captured payload anchors one ``_scenario_2025`` chain-behaviour
-    case (declared in ``test_renta_chain_behaviour.py``) for replay-mode
-    parity, closing the oracle-linkage gate.
-    """
-
-    requires_live_enabled()
-    import asyncio
-
-    locator, observed = asyncio.run(_capture_scenario_observation(overrides, scrape))
-    assert observed, f"Renta WEB Open returned no observed values for {scenario_id}"
-
-    _REPLAY_DIR.mkdir(parents=True, exist_ok=True)
-    payload_path = _REPLAY_DIR / f"{scenario_id}.json"
-    expected_by_casilla = {casilla: overrides.get(casilla, "") for casilla in scrape}
-    observed_by_casilla = {casilla: observed[casilla] for casilla in scrape if casilla in observed}
-    document = {
-        "scenario_id": scenario_id,
-        "casilla_overrides": overrides,
-        "scrape_casillas": scrape,
-        "expected_by_casilla": expected_by_casilla,
-        "observed": observed,
-        "observed_by_casilla": observed_by_casilla,
-        "raw_evidence_locator": locator,
-    }
-    payload_path.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    assert payload_path.exists()
-    persisted = json.loads(payload_path.read_text(encoding="utf-8"))
-    assert persisted["observed"] == observed

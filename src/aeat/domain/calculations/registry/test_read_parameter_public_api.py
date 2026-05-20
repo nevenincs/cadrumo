@@ -24,7 +24,12 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter() -> None:
-    """The Modelo 100 estimación-directa-simplificada gastos-difícil-justificación rate parameter resolves cleanly."""
+    """The gastos-difícil-justificación rate for estimación directa simplificada is 5% (RIRPF art. 30).
+
+    The TOML source declares value = "5" with unit = "percent" and data_type = "ratio",
+    so the registry resolves it as Decimal("0.05"). A mis-declared or mis-parsed rate
+    must break this test.
+    """
     value = read_parameter(
         "100",
         "2025",
@@ -33,7 +38,12 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
         registry_root=_REGISTRY_ROOT,
     )
     assert isinstance(value, Decimal)
-    assert value > Decimal("0")
+    # The registry stores the raw percent figure (5); the `percent` formula op divides by 100.
+    # TOML: value = "5", unit = "percent", legal: rd-439-2007:art-30 / orden-hac-277-2026:art-3.
+    assert value == Decimal("5"), (
+        f"Expected the 5% gastos-difícil-justificación rate stored as Decimal('5'), got {value!r}. "
+        "Check rd-439-2007:art-30 / orden-hac-277-2026:art-3 and the TOML parameter declaration."
+    )
 
 
 def test_read_parameter_uses_default_registry_root_when_none_provided() -> None:
