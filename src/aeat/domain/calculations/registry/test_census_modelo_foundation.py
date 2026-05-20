@@ -1,13 +1,14 @@
 """Tests for census modelo foundation ownership."""
 
 from __future__ import annotations
-from aeat.core.resources import resources
 
 import logging
 from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
+
+from aeat.core.resources import resources
 
 from ....core.errors import get_registered_error_code
 from . import (
@@ -21,19 +22,19 @@ from . import (
     CensoModeloRole,
     RegistrySnapshotError,
     RegistryValidationError,
-    census_modelo_ownership,
-    census_modelo_ownership_map,
-    get_census_modelo_foundation_contract,
-    is_active_census_modelo,
-    resolve_census_modelo_foundation,
-    resolve_census_modelo_work_unit_foundation,
+    censo_modelo_ownership,
+    censo_modelo_ownership_map,
+    get_censo_modelo_foundation_contract,
+    is_active_censo_modelo,
+    resolve_censo_modelo_foundation,
+    resolve_censo_modelo_work_unit_foundation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_census_foundation_owner_is_registry_domain() -> None:
-    records = census_modelo_ownership_map()
+    records = censo_modelo_ownership_map()
 
     assert {record.modelo for record in records} == {"036", "037"}
     assert {record.service_owner for record in records} == {CENSUS_MODELO_SERVICE_OWNER}
@@ -41,7 +42,7 @@ def test_census_foundation_owner_is_registry_domain() -> None:
 
 
 def test_census_foundation_contract_records_service_error_codes() -> None:
-    contract = get_census_modelo_foundation_contract()
+    contract = get_censo_modelo_foundation_contract()
 
     assert contract.schema_version == "1"
     assert contract.service_owner == CENSUS_MODELO_SERVICE_OWNER
@@ -54,18 +55,18 @@ def test_census_foundation_contract_records_service_error_codes() -> None:
 
 
 def test_modelo_036_is_active_event_triggered_foundation() -> None:
-    record = census_modelo_ownership("036")
+    record = censo_modelo_ownership("036")
 
     assert record.role is CensoModeloRole.ACTIVE_FOUNDATION
     assert record.event_kinds == CENSUS_MODELO_EVENT_KINDS
     assert record.event_kinds == ("alta", "modificacion", "baja")
     assert record.active_work_unit_allowed is True
     assert record.superseded_by is None
-    assert is_active_census_modelo("036") is True
+    assert is_active_censo_modelo("036") is True
 
 
 def test_modelo_036_foundation_event_kinds_are_registry_backed() -> None:
-    record = census_modelo_ownership("036")
+    record = censo_modelo_ownership("036")
     snapshot = resources().modelos.authority.snapshot("036", filing_year=2025, period="alta")
 
     assert record.event_kinds == snapshot.revision.period_selector.periods
@@ -76,7 +77,7 @@ def test_active_036_work_unit_periods_resolve_from_committed_registry_revision()
     snapshot = resources().modelos.authority.snapshot("036", filing_year=2025, period="alta")
 
     for period in snapshot.revision.period_selector.periods:
-        result = resolve_census_modelo_work_unit_foundation(modelo="036", period=period)
+        result = resolve_censo_modelo_work_unit_foundation(modelo="036", period=period)
 
         assert result is not None
         assert result.modelo == "036"
@@ -86,13 +87,13 @@ def test_active_036_work_unit_periods_resolve_from_committed_registry_revision()
 
 
 def test_modelo_037_is_historical_metadata_superseded_by_036() -> None:
-    record = census_modelo_ownership("037")
+    record = censo_modelo_ownership("037")
 
     assert record.role is CensoModeloRole.HISTORICAL_METADATA
     assert record.event_kinds == ()
     assert record.active_work_unit_allowed is False
     assert record.superseded_by == "036"
-    assert is_active_census_modelo("037") is False
+    assert is_active_censo_modelo("037") is False
 
 
 def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_source() -> None:
@@ -102,7 +103,7 @@ def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_s
         authority.validate_modelo("037")
 
     assert "boe-modelo-037-historical-suppression" in authority.catalogues.sources
-    record = census_modelo_ownership("037")
+    record = censo_modelo_ownership("037")
     assert record.role is CensoModeloRole.HISTORICAL_METADATA
     assert record.active_work_unit_allowed is False
     assert record.superseded_by == "036"
@@ -111,13 +112,13 @@ def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_s
 @pytest.mark.parametrize("modelo", ["36", "37", " 36 ", " 37 ", " 036 ", " 037 "])
 def test_census_modelo_lookup_rejects_shortened_aliases(modelo: str) -> None:
     with pytest.raises(RegistryValidationError, match="unknown census modelo code"):
-        census_modelo_ownership(modelo)
+        censo_modelo_ownership(modelo)
 
 
 def test_census_modelo_lookup_rejects_integer_codes() -> None:
     not_a_string = cast(Any, 36)
     with pytest.raises(RegistryValidationError, match="must be a string"):
-        census_modelo_ownership(not_a_string)
+        censo_modelo_ownership(not_a_string)
 
 
 def test_census_foundation_command_accepts_active_036_event_kind() -> None:
@@ -198,7 +199,7 @@ def test_census_foundation_result_rejects_active_037_work_unit() -> None:
 
 
 def test_resolve_census_modelo_foundation_returns_active_036_decision() -> None:
-    result = resolve_census_modelo_foundation(
+    result = resolve_censo_modelo_foundation(
         CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.BAJA)
     )
 
@@ -222,7 +223,7 @@ def test_resolve_census_modelo_foundation_returns_active_036_decision() -> None:
 
 
 def test_resolve_census_modelo_foundation_returns_historical_037_decision() -> None:
-    result = resolve_census_modelo_foundation(CensoModeloFoundationCommand(modelo="037"))
+    result = resolve_censo_modelo_foundation(CensoModeloFoundationCommand(modelo="037"))
 
     assert result.modelo == "037"
     assert result.role is CensoModeloRole.HISTORICAL_METADATA
@@ -243,7 +244,7 @@ def test_resolve_census_modelo_foundation_returns_historical_037_decision() -> N
 
 
 def test_resolve_census_modelo_work_unit_foundation_routes_active_census_modelo() -> None:
-    active = resolve_census_modelo_work_unit_foundation(modelo="036", period="alta")
+    active = resolve_censo_modelo_work_unit_foundation(modelo="036", period="alta")
 
     assert active is not None
     assert active.modelo == "036"
@@ -252,28 +253,28 @@ def test_resolve_census_modelo_work_unit_foundation_routes_active_census_modelo(
 
 def test_resolve_census_modelo_work_unit_foundation_rejects_historical_037() -> None:
     with pytest.raises(RegistryValidationError, match="historical census metadata only"):
-        resolve_census_modelo_work_unit_foundation(modelo="037", period="alta")
+        resolve_censo_modelo_work_unit_foundation(modelo="037", period="alta")
 
 
 @pytest.mark.parametrize("modelo", ["36", "37", " 36 ", " 37 ", " 036 ", " 037 "])
 def test_resolve_census_modelo_work_unit_foundation_rejects_census_code_aliases(modelo: str) -> None:
     with pytest.raises(RegistryValidationError, match="unknown census modelo code"):
-        resolve_census_modelo_work_unit_foundation(modelo=modelo, period="alta")
+        resolve_censo_modelo_work_unit_foundation(modelo=modelo, period="alta")
 
 
 def test_resolve_census_modelo_work_unit_foundation_ignores_non_census_modelo() -> None:
-    assert resolve_census_modelo_work_unit_foundation(modelo="303", period="1T") is None
+    assert resolve_censo_modelo_work_unit_foundation(modelo="303", period="1T") is None
 
 
 def test_resolve_census_modelo_work_unit_foundation_rejects_non_string_modelo() -> None:
     not_a_string = cast(Any, 303)
     with pytest.raises(RegistryValidationError, match="must be a string"):
-        resolve_census_modelo_work_unit_foundation(modelo=not_a_string, period="1T")
+        resolve_censo_modelo_work_unit_foundation(modelo=not_a_string, period="1T")
 
 
 def test_resolve_census_modelo_work_unit_foundation_rejects_unknown_census_period() -> None:
     with pytest.raises(RegistryValidationError, match="census event periods"):
-        resolve_census_modelo_work_unit_foundation(modelo="036", period="1T")
+        resolve_censo_modelo_work_unit_foundation(modelo="036", period="1T")
 
 
 def test_census_foundation_log_fields_are_strict_and_immutable() -> None:
@@ -308,7 +309,7 @@ def test_resolve_census_modelo_foundation_emits_structured_debug_log(
 ) -> None:
     caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._censo_modelos")
 
-    resolve_census_modelo_foundation(
+    resolve_censo_modelo_foundation(
         CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.MODIFICACION)
     )
 
