@@ -186,7 +186,12 @@ def register_active_profile(
         # Rollback reverts the directory + manifest AND clears the
         # pointer so a crashed create leaves no phantom profile in
         # the manifest scan and no dangling active-profile pointer.
-        remove_profile_bucket_directory(profile_id)
+        # Directory removal is best-effort here: a residual bucket
+        # must not mask the original registration failure being raised.
+        try:
+            remove_profile_bucket_directory(profile_id)
+        except OSError:
+            pass
         _clear_active_profile_pointer()
         raise
     updated = state.model_copy(update={"updated_at": utc_now()})
@@ -260,6 +265,13 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     deleted. When the rename is refused — Windows denies renaming a
     directory whose SQLite file was only just closed — the directory
     is removed in place so the bucket does not survive the reset.
+
+    Raises :class:`OSError` if the in-place removal also fails and the
+    bucket directory genuinely survives on disk, so a caller (config
+    reset in particular) never reports a removed profile while the
+    bucket is still present. The atomic-create rollback caller wraps
+    this call best-effort, since a residual directory there must not
+    mask the original registration failure.
     """
 
     import gc
@@ -277,6 +289,11 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
         # release lingering handles and remove the directory in place.
         gc.collect()
         shutil.rmtree(target, ignore_errors=True)
+        if target.exists():
+            raise OSError(
+                f"profile bucket directory {target} could not be removed "
+                "(a file handle is still held); the bucket survives on disk"
+            )
         return
     shutil.rmtree(trash, ignore_errors=True)
 

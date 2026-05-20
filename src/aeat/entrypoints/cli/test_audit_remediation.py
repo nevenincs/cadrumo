@@ -148,8 +148,10 @@ def test_typer_help_sources_are_direct_translations() -> None:
         # tool exposed through its own `python -m aeat.diagnostics`
         # entrypoint, not the operator-facing `aeat` CLI. Its help
         # text is intentionally English-only and outside the operator
-        # localization contract this test enforces.
-        if "diagnostics" in module.parts:
+        # localization contract this test enforces. The exclusion is
+        # anchored to exactly `src/aeat/diagnostics/` so an unrelated
+        # nested `diagnostics/` directory elsewhere is still scanned.
+        if module.parts[:3] == ("src", "aeat", "diagnostics"):
             continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
         failures.extend(_typer_help_violations(tree, module=module))
