@@ -62,7 +62,9 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         # 0528, 0529, 0530, and 0531 are now computed via lookup_bracket
         # / lookup_bracket_by_ccaa against the state and Madrid autonomic
         # bracket parameters; they cannot be supplied as inputs.
-        "0540": Decimal("0"),
+        # 0536, 0538, and 0540 are now computed via the art.66 ahorro-base
+        # estatal escala (lookup_bracket / subtract); they cannot be
+        # supplied as inputs.
         "0541": Decimal("0"),
         "0544": Decimal("0"),
         "0549": Decimal("0"),

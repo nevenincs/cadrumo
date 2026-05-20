@@ -585,3 +585,65 @@ set is independently green.
   autonomic-cession modelos (M100 + M714 + future).
 - The amortización + inventario Pydantic surface becomes reusable for
   Modelo 200 (IS) when that modelo's calc-verify lands.
+
+## Amendment (2026-05-21): art.66 ahorro-base estatal escala authored as registry data
+
+The shipped M100 registry carried casillas `0536`
+(`irpf_escala_sobre_base_ahorro_estatal`), `0538`
+(`irpf_escala_sobre_minimo_ahorro_estatal`), and `0540`
+(`irpf_cuota_base_liquidable_ahorro_estatal`) with `ley-35-2006:art-66`
+in their `legal_refs`, but no formula produced them and no art.66
+`bracket_table` parameter existed. Downstream formulas already consumed
+`0540` (`0542` tipo medio de gravamen estatal del ahorro; `0545` cuota
+íntegra estatal) as if populated — a latent defect that left the
+savings-base contribution to the cuota íntegra estatal silently zero.
+
+This amendment records that the IRPF art.66 ahorro-base **estatal**
+progressive scale (escala del ahorro, parte estatal) is now authored
+as registry data, structurally mirroring the already-shipped
+general-base estatal escala (`renta-{year}-escala-estatal-base-general`
++ its `lookup_bracket` / `subtract` formulas).
+
+- **Parameter** — `renta-{year}-escala-estatal-base-ahorro`, a
+  `bracket_table` with `bracket_axis = "filing_period"` and
+  `legal_refs = ["ley-35-2006:art-66"]`. Brackets are BOE/AEAT-grounded
+  per ejercicio (see below).
+- **`[0536]`** — `lookup_bracket([0510]
+  base liquidable del ahorro, renta-{year}-escala-estatal-base-ahorro)`:
+  the estatal escala applied to the base liquidable del ahorro.
+- **`[0538]`** — `lookup_bracket([0522]
+  mínimo personal y familiar imputado a la base del ahorro,
+  renta-{year}-escala-estatal-base-ahorro)`: the same escala applied to
+  the mínimo allocated to the savings base (art.66.1.2.º minoración).
+- **`[0540]`** — `subtract([0536], [0538])`: cuota correspondiente a la
+  base liquidable del ahorro, parte estatal. This now feeds `0542` and
+  `0545` with a non-zero value.
+
+The art.66 estatal savings brackets are grounded against the AEAT
+*Manual práctico de Renta*, section "Gravamen de la base liquidable
+del ahorro — Gravamen estatal — Normativa: Art. 66.1 Ley IRPF", and
+the BOE consolidated text of art.66 Ley 35/2006 (BOE-A-2006-20764).
+The tariff was amended across ejercicios — Ley 11/2020 (effective
+2021), Ley 31/2022 (effective 2023), Ley 7/2024 (effective 2025) —
+and each year's brackets are grounded to that year's manual:
+
+- **2020** (3 brackets): 0–6.000 @ 9,5%; 6.000–50.000 @ 10,5%;
+  >50.000 @ 11,5%.
+- **2021–2022** (4 brackets, Ley 11/2020 added the >200.000 tier):
+  0–6.000 @ 9,5%; 6.000–50.000 @ 10,5%; 50.000–200.000 @ 11,5%;
+  >200.000 @ 13%.
+- **2023–2024** (5 brackets, Ley 31/2022 added the >300.000 tier):
+  0–6.000 @ 9,5%; 6.000–50.000 @ 10,5%; 50.000–200.000 @ 11,5%;
+  200.000–300.000 @ 13,5%; >300.000 @ 14%.
+- **2025** (5 brackets, Ley 7/2024 raised the top tier): 0–6.000 @
+  9,5%; 6.000–50.000 @ 10,5%; 50.000–200.000 @ 11,5%;
+  200.000–300.000 @ 13,5%; >300.000 @ 15%.
+
+The calc-verify oracle is the worked example on AEAT Manual Renta 2025
+Parte 1, page 954 ("Don A.B.C., residente en Aragón"): base liquidable
+del ahorro 2.800 EUR, mínimo absorbed in full by the general base —
+"Gravamen estatal 2.800 x 9,50% = 266". Expected values are
+AEAT-published (the manual worked example plus the "Incremento en
+cuota íntegra estatal" column at each breakpoint), not author-computed,
+satisfying the no-tautological-calculation-tests rule. The decision
+and scope of this ADR are otherwise unchanged.
