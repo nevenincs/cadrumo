@@ -244,15 +244,9 @@ class TestEnvFileFingerprint:
     snapshot would silently evade the drift gate.
     """
 
-    def test_env_file_change_changes_corpus_hash(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_env_file_change_changes_corpus_hash(self, tmp_path: Path) -> None:
         import hashlib
 
-        from .. import config as config_mod
-        from . import _fingerprint as fp_mod
         from ._fingerprint import compute_corpus_sha256 as _compute_corpus_sha256
 
         vault_dir = tmp_path / ".vault"
@@ -262,25 +256,22 @@ class TestEnvFileFingerprint:
         env_dir.mkdir()
         env_file = env_dir / ".env"
 
-        # Patch PROJECT_ROOT so compute_corpus_sha256 reads our temp env/.env.
-        # The function imports PROJECT_ROOT from aeat.core.config inside its body,
-        # so patch the module where the name is looked up.
-        monkeypatch.setattr(fp_mod, "PROJECT_ROOT", tmp_path, raising=False)
-        monkeypatch.setattr(config_mod, "PROJECT_ROOT", tmp_path, raising=False)
-
+        # compute_corpus_sha256 takes the .env path explicitly, so the
+        # dotfile channel is exercised against a real temp file with no
+        # PROJECT_ROOT monkeypatching.
         settings = Settings()
 
         env_file.write_text("FOO=1\n", encoding="utf-8")
-        h1 = _compute_corpus_sha256(vault_dir, settings)
+        h1 = _compute_corpus_sha256(vault_dir, settings, env_path=env_file)
 
         env_file.write_text("FOO=2\n", encoding="utf-8")
-        h2 = _compute_corpus_sha256(vault_dir, settings)
+        h2 = _compute_corpus_sha256(vault_dir, settings, env_path=env_file)
 
         assert h1 != h2, ".env edit must change corpus_sha256"
 
         # Missing .env must still produce a stable non-empty hash.
         env_file.unlink()
-        h3 = _compute_corpus_sha256(vault_dir, settings)
+        h3 = _compute_corpus_sha256(vault_dir, settings, env_path=env_file)
         assert h3 != h1 and h3 != h2
         assert len(h3) == 64
         # Deterministic: missing .env hashes the empty-string digest.
