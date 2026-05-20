@@ -786,7 +786,7 @@ class Settings(BaseSettings):
     aeat_draft_fail_on_warning: bool = Field(
         default=False,
         description=(
-            "If true, build_draft raises ModeloValidationError when any WARNING- or ERROR-severity finding is produced"
+            "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
         ),
     )
 

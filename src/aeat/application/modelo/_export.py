@@ -26,12 +26,12 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.i18n import tr
+from ...domain import filing as filing_domain
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain import filing as filing_domain
 from ...domain.deadlines import AutonomoProfile
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import (
@@ -407,7 +407,7 @@ def export_modelo_revision(
             schema_provider=schema_provider,
             approved_at=now,
         )
-    except filing_domain.ModeloExportError as exc:
+    except filing_domain.FilingExportError as exc:
         raise ModeloExportError(
             f"could not approve draft for calculation_revision_id="
             f"{command.calculation_revision_id!r}: {exc}",
@@ -428,7 +428,7 @@ def export_modelo_revision(
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
         receipt = export_draft(approved, output_path=tmp_output, headers=headers)
-    except filing_domain.ModeloExportError as exc:
+    except filing_domain.FilingExportError as exc:
         if tmp_output.exists():
             tmp_output.unlink()
         raise ModeloExportError(
