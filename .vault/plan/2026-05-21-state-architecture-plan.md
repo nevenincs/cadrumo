@@ -119,10 +119,10 @@ clean later change.
 
 Source: UUID-identity ADR + aggregate ADR.
 
-- [ ] `W05.S20` - re-key auth token/lock filenames to the UUID
+- [x] `W05.S20` - re-key auth token/lock filenames to the UUID
   prefix and relocate the token/lock directory under
   `AEAT_LOCAL_STORAGE_ROOT`.
-- [ ] `W05.S21` - confirm `AEAT_LOCAL_STORAGE_ROOT` roots every
+- [x] `W05.S21` - confirm `AEAT_LOCAL_STORAGE_ROOT` roots every
   profile store end to end - the persona harness depends on it.
 - [ ] `W05.S22` - full CLI + registry suite green; cross-store
   integrity verified; testimonial regression batch across the
@@ -136,7 +136,7 @@ Source: UUID-identity ADR + aggregate ADR.
 | W02 | aggregate + repository + unit-of-work | aggregate | complete |
 | W03 | rename collapse + name-as-id sweep | identity + aggregate | complete (S15 testimonial regression pending) |
 | W04 | canonical read-projection | read-projection | complete (engine obligation-gate rewire tracked as follow-up) |
-| W05 | one state root + full verification | identity + aggregate | in progress |
+| W05 | one state root + full verification | identity + aggregate | complete (S22 testimonial regression pending) |
 
 ## Audit cadence
 
