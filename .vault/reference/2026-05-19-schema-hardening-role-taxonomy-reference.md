@@ -52,6 +52,27 @@ Per-modelo role assignments are recorded in the cluster
 classification audits, e.g. `2026-05-19-schema-hardening-m100-*`
 and `2026-05-20-schema-hardening-m200-*` under `.vault/audit/`.
 
+## Semantic-correctness verification
+
+Structural coverage is not semantic correctness. A post-enrollment
+verification campaign (tracked in
+`2026-05-20-schema-hardening-verification-ledger`) reviewed every
+role against its casillas' true labels:
+
+- A `tomllib`-based harness replaced the regex label-extraction that
+  had truncated 561 casillas' labels at escaped quotes.
+- 18 semantic-review agents read all ~2,100 roles in M100 and M200
+  against full labels; ~24% (M100) / ~22% (M200) needed a correction.
+- **3,405 role corrections applied** (M200 1,250 + M100 2,155):
+  renames, splits of over-coarse roles, and outlier reassignments.
+- Distinct roles after the sweep: **~2,426**.
+- The M200 `correcciones` cluster fracture and the M100 AEIP
+  event-deduction scatter were reconciled.
+
+The taxonomy below remains the canonical cross-modelo identity,
+monetary, address, and period role catalogue; the per-modelo detail
+lives in the `r7-*` review and consolidation audits.
+
 ## Identity roles (data_type = "nif")
 
 | role | count | example | notes |
