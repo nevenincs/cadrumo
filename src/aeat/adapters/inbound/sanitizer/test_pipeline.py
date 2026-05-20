@@ -13,6 +13,7 @@ assert:
 
 from __future__ import annotations
 
+import hashlib
 import io
 from importlib import import_module
 
@@ -20,12 +21,18 @@ import pikepdf
 import pytest
 from pydantic import SecretStr
 
-from . import fixtures as _fixtures
-from . import sanitize_pdf
+from aeat.tests import FIXTURES_DIR
+
+from . import fixtures, sanitize_pdf
 from ._errors import AlreadySanitizedError, SignaturePresentError
 from ._records import NameReplacement, NifReplacement, TokenMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
+
+# A real committed sanitised justificante; its SHA-256 is catalogued in
+# fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires
+# against it without any test-side patching of the known-SHA set.
+_SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2021-0A.pdf"
 
 
 def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
@@ -177,25 +184,27 @@ class TestRefuseIfSigned:
 
 
 class TestRefuseIfAlreadySanitized:
-    """The orchestrator refuses re-sanitising a known-sanitised SHA."""
+    """The orchestrator refuses re-sanitising a known-sanitised SHA.
 
-    def test_raises_when_source_sha_in_known_set(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        source = _build_real_world_like_pdf()
-        import hashlib
+    Both tests feed a real committed sanitised fixture whose SHA-256 is
+    genuinely a member of :data:`SANITIZED_SHAS` -- the guard is
+    exercised against the real catalogue, with no monkeypatching of the
+    known-SHA set.
+    """
 
+    def test_raises_when_source_sha_in_known_set(self) -> None:
+        source = _SANITISED_FIXTURE_PDF.read_bytes()
         sha = hashlib.sha256(source).hexdigest()
-        monkeypatch.setattr(_fixtures, "SANITIZED_SHAS", frozenset({sha}))
+        assert sha in fixtures.SANITIZED_SHAS, "fixture SHA must already be catalogued"
 
         with pytest.raises(AlreadySanitizedError, match=r"already|sanitized") as exc:
             sanitize_pdf(source, TokenMap())
         assert exc.value.source_sha256 == sha
 
-    def test_can_opt_out_via_flag(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        source = _build_real_world_like_pdf()
-        import hashlib
-
+    def test_can_opt_out_via_flag(self) -> None:
+        source = _SANITISED_FIXTURE_PDF.read_bytes()
         sha = hashlib.sha256(source).hexdigest()
-        monkeypatch.setattr(_fixtures, "SANITIZED_SHAS", frozenset({sha}))
+        assert sha in fixtures.SANITIZED_SHAS, "fixture SHA must already be catalogued"
 
         result = sanitize_pdf(source, TokenMap(), refuse_if_already_sanitized=False)
         assert result.source_sha256 == sha
