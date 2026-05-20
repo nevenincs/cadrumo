@@ -1,7 +1,6 @@
 import pytest
 from typer.testing import CliRunner
 
-from aeat.application.workflow._persistence import WorkflowStateRepository
 from aeat.entrypoints.cli._config.__init__ import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -13,10 +12,6 @@ def runner() -> CliRunner:
 
 
 def test_apoderado_status_fails_without_profile(runner: CliRunner) -> None:
-    state_repo = WorkflowStateRepository()
-    state = state_repo.load()
-    state_repo.save(state)
-
     result = runner.invoke(app, ["auth", "apoderado", "status"])
     assert result.exit_code == 1
     assert result.exception is not None
