@@ -327,3 +327,4 @@ are accepting, and unexpected exceptions must keep propagating.
 ### Phase `W08.P18` - census ownership exception specificity
 
 - [x] `W08.P18.S126` - make historical M037 ownership accept only the explicit “not present in the calculation registry” snapshot error; any other `RegistrySnapshotError` now propagates instead of being swallowed.
+- [x] `W08.P18.S127` - add a registry production-code hygiene gate that rejects `except ...: pass` and `contextlib.suppress` so future exception swallowing fails in tests.
