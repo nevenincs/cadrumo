@@ -330,3 +330,4 @@ are accepting, and unexpected exceptions must keep propagating.
 - [x] `W08.P18.S127` - add a registry production-code hygiene gate that rejects `except ...: pass` and `contextlib.suppress` so future exception swallowing fails in tests.
 - [x] `W08.P18.S128` - preserve the original `AttributeError` message when extraction-profile parser resolution fails, so dotted parser validation does not hide the failing attribute lookup.
 - [x] `W08.P18.S129` - extend the registry exception hygiene gate to reject bare `except:` handlers in production registry modules.
+- [x] `W08.P18.S130` - extend the registry exception hygiene gate so broad `Exception`/`BaseException` handlers must either re-raise or log the failure.
