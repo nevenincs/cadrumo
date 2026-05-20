@@ -9,8 +9,12 @@ exclude_type_checking_imports = True
 # ── Cross-package domain isolation ───────────────────────────────────────────
 # Domain peer-packages must not import each other's private internals.
 # The calculations registry was found importing from domain.renta during
-# the linkage-design audit (defect F7). Wave 2 P04 resolved it via Protocol-
-# based dependency inversion; the production import is gone. The test edge
+# the linkage-design audit (defect F7). It is resolved via Protocol-based
+# dependency inversion: the registry validator declares the abstract
+# CrossDomainSnapshotCheck Protocol and a register_cross_domain_snapshot_check()
+# injection point; the concrete renta first-slice routing check lives in
+# aeat.domain.renta._first_slice_routing_integrity and registers itself at
+# renta package import time. The registry never names renta. The test edge
 # below remains a legitimate cross-domain reference for integration tests.
 
 [importlinter:contract:no-renta-in-registry]

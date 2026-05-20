@@ -11,7 +11,7 @@ from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
 from importlib import import_module
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, Protocol
 
 from ._bindings import (
     validate_invoice_binding_definition,
@@ -2267,7 +2267,7 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_algorithm_provider_refs(checker, revision)
     _check_algorithm_binding_refs(checker, revision)
     _check_export_layout_refs(checker, revision)
-    _check_renta_first_slice_routing(checker, snapshot)
+    _check_cross_domain_snapshot_routing(checker, snapshot)
     _check_binding_selector_shapes(checker, revision)
 
     if checker.failures:
@@ -2468,26 +2468,54 @@ def _check_export_layout_refs(checker: _IdReferenceChecker, revision: ModeloRevi
                 checker.chk_legal_source_refs(efp, field.legal_refs, field.source_refs)
 
 
-def _check_renta_first_slice_routing(checker: _IdReferenceChecker, snapshot: RegistrySnapshot) -> None:
-    """Cross-domain referential integrity.
+class CrossDomainSnapshotCheck(Protocol):
+    """Snapshot-time referential-integrity check owned by a peer domain.
 
-    When the snapshot describes modelo 100, every casilla mentioned in the
-    renta first-slice routing table MUST be a real casilla on the revision.
-    A divergence between the BOE-prescribed routing in
-    :mod:`aeat.domain.renta._first_slice_routing` and the modelo-100
-    registry casilla set is a snapshot-build error, not a silent runtime
-    KeyError when the renta validator runs.
+    A peer domain (for example :mod:`aeat.domain.renta`) may need to
+    assert that the casilla ids it routes to are real casillas on a
+    registry snapshot. The registry must not import the peer domain
+    directly — that reverses the dependency direction the restructure
+    ADR fixes (defect F7, Wave 2 P04). Instead the peer domain
+    registers a :class:`CrossDomainSnapshotCheck` via
+    :func:`register_cross_domain_snapshot_check`; the registry calls
+    every registered check at snapshot-build time without naming the
+    peer.
+
+    A check receives the modelo id and the snapshot's casilla id set
+    and returns a list of failure strings (empty when consistent).
     """
-    if snapshot.modelo.id != "100":
-        return
-    from ...renta._first_slice_routing import first_slice_target_casillas
 
-    missing_first_slice = first_slice_target_casillas() - checker.casilla_ids
-    if missing_first_slice:
-        checker.failures.append(
-            f"{checker.prefix}: renta first-slice routing targets casillas "
-            f"{sorted(missing_first_slice)!r} that are absent from the modelo-100 revision"
-        )
+    def __call__(self, modelo_id: str, casilla_ids: frozenset[str]) -> list[str]: ...
+
+
+_CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
+
+
+def register_cross_domain_snapshot_check(check: CrossDomainSnapshotCheck) -> None:
+    """Register a peer-domain snapshot referential-integrity check.
+
+    Idempotent: registering the same callable twice is a no-op so a
+    peer-domain module re-imported in a fresh interpreter (or under
+    test reload) does not stack duplicate checks.
+    """
+
+    if check not in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+        _CROSS_DOMAIN_SNAPSHOT_CHECKS.append(check)
+
+
+def _check_cross_domain_snapshot_routing(checker: _IdReferenceChecker, snapshot: RegistrySnapshot) -> None:
+    """Run every registered peer-domain referential-integrity check.
+
+    The registry depends on the abstract :class:`CrossDomainSnapshotCheck`
+    Protocol only. Concrete checks (such as the renta first-slice
+    routing gate) are injected by their owning domain at import time
+    via :func:`register_cross_domain_snapshot_check`.
+    """
+
+    casilla_ids = frozenset(checker.casilla_ids)
+    for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+        for failure in check(snapshot.modelo.id, casilla_ids):
+            checker.failures.append(f"{checker.prefix}: {failure}")
 
 
 def _check_binding_selector_shapes(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
