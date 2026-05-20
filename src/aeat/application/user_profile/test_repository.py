@@ -10,7 +10,7 @@ import pytest
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings
+from ...core.config import Settings, override_settings
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
@@ -80,6 +80,31 @@ def test_lifecycle_round_trip_isolates_by_bucket(secure_objects: SecureObjectRep
     reloaded = bucket_a.load("operator")
     assert reloaded.profile_id == "operator"
     assert reloaded.facts == profile.facts
+
+
+def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path) -> None:
+    profile = UserProfileRecord(
+        profile_id="operator",
+        display_name="Operator",
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+    )
+    with (
+        EphemeralMasterKeyProvider(),
+        override_settings(
+            aeat_database_url=f"sqlite:///{(tmp_path / 'active-profile.db').as_posix()}",
+            aeat_local_storage_root=tmp_path,
+            aeat_active_profile=None,
+        ),
+    ):
+        bucket_a = UserProfileLifecycleRepository(bucket_id="bucket-a")
+        bucket_b = UserProfileLifecycleRepository(bucket_id="bucket-b")
+
+        bucket_a.save(profile)
+
+        assert bucket_a.exists("operator") is True
+        assert bucket_b.exists("operator") is False
+        assert (tmp_path / "buckets" / "bucket-a" / "db" / "aeat.db").is_file()
+        assert not (tmp_path / "active-profile.db").exists()
 
 
 def test_lifecycle_load_missing_raises_profile_not_found(secure_objects: SecureObjectRepository) -> None:
