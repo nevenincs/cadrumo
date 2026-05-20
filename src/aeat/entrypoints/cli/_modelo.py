@@ -159,47 +159,47 @@ def modelo_readiness(
         ),
     ] = None,
 ) -> None:
-    """Walk the ProfilePreflightService over the active profile for one modelo target.
+    """Report active-profile readiness for one modelo target.
 
     Carries the behaviour previously surfaced as
     ``aeat config profile preflight``. Lives on the modelo surface so
     the readiness check sits alongside the other modelo verbs that
     operate on ``(modelo, revision, year, period)`` tuples.
+
+    Consumes the canonical :func:`build_operator_state_projection`: the
+    readiness datum is computed once in the projection, so this surface
+    cannot disagree with any other operator-facing surface.
     """
 
-    from ...application.user_profile._orchestration import (
-        _shared_schema,
-        build_lifecycle_service,
+    from ...application.state_projection import (
+        ModeloReadinessRequest,
+        build_operator_state_projection,
     )
-    from ...application.user_profile._preflight import ProfilePreflightService
     from ...application.workflow._models import resolve_active_bucket_id
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket_by_id
     from ...core.i18n import tr as _tr
     from ...domain.user_profile import ProfileNotFoundError
     from ._errors import CliRefusedBoundaryError
 
-    active = resolve_active_bucket_id()
-    if active is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    pointer = read_profile_bucket_by_id(active)
-    if pointer is None:
-        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
-    try:
-        record = service.read(active)
-    except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=active)) from exc
-    preflight = ProfilePreflightService(schema=_shared_schema())
-    report = preflight.report(
-        record=record,
+    request = ModeloReadinessRequest(
         modelo=modelo,
         revision_id=revision_id,
         filing_year=filing_year,
         period=period or "",
     )
+    try:
+        projection = build_operator_state_projection(modelo_readiness_requests=(request,))
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(
+            _tr("cli.config.profile.unknown_profile", name=resolve_active_bucket_id() or "")
+        ) from exc
+    if not projection.modelo_readiness:
+        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+    report = projection.modelo_readiness[0]
     payload = report.model_dump(mode="json")
     lines = [
-        f"profile_id\t{record.profile_id}",
+        f"profile_id\t{report.profile_id}",
         f"modelo\t{modelo}",
         f"revision_id\t{revision_id}",
         f"filing_year\t{filing_year}",
