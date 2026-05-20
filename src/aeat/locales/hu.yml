@@ -751,7 +751,7 @@ cli:
       tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
-      help: Az összes konfigurációs kulcs és aktuális értékének listázása
+      help: Az összes regisztrált profil listázása, az aktív megjelölésével
     profile:
       already_exists: A(z) %{name} profil már létezik. Válassz másik cél-azonosítót.
       census:
