@@ -870,14 +870,14 @@ cli:
     workflow_help: Show config workflow help
   diagnostics:
     browser:
-      http_status_label: cli.diagnostics.browser.http_status_label
-      markers_label: cli.diagnostics.browser.markers_label
-      markers_none: cli.diagnostics.browser.markers_none
-      observed_at_label: cli.diagnostics.browser.observed_at_label
-      retry_after_label: cli.diagnostics.browser.retry_after_label
-      state_label: cli.diagnostics.browser.state_label
-      target_browser: cli.diagnostics.browser.target_browser
-      target_label: cli.diagnostics.browser.target_label
+      http_status_label: HTTP status
+      markers_label: Markers
+      markers_none: none
+      observed_at_label: Observed at
+      retry_after_label: Retry after
+      state_label: State
+      target_browser: browser
+      target_label: Target
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
     next_action:

@@ -899,14 +899,14 @@ cli:
     workflow_help: Konfigurációs munkafolyamat súgójának megjelenítése
   diagnostics:
     browser:
-      http_status_label: cli.diagnostics.browser.http_status_label
-      markers_label: cli.diagnostics.browser.markers_label
-      markers_none: cli.diagnostics.browser.markers_none
-      observed_at_label: cli.diagnostics.browser.observed_at_label
-      retry_after_label: cli.diagnostics.browser.retry_after_label
-      state_label: cli.diagnostics.browser.state_label
-      target_browser: cli.diagnostics.browser.target_browser
-      target_label: cli.diagnostics.browser.target_label
+      http_status_label: HTTP-állapot
+      markers_label: Jelölők
+      markers_none: nincs
+      observed_at_label: Megfigyelve
+      retry_after_label: Újrapróbálkozás ezután
+      state_label: Állapot
+      target_browser: böngésző
+      target_label: Cél
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
     next_action:
