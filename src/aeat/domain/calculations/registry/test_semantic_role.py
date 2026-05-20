@@ -214,6 +214,16 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("taxpayer-nif" in str(w.message) for w in captured)
 
+    def test_single_occurrence_near_duplicate_role_emits_warning(self) -> None:
+        typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
+        canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
+        canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
+        m = _modelo("180", "2023", [typo, canonical_a, canonical_b])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert any("taxpayer_niff" in str(w.message) for w in captured)
+
     def test_intentional_singleton_role_does_not_emit_warning(self) -> None:
         a = _casilla(
             cid="a",
