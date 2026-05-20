@@ -1,0 +1,189 @@
+"""Cross-store roundtrip and unit-of-work tests for :class:`ProfileRepository`.
+
+The repository is the single, sole writer of a logical profile's
+physical stores. These tests exercise it against real adapters — a real
+:class:`EphemeralMasterKeyProvider`, a real per-bucket SQLite engine,
+and the real filesystem — never a mock.
+
+Three contracts are pinned:
+
+- **Roundtrip**: a fully-populated :class:`ProfileAggregate` survives a
+  ``create`` / ``load`` cycle with strict pydantic equality.
+- **Anti-tautology**: corrupting one on-disk store and reloading
+  surfaces the cross-store drift via :class:`ProfileIntegrityError` —
+  never a silent inconsistent aggregate.
+- **Unit-of-work**: a real induced failure partway through ``create``
+  leaves no half-live profile — no manifest, no usable record, no
+  stranded active-profile pointer.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core._bucket_pointer import BucketPointer
+from ...core._bucket_pointer_io import read_pointer, write_pointer
+from ...core.config import override_settings
+from ...domain.user_profile import (
+    ProfileSchemaValidationError,
+    UserProfileFact,
+    UserProfileStatus,
+)
+from ..workflow._profile_bucket_scan import read_profile_bucket
+from ._integrity import ProfileIntegrityError
+from ._profile_repository import ProfileRepository
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+# The minimum schema-valid fact set the user-profile schema accepts.
+_VALID_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Roundtrip Operator"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="provenance.source", value="manual_cli"),
+)
+# An incomplete fact set: the required ``iva.regime`` field is dropped,
+# so the schema validator rejects the record inside the lifecycle
+# service's ``register`` — a real failure, not a patched one.
+_INCOMPLETE_FACTS: tuple[UserProfileFact, ...] = tuple(
+    fact for fact in _VALID_FACTS if fact.path != "iva.regime"
+)
+
+
+@pytest.fixture
+def _backend(tmp_path: Path) -> Iterator[Path]:
+    """A real per-bucket storage root with an active master-key session."""
+
+    dispose_engine()
+    provider = EphemeralMasterKeyProvider()
+    provider.__enter__()
+    try:
+        with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None):
+            yield tmp_path
+    finally:
+        provider.__exit__(None, None, None)
+        dispose_engine()
+
+
+def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
+    """A populated aggregate survives create / load with strict equality.
+
+    Every defaultable field on the aggregate is set to a non-default
+    value through ``create``: a multi-fact record (not the empty
+    default), a non-default lifecycle path. A save-drops-field /
+    load-re-defaults-field regression would surface as inequality.
+    """
+
+    repository = ProfileRepository()
+    created = repository.create(label="Roundtrip Operator", facts=_VALID_FACTS)
+
+    loaded = repository.load(created.profile_id)
+
+    assert loaded == created
+    assert loaded.label == "Roundtrip Operator"
+    assert loaded.status is UserProfileStatus.ACTIVE
+    assert loaded.record.facts == _VALID_FACTS
+    assert loaded.recovery_enrolled is False
+    assert loaded.kdf_params.algorithm == "argon2id"
+
+
+def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
+    """Corrupting the manifest ``bucket_id`` makes load raise, not lie.
+
+    The companion roundtrip asserts a clean create / load cycle. This
+    test mutates one on-disk store — the plaintext manifest's
+    ``bucket_id`` — so the three identity claims (directory name,
+    manifest, secure record) no longer agree. ``load`` must raise
+    :class:`ProfileIntegrityError`; if it returned an aggregate the
+    drift would be served silently and every load is tautological.
+    """
+
+    repository = ProfileRepository()
+    created = repository.create(label="Drift Operator", facts=_VALID_FACTS)
+
+    # Corrupt the manifest in place: rewrite bucket_id to a foreign UUID.
+    target = manifest_path(bucket_paths(_backend, created.profile_id))
+    corrupted = target.read_text(encoding="utf-8").replace(
+        f'bucket_id = "{created.profile_id}"',
+        'bucket_id = "00000000-0000-4000-8000-000000000000"',
+    )
+    assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
+    target.write_text(corrupted, encoding="utf-8")
+
+    with pytest.raises(ProfileIntegrityError):
+        repository.load(created.profile_id)
+
+
+def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
+    """A real failure inside create leaves no reclaimable-garbage profile.
+
+    The incomplete fact set makes the schema validator reject the
+    encrypted-record write inside the lifecycle service — a genuine
+    failure, induced by withholding a schema-required field, not a
+    mock. After the failure the unit-of-work rollback must leave: no
+    manifest (so the manifest scan reports nothing), no usable profile
+    record, and the active-profile pointer exactly as it was found.
+    """
+
+    # A pre-existing profile so "pointer restored to its prior state"
+    # is a non-trivial assertion: the pointer must end at the survivor.
+    repository = ProfileRepository()
+    survivor = repository.create(label="Survivor", facts=_VALID_FACTS)
+    write_pointer(_backend, BucketPointer(bucket_id=survivor.profile_id, schema_version=1))
+    prior_pointer = read_pointer(_backend)
+    assert prior_pointer is not None
+
+    with pytest.raises(ProfileSchemaValidationError):
+        repository.create(label="Victim", facts=_INCOMPLETE_FACTS)
+
+    # No half-live profile: no manifest scan hit, no pointer drift.
+    assert read_profile_bucket("Victim", root=_backend) is None
+    pointer_after = read_pointer(_backend)
+    assert pointer_after is not None
+    assert pointer_after.bucket_id == survivor.profile_id, (
+        "the failed create stranded the active-profile pointer"
+    )
+    # The survivor is untouched and still loads cleanly.
+    reloaded = repository.load(survivor.profile_id)
+    assert reloaded.label == "Survivor"
+
+
+def test_delete_tombstones_and_clears_the_pointer(_backend: Path) -> None:
+    """``delete`` tombstones the record and clears the active pointer."""
+
+    repository = ProfileRepository()
+    created = repository.create(label="To Delete", facts=_VALID_FACTS)
+    write_pointer(_backend, BucketPointer(bucket_id=created.profile_id, schema_version=1))
+
+    deleted = repository.delete(created.profile_id)
+
+    assert deleted.status is UserProfileStatus.TOMBSTONED
+    assert deleted.record.status is UserProfileStatus.TOMBSTONED
+    assert read_pointer(_backend) is None
+    # The bucket directory + manifest survive — tombstone, not destroy.
+    assert manifest_path(bucket_paths(_backend, created.profile_id)).is_file()
+
+
+def test_list_summarises_every_registered_profile(_backend: Path) -> None:
+    """``list`` returns one typed summary per registered profile."""
+
+    repository = ProfileRepository()
+    first = repository.create(label="First", facts=_VALID_FACTS)
+    second = repository.create(label="Second", facts=_VALID_FACTS)
+
+    summaries = repository.list()
+    by_id = {summary.profile_id: summary for summary in summaries}
+
+    assert set(by_id) == {first.profile_id, second.profile_id}
+    assert by_id[first.profile_id].label == "First"
+    assert by_id[second.profile_id].label == "Second"
+    assert all(summary.status is UserProfileStatus.ACTIVE for summary in summaries)

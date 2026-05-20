@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
+from ...adapters.persistence.storage.bucket._layout import provision_bucket_directory
+from ...adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...application.user_profile._orchestration import _ensure_profile_bucket_manifest
 from ...application.user_profile._testing import register_minimal_profile
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import read_pointer, write_pointer
@@ -17,6 +20,38 @@ from ._persistence import workflow_state_repository
 from ._profile_health import assess_active_profile_health, repair_active_profile_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _stage_bucket_manifest(root: Path, bucket_id: str, *, label: str) -> None:
+    """Stage a bucket directory + manifest with no secure record.
+
+    A bucket directory and plaintext manifest with no encrypted
+    profile-value row is exactly the ``missing_profile_record`` torn
+    state the health probe must detect; this helper materialises that
+    state directly through the bucket-layout primitives.
+    """
+
+    paths = provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=label,
+            created_at=datetime.now(UTC),
+            last_unlocked_at=None,
+            kdf_params=ManifestKdfParams(
+                algorithm="argon2id",
+                version=0x13,
+                memory_cost=19_456,
+                time_cost=2,
+                parallelism=1,
+                salt=b"0123456789abcdef",
+                output_length=32,
+            ),
+            recovery_enrolled=False,
+            schema_version=1,
+        ),
+    )
 
 
 def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) -> None:
@@ -30,7 +65,7 @@ def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) ->
             aeat_local_storage_root=tmp_path,
             aeat_active_profile=None,
         ):
-            _ensure_profile_bucket_manifest("operator", label="Operator")
+            _stage_bucket_manifest(tmp_path, "operator", label="Operator")
             write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
 
             health = assess_active_profile_health()
@@ -58,7 +93,7 @@ def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
             aeat_local_storage_root=tmp_path,
             aeat_active_profile=None,
         ):
-            _ensure_profile_bucket_manifest("operator", label="Operator")
+            _stage_bucket_manifest(tmp_path, "operator", label="Operator")
             write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
 
             dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)

@@ -34,6 +34,7 @@ from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.user_profile._orchestration import (
     _write_active_profile_pointer,
+    capture_active_profile_pointer,
     register_active_profile,
 )
 from aeat.application.workflow._persistence import workflow_state_repository
@@ -77,8 +78,16 @@ def _backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
 
 
 def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
-    """Run the atomic create for ``profile_id`` against ``facts``."""
+    """Run the atomic create for ``profile_id`` against ``facts``.
 
+    The genuine pre-create pointer is captured BEFORE the early
+    load-order pointer write so the repository's rollback restores the
+    pointer to exactly its pre-create state — the same cold-start
+    sequence ``initialize_workspace`` and the wizard ``create`` path
+    perform.
+    """
+
+    prior_pointer_text = capture_active_profile_pointer()
     _write_active_profile_pointer(profile_id)
     fact_tuple = tuple(UserProfileFact(path=path, value=value) for path, value in facts.items())
     with EphemeralMasterKeyProvider():
@@ -88,6 +97,7 @@ def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
                 profile_id=profile_id,
                 display_name=profile_id.capitalize(),
                 facts=fact_tuple,
+                prior_pointer_text=prior_pointer_text,
             )
         )
 
