@@ -12,7 +12,7 @@ from typer.testing import CliRunner, Result
 
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.entrypoints.cli._config import profile_app
+from aeat.entrypoints.cli._config import profile_app, repair_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -60,6 +60,76 @@ def test_config_profile_switch_activates_existing_profile(cli_runner: CliRunner)
 def test_config_profile_switch_refuses_unknown_profile(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(profile_app, ["switch", "ghost"])
     assert result.exit_code != 0
+
+
+def test_config_profile_switch_reports_manifest_without_profile_record(cli_runner: CliRunner) -> None:
+    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
+
+    _ensure_profile_bucket_manifest("operator")
+
+    result = cli_runner.invoke(profile_app, ["switch", "operator"])
+
+    assert result.exit_code == 2, result.output
+    assert "readiness\tmissing_profile_record" in result.output
+    assert "profile_record\tmissing" in result.output
+    assert "unknown profile" not in result.output.lower()
+
+
+def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runner: CliRunner) -> None:
+    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
+
+    _ensure_profile_bucket_manifest("operator")
+
+    result = cli_runner.invoke(profile_app, ["show", "operator"])
+
+    assert result.exit_code == 2, result.output
+    assert "readiness\tmissing_profile_record" in result.output
+    assert "next_action\taeat config repair profile --profile operator" in result.output
+    assert "next_action\taeat config profile switch operator" not in result.output
+
+
+def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunner) -> None:
+    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
+
+    _ensure_profile_bucket_manifest("operator")
+
+    result = cli_runner.invoke(
+        profile_app,
+        [
+            "create",
+            "operator",
+            "--quiet",
+            "--accept-defaults",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Operator",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "already exists" in result.output
+
+
+def test_repair_profile_named_active_clear_active_clears_pointer(cli_runner: CliRunner, tmp_path: Path) -> None:
+    from aeat.application.user_profile._orchestration import (
+        _ensure_profile_bucket_manifest,
+        _write_active_profile_pointer,
+    )
+    from aeat.core._bucket_pointer_io import read_pointer
+
+    _ensure_profile_bucket_manifest("operator")
+    _write_active_profile_pointer("operator")
+
+    result = cli_runner.invoke(repair_app, ["profile", "--profile", "operator", "--clear-active", "--yes"])
+
+    assert result.exit_code == 0, result.output
+    assert "cleared_pointer\tTrue" in result.output
+    assert read_pointer(tmp_path) is None
 
 
 def test_config_profile_create_refuses_existing_profile(cli_runner: CliRunner) -> None:
@@ -211,3 +281,114 @@ def test_config_profile_show_refuses_when_no_active_profile(cli_runner: CliRunne
     with override_settings(aeat_active_profile=None):
         result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code != 0
+
+
+# --- Fix 1: profile create emits visible confirmation on success ---
+
+
+def test_config_profile_create_quiet_emits_confirmation(cli_runner: CliRunner) -> None:
+    """``profile create --quiet`` must emit a confirmation line, not silent exit-0.
+
+    Before fix: zero output, exit 0 — silent success indistinguishable
+    from silent failure.  After fix: at least ``profile\\t<name>`` and
+    ``status\\tcreated`` are emitted so the operator knows the command
+    succeeded.
+    """
+
+    result = cli_runner.invoke(
+        profile_app,
+        [
+            "create",
+            "freshprofile",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Test",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "profile\tfreshprofile" in result.output
+    assert "status\tcreated" in result.output
+    assert "next\t" in result.output
+
+
+def test_config_profile_edit_quiet_emits_updated_confirmation(cli_runner: CliRunner) -> None:
+    """``profile edit --quiet`` must emit a confirmation line with ``status\\tupdated``."""
+
+    _seed("editme")
+
+    result = cli_runner.invoke(
+        profile_app,
+        [
+            "edit",
+            "editme",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Edited",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "profile\teditme" in result.output
+    assert "status\tupdated" in result.output
+
+
+# --- Fix 3: degraded profile status exits non-zero ---
+
+
+def test_config_profile_status_exits_nonzero_for_dangling_pointer(cli_runner: CliRunner) -> None:
+    """``config profile status`` exits non-zero when the active profile
+    has a dangling pointer (registered but no manifest bucket)."""
+
+    from aeat.application.user_profile._orchestration import _write_active_profile_pointer
+
+    # Write a pointer to a non-existent bucket so status sees dangling_pointer.
+    _write_active_profile_pointer("phantom")
+
+    result = cli_runner.invoke(profile_app, ["status"])
+
+    assert result.exit_code != 0, result.output
+    assert "dangling_pointer" in result.output
+
+
+# --- Fix 5: NIF/CIF validation errors do not leak internal field names ---
+
+
+def test_config_profile_create_nif_error_does_not_leak_internal_keys(cli_runner: CliRunner) -> None:
+    """A bad NIF/CIF must produce a plain-language error without exposing
+    ``prompt_key``, ``question_id``, or raw internal dict dumps."""
+
+    result = cli_runner.invoke(
+        profile_app,
+        [
+            "create",
+            "badnif",
+            "--quiet",
+            "--tax-id",
+            "NOTANIF",
+            "--name",
+            "Test",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "prompt_key" not in result.output
+    assert "question_id" not in result.output
+    # The plain-language diagnostic must be present.
+    assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
