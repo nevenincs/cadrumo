@@ -1270,7 +1270,7 @@ def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
     """Return the bare casilla numbers in a revision's calculation closure.
 
     The *calculation closure* is the set of casillas the cross-connecting
-    calculation engine traverses for one modelo revision:
+    calculation engine traverses **within this modelo revision**:
 
     - every ``formula.target`` casilla;
     - every casilla referenced inside any ``formula.expression``, walked
@@ -1280,9 +1280,18 @@ def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
       a ``binding`` (a bound endpoint) — the engine-visible casillas;
     - every binding source casilla named in a binding selector
       (``source_casillas`` / ``source_output``);
-    - every relation source-output casilla;
     - every verification-expectation operand casilla
       (``computed_casillas`` and the ``reconciliation_totals`` targets).
+
+    A ``RelationDefinition.source_output`` is intentionally **not** part
+    of this closure. A relation always carries a ``source_modelo``, and
+    its ``source_output`` is a casilla on that *foreign* modelo, not on
+    the modelo whose closure is being derived. The cross-modelo edge
+    enters the current modelo through ``relation.target_binding``, whose
+    bound casilla is already a current-modelo binding endpoint counted
+    above. Folding a foreign-modelo casilla number into this closure
+    would make the completeness gate demand it from the wrong modelo's
+    Diseño.
 
     References are reduced to bare casilla numbers: a reference token may
     be either a casilla ``id`` or a bare ``number``, and a declared
@@ -1315,8 +1324,6 @@ def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
         source_output = binding.selector.get("source_output")
         if isinstance(source_output, str):
             closure.add(_as_number(source_output))
-    for relation in revision.relations:
-        closure.add(_as_number(relation.source_output))
     for expectation in revision.verification_expectations:
         for ref in expectation.computed_casillas:
             closure.add(_as_number(ref))
@@ -1336,16 +1343,28 @@ def derive_calculation_completeness_casillas(
     Derives the modelo's *calculation closure*
     (:func:`calculation_closure_numbers`) and intersects it with the
     official AEAT Diseño de Registros at ``path``: the Diseño is
-    authoritative on each casilla's record segment and the closure
-    bounds the result to the casillas the calculation engine traverses.
+    authoritative on whether each casilla number exists and on which
+    record segment carries it, and the closure bounds the result to the
+    casillas the calculation engine traverses.
 
-    For a ``multi_segment`` modelo every Diseño casilla carries the
-    workbook sheet name as its ``segmento``; a closure number that the
-    Diseño places in two record segments yields two distinct identity
-    pairs, both required (the calculation may legitimately traverse the
-    same number under two segments). For a single-segment modelo
-    ``segmento`` is left unset and the bare number alone identifies the
-    casilla.
+    For a ``multi_segment`` modelo the result is *segment-aware*. The
+    same five-digit casilla number recurs across many record segments of
+    a multi-segment Diseño, but the modelo's calculation surface declares
+    each closure casilla under exactly the segment its formulas,
+    bindings, and verification expectations reference. So when a closure
+    number resolves to a declared casilla that carries an explicit
+    ``segmento``, the derivation pins the manifest identity to that
+    declared ``(segmento, number)`` pair — still verified to exist in the
+    Diseño under that segment. This is the ADR-amendment contract: the
+    manifest is the AEAT Diseño *intersected with the modelo's
+    calculation surface*, and the calculation surface, not a blind
+    every-sheet scan, decides the segment. A closure number declared
+    only without a ``segmento`` (or not declared at all) falls back to
+    the every-segment scan, so an undeclared or single-segment number
+    still surfaces.
+
+    For a single-segment modelo ``segmento`` is left unset and the bare
+    number alone identifies the casilla.
 
     A closure number absent from the Diseño is omitted: the Diseño is the
     identity authority, and a number the official form does not declare
@@ -1357,6 +1376,10 @@ def derive_calculation_completeness_casillas(
     """
 
     closure = calculation_closure_numbers(revision)
+    declared_segmentos: dict[str, set[str]] = {}
+    for casilla in revision.casillas:
+        if casilla.segmento is not None:
+            declared_segmentos.setdefault(casilla.number, set()).add(casilla.segmento)
     sheets = extract_record_design(path)
     seen: set[tuple[str | None, str]] = set()
     ordered: list[DerivedDisenoCasilla] = []
@@ -1364,12 +1387,20 @@ def derive_calculation_completeness_casillas(
         for number in _sheet_casilla_numbers(sheet):
             if number not in closure:
                 continue
-            segmento = sheet.name if multi_segment else None
-            identity = (segmento, number)
+            if not multi_segment:
+                identity: tuple[str | None, str] = (None, number)
+            else:
+                pinned_segmentos = declared_segmentos.get(number)
+                if pinned_segmentos is not None and sheet.name not in pinned_segmentos:
+                    # The calculation surface declares this closure number
+                    # under specific segment(s); a Diseño sheet outside that
+                    # set is not part of the modelo's calculation manifest.
+                    continue
+                identity = (sheet.name, number)
             if identity in seen:
                 continue
             seen.add(identity)
-            ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number))
+            ordered.append(DerivedDisenoCasilla(segmento=identity[0], number=number))
     return tuple(ordered)
 
 
