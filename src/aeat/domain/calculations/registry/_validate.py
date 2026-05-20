@@ -155,6 +155,39 @@ def _emit_combined_primary_id_failures(
         failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
 
 
+def _resolvable_casilla_references(revision: ModeloRevision) -> frozenset[str]:
+    """Return every token that resolves to a casilla within ``revision``.
+
+    A casilla reference — a formula ``casilla`` leaf or ``target``, an
+    export field ``casilla``, a relation ``source_output``, an algorithm
+    binding input or output — is segment-aware.
+
+    A reference resolves when it is either:
+
+    * a casilla ``id`` declared on the revision (the stable
+      within-revision handle), or
+    * a bare ``number`` that occurs on exactly one casilla across the
+      whole revision, so the segment is unambiguous and the bare number
+      resolves within its segment context.
+
+    A bare ``number`` that recurs across distinct record segments is
+    NOT resolvable on its own: the reference must use the
+    segment-qualified ``id`` to name the intended occurrence. Only those
+    genuinely cross-segment numbers carry that cost.
+
+    For a single-segment modelo every casilla sets ``id == number`` and
+    every number is unique, so the resolvable set is exactly the set of
+    casilla ids — identical to the pre-change ``set(casilla_by_id)``
+    behaviour. Single-segment references resolve precisely as before.
+    """
+    ids = {casilla.id for casilla in revision.casillas}
+    number_counts: dict[str, int] = {}
+    for casilla in revision.casillas:
+        number_counts[casilla.number] = number_counts.get(casilla.number, 0) + 1
+    unambiguous_numbers = {number for number, count in number_counts.items() if count == 1}
+    return frozenset(ids | unambiguous_numbers)
+
+
 def _emit_casilla_identity_failures(
     failures: list[str],
     prefix: str,
@@ -454,7 +487,11 @@ class RegistryValidator:
             classification.id: classification for classification in revision.dependency_classifications
         }
 
-        casillas = set(casilla_by_id)
+        # Segment-aware casilla reference resolution: a reference resolves
+        # against a casilla ``id`` or against an unambiguous bare
+        # ``number``. For single-segment modelos (``id == number``,
+        # every number unique) this set is exactly ``set(casilla_by_id)``.
+        casillas = set(_resolvable_casilla_references(revision))
         formulas = {formula.id: formula for formula in revision.formulas}
         bindings = set(binding_by_id)
         relations = set(relation_by_id)
