@@ -543,6 +543,7 @@ cli:
         amend_help: Construir una declaración complementaria sobre una declaración
           presentada externamente. Requiere un filing record con evidencia oficial
           importada de la AEAT
+        amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
         amendment_kind_help: Tipo legal de la amendación (complementaria o sustitutiva)
         amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
           operador)

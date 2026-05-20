@@ -530,6 +530,7 @@ cli:
         amend_help: Construir una declaració complementària sobre una declaració presentada
           externament. Requereix un filing record amb evidència oficial importada
           de l'AEAT
+        amend_missing_options: 'Una esmena requereix totes aquestes opcions: %{missing}.'
         amendment_kind_help: Tipus legal de l'amendació (complementaria o sustitutiva)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model

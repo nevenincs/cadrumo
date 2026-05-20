@@ -498,6 +498,8 @@ cli:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
         amend_help: Build a corrective amendment over an externally-filed return.
           Requires a filing record with imported AEAT-attested evidence
+        amend_missing_options: 'An amendment requires every one of these options:
+          %{missing}.'
         amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)

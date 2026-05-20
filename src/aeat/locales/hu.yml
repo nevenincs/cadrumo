@@ -521,6 +521,8 @@ cli:
         amend_help: Helyesbítő (complementaria) bevallás építése egy külsőleg leadott
           bevallás fölött. Importált AEAT-hitelesített evidenciával rendelkező filing
           record szükséges
+        amend_missing_options: 'A módosításhoz az alábbi összes kapcsoló szükséges:
+          %{missing}.'
         amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
         amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése

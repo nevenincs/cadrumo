@@ -612,6 +612,45 @@ def test_work_discard_help_advertises_yes_flag() -> None:
     assert "--yes" in result.output
 
 
+def test_work_amend_batch_reports_all_missing_options() -> None:
+    """``work amend`` with no flags reports every missing required option at once.
+
+    Before fix: typer surfaced the missing options one at a time,
+    forcing the operator to rediscover each on a fresh invocation.
+    After fix: a single refusal names every absent required flag.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "work", "amend"])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = result.output.replace("\n", " ")
+    for flag in ("--from-filing-record", "--kind", "--reason", "--set"):
+        assert flag in flat, f"{flag} not reported; output: {result.output}"
+
+
+def test_work_amend_batch_reports_partial_missing_options() -> None:
+    """A run missing two of four required options reports both, not just one."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "amend",
+            "--from-filing-record",
+            "f" * 64,
+            "--kind",
+            "complementaria",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "--reason" in flat
+    assert "--set" in flat
+
+
 def test_work_calculate_help_exposes_by_actor_flag() -> None:
     """``aeat app modelo work calculate --help`` advertises a ``--by ACTOR``
     option so operators can attribute a calculation revision to a specific
