@@ -295,3 +295,4 @@ need an explicit policy.
 - [x] `W06.P16.S112` - harden the singleton typo-warning scan so snapshot validation uses an indexed candidate search instead of comparing each singleton role against every role; verified by direct typo-warning unit tests and the committed-corpus warning-count gate.
 - [x] `W06.P16.S113` - classify the M200 `is_correccion_*` singleton family; 166 of 169 M200 warnings are role-axis siblings (`permanente`/`temporaria`, `aumento`/`disminucion`, current/prior-year axes), not typo drift.
 - [x] `W06.P16.S114` - add a generic semantic-role axis-sibling rule to the typo-warning detector so legal axis variants are not reported as spelling twins while same-axis near-duplicates still warn; live baseline lowered from 224 to 84 warnings.
+- [x] `W06.P16.S115` - tighten the committed singleton-warning regression cap to the live 84-warning baseline after the indexed scan and semantic-axis sibling filter.
