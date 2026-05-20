@@ -72,11 +72,13 @@ _FORBIDDEN_TEST_SCHEMA_CONSTRUCTORS = (
 _VALIDATOR_TEST_ALLOWLIST = frozenset(
     {
         "test_country_code_data_type.py",
+        "test_cross_revision_drift.py",
         "test_iban_data_type.py",
         "test_long_tail_data_types.py",
         "test_nif_data_type.py",
         "test_period_code_data_type.py",
         "test_referential_integrity.py",
+        "test_required_role_hardflip.py",
         "test_selector_shape.py",
         "test_semantic_role.py",
         "test_year_data_type.py",
