@@ -181,7 +181,7 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     Modelo 111 declares ``declaration_type``, ``surnames``, and
     ``name`` as required export header keys. The export service must
     compose all of them — the operator name from the persisted profile
-    facts — or ``_header_field_value`` raises ModeloExportValidationError.
+    facts — or ``_header_field_value`` raises FilingExportValidationError.
     This locks the header-composition contract: a real registry-backed
     export of a non-130 modelo succeeds.
     """
