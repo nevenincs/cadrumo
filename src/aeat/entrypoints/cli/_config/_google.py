@@ -86,6 +86,12 @@ from ....domain.calculations.registry._errors import (
 )
 from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.calculations.registry._snapshot import build_snapshot
+
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check with the registry validator. build_snapshot
+# of a Modelo 100 revision fails loudly if that check is unregistered, so
+# the M100 routing referential-integrity gate runs on this CLI path.
+import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 from ....core.i18n import tr

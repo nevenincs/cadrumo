@@ -62,6 +62,12 @@ from .....domain.calculations.registry import (
 )
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
+
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check with the registry validator. build_snapshot
+# of a Modelo 100 revision fails loudly if that check is unregistered, so
+# the M100 routing referential-integrity gate runs on this declarations path.
+import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
