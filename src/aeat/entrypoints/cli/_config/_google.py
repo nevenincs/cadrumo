@@ -937,7 +937,6 @@ def google_sync_calc_pull(
     """
 
     from ....adapters.outbound.google._calc_sheets_pull import (
-        PullResult,
         compute_from_pull,
         pull_operator_edits,
     )
