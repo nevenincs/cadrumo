@@ -365,6 +365,7 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         payload,
         (
             "readiness\tready",
+            f"display_name\t{record.display_name}",
             f"profile_id\t{record.profile_id}",
             f"bucket_id\t{pointer.bucket_id}",
             "registered_bucket\tpresent",
@@ -539,18 +540,19 @@ def _atomic_create_profile(*, display_name, facts) -> str:
     ``config profile duplicate`` route here so every create path lands
     on the single atomic provisioner ``register_active_profile``:
     bucket directory + manifest + encrypted record + active-profile
-    pointer in one all-or-nothing sequence with rollback.
+    pointer in one all-or-nothing unit of work owned by
+    ``ProfileRepository.create``, with rollback on any failure.
 
-    A fresh immutable UUID profile identity is minted here; ``display_name``
-    is the operator-chosen label. The minted UUID is returned so the
-    caller can report it.
+    A fresh immutable UUID profile identity is minted here;
+    ``display_name`` is the operator-chosen label. The minted UUID is
+    returned so the caller can report it.
 
-    The cold-start chicken-and-egg: ``workflow_state_repository().update``
-    resolves its SQLAlchemy engine URL from the active-profile pointer,
-    so the pointer must exist *before* the repository opens its engine,
-    and a master-key session must be active before
-    ``register_active_profile`` can encrypt the profile record. The
-    pointer carries the profile UUID.
+    Cold-start: the active-profile pointer must aim at the new UUID
+    before ``workflow_state_repository().update`` opens its per-bucket
+    engine, and a master-key session must be active before the
+    encrypted record is written. The genuine prior pointer is captured
+    and restored if the surrounding span fails, closing the window the
+    repository's own rollback cannot see.
     """
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
@@ -558,24 +560,28 @@ def _atomic_create_profile(*, display_name, facts) -> str:
         _write_active_profile_pointer,
         capture_active_profile_pointer,
         register_active_profile,
+        restore_active_profile_pointer,
     )
     from ....domain.user_profile import new_profile_id
 
     profile_id = new_profile_id()
-    prior_pointer_text = capture_active_profile_pointer()
+    prior_pointer = capture_active_profile_pointer()
     _write_active_profile_pointer(profile_id)
-    provider = get_master_key_provider()
-    with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
-        repository = _profile_state()
-        repository.update(
-            lambda current: register_active_profile(
-                current,
-                profile_id=profile_id,
-                display_name=display_name,
-                facts=facts,
-                prior_pointer_text=prior_pointer_text,
+    try:
+        provider = get_master_key_provider()
+        with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
+            repository = _profile_state()
+            repository.update(
+                lambda current: register_active_profile(
+                    current,
+                    profile_id=profile_id,
+                    display_name=display_name,
+                    facts=facts,
+                )
             )
-        )
+    except Exception:
+        restore_active_profile_pointer(prior_pointer)
+        raise
     return profile_id
 
 
@@ -1309,15 +1315,20 @@ def config_status(ctx: typer.Context) -> None:
         projection = project_answers(SETUP_FLOW, values)
     except ValidationError:
         payload = {
-            "active_profile": resolve_active_bucket_id(),
+            "active_profile": active_profile,
+            "profile_id": active_uuid,
             "tax_id_present": bool(values.get("identity.tax_id")),
             "activity_present": bool(values.get("activities.description")),
             "configured": False,
         }
         _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
         return
+    # Operators address a profile by its display name; the immutable
+    # bucket UUID is carried as a secondary `profile_id` field so the
+    # report stays unambiguous after the UUID-identity cutover.
     payload = {
-        "active_profile": resolve_active_bucket_id(),
+        "active_profile": active_profile,
+        "profile_id": active_uuid,
         "tax_id_present": bool(values.get("identity.tax_id")),
         "activity_present": bool(values.get("activities.description")),
         "iva_regime": values.get("iva.regime", ""),
@@ -1328,7 +1339,8 @@ def config_status(ctx: typer.Context) -> None:
         ctx,
         payload,
         (
-            f"profile\t{resolve_active_bucket_id() or ''}",
+            f"profile\t{active_profile or ''}",
+            f"profile_id\t{active_uuid or ''}",
             f"identity.tax_id\t{values.get('identity.tax_id', '<unset>')}",
             f"activities.description\t{values.get('activities.description', '<unset>')}",
             f"iva.regime\t{values.get('iva.regime', '<unset>')}",
