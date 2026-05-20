@@ -26,8 +26,17 @@ forbidden_modules =
     aeat.domain.renta
 # Test modules that construct domain objects for registry integration tests
 # are permitted to import domain.renta directly - they are not production code.
+# The test_referential_integrity edge below is the chain origin of an
+# indirect path (test -> application.diagnostics -> ... -> sede._declarations
+# -> renta): sede._declarations imports the renta package for its
+# cross-domain snapshot-check registration side effect, which is a legitimate
+# adapter -> domain edge. Pinning the test-module chain origin keeps the
+# contract enforcing genuine production calculations -> renta imports while
+# excusing the test path. The same edge is already sanctioned in the
+# domain-not-application contract.
 ignore_imports =
     aeat.domain.calculations.registry.test_ledger_renta_expense_binding -> aeat.domain.renta
+    aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
 
 # ── S21: Domain must not import application ───────────────────────────────────
 # Production domain modules must not import from the application layer.
