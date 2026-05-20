@@ -4,6 +4,7 @@ number = "01707"
 label = "Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Pendiente de materializar RIIB a principio del período [01707]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
 data_type = "money"
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022b-casilla-01707"]

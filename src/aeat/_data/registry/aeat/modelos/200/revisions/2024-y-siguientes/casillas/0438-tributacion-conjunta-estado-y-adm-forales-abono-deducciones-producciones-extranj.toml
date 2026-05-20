@@ -4,6 +4,7 @@ number = "01338"
 label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones extranjeras - Araba/Álava [01338]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras"]
 data_type = "money"
+semantic_role = "is_conversion_aid_abono"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026-casilla-01338"]

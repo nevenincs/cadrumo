@@ -4,6 +4,7 @@ number = "01280"
 label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Deducciones por doble imposición - D.I. interna generada y aplicada en el ejercicio (DT 23.1 LIS) [01280]"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
 data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014-casilla-01280", "modelo-200-page-015b-casilla-01280"]

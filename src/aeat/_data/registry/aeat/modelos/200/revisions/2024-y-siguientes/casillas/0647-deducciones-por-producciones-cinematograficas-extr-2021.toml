@@ -4,6 +4,7 @@ number = "02132"
 label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2021 - Deducción pendiente/generada [02132]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2021"]
 data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-02132", "modelo-200-page-027-casilla-02132"]

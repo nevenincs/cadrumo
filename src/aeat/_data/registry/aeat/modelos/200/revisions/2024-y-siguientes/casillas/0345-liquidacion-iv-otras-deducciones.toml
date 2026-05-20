@@ -4,6 +4,7 @@ number = "01039"
 label = "Liquidación IV - Otras deducciones - Deducciones por producc. Cinematograf. Extranjeras (art. 36.2 LIS) (desglose en página 18 bis) [01039]"
 section = ["liquidacion_iv", "otras_deducciones"]
 data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014b-casilla-01039", "modelo-200-page-018b-casilla-01039"]

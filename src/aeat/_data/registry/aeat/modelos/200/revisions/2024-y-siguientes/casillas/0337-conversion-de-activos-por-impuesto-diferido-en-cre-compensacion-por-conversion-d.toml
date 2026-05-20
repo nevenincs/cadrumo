@@ -4,6 +4,7 @@ number = "01021"
 label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Compensación por conversión de activos por impuesto diferido en crédito exigib..."
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "compensacion_por_conversion_de_activos_por_impuest"]
 data_type = "money"
+semantic_role = "is_conversion_aid_compensacion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015-casilla-01021"]

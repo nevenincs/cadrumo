@@ -4,6 +4,7 @@ number = "00541"
 label = "Estado de cambios patrimonio neto (III) - Operaciones con socios o propietarios - (-) Reducciones de capital - Resultado del ejercicio [00541]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-011-casilla-00541", "modelo-200-page-014-casilla-00541", "modelo-200-page-033-casilla-00541", "modelo-200-page-043-casilla-00541"]

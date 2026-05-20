@@ -4,6 +4,7 @@ number = "00057"
 label = "Régimen fiscal salida SOCIMI [00057]"
 section = ["regimen_fiscal_salida_socimi"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00057"]

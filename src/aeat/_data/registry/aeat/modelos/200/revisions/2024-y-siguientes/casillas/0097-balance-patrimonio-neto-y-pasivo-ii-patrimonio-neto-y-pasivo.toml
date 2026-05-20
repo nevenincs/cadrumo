@@ -4,6 +4,7 @@ number = "00228"
 label = "Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - PASIVO CORRIENTE [00228]"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-006-casilla-00228", "modelo-200-page-017-casilla-00228", "modelo-200-page-030-casilla-00228", "modelo-200-page-037-casilla-00228", "modelo-200-page-046-casilla-00228", "modelo-200-page-053-casilla-00228"]

@@ -4,6 +4,7 @@ number = "01285"
 label = "Liquidación III - Base imponible - Sólo sociedades cooperativas - Reserva de nivelación convertido en cuotas (solo entidades del art. 101 LIS) - Aumentos [01285]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
+semantic_role = "is_base_imponible"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014-casilla-01285"]

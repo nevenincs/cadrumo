@@ -4,6 +4,7 @@ number = "03341"
 label = "Reinversión de beneficios extraordinarios (DT 24ª LIS) - Aumento - Correcciones del ejercicio - Permanentes [03341]"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026g-casilla-03341"]

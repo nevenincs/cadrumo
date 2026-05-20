@@ -4,6 +4,7 @@ number = "01230"
 label = "Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Correcciones al resultado contable referidos al grupo fiscal - Aumentos [01230]"
 section = ["liquidacion_i", "resultado_de_la_cuenta_de_perdidas_y_ganancias"]
 data_type = "money"
+semantic_role = "is_resultado_contable"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-012-casilla-01230"]

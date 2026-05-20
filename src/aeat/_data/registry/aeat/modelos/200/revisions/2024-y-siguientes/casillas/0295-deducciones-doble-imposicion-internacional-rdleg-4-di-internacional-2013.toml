@@ -4,6 +4,7 @@ number = "00921"
 label = "Deducciones doble imposición internacional RDLeg. 4/2004 - DI internacional 2013 - Tipo gravamen período generación [00921]"
 section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2013"]
 data_type = "decimal"
+semantic_role = "is_deduccion_di_internacional_rdleg_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015b-casilla-00921"]

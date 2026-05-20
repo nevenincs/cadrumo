@@ -4,6 +4,7 @@ number = "01631"
 label = "Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento art. 19.1 LIS - Importe integrado - Araba/Álava [01631]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
 data_type = "money"
+semantic_role = "is_tributacion_conjunta_opcion_0_7"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026-casilla-01631"]

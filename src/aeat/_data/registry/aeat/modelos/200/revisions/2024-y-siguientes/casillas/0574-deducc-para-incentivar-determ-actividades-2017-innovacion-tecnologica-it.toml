@@ -4,6 +4,7 @@ number = "01853"
 label = "Deducc. para incentivar determ.actividades - 2017 Innovación tecnológica (IT) - Deducción pendiente/generada [01853]"
 section = ["deducc_para_incentivar_determ_actividades", "2017_innovacion_tecnologica_it"]
 data_type = "money"
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-017-casilla-01853"]

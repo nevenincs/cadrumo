@@ -4,6 +4,7 @@ number = "01322"
 label = "Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - Total - Pendiente de aplicación en períodos futuros [01322]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "total"]
 data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_total"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-01322"]

@@ -4,6 +4,7 @@ number = "00686"
 label = "Rég. cooperativas - Detalle compensación cuotas. 2004 Aplicado en esta liquidación [00686]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2004_aplicado_en_esta"]
 data_type = "money"
+semantic_role = "is_cooperativa_compensacion_cuotas"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022-casilla-00686"]

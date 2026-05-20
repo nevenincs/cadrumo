@@ -4,6 +4,7 @@ number = "02511"
 label = "Operaciones a plazos (art. 11.4 LIS) - Aumento - Correcciones del ejercicio - Permanentes [02511]"
 section = ["operaciones_a_plazos_art_11_4_lis", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02511"]

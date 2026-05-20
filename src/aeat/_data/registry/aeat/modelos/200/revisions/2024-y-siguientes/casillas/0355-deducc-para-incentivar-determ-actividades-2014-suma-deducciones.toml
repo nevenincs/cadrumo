@@ -4,6 +4,7 @@ number = "01063"
 label = "Deducc. para incentivar determ.actividades - 2014 Suma deducciones - Deducción pendiente/generada [01063]"
 section = ["deducc_para_incentivar_determ_actividades", "2014_suma_deducciones"]
 data_type = "money"
+semantic_role = "is_deduccion_idi_suma_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-017-casilla-01063"]

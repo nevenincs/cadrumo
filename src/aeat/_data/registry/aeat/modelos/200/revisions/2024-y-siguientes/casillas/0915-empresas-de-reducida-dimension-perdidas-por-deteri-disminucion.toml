@@ -4,6 +4,7 @@ number = "03206"
 label = "Empresas de reducida dimensión: pérdidas por deterioro créditos insolvencias (art. 104 LIS) - Disminución - Correcciones del ejercicio - Permanentes [03206]"
 section = ["empresas_de_reducida_dimension_perdidas_por_deteri", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-03206"]

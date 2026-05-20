@@ -4,6 +4,7 @@ number = "00401"
 label = "Estado de cambios patrimonio neto (III) - Ajustes por cambio de criterio de ejercicios anteriores - Resultado del ejercicio [00401]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-011-casilla-00401", "modelo-200-page-018c-casilla-00401", "modelo-200-page-041-casilla-00401"]

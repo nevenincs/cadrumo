@@ -4,6 +4,7 @@ number = "00457"
 label = "Estado de cambios patrimonio neto (III) - Resultado cuenta pérdidas y ganancias - Resultado del ejercicio [00457]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "resultado_cuenta_perdidas_y_ganancias"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-011-casilla-00457", "modelo-200-page-017-casilla-00457", "modelo-200-page-042-casilla-00457"]

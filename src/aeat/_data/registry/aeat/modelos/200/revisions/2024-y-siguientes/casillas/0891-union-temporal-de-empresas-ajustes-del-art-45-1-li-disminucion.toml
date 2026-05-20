@@ -4,6 +4,7 @@ number = "03086"
 label = "Unión temporal de empresas, ajustes del art. 45.1 LIS - Disminución - Correcciones del ejercicio - Permanentes [03086]"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03086"]

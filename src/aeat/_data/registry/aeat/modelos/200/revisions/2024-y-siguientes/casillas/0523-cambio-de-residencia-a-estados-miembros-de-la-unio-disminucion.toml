@@ -4,6 +4,7 @@ number = "01675"
 label = "Cambio de residencia a Estados miembros de la Unión Europea o EEE (art. 19.1 LIS) - Disminución - Correcciones del ejercicio - Permanentes [01675]"
 section = ["cambio_de_residencia_a_estados_miembros_de_la_unio", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026d-casilla-01675"]

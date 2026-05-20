@@ -4,6 +4,7 @@ number = "00087"
 label = "Inversiones anticipadas-reserva inversiones en Illes Balears (DA 70ª.Cuatro.10 Ley 31/2022) [00087]"
 section = ["inversiones_anticipadas_reserva_inversiones_en_ill"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00087", "modelo-200-page-026b-casilla-00087"]

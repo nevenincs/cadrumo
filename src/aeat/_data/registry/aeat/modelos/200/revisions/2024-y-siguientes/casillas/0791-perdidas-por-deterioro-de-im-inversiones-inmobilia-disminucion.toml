@@ -4,6 +4,7 @@ number = "02676"
 label = "Pérdidas por deterioro de IM, inversiones inmobiliarias e II, incluido el fondo de comercio (art. 13.2 a) y DT 15 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02676]"
 section = ["perdidas_por_deterioro_de_im_inversiones_inmobilia", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026c-casilla-02676"]

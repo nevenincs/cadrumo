@@ -4,6 +4,7 @@ number = "02536"
 label = "Rentas negativas (art. 11.9 y 11.10 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02536]"
 section = ["rentas_negativas_art_11_9_y_11_10_lis", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02536"]

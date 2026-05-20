@@ -4,6 +4,7 @@ number = "01398"
 label = "Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023 - Pendiente aplicación a principio del período [01398]"
 section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"]
 data_type = "money"
+semantic_role = "is_gastos_financieros_limitacion_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020-casilla-01398"]

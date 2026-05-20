@@ -4,6 +4,7 @@ number = "03371"
 label = "Correcciones específicas de entidades sometidas a la normativa foral - Aumento - Correcciones del ejercicio - Permanentes [03371]"
 section = ["correcciones_especificas_de_entidades_sometidas_a", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026g-casilla-03371"]

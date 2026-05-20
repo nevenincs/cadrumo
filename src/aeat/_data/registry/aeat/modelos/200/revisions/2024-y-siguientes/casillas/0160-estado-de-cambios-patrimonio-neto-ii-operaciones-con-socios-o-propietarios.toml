@@ -4,6 +4,7 @@ number = "00576"
 label = "Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Operaciones con acciones o participaciones propias - Capital - Escriturado [00576]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-010-casilla-00576", "modelo-200-page-014-casilla-00576", "modelo-200-page-043-casilla-00576"]

@@ -4,6 +4,7 @@ number = "01043"
 label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Abono por conversión de activos por impuesto diferido en crédito exigible fren..."
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "abono_por_conversion_de_activos_por_impuesto_difer"]
 data_type = "money"
+semantic_role = "is_conversion_aid_abono"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015-casilla-01043", "modelo-200-page-026-casilla-01043"]

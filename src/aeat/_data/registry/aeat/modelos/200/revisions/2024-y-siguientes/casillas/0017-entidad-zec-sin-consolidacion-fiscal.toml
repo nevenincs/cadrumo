@@ -4,6 +4,7 @@ number = "00015"
 label = "Entidad ZEC (sin consolidación fiscal) [00015]"
 section = ["entidad_zec_sin_consolidacion_fiscal"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00015", "modelo-200-page-015-casilla-00015"]

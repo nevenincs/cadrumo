@@ -4,6 +4,7 @@ number = "00448"
 label = "Estado de cambios patrimonio neto (III) - Total ingresos y gastos reconocidos - Subvenciones, donaciones y legados recibidos [00448]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-011-casilla-00448", "modelo-200-page-026-casilla-00448", "modelo-200-page-033-casilla-00448", "modelo-200-page-043-casilla-00448"]

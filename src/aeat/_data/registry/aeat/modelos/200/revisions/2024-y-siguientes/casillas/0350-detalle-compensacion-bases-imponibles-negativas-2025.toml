@@ -4,6 +4,7 @@ number = "01048"
 label = "Detalle compensación bases imponibles negativas - 2025 - Pendiente aplicación a principio del período/generada en el período [01048]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
 data_type = "money"
+semantic_role = "is_bin_pendiente_aplicacion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015-casilla-01048"]

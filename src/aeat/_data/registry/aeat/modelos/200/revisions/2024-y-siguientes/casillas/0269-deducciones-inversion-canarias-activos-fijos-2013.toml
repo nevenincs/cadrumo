@@ -4,6 +4,7 @@ number = "00863"
 label = "Deducciones inversión Canarias - Activos fijos 2013 - Deducción pendiente/generada [00863]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2013"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016b-casilla-00863"]
