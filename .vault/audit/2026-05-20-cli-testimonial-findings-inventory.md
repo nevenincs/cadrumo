@@ -252,3 +252,149 @@ Severity: major (every accented Spanish error string is affected;
 binding at a time (`irpf.previous_year_economic_activity_net_income`
 surfaced only on the calculate attempt). A preflight that lists all
 unsatisfied bindings up front would save round-trips.
+
+---
+
+## CLI bug remediation (2026-05-20)
+
+Five bugs from the testimonial inventory were actioned by one
+implementation agent. Each fix was reproduced against the live CLI
+before the test was added.
+
+### Fix 1 — Silent `profile create` (FIXED)
+
+**Files changed:**
+- `src/aeat/application/wizard/_commands.py`
+
+**What the fix does:** The `_command` closure in `build_wizard_command`
+now emits a structured confirmation after persisting wizard answers.
+For `create` mode: `profile\t<name>`, `status\tcreated`,
+`next\taeat app modelo work create`. For `edit` mode: same with
+`status\tupdated`. JSON mode emits a structured dict. The output
+respects the active format via `json_output_requested()`.
+
+**Before:** `aeat config profile create NAME --quiet ...` exited 0
+with zero output — indistinguishable from silent failure.
+
+**After:** `profile\tNAME`, `status\tcreated`, `next\t...` are
+emitted; exit 0.
+
+**Tests added:**
+- `test_config_profile_create_quiet_emits_confirmation` in
+  `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`
+- `test_config_profile_edit_quiet_emits_updated_confirmation` in
+  the same file.
+
+---
+
+### Fix 2 — `work create` accepts invalid period token (FIXED)
+
+**Files changed:**
+- `src/aeat/entrypoints/cli/_modelo.py`
+
+**What the fix does:** `work_create` now calls `_resolve_year_period(year, period)`
+before calling `create_work_unit`. This normalizes accepted aliases
+(`Q1` → `1T`, `annual` → `0A`) and rejects unrecognised tokens with
+`typer.BadParameter` naming the accepted format at create time.
+
+**Before:** `aeat app modelo work create --period Q1` stored `"Q1"` as-is;
+only failed later at `calculate` time with an obscure registry error.
+
+**After:** Valid tokens are normalised to the registry canonical form
+before storage. Invalid tokens (`INVALID`, `Q1X`, `2026Q1`) are rejected
+immediately: `Exit 2`, message `period must be YYYY, YYYYQn, YYYY-Qn,
+or YYYY-MM`.
+
+**Tests added:**
+- `test_work_create_rejects_invalid_period_at_create_time` (parametrized)
+  in `src/aeat/entrypoints/cli/test_modelo.py`
+- `test_work_create_normalizes_valid_period_tokens` (parametrized, unit)
+  in the same file.
+
+---
+
+### Fix 3 — Failures exit 0 (PARTIALLY FIXED)
+
+**Files changed:**
+- `src/aeat/entrypoints/cli/_config/__init__.py`
+
+**What the fix does:** `config_status` (the `profile status` verb) now
+raises `typer.Exit(code=2)` instead of bare `return` for three
+degraded-profile health states: `dangling_pointer`,
+`missing_profile_record`, and `profile_record_unreadable`. Scripts
+can now reliably detect that the profile is in a broken state by
+checking the exit code.
+
+**Note — not all "exit 0" paths addressed:** The `repair reset-state`
+and `profile rename` commands were reported as exiting 0 on failure
+in the audit. Live reproduction in the current codebase showed those
+paths already exit non-zero (2 for REFUSED, 6 for INTERNAL). The
+error boundary (`command_error_boundary` / `_emit_error_and_exit`) is
+correctly wired to all commands via `decorate_typer_app(app)`. The
+`status` command degraded-state paths were the remaining exit-0-on-bad-state
+issue addressed here.
+
+**Before:** `aeat config profile status` with `dangling_pointer` /
+`missing_profile_record` / `profile_record_unreadable` states printed the
+degraded status but exited 0.
+
+**After:** Same output, exit 2 — scripts can detect degraded profile state.
+
+**Tests added:**
+- `test_config_profile_status_exits_nonzero_for_dangling_pointer` in
+  `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`
+
+---
+
+### Fix 4 — `--help` / runtime flag drift (NOT REQUIRED)
+
+**Investigation finding:** All flag names in `_SETUP_OPTION_INFOS` are
+consistently Spanish (`pays-professionals-with-retencion`, etc.) and
+match the runtime. All flow question IDs have 1-to-1 entries in
+`_SETUP_OPTION_INFOS` (verified by automated check — zero gaps in
+either direction). `aeat app modelo work create --help` already shows
+both `Q1` and `4T` as example tokens, consistent with `_resolve_year_period`.
+
+**Conclusion:** No drift found in the current codebase. The testimonial
+finding was either already resolved by prior commits on this branch or
+observed in an older state. No code change required; no test added
+since there is no bug to lock.
+
+---
+
+### Fix 5 — Internal field leakage in errors (FIXED)
+
+**Files changed:**
+- `src/aeat/core/errors/_registry.py`
+
+**What the fix does:** Added `_INTERNAL_CONTEXT_KEYS = frozenset({"prompt_key", "question_id"})`
+and updated `scrub_error_context` to skip those keys. Internal wizard
+widget identifiers are now stripped from the text and JSON rendered
+output while remaining accessible on the exception's `.context`
+attribute for internal diagnostics and existing tests.
+
+**Before:** A bad NIF/CIF during `profile create` surfaced:
+`prompt_key: wizard.setup.profile.tax-id.prompt`,
+`question_id: tax-id` in the operator-visible error. Raw SQL fragments
+in the INTERNAL-category errors came from the logger traceback (not
+the error renderer) — that path was already isolated to stderr logging,
+not the structured error payload.
+
+**After:** Scrubbed output contains only user-relevant keys (`detail`,
+`raw`). `prompt_key` and `question_id` are absent from both text and JSON
+error output.
+
+**Tests added:**
+- `test_scrub_error_context_strips_internal_keys_from_rendered_output` in
+  `src/aeat/core/errors/test_envelope.py`
+- `test_config_profile_create_nif_error_does_not_leak_internal_keys` in
+  `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`
+
+---
+
+### Final test result
+
+`uv run --no-sync python -m pytest src/aeat/entrypoints/cli/ -q -p no:warnings --tb=short`
+
+All 427 tests collected and passed (exit 0). No pre-existing unrelated
+failures were present in the affected test paths.

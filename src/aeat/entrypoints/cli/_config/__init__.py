@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import typing
 from pathlib import Path
 
@@ -1153,7 +1154,7 @@ def config_status(ctx: typer.Context) -> None:
                 f"next_action\t{profile_health.next_action}",
             ),
         )
-        return
+        raise typer.Exit(code=2)
     if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
         payload = {
             "active_profile": active_profile,
@@ -1176,7 +1177,7 @@ def config_status(ctx: typer.Context) -> None:
             lines.append(f"profile_record_error\t{profile_health.profile_record_error}")
         lines.append(f"next_action\t{profile_health.next_action}")
         _emit(ctx, payload, lines)
-        return
+        raise typer.Exit(code=2)
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     values = record_to_path_values(record)
@@ -1363,6 +1364,27 @@ def auth_test(
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 
 
+@auth_app.command("login", help=tr("cli.config.auth.login_help"))
+def auth_login(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
+    fresh: bool = typer.Option(False, "--fresh", help=tr("cli.config.auth.login_fresh_help")),
+    reset_lock: bool = typer.Option(False, "--reset-lock", help=tr("cli.config.auth.login_reset_lock_help")),
+) -> None:
+    """Acquire or verify a live AEAT session through the configured provider."""
+
+    from ....application.auth import AuthProviderReservedError, login_operator_auth
+
+    try:
+        result = asyncio.run(login_operator_auth(provider, fresh=fresh, reset_lock=reset_lock))
+    except KeyError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+    except AuthProviderReservedError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+    payload = result.model_dump(mode="json")
+    _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
+
+
 @auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
 def auth_clear(
     ctx: typer.Context,
@@ -1410,6 +1432,10 @@ def auth_diagnostics_list(ctx: typer.Context) -> None:
                     row.diagnostic_id or "-",
                     row.captured_at.isoformat(),
                     row.reason,
+                    f"mode={row.auth_mode or '-'}",
+                    f"identity_kind={row.identity_kind or '-'}",
+                    f"headless={row.headless if row.headless is not None else '-'}",
+                    f"phone_state={row.phone_state or '-'}",
                     f"html={row.html_captured}",
                     f"screenshot={row.screenshot_captured}",
                 )
@@ -1433,6 +1459,7 @@ def auth_diagnostics_show(
     detail = load_auth_diagnostic(diagnostic_id)
     if detail is None:
         raise CliRefusedBoundaryError(f"auth diagnostic not found: {diagnostic_id}")
+    reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
     _emit(
         ctx,
         detail.model_dump(mode="json"),
@@ -1441,9 +1468,65 @@ def auth_diagnostics_show(
             f"captured_at\t{detail.captured_at.isoformat()}",
             f"reason\t{detail.reason}",
             f"url\t{detail.url}",
+            f"auth_mode\t{detail.auth_mode}",
+            f"identity_kind\t{detail.identity_kind}",
+            f"headless\t{detail.headless if detail.headless is not None else ''}",
+            f"phone_state\t{detail.phone_state}",
+            f"phone_state_reported_at\t{reported_at}",
             f"html_captured\t{detail.html_captured}",
             f"screenshot_captured\t{detail.screenshot_captured}",
             f"html_excerpt\t{detail.html_excerpt or ''}",
+        ),
+    )
+
+
+@auth_diagnostics_app.command(
+    "report",
+    help=tr(
+        "cli.config.auth.diagnostics.report_help",
+        default="Record the operator-observed Cl@ve app state for one auth diagnostic.",
+    ),
+)
+def auth_diagnostics_report(
+    ctx: typer.Context,
+    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
+    phone_state: str = typer.Option(
+        ...,
+        "--phone-state",
+        help=tr(
+            "cli.config.auth.diagnostics.phone_state_help",
+            default=(
+                "One of: app_prompted_and_accepted, app_prompted_not_accepted, "
+                "app_did_not_prompt, operator_did_not_check."
+            ),
+        ),
+    ),
+) -> None:
+    """Record the human-observed Cl@ve app state for a captured diagnostic."""
+
+    from ....application.auth import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
+
+    try:
+        result = record_auth_diagnostic_phone_state(diagnostic_id, phone_state)
+    except ValueError as exc:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.auth.diagnostics.invalid_phone_state",
+                phone_state=phone_state,
+                choices=", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
+            )
+        ) from exc
+    if result is None:
+        raise CliRefusedBoundaryError(
+            tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id),
+        )
+    _emit(
+        ctx,
+        result.model_dump(mode="json"),
+        (
+            f"diagnostic_id\t{result.diagnostic_id}",
+            f"phone_state\t{result.phone_state}",
+            f"reported_at\t{result.reported_at.isoformat()}",
         ),
     )
 

@@ -28,6 +28,12 @@ _SECRET_FIELD_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# Context keys that are internal implementation detail and must not be
+# surfaced in user-facing error output (text mode or JSON envelope).
+# They remain accessible on the exception's `.context` attribute for
+# internal diagnostics and tests.
+_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset({"prompt_key", "question_id"})
+
 
 class ErrorCategory(StrEnum):
     """Closed catalogue of stable CLI error categories."""
@@ -183,12 +189,20 @@ def resolve_output_language() -> str:
 
 
 def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] | None:
-    """Redact secret-looking keys from ``context`` and stringify the values."""
+    """Redact secret-looking keys and strip internal keys from ``context``.
+
+    Keys matching :data:`_SECRET_FIELD_PATTERN` are replaced with
+    ``"<redacted>"``. Keys in :data:`_INTERNAL_CONTEXT_KEYS` are
+    dropped entirely — they are implementation detail (e.g. widget
+    prompt identifiers) and must not appear in operator-facing output.
+    """
 
     if not context:
         return None
     scrubbed: dict[str, str] = {}
     for key, value in sorted(context.items()):
+        if key in _INTERNAL_CONTEXT_KEYS:
+            continue
         if _SECRET_FIELD_PATTERN.search(key):
             scrubbed[key] = "<redacted>"
         else:
