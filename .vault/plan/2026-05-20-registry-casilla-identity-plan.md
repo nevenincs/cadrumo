@@ -80,7 +80,7 @@ Add the optional segmento field to CasillaDefinition under strict-pydantic disci
 
 - [x] `P01.S01` - Add optional strict-pydantic field segmento (str or None, default None) to CasillaDefinition carrying the AEAT record-segment code with a Spanish-stem name per the terminology ADR; `src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `P01.S02` - Document the segmento field contract (composed id for multi-segment casillas, unset for single-segment) in the registry schema module docstring or field comment without embedding plan metadata; `src/aeat/domain/calculations/registry/_schema.py`.
-- [ ] `P01.S03` - Add a focused strict-pydantic test asserting segmento defaults unset, accepts a DP-code string, and that a single-segment CasillaDefinition validates unchanged; `src/aeat/domain/calculations/registry/test_registry_schema.py`.
+- [x] `P01.S03` - Add a focused strict-pydantic test asserting segmento defaults unset, accepts a DP-code string, and that a single-segment CasillaDefinition validates unchanged; `src/aeat/domain/calculations/registry/test_registry_schema.py`.
 
 ### Phase `P02` - Validator and reference resolution
 
