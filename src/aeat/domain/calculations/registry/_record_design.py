@@ -1294,12 +1294,9 @@ def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
     """
 
     id_to_number = {casilla.id: casilla.number for casilla in revision.casillas}
-    number_set = {casilla.number for casilla in revision.casillas}
 
     def _as_number(token: str) -> str:
-        if token in id_to_number:
-            return id_to_number[token]
-        return token
+        return id_to_number.get(token, token)
 
     closure: set[str] = set()
     for casilla in revision.casillas:
@@ -1325,11 +1322,6 @@ def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
             closure.add(_as_number(ref))
         for ref in expectation.reconciliation_totals.values():
             closure.add(_as_number(ref))
-    # Bare ``id``-only tokens that happen to equal a declared number are
-    # already folded in; tokens that are pure ids with no number mapping
-    # were kept verbatim above. Drop nothing — number_set is consulted by
-    # callers, not used to prune the closure.
-    del number_set
     return frozenset(closure)
 
 
