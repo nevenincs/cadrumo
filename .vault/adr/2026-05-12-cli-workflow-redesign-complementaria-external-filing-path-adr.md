@@ -70,13 +70,27 @@ reconcile from-justificante PATH` (W64 / W85.S2342 dependency) was
 never wired despite the W85 closure claim. This amendment locks the
 verb shape so the gap is closed in a follow-up wave.
 
-Required CLI surface: `aeat app modelo reconcile from-justificante
-PATH WORK_UNIT_ID` is a subverb under `aeat app modelo reconcile`. It
+Required CLI surface: a dedicated justificante-sourced reconcile verb,
+`aeat app modelo reconcile-from-justificante PATH WORK_UNIT_ID`. It
 shares the `modelo_reconcile` application service entry point with
 the `--from-justificante` flag variant of the parent verb (decided
-under app-modelo-shape ADR amendment); this subverb is sugar for
+under app-modelo-shape ADR amendment); this verb is sugar for
 operators who think "reconcile from this justificante" rather than
 "reconcile, source = justificante".
+
+The verb ships as a hyphenated sibling of `reconcile` rather than a
+nested Typer subgroup (`reconcile from-justificante`). The nested
+form was attempted and rejected: Click's argument parser resolves
+the parent positional (`WORK_UNIT_ID`) before any subcommand token,
+so `reconcile WORK_UNIT_ID --from-justificante PATH` parses
+`--from-justificante` as a subcommand name and raises "No such
+command". Preserving the canonical flag form on the parent verb —
+and the apex CLI convention of positionals-before-options — requires
+the justificante verb to be a flat hyphenated sibling. The hyphenated
+form `reconcile-from-justificante` is the canonical realisation of
+this amendment's "subverb" intent and is normative; the prose
+"subverb under reconcile" describes the operator's mental model, not
+a Typer subgroup requirement.
 
 Required behaviour: parse the supplied justificante PDF via
 `JustificanteRepository`; produce a `ReconciliationReport` keyed by
