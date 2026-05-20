@@ -172,6 +172,13 @@ class Articulo(_NormativeStrictFrozen):
     titulo: LocalizedText = Field(description="Article title in all supplied languages.")
     summary: LocalizedText = Field(description="One-paragraph plain-language article summary.")
     permalink: AnyHttpUrl = Field(description="BOE deep link to the article (fragment-addressed).")
+    text_es: str = Field(
+        default="",
+        description=(
+            "Verbatim authoritative Spanish article text. Optional; when present "
+            "it grounds registry legal-reference required_text substring checks."
+        ),
+    )
     notes: str = Field(default="", description="Free-form reviewer notes.")
 
     @model_validator(mode="after")
