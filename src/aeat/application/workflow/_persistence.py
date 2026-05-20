@@ -48,8 +48,17 @@ def _clear_output_language_cache() -> None:
 class WorkflowStateRepository:
     """Encrypted SQL object repository for :class:`WorkflowState`."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        emit_reset: Callable[..., object] = emit_workflow_state_reset,
+    ) -> None:
         self._objects = SecureObjectRepository()
+        # Injectable so the emit-first ordering contract in
+        # reset_workflow_state can be exercised with a real failing
+        # emitter — no module monkeypatching. Mirrors the injectable
+        # ``objects`` seam on WorkflowRunRepository.
+        self._emit_reset = emit_reset
 
     def load(self) -> WorkflowState:
         """Load state or return an empty payload when absent."""
@@ -204,7 +213,7 @@ class WorkflowStateRepository:
         """
 
         fingerprint = self.fingerprint_state(reason_class=reason_class)
-        emit_workflow_state_reset(fingerprint=fingerprint, actor=actor, source=source)
+        self._emit_reset(fingerprint=fingerprint, actor=actor, source=source)
         self._objects.delete(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
         _clear_output_language_cache()
         _logger.info("workflow state envelope reset; recovery route fired by operator")
