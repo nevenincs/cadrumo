@@ -820,8 +820,7 @@ cli:
       connectivity_target_help: Ellenőrizendő kapcsolati cél
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
         és javítása
-      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
-        all).
+      integrity_help: A biztonságos objektumok és a nyilvántartás integritásának ellenőrzése.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
       list_all_help: Return every key, including unreadable.
       list_conflicting_flags: --all and --unreadable cannot be combined; pass one
