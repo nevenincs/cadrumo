@@ -100,17 +100,34 @@ All five are manual-input leaves with no `formula`, `binding`, or
 |---|---|---|---|---|
 | R1 | Verification harness | DONE | - | - |
 | R2 | T percentage type defects (5) | OPEN | 5 | - |
-| R3 | M200 correcciones-a/-b reconciliation | OPEN | 0 shared roles | - |
-| R4 | M200 deducciones-a/-b reconciliation | OPEN | 1 shared role | - |
+| R3 | M200 correcciones reconciliation | DONE | 0 shared roles, fractured | 631 casillas, one 24-axis scheme |
+| R4 | M200 deducciones coherence | DONE (no defect) | suspected fracture | 853 casillas, 62 roles, 0 incoherent |
 | R5 | 561 escaped-quote re-verification | OPEN | 561 | - |
-| R6 | 458 singleton-role review | OPEN | 458 | - |
+| R6 | singleton-role review | OPEN | 506 | - |
 | R7 | Full semantic-correctness agent sweep | OPEN | - | - |
 | R8 | Source-data changes re-verification | OPEN | 5 changes | - |
-| R9 | Downstream test suite (calc/export/roundtrip) | IN PROGRESS | - | - |
+| R9 | Downstream test suite (calc/export/roundtrip) | OPEN | - | - |
 
 ## Change log
 
 Records every registry source modification made during remediation,
 with rationale and blast-radius assessment.
 
-(none yet)
+### 2026-05-20 - R3 M200 correcciones reconciliation
+
+The `correcciones al resultado contable` cluster (695 casillas) was
+re-classified under one consistent `is_correccion_<concepto>_<eje>`
+scheme (24-axis vocabulary, 72 concept slugs), replacing the fractured
+generic-vs-hyperspecific split. 689 `semantic_role` values rewritten.
+
+**Misrouting found and corrected.** The re-dump's section->cluster
+router swept 64 non-correction casillas into the correcciones bucket:
+60 entity-identification checkboxes (`is_identificacion_flag`), 2
+employee-headcount fields (`is_personal_asalariado_cifra_media`), the
+negative-base indicator `00027` (`base_imponible_negativa_is`), and the
+fiscal-group number `00018` (`is_grupo_fiscal_numero`). The
+reconciliation agent gave them `is_correccion_*` roles; all 64 were
+reverted to their correct pre-reconciliation roles. This surfaced via
+the drift gate (a constraints-signature divergence on `00027`).
+Blast radius: `semantic_role` only; no `data_type`/label/constraint
+edits. Post-state: 0 data_type divergences, 0 constraints divergences.
