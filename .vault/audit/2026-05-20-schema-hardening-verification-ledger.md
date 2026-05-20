@@ -106,7 +106,8 @@ All five are manual-input leaves with no `formula`, `binding`, or
 | R6 | singleton-role review | OPEN | 506 | - |
 | R7 | Full semantic-correctness agent sweep | OPEN | - | - |
 | R8 | Source-data changes re-verification | OPEN | 5 changes | - |
-| R9 | Downstream test suite (calc/export/roundtrip) | OPEN | - | - |
+| R9 | Downstream test suite (registry) | DONE | - | 1572 pass, 10 fail (pre-date this session) |
+| R10 | M123/130/131 calculation-test regressions | OPEN | 10 | - |
 
 ## Change log
 
@@ -148,3 +149,29 @@ was therefore truncated in the agent cluster-dumps.
   efficiency excess, pension contributions, Balearic reserve, anexo-B
   carry-forward). Caused directly by truncated-label classification.
   A focused agent is determining the canonical role; fix pending.
+
+### 2026-05-20 - R5 AEIP family fix applied
+
+Investigation agent confirmed **315** quoted-event-name casillas (all
+6 revisions; 46 ids host different events across revisions, so the fix
+is keyed per `(id, revision)`). All are the same concept: the amount
+of an AEIP event-sponsorship deduction applied in the declaration.
+Canonical role: **`irpf_anexo_a_aeip_aplicado`** (the pre-existing
+`irpf_anexo_a_aeip_aplicado_flag` had a wrong `_flag` suffix - these
+are euro amounts). 315 `semantic_role` values rewritten; the
+non-event members of the 8 previously-conflated roles (196 casillas)
+were left untouched. Blast radius: `semantic_role` only. Post-state:
+0 data_type divergences, 0 constraints divergences.
+
+### 2026-05-20 - R9 registry test suite (honest finding)
+
+Full `registry/` suite: **1572 passed, 10 failed** (32 min run).
+The 10 failures are calculation / cross-dependency tests for modelos
+**123, 130, 131** (e.g. modelo 130 emits an unexpected
+`saldo-negativo-fin-periodo` engine entry the test does not list).
+Git attribution: those modelo files were last modified by campaign
+commits *older than this session* (`b3c37983d Split large multi-
+revision modelos`, `c1563e2ff`, `c389b07bb`, `690ed3e6e`) - **not by
+this session's M100/M200 work**. They are pre-existing schema-hardening
+regressions, in scope for the campaign, tracked here as R10. The
+registry validation / drift / semantic-role tests all pass.
