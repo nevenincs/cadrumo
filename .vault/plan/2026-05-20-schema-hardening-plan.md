@@ -319,6 +319,7 @@ bounds.
 - [x] `W07.P17.S125` - split the M111 and M349 revision files into generic top-level revision fragments; the committed-corpus fragment-size gate now caps all TOML fragments at 2,000 lines.
 - [x] `W07.P17.S131` - migrate the remaining M190 long formula rows to multiline TOML expression authoring and tighten the committed-corpus TOML row cap to 600 characters; `uv run pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py src/aeat/domain/calculations/registry/test_modelo_190_registry.py --tb=short` passed with 23 tests.
 - [x] `W07.P17.S133` - disambiguate repeated generated M202 export-field ids by appending byte-offset suffixes across the affected 2019-2022, 2023-2024, and 2025+ export-layout fragments; `uv run pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py src/aeat/domain/calculations/registry/test_modelo_202_registry.py --tb=short` passed with 24 tests.
+- [x] `W07.P17.S134` - add a loader regression test proving same-record export fragments reject duplicate nested field ids after merge instead of letting ambiguous records reach schema validation.
 
 ## Wave `W08` - fail-fast exception handling
 
