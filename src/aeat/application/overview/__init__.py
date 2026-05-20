@@ -43,8 +43,8 @@ from ...application.workflow import WorkflowState, workflow_state_repository
 from ...domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
-    ModeloDeadline,
     HolidayJurisdiction,
+    ModeloDeadline,
     ObligationStatus,
     Recovery,
     Schedule,
@@ -52,7 +52,7 @@ from ...domain.deadlines import (
 )
 from ...domain.deadlines._festivos import DeadlineValidationError
 from ...domain.filing import ModeloDraftRepository
-from ...domain.invoices import InvoiceCatalogueRepository
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ._errors import (
     OverviewAgendaError,
@@ -483,7 +483,15 @@ def build_overview_status_report(
 ) -> OverviewStatusReport:
     """Build the typed readiness report used by root and overview status."""
 
-    current = workflow_state_repository().load() if state is None else state
+    from ..workflow._models import resolve_active_bucket_id
+
+    active_profile = resolve_active_bucket_id()
+    if state is not None:
+        current = state
+    elif active_profile is None:
+        current = WorkflowState()
+    else:
+        current = workflow_state_repository().load()
     bucket_id = current.active_profile_bucket_id()
     if transaction_repository is None:
         transactions = (
@@ -493,13 +501,23 @@ def build_overview_status_report(
         )
     else:
         transactions = transaction_repository.load()
-    invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
-    drafts = tuple((draft_repository or ModeloDraftRepository()).iter_drafts())
-    unreadable_total = secure_object_unreadable_total() if unreadable_rows is None else unreadable_rows
-    from ..workflow._models import resolve_active_bucket_id
-
+    invoices = (
+        InvoiceCatalogue()
+        if invoice_repository is None and active_profile is None
+        else (invoice_repository or InvoiceCatalogueRepository()).load()
+    )
+    drafts = (
+        ()
+        if draft_repository is None and active_profile is None
+        else tuple((draft_repository or ModeloDraftRepository()).iter_drafts())
+    )
+    unreadable_total = (
+        0
+        if unreadable_rows is None and active_profile is None
+        else secure_object_unreadable_total() if unreadable_rows is None else unreadable_rows
+    )
     return OverviewStatusReport(
-        active_profile=resolve_active_bucket_id(),
+        active_profile=active_profile,
         transactions=len(transactions.transactions),
         invoices=len(invoices),
         drafts=len(drafts),

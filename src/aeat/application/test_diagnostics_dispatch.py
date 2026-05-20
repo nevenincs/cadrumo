@@ -218,6 +218,17 @@ def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
     assert result.next_action == "aeat config auth test --provider certificate"
 
 
+def test_auth_check_uses_configured_provider_for_session_probe() -> None:
+    report = _wizard_status(auth_provider="clave_movil", login_ready=False)
+
+    result = _auth_check(report)
+
+    assert result.name == "auth.readiness"
+    assert result.status == "warn"
+    assert "clave_movil" in result.summary
+    assert result.next_action == "aeat config auth test --provider clave_movil"
+
+
 def test_auth_check_happy_path_returns_ok_with_provider_session_summary() -> None:
     report = _wizard_status(auth_provider="certificate", login_ready=True)
 

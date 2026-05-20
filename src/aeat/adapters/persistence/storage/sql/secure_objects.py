@@ -815,16 +815,14 @@ class SecureObjectRepository:
 
         self._check_session_freshness()
         with session_scope(self._engine) as session:
-            row_id = session.execute(
-                select(_orm.SecureObjectRow.id).where(
+            result = session.execute(
+                delete(_orm.SecureObjectRow).where(
                     _orm.SecureObjectRow.namespace == namespace,
                     _orm.SecureObjectRow.object_key == object_key,
                 )
-            ).scalar_one_or_none()
-            if row_id is None:
-                return False
-            session.execute(delete(_orm.SecureObjectRow).where(_orm.SecureObjectRow.id == row_id))
-            return True
+            )
+            return bool(result.rowcount and result.rowcount > 0)
+
 
     def _record_from_row(
         self,

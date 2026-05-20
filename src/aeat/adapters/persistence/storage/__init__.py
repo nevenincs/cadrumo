@@ -141,6 +141,7 @@ from .master_key._active_session import (
     NoActiveBucketSessionError,
     activate_session,
     get_active_master_key,
+    has_active_bucket_session,
 )
 from .master_key._master_key import (
     EphemeralMasterKeyProvider,
@@ -273,6 +274,7 @@ __all__ = [
     "get_master_key_provider",
     "get_secret_store",
     "get_sessionmaker",
+    "has_active_bucket_session",
     "load_corpus_manifest",
     "load_encrypted_envelope",
     "load_envelope",

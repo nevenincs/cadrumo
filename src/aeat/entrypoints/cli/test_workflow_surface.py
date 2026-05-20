@@ -333,10 +333,10 @@ def test_app_surface_uses_singular_user_domains() -> None:
     for removed_command in (
         "aeat app invoice",
         "aeat app declaration",
+        "aeat app transactions",
+        "aeat app imports",
         "workspaces",
         "audits",
-        "transactions",
-        "imports",
     ):
         assert removed_command not in result.output
 
@@ -658,7 +658,10 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
 
 def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="operator", activity="design")
+    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+
+    with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id="default"):
+        _seed_profile(tax_id="00000000T", name="operator", activity="design")
 
     config_status = _invoke(["--format", "json", "config", "profile", "status"])
     overview = _invoke(["--format", "json", "app", "overview", "status"])
@@ -719,10 +722,13 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     )
     assert created.exit_code == 0, created.output
 
-    state = workflow_state_repository().load()
-    record = state.active_profile_record()
-    assert record is not None
-    profile = projection_for_autonomo(record, tax_id_default="00000000T")
+    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+
+    with activate_master_key_provider(get_master_key_provider()):
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        assert record is not None
+        profile = projection_for_autonomo(record, tax_id_default="00000000T")
     assert profile.iva_regime is IVARegime.GENERAL
 
 
@@ -757,10 +763,13 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     facts = {row["path"]: row["value"] for row in show_payload["facts"]}
     assert facts["iva.does_intracomunitario"] == "true"
 
-    state = workflow_state_repository().load()
-    record = state.active_profile_record()
-    assert record is not None
-    profile = projection_for_autonomo(record, tax_id_default="00000000T")
+    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+
+    with activate_master_key_provider(get_master_key_provider()):
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        assert record is not None
+        profile = projection_for_autonomo(record, tax_id_default="00000000T")
     assert profile.does_intracomunitario is True
 
 
