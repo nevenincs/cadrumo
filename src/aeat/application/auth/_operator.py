@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.i18n import tr
-from . import AuthProviderKind, select_provider
+from . import AuthProviderKind
 from ._acquisition_lock import clear_auth_acquisition_lock
 from ._actions import update_auth
 from ._catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
@@ -20,6 +20,7 @@ from ._sessions import delete_persisted_session, ensure_authenticated_aeat_sessi
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 if TYPE_CHECKING:
+    from ..state_projection import OperatorStateProjection
     from ..workflow._models import WorkflowState
     from ..workflow._persistence import WorkflowStateRepository
 
@@ -236,60 +237,54 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 
 
 def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
-    """Return current local auth state, optionally scoped to a known provider slot."""
+    """Return current local auth state, optionally scoped to a known provider slot.
+
+    Consumes the canonical :func:`build_operator_state_projection`. The
+    ``configured`` field is the projection's single canonical
+    operational-readiness definition — ``auth status`` and ``auth test``
+    read the same datum and cannot disagree. The live backend is probed
+    (via the projection) for the ``available`` / ``health_*`` fields.
+    """
 
     if provider is not None:
         get_auth_provider(provider)
 
-    from ..workflow._persistence import workflow_state_repository
+    from ..state_projection import build_operator_state_projection
 
-    state = workflow_state_repository().load()
-    auth = state.auth
-    requested_provider = provider.strip().lower() if provider is not None else None
-    configured_provider = requested_provider or auth.provider or ""
-    configured = bool(auth.provider) and (requested_provider is None or auth.provider == requested_provider)
-    # For certificate-based auth, ``configured`` requires a path on disk
-    # recorded in workflow state via ``auth configure --file``.  Selecting
-    # the provider without supplying a file leaves the slot empty; report
-    # ``configured: False`` so the field is consistent with
-    # ``health_summary: certificate path not configured``.
-    if configured and auth.provider == AuthProviderKind.CERTIFICATE.value:
-        configured = bool(auth.certificate_path)
-    backend_configured = False
-    backend_available = False
-    health_severity = ""
-    health_summary = ""
-    if configured_provider:
-        try:
-            backend = select_provider(AuthProviderKind(configured_provider), settings=Settings())
-            description = backend.describe()
-            backend_configured = description.configured
-            backend_available = description.available
-            health_severity = description.health_severity or ""
-            health_summary = description.health_summary or ""
-        except Exception:
-            backend_configured = False
-            backend_available = False
-    from ..workflow._profile_health import assess_active_profile_health
+    projection = build_operator_state_projection(
+        requested_provider=provider,
+        probe_live_backend=True,
+    )
+    return _auth_status_from_projection(projection)
 
-    profile_health = assess_active_profile_health(state)
-    active_profile = profile_health.active_profile or ""
 
+def _auth_status_from_projection(projection: OperatorStateProjection) -> AuthStatusResult:
+    """Project the canonical state projection into the ``AuthStatusResult`` emit shape.
+
+    The :class:`AuthStatusResult` is a CLI emit shape derived from the
+    one :class:`OperatorStateProjection`; it is not a second
+    state-assembly path. ``backend_configured`` mirrors the single
+    canonical ``configured``, and ``backend_available`` mirrors the
+    single canonical ``available``.
+    """
+
+    auth = projection.auth
+    active = projection.active_profile
     return AuthStatusResult(
-        provider=configured_provider,
-        configured=configured,
-        authenticated=configured and bool(auth.authenticated_at),
-        available=configured and bool(auth.authenticated_at),
-        active_profile=active_profile,
-        active_profile_status=profile_health.status,
-        active_profile_registered=profile_health.registered_bucket,
-        active_profile_record_present=profile_health.profile_record_present,
-        active_profile_next_action=profile_health.next_action,
-        backend_configured=backend_configured,
-        backend_available=backend_available,
-        certificate_path=auth.certificate_path or "",
-        health_severity=health_severity,
-        health_summary=health_summary,
+        provider=auth.provider,
+        configured=auth.configured,
+        authenticated=auth.authenticated,
+        available=auth.available,
+        active_profile=active.profile_id or "",
+        active_profile_status=active.health_status,
+        active_profile_registered=active.registered_bucket,
+        active_profile_record_present=active.record_present,
+        active_profile_next_action=active.next_action,
+        backend_configured=auth.configured,
+        backend_available=auth.available,
+        certificate_path=auth.certificate_path,
+        health_severity=auth.health_severity,
+        health_summary=auth.health_summary,
     )
 
 
@@ -339,35 +334,28 @@ def _auth_configure_result(
 
 
 def test_operator_auth(provider: str | None = None) -> AuthStatusResult:
-    """Return backend-computed auth readiness without CLI-local branching."""
+    """Return auth readiness through the canonical state projection.
+
+    ``auth test`` and ``auth status`` (:func:`inspect_operator_auth`)
+    both consume :func:`build_operator_state_projection`, so they report
+    the SAME ``configured`` — the cross-surface disagreement is closed
+    structurally. The live backend probe is kept (it is what the
+    projection's ``probe_live_backend`` performs) and feeds only the
+    separate ``available`` / ``health_*`` fields; it never recomputes
+    ``configured``.
+    """
 
     provider_kind = _provider_kind_or_none(provider)
-    settings = Settings()
     if provider_kind is None:
-        provider_kind = _configured_or_default_provider(settings)
-    provider_backend = select_provider(provider_kind, settings=settings)
-    description = provider_backend.describe()
-    persisted = inspect_operator_auth(description.kind.value)
+        provider_kind = _configured_or_default_provider(Settings())
 
-    from ..workflow._persistence import workflow_state_repository
-    from ..workflow._profile_health import assess_active_profile_health
+    from ..state_projection import build_operator_state_projection
 
-    profile_health = assess_active_profile_health(workflow_state_repository().load())
-
-    return AuthStatusResult(
-        provider=description.kind.value,
-        configured=description.configured,
-        authenticated=persisted.authenticated,
-        available=description.available,
-        active_profile=profile_health.active_profile or "",
-        active_profile_status=profile_health.status,
-        active_profile_registered=profile_health.registered_bucket,
-        active_profile_record_present=profile_health.profile_record_present,
-        active_profile_next_action=profile_health.next_action,
-        certificate_path=persisted.certificate_path,
-        health_severity=description.health_severity or "",
-        health_summary=description.health_summary or "",
+    projection = build_operator_state_projection(
+        requested_provider=provider_kind.value,
+        probe_live_backend=True,
     )
+    return _auth_status_from_projection(projection)
 
 
 async def login_operator_auth(
