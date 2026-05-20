@@ -1,6 +1,10 @@
+from collections.abc import Iterator
+from pathlib import Path
+
 import pytest
 from typer.testing import CliRunner
 
+from aeat.entrypoints.cli import app as root_app
 from aeat.entrypoints.cli._config.__init__ import app
 from aeat.entrypoints.cli._errors import CliRefusedBoundaryError
 
@@ -10,6 +14,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def runner() -> CliRunner:
     return CliRunner()
+
+
+@pytest.fixture
+def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+    """Per-bucket storage with the unsecured backend.
+
+    Each profile bucket resolves its own SQLite file from the
+    active-profile pointer chain — the production cold-start path.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    dispose_engine()
+    try:
+        yield tmp_path
+    finally:
+        dispose_engine()
 
 
 def test_apoderado_status_fails_without_profile(runner: CliRunner) -> None:
@@ -31,3 +55,61 @@ def test_apoderado_scopes_list(runner: CliRunner) -> None:
     result = runner.invoke(app, ["auth", "apoderado", "scopes", "list"])
     assert result.exit_code == 0
     assert "GENERAL" in result.output
+
+
+def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) -> None:
+    """status/configure/clear succeed against the active profile.
+
+    The active-profile pointer carries the immutable UUID identity; the
+    apoderado verbs must resolve that UUID directly, not feed it to the
+    label-based ``read_profile_bucket`` resolver. This exercises the
+    normal active-profile path the no-active-profile test cannot reach.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    runner = CliRunner()
+    create = runner.invoke(
+        root_app,
+        [
+            "config", "profile", "create", "myco",
+            "--quiet",
+            "--tax-id", "12345678Z",
+            "--name", "MyCo",
+            "--activity", "design",
+            "--iva-regime", "GENERAL",
+        ],
+    )
+    assert create.exit_code == 0, f"create failed: {create.output}"
+
+    # status: exit 0 on the active profile (previously crashed with
+    # AttributeError because the UUID never matched a label).
+    dispose_engine()
+    status = runner.invoke(root_app, ["config", "auth", "apoderado", "status"])
+    assert status.exit_code == 0, f"apoderado status failed: {status.output}"
+    assert "configured\tFalse" in status.output
+
+    # configure: exit 0, persists the apoderado config.
+    dispose_engine()
+    configure = runner.invoke(
+        root_app,
+        [
+            "config", "auth", "apoderado", "configure",
+            "--represented-nif", "87654321X",
+            "--scope", "RENT",
+        ],
+    )
+    assert configure.exit_code == 0, f"apoderado configure failed: {configure.output}"
+    assert "represented_nif\t87654321X" in configure.output
+    assert "RENT" in configure.output
+
+    # status now reflects the configured state.
+    dispose_engine()
+    status_after = runner.invoke(root_app, ["config", "auth", "apoderado", "status"])
+    assert status_after.exit_code == 0, status_after.output
+    assert "configured\tTrue" in status_after.output
+
+    # clear: exit 0, retires the apoderado config.
+    dispose_engine()
+    clear = runner.invoke(root_app, ["config", "auth", "apoderado", "clear"])
+    assert clear.exit_code == 0, f"apoderado clear failed: {clear.output}"
+    assert "cleared\tTrue" in clear.output

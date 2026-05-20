@@ -59,9 +59,9 @@ class ConfigResetReport(BaseModel):
 
     Attributes:
         scope: The :class:`ConfigResetScope` that was applied.
-        removed_profile_names: Sorted tuple of profile names cleared
-            from the workflow state and profile bucket repository.
-            Empty when the scope did not touch profiles.
+        removed_profile_ids: Sorted tuple of profile UUIDs cleared
+            from the profile bucket repository. Empty when the scope
+            did not touch profiles.
         removed_auth_session: True when the auth session was reset.
         quarantined_namespace_count: Number of secure-object namespaces
             whose unreadable rows were archived to the quarantine table
@@ -71,7 +71,7 @@ class ConfigResetReport(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     scope: ConfigResetScope
-    removed_profile_names: tuple[str, ...] = Field(default=())
+    removed_profile_ids: tuple[str, ...] = Field(default=())
     removed_auth_session: bool = False
     quarantined_namespace_count: int = Field(default=0, ge=0)
 
@@ -99,7 +99,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
     repository = workflow_state_repository()
     current = repository.load()
     new_state = current
-    removed_profile_names: tuple[str, ...] = ()
+    removed_profile_ids: tuple[str, ...] = ()
     removed_auth_session = False
     quarantined_namespace_count = 0
 
@@ -110,14 +110,12 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         from .workflow._profile_bucket_scan import list_profile_buckets
 
         # Registered profiles are a filesystem-manifest scan, not a
-        # persisted WorkflowState field; profile id and bucket id are
-        # 1:1 per the profile-lifecycle disaster ADR.
-        profile_targets = tuple(
-            sorted((profile_id, pointer.bucket_id) for profile_id, pointer in list_profile_buckets().items())
-        )
-        removed_profile_names = tuple(profile_id for profile_id, _bucket_id in profile_targets)
-        for profile_id, bucket_id in profile_targets:
-            UserProfileLifecycleRepository(bucket_id=bucket_id).delete(profile_id)
+        # persisted WorkflowState field. Each profile is identified by
+        # its immutable UUID, which is also its bucket id and bucket
+        # directory name.
+        removed_profile_ids = tuple(sorted(list_profile_buckets()))
+        for profile_id in removed_profile_ids:
+            UserProfileLifecycleRepository(bucket_id=profile_id).delete(profile_id)
             # Dispose the cached per-bucket engine so its SQLite file
             # handle is released before the directory is removed —
             # an open handle blocks the rename on Windows.
@@ -133,7 +131,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
                 "updated_at": utc_now(),
             }
         )
-        _log.info("config reset PROFILE scope cleared %d profile(s)", len(removed_profile_names))
+        _log.info("config reset PROFILE scope cleared %d profile(s)", len(removed_profile_ids))
 
     if scope in {ConfigResetScope.AUTH, ConfigResetScope.ALL}:
         new_state = new_state.model_copy(update={"auth": AuthState(), "updated_at": utc_now()})
@@ -153,7 +151,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
 
     return ConfigResetReport(
         scope=scope,
-        removed_profile_names=removed_profile_names,
+        removed_profile_ids=removed_profile_ids,
         removed_auth_session=removed_auth_session,
         quarantined_namespace_count=quarantined_namespace_count,
     )

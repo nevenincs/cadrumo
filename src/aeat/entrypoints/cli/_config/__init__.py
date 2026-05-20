@@ -1349,7 +1349,7 @@ def config_reset(
         report.model_dump(mode="json"),
         (
             f"scope\t{report.scope.value}",
-            f"removed_profiles\t{len(report.removed_profile_names)}",
+            f"removed_profiles\t{len(report.removed_profile_ids)}",
             f"removed_auth\t{report.removed_auth_session}",
         ),
     )
@@ -1649,10 +1649,10 @@ def apoderado_scopes_list(ctx: typer.Context) -> None:
 def apoderado_status(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoService
 
-    if resolve_active_bucket_id() is None:
+    pointer = _resolve_active_profile_pointer()
+    if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = read_profile_bucket(resolve_active_bucket_id() or "")
     svc = ApoderadoService()
     result = svc.status(bucket_id=pointer.bucket_id)
 
@@ -1688,10 +1688,10 @@ def apoderado_configure(
     from ....application.workflow._persistence import workflow_state_repository
 
     workflow_state_repository().load()
-    if resolve_active_bucket_id() is None:
+    pointer = _resolve_active_profile_pointer()
+    if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = read_profile_bucket(resolve_active_bucket_id() or "")
     svc = ApoderadoService()
     result = svc.configure(
         bucket_id=pointer.bucket_id,
@@ -1716,10 +1716,10 @@ def apoderado_clear(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
 
     workflow_state_repository().load()
-    if resolve_active_bucket_id() is None:
+    pointer = _resolve_active_profile_pointer()
+    if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = read_profile_bucket(resolve_active_bucket_id() or "")
     svc = ApoderadoService()
     cleared = svc.clear(bucket_id=pointer.bucket_id)
 
@@ -1737,10 +1737,10 @@ def apoderado_check(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
 
     workflow_state_repository().load()
-    if resolve_active_bucket_id() is None:
+    pointer = _resolve_active_profile_pointer()
+    if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
-    pointer = read_profile_bucket(resolve_active_bucket_id() or "")
     svc = ApoderadoService()
 
     try:
