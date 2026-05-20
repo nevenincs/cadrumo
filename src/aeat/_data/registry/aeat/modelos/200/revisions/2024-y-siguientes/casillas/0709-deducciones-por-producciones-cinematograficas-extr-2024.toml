@@ -16,6 +16,7 @@ number = "02355"
 label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Aplicado en esta liquidación [02355]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
 data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-02355"]

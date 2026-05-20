@@ -16,6 +16,7 @@ number = "00042"
 label = "Personal asalariado (cifra media del ejercicio) Personal no fijo [00042]"
 section = ["personal_asalariado_cifra_media_del_ejercicio_pers"]
 data_type = "decimal"
+semantic_role = "is_personal_asalariado_cifra_media"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001b-casilla-00042"]

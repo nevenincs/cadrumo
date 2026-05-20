@@ -16,6 +16,7 @@ number = "02369"
 label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - k) Límite total a la deducción de gastos financieros netos, en todo caso, 1 millón de euros si el límite a la deducción d..."
 section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
 data_type = "money"
+semantic_role = "is_gastos_financieros_limitacion_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020-casilla-02369"]

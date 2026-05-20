@@ -16,6 +16,7 @@ number = "00695"
 label = "Rég. cooperativas - Detalle compensación cuotas. Total. Pendiente aplicación en períodos futuros [00695]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_total_pendiente_aplica"]
 data_type = "money"
+semantic_role = "is_cooperativa_compensacion_cuotas"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022-casilla-00695"]
