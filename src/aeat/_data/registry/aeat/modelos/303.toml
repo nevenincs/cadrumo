@@ -109,8 +109,8 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
-# flow_direction "inversion_sujeto_pasivo" matches Ley 37/1992 Art. 84.Uno.2.Âº
-# ("inversiÃ³n del sujeto pasivo"); the binding-id kebab segment is a stable
+# flow_direction "inversion_sujeto_pasivo" matches Ley 37/1992 Art. 84.Uno.2.º
+# ("inversión del sujeto pasivo"); the binding-id kebab segment is a stable
 # cross-revision reference and is not renamed alongside.
 [[revisions."2009-y-siguientes".bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
@@ -195,7 +195,7 @@ legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025"]
 
 # -----------------------------------------------------------------------------
-# Computed result casillas â€” Modelo 390 (resumen anual) declares
+# Computed result casillas — Modelo 390 (resumen anual) declares
 # previous_filing dependencies on these three casillas to aggregate the
 # four 303 quarters into the annual totals.
 # -----------------------------------------------------------------------------
@@ -301,18 +301,18 @@ required_text = ["modelo 303"]
 # percentage and the post-prorrata deducible-effective amount are
 # computed.
 #
-# RegularizaciÃ³n de bienes de inversiÃ³n (LIVA arts. 107-110). For
+# Regularización de bienes de inversión (LIVA arts. 107-110). For
 # capital goods acquired in prior years, the operator declares the
-# regularizaciÃ³n amount manually for the period. The current period's
-# cuota-deducible-total formula does NOT auto-include this â€” it is
+# regularización amount manually for the period. The current period's
+# cuota-deducible-total formula does NOT auto-include this — it is
 # carried separately for AEAT reconciliation per AEAT modelo 303
-# instructions section on "RegularizaciÃ³n de bienes de inversiÃ³n".
+# instructions section on "Regularización de bienes de inversión".
 # -----------------------------------------------------------------------------
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.prorrata-volumen-con-derecho"
 number = "prorrata-volumen-con-derecho"
-label = "Volumen anual de operaciones que originan derecho a deducciÃ³n"
+label = "Volumen anual de operaciones que originan derecho a deducción"
 section = ["iva", "prorrata"]
 data_type = "money"
 semantic_role = "iva_prorrata_volumen_con_derecho"
@@ -338,7 +338,7 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.prorrata-porcentaje"
 number = "prorrata-porcentaje"
-label = "Prorrata general â€” porcentaje (volumen con derecho / volumen total Ã— 100)"
+label = "Prorrata general — porcentaje (volumen con derecho / volumen total × 100)"
 section = ["iva", "prorrata"]
 data_type = "ratio"
 semantic_role = "iva_prorrata_porcentaje"
@@ -352,7 +352,7 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.regularizacion-inversiones"
 number = "regularizacion-inversiones"
-label = "RegularizaciÃ³n por bienes de inversiÃ³n (LIVA arts. 107-110)"
+label = "Regularización por bienes de inversión (LIVA arts. 107-110)"
 section = ["iva", "regularizacion"]
 data_type = "money"
 semantic_role = "iva_regularizacion_inversiones"
@@ -366,9 +366,9 @@ id = "modelo-303-iva-prorrata-porcentaje"
 target = "iva.prorrata-porcentaje"
 # Per LIVA art. 104.4 the prorrata is rounded UP to the nearest integer.
 # When the operator declares zero total operations, the denominator is
-# zero â€” the percentage is undefined. We default to 0 (no deduction)
+# zero — the percentage is undefined. We default to 0 (no deduction)
 # rather than 100, since under-deduction is reversible by the operator
-# whereas over-deduction would expose them to an AEAT regularizaciÃ³n.
+# whereas over-deduction would expose them to an AEAT regularización.
 expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [
         { casilla = "iva.prorrata-volumen-total" },
