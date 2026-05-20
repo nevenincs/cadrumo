@@ -667,14 +667,14 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         date_context={"filing_period": date(2025, 2, 15)},
     )
 
-    # Identity threading: low-value-cuota equals the resolver-computed binding fact.
-    # cuota-total is a sum-of-one identity over low-value-cuota; assert the values
-    # match without re-implementing the resolver's aggregation arithmetic.
-    assert (
-        result.values["iva.importacion.de.low-value-cuota"]
-        == binding_values["modelo-369-importacion-de-low-value-21pct"]
-    )
-    assert result.values["iva.importacion.cuota-total"] == result.values["iva.importacion.de.low-value-cuota"]
+    # Both casillas are anchored independently to the resolver-computed binding
+    # fact: low-value-cuota is the bound input, and cuota-total is a sum-of-one
+    # identity over it. Asserting each against the binding fact (rather than
+    # against the other SUT output) means a broken cuota-total formula cannot
+    # hide by collapsing both casillas to the same wrong value.
+    expected_cuota = binding_values["modelo-369-importacion-de-low-value-21pct"]
+    assert result.values["iva.importacion.de.low-value-cuota"] == expected_cuota
+    assert result.values["iva.importacion.cuota-total"] == expected_cuota
 
 
 def test_modelo_369_constructs_link_calculation_application_link() -> None:
