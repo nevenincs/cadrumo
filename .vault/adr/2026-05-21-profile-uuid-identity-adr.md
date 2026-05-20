@@ -5,12 +5,14 @@ tags:
 date: '2026-05-21'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
+  - "[[2026-05-21-profile-state-aggregate-adr]]"
+  - "[[2026-05-21-state-read-projection-adr]]"
   - "[[2026-05-20-cli-state-architecture-research]]"
   - "[[2026-05-21-cli-testimonial-reference]]"
   - "[[2026-05-16-profile-lifecycle-cli-adr]]"
 ---
 
-# `cli-workflow-redesign` adr: `Profile identity is a generated UUID; the display name is a decoupled mutable label` | (**status:** `proposed`)
+# `cli-workflow-redesign` adr: `Profile identity is a generated UUID; the display name is a decoupled mutable label` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -59,14 +61,14 @@ generated, immutable identity from a mutable display label.
   profile-value record per profile. The key collapses to
   `user-profile:{uuid}`. The snapshot key keeps its discriminator:
   `user-profile-snapshot:{uuid}:{snapshot_id}`.
-- **No dual-key read path.** A process cannot serve both
-  `user-profile:{name}:{name}` and `user-profile:{uuid}` rows without
-  a fragile fallback. The migration must be a one-time forward
-  migration; new code reads only UUID keys.
-- **Migration atomicity gap.** SQLite row re-keying is transactional;
-  the filesystem directory rename is not. A crash between them leaves
-  a *detectable* degraded state (UUID keys inside a name-named
-  directory) that a re-run repairs. This is acceptable and bounded.
+- **No dual-key read path.** New code reads only UUID keys. There is
+  no fallback to the legacy `user-profile:{name}:{name}` key.
+- **Clean cutover, no migration.** Existing on-disk profile state is
+  pre-1.0 local development data with no production value. It is
+  abandoned, not migrated: no migration command, no compatibility
+  window, no rekeying of legacy rows. The objective is an industry-
+  grade profile backend built correct from the start, not a bridge
+  from a flawed one. Operators recreate profiles on the new backend.
 
 ## Constraints
 
@@ -80,12 +82,11 @@ generated, immutable identity from a mutable display label.
   deterministic. A tombstoned profile's name is free to reuse.
 - `rename` MUST be a label-only field update: no directory move, no
   re-key, no cross-store transaction.
-- The migration MUST run before any UUID-key-consuming code path is
-  reachable; a single forward migration, idempotent and re-runnable.
+- No migration is written and no legacy data is preserved; existing
+  secure-storage profile records are abandoned at cutover.
 - No backward-compatible dual-key read path is introduced.
 - Per the apex CLI ADR, the CLI root surface stays `config` / `app`;
-  the only new verb this ADR authorises is the one-time migration
-  command.
+  this ADR authorises no new root verbs.
 
 ## Implementation
 
@@ -124,38 +125,29 @@ collapse to: load the profile record, set `label`, save. No
 `shutil.move`, no engine disposal, no re-key, no rollback machinery.
 The current rename handler's directory-move/re-key block is deleted.
 
-### 4. Migration
+### 4. Cutover - no migration
 
-A one-time, idempotent `aeat config migrate-profile-uuid` command
-(the only new verb). Sequence, per the discovery reference's
-migration considerations:
+Existing on-disk profile state is abandoned. No migration command is
+written; no legacy `user-profile:{name}:{name}` row is read or
+rekeyed; no compatibility window exists. The UUID-identity backend is
+the only code path. Any pre-existing local bucket directory is inert
+and may be deleted by the operator. New profiles are created directly
+on the UUID backend.
 
-1. Inventory every bucket directory; read each manifest for the
-   display name; generate a UUIDv4 per bucket; write a durable
-   `name -> uuid` mapping before any mutation.
-2. Re-key the secure-object rows in a single SQLite transaction
-   (reversible).
-3. Rewrite the manifest: `bucket_id` = uuid, `label` = name.
-4. Rename the bucket and keystore directories to the UUID (the
-   non-transactional step).
-5. Rewrite the active-profile pointer to the UUID.
-6. Rename token files best-effort; delete lock files (TTL expiry
-   already handles staleness). A missing token file forces
-   re-authentication - not data loss.
-
-Crash recovery: a degraded state (UUID keys in a name-named
-directory) is detectable by comparing the manifest `bucket_id` to the
-directory name; the command re-run repairs it.
+This is deliberate: the objective is a verified, tested, industry-
+grade profile management backend, and a clean build is both simpler
+and more trustworthy than a bridge from the flawed name-as-id design.
 
 ### 5. Sequencing
 
-This ADR is the decision. A follow-up evolving plan executes it in
-waves: (W1) identity model + keys + paths behind the migration;
-(W2) the migration command; (W3) `rename` collapse and the
-name-as-id call-site sweep; (W4) auth token/lock filenames. Each wave
-is a Codex-assisted refactor with tracked audits. A child ADR is
-required only if name-uniqueness policy or the migration-command UX
-needs its own adjudication.
+This ADR is the decision. The evolving plan executes it in three
+waves: (W1) UUID identity model - `profile_id`, `label`, keys, paths,
+manifest, pointer; (W2) `rename` collapse and the name-as-id
+call-site sweep, with the legacy code paths deleted; (W3) auth
+token/lock filenames keyed by UUID and one-state-root verification.
+Every wave lands real-behavior roundtrip and anti-tautology tests
+with it. A child ADR is required only if name-uniqueness policy needs
+its own adjudication.
 
 ## Rationale
 
@@ -172,14 +164,17 @@ construction.
 
 - The `profile rename` corruption class is eliminated by design, not
   patched.
-- A single, breaking, one-time migration is required; there is no
-  dual-key compatibility window. Pre-1.0 local-first state makes this
-  acceptable.
+- Existing local profile state is abandoned at cutover. There is no
+  migration and no compatibility window; operators recreate profiles
+  on the new backend. Pre-1.0 local-first state makes this acceptable
+  and is an explicit, accepted decision.
 - Every name-as-id call site (22, per the reference) changes; the
-  blast radius is real and is the subject of the follow-up plan.
+  blast radius is real and is the subject of the plan.
 - Bucket directories become opaque UUIDs - operator-facing tooling
   must always resolve through the manifest `label`, never the
-  directory name. This is a permanent discipline the plan must encode
-  in tests.
-- Auth re-authentication may be required once after migration if
-  token-file rename is skipped; this is a one-time, recoverable cost.
+  directory name. This is a permanent discipline the plan encodes in
+  tests.
+- The backend is rebuilt to an industry-grade standard: UUID
+  identity, decoupled label, single-key secure objects, and
+  roundtrip + anti-tautology test coverage at every persistence
+  boundary.
