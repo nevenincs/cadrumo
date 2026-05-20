@@ -43,19 +43,19 @@ roundtrip and anti-tautology tests for the boundaries it touches.
 
 Source: UUID-identity ADR.
 
-- [ ] `W01.S01` - generate an immutable `profile_id` (UUIDv4) at
+- [x] `W01.S01` - generate an immutable `profile_id` (UUIDv4) at
   profile creation; add `label` (display name) as a distinct mutable
   field on the profile record and `BucketManifest`; `bucket_id`
   becomes the UUID.
-- [ ] `W01.S02` - de-double the secure-object keys to
+- [x] `W01.S02` - de-double the secure-object keys to
   `user-profile:{uuid}` and
   `user-profile-snapshot:{uuid}:{snapshot_id}` in `_repository.py`.
-- [ ] `W01.S03` - bucket directory (`_layout.py`) and keystore
+- [x] `W01.S03` - bucket directory (`_layout.py`) and keystore
   directory (`_keystore_paths.py`) named by UUID; `BucketPointer`
   stores the UUID.
-- [ ] `W01.S04` - name-uniqueness validator: display names unique
+- [x] `W01.S04` - name-uniqueness validator: display names unique
   among live profiles, case-insensitive; tombstoned names reusable.
-- [ ] `W01.S05` - roundtrip + anti-tautology tests for the
+- [x] `W01.S05` - roundtrip + anti-tautology tests for the
   dual-field manifest and the UUID-keyed secure object.
 
 ## Wave `W02` - profile aggregate, repository, unit-of-work
@@ -80,15 +80,15 @@ Source: aggregate ADR.
 
 Source: UUID-identity ADR + aggregate ADR.
 
-- [ ] `W03.S11` - collapse `LifecycleService.rename` and CLI
+- [x] `W03.S11` - collapse `LifecycleService.rename` and CLI
   `config profile rename` to a label-only field update; delete the
   directory-move / re-key / rollback machinery.
-- [ ] `W03.S12` - sweep the 22 name-as-id call sites (per the
+- [x] `W03.S12` - sweep the 22 name-as-id call sites (per the
   discovery reference) to route through `ProfileRepository`; CLI
   resolves `name -> uuid` via the manifest scan at command entry.
-- [ ] `W03.S13` - `_profile_bucket_scan` reads the display name from
+- [x] `W03.S13` - `_profile_bucket_scan` reads the display name from
   the manifest `label`, never the directory name.
-- [ ] `W03.S14` - delete the legacy name-keyed code paths entirely;
+- [x] `W03.S14` - delete the legacy name-keyed code paths entirely;
   no dual-key read path remains.
 - [ ] `W03.S15` - testimonial regression persona re-runs the
   `profile create / rename / switch / delete / status` flows.
@@ -125,9 +125,9 @@ Source: UUID-identity ADR + aggregate ADR.
 
 | Wave | Intent | ADR | State |
 |---|---|---|---|
-| W01 | UUID identity model | identity | not started |
-| W02 | aggregate + repository + unit-of-work | aggregate | not started |
-| W03 | rename collapse + name-as-id sweep | identity + aggregate | not started |
+| W01 | UUID identity model | identity | complete |
+| W02 | aggregate + repository + unit-of-work | aggregate | in progress |
+| W03 | rename collapse + name-as-id sweep | identity + aggregate | complete (S15 testimonial regression pending) |
 | W04 | canonical read-projection | read-projection | not started |
 | W05 | one state root + full verification | identity + aggregate | not started |
 
