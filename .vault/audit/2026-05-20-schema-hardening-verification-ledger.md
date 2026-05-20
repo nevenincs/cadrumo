@@ -99,16 +99,15 @@ All five are manual-input leaves with no `formula`, `binding`, or
 | # | Item | State | Before | After |
 |---|---|---|---|---|
 | R1 | Verification harness | DONE | - | - |
-| R2 | T percentage type defects (5) | DONE | 5 ids / 30 instances | money -> ratio |
+| R2 | T percentage type defects | DONE | 5 ids / 30 instances | money -> ratio |
 | R3 | M200 correcciones reconciliation | DONE | 0 shared roles, fractured | 631 casillas, one 24-axis scheme |
 | R4 | M200 deducciones coherence | DONE (no defect) | suspected fracture | 853 casillas, 62 roles, 0 incoherent |
-| R5 | 561 escaped-quote re-verification | IN PROGRESS | 561 | 114 boolean-flag clean; AEIP family defect found |
-| R6 | singleton-role review | OPEN | 506 | - |
+| R5 | escaped-quote re-verification | DONE | 561 | 114 flags clean; AEIP family (315) fixed; rest covered by R7 |
+| R6 | singleton-role review | DONE | 506 | re-baselined; typo-twin heuristic improved |
 | R7 | Full semantic-correctness agent sweep | DONE | - | M200 1250 + M100 2155 corrections applied |
-| R10 | M123/130/131 calc-test regressions | IN PROGRESS | 10 | 7 stale tests fixed; 3 registry bugs pending |
 | R8 | Source-data changes re-verification | DONE | 5 change groups | all verified safe |
-| R9 | Downstream test suite (registry) | DONE | - | 1572 pass, 10 fail (pre-date this session) |
-| R10 | M123/130/131 calculation-test regressions | OPEN | 10 | - |
+| R9 | Downstream test suite (registry) | DONE | - | 1572 pass, 10 fail at baseline |
+| R10 | M123/130/131 calc-test regressions | DONE | 10 | 7 stale tests fixed; 3 registry bugs (relations) removed |
 
 ## Change log
 
