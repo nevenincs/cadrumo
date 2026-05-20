@@ -9,6 +9,8 @@ related:
   - '[[2026-05-18-schema-hardening-research]]'
   - '[[2026-05-18-schema-hardening-plan]]'
   - '[[2026-05-19-schema-hardening-plan]]'
+  - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
+  - '[[2026-05-19-modelo-registry-fragment-architecture-research]]'
 ---
 
 <!-- LINK RULES:
@@ -256,3 +258,35 @@ introduced role inconsistency.
 - [x] `W05.P14.S99` - deferred to operational per-role rollout per role-rollout-strategy audit; `framework in place via W01 validator; each role lands role-by-role as audit + retrofit + verification cluster; `.vault/audit/2026-05-19-schema-hardening-role-rollout-strategy.md`.
 - [x] `W05.P14.S100` - deferred to operational per-role rollout per role-rollout-strategy audit; `framework in place via W01 validator; each role lands role-by-role as audit + retrofit + verification cluster; `.vault/audit/2026-05-19-schema-hardening-role-rollout-strategy.md`.
 - [x] `W05.P14.S101` - deferred to operational per-role rollout per role-rollout-strategy audit; `framework in place via W01 validator; each role lands role-by-role as audit + retrofit + verification cluster; `.vault/audit/2026-05-19-schema-hardening-role-rollout-strategy.md`.
+
+## Wave `W06` - registry fragmentation closure and warning burn-down
+
+This Wave records the 2026-05-20 operational pivot back to the
+registry-hardening blocker. The profile-lifecycle recovery work is
+tracked separately and must not displace this registry thread. The
+fragmentation authority is the accepted fragment architecture ADR and
+research; the semantic-role authority remains the schema-hardening
+ADR and role-taxonomy reference.
+
+### Phase `W06.P15` - confirm M200 fragmentation and cross-revision drift gate
+
+This Phase verifies the structural mitigation that originally blocked
+reviewability.
+
+- [x] `W06.P15.S102` - verify `src/aeat/_data/registry/aeat/modelos/200.toml` is absent and M200 is authored through `modelos/200/manifest.toml` plus revision fragments.
+- [x] `W06.P15.S103` - verify the largest remaining single-file modelo TOML is below 2,000 lines; latest inventory reports `130.toml` at 1,456 lines.
+- [x] `W06.P15.S104` - run cross-revision drift and M200 registry gates: `uv run pytest src/aeat/domain/calculations/registry/test_cross_revision_drift.py src/aeat/domain/calculations/registry/test_modelo_200_registry.py --tb=short`; result on 2026-05-20 was 15 passed.
+- [x] `W06.P15.S105` - confirm drift validation is wired into registry validation through `_validate_cross_revision_casilla_consistency` and covered by synthetic and committed-corpus tests.
+
+### Phase `W06.P16` - singleton semantic-role warning burn-down
+
+The drift gate now passes, but snapshot validation still emits
+singleton-role warnings. These warnings are the next hardening
+substrate because they identify role declarations that may be typos,
+missing sibling declarations, or intentionally unique concepts that
+need an explicit policy.
+
+- [x] `W06.P16.S106` - generate a current singleton-role warning inventory grouped by modelo and role prefix; 2026-05-20 baseline is 242 warnings: M200 174, M100 55, M202 4, M390 3, M184 2, M190 2, M303 2; prefixes are `is` 178, `irpf` 55, `iva` 5, `tipo` 2, `total` 2.
+- [ ] `W06.P16.S107` - classify each warning group as missing sibling coverage, intentional singleton, or role-name typo.
+- [x] `W06.P16.S108` - land the first burn-down cluster by normalizing M390 annual IVA cuota roles to the shared IVA cuota taxonomy used by M303/M322/M353; singleton-warning baseline lowered from 242 to 239.
+- [x] `W06.P16.S109` - add a regression surface that makes the singleton warning count visible and prevents accidental increases outside intentional role rollout commits; baseline cap test added to `test_cross_revision_drift.py`.
