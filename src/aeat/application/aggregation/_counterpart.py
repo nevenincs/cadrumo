@@ -21,8 +21,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ._errors import AggregationUnsupportedModeloError, t
-from ._grouping import group_and_collect_names
+from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
 _CANONICAL_SOURCE_KINDS: frozenset[str] = frozenset(
     {
@@ -176,25 +175,19 @@ _MODELO_KIND_CATALOGUE: dict[str, frozenset[str]] = {
 }
 
 
-def _filter_observations_for_modelo(
-    observations: tuple[CounterpartObservation, ...],
-    modelo: str,
-) -> tuple[CounterpartObservation, ...]:
-    if modelo not in _MODELO_KIND_CATALOGUE:
-        raise AggregationUnsupportedModeloError(
-            t(f"counterpart aggregator for modelo {modelo!r} is not registered"),
-        )
-    eligible = _MODELO_KIND_CATALOGUE[modelo]
-    return tuple(o for o in observations if o.operation_kind in eligible)
-
-
 def _aggregate_for_modelo(
     observations: tuple[CounterpartObservation, ...],
     *,
     modelo: str,
     period: str,
 ) -> CounterpartAggregation:
-    filtered = _filter_observations_for_modelo(observations, modelo=modelo)
+    filtered = filter_observations_for_modelo(
+        observations,
+        modelo=modelo,
+        catalogue=_MODELO_KIND_CATALOGUE,
+        attribute_fn=lambda obs: obs.operation_kind,
+        aggregator_label="counterpart aggregator",
+    )
     grouped, names = group_and_collect_names(
         filtered,
         group_key_fn=lambda obs: (obs.source_kind, obs.counterparty_nif, obs.operation_kind),
