@@ -16,6 +16,7 @@ number = "00701"
 label = "Balance: Activo (I) - Activo - Derechos de emisión de gases de efecto invernadero [00701]"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
+semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-003-casilla-00701", "modelo-200-page-016b-casilla-00701"]

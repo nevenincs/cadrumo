@@ -16,6 +16,7 @@ number = "01333"
 label = "Liquidación IV - Resultado de la autoliquidación - Abono deducciones por producciones cinematográficas extranjeras - D. Forales/Navarra [01333]"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014b-casilla-01333", "modelo-200-page-026-casilla-01333"]

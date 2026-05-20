@@ -16,6 +16,7 @@ number = "00832"
 label = "Deducc. para incentivar determ.actividades - Total - Pendiente de aplicación en periodos futuros [00832]"
 section = ["deducc_para_incentivar_determ_actividades", "total"]
 data_type = "money"
+semantic_role = "is_deduccion_idi_suma_pendiente"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-00832"]

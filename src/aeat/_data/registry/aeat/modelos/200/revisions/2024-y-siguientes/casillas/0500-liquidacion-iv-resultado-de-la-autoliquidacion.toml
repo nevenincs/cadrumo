@@ -16,6 +16,7 @@ number = "01587"
 label = "Liquidación IV - Resultado de la autoliquidación - D. Forales/Navarra [01587]"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"
+semantic_role = "is_tributacion_conjunta_resultado"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014b-casilla-01587", "modelo-200-page-026-casilla-01587"]

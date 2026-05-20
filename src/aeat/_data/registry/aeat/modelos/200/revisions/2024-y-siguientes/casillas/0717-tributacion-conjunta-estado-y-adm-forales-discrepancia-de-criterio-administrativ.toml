@@ -16,6 +16,7 @@ number = "02379"
 label = "Tributación conjunta Estado y Adm.Forales - Discrepancia de criterio administrativo para determinados supuestos de autoliquidación rectificativa que no deban incluirse en otras casillas - Gipuzkoa ..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "discrepancia_de_criterio_administrativo_para_deter"]
 data_type = "money"
+semantic_role = "is_tributacion_conjunta_discrepancia"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026-casilla-02379"]

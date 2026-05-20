@@ -16,6 +16,7 @@ number = "01019"
 label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Unión temporal de empresas, ajustes por criterios de imputación temporal (art. 46.2 LIS) - Disminuciones [01019]"
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
+semantic_role = "is_correcciones_aumentos"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-013-casilla-01019"]

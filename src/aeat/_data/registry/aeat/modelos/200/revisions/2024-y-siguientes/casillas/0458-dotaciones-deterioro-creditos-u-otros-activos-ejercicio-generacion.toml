@@ -16,6 +16,7 @@ number = "01409"
 label = "Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2007 y anteriores - Dotaciones pendientes integración a principio periodo - Que han cumplido condiciones deducibilidad fiscal ..."
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
 data_type = "money"
+semantic_role = "is_dotacion_deterioro_pendiente_inicio_sin_cond"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020d-casilla-01409"]

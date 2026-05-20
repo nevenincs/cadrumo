@@ -16,6 +16,7 @@ number = "02315"
 label = "Liquidación IV - Otras deducciones - Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) (desglose en página 18 bis) [02315]"
 section = ["liquidacion_iv", "otras_deducciones"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_autoridades_portuarias"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014b-casilla-02315", "modelo-200-page-018b-casilla-02315"]

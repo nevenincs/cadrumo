@@ -16,6 +16,7 @@ number = "00881"
 label = "Deducc. para incentivar determ.actividades - 2023 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP) - Pendiente de aplicación en periodos ..."
 section = ["deducc_para_incentivar_determ_actividades", "2023_inversiones_en_territ_africa_occidental_y_gas"]
 data_type = "money"
+semantic_role = "is_deduccion_inversiones_africa_canarias_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-017-casilla-00881"]

@@ -16,6 +16,7 @@ number = "03628"
 label = "Rég. especial reserva inversiones Canarias - RIC 2025 - Pendiente de materializar RIC al final de período [03628]"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2025"]
 data_type = "money"
+semantic_role = "is_reserva_inversiones_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022-casilla-03628"]

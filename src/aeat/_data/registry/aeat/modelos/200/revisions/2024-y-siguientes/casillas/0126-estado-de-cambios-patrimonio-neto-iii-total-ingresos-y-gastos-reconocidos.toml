@@ -16,6 +16,7 @@ number = "00449"
 label = "Estado de cambios patrimonio neto (III) - Total ingresos y gastos reconocidos - Total [00449]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-011-casilla-00449", "modelo-200-page-026-casilla-00449", "modelo-200-page-043-casilla-00449"]

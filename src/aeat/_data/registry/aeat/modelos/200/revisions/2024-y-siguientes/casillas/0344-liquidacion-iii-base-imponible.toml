@@ -16,6 +16,7 @@ number = "01038"
 label = "Liquidación III - Base imponible - Incremento por incumplimiento reserva de nivelación [01038]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
+semantic_role = "is_reserva_nivelacion_incumplimiento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014-casilla-01038"]
