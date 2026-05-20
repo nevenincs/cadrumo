@@ -2,14 +2,47 @@
 
 import pytest
 
-from .....core import errors, logging
-from . import __doc__ as auth_doc
+from . import (
+    AeatAuthenticator,
+    AuthError,
+    ClaveMovilAuthProvider,
+    select_provider,
+)
+from . import __all__ as auth_all
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
+_REQUIRED_SYMBOLS = [
+    "AeatAuthenticator",
+    "AeatSession",
+    "AeatLoginAssertionError",
+    "AeatSessionExpiredError",
+    "AuthError",
+    "AuthConfigurationError",
+    "ClaveMovilAuthProvider",
+    "ClaveMovilApprovalTimeoutError",
+    "ClaveMovilConfigurationError",
+    "select_provider",
+    "CertificateBackend",
+    "LoadedCertificate",
+    "load_certificate",
+    "verify_handshake",
+    "health",
+]
 
-def test_smoke_auth() -> None:
-    """Asserts the subpackage is importable and conventions hold."""
-    assert auth_doc is not None
-    assert issubclass(errors.AeatError, Exception)
-    assert logging.get_logger(__name__).name == __name__
+
+def test_smoke_auth_public_surface_is_complete() -> None:
+    """Every required public symbol is exported in __all__ and importable."""
+    missing = [sym for sym in _REQUIRED_SYMBOLS if sym not in auth_all]
+    assert not missing, f"auth __all__ is missing symbols: {missing}"
+
+
+def test_smoke_auth_key_symbols_are_importable() -> None:
+    """Key concrete symbols are importable and have the expected types."""
+    import inspect
+
+    assert inspect.isclass(AeatAuthenticator), "AeatAuthenticator must be a class"
+    assert inspect.isclass(ClaveMovilAuthProvider), "ClaveMovilAuthProvider must be a class"
+    assert inspect.isclass(AuthError), "AuthError must be a class"
+    assert issubclass(AuthError, Exception), "AuthError must inherit from Exception"
+    assert callable(select_provider), "select_provider must be callable"

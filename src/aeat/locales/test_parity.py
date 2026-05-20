@@ -94,8 +94,11 @@ def test_codebase_namespaces_are_satisfied_by_locale_entries(locales_state, mana
     """Every dynamic-namespace marker has at least one concrete locale entry."""
     _, locale_keys_map, _ = locales_state
     namespaces = manager.get_codebase_namespaces()
-    if not namespaces:
-        return
+    assert namespaces, (
+        "manager.get_codebase_namespaces() returned an empty collection. "
+        "The namespace scanner may be broken or misconfigured. "
+        "Fix the scanner rather than silently skipping the namespace coverage check."
+    )
 
     errors = []
     for marker in sorted(namespaces):

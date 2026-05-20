@@ -135,19 +135,27 @@ def test_resume_refuses_non_resumable_reason(cli_runner: CliRunner) -> None:
     assert "terminal by design" in result.output
 
 
-def test_resume_emits_no_bucket_event() -> None:
-    """The resume verb is structurally read-only: it neither emits a bucket
-    event nor calls into BucketEventHistoryRepository at all.
+def test_resume_emits_no_bucket_event(cli_runner: CliRunner) -> None:
+    """The resume verb must not emit any bucket event into BucketEventHistoryRepository.
 
-    Verified at the source level so a future refactor that adds an event
-    emission to the verb must consciously update this contract."""
-    from aeat.entrypoints.cli import _modelo
+    Drives `work resume` against a real persisted aborted run through the CLI
+    runner and asserts that the real BucketEventHistoryRepository (backed by
+    the isolated SQLite engine) has zero entries after the command completes.
+    """
+    from aeat.domain.buckets import BucketEventHistoryRepository
 
-    source = Path(_modelo.__file__).read_text(encoding="utf-8")
-    # Slice the source to just the work_resume function definition.
-    assert "def work_resume" in source
-    start = source.index("def work_resume")
-    end = source.index("def _parse_amendment_casilla", start)
-    body = source[start:end]
-    assert "bucket_event" not in body.lower()
-    assert "BucketEventHistory" not in body
+    run_id = "d" * 16
+    save_run(_aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE))
+
+    repo = BucketEventHistoryRepository()
+    before = repo.load().events
+
+    result = cli_runner.invoke(work_app, ["resume", run_id])
+
+    after = repo.load().events
+    new_event_ids = set(after.keys()) - set(before.keys())
+    assert not new_event_ids, (
+        f"`work resume` emitted {len(new_event_ids)} unexpected bucket event(s): "
+        f"{new_event_ids!r}. The resume verb must be read-only. "
+        f"CLI output:\n{result.output}"
+    )
