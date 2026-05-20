@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_pago_autoliquidacion_cuenta.label_405817",
+    label="entries.portal_pago_autoliquidacion_cuenta.label",
     purpose="entries.portal_pago_autoliquidacion_cuenta.purpose",
 )
 """Portal entry for self-assessment payment via bank account (NRC issuance)."""

@@ -23,7 +23,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m369_oss_ioss.label_354748",
+    label="entries.portal_m369_oss_ioss.label",
     purpose="entries.portal_m369_oss_ioss.purpose",
 )
 """Portal entry for Modelo 369 (OSS / IOSS one-stop-shop VAT return)."""

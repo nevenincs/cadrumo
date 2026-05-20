@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_consulta_pagos.label_872613",
+    label="entries.portal_consulta_pagos.label",
     purpose="entries.portal_consulta_pagos.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the payment / NRC enquiry page."""

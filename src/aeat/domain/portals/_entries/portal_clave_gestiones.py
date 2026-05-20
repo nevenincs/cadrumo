@@ -19,7 +19,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CLAVE_PERMANENTE,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_clave_gestiones.label_802490",
+    label="entries.portal_clave_gestiones.label",
     purpose="entries.portal_clave_gestiones.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Cl@ve self-service page."""

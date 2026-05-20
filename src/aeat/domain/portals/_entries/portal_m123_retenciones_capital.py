@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m123_retenciones_capital.label_392660",
+    label="entries.portal_m123_retenciones_capital.label",
     purpose="entries.portal_m123_retenciones_capital.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 123 procedure page."""

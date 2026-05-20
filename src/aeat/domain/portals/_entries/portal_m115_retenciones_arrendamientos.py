@@ -26,7 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m115_retenciones_arrendamientos.label_841139",
+    label="entries.portal_m115_retenciones_arrendamientos.label",
     purpose="entries.portal_m115_retenciones_arrendamientos.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 115 procedure page."""

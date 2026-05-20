@@ -1516,6 +1516,145 @@ cli:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
 dotted:
   key: Dotted key
+entries:
+  portal_calendario_contribuyente:
+    label: Taxpayer Calendar
+    purpose: Annual calendar of tax deadlines and obligations.
+  portal_cert_selection:
+    label: Electronic Certificate Selection
+    notes:
+      '0': The browser must have the certificate installed in its store.
+    purpose: Gateway for selecting the digital certificate used to authenticate.
+  portal_cert_validation_rest:
+    label: Electronic Certificate Validation
+    purpose: Service that checks the validity of digital certificates.
+  portal_clave_gestiones:
+    label: Cl@ve PIN — Procedures
+    purpose: Management and issuance of the temporary Cl@ve PIN credential.
+  portal_clave_idp_root:
+    label: Cl@ve — Electronic Identification
+    purpose: Cl@ve identity provider for authentication with the AEAT.
+  portal_clave_sede_entry:
+    label: Sign in with Cl@ve
+    purpose: Electronic Office entry point using the Cl@ve system.
+  portal_consulta_pagos:
+    label: Payment and Refund Lookup
+    purpose: Review of the status of tax payments and refunds.
+  portal_dnie_sede_entry:
+    label: Sign in with the Electronic ID Card
+    purpose: Electronic Office entry point using the Spanish electronic ID card.
+  portal_domiciliacion_bancaria:
+    label: Set Up Direct Debit for Payments
+    purpose: Direct-debit setup for self-assessments and tax payments.
+  portal_m036_censal:
+    label: Form 036 — Census Declaration
+    purpose: Registration, amendment and deregistration in the census of businesses
+      and professionals.
+  portal_m037_censal_simplificada:
+    label: Form 037 — Simplified Census Declaration (retired)
+    notes:
+      '0': Abolished by Order HAC/1526/2024, effective from 2025-02-03.
+      '1': Use Form 036 for any subsequent census procedure.
+    purpose: Simplified census declaration for sole traders, abolished in 2025.
+  portal_m100_renta:
+    label: Form 100 — Personal Income Tax Return
+    purpose: Annual personal income tax (IRPF) return.
+  portal_m111_retenciones_trabajo:
+    label: Form 111 — Withholdings on Employment Income
+    purpose: Self-assessment of IRPF withholdings and payments on account for employment
+      income.
+  portal_m115_retenciones_arrendamientos:
+    label: Form 115 — Withholdings on Property Rental
+    purpose: Self-assessment of IRPF withholdings on urban property rentals.
+  portal_m123_retenciones_capital:
+    label: Form 123 — Withholdings on Investment Income
+    purpose: Self-assessment of IRPF withholdings on investment income.
+  portal_m130_pago_fraccionado_ed:
+    label: Form 130 — IRPF Instalment Payment (direct assessment)
+    purpose: Quarterly IRPF instalment payment for sole traders under direct assessment.
+  portal_m131_pago_fraccionado_eo:
+    label: Form 131 — IRPF Instalment Payment (objective assessment)
+    purpose: Quarterly IRPF instalment payment for sole traders under objective assessment
+      (modules).
+  portal_m180_resumen_arrendamientos:
+    label: Form 180 — Annual Summary of Property Rentals
+    purpose: Annual summary of withholdings on urban property rentals.
+  portal_m190_resumen_trabajo:
+    label: Form 190 — Annual Summary of Employment Withholdings
+    purpose: Annual summary of withholdings and payments on account for employment
+      income.
+  portal_m193_resumen_capital:
+    label: Form 193 — Annual Summary of Investment Withholdings
+    purpose: Annual summary of withholdings on investment income.
+  portal_m200_sociedades_anual:
+    label: Form 200 — Corporate Income Tax Return
+    purpose: Annual corporate income tax return.
+  portal_m202_sociedades_fraccionado:
+    label: Form 202 — Corporate Income Tax Instalment Payment
+    purpose: Instalment payment on account of corporate income tax.
+  portal_m232_vinculadas:
+    label: Form 232 — Related-Party Transactions
+    purpose: Informational return of transactions with related persons or entities.
+  portal_m303_iva_autoliquidacion:
+    label: Form 303 — VAT Self-Assessment
+    purpose: Periodic value added tax (VAT) self-assessment.
+  portal_m347_operaciones_terceros:
+    label: Form 347 — Transactions with Third Parties
+    purpose: Annual informational return of transactions with third parties above
+      EUR 3,005.06.
+  portal_m349_intracomunitarias:
+    label: Form 349 — Intra-Community Transactions
+    purpose: Recapitulative statement of intra-Community supplies of goods and services.
+  portal_m369_oss_ioss:
+    label: Form 369 — VAT One-Stop Shop (OSS/IOSS)
+    purpose: VAT self-assessment under the OSS and IOSS one-stop-shop schemes.
+  portal_m390_resumen_iva:
+    label: Form 390 — Annual VAT Summary
+    purpose: Annual summary return for value added tax.
+  portal_m720_bienes_extranjero:
+    label: Form 720 — Assets and Rights Held Abroad
+    purpose: Informational return of assets and rights located abroad.
+  portal_m840_iae:
+    label: Form 840 — Tax on Economic Activities
+    purpose: Return for the tax on economic activities (IAE).
+  portal_mi_area_personal:
+    label: My Personal Area
+    purpose: Authenticated taxpayer personal area in the Electronic Office.
+  portal_mis_datos_censales:
+    label: My Census Data
+    purpose: Review of the taxpayer's registered census data.
+  portal_mis_documentos_pendientes_firma:
+    label: Documents Awaiting Signature
+    purpose: Signature portfolio with documents awaiting electronic signature.
+  portal_mis_expedientes:
+    label: My Case Files
+    purpose: Review of the status of the taxpayer's case files and procedures.
+  portal_mis_notificaciones:
+    label: My Notifications
+    purpose: Electronic mailbox for AEAT notifications and communications.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pay Self-Assessment by Bank Account Charge
+    purpose: Payment of self-assessments by charge to a bank account.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pay Self-Assessment by Card or Bizum
+    purpose: Payment of self-assessments by bank card or Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pay Assessments and Debts
+    purpose: Payment of assessments raised by the AEAT and tax debts.
+  portal_pre303_ayuda:
+    label: Pre303 — Form 303 Assistance Service
+    purpose: Pre303 assistance service for preparing the Form 303 draft.
+  portal_presentar_consultar_index:
+    label: File and Review Tax Returns
+    purpose: Index of forms for filing or reviewing tax returns.
+  portal_renta_web_borrador:
+    label: Renta WEB — Income Tax Draft
+    notes:
+      '0': The draft is generated from the tax data held by the AEAT.
+    purpose: Renta WEB service to review and file the personal income tax draft.
+  portal_sede_root:
+    label: AEAT Electronic Office
+    purpose: Landing page of the AEAT Electronic Office.
 errors:
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.

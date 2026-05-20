@@ -20,7 +20,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_clave_idp_root.label_655035",
+    label="entries.portal_clave_idp_root.label",
     purpose="entries.portal_clave_idp_root.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Cl@ve IdP root page."""

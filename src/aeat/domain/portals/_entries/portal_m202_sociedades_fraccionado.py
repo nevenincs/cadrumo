@@ -23,7 +23,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m202_sociedades_fraccionado.label_203074",
+    label="entries.portal_m202_sociedades_fraccionado.label",
     purpose="entries.portal_m202_sociedades_fraccionado.purpose",
 )
 """Portal entry for Modelo 202 (corporate-tax instalment payment)."""

@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m193_resumen_capital.label_188618",
+    label="entries.portal_m193_resumen_capital.label",
     purpose="entries.portal_m193_resumen_capital.purpose",
 )
 """Portal entry for Modelo 193 (annual summary of movable-capital withholdings)."""
