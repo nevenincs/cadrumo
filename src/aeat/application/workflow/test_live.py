@@ -7,7 +7,7 @@ backend. This test is deliberately minimal: it asserts that
 adapters, which is the only stable contract this subpackage can
 verify against live Settings without driving a real AEAT round-trip.
 
-The test is gated via :func:`aeat.entrypoints.cli._live.requires_live_enabled`
+The test is gated via :func:`aeat.tests.live_gate.requires_live_enabled`
 per the project's canonical opt-in env var
 ``AEAT_LIVE_TESTS_ENABLED``.
 """
@@ -19,7 +19,7 @@ from datetime import date
 import pytest
 
 from aeat.application.workflow import WorkflowError, default_engine
-from aeat.entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
 

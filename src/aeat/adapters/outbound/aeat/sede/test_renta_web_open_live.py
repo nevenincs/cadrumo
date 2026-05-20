@@ -12,7 +12,7 @@ from .....domain.calculations.registry._remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from .....domain.calculations.registry._schema import LiveCrossReferenceDecision
-from .....entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 from ._renta_web_open import RentaWebOpenSedeDriver
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]

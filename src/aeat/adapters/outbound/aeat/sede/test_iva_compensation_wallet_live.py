@@ -22,7 +22,7 @@ from aeat.adapters.persistence.storage import get_master_key_provider
 from aeat.application.auth import AuthProviderKind, ensure_authenticated_aeat_session
 from aeat.core.config import load_settings
 from aeat.core.errors import AeatError
-from aeat.entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

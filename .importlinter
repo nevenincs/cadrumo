@@ -118,22 +118,10 @@ ignore_imports =
     # application/ may import adapters/ for outbound wiring; full inversion
     # would require a major refactor and is deferred.
     aeat.application.** -> aeat.adapters.**
-    # ── application → entrypoints (test live-gate sentinels) ──
-    aeat.application.workflow.test_live -> aeat.entrypoints.cli._live
+    # ── application → entrypoints (test CLI-runner sentinels) ──
     aeat.application.setup.test_cli -> aeat.tests.cli_runner
     aeat.application.test_config_parity -> aeat.tests.cli_runner
     aeat.application.aggregation.test_renta_ledger -> aeat.entrypoints.cli._common
-    # ── adapters → entrypoints (live-test sentinel imports) ──
-    aeat.adapters.outbound.aeat.browser.test_live_evasion -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.sede.test_declarations_live -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.sede.test_groi_check_live -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.sede.test_groi_dependency_chain_live -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.sede.test_groi_oracle_live -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.sede.test_renta_web_open_capture_replay -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.sede.test_renta_web_open_explore_dom -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.sede.test_renta_web_open_live -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.sede.test_renta_web_open_safety_live_proof -> aeat.entrypoints.cli._live
-    aeat.adapters.outbound.aeat.verify.test_verify_live -> aeat.entrypoints.cli._live
     # ── domain → adapters (repositories backed by persistence substrate) ──
     # Many domain repositories directly import the SQL persistence substrate.
     # Full inversion (Protocol + adapter injection) deferred to a future refactor.
