@@ -58,15 +58,15 @@ def _write_valid_normative(root: Path) -> None:
                 "id": "ley-35-2006",
                 "kind": "ley",
                 "number": "35/2006",
-                "title": "Ley 35/2006",
+                "title": {"es": "Ley 35/2006"},
                 "published_at": "2006-11-29",
                 "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
                 "boe_id": "BOE-A-2006-20764",
                 "articulos": [
                     {
                         "numero": "32",
-                        "titulo": "Reducciones",
-                        "summary": "Resumen.",
+                        "titulo": {"es": "Reducciones"},
+                        "summary": {"es": "Resumen."},
                         "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
                     }
                 ],
@@ -114,13 +114,34 @@ def test_citations_verify_emits_json_when_format_json_is_set() -> None:
     assert isinstance(payload["issues"], list)
 
 
-def test_citations_list_propagates_corpus_load_failures_through_error_boundary() -> None:
+def test_citations_list_propagates_corpus_load_failures_through_error_boundary(tmp_path: Path) -> None:
     """``citations list`` is not resilient by design — it cannot list
     references when the schema-strict loader fails. The CLI must
     surface the failure through the central error boundary, not
     crash the process."""
 
-    result = _invoke("citations", "list")
+    # A normative whose title is a bare string violates the
+    # LocalizedText schema; the schema-strict loader rejects the
+    # corpus at load time.
+    (tmp_path / "ley-broken.json").write_text(
+        json.dumps(
+            {
+                "id": "ley-broken",
+                "kind": "ley",
+                "number": "1/2000",
+                "title": "not-a-localized-mapping",
+                "published_at": "2000-01-01",
+                "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2000-00001",
+                "boe_id": "BOE-A-2000-00001",
+                "articulos": [],
+                "tags": [],
+                "last_reviewed_at": "2026-04-12",
+                "reviewed_by": "wgergely",
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = _invoke_with_env("citations", "list", env=_env_with_normatives_root(tmp_path))
     # The central error boundary turns the typed exception into a
     # non-zero exit. The exact code depends on the
     # NormativeParseError → ErrorCategory mapping.
