@@ -328,3 +328,4 @@ are accepting, and unexpected exceptions must keep propagating.
 
 - [x] `W08.P18.S126` - make historical M037 ownership accept only the explicit “not present in the calculation registry” snapshot error; any other `RegistrySnapshotError` now propagates instead of being swallowed.
 - [x] `W08.P18.S127` - add a registry production-code hygiene gate that rejects `except ...: pass` and `contextlib.suppress` so future exception swallowing fails in tests.
+- [x] `W08.P18.S128` - preserve the original `AttributeError` message when extraction-profile parser resolution fails, so dotted parser validation does not hide the failing attribute lookup.

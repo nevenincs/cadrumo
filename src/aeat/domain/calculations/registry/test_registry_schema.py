@@ -766,7 +766,7 @@ def test_validator_rejects_extraction_profile_parser_that_does_not_resolve() -> 
     profile = revision.extraction_profiles[0].model_copy(update={"parser": "aeat.missing_registry_parser"})
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
-    with pytest.raises(RegistryValidationError, match="does not resolve attribute"):
+    with pytest.raises(RegistryValidationError, match=r"does not resolve attribute 'missing_registry_parser'.*aeat"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
