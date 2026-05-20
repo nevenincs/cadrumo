@@ -31,35 +31,27 @@ class InvoiceReviewProjection(BaseModel):
     review: InvoiceReviewRecord | None = None
 
 
+class InvoiceMatchRow(BaseModel):
+    """One invoice row in an :class:`InvoiceMatchProjection`.
+
+    ``payment`` carries the matched transaction id; it is ``None`` for
+    an unmatched invoice.
+    """
+
+    model_config = ConfigDict(frozen=True, strict=True, extra="forbid")
+
+    invoice: str
+    payment: str | None = None
+
+
 class InvoiceMatchProjection(BaseModel):
     """Backend-owned invoice/payment matching projection."""
 
     model_config = ConfigDict(frozen=True)
 
     period: str
-    matched: tuple[dict[str, str], ...]
-    unmatched: tuple[dict[str, str], ...]
-
-
-def _coerce_invoice_review(raw: object) -> InvoiceReviewRecord | None:
-    """Coerce a raw value from WorkflowState.invoice_reviews to InvoiceReviewRecord.
-
-    WorkflowState.invoice_reviews is typed `dict[str, Any]` to accept
-    both already-validated InvoiceReviewRecord instances and raw dicts
-    that need re-validation (e.g. after JSON deserialisation). This
-    helper dispatches on the runtime shape and raises explicitly on
-    anything else so the unsupported value does not silently slip
-    through the projection pipeline.
-    """
-    if raw is None:
-        return None
-    if isinstance(raw, InvoiceReviewRecord):
-        return raw
-    if isinstance(raw, dict):
-        return InvoiceReviewRecord.model_validate(raw)
-    raise TypeError(
-        f"WorkflowState.invoice_reviews value must be InvoiceReviewRecord or dict; got {type(raw).__name__}"
-    )
+    matched: tuple[InvoiceMatchRow, ...]
+    unmatched: tuple[InvoiceMatchRow, ...]
 
 
 def project_invoice_reviews(
@@ -73,7 +65,7 @@ def project_invoice_reviews(
 
     rows: list[InvoiceReviewProjection] = []
     for invoice in catalogue.values():
-        review = _coerce_invoice_review(state.invoice_reviews.get(invoice.invoice_id))
+        review = state.invoice_reviews.get(invoice.invoice_id)
         status = invoice_review_status(invoice, review)
         if spec.kind is not None and invoice.kind is not spec.kind:
             continue
@@ -164,15 +156,15 @@ def project_invoice_payment_matches(
 ) -> InvoiceMatchProjection:
     """Return period-labelled invoice/payment match status."""
 
-    matched: list[dict[str, str]] = []
-    unmatched: list[dict[str, str]] = []
+    matched: list[InvoiceMatchRow] = []
+    unmatched: list[InvoiceMatchRow] = []
     for invoice in catalogue.values():
-        review = _coerce_invoice_review(state.invoice_reviews.get(invoice.invoice_id))
+        review = state.invoice_reviews.get(invoice.invoice_id)
         payment_id = (review.fields.get("payment.id") if review else None) or ""
         if payment_id and payment_id in transactions.transactions:
-            matched.append({"invoice": invoice.invoice_id, "payment": payment_id})
+            matched.append(InvoiceMatchRow(invoice=invoice.invoice_id, payment=payment_id))
         else:
-            unmatched.append({"invoice": invoice.invoice_id})
+            unmatched.append(InvoiceMatchRow(invoice=invoice.invoice_id))
     return InvoiceMatchProjection(period=period, matched=tuple(matched), unmatched=tuple(unmatched))
 
 
@@ -185,6 +177,7 @@ def _format_decimal(value: Decimal | None) -> str:
 
 __all__ = [
     "InvoiceMatchProjection",
+    "InvoiceMatchRow",
     "InvoiceReviewProjection",
     "apply_manual_invoice_match",
     "invoice_display_amounts",

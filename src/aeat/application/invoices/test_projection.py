@@ -19,7 +19,12 @@ from ...domain.transactions import (
 )
 from ..review import InvoiceReviewFilterSpec, update_invoice_review
 from ..workflow import WorkflowState
-from . import apply_manual_invoice_match, project_invoice_payment_matches, project_invoice_reviews
+from . import (
+    InvoiceMatchRow,
+    apply_manual_invoice_match,
+    project_invoice_payment_matches,
+    project_invoice_reviews,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -88,7 +93,9 @@ def test_manual_match_projection_records_payment_and_matches_existing_transactio
         state=state,
     )
 
-    assert projection.matched == ({"invoice": invoice.invoice_id, "payment": transaction_id},)
+    assert projection.matched == (
+        InvoiceMatchRow(invoice=invoice.invoice_id, payment=transaction_id),
+    )
     assert projection.unmatched == ()
 
 
