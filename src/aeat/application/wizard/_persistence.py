@@ -10,12 +10,18 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel
 
 from ..user_profile._orchestration import register_active_profile, set_active_fields
 from ..workflow._models import WorkflowState
 from ._models import WizardFlow, WizardQuestion
+
+WizardPersistMode = Literal["create", "edit"]
+"""Which wizard verb is persisting — ``create`` registers a new profile,
+``edit`` upserts facts on an existing one. The verb is the authority for
+the create-vs-edit branch; it is never re-derived at runtime."""
 
 
 def _canonicalise(question: WizardQuestion, value: object) -> str:
@@ -74,42 +80,35 @@ def persist_answers(
     *,
     state: WorkflowState,
     profile_name: str,
-    profile_existed: bool,
+    mode: WizardPersistMode,
 ) -> WorkflowState:
     """Persist ``answers`` into the profile bucket and return updated state.
 
     Each profile-bound question contributes one canonical-token entry to
     the profile bucket.
 
-    ``profile_existed`` is the create-vs-edit discriminator. It MUST be
-    captured by the caller BEFORE any pointer or manifest write — once
-    the wizard pre-writes the active-profile pointer (the engine-URL
-    load-order requirement), a re-derived check inside this function
-    can no longer tell a first-run create from an edit. ``False``
-    routes to :func:`register_active_profile` (which refuses a
-    duplicate name); ``True`` routes to the edit path.
+    ``mode`` is the create-vs-edit discriminator and is the wizard
+    verb itself, not a runtime-detected fact. ``"create"`` routes to
+    :func:`register_active_profile`, which refuses a name that already
+    has a manifest. ``"edit"`` routes to :func:`set_active_fields`,
+    which upserts facts on the active profile and surfaces
+    :class:`ProfileNotFoundError` when no such profile exists. The
+    caller guards both refusals before the wizard runs; this branch
+    only selects the persistence pathway.
     """
 
-    from ...domain.user_profile import ProfileNotFoundError, UserProfileFact
+    from ...domain.user_profile import UserProfileFact
 
     canonical = serialise_answers(flow, answers)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
-    if not profile_existed:
+    if mode == "create":
         return register_active_profile(
             state,
             profile_id=profile_name,
             display_name=profile_name,
             facts=facts,
         )
-    try:
-        return set_active_fields(state, facts)
-    except ProfileNotFoundError:
-        return register_active_profile(
-            state,
-            profile_id=profile_name,
-            display_name=profile_name,
-            facts=facts,
-        )
+    return set_active_fields(state, facts)
 
 
 def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
@@ -155,6 +154,7 @@ def _parse_canonical(question: WizardQuestion, raw: str) -> object:
 
 
 __all__ = [
+    "WizardPersistMode",
     "persist_answers",
     "project_answers",
     "serialise_answers",

@@ -204,6 +204,10 @@ application:
   user_profile:
     errors:
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
+      profile_already_exists: El perfil '%{profile}' ja existeix; executa `aeat config
+        profile switch NAME` per activar-lo o `aeat config profile delete NAME` primer.
+      profile_not_registered: El perfil '%{profile}' no existeix; executa `aeat config
+        profile create NAME` per crear-lo.
   wizard:
     errors:
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
@@ -342,11 +346,14 @@ cli:
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
-        app_help: cli.app.live.iva_wallet.app_help
-        capture_history_help: cli.app.live.iva_wallet.capture_history_help
-        history_help: cli.app.live.iva_wallet.history_help
-        pull_help: cli.app.live.iva_wallet.pull_help
-        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
+        app_help: Captura de la cartera de compensació d'IVA de l'AEAT (només lectura).
+        capture_history_help: Captura en directe l'historial de Modelo 303 presentats
+          i persisteix l'estat segur de compensació d'IVA.
+        history_help: Llista l'historial local segur de compensació d'IVA derivat de
+          les captures de Modelo 303 presentats.
+        pull_help: Descarrega en directe i persisteix la cartera de compensació d'IVA
+          de l'AEAT.
+        taxpayer_nif_help: NIF del contribuent; per defecte, la identitat autenticada.
       limit_help: Nombre màxim de files a capturar
       modelo_help: Codi de model
       notifications:
@@ -484,11 +491,12 @@ cli:
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       readiness:
-        modelo_help: cli.app.modelo.readiness.modelo_help
-        period_help: cli.app.modelo.readiness.period_help
-        revision_help: cli.app.modelo.readiness.revision_help
-        year_help: cli.app.modelo.readiness.year_help
-      readiness_help: cli.app.modelo.readiness_help
+        modelo_help: Codi de model (p. ex. 303).
+        period_help: Token de període (p. ex. Q1, annual).
+        revision_help: Identificador de revisió del registre.
+        year_help: Exercici de presentació.
+      readiness_help: Informa de si el perfil actiu està a punt per presentar un model
+        / exercici / període.
       reconcile:
         errors:
           exclusive_source: --from-justificante i --from-declaration són mútuament
@@ -620,10 +628,10 @@ cli:
       clear_sessions_help: Netejar sessions AEAT persistides
       configure_help: Configurar el proveïdor d'autenticació actiu
       diagnostics:
-        help: cli.config.auth.diagnostics.help
-        id_help: cli.config.auth.diagnostics.id_help
-        list_help: cli.config.auth.diagnostics.list_help
-        show_help: cli.config.auth.diagnostics.show_help
+        help: Inspecciona els diagnòstics d'autenticació xifrats.
+        id_help: Identificador del diagnòstic.
+        list_help: Llista els diagnòstics d'autenticació Cl@ve xifrats.
+        show_help: Mostra un diagnòstic d'autenticació xifrat i redactat.
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
       no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config profile
@@ -757,7 +765,7 @@ cli:
         refresh_help: Descarrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
-      create_help: cli.config.profile.create_help
+      create_help: Inicialitza un perfil actiu nou i el seu bucket de configuració.
       delete_help: Elimina un perfil i el seu estat local; --yes confirma
       delete_name_help: Nom del perfil que vols eliminar
       delete_requires_yes: L'eliminació és destructiva. Torna a executar 'aeat config

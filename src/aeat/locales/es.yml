@@ -137,9 +137,9 @@ application:
     operator:
       errors:
         dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
-          resuelve a un bucket de perfil registrado. Ejecuta `aeat config profile list`
-          para inspeccionar los perfiles registrados y después `aeat config profile
-          switch NAME` o `aeat config profile create NAME`.
+          resuelve a un bucket de perfil registrado. Ejecuta `aeat config profile
+          list` para inspeccionar los perfiles registrados y después `aeat config
+          profile switch NAME` o `aeat config profile create NAME`.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
         unreadable_active_profile: El perfil activo '%{active_profile}' tiene un manifiesto
@@ -204,6 +204,10 @@ application:
   user_profile:
     errors:
       no_active_profile_selected: No hay un perfil activo seleccionado.
+      profile_already_exists: El perfil '%{profile}' ya existe; ejecuta `aeat config
+        profile switch NAME` para activarlo o `aeat config profile delete NAME` primero.
+      profile_not_registered: El perfil '%{profile}' no existe; ejecuta `aeat config
+        profile create NAME` para crearlo.
   wizard:
     errors:
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
@@ -342,11 +346,14 @@ cli:
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
-        app_help: cli.app.live.iva_wallet.app_help
-        capture_history_help: cli.app.live.iva_wallet.capture_history_help
-        history_help: cli.app.live.iva_wallet.history_help
-        pull_help: cli.app.live.iva_wallet.pull_help
-        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
+        app_help: Captura de la cartera de compensación de IVA de la AEAT (solo lectura).
+        capture_history_help: Captura en directo el historial de Modelo 303 presentados
+          y persiste el estado seguro de compensación de IVA.
+        history_help: Lista el historial local seguro de compensación de IVA derivado
+          de las capturas de Modelo 303 presentados.
+        pull_help: Descarga en directo y persiste la cartera de compensación de IVA
+          de la AEAT.
+        taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
       limit_help: Número máximo de filas a capturar
       modelo_help: Código de modelo
       notifications:
@@ -497,11 +504,12 @@ cli:
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       readiness:
-        modelo_help: cli.app.modelo.readiness.modelo_help
-        period_help: cli.app.modelo.readiness.period_help
-        revision_help: cli.app.modelo.readiness.revision_help
-        year_help: cli.app.modelo.readiness.year_help
-      readiness_help: cli.app.modelo.readiness_help
+        modelo_help: Código de modelo (p. ej. 303).
+        period_help: Token de periodo (p. ej. Q1, annual).
+        revision_help: Identificador de revisión del registro.
+        year_help: Ejercicio de presentación.
+      readiness_help: Informa de si el perfil activo está listo para presentar un modelo
+        / ejercicio / periodo.
       reconcile:
         errors:
           exclusive_source: --from-justificante y --from-declaration son mutuamente
@@ -633,10 +641,10 @@ cli:
       clear_sessions_help: Limpiar sesiones AEAT persistidas
       configure_help: Configurar el proveedor de autenticación activo
       diagnostics:
-        help: cli.config.auth.diagnostics.help
-        id_help: cli.config.auth.diagnostics.id_help
-        list_help: cli.config.auth.diagnostics.list_help
-        show_help: cli.config.auth.diagnostics.show_help
+        help: Inspecciona los diagnósticos de autenticación cifrados.
+        id_help: Identificador del diagnóstico.
+        list_help: Lista los diagnósticos de autenticación Cl@ve cifrados.
+        show_help: Muestra un diagnóstico de autenticación cifrado y redactado.
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
       no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config profile
@@ -771,7 +779,7 @@ cli:
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
-      create_help: cli.config.profile.create_help
+      create_help: Inicializa un nuevo perfil activo y su bucket de configuración.
       delete_help: Elimina un perfil y su estado local; --yes confirma
       delete_name_help: Nombre del perfil que quieres eliminar
       delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
@@ -929,8 +937,8 @@ cli:
       registry_unavailable: cli.diagnostics.summary.registry_unavailable
       secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
       secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
-      secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable}
-        fila(s) legible(s)'
+      secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable} fila(s)
+        legible(s)'
       state_backend_readable: cli.diagnostics.summary.state_backend_readable
       state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
       venv_in_sync: cli.diagnostics.summary.venv_in_sync

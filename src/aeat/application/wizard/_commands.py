@@ -38,7 +38,7 @@ from ...core.i18n import tr
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardMissingFlagError
 from ._models import WizardFlow, WizardQuestion, WizardWidget
-from ._persistence import persist_answers
+from ._persistence import WizardPersistMode, persist_answers
 from ._prompter import Prompter, QuestionaryPrompter, ScriptedPrompter
 from ._runner import run_flow
 
@@ -415,13 +415,19 @@ def _collect_flag_values(
     return canonical
 
 
-def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
+def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
     The returned closure carries one parameter per question in the
     flow (typed and annotated for Typer to derive a CLI flag) plus the
     three mode flags. Tests can pass a custom prompter through the
     keyword-only ``_prompter`` slot (not surfaced as a Typer option).
+
+    ``mode`` binds the closure to a single wizard verb. ``"create"``
+    refuses a name that already has a manifest; ``"edit"`` refuses a
+    name that has none. Both refusals fire before the wizard prompts,
+    so an operator is never walked through 40-odd questions only to
+    have the persistence step reject the work.
     """
 
     question_params = _question_parameters(flow)
@@ -430,6 +436,11 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
 
     def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
         from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+        from ..user_profile._orchestration import (
+            _refuse_duplicate_profile,
+            _require_registered_profile,
+            _write_active_profile_pointer,
+        )
         from ..workflow._persistence import workflow_state_repository
 
         raw_profile_name = kwargs.pop("profile_name")
@@ -439,6 +450,17 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
                 context={"flow_id": flow.id, "missing": ("profile_name",)},
             )
         profile_name = raw_profile_name.strip()
+
+        # Refuse BEFORE prompting and BEFORE any pointer/engine write.
+        # A `create` that targets an existing name, or an `edit` that
+        # targets a missing one, must neither walk the operator
+        # through the flow nor switch the active-profile pointer as a
+        # side effect.
+        if mode == "create":
+            _refuse_duplicate_profile(profile_name)
+        else:
+            _require_registered_profile(profile_name)
+
         quiet = bool(kwargs.pop("quiet", False))
         accept_defaults = bool(kwargs.pop("accept_defaults", False))
         canonical = _collect_flag_values(flow, kwargs)
@@ -469,14 +491,6 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
             active = _prompter if _prompter is not None else QuestionaryPrompter()
             answers = run_flow(flow, active, defaults=canonical)
 
-        # Capture create-vs-edit BEFORE any write. Once the pointer
-        # is pre-written below, a re-derived existence check can no
-        # longer distinguish a first-run create from an edit.
-        from ..user_profile._orchestration import _write_active_profile_pointer
-        from ..workflow._profile_bucket_scan import read_profile_bucket
-
-        profile_existed = read_profile_bucket(profile_name) is not None
-
         # Write the active-profile pointer BEFORE constructing the
         # workflow-state repository. `workflow_state_repository()`
         # eagerly opens the per-bucket SQLAlchemy engine in its
@@ -498,7 +512,7 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
                     answers,
                     state=state,
                     profile_name=profile_name,
-                    profile_existed=profile_existed,
+                    mode=mode,
                 )
             )
 
