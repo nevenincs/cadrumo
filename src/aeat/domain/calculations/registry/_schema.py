@@ -1504,6 +1504,7 @@ class CasillaConstraints(RegistryModel):
 class CasillaDefinition(RegistryModel):
     id: CasillaId
     number: str
+    segmento: str | None = Field(default=None, min_length=1, max_length=32)
     label: str
     section: tuple[str, ...]
     data_type: Literal[
