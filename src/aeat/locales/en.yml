@@ -180,11 +180,6 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
-  setup:
-    errors:
-      workspace_bucket_torn: Profile bucket '%{profile}' has a manifest but no profile
-        record; initialization did not complete. Run `aeat config repair profile --clear-active
-        --yes`, then create the profile again.
   user_profile:
     errors:
       no_active_profile_selected: No active profile selected.
@@ -796,6 +791,10 @@ cli:
         logs
       integrity_help: Probe secure-object and registry integrity.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
+      integrity_objects_help: Probe AES-256-GCM tag verification across one namespace
+        (or all).
+      integrity_registry_help: Run full registry validation (the opt-in cross-domain
+        integrity probe).
       list_all_help: Return every key, including unreadable.
       list_conflicting_flags: --all and --unreadable cannot be combined; pass one
         or neither.
@@ -1544,6 +1543,13 @@ errors:
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
+  financial:
+    source_file_not_found: 'Source file does not exist: {path}'
+  transaction:
+    import_source_invalid: the source is not a valid ledger document
+    ledger_import_failed: 'The ledger file cannot be imported: {reason}'
+    ledger_import_requires_bucket: Ledger source import requires an active profile
+      unless dry-run mode is used.
 filing:
   validation:
     deadline_missed: Submission deadline has passed

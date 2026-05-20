@@ -195,12 +195,6 @@ application:
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.
-  setup:
-    errors:
-      workspace_bucket_torn: A(z) '%{profile}' profil bucket manifesttel rendelkezik,
-        de nincs profilrekordja; az inicializálás nem fejeződött be. Futtasd az `aeat
-        config repair profile --clear-active --yes` parancsot, majd hozd létre újra
-        a profilt.
   user_profile:
     errors:
       no_active_profile_selected: Nincs kiválasztva aktív profil.
@@ -622,17 +616,21 @@ cli:
       diagnostics:
         help: Titkosított hitelesítési diagnosztikák vizsgálata.
         id_help: Diagnosztika azonosítója.
-        invalid_phone_state: 'Érvénytelen telefonállapot: ''%{phone_state}''. A várt értékek egyike: %{choices}.'
+        invalid_phone_state: 'Érvénytelen telefonállapot: ''%{phone_state}''. A várt
+          értékek egyike: %{choices}.'
         list_help: Titkosított Cl@ve hitelesítési diagnosztikák listázása.
         not_found: 'Hitelesítési diagnosztika nem található: %{diagnostic_id}.'
-        phone_state_help: 'Az alábbiak egyike: app_prompted_and_accepted, app_prompted_not_accepted, app_did_not_prompt, operator_did_not_check.'
-        report_help: 'A kezelő által megfigyelt Cl@ve alkalmazásállapot rögzítése egy hitelesítési diagnosztikához.'
+        phone_state_help: 'Az alábbiak egyike: app_prompted_and_accepted, app_prompted_not_accepted,
+          app_did_not_prompt, operator_did_not_check.'
+        report_help: A kezelő által megfigyelt Cl@ve alkalmazásállapot rögzítése egy
+          hitelesítési diagnosztikához.
         show_help: Egy szerkesztett, titkosított hitelesítési diagnosztika megjelenítése.
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
       help: Az aktív hitelesítési szolgáltató beállítása
-      login_fresh_help: 'Új élő hitelesítés kényszerítése mentett AEAT-munkamenet újrafelhasználása helyett.'
-      login_help: 'Élő AEAT-munkamenet megszerzése vagy ellenőrzése.'
-      login_reset_lock_help: 'Elavult hitelesítési zárolás törlése indítás előtt.'
+      login_fresh_help: Új élő hitelesítés kényszerítése mentett AEAT-munkamenet újrafelhasználása
+        helyett.
+      login_help: Élő AEAT-munkamenet megszerzése vagy ellenőrzése.
+      login_reset_lock_help: Elavult hitelesítési zárolás törlése indítás előtt.
       no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config profile
         create NAME' parancsot a hitelesítés beállítása előtt.
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
@@ -778,8 +776,8 @@ cli:
       export_out_help: A JSON-csomag célútvonala
       help: Az aktív profil konfigurációs értékeinek kezelése
       import_help: Regisztrálj hordozható profilcsomagot JSON-fájlból
-      import_label_help: Az importált profil megjelenítendő neve; alapértelmezésben a
-        csomagban tárolt név. Használd egy második példány másik néven történő importjához.
+      import_label_help: Az importált profil megjelenítendő neve; alapértelmezésben
+        a csomagban tárolt név. Használd egy második példány másik néven történő importjához.
       import_label_taken: Már létezik %{name} nevű profil. Futtasd újra a `--label
         ÚJ_NÉV` kapcsolóval, hogy más néven importáld.
       import_missing_bundle: 'Nem található profilcsomag itt: %{path}'
@@ -822,6 +820,10 @@ cli:
         és javítása
       integrity_help: A biztonságos objektumok és a nyilvántartás integritásának ellenőrzése.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
+      integrity_objects_help: AES-256-GCM címke-ellenőrzés futtatása egy névtérben
+        (vagy az összesben).
+      integrity_registry_help: Teljes registry-érvényesítés futtatása (az opcionális,
+        tartományközi integritásellenőrzés).
       list_all_help: Return every key, including unreadable.
       list_conflicting_flags: --all and --unreadable cannot be combined; pass one
         or neither.
@@ -832,9 +834,10 @@ cli:
       logs_lines_help: Megjelenítendő friss naplósorok száma
       profile_clear_active_help: Mutatófájlból származó aktív profil törlése csak
         akkor, ha olvashatatlan profilállapotra mutat.
-      profile_clear_active_mismatch: 'A --clear-active csak az aktív profilmutatót törölheti; a(z) ''%{profile}'' nem aktív.'
+      profile_clear_active_mismatch: A --clear-active csak az aktív profilmutatót
+        törölheti; a(z) '%{profile}' nem aktív.
       profile_help: Az aktív profilmutató vizsgálata és javítása.
-      profile_name_help: 'Egy adott regisztrált profil-bucket vizsgálata.'
+      profile_name_help: Egy adott regisztrált profil-bucket vizsgálata.
       profile_requires_yes: Add meg a --yes kapcsolót az aktív profilmutató törléséhez.
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
         --yes szükséges)
@@ -1567,6 +1570,13 @@ errors:
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} reláció nem rendelkezik értékkel.
     unknown_input_casillas: 'Ismeretlen cellaazonosítók a bemenetben: {casilla_ids}.'
+  financial:
+    source_file_not_found: 'A forrásfájl nem létezik: {path}'
+  transaction:
+    import_source_invalid: a forrás nem érvényes könyvelési dokumentum
+    ledger_import_failed: 'A könyvelési fájl nem importálható: {reason}'
+    ledger_import_requires_bucket: A könyvelési forrás importálásához aktív profil
+      szükséges, kivéve próbafuttatási módban.
 filing:
   validation:
     deadline_missed: A benyújtási határidő lejárt
