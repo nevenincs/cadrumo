@@ -308,3 +308,48 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
+
+    def test_legal_reference_axis_roles_do_not_warn_as_typos(self) -> None:
+        article = _casilla(
+            cid="a",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+        )
+        transitional = _casilla(
+            cid="b",
+            semantic_role="is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+        )
+        m = _modelo("200", "2024-y-siguientes", [article, transitional])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_optional_legal_regime_roles_do_not_warn_as_typos(self) -> None:
+        rdleg = _casilla(
+            cid="a",
+            semantic_role="is_deduccion_di_internacional_rdleg_pendiente",
+        )
+        current = _casilla(
+            cid="b",
+            semantic_role="is_deduccion_di_internacional_pendiente",
+        )
+        m = _modelo("200", "2024-y-siguientes", [rdleg, current])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_scope_token_sibling_roles_do_not_warn_as_typos(self) -> None:
+        detalle = _casilla(
+            cid="a",
+            semantic_role="is_correccion_detalle_correcciones_resultado_permanente_disminucion",
+        )
+        otras = _casilla(
+            cid="b",
+            semantic_role="is_correccion_otras_correcciones_resultado_permanente_disminucion",
+        )
+        m = _modelo("200", "2024-y-siguientes", [detalle, otras])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
