@@ -201,6 +201,12 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
+  setup:
+    errors:
+      workspace_bucket_torn: El bucket de perfil '%{profile}' tiene un manifiesto
+        pero no tiene un registro de perfil; la inicialización no se completó.
+        Ejecuta `aeat config repair profile --clear-active --yes` y después crea
+        el perfil de nuevo.
   user_profile:
     errors:
       no_active_profile_selected: No hay un perfil activo seleccionado.

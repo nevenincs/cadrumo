@@ -201,6 +201,12 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
+  setup:
+    errors:
+      workspace_bucket_torn: El bucket de perfil '%{profile}' té un manifest
+        però no té cap registre de perfil; la inicialització no s'ha completat.
+        Executa `aeat config repair profile --clear-active --yes` i després crea
+        el perfil de nou.
   user_profile:
     errors:
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
