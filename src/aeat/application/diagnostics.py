@@ -483,7 +483,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     from ..domain.calculations.registry._errors import RegistryValidationError
 
     try:
-        authority = ValidatedRegistryAuthority.load(registry_root, source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
         authority.snapshot(
             "100",
             filing_year=2025,

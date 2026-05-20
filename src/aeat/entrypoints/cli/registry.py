@@ -16,11 +16,10 @@ from ...application.registry import (
     verify_registry_tree,
     verify_registry_workbooks,
 )
+from ...core.i18n import tr
 from ...core.resources import bundled_path
 from ._common import _emit
-from ...core.i18n import tr
 from ._registry_corpus import citations_app, manuals_app
-
 
 app = typer.Typer(
     name="registry",
@@ -61,6 +60,16 @@ def _resolve_registry_root(value: Path | None) -> Path:
 
 def _resolve_workbook_root(value: Path | None) -> Path:
     return value if value is not None else bundled_path("corpus", "aeat_official", "disenos_registro")
+
+
+def _resolve_source_root(value: Path | None) -> Path:
+    """Resolve the corpus/source root, defaulting to the bundled data root.
+
+    Source citations carry corpus-root-relative paths (``corpus/...``);
+    they only resolve against the bundled data root, never the operator's
+    current working directory.
+    """
+    return value if value is not None else bundled_path()
 
 
 @app.command("inspect", help=tr("cli.registry.inspect_help"))
@@ -116,7 +125,7 @@ def verify_registry_cmd(
         ),
     ] = None,
     source_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--source-root",
             exists=True,
@@ -125,12 +134,12 @@ def verify_registry_cmd(
             readable=True,
             help=tr("cli.registry.verify_source_root_help"),
         ),
-    ] = Path("."),
+    ] = None,
 ) -> None:
     """Validate every registry modelo against shared legal/source catalogues."""
 
     registry_root = _resolve_registry_root(registry_root)
-    report = verify_registry_tree(registry_root, source_root=source_root)
+    report = verify_registry_tree(registry_root, source_root=_resolve_source_root(source_root))
     _emit(
         ctx,
         report,
@@ -243,7 +252,7 @@ def verify_filed_state_cmd(
         ),
     ] = None,
     source_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--source-root",
             exists=True,
@@ -252,7 +261,7 @@ def verify_filed_state_cmd(
             readable=True,
             help=tr("cli.registry.verify_source_root_help"),
         ),
-    ] = Path("."),
+    ] = None,
     required_casillas: Annotated[
         list[str] | None,
         typer.Option("--casilla", help=tr("cli.registry.casilla_help")),
@@ -264,7 +273,7 @@ def verify_filed_state_cmd(
         observation_path=observation_path,
         source_observation_paths=tuple(source_observation_paths or ()),
         registry_root=_resolve_registry_root(registry_root),
-        source_root=source_root,
+        source_root=_resolve_source_root(source_root),
         required_casillas=tuple(required_casillas or ()),
     )
     comparison = report.comparison
@@ -381,7 +390,7 @@ def run_parity_cmd(
         ),
     ] = None,
     source_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--source-root",
             exists=True,
@@ -390,7 +399,7 @@ def run_parity_cmd(
             readable=True,
             help=tr("cli.registry.verify_source_root_help"),
         ),
-    ] = Path("."),
+    ] = None,
     store_root: Annotated[
         Path,
         typer.Option(
@@ -417,7 +426,7 @@ def run_parity_cmd(
     tape, target = run_registry_parity(
         scenario_path=scenario_path,
         registry_root=_resolve_registry_root(registry_root),
-        source_root=source_root,
+        source_root=_resolve_source_root(source_root),
         store_root=store_root,
         output=output,
     )
@@ -459,7 +468,7 @@ def replay_parity_cmd(
         ),
     ] = None,
     source_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--source-root",
             exists=True,
@@ -468,14 +477,14 @@ def replay_parity_cmd(
             readable=True,
             help=tr("cli.registry.verify_source_root_help"),
         ),
-    ] = Path("."),
+    ] = None,
 ) -> None:
     """Replay one archived parity tape against the current registry runtime."""
 
     report = replay_registry_parity(
         tape_path=tape_path,
         registry_root=_resolve_registry_root(registry_root),
-        source_root=source_root,
+        source_root=_resolve_source_root(source_root),
     )
     _emit(
         ctx,
