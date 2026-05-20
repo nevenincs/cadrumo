@@ -1931,6 +1931,8 @@ wizard:
     checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
     invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
     invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
+      postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
     invalid_tax_id: 'NIF/NIE/CIF no válido para %{prompt_key}: %{raw}. %{detail}.'
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
