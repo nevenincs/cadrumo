@@ -31,6 +31,7 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..core.config import Settings
+from ..core.logging import get_logger
 from ..domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
@@ -49,6 +50,8 @@ from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+_log = get_logger(__name__)
 
 
 class ProjectionActiveProfile(BaseModel):
@@ -183,8 +186,10 @@ class OperatorStateProjection(BaseModel):
             by the ``(modelo, revision, year, period)`` request the
             caller asked for. Empty when no modelo target was supplied.
         pending_obligations: The deadline obligations for the active
-            profile's current year. The ``verify`` /
-            ``NO_PENDING_OBLIGATION`` gate reads the same datum.
+            profile's current year. Carried here for a future rewire
+            of the ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate;
+            that gate is not yet wired to this field and still
+            computes its own schedule independently.
     """
 
     model_config = _STRICT_FROZEN
@@ -280,6 +285,11 @@ def _build_auth_readiness(
             health_summary = description.health_summary or ""
             health_severity = description.health_severity or ""
         except Exception:
+            _log.warning(
+                "auth backend probe failed for provider %s; reporting unavailable",
+                provider,
+                exc_info=True,
+            )
             available = False
 
     return ProjectionAuthReadiness(
@@ -342,15 +352,20 @@ def _build_pending_obligations(
 ) -> tuple[ProjectionObligation, ...]:
     """Compute the deadline obligations for the active profile.
 
-    Carried in the projection so the ``NO_PENDING_OBLIGATION`` gate and
-    ``modelo readiness`` read the same obligation datum. A failure to
-    compute the schedule degrades to an empty tuple rather than failing
-    the whole projection.
+    Carried in the projection for a future rewire of the
+    ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate, which today
+    still computes its own schedule independently. A failure to
+    compute the schedule is logged and degrades to an empty tuple
+    rather than failing the whole projection.
     """
 
     try:
         schedule: Schedule = DeadlineEngine().compute(profile, today.year, today=today)
     except Exception:
+        _log.warning(
+            "deadline schedule computation failed; reporting no pending obligations",
+            exc_info=True,
+        )
         return ()
     return tuple(
         ProjectionObligation(
