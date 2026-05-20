@@ -99,32 +99,27 @@ def persist_answers(
     profile_id: str,
     mode: WizardPersistMode,
     supplied_question_ids: Collection[str] | None = None,
-    prior_pointer_text: str | None = None,
 ) -> WorkflowState:
     """Persist ``answers`` into the profile bucket and return updated state.
 
-    Each profile-bound question contributes one canonical-token entry to
-    the profile bucket.
-
     ``profile_id`` is the immutable UUID profile identity; ``profile_name``
-    is the operator-chosen display label. For ``"create"`` the caller
-    mints a fresh UUID; for ``"edit"`` the caller resolves the existing
-    profile's UUID from its label.
+    is the operator-chosen display label.
 
-    ``mode`` is the create-vs-edit discriminator and is the wizard
-    verb itself, not a runtime-detected fact. ``"create"`` routes to
-    :func:`register_active_profile`, which refuses a label that already
-    belongs to a live profile and writes the full answer set. ``"edit"``
-    routes to :func:`set_active_fields`, which upserts facts on the
-    active profile.
+    ``mode`` is the create-vs-edit discriminator and is the wizard verb
+    itself, not a runtime-detected fact. ``"create"`` routes to
+    :func:`register_active_profile`, which delegates the whole
+    cross-store create — bucket directory, manifest, encrypted record,
+    and the active-profile pointer — to :class:`ProfileRepository` as
+    one unit of work and refuses a label already carried by a live
+    profile. ``"edit"`` routes to :func:`set_active_fields`, which
+    upserts facts on the active profile.
 
     ``supplied_question_ids`` names the questions the operator
     explicitly supplied on the command line. On the ``"edit"`` path it
     scopes the write to exactly those questions: ``edit`` is a patch,
-    so a field the operator did not name must be left untouched on the
-    stored profile rather than rewritten at its descriptor default. It
-    must be supplied for ``"edit"``; it is ignored for ``"create"``,
-    which always registers the full set.
+    so a field the operator did not name is left untouched. It must be
+    supplied for ``"edit"``; it is ignored for ``"create"``, which
+    always registers the full set.
     """
 
     from ...domain.user_profile import UserProfileFact
@@ -137,7 +132,6 @@ def persist_answers(
             profile_id=profile_id,
             display_name=profile_name,
             facts=facts,
-            prior_pointer_text=prior_pointer_text,
         )
 
     if supplied_question_ids is None:
