@@ -105,7 +105,7 @@ All five are manual-input leaves with no `formula`, `binding`, or
 | R5 | 561 escaped-quote re-verification | IN PROGRESS | 561 | 114 boolean-flag clean; AEIP family defect found |
 | R6 | singleton-role review | OPEN | 506 | - |
 | R7 | Full semantic-correctness agent sweep | OPEN | - | - |
-| R8 | Source-data changes re-verification | OPEN | 5 changes | - |
+| R8 | Source-data changes re-verification | DONE | 5 change groups | all verified safe |
 | R9 | Downstream test suite (registry) | DONE | - | 1572 pass, 10 fail (pre-date this session) |
 | R10 | M123/130/131 calculation-test regressions | OPEN | 10 | - |
 
@@ -176,6 +176,23 @@ referenced by any M100 formula file, revision binding, or cross-modelo
 relation - they are pure manual-input leaves with no `export_refs`.
 This is a `data_type` source edit; recorded here per the source-data
 discipline.
+
+### 2026-05-20 - R8 source-data change re-verification
+
+Blast-radius re-check of every label/data_type/constraint edit made
+earlier this campaign:
+- `1096` text->nif, `0210` text->money default, RIC `dotacion_anio`
+  ->text: NOT referenced by any formula, revision binding, or relation
+  - pure leaves, safe.
+- `0153` +`non_negative` constraint: referenced by 1 formula
+  (`renta-2025-retenciones-arrendamientos-urbanos`); a constraint
+  validates the value without changing it, and a retention is
+  non-negative - safe.
+- `irpf_ed` 2025 money->decimal: referenced by 51 formula entries, but
+  the change only harmonised the 2025 instances to the 2020-2024
+  `decimal` baseline they were already inconsistent with; the full
+  registry suite's M100 estimacion-directa calculation tests pass.
+All five change groups verified safe.
 
 ### 2026-05-20 - R9 registry test suite (honest finding)
 
