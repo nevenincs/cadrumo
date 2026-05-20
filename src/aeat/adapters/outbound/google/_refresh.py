@@ -230,10 +230,6 @@ def _refresh_against_google(client: OAuthClient, token: OAuthToken) -> tuple[str
     )
 
 
-def utc_now() -> datetime:
-    return datetime.now(UTC)
-
-
 __all__ = [
     "ACCESS_TOKEN_REFRESH_BUFFER",
     "TESTING_PROJECT_TOKEN_LIFETIME",
@@ -242,5 +238,4 @@ __all__ = [
     "is_token_expired",
     "mark_reauth_required",
     "refresh_credentials",
-    "utc_now",
 ]
