@@ -155,6 +155,40 @@ def _emit_combined_primary_id_failures(
         failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
 
 
+def _emit_casilla_identity_failures(
+    failures: list[str],
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Append a failure for every duplicate ``(segmento, number)`` casilla pair.
+
+    A casilla's identity is the pair ``(segmento, number)``: a
+    multi-segment AEAT modelo (e.g. Modelo 200) reuses the same bare
+    five-digit ``number`` across distinct record segments, so uniqueness
+    must be keyed on the pair, not on ``number`` alone.
+
+    For a single-segment modelo every casilla leaves ``segmento`` unset,
+    so the pair degrades to ``(None, number)`` and this check reproduces
+    the prior bare-number uniqueness exactly: two casillas sharing a
+    number with no ``segmento`` collide on ``(None, number)`` and
+    hard-fail precisely as the previous duplicate-id check did.
+    """
+    pairs = [(casilla.segmento, casilla.number) for casilla in revision.casillas]
+    seen: set[tuple[str | None, str]] = set()
+    reported: set[tuple[str | None, str]] = set()
+    for pair in pairs:
+        if pair in seen and pair not in reported:
+            reported.add(pair)
+        seen.add(pair)
+    for segmento, number in sorted(reported, key=lambda item: (item[0] or "", item[1])):
+        if segmento is None:
+            failures.append(f"{prefix}: duplicate casilla number {number!r}")
+        else:
+            failures.append(
+                f"{prefix}: duplicate casilla number {number!r} within segmento {segmento!r}"
+            )
+
+
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     """Layout-binding predicate, delegated to the typed manual_input shape.
 
@@ -382,6 +416,7 @@ class RegistryValidator:
             failures.append(f"{prefix}: revision must declare official workbook parity coverage")
         _emit_per_kind_duplicate_failures(failures, prefix, ids_by_kind)
         _emit_combined_primary_id_failures(failures, prefix, ids_by_kind)
+        _emit_casilla_identity_failures(failures, prefix, revision)
         # The ``_validate_support_removal_decisions`` call below still
         # consumes the per-kind lists as kwargs; expose them as local
         # aliases so the existing signature shape stays unchanged.
