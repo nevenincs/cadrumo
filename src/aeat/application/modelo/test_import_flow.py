@@ -25,7 +25,7 @@ from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.modelo import (
     AmendmentEvidenceMissingError,
-    ExternalFilingImportError,
+    ExternalModeloImportError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
@@ -344,7 +344,7 @@ def test_import_refuses_casilla_ids_not_in_registry(repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
-    with pytest.raises(ExternalFilingImportError, match=r"9999|not declared"):
+    with pytest.raises(ExternalModeloImportError, match=r"9999|not declared"):
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={"9999": Decimal("100")},
@@ -365,7 +365,7 @@ def test_import_refuses_empty_casilla_values(repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
-    with pytest.raises(ExternalFilingImportError, match=r"empty|casilla"):
+    with pytest.raises(ExternalModeloImportError, match=r"empty|casilla"):
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={},
@@ -386,7 +386,7 @@ def test_import_refuses_empty_evidence_reference(repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
-    with pytest.raises(ExternalFilingImportError, match=r"evidence_reference_id|non-empty"):
+    with pytest.raises(ExternalModeloImportError, match=r"evidence_reference_id|non-empty"):
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={"01": Decimal("1500")},

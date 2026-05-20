@@ -291,7 +291,7 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     ref = RegistrySnapshotRef(
         modelo="303",
         revision_id="2025-y-siguientes",
-        filing_year=2025,
+        modelo_year=2025,
         period="1T",
     )
     original = ModeloDraft(

@@ -43,14 +43,14 @@ class DeadlineEngineProtocol(Protocol):
 
 
 @runtime_checkable
-class RegistryFilingDraftProtocol(ModeloDraftLike, Protocol):
+class RegistryModeloDraftProtocol(ModeloDraftLike, Protocol):
     """Workflow draft surface after registry-backed filing construction."""
 
     schema_version: str
 
 
 @runtime_checkable
-class FilingDraftBuilderProtocol(Protocol):
+class ModeloDraftBuilderProtocol(Protocol):
     """Narrow surface over :func:`aeat.application.filing.build_draft`."""
 
     def build(
@@ -61,7 +61,7 @@ class FilingDraftBuilderProtocol(Protocol):
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ) -> RegistryFilingDraftProtocol:
+    ) -> RegistryModeloDraftProtocol:
         """Build and return a registry-backed filing draft."""
         ...
 
@@ -70,7 +70,7 @@ class FilingDraftBuilderProtocol(Protocol):
 class SubmissionEngineProtocol(Protocol):
     """Read-only preflight surface over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
 
-    def preflight(self, draft: RegistryFilingDraftProtocol, *, today: date) -> None:
+    def preflight(self, draft: RegistryModeloDraftProtocol, *, today: date) -> None:
         """Run preflight gates against ``draft``; raise on failure."""
         ...
 
@@ -92,7 +92,7 @@ class CertificateBundleProtocol(Protocol):
 
 
 @runtime_checkable
-class FilingInputsProviderProtocol(Protocol):
+class ModeloInputsProviderProtocol(Protocol):
     """Provides filing inputs for the draft stage.
 
     Production adapters load inputs from bucket-scoped, secure application
@@ -115,8 +115,8 @@ class FilingInputsProviderProtocol(Protocol):
 __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineProtocol",
-    "FilingDraftBuilderProtocol",
-    "FilingInputsProviderProtocol",
-    "RegistryFilingDraftProtocol",
+    "ModeloDraftBuilderProtocol",
+    "ModeloInputsProviderProtocol",
+    "RegistryModeloDraftProtocol",
     "SubmissionEngineProtocol",
 ]

@@ -60,7 +60,7 @@ def _populated_draft() -> ModeloDraft:
         snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id="2025-y-siguientes",
-            filing_year=2025,
+            modelo_year=2025,
             period="1T",
         ),
         status=ModeloDraftStatus.BORRADOR,
@@ -136,7 +136,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
             assert loaded.snapshot_ref is not None
             assert loaded.snapshot_ref.modelo == "303"
             assert loaded.snapshot_ref.revision_id == "2025-y-siguientes"
-            assert loaded.snapshot_ref.filing_year == 2025
+            assert loaded.snapshot_ref.modelo_year == 2025
             assert loaded.snapshot_ref.period == "1T"
             computed = next(
                 v for v in loaded.values if v.kind is ModeloValueKind.COMPUTED

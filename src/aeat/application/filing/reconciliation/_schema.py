@@ -9,7 +9,7 @@ The schema deliberately covers only fields the justificante PDF exposes
 directly; per-casilla reconciliation is a modelo-specific follow-up
 handled elsewhere.
 
-See :class:`FilingDivergenceKind` for the closed taxonomy of divergence
+See :class:`ModeloDivergenceKind` for the closed taxonomy of divergence
 reasons referenced by :class:`FieldMismatch`.
 """
 
@@ -22,7 +22,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._kind import FilingDivergenceKind
+from ._kind import ModeloDivergenceKind
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
     strict=True,
@@ -46,7 +46,7 @@ class ReconciliationStatus(StrEnum):
     NOT_YET_FOUND = "not_yet_found"
 
 
-class FilingDraftRef(BaseModel):
+class ModeloDraftRef(BaseModel):
     """Lightweight reference to the local ModeloDraft side of a compare.
 
     Attributes:
@@ -116,7 +116,7 @@ class FieldMismatch(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    kind: FilingDivergenceKind
+    kind: ModeloDivergenceKind
     field_name: str = Field(min_length=1, max_length=64)
     draft_value: str = Field(max_length=256)
     remote_value: str = Field(max_length=256)
@@ -147,7 +147,7 @@ class ReconciliationReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     status: ReconciliationStatus
-    draft_ref: FilingDraftRef
+    draft_ref: ModeloDraftRef
     justificante: JustificanteRefSummary | None
     mismatches: tuple[FieldMismatch, ...] = ()
     reconciled_at: datetime
@@ -157,7 +157,7 @@ class ReconciliationReport(BaseModel):
 
 __all__ = [
     "FieldMismatch",
-    "FilingDraftRef",
+    "ModeloDraftRef",
     "JustificanteRefSummary",
     "ReconciliationReport",
     "ReconciliationStatus",

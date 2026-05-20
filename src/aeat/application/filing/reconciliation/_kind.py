@@ -1,6 +1,6 @@
 """Divergence taxonomy for ModeloDraft vs Justificante reconciliation.
 
-Defines :class:`FilingDivergenceKind`, the closed set of concrete
+Defines :class:`ModeloDivergenceKind`, the closed set of concrete
 instance-level reasons a local :class:`aeat.domain.filing.ModeloDraft`
 and its parsed AEAT :class:`aeat.domain.justificante.Justificante` can
 disagree.
@@ -16,7 +16,7 @@ from __future__ import annotations
 from enum import StrEnum
 
 
-class FilingDivergenceKind(StrEnum):
+class ModeloDivergenceKind(StrEnum):
     """Concrete divergence variants for a ModeloDraft vs Justificante compare.
 
     Each member identifies a single, mutually-exclusive reason why a
@@ -48,4 +48,4 @@ class FilingDivergenceKind(StrEnum):
     PRESENTATION_ID_MISMATCH = "presentation_id_mismatch"
 
 
-__all__ = ["FilingDivergenceKind"]
+__all__ = ["ModeloDivergenceKind"]

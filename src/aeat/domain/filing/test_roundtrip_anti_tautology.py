@@ -62,7 +62,7 @@ def _populated_draft() -> ModeloDraft:
         snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id="2025-y-siguientes",
-            filing_year=2025,
+            modelo_year=2025,
             period="1T",
         ),
         status=ModeloDraftStatus.BORRADOR,

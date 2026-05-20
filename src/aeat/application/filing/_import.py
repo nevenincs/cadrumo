@@ -25,7 +25,7 @@ from ...adapters.inbound.justificante import parse_justificante
 from ...core.logging import get_logger
 from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
 from ...domain.justificante import Justificante
-from .runtime import FilingOperatorProfile
+from .runtime import ModeloOperatorProfile
 
 if TYPE_CHECKING:
     from ...domain.submission import ModeloPresentado
@@ -107,7 +107,7 @@ def import_filing_from_justificante(
         raw_period=justificante.period,
         schema_provider=schema_provider,
     )
-    profile = FilingOperatorProfile(
+    profile = ModeloOperatorProfile(
         tax_id=justificante.tax_id,
         display_name=f"Imported filing {justificante.csv}",
     )

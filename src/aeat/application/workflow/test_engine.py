@@ -52,7 +52,7 @@ from ...domain.submission import SubmissionPreflightError
 from ...tests import FIXTURES_DIR
 from ..filing.runtime import build_runtime_schema_provider
 from . import (
-    RegistryFilingDraftProtocol,
+    RegistryModeloDraftProtocol,
     WorkflowAbortReason,
     WorkflowEngine,
     WorkflowStage,
@@ -124,7 +124,7 @@ class _ConcreteDraftBuilder:
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ) -> RegistryFilingDraftProtocol:
+    ) -> RegistryModeloDraftProtocol:
         if self.raise_exc is not None:
             raise self.raise_exc
         return self.draft
@@ -135,7 +135,7 @@ class _ConcreteSubmissionEngine:
     preflight_exc: BaseException | None = None
     preflight_calls: list[date] = field(default_factory=list)
 
-    def preflight(self, draft: RegistryFilingDraftProtocol, *, today: date) -> None:
+    def preflight(self, draft: RegistryModeloDraftProtocol, *, today: date) -> None:
         self.preflight_calls.append(today)
         if self.preflight_exc is not None:
             raise self.preflight_exc

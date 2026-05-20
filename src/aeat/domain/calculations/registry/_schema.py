@@ -82,12 +82,12 @@ identifier independently of a casilla declaration.
 """
 
 
-def _coerce_filing_year(value: object) -> object:
+def _coerce_modelo_year(value: object) -> object:
     """Coerce a fiscal-year input to an int within the registry-supported window.
 
     Accepts an int directly or a non-empty string of digits. Rejects
     booleans (which are int subclasses in Python), floats, and any
-    value outside ``RegistrySnapshotRef.filing_year``'s declared
+    value outside ``RegistrySnapshotRef.modelo_year``'s declared
     ``ge=2000, le=2099`` range.
     """
 
@@ -105,14 +105,14 @@ def _coerce_filing_year(value: object) -> object:
     return value
 
 
-FilingYear = Annotated[int, BeforeValidator(_coerce_filing_year), Field(ge=2000, le=2099)]
+ModeloYear = Annotated[int, BeforeValidator(_coerce_modelo_year), Field(ge=2000, le=2099)]
 """Canonical fiscal-year integer for the registry boundary.
 
-Mirrors the ``RegistrySnapshotRef.filing_year`` bound so a casilla
+Mirrors the ``RegistrySnapshotRef.modelo_year`` bound so a casilla
 declaring ``data_type = "year"`` and the snapshot coordinate agree
 on the supported window. Consumers that need to validate a year
 value independently of a casilla declaration should type their
-field as ``FilingYear``.
+field as ``ModeloYear``.
 """
 
 
@@ -515,7 +515,7 @@ class RegistrySnapshotRef(RegistryModel):
 
     Replaces opaque ``schema_version: str`` strings in persisted records
     (filing drafts, justificantes, etc.) with the four-axis registry
-    coordinate ``(modelo, revision_id, filing_year, period)``. A persisted
+    coordinate ``(modelo, revision_id, modelo_year, period)``. A persisted
     record carrying a ``RegistrySnapshotRef`` can be re-resolved against
     the live registry catalogue with a single
     :meth:`ValidatedRegistryAuthority.snapshot` call; an opaque schema
@@ -524,7 +524,7 @@ class RegistrySnapshotRef(RegistryModel):
 
     modelo: ModeloId
     revision_id: RevisionId
-    filing_year: int = Field(ge=2000, le=2099)
+    modelo_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=32)
 
 
