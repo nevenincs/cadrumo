@@ -22,7 +22,7 @@ async def _playwright_error() -> None:
 
 @pytest.mark.asyncio
 async def test_shape_timeout_reports_external_shape_change() -> None:
-    with pytest.raises(SedeParseError, match=r"sede|parse") as excinfo:
+    with pytest.raises(SedeParseError, match=r"page element was not visible") as excinfo:
         await run_playwright_stage(
             _timeout(),
             stage="wait-control",
@@ -43,7 +43,7 @@ async def test_shape_timeout_reports_external_shape_change() -> None:
 
 @pytest.mark.asyncio
 async def test_navigation_timeout_reports_live_navigation_failure() -> None:
-    with pytest.raises(SedeNavigationError, match=r"sede|navigation") as excinfo:
+    with pytest.raises(SedeNavigationError, match=r"browser stage") as excinfo:
         await run_playwright_stage(
             _timeout(),
             stage="networkidle",
@@ -63,7 +63,7 @@ async def test_navigation_timeout_reports_live_navigation_failure() -> None:
 
 @pytest.mark.asyncio
 async def test_playwright_error_reports_cause_type() -> None:
-    with pytest.raises(SedeNavigationError, match=r"sede|navigation") as excinfo:
+    with pytest.raises(SedeNavigationError, match=r"browser stage") as excinfo:
         await run_playwright_stage(
             _playwright_error(),
             stage="click-submit",

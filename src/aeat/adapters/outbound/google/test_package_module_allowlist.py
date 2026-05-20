@@ -22,15 +22,26 @@ _PACKAGE_ROOT = Path(__file__).resolve().parent
 _ALLOWED_MODULES: frozenset[str] = frozenset(
     {
         "__init__.py",
+        "_calc_sheets_apply.py",
+        "_calc_sheets_pull.py",
         "_errors.py",
         "_oauth_flow.py",
         "_profile_binding.py",
         "_records.py",
         "_refresh.py",
         "_session_store.py",
-        "test_package_module_allowlist.py",
+        "test_apply_adapter_helpers.py",
+        "test_calc_sheets_row_set_headers.py",
+        "test_column_index_to_letters.py",
+        "test_compute_from_pull.py",
+        "test_grid_resize.py",
         "test_oauth_live.py",
+        "test_package_module_allowlist.py",
+        "test_pull_adapter_helpers.py",
+        "test_pull_result_roundtrip.py",
         "test_records.py",
+        "test_verify_pull_coverage.py",
+        "test_worksheet_export_pull_roundtrip.py",
     }
 )
 

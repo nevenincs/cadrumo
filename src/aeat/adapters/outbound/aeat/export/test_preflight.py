@@ -2,38 +2,43 @@
 
 from __future__ import annotations
 
-from .....core.errors import BaseSeverity
-from dataclasses import dataclass, field
 from datetime import date
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .....domain.submission._preflight import AuthProviderProbe, DeadlineWindowChecker
-
 import pytest
+from pydantic import BaseModel, ConfigDict, Field
 
 from .....application.auth import AuthProviderDescription, AuthProviderKind
+from .....core.errors import BaseSeverity
 from .....domain.submission import SubmissionPreflightError
 from . import (
     ModeloDraftStatus,
-    ModeloDraftLike,
     ModeloFinding,
     Preflight,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
+if TYPE_CHECKING:
+    from .....domain.submission._preflight import AuthProviderProbe, DeadlineWindowChecker
 
-@dataclass
-class _Draft(ModeloDraftLike):
-    """Protocol-conforming test double for :class:`ModeloDraftLike`."""
+
+class _Draft(BaseModel):
+    """Frozen Protocol-conforming test double for ``ModeloDraftLike``.
+
+    Structural conformance only — ``ModeloDraftLike`` declares read-only
+    properties, so a frozen pydantic model satisfies it without
+    inheritance and without the no-dataclasses mandate violation.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     draft_id: str = "draft-1"
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO
-    values: dict[str, str] = field(default_factory=dict)
+    values: dict[str, str] = Field(default_factory=dict)
     findings: tuple[ModeloFinding, ...] = ()
 
 
