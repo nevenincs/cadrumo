@@ -222,6 +222,58 @@ def _emit_casilla_identity_failures(
             )
 
 
+def _emit_completeness_gate_failures(
+    failures: list[str],
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Append a failure for every divergence from the Diseño-completeness manifest.
+
+    The completeness gate compares the revision's declared
+    ``(segmento, number)`` casilla set against the expected set in the
+    revision's checked-in Diseño-completeness manifest, derived
+    off-load-path from the official AEAT Diseño de Registros corpus.
+
+    The gate is **rollout-staged and per-modelo**. A revision that
+    declares a ``completeness_manifest`` is enforced strictly: a casilla
+    the manifest expects but the revision does not declare, or a casilla
+    the revision declares but the manifest does not list, is a hard
+    failure. A revision with no manifest declared yet is NOT a failure
+    here — manifest authoring is a staged migration, and a casilla-bearing
+    revision is allowed to load while its manifest is still being
+    authored. The fail-closed flip (missing manifest is itself a hard
+    error) lands once every casilla-bearing modelo carries a manifest.
+    """
+
+    manifest = revision.completeness_manifest
+    if manifest is None:
+        return
+    expected = manifest.identities()
+    declared = frozenset((casilla.segmento, casilla.number) for casilla in revision.casillas)
+    for segmento, number in sorted(expected - declared, key=lambda pair: (pair[0] or "", pair[1])):
+        if segmento is None:
+            failures.append(
+                f"{prefix}: Diseño-completeness manifest expects casilla number {number!r} "
+                "but the revision does not declare it"
+            )
+        else:
+            failures.append(
+                f"{prefix}: Diseño-completeness manifest expects casilla number {number!r} "
+                f"within segmento {segmento!r} but the revision does not declare it"
+            )
+    for segmento, number in sorted(declared - expected, key=lambda pair: (pair[0] or "", pair[1])):
+        if segmento is None:
+            failures.append(
+                f"{prefix}: revision declares casilla number {number!r} "
+                "absent from the Diseño-completeness manifest"
+            )
+        else:
+            failures.append(
+                f"{prefix}: revision declares casilla number {number!r} within segmento "
+                f"{segmento!r} absent from the Diseño-completeness manifest"
+            )
+
+
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     """Layout-binding predicate, delegated to the typed manual_input shape.
 
@@ -450,6 +502,7 @@ class RegistryValidator:
         _emit_per_kind_duplicate_failures(failures, prefix, ids_by_kind)
         _emit_combined_primary_id_failures(failures, prefix, ids_by_kind)
         _emit_casilla_identity_failures(failures, prefix, revision)
+        _emit_completeness_gate_failures(failures, prefix, revision)
         # The ``_validate_support_removal_decisions`` call below still
         # consumes the per-kind lists as kwargs; expose them as local
         # aliases so the existing signature shape stays unchanged.
