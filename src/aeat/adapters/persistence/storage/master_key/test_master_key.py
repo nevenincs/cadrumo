@@ -5,7 +5,7 @@ from __future__ import annotations
 import base64
 import os
 import secrets
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -84,16 +84,6 @@ def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Setting
     )
 
 
-@pytest.fixture(autouse=True)
-def _reset_caches() -> Iterator[None]:
-    """Clear in-process caches between tests so providers behave deterministically."""
-    KeyringMasterKeyProvider._reset_for_tests()
-    FileFallbackMasterKeyProvider._reset_for_tests()
-    yield
-    KeyringMasterKeyProvider._reset_for_tests()
-    FileFallbackMasterKeyProvider._reset_for_tests()
-
-
 class TestEphemeralProvider:
     """The ephemeral provider gives tests a deterministic master key."""
 
@@ -139,8 +129,6 @@ class TestFileFallbackProvider:
         )
         first_key = first.get_master_key()
 
-        FileFallbackMasterKeyProvider._reset_for_tests()
-
         second = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "correct horse battery staple",
@@ -153,8 +141,6 @@ class TestFileFallbackProvider:
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "right-passphrase",
         ).get_master_key()
-
-        FileFallbackMasterKeyProvider._reset_for_tests()
 
         # Distinguish passphrase-mismatch from material-missing. Both
         # inherit from MasterKeyUnavailableError so legacy catchers
@@ -174,8 +160,6 @@ class TestFileFallbackProvider:
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "right-passphrase",
         ).get_master_key()
-
-        FileFallbackMasterKeyProvider._reset_for_tests()
 
         # The narrowed subclass still satisfies the parent type.
         with pytest.raises(MasterKeyUnavailableError):
@@ -236,8 +220,6 @@ class TestFileFallbackProvider:
         tampered = bytes([contents[0] ^ 0x01]) + contents[1:]
         master_key_path.write_bytes(base64.b64encode(tampered))
 
-        FileFallbackMasterKeyProvider._reset_for_tests()
-
         with pytest.raises(MasterKeyUnavailableError):
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
@@ -272,7 +254,6 @@ class TestKeyringProvider:
         try:
             first = provider.get_master_key()
             assert len(first) == KEY_SIZE
-            KeyringMasterKeyProvider._reset_for_tests()
             second = KeyringMasterKeyProvider(service=service).get_master_key()
             assert first == second
         finally:
@@ -344,7 +325,6 @@ class TestTornStateGate:
         from ..errors import MasterKeyMaterialMissingError
         from . import FileFallbackMasterKeyProvider
 
-        FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
             provider.get_master_key()
@@ -367,7 +347,6 @@ class TestTornStateGate:
         from ..errors import MasterKeyMaterialMissingError
         from . import FileFallbackMasterKeyProvider
 
-        FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
             provider.get_master_key()
@@ -387,7 +366,6 @@ class TestTornStateGate:
         from ..errors import MasterKeyMaterialMissingError
         from . import FileFallbackMasterKeyProvider
 
-        FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
             provider.get_master_key()
@@ -400,7 +378,6 @@ class TestTornStateGate:
         # silent-first-run-mint contract).
         from . import FileFallbackMasterKeyProvider
 
-        FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         key = provider.get_master_key()
         assert len(key) == KEY_SIZE
@@ -554,7 +531,6 @@ class TestFactory:
             raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
 
         client = _InMemoryKeyringClient(probe=_probe_fail)
-        KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
@@ -583,7 +559,6 @@ class TestFactory:
             raise KeyringError("simulated locked keychain")
 
         client = _InMemoryKeyringClient(get=_locked, set_=_locked)
-        KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         with pytest.raises(MasterKeyKeychainLockedError, match="auto-mode refuses"):
             get_master_key_provider(
@@ -603,7 +578,7 @@ class TestFactory:
         # already provisioned both).
         from keyring.errors import KeyringError
 
-        from . import FileFallbackMasterKeyProvider, KeyringMasterKeyProvider
+        from . import FileFallbackMasterKeyProvider
 
         def _locked(*_args: object, **_kwargs: object) -> None:
             raise KeyringError("simulated locked keychain")
@@ -617,10 +592,7 @@ class TestFactory:
             passphrase_callback=lambda: "seed-passphrase",
         )
         seed_provider.get_master_key()
-        FileFallbackMasterKeyProvider._reset_for_tests()
-
         client = _InMemoryKeyringClient(get=_locked, set_=_locked)
-        KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
