@@ -1,6 +1,6 @@
 """Real-behavior tests for the 036 census snapshot service.
 
-Anti-tautology: ``census_facts`` is a ``Mapping[str, str]`` — the
+Anti-tautology: ``censo_facts`` is a ``Mapping[str, str]`` — the
 narrowing to ``str``-only avoids the ``Decimal | str`` coercion trap
 that silently turned enum literals like ``"15"`` into ``Decimal("15")``
 on JSON round-trip. Roundtrip tests pin that numeric-looking strings
@@ -82,7 +82,7 @@ def test_derive_census_snapshot_id_is_deterministic_over_canonical_inputs() -> N
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
-        census_facts=_populated_facts(),
+        censo_facts=_populated_facts(),
     )
     base_id = derive_census_snapshot_id(**base_kwargs)
     assert len(base_id) == 64
@@ -98,7 +98,7 @@ def test_derive_census_snapshot_id_is_deterministic_over_canonical_inputs() -> N
     # Different fact value => different id.
     drift_facts = dict(_populated_facts())
     drift_facts["census.elected_withholding_pct"] = "7"
-    assert derive_census_snapshot_id(**dict(base_kwargs, census_facts=drift_facts)) != base_id
+    assert derive_census_snapshot_id(**dict(base_kwargs, censo_facts=drift_facts)) != base_id
 
 
 def test_census_snapshot_object_key_namespaces_by_bucket_and_snapshot() -> None:
@@ -122,7 +122,7 @@ def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        census_facts={},
+        censo_facts={},
     )
     with pytest.raises(LiveApplicationInputError, match=r"active.*supersession"):
         CensoSnapshot(
@@ -144,7 +144,7 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        census_facts={},
+        censo_facts={},
     )
     with pytest.raises(LiveApplicationInputError, match=r"superseded.*superseded_by"):
         CensoSnapshot(
@@ -171,7 +171,7 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
-        census_facts=facts,
+        censo_facts=facts,
     )
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
@@ -180,7 +180,7 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
         captured_at=captured_at,
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
         state=SnapshotLifecycleState.ACTIVE,
-        census_facts=facts,
+        censo_facts=facts,
     )
     repo.save(original)
     loaded = repo.load(original.snapshot_id)
@@ -197,9 +197,9 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
         "vivienda_office.office_m2",
         "census.establecimiento_type",
     ):
-        assert isinstance(loaded.census_facts[key], str), key
-    assert loaded.census_facts["vivienda_office.total_m2"] == "120.00"
-    assert loaded.census_facts["census.elected_withholding_pct"] == "15"
+        assert isinstance(loaded.censo_facts[key], str), key
+    assert loaded.censo_facts["vivienda_office.total_m2"] == "120.00"
+    assert loaded.censo_facts["census.elected_withholding_pct"] == "15"
 
 
 def test_capture_is_idempotent_for_structurally_identical_facts(
@@ -217,13 +217,13 @@ def test_capture_is_idempotent_for_structurally_identical_facts(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        census_facts=facts,
+        censo_facts=facts,
     )
     second = service.capture(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        census_facts=facts,
+        censo_facts=facts,
     )
     assert first.snapshot_id == second.snapshot_id
     assert first.state is SnapshotLifecycleState.ACTIVE
@@ -247,13 +247,13 @@ def test_capture_auto_supersedes_prior_active_for_same_profile(
         profile_id="operator",
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
-        census_facts=facts_v1,
+        censo_facts=facts_v1,
     )
     snapshot_v2 = service.capture(
         profile_id="operator",
         captured_at=datetime(2026, 5, 17, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
-        census_facts=facts_v2,
+        censo_facts=facts_v2,
     )
 
     # v1 was superseded; v2 is the new ACTIVE.
@@ -284,13 +284,13 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
         profile_id="operator",
         captured_at=datetime(2026, 5, 17, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
-        census_facts=facts_newer,
+        censo_facts=facts_newer,
     )
     older = service.capture(
         profile_id="operator",
         captured_at=datetime(2026, 5, 15, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
-        census_facts=facts_older,
+        censo_facts=facts_older,
     )
 
     assert older.state is SnapshotLifecycleState.SUPERSEDED
@@ -309,13 +309,13 @@ def test_supersession_scopes_to_profile_id(isolated_secure_store: None) -> None:
         profile_id="operator-a",
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
-        census_facts=facts,
+        censo_facts=facts,
     )
     operator_b = service.capture(
         profile_id="operator-b",
         captured_at=datetime(2026, 5, 16, 10, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
-        census_facts=facts,
+        censo_facts=facts,
     )
 
     # Both stay ACTIVE; neither references the other.
@@ -337,7 +337,7 @@ def test_discard_marks_snapshot_discarded_with_audit(
         profile_id="operator",
         captured_at=datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC),
         source_url="https://example/G313",
-        census_facts=_populated_facts(),
+        censo_facts=_populated_facts(),
     )
 
     discarded = service.discard(
@@ -378,7 +378,7 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        census_facts=facts,
+        censo_facts=facts,
     )
     successor_id = "f" * 64
     original = CensoSnapshot(
@@ -388,7 +388,7 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.SUPERSEDED,
-        census_facts=facts,
+        censo_facts=facts,
         superseded_by_snapshot_id=successor_id,
     )
     repo.save(original)
@@ -415,7 +415,7 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        census_facts=facts,
+        censo_facts=facts,
     )
     original = CensoSnapshot(
         snapshot_id=snapshot_id,
@@ -424,7 +424,7 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.DISCARDED,
-        census_facts=facts,
+        censo_facts=facts,
         discarded_at=discarded_at,
         discarded_by="operator",
         discard_reason="malformed elected_withholding_pct from sede",
@@ -463,7 +463,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
-        census_facts=facts,
+        censo_facts=facts,
     )
     successor_id = "f" * 64
     original = CensoSnapshot(
@@ -473,7 +473,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
         captured_at=captured_at,
         source_url="https://example/G313",
         state=SnapshotLifecycleState.SUPERSEDED,
-        census_facts=facts,
+        censo_facts=facts,
         superseded_by_snapshot_id=successor_id,
     )
     repo.save(original)
