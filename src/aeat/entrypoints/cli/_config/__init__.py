@@ -931,6 +931,7 @@ def config_profile_rename(
 
     was_active = resolve_active_bucket_id() == source
 
+    import gc
     import shutil
 
     from ....adapters.persistence.storage.bucket._layout import bucket_paths
@@ -942,11 +943,47 @@ def config_profile_rename(
     source_paths = bucket_paths(settings.aeat_local_storage_root, source)
     target_paths = bucket_paths(settings.aeat_local_storage_root, target)
 
+    # Dispose every open SQLAlchemy engine before the directory move.
+    # On Windows, SQLite holds the .db file open; shutil.move raises
+    # WinError 32 if any connection pool still references it.
+    # _secure_objects_for_bucket creates a per-bucket engine that is NOT
+    # tracked in the global _engines dict, so it must be disposed
+    # through the service's repository object directly.
+    _svc_engine = getattr(
+        getattr(getattr(service, "_repository", None), "_objects", None), "_engine", None
+    )
+    if _svc_engine is not None:
+        _svc_engine.dispose()
     dispose_engine()
+    gc.collect()  # release any lingering reference-counted connections
+
     try:
         shutil.move(source_paths.bucket_dir, target_paths.bucket_dir)
-    except Exception as exc:
-        raise CliRefusedBoundaryError(f"Failed to rename bucket directory: {exc}") from exc
+    except Exception as move_exc:
+        # Directory move failed (e.g. file lock still held on Windows).
+        # The DB record was already mutated by service.rename(); roll it back
+        # so the registry never shows a ghost target with no bucket on disk.
+        # Build a fresh service against the source bucket (still in place)
+        # and swap the rename back.
+        try:
+            rollback_service = build_lifecycle_service(bucket_id=source)
+            rollback_service.rename(
+                RenameProfileCommand(
+                    source_profile_id=target,
+                    target_profile_id=source,
+                    target_display_name=display_name,
+                )
+            )
+            _rb_engine = getattr(
+                getattr(getattr(rollback_service, "_repository", None), "_objects", None),
+                "_engine",
+                None,
+            )
+            if _rb_engine is not None:
+                _rb_engine.dispose()
+        except Exception:
+            pass  # best-effort rollback; surface the original move error
+        raise CliRefusedBoundaryError(f"Failed to rename bucket directory: {move_exc}") from move_exc
 
     try:
         manifest = read_manifest(target_paths)
@@ -958,9 +995,15 @@ def config_profile_rename(
     # WorkflowState.profiles retired; renaming the bucket directory on
     # disk is what removes ``source`` and registers ``target`` in the
     # manifest-scan view. Only the updated_at stamp needs to advance.
-    repository.update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
+    # Update the active-profile pointer BEFORE calling repository.update()
+    # so that the engine URL resolves to the moved (target) bucket path.
+    # dispose_engine() cleared the cached engine; the next DB access will
+    # open a fresh engine against the URL derived from the active pointer.
+    # A fresh repository reference is required here — the original
+    # `repository` object still holds the old (now-disposed) engine.
     if was_active:
         _write_active_profile_pointer(target)
+    _profile_state().update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
     _emit(
         ctx,
         {

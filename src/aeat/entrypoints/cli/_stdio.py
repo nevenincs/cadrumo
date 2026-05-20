@@ -27,6 +27,34 @@ import logging
 import sys
 from typing import TextIO
 
+
+def _set_windows_console_utf8() -> None:
+    """Switch the Windows console input/output code page to UTF-8 (65001).
+
+    On Windows, the default console code page is cp850 or cp1252
+    depending on locale.  When the CLI reconfigures its Python streams
+    to UTF-8 via :func:`_reconfigure_stream` the bytes emitted are
+    valid UTF-8, but the console *renders* them as the active code
+    page, producing mojibake for Spanish accented characters
+    (``ó`` → ``Ã³`` on cp1252).
+
+    ``SetConsoleOutputCP(65001)`` and ``SetConsoleCP(65001)`` instruct
+    the Windows console host to interpret bytes as UTF-8 instead.  The
+    calls are best-effort: they succeed silently in a real console and
+    are no-ops (return 0, which we ignore) in redirected / piped output
+    where code-page switching has no effect.
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        k32.SetConsoleOutputCP(65001)
+        k32.SetConsoleCP(65001)
+    except Exception:
+        pass  # best-effort; non-fatal if ctypes or windll is unavailable
+
 # ``aeat.core.logging`` cannot be imported at this layer without
 # pulling the project's configuration eagerly; this module runs at
 # the top of CLI startup, before settings are loaded. The stdlib
@@ -83,6 +111,7 @@ def configure_stdio_for_utf8(
     monkeypatching ``sys``.
     """
 
+    _set_windows_console_utf8()
     _reconfigure_stream(sys.stdout if stdout is None else stdout)
     _reconfigure_stream(sys.stderr if stderr is None else stderr)
 

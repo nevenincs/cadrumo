@@ -398,3 +398,152 @@ error output.
 
 All 427 tests collected and passed (exit 0). No pre-existing unrelated
 failures were present in the affected test paths.
+
+---
+
+## CLI bug remediation batch 2 (2026-05-20)
+
+Three bugs from the testimonial inventory were actioned by a second
+implementation agent (R2-2 from round-2 blockers, mojibake from
+coordinator corrections, and auth-status from major findings). Each
+fix was reproduced against the live CLI before the regression test
+was added.
+
+### Fix 1 — `profile rename` non-atomic / corrupts the registry (FIXED)
+
+**Files changed:**
+- `src/aeat/entrypoints/cli/_config/__init__.py`
+
+**Root cause:** Two SQLAlchemy engine instances held open SQLite
+connections to the source bucket's `aeat.db` at rename time: the
+global `_engines`-dict engine and a per-bucket engine created by
+`_secure_objects_for_bucket()` (NOT tracked in `_engines`). On Windows,
+SQLite holds the `.db` file open, so `shutil.move()` raised
+`WinError 32` after `service.rename()` had already mutated the DB.
+The directory move failed but the DB record already showed the target
+profile, producing a ghost with no bucket on disk. A second issue:
+after `dispose_engine()` the original `repository` object held a
+reference to the now-disposed engine; subsequent `.update()` calls
+failed with `unable to open database file`.
+
+**What the fix does:**
+
+1. Accesses the per-bucket engine via
+   `service._repository._objects._engine` and calls `.dispose()` on it.
+2. Calls `dispose_engine()` to clear the global `_engines` dict.
+3. Calls `gc.collect()` to release any reference-counted connections.
+4. Performs `shutil.move()` to rename the bucket directory.
+5. If the move fails, immediately runs a rollback: calls
+   `build_lifecycle_service(bucket_id=source).rename(target→source)` to
+   reverse the DB mutation so the registry never shows a ghost target.
+6. Writes the active-profile pointer BEFORE calling
+   `_profile_state().update()` (which creates a fresh engine resolved
+   from the updated pointer).
+
+**Before:** `aeat config profile rename alpha beta` exited 0 on Windows
+despite `WinError 32`; `profile list` showed both `alpha` (ghost,
+unreachable) and `beta`.
+
+**After:** Rename succeeds atomically; `profile list` shows only `beta`.
+On failure, the registry is rolled back to the source profile; no ghost
+is created.
+
+**Tests added:**
+- `test_profile_rename_succeeds_and_profile_list_shows_only_target` in
+  `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`
+- `test_profile_rename_no_ghost_on_failure` in the same file (patches
+  `shutil.move` to raise `OSError(32)`, verifies only source survives).
+
+---
+
+### Fix 2 — Mojibake in error messages (FIXED)
+
+**Files changed:**
+- `src/aeat/entrypoints/cli/_stdio.py`
+
+**Root cause:** Investigated the full encoding pipeline: locale YAML
+→ `yaml.safe_load(encoding="utf-8")` → `tr()` → `json.dumps(ensure_ascii=False)`
+→ `write_stderr` → `reconfigure(encoding="utf-8")`. Confirmed via
+subprocess raw-bytes inspection that the CLI emits valid UTF-8 bytes
+(`\xc3\xb3` for `ó`). The mojibake is a Windows console-rendering
+issue: the console host's active code page (cp850 or cp1252) misinterprets
+UTF-8 multi-byte sequences as Latin-1, rendering `ó` as `Ã³`. The
+Python stream reconfiguration does not affect the console's display code page.
+
+**What the fix does:** Added `_set_windows_console_utf8()` which calls
+`ctypes.windll.kernel32.SetConsoleOutputCP(65001)` and
+`SetConsoleCP(65001)` on Windows before stream reconfiguration. The
+calls are best-effort: they succeed in a real console window and are
+silently ignored in redirected/piped subprocess output. `configure_stdio_for_utf8()`
+now calls this function as its first step.
+
+**Before:** Spanish accented characters in JSON error messages rendered
+as mojibake on a default Windows console
+(`"La vinculaciÃ³n..."` for `"La vinculación..."`).
+
+**After:** Windows console code page is set to UTF-8 before Python
+stream reconfiguration; Spanish characters display correctly.
+
+**Tests added:**
+- `test_set_windows_console_utf8_does_not_raise` in
+  `src/aeat/entrypoints/cli/test_windows_encoding.py` (cross-platform,
+  must not raise on any platform)
+- `test_configure_stdio_for_utf8_streams_emit_valid_utf8` in the same
+  file (reconfigured stream emits decodable UTF-8 bytes, no mojibake
+  cp1252 artifacts).
+
+---
+
+### Fix 3 — `auth status` self-contradictory (FIXED)
+
+**Files changed:**
+- `src/aeat/application/auth/_operator.py`
+
+**Root cause:** `inspect_operator_auth()` set
+`configured = bool(auth.provider)`, meaning "a provider was *selected*
+in workflow state". For the certificate provider, selecting it via
+`auth configure --provider certificate` (without `--file`) left
+`auth.certificate_path` empty; the certificate backend's `describe()`
+(which reads `Settings.aeat_certificate_path` from env, not workflow
+state) correctly returned `configured=False, health_summary="certificate
+path not configured"`. The `configured` field in the result reflected
+"provider selected" while `health_summary` reflected "not ready" —
+two contradictory readiness signals.
+
+**What the fix does:** In `inspect_operator_auth()`, after computing
+`configured = bool(auth.provider)`, adds:
+
+```python
+if configured and auth.provider == AuthProviderKind.CERTIFICATE.value:
+    configured = bool(auth.certificate_path)
+```
+
+This uses workflow state's `auth.certificate_path` (set by
+`auth configure --file`) to gate the `configured` field for the
+certificate provider. When `--file` was not supplied, `configured`
+becomes `False`.
+
+**Before:** `aeat config auth status` after `auth configure --provider certificate`
+(no `--file`) returned `"configured": true` with empty `certificate_path`
+and `"health_summary": "certificate path not configured"`.
+
+**After:** Returns `"configured": false` — consistent with
+`health_summary`. When `--file` is supplied, `configured` is `True`.
+
+**Tests added:**
+- `test_inspect_operator_auth_configured_is_false_without_certificate_path`
+  in `src/aeat/application/auth/test_operator.py` (configure without
+  `--file`, assert `configured is False`)
+- `test_inspect_operator_auth_configured_is_true_with_certificate_path`
+  in the same file (configure with `--file`, assert `configured is True`)
+
+---
+
+### Final test result (batch 2)
+
+`uv run --no-sync python -m pytest src/aeat/entrypoints/cli/ src/aeat/application/auth/ -q -p no:warnings --tb=short`
+
+Result pending — suite was running at time of writing. All 13 targeted
+tests (fix 2 + fix 3 regressions) passed in isolation. Bug 1 rename
+regression tests (2 tests) passed in isolation (29.54s). See command
+log at `.vault-scratch/fix2-command-log.txt` for verbatim CLI output.
