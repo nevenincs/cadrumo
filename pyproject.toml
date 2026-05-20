@@ -336,6 +336,7 @@ ignore = [
 "src/aeat/adapters/persistence/storage/_test_path_safety.py" = ["S105"]
 "src/aeat/adapters/persistence/storage/bucket/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/test_substrate_smoke.py" = ["S603"]
+"src/aeat/domain/calculations/registry/test_cross_domain_snapshot_registration.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
 "src/aeat/adapters/persistence/storage/crypto/_test_encrypted_columns.py" = ["S105", "S106"]
 "src/aeat/adapters/outbound/aeat/browser/test_live_evasion.py" = ["S603"]
