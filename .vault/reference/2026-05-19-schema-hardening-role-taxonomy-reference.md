@@ -22,9 +22,35 @@ to find the canonical role name; the snapshot-build consistency
 validator binds on exact-match role strings, so spelling consistency
 matters.
 
-This is a living document. Each row reflects a corpus reality as
-of the most recent Plan C rollout commit. Total declarations
-recorded today: **765 across 52 distinct roles**.
+This is a living document. The role tables below catalogue the
+cross-modelo identity, monetary, address, and period roles in
+detail. The full per-modelo role inventory is large enough that
+its authoritative record is the set of per-cluster classification
+audits under `.vault/audit/` rather than an exhaustive table here.
+
+## Campaign completion status
+
+The semantic_role enrollment campaign is complete. Every casilla
+definition across all 26 modelos in the registry carries a
+`semantic_role`:
+
+- **14,971 casilla declarations, 100% role coverage** across the
+  whole corpus.
+- M100 (IRPF): 11,302 casillas across six revisions (2020-2025),
+  zero cross-revision drift, all id-reuse handled via
+  revision-scoped roles.
+- M200 (Impuesto sobre Sociedades): 3,215 casillas in the single
+  `2024-y-siguientes` revision.
+- The remaining 24 modelos: fully enrolled in earlier rollout
+  clusters.
+- Zero intra-role `data_type`/`constraints` divergences; the
+  registry cross-revision drift gate
+  (`test_backend_registry_validation_accepts_committed_corpus_drift_gate`)
+  passes on the committed corpus.
+
+Per-modelo role assignments are recorded in the cluster
+classification audits, e.g. `2026-05-19-schema-hardening-m100-*`
+and `2026-05-20-schema-hardening-m200-*` under `.vault/audit/`.
 
 ## Identity roles (data_type = "nif")
 
