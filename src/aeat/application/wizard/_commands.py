@@ -303,16 +303,20 @@ def _python_parameter(
 
     ``section_title`` becomes the ``rich_help_panel`` so Typer renders
     each ``WizardSection`` as its own group in the ``--help`` output;
-    this groups the 42-flag surface visually and stops the column
-    wrapper from ellipsising long flag names.
+    this groups the ~40-flag surface into operator-meaningful panels
+    (basic identity vs. advanced regime questions) instead of one
+    undifferentiated wall of flags.
     """
 
     _flag_name(question)
-    del section_title
     try:
         option = _SETUP_OPTION_INFOS[question.id]
     except KeyError as exc:
         raise KeyError(_help_key(flow, question)) from exc
+    if section_title is not None:
+        # `OptionInfo` carries `rich_help_panel`; setting it groups the
+        # flag under the section's panel in Typer's `--help` output.
+        option.rich_help_panel = section_title  # type: ignore[attr-defined]
     annotation: object
     default: object
     match question.widget:
@@ -453,7 +457,11 @@ def _run_full_flow(
     """
 
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ..user_profile._orchestration import _write_active_profile_pointer, capture_active_profile_pointer
+    from ..user_profile._orchestration import (
+        _write_active_profile_pointer,
+        capture_active_profile_pointer,
+        restore_active_profile_pointer,
+    )
     from ..workflow._persistence import workflow_state_repository
     from ._persistence import persist_answers
 
@@ -488,38 +496,37 @@ def _run_full_flow(
         question.id for section in flow.sections for question in section.questions
     )
 
-    # Write the active-profile pointer BEFORE constructing the
-    # workflow-state repository. `workflow_state_repository()` eagerly
-    # opens the per-bucket SQLAlchemy engine, whose URL resolves from
-    # the active-profile pointer chain. On a first-run `profile create`
-    # the pointer does not exist yet, so the URL is empty and the
-    # engine open crashes. The pointer stores the immutable profile
-    # UUID; `ProfileRepository.create` re-writes it idempotently.
-    #
-    # A `create` must be strictly all-or-nothing. The genuine
-    # pre-create pointer text is captured here and handed to
-    # `register_active_profile` as the rollback anchor: the cross-store
-    # rollback (directory removal + pointer restore) lives solely in
-    # `ProfileRepository.create`, so a crashed create leaves the
-    # active-profile pointer exactly as it was found without this
-    # caller carrying its own rollback copy.
-    prior_pointer_text = capture_active_profile_pointer() if mode == "create" else None
+    # Cold-start: the active-profile pointer must aim at the target
+    # profile before `workflow_state_repository()` opens its per-bucket
+    # engine. For `create`, `ProfileRepository.create` (inside
+    # `persist_answers`) owns the cross-store unit of work — bucket
+    # directory, manifest, encrypted record, AND the pointer — and
+    # rolls every store back on a failure inside the create. The
+    # genuine prior pointer is captured here and restored if the
+    # surrounding span fails before or around `create` (engine open,
+    # master-key activation), the window the repository's own rollback
+    # cannot see. For `edit` the profile already has a record, so the
+    # pointer write only sets the active profile.
+    prior_pointer = capture_active_profile_pointer() if mode == "create" else None
     _write_active_profile_pointer(profile_id)
-    provider = get_master_key_provider()
-    with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
-        repository = workflow_state_repository()
-        repository.update(
-            lambda state: persist_answers(
-                flow,
-                answers,
-                state=state,
-                profile_name=profile_name,
-                profile_id=profile_id,
-                mode=mode,
-                supplied_question_ids=supplied_question_ids,
-                prior_pointer_text=prior_pointer_text,
+    try:
+        provider = get_master_key_provider()
+        with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
+            workflow_state_repository().update(
+                lambda state: persist_answers(
+                    flow,
+                    answers,
+                    state=state,
+                    profile_name=profile_name,
+                    profile_id=profile_id,
+                    mode=mode,
+                    supplied_question_ids=supplied_question_ids,
+                )
             )
-        )
+    except Exception:
+        if mode == "create":
+            restore_active_profile_pointer(prior_pointer)
+        raise
 
 
 def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:

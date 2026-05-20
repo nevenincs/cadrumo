@@ -38,7 +38,13 @@ from typing import TextIO
 # Bumping the width floor for help rendering keeps full flag names
 # readable. The widening is scoped to `--help` invocations only, so
 # ordinary command output keeps the real terminal width.
-_MIN_HELP_RENDER_COLUMNS = 200
+#
+# The floor must clear the widest flag-pair cell: the longest pair
+# (`--iva-intracommunity-operations-exceed-50000-eur/--no-...`) runs
+# to ~100 chars, and Rich splits the table width between the options
+# and help columns — a 200-column floor still ellipsised three pairs,
+# whereas 240 fits every flag name in full.
+_MIN_HELP_RENDER_COLUMNS = 240
 
 #: argv tokens that request the help surface.
 _HELP_TOKENS = frozenset({"--help", "-h"})
