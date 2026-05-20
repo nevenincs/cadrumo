@@ -11,11 +11,14 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl
 
+import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 from aeat.core.resources import bundled_path
 from aeat.domain.profile import PROFILE_KEYS, TaxResidenceProfile
 from aeat.domain.profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 from . import (
+    CasillaDefinition,
+    DataBindingDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -32,7 +35,6 @@ from ._remote_state_guard import (
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
-from . import CasillaDefinition, DataBindingDefinition
 from ._snapshot import build_snapshot
 from ._validate import RegistryValidator
 
