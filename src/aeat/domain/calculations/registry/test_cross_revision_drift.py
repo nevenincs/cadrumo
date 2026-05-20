@@ -165,7 +165,6 @@ def test_singleton_semantic_role_warning_count_does_not_regress() -> None:
     ]
 
     # Re-baselined after the 2026-05-20 indexed typo scan and
-    # semantic-axis sibling filter. Remaining warnings are still active
-    # hardening work; this guard prevents the unresolved inventory from
-    # growing while those groups are classified.
-    assert len(singleton_warnings) <= 49, singleton_warnings[:10]
+    # semantic-axis sibling filters. Any new singleton typo warning is
+    # now a regression or a missing explicit singleton policy.
+    assert len(singleton_warnings) == 0, singleton_warnings[:10]

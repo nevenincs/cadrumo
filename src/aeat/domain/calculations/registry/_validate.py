@@ -2686,6 +2686,8 @@ def _semantic_roles_are_axis_siblings(left: str, right: str) -> bool:
         return True
     if _semantic_roles_are_legal_reference_siblings(left, right):
         return True
+    if _semantic_roles_are_ccaa_siblings(left, right):
+        return True
     return _semantic_roles_are_axis_token_siblings(left, right)
 
 
@@ -2706,6 +2708,15 @@ _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS: tuple[frozenset[str], ...] = (
     frozenset({"interna", "internacional"}),
     frozenset({"i", "ii", "iii", "iv"}),
     frozenset({"detalle", "otras"}),
+    frozenset({"ascendiente", "descendiente"}),
+    frozenset({"nacimiento", "fallecimiento"}),
+    frozenset({"periodo", "aplicado"}),
+    frozenset({"transmision", "adquisicion"}),
+    frozenset({"ab", "c"}),
+)
+
+_SEMANTIC_ROLE_OPTIONAL_AXIS_TOKENS: frozenset[str] = frozenset(
+    {"sin", "agr", "pub", "coti", "aav", "b", "anio", "precio"}
 )
 
 
@@ -2718,25 +2729,79 @@ def _semantic_roles_are_axis_token_siblings(left: str, right: str) -> bool:
             for left_part, right_part in zip(left_parts, right_parts, strict=True)
             if left_part != right_part
         ]
-        return len(differing) == 1 and _semantic_role_tokens_share_axis(*differing[0])
+        if len(differing) == 1 and _semantic_role_tokens_share_axis(*differing[0]):
+            return True
+        if differing and all(left.isdigit() and right.isdigit() for left, right in differing):
+            return True
 
-    return _semantic_role_optional_negation_siblings(left_parts, right_parts)
+    return _semantic_role_optional_axis_token_siblings(left_parts, right_parts)
 
 
 def _semantic_role_tokens_share_axis(left: str, right: str) -> bool:
     return any(left in group and right in group for group in _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS)
 
 
-def _semantic_role_optional_negation_siblings(left: tuple[str, ...], right: tuple[str, ...]) -> bool:
-    if abs(len(left) - len(right)) != 1:
-        return False
-    longer, shorter = (left, right) if len(left) > len(right) else (right, left)
-    for index, part in enumerate(longer):
-        if part != "sin":
+def _semantic_role_optional_axis_token_siblings(left: tuple[str, ...], right: tuple[str, ...]) -> bool:
+    left_stripped = _strip_semantic_role_optional_axis_tokens(left)
+    right_stripped = _strip_semantic_role_optional_axis_tokens(right)
+    return left_stripped == right_stripped and (left_stripped != left or right_stripped != right)
+
+
+def _strip_semantic_role_optional_axis_tokens(parts: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(
+        part
+        for part in parts
+        if part not in _SEMANTIC_ROLE_OPTIONAL_AXIS_TOKENS and not part.isdigit()
+    )
+
+
+_SEMANTIC_ROLE_CCAA_TOKENS: frozenset[str] = frozenset(
+    {
+        "andalucia",
+        "aragon",
+        "asturias",
+        "baleares",
+        "canarias",
+        "cantabria",
+        "galicia",
+        "madrid",
+        "murcia",
+    }
+)
+
+
+def _semantic_roles_are_ccaa_siblings(left: str, right: str) -> bool:
+    left_parts = tuple(left.split("_"))
+    right_parts = tuple(right.split("_"))
+    left_normalised = _normalise_semantic_role_ccaa_tokens(left_parts)
+    right_normalised = _normalise_semantic_role_ccaa_tokens(right_parts)
+    return (
+        left_normalised == right_normalised
+        and (left_normalised != left_parts or right_normalised != right_parts)
+        and left_parts != right_parts
+    )
+
+
+def _normalise_semantic_role_ccaa_tokens(parts: tuple[str, ...]) -> tuple[str, ...]:
+    normalised: list[str] = []
+    index = 0
+    while index < len(parts):
+        part = parts[index]
+        if part == "c" and index + 1 < len(parts) and parts[index + 1] == "valenciana":
+            normalised.append("ccaa")
+            index += 2
             continue
-        if longer[:index] + longer[index + 1:] == shorter:
-            return True
-    return False
+        if part == "la" and index + 1 < len(parts) and parts[index + 1] == "rioja":
+            normalised.append("ccaa")
+            index += 2
+            continue
+        if part in _SEMANTIC_ROLE_CCAA_TOKENS:
+            normalised.append("ccaa")
+            index += 1
+            continue
+        normalised.append(part)
+        index += 1
+    return tuple(normalised)
 
 
 def _semantic_roles_are_legal_reference_siblings(left: str, right: str) -> bool:
