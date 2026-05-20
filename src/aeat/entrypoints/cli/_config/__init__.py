@@ -417,6 +417,51 @@ def _profile_state():
     return workflow_state_repository()
 
 
+def _atomic_create_profile(*, profile_id, display_name, facts):
+    """Provision a new profile bucket through the canonical atomic-create.
+
+    Both ``config profile import`` (recovery from a backup) and
+    ``config profile create --copy-from`` / ``config profile
+    duplicate`` route here so every create path lands on the single
+    atomic provisioner ``register_active_profile`` (disaster ADR
+    Ruling 3): bucket directory + manifest + encrypted record +
+    active-profile pointer in one all-or-nothing sequence with
+    rollback.
+
+    The cold-start chicken-and-egg the disaster ADR catalogues:
+    ``workflow_state_repository().update`` resolves its SQLAlchemy
+    engine URL from the active-profile pointer, so the pointer must
+    exist *before* the repository opens its engine, and a master-key
+    session must be active before ``register_active_profile`` can
+    encrypt the profile record. The wizard ``profile create`` path
+    pre-writes the pointer and wraps the update in
+    ``activate_master_key_provider`` for exactly this reason; this
+    helper keeps the import / duplicate paths consistent with it.
+    ``register_active_profile`` re-writes the pointer and manifest
+    idempotently and owns the rollback contract for the
+    encrypted-record write.
+    """
+
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....application.user_profile._orchestration import (
+        _write_active_profile_pointer,
+        register_active_profile,
+    )
+
+    _write_active_profile_pointer(profile_id)
+    provider = get_master_key_provider()
+    with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
+        repository = _profile_state()
+        repository.update(
+            lambda current: register_active_profile(
+                current,
+                profile_id=profile_id,
+                display_name=display_name,
+                facts=facts,
+            )
+        )
+
+
 @profile_app.command("list", help=tr("cli.config.list.help"))
 def config_list(ctx: typer.Context) -> None:
     """List every registered profile via the manifest-scan helper.
@@ -736,117 +781,55 @@ def config_profile_duplicate(
         None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help")
     ),
 ) -> None:
-    """Copy SOURCE into TARGET as a new active profile."""
+    """Copy SOURCE into TARGET as a new active profile.
 
-    import shutil
+    The TARGET profile lands through the canonical atomic-create
+    provisioner (``register_active_profile``): the source record's
+    facts are read, then a fresh bucket directory + manifest +
+    encrypted record + active pointer are written in one
+    all-or-nothing sequence. The prior copytree-then-rewrite path
+    bypassed the provisioner and could leave a half-copied bucket on
+    a crash; the atomic provisioner rolls every write back instead.
+    """
 
-    from ....adapters.persistence.storage.bucket._layout import bucket_paths
-    from ....adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
-    from ....adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
-    from ....application.user_profile import UserProfileLifecycleRepository
-    from ....application.workflow._utils import utc_now
-    from ....core.config import Settings, load_settings
-    from ....domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        BucketEventType,
-        append_bucket_event,
-        derive_bucket_event_id,
+    from ....application.user_profile._orchestration import (
+        ProfileAlreadyRegisteredError,
+        build_lifecycle_service,
     )
-    from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
+    from ....domain.user_profile import ProfileNotFoundError
 
-    repository = _profile_state()
-    repository.load()
-    pointer = read_profile_bucket(source)
-    if pointer is None:
+    source_pointer = read_profile_bucket(source)
+    if source_pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
     if read_profile_bucket(target) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
 
-    settings = load_settings()
-    source_paths = bucket_paths(settings.aeat_local_storage_root, source)
-    target_paths = bucket_paths(settings.aeat_local_storage_root, target)
-
+    source_service = build_lifecycle_service(bucket_id=source_pointer.bucket_id)
     try:
-        shutil.copytree(source_paths.bucket_dir, target_paths.bucket_dir)
-    except Exception as exc:
-        raise CliRefusedBoundaryError(f"Failed to copy bucket directory: {exc}") from exc
-
-    try:
-        manifest = read_manifest(target_paths)
-        manifest = manifest.model_copy(update={"bucket_id": target, "label": target})
-        write_manifest(target_paths, manifest)
-    except Exception as exc:
-        raise CliRefusedBoundaryError(f"Failed to update target bucket manifest: {exc}") from exc
-
-    dispose_engine()
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{(target_paths.db_dir / 'aeat.db').as_posix()}")
-    )
-    try:
-        objects = SecureObjectRepository(engine=engine)
-        copied_source = UserProfileLifecycleRepository(bucket_id=source, objects=objects)
-        target_profiles = UserProfileLifecycleRepository(bucket_id=target, objects=objects)
-        if target_profiles.exists(target):
-            raise ProfileAlreadyExistsError(f"profile {target!r} already exists in bucket {target!r}")
-        source_record = copied_source.load(source)
-        now = utc_now()
-        target_record = source_record.model_copy(
-            update={
-                "profile_id": target,
-                "display_name": display_name or target,
-                "created_at": now,
-                "updated_at": now,
-            }
-        )
-        target_profiles.save(target_record)
-        copied_source.delete(source)
-        events = BucketEventHistoryRepository(objects=objects)
-        event = BucketEvent(
-            event_id=derive_bucket_event_id(
-                bucket_id=target,
-                event_type=BucketEventType.PROFILE_DUPLICATED,
-                occurred_at=now,
-                actor="aeat.application.user_profile",
-                object_type=BucketEventObjectType.PROFILE,
-                object_id=target,
-                payload={"source_profile_id": source},
-            ),
-            bucket_id=target,
-            event_type=BucketEventType.PROFILE_DUPLICATED,
-            occurred_at=now,
-            actor="aeat.application.user_profile",
-            object_type=BucketEventObjectType.PROFILE,
-            object_id=target,
-            payload_version=1,
-            payload={"source_profile_id": source},
-        )
-        events.save(append_bucket_event(events.load(), event))
-    except ProfileAlreadyExistsError as exc:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
+        source_record = source_service.read(source)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
-    finally:
-        engine.dispose()
 
-    # WorkflowState.profiles retired; the bucket manifest written by
-    # the lifecycle service registration is what makes the new
-    # profile appear in the manifest-scan computed mapping. Only the
-    # updated_at stamp needs to advance on the encrypted record.
-    repository.update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
+    try:
+        _atomic_create_profile(
+            profile_id=target,
+            display_name=display_name or target,
+            facts=source_record.facts,
+        )
+    except ProfileAlreadyRegisteredError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
+
     _emit(
         ctx,
         {
             "source_profile_id": source,
-            "target_profile_id": target_record.profile_id,
-            "display_name": target_record.display_name,
+            "target_profile_id": target,
+            "display_name": display_name or target,
         },
         (
             f"source_profile_id\t{source}",
-            f"target_profile_id\t{target_record.profile_id}",
-            f"display_name\t{target_record.display_name}",
+            f"target_profile_id\t{target}",
+            f"display_name\t{display_name or target}",
         ),
     )
 
@@ -1105,10 +1088,16 @@ def config_profile_export(
         help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
     ),
 ) -> None:
-    """Serialize a profile bundle to a JSON file."""
+    """Serialize a profile bundle to a JSON file.
+
+    The bundle wraps the live :class:`UserProfileRecord` read through
+    the canonical lifecycle service. ``config profile import`` is the
+    symmetric reader and re-provisions the record into a fresh bucket
+    via the atomic-create provisioner.
+    """
 
     from ....application.user_profile._orchestration import build_lifecycle_service
-    from ....domain.user_profile import ProfileNotFoundError
+    from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
 
     _profile_state().load()
     target = name or resolve_active_bucket_id()
@@ -1119,9 +1108,10 @@ def config_profile_export(
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        bundle = service.export(target)
+        record = service.read(target)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target)) from exc
+    bundle = UserProfilePortableExport(profile=record)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
     _emit(
@@ -1148,11 +1138,18 @@ def config_profile_import(
         ..., help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle.")
     ),
 ) -> None:
-    """Read a portable profile bundle from a JSON file and register it."""
+    """Read a portable profile bundle from a JSON file and register it.
 
-    from ....application.user_profile._orchestration import build_lifecycle_service
-    from ....application.workflow._utils import utc_now
-    from ....domain.user_profile import ProfileAlreadyExistsError, UserProfilePortableExport
+    The imported profile lands in its **own** bucket through the
+    canonical atomic-create provisioner (``register_active_profile``):
+    bucket directory + manifest + encrypted record + active pointer
+    in one all-or-nothing sequence. The imported bundle is recovery
+    from a backup archive, so it becomes the new active profile. A
+    crash mid-import rolls every write back, leaving no phantom bucket.
+    """
+
+    from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
+    from ....domain.user_profile import UserProfilePortableExport
 
     if not path.is_file():
         raise CliRefusedBoundaryError(
@@ -1163,36 +1160,24 @@ def config_profile_import(
             )
         )
     bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
-    target_id = bundle.profile.profile_id
-    repository = _profile_state()
-    repository.load()
+    record = bundle.profile
+    target_id = record.profile_id
     if read_profile_bucket(target_id) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id))
-    active_bucket = resolve_active_bucket_id()
-    if active_bucket is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    bucket_pointer = read_profile_bucket(active_bucket)
-    bucket_id = bucket_pointer.bucket_id if bucket_pointer is not None else active_bucket
-    service = build_lifecycle_service(bucket_id=bucket_id)
     try:
-        result = service.import_archive(bundle)
-    except ProfileAlreadyExistsError as exc:
+        _atomic_create_profile(profile_id=target_id, display_name=record.display_name, facts=record.facts)
+    except ProfileAlreadyRegisteredError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_id)) from exc
-
-    # WorkflowState.profiles retired; the imported bucket's manifest
-    # is what registers the new profile in the manifest-scan view.
-    # Only the updated_at stamp needs to advance.
-    repository.update(lambda current: current.model_copy(update={"updated_at": utc_now()}))
     _emit(
         ctx,
         {
-            "profile_id": result.profile.profile_id,
-            "display_name": result.profile.display_name,
+            "profile_id": target_id,
+            "display_name": record.display_name,
             "schema_version": bundle.bundle_schema_version,
         },
         (
-            f"profile_id\t{result.profile.profile_id}",
-            f"display_name\t{result.profile.display_name}",
+            f"profile_id\t{target_id}",
+            f"display_name\t{record.display_name}",
             f"schema_version\t{bundle.bundle_schema_version}",
         ),
     )
