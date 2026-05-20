@@ -99,7 +99,7 @@ All five are manual-input leaves with no `formula`, `binding`, or
 | # | Item | State | Before | After |
 |---|---|---|---|---|
 | R1 | Verification harness | DONE | - | - |
-| R2 | T percentage type defects (5) | OPEN | 5 | - |
+| R2 | T percentage type defects (5) | DONE | 5 ids / 30 instances | money -> ratio |
 | R3 | M200 correcciones reconciliation | DONE | 0 shared roles, fractured | 631 casillas, one 24-axis scheme |
 | R4 | M200 deducciones coherence | DONE (no defect) | suspected fracture | 853 casillas, 62 roles, 0 incoherent |
 | R5 | 561 escaped-quote re-verification | IN PROGRESS | 561 | 114 boolean-flag clean; AEIP family defect found |
@@ -162,6 +162,20 @@ are euro amounts). 315 `semantic_role` values rewritten; the
 non-event members of the 8 previously-conflated roles (196 casillas)
 were left untouched. Blast radius: `semantic_role` only. Post-state:
 0 data_type divergences, 0 constraints divergences.
+
+### 2026-05-20 - R2 percentage type defects
+
+5 M100 casillas hold a percentage but declared `data_type = "money"`:
+`0063` "Propiedad (%)", `0064` "Usufructo (%)", `0087` "...porcentaje
+(%) del inmueble...", `0710` "Porcentaje del importe total del
+prestamo...", `1564` "Porcentaje de participacion...". Changed to
+`ratio` (the registry's proportion type; M303 prorrata uses it) across
+all 6 revisions = 30 (id,revision) instances, each label-guarded.
+**Blast radius verified before the change:** none of the 5 ids is
+referenced by any M100 formula file, revision binding, or cross-modelo
+relation - they are pure manual-input leaves with no `export_refs`.
+This is a `data_type` source edit; recorded here per the source-data
+discipline.
 
 ### 2026-05-20 - R9 registry test suite (honest finding)
 
