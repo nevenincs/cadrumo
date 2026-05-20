@@ -144,7 +144,7 @@ Add strict roundtrip and anti-tautology proofs, the M200 manifest, the per-model
 - [x] `P05.S22` - Author the Modelo 200 calculation-completeness manifest enumerating the cuota-chain calculation closure, and confirm M200 clears the gate now that the Liquidacion casillas are registered; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/completeness-manifest.toml`.
 - [x] `P05.S23` - Author calculation-completeness manifests for the calculation-bearing modelos so the fail-closed gate has a calculation-closure manifest for every modelo it gates; `src/aeat/_data/registry/aeat/modelos/`.
 - [x] `P05.S31` - Produce the off-load-path full-Diseno coverage advisory report that inventories form-level data coverage and surfaces known gaps without redding the load; `src/aeat/domain/calculations/registry/_record_design.py`.
-- [ ] `P05.S24` - Extend the M200 registry test to assert the Liquidacion cuota-chain casillas resolve under their DP200014 segmento and the page-014 export binding resolves 00562 to the Liquidacion occurrence; `src/aeat/domain/calculations/registry/test_modelo_200_registry.py`.
+- [x] `P05.S24` - Extend the M200 registry test to assert the Liquidacion cuota-chain casillas resolve under their DP200014 segmento and the page-014 export binding resolves 00562 to the Liquidacion occurrence; `src/aeat/domain/calculations/registry/test_modelo_200_registry.py`.
 - [ ] `P05.S25` - Run the full registry parity-coverage suite to confirm all 26 modelos load valid after the gate flips to hard-error per modelo; `src/aeat/domain/calculations/registry/test_modelo_parity_coverage.py`.
 
 ## Parallelization
