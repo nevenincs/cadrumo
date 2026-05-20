@@ -1355,6 +1355,8 @@ cli:
       title: Workspace status
       transactions_empty: No bank transactions have been imported yet.
       transactions_present: '%{count} bank transaction(s) are available in the ledger.'
+      work_units_empty: cli.overview.status.work_units_empty
+      work_units_present: cli.overview.status.work_units_present
     status_help: Show profile, ledger, and modelo readiness
     verbose_help: Show details and next action when available
   registry:
@@ -1486,6 +1488,8 @@ cli:
     app_help_help: Show app workflow help
     debug_help: Show internal debug logs on stderr
     detail_help: Also show the detailed registry summary
+    errors:
+      did_you_mean_command: Did you mean '%{command}'?
     format_help: Output format for command results
     help_help: Show workflow-oriented help
     landing:

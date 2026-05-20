@@ -25,6 +25,7 @@ from ....application.workflow._models import resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path
+from .._command_suggestions import AeatTyperGroup
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 
@@ -38,7 +39,12 @@ app = typer.Typer(
     invoke_without_command=True,
     add_help_option=False,
 )
-profile_app = typer.Typer(name="profile", help=tr("cli.config.profile.help"), no_args_is_help=True)
+profile_app = typer.Typer(
+    name="profile",
+    help=tr("cli.config.profile.help"),
+    no_args_is_help=True,
+    cls=AeatTyperGroup,
+)
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
 auth_diagnostics_app = typer.Typer(
     name="diagnostics",
