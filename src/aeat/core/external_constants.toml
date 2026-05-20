@@ -9,6 +9,7 @@
 ## to `Settings.external` via `Settings.external_constants()`.
 
 [aeat.domains]
+host_suffix = "agenciatributaria.gob.es"
 sede = "https://sede.agenciatributaria.gob.es"
 www1 = "https://www1.agenciatributaria.gob.es"
 www2 = "https://www2.agenciatributaria.gob.es"
@@ -17,6 +18,7 @@ clave = "https://clave.gob.es"
 boe = "https://www.boe.es"
 
 [aeat.sede_paths]
+auth_gate_4033 = "/Sede/errores/erro4033.html"
 expedientes_resumen = "/wlpl/TEWV-CORE/ResumenVlt"
 declarations_listing = "/wlpl/SCEJ-MANT/CONSUL/index.zul"
 cotejo_query = "/wlpl/KATA-APLI/cotejo/CotejoIdSv"
@@ -24,6 +26,7 @@ cotejo_document = "/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
 notifications_summary = "/wlpl/GNNO-JDIT/ResumenInteresados"
 notifications_query = "/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
 certificate_selector = "/wlpl/BUCV-JDIT/SelectorCertificado"
+census_g313_launcher = "/Sede/procedimientoini/G313.shtml"
 expediente_detail_template = "/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}"
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
 iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
@@ -34,6 +37,7 @@ selector_access_path_marker = "SelectorAccesos"
 dialogo_representacion_path_marker = "DialogoRepresentacion"
 obtener_clave_movil_path_marker = "ObtenerClaveMovil"
 obtener_clave_movil_qr_path_marker = "ObtenerClaveMovilQR"
+cancelar_clave_movil_path_marker = "CancelarClaveMovil"
 authorize_button_selector = "button[name=\"autoriza-P\"]"
 non_qr_link_selector = "a[href*=\"ObtenerClaveMovil?qAA=2\"]"
 nif_input_selector = "#NIF"
@@ -60,6 +64,36 @@ pending_petition_text_markers = [
   "rechace la petición pendiente",
   "rechace la peticion pendiente",
 ]
+
+[aeat.pre303]
+presentation_service_path = "/wlpl/BUGC-JDIT/VentanaCensalIva?forigen=pre303"
+access_help_path = "/Sede/iva/pre-303/acceder-pre303.html"
+faq_general_path = "/Sede/iva/pre-303/preguntas-frecuentes/cuestiones-generales-sobre-servicio-pre303_.html"
+faq_specific_path = "/Sede/iva/pre-303/preguntas-frecuentes/cuestiones-especificas-sobre-servicio-pre303_.html"
+functionalities_path = "/Sede/iva/pre-303/que-servicios-funcionalidades-tiene-nuevo-pre303.html"
+procedures_path = "/Sede/iva/pre-303/gestiones.html"
+iva_wallet_header_tokens = [
+  "ejercicio",
+  "periodo",
+  "gener",
+  "aplic",
+  "pend",
+]
+iva_wallet_empty_page_tokens = [
+  "cartera",
+  "cuotas",
+]
+official_access_auth_methods = [
+  "Certificado o DNI electrónico",
+  "clave PIN",
+]
+representation_own_name_selector = "input[name=\"representacion\"][id=\"propio\"]"
+representation_representative_selector = "input[name=\"representacion\"][id=\"representante\"]"
+representation_submit_selector = "button[type=\"submit\"]"
+alert_modal_selector = "#alertsModal"
+alert_continue_button_text = "continuar"
+wallet_form_selector = "form#Form"
+wallet_execute_submit_selector = "input#ejecutar[name=\"ejecutar\"][type=\"submit\"]"
 
 [aeat.help_pages]
 csv_verification = "/Sede/ayuda/consultas-practicas-manuales/verificacion-integridad-documentos.html"
