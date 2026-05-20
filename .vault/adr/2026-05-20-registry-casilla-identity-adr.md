@@ -203,3 +203,54 @@ could not be satisfied because the casillas would remain undeclarable.
   re-verification, which fails CI on divergence.
 - Follow-on: this ADR does not itself author the M200 casillas or the
   manifests; those are Plan/execution work that depends on this decision.
+
+## Amendment (2026-05-20): completeness gate refocused to calculation-completeness
+
+During execution of the implementing plan a design tension surfaced in
+decision B3 as originally written. B3 named the gate a
+"Diseño-completeness" gate — declared casillas checked against the full
+AEAT Diseño de Registros. Modelo 200's Diseño is a 75-segment form of
+several thousand casillas, the large majority of which are
+accounting-statement data-entry fields that feed no formula. A
+load-blocking gate keyed on full-Diseño coverage would fail every modelo
+whose registry is not yet exhaustively backfilled (all of them),
+conflating data-entry completeness with calculation correctness. The
+opposite reading — a drift-only gate — would not have caught the very
+M200 defect this ADR exists to fix.
+
+Measured against the project mission — verified, legally-grounded modelo
+calculations through a cross-connecting calculation engine — B3 is
+refined as follows. This amendment supersedes the wording of B3 in
+Considerations, Constraints, Implementation, Rationale, and Consequences
+above wherever the two conflict; decision A2b is unchanged.
+
+- **The load-blocking gate enforces calculation-completeness, not
+  Diseño-completeness.** For each modelo it verifies that every casilla
+  in the modelo's *calculation closure* — formula targets, their
+  transitive casilla inputs, binding and relation endpoints, and
+  verification-expectation operands — is (1) present in the registry,
+  (2) at the correct `(segmento, number)` identity, and (3) carrying its
+  `legal_refs` and `source_refs`. This is the casilla set the
+  cross-connecting calculation engine traverses; a gap here is a
+  calculation-correctness defect, which is exactly the M200 failure mode.
+- **The calculation-completeness manifest** enumerates that closure. It
+  is derived from the AEAT Diseño *intersected with* the modelo's
+  calculation surface — Diseño-authoritative on each casilla's segment,
+  number, and label, but bounded to what the engine needs. A calculation
+  closure is bounded, so a manifest is tractable to author and a modelo
+  can clear it without a full-form backfill.
+- **Gate semantics** are `manifest-required ⊆ declared` plus the identity
+  and legal-grounding checks above — not `declared == manifest`. A
+  declared casilla absent from the calculation manifest (a pure
+  accounting-statement field) is not a failure.
+- **Full-Diseño coverage is retained as an off-load-path advisory
+  coverage report**, not a build gate. The Diseño-extraction machinery
+  built for B3 is repurposed to inventory form-level data coverage and
+  surface known gaps without redding the load.
+
+Consequence: Modelo 200 clears the calculation-completeness gate once its
+cuota-chain casillas are registered (done in the implementing plan's
+Modelo 200 phase); the build stays green throughout rollout; and the
+gate still hard-fails the silently-dropped-calculation-casilla defect
+class. The implementing plan and the gate code are updated to this
+refined B3.
