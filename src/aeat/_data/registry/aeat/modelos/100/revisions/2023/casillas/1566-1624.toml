@@ -4,5 +4,6 @@ number = "1624"
 label = "Contribuyente titular del elemento patrimonial transmitido"
 section = ["toma_datos_ampliada"]
 data_type = "text"
+semantic_role = "irpf_contribuyente_titular"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

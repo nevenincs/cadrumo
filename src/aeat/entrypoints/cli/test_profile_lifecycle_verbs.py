@@ -19,8 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
     from aeat.adapters.persistence.storage import get_master_key_provider
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-verbs.db').as_posix()}")
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
@@ -40,34 +40,6 @@ def cli_runner() -> CliRunner:
 
 
 def _seed(name: str = "default") -> None:
-    from aeat.core.config import load_settings
-    from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
-    from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
-    from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
-    from datetime import datetime, UTC
-
-    settings = load_settings()
-    paths = provision_bucket_directory(settings.aeat_local_storage_root, name)
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=name,
-            label=name,
-            created_at=datetime.now(UTC),
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=0x13,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=b"\x00" * 16,
-                output_length=32,
-            ),
-            recovery_enrolled=False,
-            schema_version=1,
-        ),
-    )
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=name))
 
 
@@ -88,6 +60,57 @@ def test_config_profile_switch_activates_existing_profile(cli_runner: CliRunner)
 def test_config_profile_switch_refuses_unknown_profile(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(profile_app, ["switch", "ghost"])
     assert result.exit_code != 0
+
+
+def test_config_profile_create_refuses_existing_profile(cli_runner: CliRunner) -> None:
+    _seed("operator")
+
+    result = cli_runner.invoke(
+        profile_app,
+        [
+            "create",
+            "operator",
+            "--quiet",
+            "--accept-defaults",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Operator",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "already exists" in result.output
+
+
+def test_config_profile_edit_refuses_missing_profile_without_creating_bucket(cli_runner: CliRunner) -> None:
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+
+    result = cli_runner.invoke(
+        profile_app,
+        [
+            "edit",
+            "ghost",
+            "--quiet",
+            "--accept-defaults",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Ghost",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "does not exist" in result.output
+    assert read_profile_bucket("ghost") is None
 
 
 def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunner) -> None:
@@ -147,7 +170,6 @@ def test_config_profile_delete_tombstones_with_yes(cli_runner: CliRunner) -> Non
     assert "status\ttombstoned" in result.output
     from aeat.application.workflow._models import resolve_active_bucket_id
 
-    state = workflow_state_repository().load()
     assert resolve_active_bucket_id() is None
 
 

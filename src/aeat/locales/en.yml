@@ -184,6 +184,10 @@ application:
   user_profile:
     errors:
       no_active_profile_selected: No active profile selected.
+      profile_already_exists: Profile '%{profile}' already exists; run `aeat config
+        profile switch NAME` to activate it or `aeat config profile delete NAME` first.
+      profile_not_registered: Profile '%{profile}' does not exist; run `aeat config
+        profile create NAME` to create it.
   wizard:
     errors:
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
@@ -317,11 +321,13 @@ cli:
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
-        app_help: cli.app.live.iva_wallet.app_help
-        capture_history_help: cli.app.live.iva_wallet.capture_history_help
-        history_help: cli.app.live.iva_wallet.history_help
-        pull_help: cli.app.live.iva_wallet.pull_help
-        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
+        app_help: AEAT IVA compensation wallet capture (read-only).
+        capture_history_help: Live-capture filed Modelo 303 history and persist secure
+          IVA compensation state.
+        history_help: List secure local IVA compensation history derived from filed
+          Modelo 303 captures.
+        pull_help: Live-fetch and persist AEAT's IVA compensation wallet.
+        taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
       notifications:
@@ -458,11 +464,12 @@ cli:
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
       readiness:
-        modelo_help: cli.app.modelo.readiness.modelo_help
-        period_help: cli.app.modelo.readiness.period_help
-        revision_help: cli.app.modelo.readiness.revision_help
-        year_help: cli.app.modelo.readiness.year_help
-      readiness_help: cli.app.modelo.readiness_help
+        modelo_help: Modelo code (e.g. 303).
+        period_help: Period token (e.g. Q1, annual).
+        revision_help: Registry revision id.
+        year_help: Filing year.
+      readiness_help: Report whether the active profile is ready to file one modelo
+        / year / period.
       reconcile:
         errors:
           exclusive_source: --from-justificante and --from-declaration are mutually
@@ -584,10 +591,10 @@ cli:
       clear_sessions_help: Clear persisted AEAT auth sessions
       configure_help: Configure the active authentication provider
       diagnostics:
-        help: cli.config.auth.diagnostics.help
-        id_help: cli.config.auth.diagnostics.id_help
-        list_help: cli.config.auth.diagnostics.list_help
-        show_help: cli.config.auth.diagnostics.show_help
+        help: Inspect encrypted auth diagnostics.
+        id_help: Diagnostic id.
+        list_help: List encrypted Cl@ve auth diagnostics.
+        show_help: Show one redacted encrypted auth diagnostic.
       file_help: Path to the credential file (certificate or key)
       help: Configure the active authentication provider
       no_active_bucket: No active profile bucket. Run 'aeat config profile create
@@ -715,7 +722,7 @@ cli:
         refresh_help: Download the latest census from AEAT and save a snapshot
         show_help: Show the latest census AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
-      create_help: cli.config.profile.create_help
+      create_help: Initialize a new active profile and config bucket.
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete

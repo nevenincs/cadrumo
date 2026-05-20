@@ -27,7 +27,8 @@ from ....core.logging import default_log_file_path
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 
-_wizard_init_command = build_wizard_command(SETUP_FLOW)
+_wizard_create_command = build_wizard_command(SETUP_FLOW, mode="create")
+_wizard_edit_command = build_wizard_command(SETUP_FLOW, mode="edit")
 
 app = typer.Typer(
     name="config",
@@ -542,11 +543,19 @@ def config_profile_duplicate(
 
     from ....adapters.persistence.storage.bucket._layout import bucket_paths
     from ....adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
+    from ....adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
     from ....adapters.persistence.storage.sql.engine import dispose_engine
-    from ....application.user_profile import DuplicateProfileCommand
-    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.user_profile import UserProfileLifecycleRepository
     from ....application.workflow._utils import utc_now
-    from ....core.config import load_settings
+    from ....core.config import Settings, load_settings
+    from ....domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
     from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
 
     repository = _profile_state()
@@ -574,19 +583,54 @@ def config_profile_duplicate(
         raise CliRefusedBoundaryError(f"Failed to update target bucket manifest: {exc}") from exc
 
     dispose_engine()
-    service = build_lifecycle_service(bucket_id=target)
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{(target_paths.db_dir / 'aeat.db').as_posix()}")
+    )
     try:
-        result = service.duplicate(
-            DuplicateProfileCommand(
-                source_profile_id=source,
-                target_profile_id=target,
-                target_display_name=display_name or target,
-            )
+        objects = SecureObjectRepository(engine=engine)
+        copied_source = UserProfileLifecycleRepository(bucket_id=source, objects=objects)
+        target_profiles = UserProfileLifecycleRepository(bucket_id=target, objects=objects)
+        if target_profiles.exists(target):
+            raise ProfileAlreadyExistsError(f"profile {target!r} already exists in bucket {target!r}")
+        source_record = copied_source.load(source)
+        now = utc_now()
+        target_record = source_record.model_copy(
+            update={
+                "profile_id": target,
+                "display_name": display_name or target,
+                "created_at": now,
+                "updated_at": now,
+            }
         )
+        target_profiles.save(target_record)
+        copied_source.delete(source)
+        events = BucketEventHistoryRepository(objects=objects)
+        event = BucketEvent(
+            event_id=derive_bucket_event_id(
+                bucket_id=target,
+                event_type=BucketEventType.PROFILE_DUPLICATED,
+                occurred_at=now,
+                actor="aeat.application.user_profile",
+                object_type=BucketEventObjectType.PROFILE,
+                object_id=target,
+                payload={"source_profile_id": source},
+            ),
+            bucket_id=target,
+            event_type=BucketEventType.PROFILE_DUPLICATED,
+            occurred_at=now,
+            actor="aeat.application.user_profile",
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=target,
+            payload_version=1,
+            payload={"source_profile_id": source},
+        )
+        events.save(append_bucket_event(events.load(), event))
     except ProfileAlreadyExistsError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
+    finally:
+        engine.dispose()
 
     # WorkflowState.profiles retired; the bucket manifest written by
     # the lifecycle service registration is what makes the new
@@ -597,29 +641,29 @@ def config_profile_duplicate(
         ctx,
         {
             "source_profile_id": source,
-            "target_profile_id": result.profile.profile_id,
-            "display_name": result.profile.display_name,
+            "target_profile_id": target_record.profile_id,
+            "display_name": target_record.display_name,
         },
         (
             f"source_profile_id\t{source}",
-            f"target_profile_id\t{result.profile.profile_id}",
-            f"display_name\t{result.profile.display_name}",
+            f"target_profile_id\t{target_record.profile_id}",
+            f"display_name\t{target_record.display_name}",
         ),
     )
 
 
-# The wizard's persist_answers path detects an existing pointer and
-# calls `set_active_fields` rather than `register_active_profile`, so a
-# single closure powers both "create" and "edit" semantics with the
-# positional ``profile_name`` argument deciding which side of the
-# branch runs.
+# `create` and `edit` are two closures off the same wizard flow,
+# each bound to its verb. The `create` closure refuses a name that
+# already has a manifest; the `edit` closure refuses a name that has
+# none. The verb — not a runtime-detected pointer — is the authority
+# for the create-vs-edit branch.
 _config_profile_create_callback = profile_app.command(
     "create",
     help=tr(
         "cli.config.profile.create_help",
         default="Initialize a new active profile and config bucket.",
     ),
-)(_wizard_init_command)
+)(_wizard_create_command)
 
 
 _config_profile_edit_callback = profile_app.command(
@@ -628,7 +672,7 @@ _config_profile_edit_callback = profile_app.command(
         "cli.config.profile.edit_help",
         default="Re-run the wizard against an existing profile; updates values in place.",
     ),
-)(_wizard_init_command)
+)(_wizard_edit_command)
 
 
 @profile_app.command(
