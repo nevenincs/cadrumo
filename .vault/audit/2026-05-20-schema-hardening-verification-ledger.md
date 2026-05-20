@@ -254,6 +254,63 @@ all 7 assertions to match the correct registry. The remaining 3 (a
 malformed self-referencing carry-forward relation) are a genuine
 registry structural bug, tracked open.
 
+### 2026-05-20 - R10 malformed self-referencing relations removed (Option B)
+
+The three remaining R10 failures (Failures 8, 9, 10 per the investigation
+document) were caused by intra-modelo carry-forward relations introduced by
+commit `eb4306024` using the cross-model `RelationDefinition` schema. The
+relations are structurally invalid: `source_modelo == modelo.id` violates
+the cross-model hierarchy contract, `copy` aggregation with 3 static
+`source_periods` is incoherent, and no formula expression consumed the
+`direct_calculation` dependency role.
+
+**Root cause:** the relations were redundant — each modelo already carries the
+carry-forward value through a `source = "previous_filing"` binding that is
+fully self-sufficient. Option B applied: remove the relation and dependency
+classification entirely; the binding alone carries the value.
+
+**Blocks removed per file:**
+
+- `src/aeat/_data/registry/aeat/modelos/130.toml` — removed
+  `[[revisions."2019-y-siguientes".relations]] id = "modelo-130-rel-self-prior-quarter-negative"` and
+  `[[revisions."2019-y-siguientes".dependency_classifications]] id = "modelo-130-dep-self-prior-quarter"`;
+  removed `relations` and `dependency_classifications` lines from construct manifest.
+  Binding `modelo-130-resultados-negativos-anteriores` (previous_filing) carries the value.
+
+- `src/aeat/_data/registry/aeat/modelos/131/revisions/2019-2023.toml` — same pattern:
+  `modelo-131-2019-2023-rel-self-prior-quarter-negative` relation and
+  `modelo-131-2019-2023-dep-self-prior-quarter` classification removed.
+  Binding `modelo-131-2019-2023-resultados-negativos-anteriores` carries the value.
+
+- `src/aeat/_data/registry/aeat/modelos/131/revisions/2024.toml` —
+  `modelo-131-2024-rel-self-prior-quarter-negative` and `modelo-131-2024-dep-self-prior-quarter` removed.
+
+- `src/aeat/_data/registry/aeat/modelos/131/revisions/2025.toml` —
+  `modelo-131-2025-rel-self-prior-quarter-negative` and `modelo-131-2025-dep-self-prior-quarter` removed.
+
+- `src/aeat/_data/registry/aeat/modelos/131/revisions/2026.toml` —
+  `modelo-131-2026-rel-self-prior-quarter-negative` and `modelo-131-2026-dep-self-prior-quarter` removed.
+
+**Additional pre-existing violations surfaced and fixed:** removing the M130/M131
+relations caused the contract test loop to advance past those failures and expose
+two more modelos with the same structural bug (also introduced via the same
+pattern prior to this session):
+
+- `src/aeat/_data/registry/aeat/modelos/303.toml` —
+  `modelo-303-rel-self-compensacion-anteriores` and `modelo-303-dep-self-prior-quarter` removed.
+  Binding `modelo-303-compensacion-pendiente-anteriores` (previous_filing, source_period_offset_from_target = -1) carries the value.
+
+- `src/aeat/_data/registry/aeat/modelos/202/revisions/2019-2022/` —
+  `0001-modelo-202-2019-2022-rel-self-pagos-2p.toml`,
+  `0002-modelo-202-2019-2022-rel-self-pagos-3p.toml`, and
+  `0001-modelo-202-2019-2022-dep-self-prior-pagos.toml` deleted;
+  manifest updated. Same for `2023-2024` and `2025-y-siguientes` revisions.
+  Binding `modelo-202-*-pagos-fraccionados-anteriores` (previous_filing, sum aggregation) carries the value.
+
+**Test results post-fix:**
+- `test_cross_dependency_calculations.py` + `test_cross_dependency_contract.py` + `test_committed_registry.py`: **72 passed, 0 failed**
+- `test_cross_revision_drift.py`: **13 passed, 0 failed**
+
 ### 2026-05-20 - R9 registry test suite (honest finding)
 
 Full `registry/` suite: **1572 passed, 10 failed** (32 min run).
