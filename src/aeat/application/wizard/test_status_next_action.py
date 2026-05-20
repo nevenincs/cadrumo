@@ -112,6 +112,19 @@ def test_next_wizard_action_returns_auth_login_command_when_not_login_ready() ->
     )
 
 
+def test_next_wizard_action_uses_configured_auth_provider() -> None:
+    assert (
+        _next_wizard_action(
+            has_profile=True,
+            missing_required=(),
+            missing_enrolment=(),
+            auth_provider="clave_movil",
+            login_ready=False,
+        )
+        == "aeat config auth test --provider clave_movil"
+    )
+
+
 def test_next_wizard_action_returns_app_overview_status_in_happy_path() -> None:
     """Every state ready — the operator's next move is to use the app."""
     assert (

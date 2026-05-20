@@ -469,9 +469,23 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
             active = _prompter if _prompter is not None else QuestionaryPrompter()
             answers = run_flow(flow, active, defaults=canonical)
 
-        repository = workflow_state_repository()
+        # Write the active-profile pointer BEFORE constructing the
+        # workflow-state repository. `workflow_state_repository()`
+        # eagerly opens the per-bucket SQLAlchemy engine in its
+        # `SecureObjectRepository.__init__`, and the engine URL
+        # resolves from the active-profile pointer chain. On a
+        # first-run `profile create` the pointer does not exist yet,
+        # so the URL is empty and the engine open crashes — the F3
+        # cold-start chicken-and-egg the operator testimonies
+        # catalogued. `register_active_profile` re-writes the pointer
+        # idempotently at the tail of its work; this early write is
+        # purely the engine-URL load-order requirement.
+        from ..user_profile._orchestration import _write_active_profile_pointer
+
+        _write_active_profile_pointer(profile_name)
         provider = get_master_key_provider()
         with activate_master_key_provider(provider, fallback_bucket_id=profile_name):
+            repository = workflow_state_repository()
             repository.update(lambda state: persist_answers(flow, answers, state=state, profile_name=profile_name))
 
     typed = typing.cast(typing.Any, _command)
