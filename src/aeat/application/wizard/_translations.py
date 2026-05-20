@@ -64,11 +64,21 @@ def _question_translation_keys(question: WizardQuestion, *, flow_id: str) -> tup
     return tuple(keys)
 
 
-def _resolves_in(locale: str, key: str) -> bool:
-    """Return True when ``key`` resolves to something other than its raw form."""
+_UNRESOLVED_SENTINEL = "\x00aeat-wizard-translation-unresolved\x00"
 
-    rendered = tr(key, locale=locale)
-    return rendered != key
+
+def _resolves_in(locale: str, key: str) -> bool:
+    """Return True when ``key`` resolves to a real translation.
+
+    ``tr`` falls back to a humanised form of the key (not the raw
+    key) when no translation exists, so a raw-key comparison can
+    never detect a miss. Passing a sentinel ``default`` makes the
+    miss unambiguous: an unresolved key renders exactly the
+    sentinel, a resolved one renders its translation.
+    """
+
+    rendered = tr(key, locale=locale, default=_UNRESOLVED_SENTINEL)
+    return rendered != _UNRESOLVED_SENTINEL
 
 
 def audit_wizard_translations() -> tuple[str, ...]:

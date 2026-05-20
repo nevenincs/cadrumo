@@ -62,12 +62,28 @@ def build_lifecycle_service(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> ProfileLifecycleService:
-    """Construct a :class:`ProfileLifecycleService` for one bucket."""
+    """Construct a :class:`ProfileLifecycleService` for one bucket.
+
+    The profile aggregate AND the bucket-event-history catalogue both
+    belong to the named bucket's own database. When no repository is
+    injected, a single per-bucket secure-object store is resolved and
+    handed to both the lifecycle repository and the event-history
+    repository, so the audit trail can never split from the records
+    it describes. The prior wiring left the event-history repository
+    on the process-global engine, which had no URL until an active
+    profile existed — every ``register`` then crashed before its
+    first event landed.
+    """
+
+    from ...domain.buckets import BucketEventHistoryRepository
+    from ._repository import _secure_objects_for_bucket
 
     schema = schema or _shared_schema()
+    objects = secure_objects or _secure_objects_for_bucket(bucket_id)
     return ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(bucket_id=bucket_id, objects=secure_objects),
+        repository=UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects),
         validator=ProfileValidationService(schema=schema),
+        events=BucketEventHistoryRepository(objects=objects),
     )
 
 
@@ -198,9 +214,36 @@ def _refuse_duplicate_profile(profile_id: str) -> None:
 
     if read_profile_bucket(profile_id) is not None:
         raise ProfileAlreadyRegisteredError(
-            f"profile {profile_id!r} already exists; "
-            "run `aeat config profile switch NAME` to activate it or "
-            "`aeat config profile delete NAME` first.",
+            tr(
+                "application.user_profile.errors.profile_already_exists",
+                default=(
+                    "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
+                    "to activate it or `aeat config profile delete NAME` first."
+                ),
+                profile=profile_id,
+            ),
+        )
+
+
+def _require_registered_profile(profile_id: str) -> None:
+    """Refuse a ``profile edit`` when no manifest exists for the name.
+
+    Symmetric to :func:`_refuse_duplicate_profile`: ``profile edit``
+    re-runs the wizard against an *existing* profile, so a missing
+    manifest is an operator error, not an implicit create. The
+    manifest-scan helper is the canonical "is this profile
+    registered?" oracle (disaster ADR Ruling 2).
+    """
+
+    from ..workflow._profile_bucket_scan import read_profile_bucket
+
+    if read_profile_bucket(profile_id) is None:
+        raise ProfileNotFoundError(
+            tr(
+                "application.user_profile.errors.profile_not_registered",
+                default="Profile '%{profile}' does not exist; run `aeat config profile create NAME` to create it.",
+                profile=profile_id,
+            ),
         )
 
 
@@ -225,10 +268,7 @@ def _rollback_profile_bucket(profile_id: str) -> None:
         target.rename(trash)
     except OSError:
         return
-    try:
-        shutil.rmtree(trash, ignore_errors=True)
-    except Exception:  # noqa: BLE001 - rollback is best-effort
-        return
+    shutil.rmtree(trash, ignore_errors=True)
 
 
 def _ensure_profile_bucket_manifest(profile_id: str) -> None:

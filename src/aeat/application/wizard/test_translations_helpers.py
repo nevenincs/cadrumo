@@ -160,7 +160,7 @@ def test_resolves_in_returns_true_for_a_real_key_in_every_locale() -> None:
     the CLI app-help for the root namespace. Walks every project locale
     to ensure the helper does not just say True for English."""
     for locale in ("en", "es", "ca", "hu"):
-        assert _resolves_in(locale, "cli.config.set.help") is True
+        assert _resolves_in(locale, "cli.config.list.help") is True
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +193,7 @@ def test_cli_keys_referenced_in_source_extracts_representative_namespaces() -> N
     are surfaced — guards against regressions in the regex grammar."""
     keys = set(cli_keys_referenced_in_source())
 
-    assert "cli.config.set.help" in keys
+    assert "cli.config.list.help" in keys
     assert "cli.config.errors.no_active_profile" in keys
 
 
