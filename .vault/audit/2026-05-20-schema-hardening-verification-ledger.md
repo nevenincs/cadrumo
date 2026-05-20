@@ -104,7 +104,7 @@ All five are manual-input leaves with no `formula`, `binding`, or
 | R4 | M200 deducciones coherence | DONE (no defect) | suspected fracture | 853 casillas, 62 roles, 0 incoherent |
 | R5 | 561 escaped-quote re-verification | IN PROGRESS | 561 | 114 boolean-flag clean; AEIP family defect found |
 | R6 | singleton-role review | OPEN | 506 | - |
-| R7 | Full semantic-correctness agent sweep | OPEN | - | - |
+| R7 | Full semantic-correctness agent sweep | IN PROGRESS | - | M200 done (1250 corrections); M100 consolidating |
 | R8 | Source-data changes re-verification | DONE | 5 change groups | all verified safe |
 | R9 | Downstream test suite (registry) | DONE | - | 1572 pass, 10 fail (pre-date this session) |
 | R10 | M123/130/131 calculation-test regressions | OPEN | 10 | - |
@@ -193,6 +193,21 @@ earlier this campaign:
   `decimal` baseline they were already inconsistent with; the full
   registry suite's M100 estimacion-directa calculation tests pass.
 All five change groups verified safe.
+
+### 2026-05-20 - R7 M200 semantic sweep applied
+
+All 566 M200 roles were reviewed by 6 semantic-review agents against
+full labels (name accuracy, member coherence, granularity). 111 roles
+carried a correction (92 renames, 19 splits); a consolidation agent
+resolved 8 cross-batch conflicts into one per-casilla mapping. **1,250
+casillas** had `semantic_role` rewritten; 144 distinct corrected role
+names. Blast radius: `semantic_role` only. Post-state: 0 data_type
+divergences, 0 constraints divergences. Common defect classes fixed:
+factually wrong role names (e.g. `cooperativas` family was actually
+grupo-fiscal group-exit; `actividades_economicas` amortization family
+was actually I+D-specific), `_flag` suffix on money/decimal fields,
+over-coarse roles lumping distinct LIS concepts, and outlier casillas
+swept in from adjacent sections.
 
 ### 2026-05-20 - R9 registry test suite (honest finding)
 
