@@ -6,11 +6,40 @@ predictable error handling throughout the application.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, ClassVar
+from collections.abc import Mapping, Sequence
+from datetime import datetime
+from typing import ClassVar, Protocol, runtime_checkable
 
-if TYPE_CHECKING:
-    from aeat.adapters.outbound.aeat.browser._site_health import SiteHealthStatus
+
+@runtime_checkable
+class SiteHealthEvidenceLike(Protocol):
+    """Structural view of the evidence block carried by a site-health status.
+
+    Declared in :mod:`aeat.core.errors` so :class:`SiteHealthError` can
+    type its payload without importing the adapter layer that produces
+    it. The concrete record is
+    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthEvidence`.
+    """
+
+    url: object
+    http_status: object
+    detected_markers: Sequence[object]
+
+
+@runtime_checkable
+class SiteHealthStatusLike(Protocol):
+    """Structural view of a detected AEAT site-health classification.
+
+    Declared in :mod:`aeat.core.errors` so :class:`SiteHealthError` can
+    accept the status without a runtime or type-checking import of the
+    adapter layer. The concrete record is
+    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`.
+    """
+
+    state: object
+    evidence: SiteHealthEvidenceLike
+    observed_at: datetime
+    retry_after_seconds: int | None
 
 
 class AeatError(Exception):
@@ -97,31 +126,30 @@ class ModeloFixtureError(AeatError):
 class SiteHealthError(AeatError):
     """Raised when AEAT site-health detection classifies a non-OK state.
 
-    Carries a strict :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
-    attribute describing the detected state (mantenimiento, WAF challenge,
-    rate limit, unreachable, unknown error) together with the evidence
-    used to classify it. The workflow engine catches this error in a typed
-    arm that precedes the generic exception handler so a planned
+    Carries a :class:`SiteHealthStatusLike` payload describing the
+    detected state (mantenimiento, WAF challenge, rate limit,
+    unreachable, unknown error) together with the evidence used to
+    classify it. The workflow engine catches this error in a typed arm
+    that precedes the generic exception handler so a planned
     mantenimiento never collapses into ``UNHANDLED_EXCEPTION``.
 
     The error lives in :mod:`aeat.core.errors` (and not in either leaf
     subpackage) to break the circular import between
-    :mod:`aeat.adapters.outbound.aeat.browser` (which raises it) and :mod:`aeat.application.workflow`
-    (which consumes it).
-
-    The ``SiteHealthStatus`` import is guarded by ``TYPE_CHECKING`` so no
-    runtime adapter-layer import occurs; :data:`.importlinter` is configured
-    with ``exclude_type_checking_imports = True`` to keep this edge invisible
-    to the ``core-not-outer`` contract.
+    :mod:`aeat.adapters.outbound.aeat.browser` (which raises it) and
+    :mod:`aeat.application.workflow` (which consumes it). The payload is
+    typed through the :class:`SiteHealthStatusLike` structural Protocol
+    declared in this module, so no import of the adapter layer occurs at
+    runtime or under type checking — the ``core-not-outer`` boundary is
+    satisfied without an exclusion.
     """
 
-    def __init__(self, *, status: SiteHealthStatus) -> None:
+    def __init__(self, *, status: SiteHealthStatusLike) -> None:
         """Construct a SiteHealthError carrying a detected status.
 
         Args:
-            status: The strict
-                :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
-                instance describing the detected non-OK state.
+            status: A :class:`SiteHealthStatusLike` instance describing
+                the detected non-OK state. The concrete record is the
+                adapter-layer ``SiteHealthStatus``.
         """
 
         state = status.state
@@ -137,7 +165,7 @@ class SiteHealthError(AeatError):
         if status.retry_after_seconds is not None:
             context["retry_after_seconds"] = status.retry_after_seconds
         super().__init__(str(state_value), context=context)
-        self.status: SiteHealthStatus = status
+        self.status: SiteHealthStatusLike = status
 
 
 class McpLaunchError(AeatError):
@@ -176,6 +204,8 @@ __all__ = [
     "FixtureProvisioningError",
     "McpLaunchError",
     "SiteHealthError",
+    "SiteHealthEvidenceLike",
+    "SiteHealthStatusLike",
     "bind_error_code",
     "build_error_envelope",
     "get_error_exit_code",
