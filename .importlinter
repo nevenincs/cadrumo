@@ -72,6 +72,20 @@ ignore_imports =
 #   callback (register_profile_language_resolver).
 # Core test files that pull application / domain fixtures for integration tests
 # are permitted per project convention.
+#
+# core.resources._repos deferred loader imports (resource-management-api ADR,
+# 2026-05-16): the resource-management-api ADR explicitly places the concrete
+# Repository implementations under core/resources/ ("Repository implementations
+# reference [domain models] but the Repository class hierarchy itself is
+# core-layer infrastructure") AND chose lazy loading as the default (ADR Q5:
+# "each Repository's get(key) loads on demand"; "the eager imports disappear").
+# Each loader below is a *function-local* import inside a Repository._load /
+# _resolve_authority method -- it runs only at first resource access, never at
+# module-import time, so core/resources/ stays an acyclic leaf in the module
+# graph. The runtime dependency direction is a deliberate, ADR-sanctioned
+# consequence of co-locating the single resource boundary in core. Each edge is
+# pinned individually (no wildcard) so a NEW non-deferred core->outer import is
+# still caught. Test files importing domain errors are permitted per convention.
 
 [importlinter:contract:core-not-outer]
 name = Core must not import outer layers
@@ -83,8 +97,8 @@ forbidden_modules =
     aeat.application
     aeat.adapters
     aeat.entrypoints
-# Core test files that import application/domain/adapters for integration tests.
 ignore_imports =
+    # ── core test files importing application/domain/adapters for fixtures ──
     aeat.core.i18n.test_output_language -> aeat.application.user_profile._orchestration
     aeat.core.i18n.test_output_language -> aeat.application.user_profile._testing
     aeat.core.i18n.test_output_language -> aeat.application.workflow._persistence
@@ -92,6 +106,21 @@ ignore_imports =
     aeat.core.i18n.test_output_language -> aeat.adapters.persistence.storage.sql
     aeat.core.i18n.test_output_language -> aeat.domain.user_profile
     aeat.core.test_external_constants -> aeat.domain.portals._categories
+    aeat.core.resources._repos.test_manuals -> aeat.domain.manuals.errors
+    aeat.core.resources._repos.test_normatives -> aeat.domain.normatives.errors
+    # ── core/resources/_repos deferred loader imports (ADR-sanctioned, see above) ──
+    aeat.core.resources._repos.apoderamientos -> aeat.domain.auth.apoderamientos
+    aeat.core.resources._repos.category_profiles -> aeat.domain.categories
+    aeat.core.resources._repos.holiday_calendars -> aeat.domain.deadlines
+    aeat.core.resources._repos.iva_catalogues -> aeat.domain.iva._catalogue
+    aeat.core.resources._repos.iva_rate_tables -> aeat.domain.iva._rates
+    aeat.core.resources._repos.legal_parameters -> aeat.domain.calculations.registry
+    aeat.core.resources._repos.manuals -> aeat.domain.manuals
+    aeat.core.resources._repos.modelos -> aeat.domain.calculations.registry
+    aeat.core.resources._repos.normatives -> aeat.domain.normatives
+    aeat.core.resources._repos.recargo_bands -> aeat.domain.deadlines
+    aeat.core.resources._repos.topics -> aeat.application.topics
+    aeat.core.resources._repos.user_profile -> aeat.domain.user_profile
 
 # ── S23: Full layered architecture contract ───────────────────────────────────
 # The broad layered contract enforces hexagonal direction across all layers.
@@ -279,3 +308,25 @@ ignore_imports =
     aeat.core.i18n.test_output_language -> aeat.adapters.persistence.storage.sql
     aeat.core.i18n.test_output_language -> aeat.domain.user_profile
     aeat.core.test_external_constants -> aeat.domain.portals._categories
+    aeat.core.resources._repos.test_manuals -> aeat.domain.manuals.errors
+    aeat.core.resources._repos.test_normatives -> aeat.domain.normatives.errors
+    # ── core/resources/_repos deferred loader imports ──
+    # Function-local imports inside Repository._load / _resolve_authority
+    # methods. The resource-management-api ADR (2026-05-16) places the
+    # concrete Repository implementations in core/resources/ and chose lazy
+    # loading (ADR Q5); the imports run only at first resource access, never
+    # at module-import time, so core/resources/ stays an acyclic leaf. Each
+    # edge is pinned individually so a new non-deferred core->outer import is
+    # still caught. See the core-not-outer contract comment above for detail.
+    aeat.core.resources._repos.apoderamientos -> aeat.domain.auth.apoderamientos
+    aeat.core.resources._repos.category_profiles -> aeat.domain.categories
+    aeat.core.resources._repos.holiday_calendars -> aeat.domain.deadlines
+    aeat.core.resources._repos.iva_catalogues -> aeat.domain.iva._catalogue
+    aeat.core.resources._repos.iva_rate_tables -> aeat.domain.iva._rates
+    aeat.core.resources._repos.legal_parameters -> aeat.domain.calculations.registry
+    aeat.core.resources._repos.manuals -> aeat.domain.manuals
+    aeat.core.resources._repos.modelos -> aeat.domain.calculations.registry
+    aeat.core.resources._repos.normatives -> aeat.domain.normatives
+    aeat.core.resources._repos.recargo_bands -> aeat.domain.deadlines
+    aeat.core.resources._repos.topics -> aeat.application.topics
+    aeat.core.resources._repos.user_profile -> aeat.domain.user_profile
