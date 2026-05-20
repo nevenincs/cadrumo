@@ -298,6 +298,9 @@ class OverviewStatusReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     active_profile: str | None = None
+    """Immutable bucket UUID of the active profile, or ``None``."""
+    active_profile_name: str | None = None
+    """Operator-chosen display name of the active profile, or ``None``."""
     transactions: int = Field(ge=0)
     invoices: int = Field(ge=0)
     drafts: int = Field(ge=0)
@@ -518,6 +521,7 @@ def build_overview_status_report(
     )
     return OverviewStatusReport(
         active_profile=active_profile,
+        active_profile_name=_resolve_active_profile_name(active_profile),
         transactions=len(transactions.transactions),
         invoices=len(invoices),
         drafts=len(drafts),
@@ -525,11 +529,32 @@ def build_overview_status_report(
     )
 
 
+def _resolve_active_profile_name(bucket_id: str | None) -> str | None:
+    """Resolve a bucket UUID to its operator-chosen display name.
+
+    Reads the plaintext profile-bucket manifest (no secret access, no
+    active session required); returns ``None`` when no profile is active
+    or the manifest cannot be located so the renderer falls back to the
+    UUID.
+    """
+
+    if bucket_id is None:
+        return None
+    from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
+
+    try:
+        pointer = read_profile_bucket_by_id(bucket_id)
+    except (OSError, ValueError):
+        return None
+    return pointer.label if pointer is not None else None
+
+
 def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     """Render ``OverviewStatusReport`` as stable tab-separated text rows."""
 
     lines = [
-        f"profile\t{report.active_profile or ''}",
+        f"profile\t{report.active_profile_name or report.active_profile or ''}",
+        f"profile_id\t{report.active_profile or ''}",
         f"transactions\t{report.transactions}",
         f"invoices\t{report.invoices}",
         f"drafts\t{report.drafts}",

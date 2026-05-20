@@ -27,6 +27,14 @@ def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str,
 def _profile_line(report: OverviewStatusReport) -> str:
     if report.active_profile is None:
         return tr("cli.overview.status.profile_missing")
+    # Prefer the operator-chosen display name; the immutable bucket UUID
+    # is shown as a parenthetical secondary so the line is still
+    # unambiguous after the UUID-identity cutover. Fall back to the UUID
+    # alone when the manifest carried no display name.
+    name = report.active_profile_name
+    if name:
+        line = tr("cli.overview.status.profile_active", profile=name)
+        return f"{line} ({report.active_profile})"
     return tr("cli.overview.status.profile_active", profile=report.active_profile)
 
 

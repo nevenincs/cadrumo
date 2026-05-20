@@ -142,6 +142,15 @@ def _root(
         document = build_help_document("root")
         _emit(ctx, document, render_help_text(document).splitlines())
         raise typer.Exit()
+    # Wire the active-profile output-language resolver into ``core.i18n``
+    # before any subcommand renders prose. Importing the side-effect
+    # module registers the resolver; without it, render paths that never
+    # touch ``aeat.application.user_profile`` (e.g. ``overview status``)
+    # silently ignore a profile's ``preferences.output_language``. Kept
+    # after the ``--version`` / ``--help`` fast-path exits so those
+    # surfaces stay free of the application-layer import.
+    from ...application.user_profile import _language_resolver as _language_resolver
+
     _activate_active_bucket_session(ctx)
     if ctx.invoked_subcommand is None:
         if _app_import_error is not None:
@@ -208,6 +217,16 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     if has_active_bucket_session():
         return
     ctx.with_resource(get_master_key_provider())
+    # The active profile's encrypted record is only decryptable once the
+    # bucket session above is open. ``output_language()`` is cached, and
+    # its cache key (env vars + `.env` mtime) does not vary when a
+    # session opens — so any `tr()` fired during module import or the
+    # root callback cached the settings-default language before the
+    # profile preference was readable. Drop the cache here so the verb
+    # body re-resolves through the now-readable profile preference.
+    from ...core.i18n._render import clear_output_language_cache
+
+    clear_output_language_cache()
 
 
 def _full_invocation_verb_path() -> str | None:
