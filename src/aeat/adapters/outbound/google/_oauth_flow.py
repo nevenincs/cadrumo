@@ -39,7 +39,7 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
     """Refuse the OAuth flow when unsecured mode meets a real NIF.
 
     Args:
-        profile: Resolved active profile name (per `_profile_binding`).
+        profile: Resolved active profile UUID (per `_profile_binding`).
         tax_id: The active profile's `tax.id` value. Empty string when
             the profile has no tax id stored.
 
@@ -142,7 +142,7 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
 
     Args:
         client: The operator-imported OAuth client metadata.
-        profile: Resolved active profile name (per `_profile_binding`).
+        profile: Resolved active profile UUID (per `_profile_binding`).
 
     Returns:
         A `(OAuthToken, OAuthMetadata)` pair ready for persistence.

@@ -12,8 +12,8 @@ from typer.testing import CliRunner, Result
 
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.entrypoints.cli._config import profile_app, repair_app
 from aeat.entrypoints.cli import app as root_app
+from aeat.entrypoints.cli._config import profile_app, repair_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

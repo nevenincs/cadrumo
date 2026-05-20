@@ -107,7 +107,7 @@ def test_reset_profile_only_clears_active_profile_record(
         report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
         assert isinstance(report, ConfigResetReport)
         assert report.scope is ConfigResetScope.PROFILE
-        assert "operator" in report.removed_profile_names
+        assert "operator" in report.removed_profile_ids
         assert report.removed_auth_session is False
 
         state_after = workflow_state_repository().load()
@@ -133,7 +133,7 @@ def test_reset_auth_only_clears_session(
         report = reset_config(ConfigResetScope.AUTH, confirmed=True)
         assert report.scope is ConfigResetScope.AUTH
         assert report.removed_auth_session is True
-        assert report.removed_profile_names == ()
+        assert report.removed_profile_ids == ()
 
         state_after = workflow_state_repository().load()
         assert state_after.auth.provider is None
@@ -154,7 +154,7 @@ def test_reset_profile_deletes_registered_bucket_record(
 
         report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
 
-        assert "operator" in report.removed_profile_names
+        assert "operator" in report.removed_profile_ids
         assert not _profile_exists("operator")
         assert _registered_profile_names() == ()
 
@@ -171,7 +171,7 @@ def test_reset_data_invokes_quarantine_pipeline(
 
         report = reset_config(ConfigResetScope.DATA, confirmed=True)
         assert report.scope is ConfigResetScope.DATA
-        assert report.removed_profile_names == ()
+        assert report.removed_profile_ids == ()
         assert report.removed_auth_session is False
         # No unreadable rows in a fresh temp DB -> quarantine count is 0.
         assert report.quarantined_namespace_count == 0
@@ -196,7 +196,7 @@ def test_reset_all_combines_all_scopes(
 
         report = reset_config(ConfigResetScope.ALL, confirmed=True)
         assert report.scope is ConfigResetScope.ALL
-        assert "operator" in report.removed_profile_names
+        assert "operator" in report.removed_profile_ids
         assert report.removed_auth_session is True
 
         state_after = workflow_state_repository().load()
