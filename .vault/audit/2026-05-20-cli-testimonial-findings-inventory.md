@@ -210,3 +210,45 @@ this pass: the CLI / persistence / `core.resources` / `workflow`
 layers are under concurrent refactor by other campaigns in this shared
 worktree (the tree was observed in a broken import state mid-session),
 so editing them now would collide. The inventory is the handoff.
+
+---
+
+# Coordinator verification corrections (2026-05-20)
+
+Direct reproduction against the live CLI corrected/extended testimonial
+findings - testimonials are evidence, not gospel.
+
+## Correction: Diego's "legal refs absent from calculation output"
+
+**Inaccurate as stated.** A successful `modelo work calculate` (130,
+1T) JSON output *does* carry full provenance under `observations[]`:
+`observations[].formula_id`, `observations[].legal_refs[]`,
+`observations[].source_refs[]`. The flat `casilla_values` mapping omits
+them - but that is by design (the calculation-grounding rule: the typed
+`observations` list is the contract, the flat view is for human
+readability). Diego likely inspected `casilla_values`, or his calc
+errored on a missing binding before producing observations. The data
+contract is satisfied. A residual *presentation* question remains
+(does the default text renderer surface the observation provenance to
+the operator?) - that is a UX gap, not a data gap. Severity downgraded
+major -> minor (presentation).
+
+## New finding: mojibake in error messages
+
+[verified] `aeat --format json app modelo work calculate ...` on a
+missing binding emits
+`"message": "La vinculaciÃ³n ... no tiene valor asignado."`
+- `vinculacion` is double-encoded (`Ã³` = the UTF-8 bytes of
+`o-acute` decoded as latin-1). The locale source `src/aeat/locales/
+es.yml` is correct, valid UTF-8 (`vinculaci\xc3\xb3n`); the corruption
+is introduced downstream between locale read and JSON emit. Spanish
+accented characters in user-facing error messages render as mojibake.
+Severity: major (every accented Spanish error string is affected;
+`test_windows_encoding.py` confirms CLI encoding is a known fragility).
+
+## New finding: no pre-flight binding check before calculate
+
+[verified] confirms Diego - `modelo work calculate` fails one missing
+binding at a time (`irpf.previous_year_economic_activity_net_income`
+surfaced only on the calculate attempt). A preflight that lists all
+unsatisfied bindings up front would save round-trips.
