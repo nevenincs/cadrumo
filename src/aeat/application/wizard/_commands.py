@@ -43,6 +43,23 @@ from ._prompter import Prompter, QuestionaryPrompter, ScriptedPrompter
 from ._runner import run_flow
 
 
+def _ccaa_choice_values() -> list[str]:
+    """Return the CCAA choice tokens from the canonical ``CCAA`` enum.
+
+    Derived from the domain enum rather than a hand-kept literal list
+    so the ``--tax-residence-ccaa`` choices never drift from the
+    autonomous-community catalogue the rest of the domain validates
+    against.
+    """
+
+    from ...domain.profile._ccaa import CCAA
+
+    return [member.value for member in CCAA]
+
+
+_CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
+
+
 def _flag_name(question: WizardQuestion) -> str:
     """Map a question id to its primary Typer flag name."""
 
@@ -200,26 +217,18 @@ _SETUP_OPTION_INFOS: dict[str, object] = {
     ),
     "tax-residence-ccaa": typer.Option(
         "--tax-residence-ccaa",
-        click_type=click.Choice(
-            [
-                "andalucia",
-                "aragon",
-                "asturias",
-                "baleares",
-                "canarias",
-                "cantabria",
-                "castilla_la_mancha",
-                "castilla_y_leon",
-                "cataluna",
-                "comunidad_valenciana",
-                "extremadura",
-                "galicia",
-                "la_rioja",
-                "madrid",
-                "murcia",
-            ]
+        click_type=click.Choice(_CCAA_CHOICE_VALUES),
+        # The 15 CCAA choices form one ~150-char metavar that Rich
+        # wraps mid-token (`com` / `unidad_valenciana`). A short
+        # explicit metavar plus `show_choices=False` keeps the metavar
+        # column tidy; the choice values are listed in the help text,
+        # where they wrap on commas / word boundaries.
+        metavar="CCAA",
+        show_choices=False,
+        help=tr(
+            "wizard.setup.flags.tax-residence-ccaa.help",
+            choices=", ".join(_CCAA_CHOICE_VALUES),
         ),
-        help=tr("wizard.setup.flags.tax-residence-ccaa.help"),
     ),
     "notes": typer.Option("--notes", help=tr("wizard.setup.flags.notes.help")),
 }

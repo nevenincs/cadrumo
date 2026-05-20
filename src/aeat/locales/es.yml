@@ -2051,7 +2051,7 @@ wizard:
       tax-id:
         help: Identificador fiscal (NIF/NIE) del perfil activo
       tax-residence-ccaa:
-        help: Comunidad autónoma de residencia fiscal
+        help: 'Comunidad autónoma de residencia fiscal. Una de: %{choices}.'
       taxation-type:
         help: 'Tipo de declaración de Renta: 1 = individual, 2 = conjunta (unidad
           familiar).'

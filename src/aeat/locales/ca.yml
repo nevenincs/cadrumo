@@ -2021,7 +2021,7 @@ wizard:
       tax-id:
         help: Identificador fiscal (NIF/NIE) del perfil actiu
       tax-residence-ccaa:
-        help: Comunitat autònoma de residència fiscal
+        help: 'Comunitat autònoma de residència fiscal. Una de: %{choices}.'
       taxation-type:
         help: 'Tipus de declaració de Renda: 1 = individual, 2 = conjunta (unitat
           familiar).'

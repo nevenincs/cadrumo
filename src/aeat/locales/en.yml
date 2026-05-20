@@ -1978,7 +1978,7 @@ wizard:
       tax-id:
         help: Tax identifier (NIF/NIE) for the active profile
       tax-residence-ccaa:
-        help: Tax-residence autonomous community
+        help: 'Tax-residence autonomous community. One of: %{choices}.'
       taxation-type:
         help: 'Income-tax return type: 1 = individual, 2 = joint (family unit).'
       taxpayer-birth-date:

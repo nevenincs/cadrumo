@@ -2004,7 +2004,7 @@ wizard:
       tax-id:
         help: Az aktív profil adóazonosítója (NIF/NIE)
       tax-residence-ccaa:
-        help: Adóügyi rezidens autonóm közösség
+        help: 'Adóügyi rezidens autonóm közösség. Az egyike: %{choices}.'
       taxation-type:
         help: 'A jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
       taxpayer-birth-date:
