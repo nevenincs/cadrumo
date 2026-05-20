@@ -16,6 +16,7 @@ from decimal import Decimal
 from typing import Literal
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
 from ....core.resources import bundled_path
@@ -1005,6 +1006,55 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     assert unknown_casilla_failures == [], (
         f"a segment-qualified casilla reference must resolve; got: {unknown_casilla_failures}"
     )
+
+
+def _single_segment_casilla() -> CasillaDefinition:
+    """A real single-segment casilla, the shape every existing modelo authors."""
+    return CasillaDefinition(
+        id="00592",
+        number="00592",
+        label="Cuota liquida",
+        section=("liquidacion",),
+        data_type="money",
+        legal_refs=("ley-58-2003:art-29",),
+        source_refs=("aeat-manual-modelo",),
+    )
+
+
+def test_casilla_segmento_defaults_unset() -> None:
+    """A single-segment casilla leaves segmento unset; the field defaults to None."""
+    casilla = _single_segment_casilla()
+
+    assert casilla.segmento is None
+
+
+def test_casilla_segmento_accepts_aeat_record_segment_code() -> None:
+    """A multi-segment casilla carries the AEAT record-segment code in segmento."""
+    casilla = _single_segment_casilla().model_copy(update={"segmento": "DP200014"})
+
+    assert casilla.segmento == "DP200014"
+
+
+def test_single_segment_casilla_validates_unchanged_with_segmento_unset() -> None:
+    """A single-segment casilla (segmento unset) survives a strict pydantic round-trip.
+
+    The segmento field is purely additive: every existing CasillaDefinition
+    that never declares segmento must validate exactly as before, with
+    segmento absent from the serialised payload's meaningful state.
+    """
+    casilla = _single_segment_casilla()
+
+    round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
+
+    assert round_tripped == casilla
+    assert round_tripped.segmento is None
+    assert "segmento" not in casilla.model_dump(exclude_defaults=True)
+
+
+def test_casilla_segmento_rejects_empty_string() -> None:
+    """An empty segmento is rejected so 'unset' stays distinct from 'empty'."""
+    with pytest.raises(ValidationError, match="segmento"):
+        CasillaDefinition.model_validate({**_single_segment_casilla().model_dump(), "segmento": ""})
 
 
 def test_filing_modelo_with_formula_passes_invariant() -> None:
