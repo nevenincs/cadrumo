@@ -1574,6 +1574,90 @@ class CasillaDefinition(RegistryModel):
         return self
 
 
+class DisenoCompletenessCasilla(RegistryModel):
+    """One expected ``(segmento, number)`` casilla in a Diseño-completeness manifest.
+
+    A casilla's identity is the pair ``(segmento, number)``. A
+    single-segment modelo leaves ``segmento`` unset, so the pair degrades
+    to ``(None, number)`` and the manifest enumerates bare numbers
+    exactly as the AEAT Diseño de Registros declares them.
+    """
+
+    number: str = Field(min_length=1, max_length=32)
+    segmento: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=32,
+        description=(
+            "AEAT record-segment code (e.g. 'DP200014') for multi-segment "
+            "modelos that reuse a casilla number across record segments. "
+            "Unset for single-segment modelos."
+        ),
+    )
+
+    def identity(self) -> tuple[str | None, str]:
+        """Return the ``(segmento, number)`` identity pair for this casilla."""
+        return (self.segmento, self.number)
+
+
+class DisenoCompletenessManifest(RegistryModel):
+    """The expected ``(segmento, number)`` casilla set for a modelo revision.
+
+    Derived from the official AEAT Diseño de Registros corpus (an
+    off-load-path extraction step, never parsed on the snapshot-build
+    hot path) and checked into the registry as reviewed data. The
+    registry validator compares a revision's declared casillas against
+    this manifest and hard-errors on any missing or extra casilla.
+
+    ``manual_extraction`` flags a manifest authored from a manual read
+    of a PDF-only Diseño that resists machine extraction; the
+    off-load-path drift re-verification skips the machine re-derivation
+    for such manifests and records ``manual_extraction_reason`` instead
+    of failing silently.
+    """
+
+    source_ref: SourceRefId = Field(
+        description="Catalogue source id of the AEAT Diseño de Registros the manifest was derived from."
+    )
+    casillas: tuple[DisenoCompletenessCasilla, ...]
+    manual_extraction: bool = False
+    manual_extraction_reason: str | None = Field(default=None, min_length=1, max_length=512)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_manifest(self) -> DisenoCompletenessManifest:
+        if not self.casillas:
+            raise RegistryValidationError("Diseño-completeness manifest must enumerate at least one casilla")
+        identities = [casilla.identity() for casilla in self.casillas]
+        duplicates = sorted({pair for pair in identities if identities.count(pair) > 1})
+        if duplicates:
+            rendered = ", ".join(
+                f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
+                for segmento, number in duplicates
+            )
+            raise RegistryValidationError(
+                f"Diseño-completeness manifest declares duplicate casilla identities: {rendered}"
+            )
+        if self.source_ref not in self.source_refs:
+            raise RegistryValidationError(
+                "Diseño-completeness manifest source_ref must be included in source_refs"
+            )
+        if self.manual_extraction and self.manual_extraction_reason is None:
+            raise RegistryValidationError(
+                "Diseño-completeness manifest with manual_extraction must declare manual_extraction_reason"
+            )
+        if not self.manual_extraction and self.manual_extraction_reason is not None:
+            raise RegistryValidationError(
+                "Diseño-completeness manifest declares manual_extraction_reason without manual_extraction"
+            )
+        return self
+
+    def identities(self) -> frozenset[tuple[str | None, str]]:
+        """Return the frozenset of expected ``(segmento, number)`` identity pairs."""
+        return frozenset(casilla.identity() for casilla in self.casillas)
+
+
 class AlgorithmProviderDefinition(RegistryModel):
     id: str
     import_path: str
@@ -1834,6 +1918,7 @@ class ModeloRevision(RegistryModel):
     support_removal_decisions: tuple[SupportRemovalDecisionDefinition, ...] = ()
     constructs: tuple[ConstructDefinition, ...] = ()
     dependency_classifications: tuple[DependencyClassificationDefinition, ...] = ()
+    completeness_manifest: DisenoCompletenessManifest | None = None
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
