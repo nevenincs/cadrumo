@@ -436,12 +436,14 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
 
     def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
         from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+        from ...domain.user_profile import new_profile_id
         from ..user_profile._orchestration import (
-            _refuse_duplicate_profile,
-            _require_registered_profile,
+            _refuse_duplicate_label,
+            _require_registered_label,
             _write_active_profile_pointer,
         )
         from ..workflow._persistence import workflow_state_repository
+        from ..workflow._profile_bucket_scan import read_profile_bucket
 
         raw_profile_name = kwargs.pop("profile_name")
         if not isinstance(raw_profile_name, str) or not raw_profile_name.strip():
@@ -452,14 +454,24 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         profile_name = raw_profile_name.strip()
 
         # Refuse BEFORE prompting and BEFORE any pointer/engine write.
-        # A `create` that targets an existing name, or an `edit` that
-        # targets a missing one, must neither walk the operator
+        # A `create` that targets an existing label, or an `edit` that
+        # targets an unknown one, must neither walk the operator
         # through the flow nor switch the active-profile pointer as a
-        # side effect.
+        # side effect. The profile identity is the immutable UUID:
+        # `create` mints a fresh one, `edit` resolves the existing
+        # profile's UUID from its operator-facing label.
         if mode == "create":
-            _refuse_duplicate_profile(profile_name)
+            _refuse_duplicate_label(profile_name)
+            profile_id = new_profile_id()
         else:
-            _require_registered_profile(profile_name)
+            _require_registered_label(profile_name)
+            pointer = read_profile_bucket(profile_name)
+            if pointer is None:
+                raise WizardMissingFlagError(
+                    tr("application.wizard.errors.profile_flag_required"),
+                    context={"flow_id": flow.id, "missing": ("profile_name",)},
+                )
+            profile_id = pointer.bucket_id
 
         quiet = bool(kwargs.pop("quiet", False))
         accept_defaults = bool(kwargs.pop("accept_defaults", False))
@@ -497,14 +509,15 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         # `SecureObjectRepository.__init__`, and the engine URL
         # resolves from the active-profile pointer chain. On a
         # first-run `profile create` the pointer does not exist yet,
-        # so the URL is empty and the engine open crashes — the F3
+        # so the URL is empty and the engine open crashes — the
         # cold-start chicken-and-egg the operator testimonies
-        # catalogued. `register_active_profile` re-writes the pointer
-        # idempotently at the tail of its work; this early write is
-        # purely the engine-URL load-order requirement.
-        _write_active_profile_pointer(profile_name)
+        # catalogued. The pointer stores the immutable profile UUID,
+        # never the operator label. `register_active_profile` re-writes
+        # the pointer idempotently at the tail of its work; this early
+        # write is purely the engine-URL load-order requirement.
+        _write_active_profile_pointer(profile_id)
         provider = get_master_key_provider()
-        with activate_master_key_provider(provider, fallback_bucket_id=profile_name):
+        with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
             repository = workflow_state_repository()
             repository.update(
                 lambda state: persist_answers(
@@ -512,6 +525,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
                     answers,
                     state=state,
                     profile_name=profile_name,
+                    profile_id=profile_id,
                     mode=mode,
                 )
             )

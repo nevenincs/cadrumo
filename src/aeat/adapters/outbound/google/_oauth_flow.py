@@ -62,22 +62,24 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
         )
 
 
-def resolve_active_tax_id(profile: str) -> str:
-    """Return the `tax.id` value for the named profile, or empty string.
+def resolve_active_tax_id(profile_id: str) -> str:
+    """Return the `identity.tax_id` value for the profile UUID, or empty string.
 
-    Looks up the workflow state's pointer for `profile`, loads the
-    canonical user-profile record, and reads the identity tax-id fact.
-    Used by the orchestrator to feed `check_unsecured_mode_safety`.
+    ``profile_id`` is the immutable UUID profile identity (per
+    ``_profile_binding.resolve_active_profile``). Loads the canonical
+    user-profile record from that profile's bucket and reads the
+    identity tax-id fact. Used by the orchestrator to feed
+    `check_unsecured_mode_safety`.
     """
 
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
 
-    pointer = read_profile_bucket(profile)
+    pointer = read_profile_bucket_by_id(profile_id)
     if pointer is None:
         return ""
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(profile)
+        record = service.read(profile_id)
     except ProfileNotFoundError:
         return ""
     return fact_value(record, "identity.tax_id") or ""

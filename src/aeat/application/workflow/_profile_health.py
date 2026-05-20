@@ -12,7 +12,7 @@ from ..user_profile._keys_validation import list_profile_key_records, validate_p
 from ..user_profile._projections import record_to_path_values
 from ._models import WorkflowState
 from ._persistence import workflow_state_repository
-from ._profile_bucket_scan import read_profile_bucket
+from ._profile_bucket_scan import read_profile_bucket_by_id
 
 ProfileHealthStatus = Literal[
     "none",
@@ -75,7 +75,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
 
-    registered = read_profile_bucket(active_profile) is not None
+    registered_pointer = read_profile_bucket_by_id(active_profile)
+    registered = registered_pointer is not None
     if not registered:
         return ActiveProfileHealth(
             active_profile=active_profile,
@@ -155,7 +156,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         next_action=(
             "aeat app overview status"
             if validation.valid
-            else f"aeat config profile edit {active_profile}"
+            else f"aeat config profile edit {registered_pointer.label}"
         ),
     )
 
