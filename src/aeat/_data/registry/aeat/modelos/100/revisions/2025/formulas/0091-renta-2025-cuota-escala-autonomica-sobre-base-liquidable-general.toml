@@ -4,7 +4,23 @@ target = "0529"
 expression = { op = "lookup_bracket_by_ccaa", args = [
     { casilla = "0505" },
     { binding = "renta-2025-profile-tax-residence-ccaa" },
-    { dispatch_table = { andalucia = "renta-2025-escala-autonomica-andalucia-base-general", aragon = "renta-2025-escala-autonomica-aragon-base-general", asturias = "renta-2025-escala-autonomica-asturias-base-general", baleares = "renta-2025-escala-autonomica-baleares-base-general", canarias = "renta-2025-escala-autonomica-canarias-base-general", cantabria = "renta-2025-escala-autonomica-cantabria-base-general", castilla_la_mancha = "renta-2025-escala-autonomica-castilla-la-mancha-base-general", castilla_y_leon = "renta-2025-escala-autonomica-castilla-y-leon-base-general", cataluna = "renta-2025-escala-autonomica-cataluna-base-general", comunidad_valenciana = "renta-2025-escala-autonomica-comunidad-valenciana-base-general", extremadura = "renta-2025-escala-autonomica-extremadura-base-general", galicia = "renta-2025-escala-autonomica-galicia-base-general", la_rioja = "renta-2025-escala-autonomica-la-rioja-base-general", madrid = "renta-2025-escala-autonomica-madrid-base-general", murcia = "renta-2025-escala-autonomica-murcia-base-general" } },
+    { dispatch_table_entries = [
+        { key = "andalucia", parameter = "renta-2025-escala-autonomica-andalucia-base-general" },
+        { key = "aragon", parameter = "renta-2025-escala-autonomica-aragon-base-general" },
+        { key = "asturias", parameter = "renta-2025-escala-autonomica-asturias-base-general" },
+        { key = "baleares", parameter = "renta-2025-escala-autonomica-baleares-base-general" },
+        { key = "canarias", parameter = "renta-2025-escala-autonomica-canarias-base-general" },
+        { key = "cantabria", parameter = "renta-2025-escala-autonomica-cantabria-base-general" },
+        { key = "castilla_la_mancha", parameter = "renta-2025-escala-autonomica-castilla-la-mancha-base-general" },
+        { key = "castilla_y_leon", parameter = "renta-2025-escala-autonomica-castilla-y-leon-base-general" },
+        { key = "cataluna", parameter = "renta-2025-escala-autonomica-cataluna-base-general" },
+        { key = "comunidad_valenciana", parameter = "renta-2025-escala-autonomica-comunidad-valenciana-base-general" },
+        { key = "extremadura", parameter = "renta-2025-escala-autonomica-extremadura-base-general" },
+        { key = "galicia", parameter = "renta-2025-escala-autonomica-galicia-base-general" },
+        { key = "la_rioja", parameter = "renta-2025-escala-autonomica-la-rioja-base-general" },
+        { key = "madrid", parameter = "renta-2025-escala-autonomica-madrid-base-general" },
+        { key = "murcia", parameter = "renta-2025-escala-autonomica-murcia-base-general" },
+    ] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-74", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
