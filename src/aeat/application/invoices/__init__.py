@@ -42,6 +42,7 @@ from ._linking import (
 )
 from ._projection import (
     InvoiceMatchProjection,
+    InvoiceMatchRow,
     InvoiceReviewProjection,
     apply_manual_invoice_match,
     invoice_display_amounts,
@@ -70,6 +71,7 @@ __all__ = [
     "InvoiceImportResult",
     "InvoiceListRow",
     "InvoiceMatchProjection",
+    "InvoiceMatchRow",
     "InvoiceReconciliationResult",
     "InvoiceReviewProjection",
     "InvoiceTransactionLinkResult",
