@@ -2,27 +2,84 @@
 #
 # Enumerates the (segmento, number) casillas in the Modelo 200
 # calculation closure — the casilla set the cross-connecting calculation
-# engine traverses for the cuota-chain: the cuota liquida casilla 00592
-# (the expression input of the cuota-del-ejercicio formula) and the
-# cuota del ejercicio casilla 00599 (the formula target and the
-# verification-expectation operand). Both are declared under the
-# Liquidación IV record segment DP200014B.
+# engine traverses for the page-14 cuota chain. The closure spans the
+# four cuota-chain formulas: base imponible después de la reserva de
+# nivelación (01330), cuota íntegra (00562), cuota del ejercicio a
+# ingresar o a devolver (00599), and cuota diferencial (00611), plus
+# every casilla their expressions reference and the cuota-del-ejercicio
+# verification-expectation operand.
 #
 # Derived off-load-path from the calculation closure intersected with the
 # official AEAT Diseño de Registros (source aeat-dr-200-2025); the Diseño
-# is authoritative on the DP200014B segment and the closure bounds the
-# set to the calculation surface. The off-load-path drift re-verification
+# is authoritative on the record segment that carries each casilla and
+# the closure bounds the set to the calculation surface. The Liquidación
+# III chain (01330, 00552, 01033, 01034, 00562, 00558) is declared under
+# segment DP200014; the Liquidación IV chain (00592, 00599, 01766, 01784,
+# 00611, 00601, 00603, 00605) under DP200014B; the Estado tributación
+# share (00625) under DP200026. The off-load-path drift re-verification
 # test re-derives this set from the corpus Diseño.
 
 [revisions."2024-y-siguientes".completeness_manifest]
 source_ref = "aeat-dr-200-2025"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105", "ley-27-2014:art-40"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00552"
+segmento = "DP200014"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01033"
+segmento = "DP200014"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01034"
+segmento = "DP200014"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01330"
+segmento = "DP200014"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00558"
+segmento = "DP200014"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00562"
+segmento = "DP200014"
 
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 number = "00592"
 segmento = "DP200014B"
 
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01766"
+segmento = "DP200014B"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01784"
+segmento = "DP200014B"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 number = "00599"
 segmento = "DP200014B"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00601"
+segmento = "DP200014B"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00603"
+segmento = "DP200014B"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00605"
+segmento = "DP200014B"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00611"
+segmento = "DP200014B"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00625"
+segmento = "DP200026"

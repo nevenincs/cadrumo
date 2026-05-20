@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
-id = "01766"
+id = "DP200014B:01766"
 number = "01766"
+segmento = "DP200014B"
 label = "Liquidación IV - Cuota del ejercicio a ingresar o a devolver - Total retenciones e ingresos a cuenta - Efectuados a la entidad [01766]"
 section = ["liquidacion_iv", "cuota_del_ejercicio_a_ingresar_o_a_devolver"]
 data_type = "money"
