@@ -275,7 +275,8 @@ def _validate_nif_iva_string(value: object) -> object:
     canonical = value.replace(" ", "").replace("-", "").upper()
     if not _NIF_IVA_RE.match(canonical):
         raise RegistryValidationError(
-            f"nif_iva value {value!r} must start with a two-letter country code followed by 2-12 alphanumeric characters"
+            f"nif_iva value {value!r} must start with a two-letter country code "
+            "followed by 2-12 alphanumeric characters"
         )
     return canonical
 
@@ -1484,7 +1485,7 @@ class CasillaDefinition(RegistryModel):
     export_refs: tuple[ExportFieldId, ...] = ()
     constraints: CasillaConstraints | None = None
     form_number: str | None = Field(default=None, min_length=1, max_length=16)
-    semantic_role: str | None = Field(default=None, min_length=1, max_length=64)
+    semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
     aliases: tuple[CasillaAlias, ...] = ()
     legal_refs: LegalRefs
     source_refs: SourceRefs
