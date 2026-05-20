@@ -474,6 +474,32 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     assert len(transaction_repository.load().transactions) == 2
 
 
+def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path) -> None:
+    """A missing source file raises a tr()-localised error, not naked English.
+
+    Regression guard for the CLI persona testimonial finding: the ledger
+    import error must carry the ``translated_message`` tr-key and render
+    in the operator's locale (Spanish by default), not a hardcoded
+    English sentence.
+    """
+    from ...core.errors import resolve_error_message
+
+    missing = tmp_path / "no-such-statement.csv"
+    with pytest.raises(TransactionValidationError) as excinfo:
+        import_ledger_source(
+            LedgerSourceImportCommand(
+                path=missing, provider="csv", dry_run=True, verify=False, source=missing
+            ),
+        )
+
+    error = excinfo.value
+    assert error.translated_message == "errors.financial.source_file_not_found"
+    assert error.context == {"path": str(missing)}
+    rendered = resolve_error_message(error)
+    assert "El archivo de origen no existe" in rendered
+    assert str(missing) in rendered
+
+
 def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_event(secure_engine: Engine) -> None:
     transaction_repository, event_repository = _repositories(secure_engine)
     first = create_manual_transaction(
