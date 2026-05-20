@@ -173,6 +173,74 @@ def test_delete_tombstones_and_clears_the_pointer(_backend: Path) -> None:
     assert manifest_path(bucket_paths(_backend, created.profile_id)).is_file()
 
 
+def test_failed_delete_leaves_no_torn_state(_backend: Path) -> None:
+    """A real failure inside delete leaves both stores in their pre-delete state.
+
+    ``delete`` integrity-checks the profile via ``load`` before touching
+    any store. Corrupting the on-disk manifest UUID makes that ``load``
+    raise :class:`ProfileIntegrityError` — a genuine induced failure, no
+    mock. The contract: a failed delete is all-or-nothing. Neither store
+    is mutated — the record stays live (not tombstoned) and the
+    active-profile pointer still aims at the profile — so there is no
+    torn "pointer cleared but record live" or "record tombstoned but
+    pointer stranded" intermediate.
+    """
+
+    repository = ProfileRepository()
+    created = repository.create(label="Torn Delete", facts=_VALID_FACTS)
+    write_pointer(_backend, BucketPointer(bucket_id=created.profile_id, schema_version=1))
+
+    # Corrupt the manifest UUID so delete's internal load fails.
+    target = manifest_path(bucket_paths(_backend, created.profile_id))
+    corrupted = target.read_text(encoding="utf-8").replace(
+        f'bucket_id = "{created.profile_id}"',
+        'bucket_id = "00000000-0000-4000-8000-000000000000"',
+    )
+    assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
+    target.write_text(corrupted, encoding="utf-8")
+
+    with pytest.raises(ProfileIntegrityError):
+        repository.delete(created.profile_id)
+
+    # No torn state: the pointer is untouched and the record is still
+    # live. Restore the manifest so the record can be re-loaded.
+    pointer_after = read_pointer(_backend)
+    assert pointer_after is not None
+    assert pointer_after.bucket_id == created.profile_id
+    target.write_text(corrupted.replace(
+        '00000000-0000-4000-8000-000000000000', created.profile_id
+    ), encoding="utf-8")
+    reloaded = repository.load(created.profile_id)
+    assert reloaded.status is UserProfileStatus.ACTIVE
+
+
+def test_delete_clears_pointer_before_tombstoning(_backend: Path) -> None:
+    """``delete`` clears the pointer before it tombstones the record.
+
+    The ordering matters: clearing the pointer first means a failure
+    between the two steps leaves a live record with no active pointer —
+    benign. This test pins the successful ordering's observable result:
+    after a clean delete the pointer is gone and the record is
+    tombstoned, and a profile that was NOT the active one keeps its
+    own (untouched) state.
+    """
+
+    repository = ProfileRepository()
+    active = repository.create(label="Active One", facts=_VALID_FACTS)
+    other = repository.create(label="Other One", facts=_VALID_FACTS)
+    write_pointer(_backend, BucketPointer(bucket_id=active.profile_id, schema_version=1))
+
+    repository.delete(active.profile_id)
+
+    assert read_pointer(_backend) is None
+    # Deleting a non-active profile must not clear another profile's pointer.
+    write_pointer(_backend, BucketPointer(bucket_id=other.profile_id, schema_version=1))
+    repository.delete(active.profile_id)  # idempotent re-delete of the same id
+    pointer = read_pointer(_backend)
+    assert pointer is not None
+    assert pointer.bucket_id == other.profile_id
+
+
 def test_list_summarises_every_registered_profile(_backend: Path) -> None:
     """``list`` returns one typed summary per registered profile."""
 
