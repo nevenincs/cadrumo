@@ -6,33 +6,31 @@ import asyncio
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from aeat import __version__
 
-from ..adapters.outbound.aeat.browser import (
-    SiteHealthEvidence,
-    SiteHealthState,
-    SiteHealthStatus,
-    default_browser_session_factory,
-)
-from ..adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
-from ..adapters.persistence.storage.master_key._active_session import NoActiveBucketSessionError
-from ..adapters.persistence.storage.sql.secure_objects import (
-    SecureObjectNamespaceIntegrity,
-    SecureObjectRepository,
-)
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.resources import bundled_path
-from ..domain.calculations.registry import ValidatedRegistryAuthority
-from .wizard._status import WizardStatusReport, build_wizard_status
-from .workflow import workflow_state_repository
-from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
+
+# The browser adapter, the registry authority, the secure-object
+# repository, the workflow store, and the wizard-status projection are
+# all heavy import subtrees (the browser adapter and the registry parse
+# alone add ~3.5s of cold-start import time). The ``aeat --version``
+# fast path imports this module only for ``build_cli_version_report`` /
+# ``render_cli_version_text``, neither of which needs any of them.
+# Importing them lazily inside the functions that actually run keeps the
+# version surface off the heavy graph (disaster ADR Ruling 4 fast-path).
+if TYPE_CHECKING:
+    from ..adapters.outbound.aeat.browser import SiteHealthStatus
+    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
+    from .wizard._status import WizardStatusReport
+    from .workflow._profile_health import ActiveProfileHealth
 
 _log = get_logger(__name__)
 
@@ -134,6 +132,36 @@ class ConfigRepairReport(BaseModel):
     checks: tuple[DiagnosticCheck, ...]
 
 
+_models_rebuilt = False
+
+
+def _ensure_models_rebuilt() -> None:
+    """Resolve the deferred forward references on the heavy report models.
+
+    ``SecureObjectIntegrityReport`` and ``ConfigRepairReport`` carry
+    fields typed by ``SecureObjectNamespaceIntegrity`` and
+    ``WizardStatusReport``. Those names are imported lazily so the
+    ``aeat --version`` fast path never pulls the heavy secure-object and
+    wizard-status import subtrees. The two models are only ever
+    *constructed* by the diagnostics functions below — never by the
+    version path — so their forward references are resolved here, on
+    first use of a heavy function, when the real types are imported
+    anyway. Idempotent: the rebuild runs once per process.
+    """
+
+    global _models_rebuilt
+    if _models_rebuilt:
+        return
+    from ..adapters.persistence.storage.sql.secure_objects import (  # noqa: F401
+        SecureObjectNamespaceIntegrity,
+    )
+    from .wizard._status import WizardStatusReport  # noqa: F401
+
+    SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
+    ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
+    _models_rebuilt = True
+
+
 class RegistryIntegrityReport(BaseModel):
     """Result of the opt-in full registry-validation probe.
 
@@ -181,6 +209,7 @@ def build_cli_version_report(
 def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface."""
 
+    _ensure_models_rebuilt()
     root = registry_root or bundled_path("registry", "aeat")
     registry = _build_registry_version_summary(root)
     checks: list[DiagnosticCheck] = [
@@ -222,7 +251,10 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     try:
         try:
             from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+            from .wizard._status import build_wizard_status
+            from .workflow import workflow_state_repository
             from .workflow._models import resolve_active_bucket_id
+            from .workflow._profile_health import assess_active_profile_health
 
             if not has_active_bucket_session() and resolve_active_bucket_id() is not None:
                 provider_context = get_master_key_provider()
@@ -241,6 +273,8 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             checks.append(_profile_check(setup_report, profile_health=profile_health))
             checks.append(_auth_check(setup_report))
         except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
+            from .workflow._profile_health import assess_active_profile_health
+
             _log.debug("config repair secure state probe failed", exc_info=True)
             profile_health = assess_active_profile_health()
             missing_active_bucket_session = _is_missing_active_bucket_session(exc)
@@ -311,6 +345,8 @@ def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
 
 
 async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
+    from ..adapters.outbound.aeat.browser import default_browser_session_factory
+
     url = settings.site_health_probe_url
     session = await default_browser_session_factory(settings)
     context = None
@@ -335,6 +371,9 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
 
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:
+    from ..adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthState, SiteHealthStatus
+    from ..adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
+
     return SiteHealthStatus(
         state=SiteHealthState.OK,
         evidence=SiteHealthEvidence(
@@ -377,6 +416,8 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
 
 
 def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
+    from ..domain.calculations.registry import ValidatedRegistryAuthority
+
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
     except Exception as exc:  # pragma: no cover - covered by later repair diagnostics.
@@ -408,6 +449,12 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     operator can locate which application surface holds rows from a
     rotated master-key generation.
     """
+    _ensure_models_rebuilt()
+    from ..adapters.persistence.storage.sql.secure_objects import (
+        SecureObjectNamespaceIntegrity,
+        SecureObjectRepository,
+    )
+
     try:
         repo = SecureObjectRepository()
         namespaces = repo.list_namespaces()
@@ -496,6 +543,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
 
     from datetime import date
 
+    from ..domain.calculations.registry import ValidatedRegistryAuthority
     from ..domain.calculations.registry._errors import RegistryValidationError
 
     try:
@@ -670,6 +718,8 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
 
 
 def _is_missing_active_bucket_session(exc: BaseException) -> bool:
+    from ..adapters.persistence.storage.master_key._active_session import NoActiveBucketSessionError
+
     current: BaseException | None = exc
     while current is not None:
         if isinstance(current, NoActiveBucketSessionError):
@@ -789,6 +839,9 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
         moved to quarantine) and ``readable`` counts (= rows retained
         in ``secure_objects``).
     """
+    _ensure_models_rebuilt()
+    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+
     repo = SecureObjectRepository()
     namespaces = repo.quarantine_unreadable_rows()
     quarantined_total = sum(item.unreadable for item in namespaces)

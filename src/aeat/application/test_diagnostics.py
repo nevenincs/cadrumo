@@ -435,3 +435,60 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
         archived = con.execute("SELECT COUNT(*) FROM secure_objects_quarantine").fetchone()[0]
     assert active == 1, f"expected one row left in secure_objects; got {active}"
     assert archived == 2, f"expected two rows archived; got {archived}"
+
+
+def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -> None:
+    """Importing ``diagnostics`` stays off the heavy adapter import graph.
+
+    The ``aeat --version`` fast path imports ``aeat.application.
+    diagnostics`` solely for ``build_cli_version_report`` /
+    ``render_cli_version_text``. Disaster ADR Ruling 4 mandates that
+    surface return fast on cold start. The browser adapter and the
+    registry-authority parse together add seconds of import time; a
+    regression that re-introduces an eager module-level import of
+    either drags them back onto the version path.
+
+    Run in a fresh interpreter (no warm ``sys.modules``) so the check
+    is a real structural guard: importing only ``diagnostics`` must
+    leave the browser adapter and registry authority unimported.
+    """
+
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; import aeat.application.diagnostics; "
+            "print(','.join(m for m in ("
+            "'aeat.adapters.outbound.aeat.browser', "
+            "'aeat.domain.calculations.registry', "
+            "'aeat.application.workflow', "
+            "'aeat.application.wizard._status') if m in sys.modules))",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=120,
+    )
+    leaked = result.stdout.strip()
+    assert leaked == "", f"importing diagnostics eagerly pulled the heavy subtree: {leaked}"
+
+
+def test_build_cli_version_report_fast_path_needs_no_model_rebuild() -> None:
+    """The ``--version`` model is fully defined without the deferred rebuild.
+
+    ``build_cli_version_report(with_registry=False)`` is the fast-path
+    call. It returns a ``CliVersionReport``, which must carry no field
+    typed by a lazily imported name — otherwise the version path would
+    have to pay the heavy ``_ensure_models_rebuilt`` import cost.
+    """
+
+    from .diagnostics import build_cli_version_report, render_cli_version_text
+
+    report = build_cli_version_report(with_registry=False)
+    assert report.package_name == "aeat"
+    assert report.package_version
+    # Renders without raising — the model is fully defined.
+    assert isinstance(render_cli_version_text(report), str)
