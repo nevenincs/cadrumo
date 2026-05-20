@@ -752,7 +752,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AmortizationLedgerError",
+        "aeat.domain.profile.errors.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",
             category=ErrorCategory.ERROR,
@@ -1700,7 +1700,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AmortizationLedgerError",
+        "aeat.domain.profile.errors.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",
             category=ErrorCategory.ERROR,

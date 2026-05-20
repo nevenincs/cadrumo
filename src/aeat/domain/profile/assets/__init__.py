@@ -177,13 +177,13 @@ class AssetRecord(BaseModel):
         return self.gross_total or _quantize(self.resolved_taxable_base + self.resolved_vat_amount)
 
 
-class AmortizationEntry(BaseModel):
-    """One immutable amortization amount for an asset/year.
+class AmortizacionEntry(BaseModel):
+    """One immutable amortizacion amount for an asset/year.
 
     Attributes:
         asset_id: Foreign key into :class:`AssetRecord` by identifier.
         year: Calendar year the entry covers.
-        amount: Amortization amount (non-negative Decimal).
+        amount: Amortizacion amount (non-negative Decimal).
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -197,13 +197,13 @@ class AmortizacionLedger(BaseModel):
     """Per-asset yearly amortizacion already recorded.
 
     Attributes:
-        entries: Tuple of immutable :class:`AmortizationEntry` rows.
+        entries: Tuple of immutable :class:`AmortizacionEntry` rows.
         schema_version: Forward-compatible schema version. ``"1"``.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    entries: tuple[AmortizationEntry, ...] = ()
+    entries: tuple[AmortizacionEntry, ...] = ()
     schema_version: str = SCHEMA_VERSION
 
     @field_validator("schema_version")
@@ -242,8 +242,8 @@ def _quantize(value: Decimal) -> Decimal:
 
 
 __all__ = [
+    "AmortizacionEntry",
     "AmortizacionLedger",
-    "AmortizationEntry",
     "AssetClass",
     "AssetRecord",
     "LibertadAmortizacionElection",
