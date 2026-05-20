@@ -180,5 +180,38 @@ def test_error_carries_prompt_key_context() -> None:
         validate_widget_answer(question, "maybe")
     error = excinfo.value
     assert error.context is not None
-    assert error.context["prompt_key"] == str(_TEXT_PROMPT)
+    # `prompt_key` is the resolved field label, never the raw
+    # translation key path.
+    from aeat.core.i18n import tr as _tr
+
+    assert error.context["prompt_key"] == _tr(str(_TEXT_PROMPT))
+    assert "prompt_key_path" not in error.context
     assert error.context["question_id"] == "probe"
+
+
+def test_invalid_tax_id_error_does_not_leak_internal_key_path() -> None:
+    """The NIF refusal message must not contain the internal key path.
+
+    `question.prompt` carries a translation key
+    (`wizard.setup.profile.tax-id.prompt`). The operator-facing
+    refusal interpolates the prompt; the raw key path must be resolved
+    to a human label before it reaches the message.
+    """
+
+    question = WizardQuestion(
+        id="tax-id",
+        profile_key=None,
+        widget=WizardWidget.TEXT,
+        prompt="wizard.setup.profile.tax-id.prompt",
+        choices=(),
+        required=True,
+        visible_when=None,
+        answer_type=str,
+    )
+    with pytest.raises(WizardValidationError) as excinfo:
+        validate_widget_answer(question, "NOT-A-VALID-NIF")
+    error = excinfo.value
+    assert error.translated_message is not None
+    assert "wizard.setup.profile.tax-id.prompt" not in error.translated_message
+    assert error.context is not None
+    assert error.context["prompt_key"] != "wizard.setup.profile.tax-id.prompt"
