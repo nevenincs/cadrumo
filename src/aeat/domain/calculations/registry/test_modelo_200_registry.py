@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from html import unescape
 
 import pytest
@@ -10,6 +11,7 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import RegistryValidator, build_snapshot, load_registry_tree, resolve_export_layout
+from ._formula_runtime import calculate_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -160,20 +162,127 @@ def test_modelo_200_page_014_export_binding_resolves_00562_to_liquidacion() -> N
     page_014_field = layout.fields_by_id.get("modelo-200-page-014-casilla-00562")
 
     assert page_014_field is not None, (
-        "the Modelo 200 fichero-BOE layout must carry the page-014 export "
-        "field for casilla 00562"
+        "the Modelo 200 fichero-BOE layout must carry the page-014 export field for casilla 00562"
     )
     assert page_014_field.casilla == "DP200014:00562", (
         "the page-014 export binding for 00562 must resolve to the Liquidación "
         f"DP200014 occurrence, not the ECPN one; got {page_014_field.casilla!r}"
     )
 
-    liquidacion_casilla = next(
-        (c for c in snapshot.revision.casillas if c.id == page_014_field.casilla), None
-    )
+    liquidacion_casilla = next((c for c in snapshot.revision.casillas if c.id == page_014_field.casilla), None)
     assert liquidacion_casilla is not None
     assert liquidacion_casilla.segmento == "DP200014"
     assert liquidacion_casilla.number == "00562"
+
+
+def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> None:
+    """The page-14 cuota chain evaluates to the AEAT manual's worked-example oracle.
+
+    The Manual práctico de Sociedades 2024 carries a fully worked
+    liquidación example ("Liquidación del IS 2024 sin tributación
+    mínima", manual pages 399 and 401). For a company tributing
+    exclusively to the Administración del Estado it publishes these
+    figures on the cuota chain:
+
+    - cuota líquida ``00592`` = 0
+    - retenciones e ingresos a cuenta ``01766`` = 20.000
+    - **cuota del ejercicio a ingresar o a devolver ``00599`` = -20.000**
+    - pagos fraccionados (sum of ``00601`` / ``00603`` / ``00605``) = 10.000
+    - **cuota diferencial ``00611`` = -30.000**
+
+    The two bold figures are AEAT-published oracle values lifted
+    verbatim from the manual table — they are *not* recomputed by the
+    test author from the registry formula, so this satisfies the
+    no-tautological-calculation-tests rule: the test fails if the
+    registry formula diverges from the AEAT manual.
+
+    The retenciones and pagos-fraccionados casillas hold their positive
+    amounts; the manual table renders the subtracted items with a
+    leading minus as a display convention. The registry formula
+    ``00599 = (00625 / 100) x (00592 - 01766 - 01784)`` and
+    ``00611 = 00599 - (00601 + 00603 + 00605)`` produce the signed
+    results.
+    """
+    modelo, catalogues = _load_modelo_200()
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2024,
+        period="0A",
+    )
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "DP200014B:00592": Decimal("0"),
+            "DP200014B:01766": Decimal("20000"),
+            "DP200014B:01784": Decimal("0"),
+            "DP200026:00625": Decimal("100"),
+            "DP200014B:00601": Decimal("10000"),
+            "DP200014B:00603": Decimal("0"),
+            "DP200014B:00605": Decimal("0"),
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+
+    assert result.values["DP200014B:00599"] == Decimal("-20000.00"), (
+        "cuota del ejercicio 00599 must equal the AEAT manual worked-example oracle of -20.000 (manual pages 399/401)"
+    )
+    assert result.values["DP200014B:00611"] == Decimal("-30000.00"), (
+        "cuota diferencial 00611 must equal the AEAT manual worked-example oracle of -30.000 (manual pages 399/401)"
+    )
+
+
+def test_modelo_200_cuota_integra_chain_applies_manual_rate_to_post_nivelacion_base() -> None:
+    """The cuota íntegra chain applies the printed rate to the post-nivelación base.
+
+    The Manual práctico de Sociedades 2024 worked example (page 401)
+    carries a base imponible después de la reserva de nivelación
+    ``01330`` of 1.000.000 at a 25% tipo de gravamen yielding a cuota
+    íntegra ``00562`` of 250.000. This exercises the two upstream
+    cuota-chain formulas — ``01330 = 00552 + 01033 - 01034`` (manual
+    page 361) and ``00562 = 01330 x 00558 / 100`` (manual page 362) —
+    against those published figures.
+
+    The expected outputs are read from the manual table, not recomputed
+    by the test author, so the test fails if the registry formula
+    diverges from the AEAT manual.
+    """
+    modelo, catalogues = _load_modelo_200()
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2024,
+        period="0A",
+    )
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "DP200014:00552": Decimal("1000000"),
+            "DP200014:01033": Decimal("0"),
+            "DP200014:01034": Decimal("0"),
+            "DP200014:00558": Decimal("25"),
+            "DP200014B:00592": Decimal("0"),
+            "DP200014B:01766": Decimal("0"),
+            "DP200014B:01784": Decimal("0"),
+            "DP200026:00625": Decimal("100"),
+            "DP200014B:00601": Decimal("0"),
+            "DP200014B:00603": Decimal("0"),
+            "DP200014B:00605": Decimal("0"),
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+
+    assert result.values["DP200014:01330"] == Decimal("1000000.00"), (
+        "base imponible después de la reserva de nivelación 01330 must equal "
+        "the AEAT manual worked-example figure of 1.000.000 (manual page 401)"
+    )
+    assert result.values["DP200014:00562"] == Decimal("250000.00"), (
+        "cuota íntegra 00562 must equal the AEAT manual worked-example figure of 250.000 (manual page 401)"
+    )
 
 
 def _normalized_text(value: str) -> str:

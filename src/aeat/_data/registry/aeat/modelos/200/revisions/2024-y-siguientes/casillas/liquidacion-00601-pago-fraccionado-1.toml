@@ -1,0 +1,15 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00601"
+number = "00601"
+segmento = "DP200014B"
+label = "Liquidación IV - Pagos fraccionados/Cuota diferencial - Pagos fraccionados - 1er. pago fraccionado - Estado [00601]"
+section = ["liquidacion_iv", "pagos_fraccionados_cuota_diferencial"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_pago_fraccionado_primero"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Liquidación IV primer pago fraccionado (Estado) is the single cuota-chain first-instalment casilla; no sibling casilla shares this role within the modelo revision."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00601", "modelo-200-page-042-casilla-00601"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -289,6 +289,12 @@ def _extract_sheet_rows(
     header: _WorkbookHeader,
     rows: Iterator[tuple[int, tuple[object, ...]]],
 ) -> RecordDesignSheet:
+    # AEAT Diseño workbooks occasionally carry surrounding whitespace on a
+    # sheet tab (e.g. 'DP200026 '). The sheet name is the record-segment
+    # identity that segment-qualified casillas and the calculation-
+    # completeness derivation match against, so the raw tab whitespace
+    # must not leak into that identity.
+    sheet_name = sheet_name.strip()
     fields: list[RecordDesignField] = []
     total_positions: int | None = None
     trailing_blank_rows = 0
