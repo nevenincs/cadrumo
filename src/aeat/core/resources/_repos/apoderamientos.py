@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from .._repository import Repository
+from .._repository import ResourceCacheRepository
 
 
-class ApoderamientosRepository(Repository[object, type(None)]):
+class ApoderamientosRepository(ResourceCacheRepository[object, type(None)]):
     """Singleton-keyed repository for the apoderamientos scope catalogue.
 
     Wraps :func:`aeat.domain.auth.apoderamientos.load_default_catalogue`.

@@ -169,7 +169,7 @@ from .master_key._recovery import (
 from .secret_store._secret_store import SecretRecord, SecretStore
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
 from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
-from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository
+from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, SqlRecordRepository
 from .sql.session import get_sessionmaker, session_scope
 
 __all__ = [
@@ -230,7 +230,6 @@ __all__ = [
     "RecoveryKey",
     "RedactionRule",
     "RedactionStrategy",
-    "Repository",
     "RepositoryError",
     "RetentionPolicy",
     "RetentionPolicyError",
@@ -242,6 +241,7 @@ __all__ = [
     "SecretStore",
     "SecretStoreError",
     "SensitivityClass",
+    "SqlRecordRepository",
     "StorageError",
     "StorageValidationError",
     "UnsecuredMasterKeyProvider",
