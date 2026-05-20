@@ -419,9 +419,9 @@ def test_census_modelo_foundation_stays_backend_owned() -> None:
 
     forbidden_cli_tokens = (
         "CensoModeloFoundationCommand",
-        "resolve_census_modelo_foundation",
-        "resolve_census_modelo_work_unit_foundation",
-        "is_active_census_modelo",
+        "resolve_censo_modelo_foundation",
+        "resolve_censo_modelo_work_unit_foundation",
+        "is_active_censo_modelo",
         "CensoModeloRole",
         "active_work_unit_allowed",
         "historical_metadata_only",

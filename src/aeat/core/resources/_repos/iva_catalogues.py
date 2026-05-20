@@ -5,10 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from .._errors import ResourceNotFoundError
-from .._repository import Repository
+from .._repository import ResourceCacheRepository
 
 
-class IvaCatalogueRepository(Repository[object, int]):
+class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
     """Year-keyed repository for the bundled IVA regulation catalogue.
 
     Wraps :func:`aeat.domain.iva._catalogue.load_iva_catalogues`. The

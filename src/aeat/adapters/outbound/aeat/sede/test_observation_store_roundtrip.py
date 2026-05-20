@@ -24,11 +24,11 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from .....core.config import Settings
+from .....core.config import override_settings
 from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql import SecureObjectRepository
 from ....persistence.storage.sql._orm import Base
-from ....persistence.storage.sql.engine import create_engine_from_settings
+from ....persistence.storage.sql.engine import dispose_engine, get_engine
 from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import (
     FiledDeclaracionArtefact,
@@ -68,17 +68,13 @@ def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaraci
 
 def test_filed_declaration_observation_roundtrips_through_encrypted_store(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A populated observation + artefact round-trips through the encrypted store."""
 
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "sede-observation-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    db_path = tmp_path / "sede-observation-roundtrip.db"
+    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
@@ -119,12 +115,11 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
             assert loaded.registry_snapshot_id == "registry-2023-snapshot-04"
             assert loaded.artefacts[0].storage_ref == persisted_artefact.storage_ref
         finally:
-            engine.dispose()
+            dispose_engine(settings)
 
 
 def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: stripping ``artefacts`` to empty must surface.
 
@@ -156,12 +151,9 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
     from ._observation_store import _OBSERVATION_NAMESPACE
 
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "sede-observation-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    db_path = tmp_path / "sede-observation-anti-tautology.db"
+    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
@@ -212,22 +204,18 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
                 "cannot be trusted as a filed-observation audit trail."
             )
         finally:
-            engine.dispose()
+            dispose_engine(settings)
 
 
 def test_iva_wallet_observation_roundtrips_through_encrypted_store(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """An AEAT IVA wallet observation round-trips as financial evidence."""
 
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "iva-wallet-observation-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    db_path = tmp_path / "iva-wallet-observation-roundtrip.db"
+    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
@@ -262,4 +250,4 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
             assert loaded.total_pending == Decimal("1200")
             assert loaded.raw_sha256 == "b" * 64
         finally:
-            engine.dispose()
+            dispose_engine(settings)

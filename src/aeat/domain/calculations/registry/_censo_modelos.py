@@ -130,7 +130,7 @@ class CensoModeloFoundationCommand(BaseModel):
 
     @model_validator(mode="after")
     def _validate_census_command(self) -> Self:
-        ownership = census_modelo_ownership(self.modelo)
+        ownership = censo_modelo_ownership(self.modelo)
         if ownership.active_work_unit_allowed and self.event_kind is None:
             raise RegistryValidationError("active census modelo 036 requires event_kind")
         if not ownership.active_work_unit_allowed and self.event_kind is not None:
@@ -201,16 +201,16 @@ class CensoModeloFoundationResult(BaseModel):
             raise RegistryValidationError("modelo 037 result must be inactive and superseded by 036")
 
 
-def census_modelo_ownership_map() -> tuple[CensoModeloOwnership, ...]:
+def censo_modelo_ownership_map() -> tuple[CensoModeloOwnership, ...]:
     """Return the registry-owned census modelo ownership map."""
 
-    return (census_modelo_ownership(_ACTIVE_CENSUS_MODELO), census_modelo_ownership(_HISTORICAL_CENSUS_MODELO))
+    return (censo_modelo_ownership(_ACTIVE_CENSUS_MODELO), censo_modelo_ownership(_HISTORICAL_CENSUS_MODELO))
 
 
-def build_census_modelo_foundation_contract() -> CensoModeloFoundationContract:
+def build_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
     """Build the immutable backend-owned census modelo foundation contract."""
 
-    active_ownership = census_modelo_ownership(_ACTIVE_CENSUS_MODELO)
+    active_ownership = censo_modelo_ownership(_ACTIVE_CENSUS_MODELO)
     contract = CensoModeloFoundationContract(
         event_kinds=tuple(CensoModeloEventKind(kind) for kind in active_ownership.event_kinds),
         error_codes=CENSUS_MODELO_ERROR_CODES,
@@ -229,13 +229,13 @@ def build_census_modelo_foundation_contract() -> CensoModeloFoundationContract:
 
 
 @lru_cache(maxsize=1)
-def get_census_modelo_foundation_contract() -> CensoModeloFoundationContract:
+def get_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
     """Return the cached backend-owned census modelo foundation contract."""
 
-    return build_census_modelo_foundation_contract()
+    return build_censo_modelo_foundation_contract()
 
 
-def census_modelo_ownership(modelo: str) -> CensoModeloOwnership:
+def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
     """Return the census ownership record for an exact string modelo code."""
 
     if not isinstance(modelo, str):
@@ -248,7 +248,7 @@ def census_modelo_ownership(modelo: str) -> CensoModeloOwnership:
     raise RegistryValidationError(f"unknown census modelo code {modelo!r}; expected '036' or '037'")
 
 
-def _find_census_modelo_ownership(modelo: str) -> CensoModeloOwnership | None:
+def _find_censo_modelo_ownership(modelo: str) -> CensoModeloOwnership | None:
     if not isinstance(modelo, str):
         raise RegistryValidationError("census modelo code must be a string")
     if modelo not in {_ACTIVE_CENSUS_MODELO, _HISTORICAL_CENSUS_MODELO}:
@@ -256,7 +256,7 @@ def _find_census_modelo_ownership(modelo: str) -> CensoModeloOwnership | None:
         if stripped_modelo in {_ACTIVE_CENSUS_MODELO, _HISTORICAL_CENSUS_MODELO, "36", "37"}:
             raise RegistryValidationError(f"unknown census modelo code {modelo!r}; expected '036' or '037'")
         return None
-    return census_modelo_ownership(modelo)
+    return censo_modelo_ownership(modelo)
 
 
 def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -> CensoModeloOwnership:
@@ -311,16 +311,16 @@ def _historical_037_ownership_from_registry(authority: ValidatedRegistryAuthorit
     )
 
 
-def is_active_census_modelo(modelo: str) -> bool:
+def is_active_censo_modelo(modelo: str) -> bool:
     """Return whether a census modelo may create active work units."""
 
-    return census_modelo_ownership(modelo).active_work_unit_allowed
+    return censo_modelo_ownership(modelo).active_work_unit_allowed
 
 
-def resolve_census_modelo_foundation(command: CensoModeloFoundationCommand) -> CensoModeloFoundationResult:
+def resolve_censo_modelo_foundation(command: CensoModeloFoundationCommand) -> CensoModeloFoundationResult:
     """Resolve one census modelo foundation command through the registry owner."""
 
-    ownership = census_modelo_ownership(command.modelo)
+    ownership = censo_modelo_ownership(command.modelo)
     event_kinds = tuple(CensoModeloEventKind(kind) for kind in ownership.event_kinds)
     result = CensoModeloFoundationResult(
         modelo=ownership.modelo,
@@ -335,14 +335,14 @@ def resolve_census_modelo_foundation(command: CensoModeloFoundationCommand) -> C
     return result
 
 
-def resolve_census_modelo_work_unit_foundation(
+def resolve_censo_modelo_work_unit_foundation(
     *,
     modelo: str,
     period: str,
 ) -> CensoModeloFoundationResult | None:
     """Resolve a work-unit period through the census foundation when it applies."""
 
-    ownership = _find_census_modelo_ownership(modelo)
+    ownership = _find_censo_modelo_ownership(modelo)
     if ownership is None:
         return None
     if not ownership.active_work_unit_allowed:
@@ -356,7 +356,7 @@ def resolve_census_modelo_work_unit_foundation(
         raise RegistryValidationError(
             "active census modelo 036 work units require one of the census event periods: alta, modificacion, baja"
         ) from exc
-    return resolve_census_modelo_foundation(CensoModeloFoundationCommand.model_validate(payload))
+    return resolve_censo_modelo_foundation(CensoModeloFoundationCommand.model_validate(payload))
 
 
 __all__ = [
@@ -370,11 +370,11 @@ __all__ = [
     "CensoModeloFoundationResult",
     "CensoModeloOwnership",
     "CensoModeloRole",
-    "build_census_modelo_foundation_contract",
-    "census_modelo_ownership",
-    "census_modelo_ownership_map",
-    "get_census_modelo_foundation_contract",
-    "is_active_census_modelo",
-    "resolve_census_modelo_foundation",
-    "resolve_census_modelo_work_unit_foundation",
+    "build_censo_modelo_foundation_contract",
+    "censo_modelo_ownership",
+    "censo_modelo_ownership_map",
+    "get_censo_modelo_foundation_contract",
+    "is_active_censo_modelo",
+    "resolve_censo_modelo_foundation",
+    "resolve_censo_modelo_work_unit_foundation",
 ]

@@ -46,15 +46,15 @@ def _write_valid_normative(root: Path) -> None:
                 "id": "ley-35-2006",
                 "kind": "ley",
                 "number": "35/2006",
-                "title": "Ley 35/2006",
+                "title": {"es": "Ley 35/2006"},
                 "published_at": "2006-11-29",
                 "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
                 "boe_id": "BOE-A-2006-20764",
                 "articulos": [
                     {
                         "numero": "32",
-                        "titulo": "Reducciones",
-                        "summary": "Resumen.",
+                        "titulo": {"es": "Reducciones"},
+                        "summary": {"es": "Resumen."},
                         "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
                     }
                 ],

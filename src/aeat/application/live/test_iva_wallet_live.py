@@ -1,0 +1,110 @@
+"""Opt-in live application workflow test for the AEAT IVA wallet capture."""
+
+from __future__ import annotations
+
+import asyncio
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from aeat.adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+from aeat.adapters.persistence.storage import get_master_key_provider
+from aeat.application.calculations import IvaWalletDecisionRepository
+from aeat.application.modelo import ModeloIvaWalletReconciliationBlocked
+from aeat.application.modelo._actions import _apply_iva_compensation_decision_binding
+from aeat.application.user_profile import UserProfileLifecycleRepository
+from aeat.application.user_profile._projections import record_to_path_values
+from aeat.application.workflow._models import require_active_bucket_id
+from aeat.core.config import load_settings
+from aeat.tests.live_gate import requires_live_enabled
+
+from . import capture_iva_compensation_wallet
+
+pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
+
+
+def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> None:
+    """Pull the real AEAT wallet and verify persisted reconciliation locally.
+
+    The assertions are structural and relational. They never embed the
+    operator's wallet rows or amounts into source-controlled expectations.
+    """
+
+    requires_live_enabled()
+    with get_master_key_provider():
+        bucket_id = require_active_bucket_id()
+        taxpayer_nif = _active_profile_tax_id(bucket_id)
+        if taxpayer_nif is None:
+            pytest.fail(f"active profile {bucket_id!r} has no identity.tax_id")
+
+        today = date.today()
+        target_year = today.year
+        target_period = _quarter_period(today.month)
+        settings = load_settings()
+        report = asyncio.run(
+            capture_iva_compensation_wallet(
+                target_year=target_year,
+                target_period=target_period,
+                output_root=settings.aeat_audit_dir / "live" / "iva-wallet",
+            )
+        )
+        observation = FiledDeclaracionObservationStore(
+            settings.aeat_audit_dir / "live" / "iva-wallet"
+        ).load_iva_wallet_observation(Path(report.observation_path))
+        decision = IvaWalletDecisionRepository().load_decision(taxpayer_nif, target_year, target_period)
+        history = IvaWalletDecisionRepository().load_decision_history(taxpayer_nif, target_year, target_period)
+
+        if decision is None:
+            pytest.fail("live IVA wallet capture did not persist a reconciliation decision")
+        if not any(item == decision for item in history):
+            pytest.fail("live IVA wallet capture did not append immutable decision history")
+        if observation.taxpayer_nif != taxpayer_nif:
+            pytest.fail("live IVA wallet observation taxpayer did not match active profile")
+        if observation.target_year != target_year or observation.target_period != target_period:
+            pytest.fail("live IVA wallet observation target period did not match requested period")
+        if decision.wallet_amount != observation.total_pending:
+            pytest.fail("live IVA wallet decision did not bind the observed wallet amount")
+        if Decimal(report.total_pending) != observation.total_pending:
+            pytest.fail("live IVA wallet report did not match the persisted observation")
+
+        backend_bindings: dict[str, Decimal] = {}
+        if decision.blocked:
+            with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+                _apply_iva_compensation_decision_binding(
+                    "303",
+                    target_year,
+                    target_period,
+                    taxpayer_nif=taxpayer_nif,
+                    casilla_inputs={},
+                    backend_casilla_inputs={},
+                    caller_binding_values={},
+                    backend_binding_values=backend_bindings,
+                    decision=decision,
+                )
+            return
+
+        _apply_iva_compensation_decision_binding(
+            "303",
+            target_year,
+            target_period,
+            taxpayer_nif=taxpayer_nif,
+            casilla_inputs={},
+            backend_casilla_inputs={},
+            caller_binding_values={},
+            backend_binding_values=backend_bindings,
+            decision=decision,
+        )
+        if backend_bindings.get("modelo-303-compensacion-pendiente-anteriores") != decision.selected_amount:
+            pytest.fail("live IVA wallet decision did not feed the local Modelo 303 guard")
+
+
+def _active_profile_tax_id(bucket_id: str) -> str | None:
+    record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    value = record_to_path_values(record).get("identity.tax_id")
+    return value.strip().upper() if value is not None and value.strip() else None
+
+
+def _quarter_period(month: int) -> str:
+    return f"{((month - 1) // 3) + 1}T"

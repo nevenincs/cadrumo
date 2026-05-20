@@ -55,7 +55,7 @@ from aeat.domain.calculations.registry import (
     evaluate_cross_reference_applicability,
     resolve_cross_reference_oracle,
 )
-from aeat.entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

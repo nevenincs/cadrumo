@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ...core.config import Settings
-from . import AuthProviderDescription, AuthProviderKind
+from . import AuthProvider, AuthProviderDescription, AuthProviderKind
 from ._acquisition_lock import inspect_auth_acquisition_lock
 from ._sessions import AuthSessionUnavailableError, ensure_authenticated_aeat_session
 
@@ -23,6 +23,17 @@ if TYPE_CHECKING:
 
 
 class _Provider:
+    """Duck-typed auth provider stub.
+
+    Real providers (AeatAuthenticator, ClaveMovilAuthProvider) require a live
+    Playwright browser and AEAT network access; they cannot be instantiated
+    without network infrastructure. This stub satisfies the ``AuthProvider``
+    runtime-checkable protocol and exercises the session-service orchestration
+    logic (lock acquisition, double-probe race-guard, fresh-flow deletion) under
+    unit conditions. Live provider behaviour is covered separately in
+    ``test_authenticator.py`` and ``test_clave_movil.py``.
+    """
+
     kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
 
     def __init__(
@@ -67,6 +78,20 @@ class _Provider:
 
     async def close(self) -> None:
         self.close_calls += 1
+
+
+def test_provider_stub_satisfies_auth_provider_protocol() -> None:
+    """_Provider must be recognised as a valid AuthProvider by the runtime check.
+
+    This guards against the stub drifting out of step with the protocol as new
+    required methods are added; if the protocol grows a method that _Provider
+    lacks, this test will fail with an ``AssertionError``, surfacing the gap
+    before any orchestration test can produce a false-positive.
+    """
+    assert isinstance(_Provider(), AuthProvider), (
+        "_Provider does not satisfy the AuthProvider runtime-checkable protocol; "
+        "update _Provider to match the protocol definition in aeat.application.auth"
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -185,3 +210,33 @@ async def test_ensure_fresh_skips_persisted_probe(tmp_path: Path) -> None:
     assert result.reused_persisted_session is False
     assert auth_provider.probe_calls == 0
     assert auth_provider.authenticate_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_ensure_raises_when_assertion_is_invalid(tmp_path: Path) -> None:
+    """When the provider returns an assertion with is_valid=False the service
+    must raise AeatLoginAssertionError rather than returning a result that
+    would let an unverified session propagate to callers.
+
+    This test exercises the is_valid gate in ensure_authenticated_aeat_session;
+    without it, a provider that silently returns a failed assertion would pass
+    through undetected.
+    """
+    from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
+
+    settings = _settings(tmp_path)
+    session = SimpleNamespace(identity_nif="12345678Z")
+    # is_valid=False triggers the gate.
+    invalid_assertion = _assertion(valid=False)
+    # The service builds three providers: probe-outside-lock, probe-inside-lock,
+    # then authenticate. All three are needed in the factory queue.
+    probe_1 = _Provider(probe=AuthSessionUnavailableError("no session"))
+    probe_2 = _Provider(probe=AuthSessionUnavailableError("no session"))
+    auth_provider = _Provider(auth=(session, invalid_assertion))
+
+    with pytest.raises(AeatLoginAssertionError), _active_bucket_session():
+        await ensure_authenticated_aeat_session(
+            settings,
+            kind=AuthProviderKind.CLAVE_MOVIL,
+            provider_factory=_factory([probe_1, probe_2, auth_provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]
+        )

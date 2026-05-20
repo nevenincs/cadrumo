@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .._repository import Repository
+from .._repository import ResourceCacheRepository
 
 
-class CategoryProfileRepository(Repository[Mapping[object, object], int]):
+class CategoryProfileRepository(ResourceCacheRepository[Mapping[object, object], int]):
     """Year-keyed repository for spending-category profile registries.
 
     Wraps :func:`aeat.domain.categories.resolve_category_profiles`.

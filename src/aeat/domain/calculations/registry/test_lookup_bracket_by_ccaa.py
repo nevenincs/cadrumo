@@ -126,66 +126,133 @@ def _evaluate(
 
 
 def test_lookup_bracket_by_ccaa_dispatches_to_madrid_when_residence_is_madrid() -> None:
-    """A Madrid-resident profile routes the lookup against the Madrid scale."""
+    """Madrid-resident profile routes to the Madrid scale, not Cataluña's.
+
+    Asserts dispatch mechanics: the CCAA binding selects a different bracket
+    table than the alternative, so changing the binding changes the result.
+    The bracket band constraint confirms the correct row was chosen: the
+    Madrid second-band fixed_addition (1058.25) must appear in the result
+    because base=20000 exceeds the 12450 threshold, and the marginal rate
+    (0.103) is distinct from Cataluña's (0.12).
+    """
     base = Decimal("20000")
-    expression = _dispatch_expression(base)
+    madrid_param = _madrid_bracket_param()
+    cataluna_param = _cataluna_bracket_param()
     parameters = {
-        "renta-2025-escala-autonomica-madrid-base-general": _madrid_bracket_param(),
-        "renta-2025-escala-autonomica-cataluna-base-general": _cataluna_bracket_param(),
+        madrid_param.id: madrid_param,
+        cataluna_param.id: cataluna_param,
     }
-    enum_bindings = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
 
-    result = _evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
+    madrid_result = _evaluate(
+        _dispatch_expression(base),
+        parameters=parameters,
+        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+    )
+    cataluna_result = _evaluate(
+        _dispatch_expression(base),
+        parameters=parameters,
+        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "cataluna"},
+    )
 
-    # Madrid: 1058.25 + (20000-12450) * 0.103 = 1058.25 + 7550 * 0.103 = 1058.25 + 777.65 = 1835.90
-    assert result == Decimal("1835.90")
+    # Dispatch selects different tables — results must differ.
+    assert madrid_result != cataluna_result
+
+    # Madrid second band: fixed_addition=1058.25, marginal_rate=0.103.
+    # For base=20000 (above 12450 threshold), result must exceed fixed_addition
+    # and must be strictly less than the Cataluña result (higher marginal rate).
+    assert madrid_result > madrid_param.brackets[1].fixed_addition
+    assert madrid_result < cataluna_result
+
+    # Result must be bounded by the bracket band: >= fixed_addition, and
+    # less than a full-top-bracket calculation with the Cataluña rate applied.
+    madrid_bracket = madrid_param.brackets[1]
+    overage = base - madrid_bracket.lower_bound
+    expected_marginal = (overage * madrid_bracket.marginal_rate).quantize(Decimal("0.01"))
+    assert madrid_result == madrid_bracket.fixed_addition + expected_marginal
 
 
 def test_lookup_bracket_by_ccaa_dispatches_to_cataluna_when_residence_is_cataluna() -> None:
-    """The same expression routes to Cataluña's scale when the binding flips."""
+    """Flipping the binding to Cataluña selects the Cataluña scale.
+
+    Verifies dispatch mechanics: the Cataluña bracket has a higher fixed_addition
+    and a higher marginal_rate than Madrid, so the Cataluña result must exceed
+    the Madrid result for the same base. The bracket row constraint confirms
+    the correct band was applied.
+    """
     base = Decimal("20000")
-    expression = _dispatch_expression(base)
+    madrid_param = _madrid_bracket_param()
+    cataluna_param = _cataluna_bracket_param()
     parameters = {
-        "renta-2025-escala-autonomica-madrid-base-general": _madrid_bracket_param(),
-        "renta-2025-escala-autonomica-cataluna-base-general": _cataluna_bracket_param(),
+        madrid_param.id: madrid_param,
+        cataluna_param.id: cataluna_param,
     }
-    enum_bindings = {"renta-2025-profile-tax-residence-ccaa": "cataluna"}
 
-    result = _evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
+    cataluna_result = _evaluate(
+        _dispatch_expression(base),
+        parameters=parameters,
+        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "cataluna"},
+    )
 
-    # Cataluña: 1307.25 + (20000-12450) * 0.12 = 1307.25 + 906 = 2213.25
-    assert result == Decimal("2213.25")
+    # Cataluña second band: fixed_addition=1307.25, marginal_rate=0.12.
+    cataluna_bracket = cataluna_param.brackets[1]
+    overage = base - cataluna_bracket.lower_bound
+    expected_marginal = (overage * cataluna_bracket.marginal_rate).quantize(Decimal("0.01"))
+    assert cataluna_result == cataluna_bracket.fixed_addition + expected_marginal
+
+    # Cataluña rate > Madrid rate — Cataluña result must be higher.
+    madrid_result = _evaluate(
+        _dispatch_expression(base),
+        parameters=parameters,
+        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+    )
+    assert cataluna_result > madrid_result
 
 
 def test_lookup_bracket_by_ccaa_dispatches_with_entry_array_table() -> None:
-    """The reviewable dispatch_table_entries authoring shape behaves identically."""
-    expression = FormulaExpression.model_validate(
+    """dispatch_table_entries authoring shape produces the same result as dispatch_table dict.
+
+    Verifies that both authoring shapes dispatch to the same bracket table and
+    produce identical results — this tests the dispatch indirection, not the
+    arithmetic.
+    """
+    base = Decimal("20000")
+    madrid_param = _madrid_bracket_param()
+    cataluna_param = _cataluna_bracket_param()
+    parameters = {
+        madrid_param.id: madrid_param,
+        cataluna_param.id: cataluna_param,
+    }
+    enum_bindings = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
+
+    dict_form_result = _evaluate(
+        _dispatch_expression(base),
+        parameters=parameters,
+        enum_bindings=enum_bindings,
+    )
+
+    entry_array_expression = FormulaExpression.model_validate(
         {
             "op": "lookup_bracket_by_ccaa",
             "args": (
-                {"literal": Decimal("20000")},
+                {"literal": base},
                 {"binding": "renta-2025-profile-tax-residence-ccaa"},
                 {
                     "dispatch_table_entries": [
-                        {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
-                        {"key": "cataluna", "parameter": "renta-2025-escala-autonomica-cataluna-base-general"},
+                        {"key": "madrid", "parameter": madrid_param.id},
+                        {"key": "cataluna", "parameter": cataluna_param.id},
                     ]
                 },
             ),
         }
     )
-    parameters = {
-        "renta-2025-escala-autonomica-madrid-base-general": _madrid_bracket_param(),
-        "renta-2025-escala-autonomica-cataluna-base-general": _cataluna_bracket_param(),
-    }
-
-    result = _evaluate(
-        expression,
+    entry_array_result = _evaluate(
+        entry_array_expression,
         parameters=parameters,
-        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_bindings=enum_bindings,
     )
 
-    assert result == Decimal("1835.90")
+    # Both authoring shapes must dispatch to the same table and produce identical output.
+    assert dict_form_result == entry_array_result
 
 
 def test_lookup_bracket_by_ccaa_raises_on_missing_dispatch_key() -> None:

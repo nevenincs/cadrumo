@@ -2,19 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+from ...core._time import utc_now
 from ._models import AuthState
 
 if TYPE_CHECKING:
     from ..workflow._models import WorkflowState
-
-
-def utc_now() -> datetime:
-    """Return an aware UTC timestamp for user-CLI workflow events."""
-
-    return datetime.now(tz=UTC)
 
 
 def update_auth(

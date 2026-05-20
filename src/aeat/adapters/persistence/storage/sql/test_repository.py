@@ -18,7 +18,7 @@ from ..errors import RepositoryError
 from . import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
-    ModeloRecord,
+    ModeloCatalogueRecord,
     ModeloRepository,
     PortalAuthMethod,
     PortalRecord,
@@ -44,15 +44,19 @@ def test_modelo_repository_crud_round_trip(tmp_path: Path) -> None:
     try:
         with session_scope(engine) as session:
             repo = ModeloRepository(session)
-            created = repo.upsert(ModeloRecord(identifier="MODELO_130", name="Pagos fraccionados"))
-            assert isinstance(created, ModeloRecord)
+            created = repo.upsert(ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos fraccionados"))
+            assert isinstance(created, ModeloCatalogueRecord)
             assert created.id is not None
 
             fetched = repo.get(created.id)
             assert fetched == created
             assert repo.list_all() == [created]
 
-            updated = repo.upsert(ModeloRecord(id=created.id, identifier="MODELO_130", name="Pagos fraccionados IRPF"))
+            updated = repo.upsert(
+                ModeloCatalogueRecord(
+                    id=created.id, identifier="MODELO_130", name="Pagos fraccionados IRPF"
+                )
+            )
             assert updated.name.endswith("IRPF")
 
             repo.delete(created.id)
@@ -68,7 +72,7 @@ def test_portal_repository_preserves_enum(tmp_path: Path) -> None:
     try:
         with session_scope(engine) as session:
             modelo_repo = ModeloRepository(session)
-            modelo = modelo_repo.upsert(ModeloRecord(identifier="MODELO_303", name="IVA"))
+            modelo = modelo_repo.upsert(ModeloCatalogueRecord(identifier="MODELO_303", name="IVA"))
             portal_repo = PortalRepository(session)
             created = portal_repo.upsert(
                 PortalRecord(
@@ -91,7 +95,9 @@ def test_corpus_artifact_repository_round_trip(tmp_path: Path) -> None:
     engine = _engine(tmp_path)
     try:
         with session_scope(engine) as session:
-            modelo = ModeloRepository(session).upsert(ModeloRecord(identifier="MODELO_130", name="Pagos fraccionados"))
+            modelo = ModeloRepository(session).upsert(
+                ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos fraccionados")
+            )
             assert modelo.id is not None
             repo = CorpusArtifactRepository(session)
             created = repo.upsert(

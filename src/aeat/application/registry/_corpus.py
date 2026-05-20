@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
 from typing import get_args
@@ -380,8 +381,8 @@ def show_registry_citation(
         articulo=(
             RegistryCitationArticleProjection(
                 numero=article.numero,
-                titulo=article.titulo,
-                summary=article.summary,
+                titulo=_localized(article.titulo),
+                summary=_localized(article.summary),
                 permalink=str(article.permalink),
                 cite=cite(reference, article),
             )
@@ -673,6 +674,20 @@ def _registry_topic_locale(locale: str | None) -> str:
     return normalized
 
 
+def _localized(text: Mapping[str, str]) -> str:
+    """Resolve a multilingual normative field to the operator's language.
+
+    Normative ``title`` / ``titulo`` / ``summary`` fields are
+    :data:`LocalizedText` mappings. Citation projections are
+    operator-facing and carry a single rendered string, so the field
+    is flattened to the operator's output language, falling back to
+    the authoritative ``es`` entry (guaranteed present by the
+    normatives schema).
+    """
+
+    return text.get(output_language()) or text["es"]
+
+
 def _citation_reference_projection(
     reference: NormativeReference,
     *,
@@ -682,7 +697,7 @@ def _citation_reference_projection(
         id=reference.id,
         kind=reference.kind.value,
         number=reference.number,
-        title=reference.title,
+        title=_localized(reference.title),
         published_at=reference.published_at.isoformat(),
         boe_id=reference.boe_id,
         boe_url=str(reference.boe_url),

@@ -22,7 +22,6 @@ import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
@@ -30,31 +29,9 @@ from ..config import Settings, load_settings
 from ..logging import get_logger
 from ._errors import RunTraceValidationError
 from ._models import RunEvent, RunTrace
+from ._redaction_rules import diagnostic_rules
 
 _logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    from ..classification import RedactionRule
-
-
-# Cached at first use so repeated emits do not repeatedly resolve the
-# substrate rule set.
-_DIAGNOSTIC_RULES: tuple[RedactionRule, ...] | None = None
-
-
-def _diagnostic_rules() -> tuple[RedactionRule, ...]:
-    """Return the DIAGNOSTIC-class default rule set, resolved on first call.
-
-    Cached at module scope after first resolution so repeated emits do
-    not re-import the redaction substrate.
-    """
-    global _DIAGNOSTIC_RULES
-    if _DIAGNOSTIC_RULES is None:
-        from ..classification import SensitivityClass
-        from ..redaction import default_rules_for_class
-
-        _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
-    return _DIAGNOSTIC_RULES
 
 
 _TRACE_FILENAME = "trace.json"
@@ -147,7 +124,7 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     from ..redaction import redact_structured
 
     target = _run_dir(trace.run_id, settings=settings) / _TRACE_FILENAME
-    redacted = redact_structured(trace.model_dump(mode="json"), rules=_diagnostic_rules())
+    redacted = redact_structured(trace.model_dump(mode="json"), rules=diagnostic_rules())
     target.write_text(json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
     _logger.info(
         "save_trace: persisted run trace for run_id=%s outcome=%s at %s",
@@ -217,7 +194,7 @@ def save_events_append(
     from ..redaction import redact_structured
 
     target = _run_dir(run_id, settings=settings) / _EVENTS_FILENAME
-    redacted = redact_structured(event.model_dump(mode="json"), rules=_diagnostic_rules())
+    redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
     line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
     with target.open("a", encoding="utf-8", newline="") as handle:
         handle.write(line)

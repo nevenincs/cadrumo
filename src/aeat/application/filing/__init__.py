@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
+from ...core._time import utc_now
 from ...core.errors import BaseSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import (
@@ -27,6 +28,7 @@ from ...domain.filing import (
     CasillaSchemaProvider,
     DeadlineChecker,
     DeadlineStatus,
+    FilingValidationError,
     ModeloAmendmentError,
     ModeloAmendmentValidationError,
     ModeloApprovalBasis,
@@ -42,7 +44,6 @@ from ...domain.filing import (
     ModeloInputs,
     ModeloProfile,
     ModeloScalar,
-    ModeloValidationError,
     ModeloValidationFinding,
     ModeloValidator,
     ModeloValue,
@@ -450,11 +451,6 @@ def iter_findings(
             yield finding
 
 
-def utc_now() -> datetime:
-    """Return the current UTC time, used by tests for determinism hooks."""
-    return datetime.now(tz=UTC)
-
-
 __all__ = [
     "APPROVAL_BASIS_VERSION",
     "AmendmentKind",
@@ -472,6 +468,7 @@ __all__ = [
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
+    "FilingValidationError",
     "JustificanteImportResult",
     "ModeloAmendmentError",
     "ModeloAmendmentValidationError",
@@ -494,7 +491,6 @@ __all__ = [
     "ModeloOperatorProfile",
     "ModeloProfile",
     "ModeloScalar",
-    "ModeloValidationError",
     "ModeloValidationFinding",
     "ModeloValidator",
     "ModeloValue",

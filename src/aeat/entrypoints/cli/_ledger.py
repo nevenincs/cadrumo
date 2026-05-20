@@ -395,12 +395,23 @@ def ledger_allocate(
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
+    parsed_business_pct = _parse_required_decimal(business_pct, label="business-pct")
+    # The classification follows the proportion: a 100% allocation is
+    # BUSINESS, a 0% allocation is PERSONAL, and anything strictly
+    # between is genuinely MIXED. Hard-coding MIXED silently mislabels
+    # a fully-business expense as mixed-use (CLI testimonial, Nuria).
+    if parsed_business_pct == Decimal(1):
+        allocation_classification = BusinessClassification.BUSINESS
+    elif parsed_business_pct == Decimal(0):
+        allocation_classification = BusinessClassification.PERSONAL
+    else:
+        allocation_classification = BusinessClassification.MIXED
     result = update_manual_transaction_fields(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
         patch=_patch_from_options(
-            business_classification=BusinessClassification.MIXED,
-            business_pct=_parse_required_decimal(business_pct, label="business-pct"),
+            business_classification=allocation_classification,
+            business_pct=parsed_business_pct,
             category_id=category_id,
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,

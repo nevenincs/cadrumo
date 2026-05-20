@@ -96,3 +96,43 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     assert not missing, (
         f"first-slice routing targets casillas absent from modelo-100: {sorted(missing)!r}"
     )
+
+
+def test_first_slice_check_is_registered_with_the_registry_validator() -> None:
+    """Importing ``renta`` registers the first-slice cross-domain check.
+
+    The registry validator depends only on the abstract
+    ``CrossDomainSnapshotCheck`` Protocol. The concrete renta check is
+    injected at ``renta`` package import time. This test confirms the
+    registration side effect landed (importing this test module imports
+    ``renta``).
+    """
+
+    from ..calculations.registry._validate import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    from ._first_slice_routing_integrity import check_first_slice_routing
+
+    assert check_first_slice_routing in _CROSS_DOMAIN_SNAPSHOT_CHECKS
+
+
+def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
+    """The registered renta check runs inside ``_check_all_id_references``.
+
+    Builds a real modelo-100 snapshot and drives a divergent casilla
+    set through the registered check: a routing target absent from the
+    revision must surface as a failure string. This proves the
+    Protocol-injected check is wired into the snapshot gate rather
+    than dead code.
+    """
+
+    from ._first_slice_routing_integrity import check_first_slice_routing
+
+    real_targets = first_slice_target_casillas()
+    # A casilla set missing every routing target must report them all.
+    failures = check_first_slice_routing("100", frozenset())
+    assert len(failures) == 1
+    for target in real_targets:
+        assert target in failures[0]
+    # A complete casilla set reports nothing.
+    assert check_first_slice_routing("100", real_targets) == []
+    # A non-100 modelo is outside the first slice -- no check.
+    assert check_first_slice_routing("303", frozenset()) == []

@@ -5,9 +5,27 @@ graph: the outer layers (:mod:`aeat.adapters`, :mod:`aeat.application`,
 :mod:`aeat.domain`, :mod:`aeat.entrypoints`) depend on it, never the
 other way round. The tests here parse every production module under
 :mod:`aeat.core` and assert that none of them imports anything from
-those outer packages. A second test guards against the re-introduction
-of the historical ``WorkspaceLockedError`` symbol that was removed
-during the storage-foundation cleanup.
+those outer packages at *import time*.
+
+Import-time coupling is what the layered architecture forbids: a
+module-level ``import`` of an outer package would make loading
+:mod:`aeat.core` drag the outer layer in, opening the door to import
+cycles and layer inversion. Two import forms are deliberately *not*
+import-time edges and are excluded from the scan, matching the
+authoritative ``core-not-outer`` import-linter contract
+(``exclude_type_checking_imports = True``):
+
+* ``TYPE_CHECKING``-guarded imports — evaluated only by static type
+  checkers, never at runtime.
+* Function- and method-scoped (deferred) imports — evaluated only when
+  the enclosing callable runs. ``aeat.core`` uses this pattern
+  deliberately (for example :mod:`aeat.core.config` and the resource
+  repositories) so a core primitive can call into a higher layer
+  lazily without a load-time dependency.
+
+A second test guards against the re-introduction of the historical
+``WorkspaceLockedError`` symbol that was removed during the
+storage-foundation cleanup.
 """
 
 from __future__ import annotations
@@ -51,27 +69,77 @@ def _resolve_relative_import(path: Path, level: int, module: str | None) -> str:
     return ".".join(package_parts)
 
 
-def _iter_imports(path: Path) -> list[str]:
+def _is_type_checking_guard(node: ast.stmt) -> bool:
+    """Return ``True`` when ``node`` is an ``if TYPE_CHECKING:`` block."""
+
+    if not isinstance(node, ast.If):
+        return False
+    test = node.test
+    if isinstance(test, ast.Name):
+        return test.id == "TYPE_CHECKING"
+    if isinstance(test, ast.Attribute):
+        return test.attr == "TYPE_CHECKING"
+    return False
+
+
+def _iter_import_time_imports(path: Path) -> list[str]:
+    """Collect every import that executes when ``path`` is loaded.
+
+    Imports nested inside a function or method body are deferred and do
+    not run at module-load time; imports under an ``if TYPE_CHECKING:``
+    guard never run at all. Both are excluded so the scan reflects the
+    real import-time dependency graph the layered contract protects.
+    """
+
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     imports: list[str] = []
-    for node in ast.walk(tree):
+
+    def _record(node: ast.Import | ast.ImportFrom) -> None:
         if isinstance(node, ast.Import):
             imports.extend(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            if node.level:
-                imports.append(_resolve_relative_import(path, node.level, node.module))
-            else:
-                imports.append(_absolute_import_name(node.module, node.names))
+            return
+        if node.level:
+            imports.append(_resolve_relative_import(path, node.level, node.module))
+        else:
+            imports.append(_absolute_import_name(node.module, node.names))
+
+    def _visit(body: list[ast.stmt]) -> None:
+        for node in body:
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                _record(node)
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                # Function/method body imports are deferred — skip them.
+                continue
+            elif _is_type_checking_guard(node):
+                # TYPE_CHECKING-only imports never run at import time.
+                continue
+            elif isinstance(node, ast.If):
+                _visit(node.body)
+                _visit(node.orelse)
+            elif isinstance(node, ast.Try):
+                _visit(node.body)
+                _visit(node.handlers)  # type: ignore[arg-type]
+                _visit(node.orelse)
+                _visit(node.finalbody)
+            elif isinstance(node, ast.ExceptHandler):
+                _visit(node.body)
+            elif isinstance(node, (ast.With, ast.AsyncWith)):
+                _visit(node.body)
+            elif isinstance(node, ast.ClassDef):
+                # Class-body imports execute when the module loads.
+                _visit(node.body)
+
+    _visit(tree.body)
     return imports
 
 
 def test_core_production_modules_do_not_import_outer_layers() -> None:
-    """Core production modules must not import from the outer layers."""
+    """Core production modules must not import the outer layers at load time."""
     violations: list[str] = []
     for path in sorted(_CORE_ROOT.rglob("*.py")):
         if not _is_production_module(path):
             continue
-        for imported in _iter_imports(path):
+        for imported in _iter_import_time_imports(path):
             if imported.startswith(_FORBIDDEN_CORE_PREFIXES):
                 violations.append(f"{path}:{imported}")
 

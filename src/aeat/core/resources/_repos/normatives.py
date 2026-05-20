@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .._repository import Repository
+from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
     from ....core.config import Settings
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from ....domain.normatives._schema import Articulo
 
 
-class NormativeRepository(Repository["NormativeCatalogue", type(None)]):
+class NormativeRepository(ResourceCacheRepository["NormativeCatalogue", type(None)]):
     """Singleton-keyed repository for the bundled normatives catalogue.
 
     Wraps :func:`aeat.domain.normatives.load_catalogue`. The

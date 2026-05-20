@@ -1,9 +1,9 @@
-"""Asset ledger records for actividad economica amortization tracking.
+"""Asset ledger records for actividad economica amortizacion tracking.
 
 Provides the strict, frozen pydantic v2 records that back the
-registry-backed amortization workflow:
+registry-backed amortizacion workflow:
 :class:`AssetRecord` (a depreciable asset affected to an economic
-activity), :class:`AmortizationLedger` (the recorded per-asset / per-
+activity), :class:`AmortizacionLedger` (the recorded per-asset / per-
 year accruals), and :class:`LibertadAmortizacionElection`.
 """
 
@@ -193,8 +193,8 @@ class AmortizationEntry(BaseModel):
     amount: Decimal = Field(ge=Decimal("0"))
 
 
-class AmortizationLedger(BaseModel):
-    """Per-asset yearly amortization already recorded.
+class AmortizacionLedger(BaseModel):
+    """Per-asset yearly amortizacion already recorded.
 
     Attributes:
         entries: Tuple of immutable :class:`AmortizationEntry` rows.
@@ -211,7 +211,7 @@ class AmortizationLedger(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
-            raise AssetValidationError(f"unsupported AmortizationLedger schema_version {value!r}")
+            raise AssetValidationError(f"unsupported AmortizacionLedger schema_version {value!r}")
         return value
 
 
@@ -242,8 +242,8 @@ def _quantize(value: Decimal) -> Decimal:
 
 
 __all__ = [
+    "AmortizacionLedger",
     "AmortizationEntry",
-    "AmortizationLedger",
     "AssetClass",
     "AssetRecord",
     "LibertadAmortizacionElection",

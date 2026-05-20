@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from pydantic import ConfigDict
 
 from .._keys import TypedResourceKey
-from .._repository import Repository
+from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
     from ....core.config import Settings
@@ -33,7 +33,7 @@ class ManualKey(TypedResourceKey):
     part: str = "single"
 
 
-class ManualRepository(Repository[object, ManualKey]):
+class ManualRepository(ResourceCacheRepository[object, ManualKey]):
     """Composite-key repository for the bundled Manual catalogue.
 
     Wraps :func:`aeat.domain.manuals.load_manual` and stays in

@@ -46,10 +46,9 @@ from ....domain.calculations.registry._schema import CasillaDefinition, Registry
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
     OutboundStorageNetworkError,
-    OutboundStorageNotFoundError,
-    OutboundStoragePermissionError,
     OutboundStorageValidationError,
 )
+from ._api import execute_request
 
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "aeat"
@@ -227,38 +226,10 @@ def _sheets_service(credentials: object) -> Any:
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-def _execute(request: Any, *, action: str) -> Any:
-    try:
-        return request.execute()
-    except Exception as exc:
-        from googleapiclient.errors import HttpError
-
-        if isinstance(exc, HttpError):
-            status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
-            if status in (401, 403):
-                raise OutboundStoragePermissionError(
-                    f"Google {action} refused (HTTP {status}): {exc}",
-                    suggestion="aeat config google login",
-                    context={"action": action, "status": status},
-                    translated_message="adapters.google.calc_sheets.errors.api_call_refused",
-                ) from exc
-            if status == 404:
-                raise OutboundStorageNotFoundError(
-                    f"Google {action} target not found (HTTP 404): {exc}",
-                    context={"action": action},
-                    translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
-                ) from exc
-        raise OutboundStorageNetworkError(
-            f"Google {action} failed: {exc}",
-            context={"action": action},
-            translated_message="adapters.google.calc_sheets.errors.api_call_failed",
-        ) from exc
-
-
 def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
 
-    file_meta = _execute(
+    file_meta = execute_request(
         drive_service.files().get(
             fileId=spreadsheet_id,
             fields="id,name,appProperties",
@@ -284,7 +255,7 @@ def _read_developer_metadata(
 ) -> dict[str, str]:
     """Recover the engine-stamped developer metadata pairs."""
 
-    spreadsheet = _execute(
+    spreadsheet = execute_request(
         sheets_service.spreadsheets().get(
             spreadsheetId=spreadsheet_id,
             fields="developerMetadata(metadataKey,metadataValue,location)",
@@ -483,7 +454,7 @@ def _batch_get_values(
     """
     if not ranges:
         return []
-    response = _execute(
+    response = execute_request(
         sheets.spreadsheets()
         .values()
         .batchGet(
@@ -686,7 +657,7 @@ def _batch_get_values_for_row_sets(
     block_ranges: list[str],
 ) -> list[Any]:
     """Sheets ``values.batchGet`` for row-set blocks; returns the raw valueRanges list."""
-    response = _execute(
+    response = execute_request(
         sheets.spreadsheets()
         .values()
         .batchGet(

@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00592"
 number = "00592"
+segmento = "DP200014B"
 label = "Cuota liquida"
 section = ["liquidacion", "cuota_liquida"]
 data_type = "money"

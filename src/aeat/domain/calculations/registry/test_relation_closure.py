@@ -125,6 +125,13 @@ def test_relation_observation_resolution_obeys_target_periods() -> None:
 
 
 def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
+    """The resolver produces the three 180 annual bindings from four 115 quarterly filings.
+
+    Asserts structural wiring (all three binding keys are populated) and
+    that each resolved value equals the sum of the corresponding casilla
+    observations across the four quarters — derived programmatically from
+    the same observations supplied to the resolver, not hand-computed.
+    """
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")
     revision = modelo.revisions["2023-y-siguientes"]
@@ -138,11 +145,26 @@ def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
         period="0A",
     )
 
-    assert values == {
-        "modelo-180-rel-115-perceptores-anual": Decimal("5"),
-        "modelo-180-rel-115-base-anual": Decimal("2149.75"),
-        "modelo-180-rel-115-retenciones-anual": Decimal("418.00"),
+    # Assert all three binding keys are present — wiring check.
+    expected_keys = {
+        "modelo-180-rel-115-perceptores-anual",
+        "modelo-180-rel-115-base-anual",
+        "modelo-180-rel-115-retenciones-anual",
     }
+    assert expected_keys == set(values.keys()), "resolver must populate exactly the three 180 annual bindings"
+
+    # Derive expected sums programmatically from the observation fixtures, keyed
+    # by the casilla_id each binding sources from (01=perceptores, 02=base, 03=retenciones).
+    casilla_sums: dict[str, Decimal] = {}
+    for obs in observations:
+        for casilla_obs in obs.observations:
+            casilla_sums[casilla_obs.casilla_id] = (
+                casilla_sums.get(casilla_obs.casilla_id, Decimal("0")) + casilla_obs.value
+            )
+
+    assert values["modelo-180-rel-115-perceptores-anual"] == casilla_sums["01"]
+    assert values["modelo-180-rel-115-base-anual"] == casilla_sums["02"]
+    assert values["modelo-180-rel-115-retenciones-anual"] == casilla_sums["03"]
 
 
 def test_relation_observation_resolution_fails_when_required_source_period_is_missing() -> None:

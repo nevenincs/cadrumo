@@ -7,20 +7,26 @@ Operator verbs:
   check      read-only live verification (calls
              :func:`AeatAccessGate.require_live_read`)
 
-Configuration is persisted per-bucket as a single JSON document under
-``aeat_secret_store_dir/apoderado/<bucket_id>.json``. Live mutation of
-AEAT-side apoderamiento state (registrar, ampliar, revocar, confirmar,
-renunciar, presentar-en-representacion) is permanently refused at this
-boundary; the service has no verb that would write to AEAT.
+Configuration is persisted per-bucket as an encrypted envelope row in
+the :class:`SecureObjectRepository` under the
+``aeat.auth.apoderado`` namespace. The ``represented_nif`` is an
+identity-bearing tax identifier, so the record carries
+:attr:`SensitivityClass.IDENTITY` and is encrypted at rest; the
+service never writes plaintext to disk. Live mutation of AEAT-side
+apoderamiento state (registrar, ampliar, revocar, confirmar,
+renunciar, presentar-en-representacion) is permanently refused at
+this boundary; the service has no verb that would write to AEAT.
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage import SensitivityClass, safe_repository_id
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...domain.auth.apoderamientos import (
@@ -64,10 +70,23 @@ class ApoderadoStatus(BaseModel):
     configured_at: datetime | None = Field(default=None)
 
 
-def _storage_path(settings: Settings, bucket_id: str) -> Path:
-    root = settings.aeat_secret_store_dir / "apoderado"
-    root.mkdir(parents=True, exist_ok=True)
-    return root / f"{bucket_id}.json"
+class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
+    """Encrypted per-bucket apoderado configuration store.
+
+    Records carry :attr:`SensitivityClass.IDENTITY`: the
+    ``represented_nif`` is an identity-bearing tax identifier. The
+    natural key is the ``bucket_id``, so each bucket holds at most one
+    apoderado configuration.
+    """
+
+    namespace: ClassVar[str] = "aeat.auth.apoderado"
+    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.IDENTITY
+    schema_version: ClassVar[int] = 1
+    payload_type: ClassVar[type[ApoderadoConfiguration]] = ApoderadoConfiguration
+
+    def extract_identifier(self, payload: ApoderadoConfiguration) -> str:
+        """Return the ``bucket_id`` as the SQL object key."""
+        return safe_repository_id(payload.bucket_id, context="bucket_id")
 
 
 class ApoderadoService:
@@ -85,16 +104,26 @@ class ApoderadoService:
     ) -> None:
         self._settings = settings or Settings()
         self._catalogue = catalogue or load_default_catalogue()
+        # The config repository opens a per-bucket SQLAlchemy engine.
+        # Build it lazily so catalogue-only verbs (``scopes list``)
+        # never touch storage — they must run cleanly on a
+        # profile-less root where no engine URL resolves.
+        self._repository_instance: _ApoderadoConfigRepository | None = None
+
+    @property
+    def _repository(self) -> _ApoderadoConfigRepository:
+        if self._repository_instance is None:
+            self._repository_instance = _ApoderadoConfigRepository()
+        return self._repository_instance
 
     @property
     def catalogue(self) -> ApoderamientosCatalogue:
         return self._catalogue
 
     def status(self, *, bucket_id: str) -> ApoderadoStatus:
-        path = _storage_path(self._settings, bucket_id)
-        if not path.exists():
+        config = self._repository.load(safe_repository_id(bucket_id, context="bucket_id"))
+        if config is None:
             return ApoderadoStatus(bucket_id=bucket_id, configured=False)
-        config = ApoderadoConfiguration.model_validate_json(path.read_text(encoding="utf-8"))
         return ApoderadoStatus(
             bucket_id=bucket_id,
             configured=True,
@@ -122,17 +151,12 @@ class ApoderadoService:
             configured_at=datetime.now(tz=UTC),
             notes=notes,
         )
-        path = _storage_path(self._settings, bucket_id)
-        path.write_text(config.model_dump_json(indent=2), encoding="utf-8")
+        self._repository.save(config)
         return config
 
     def clear(self, *, bucket_id: str) -> bool:
         """Retire the configuration. Returns True iff a record was removed."""
-        path = _storage_path(self._settings, bucket_id)
-        if not path.exists():
-            return False
-        path.unlink()
-        return True
+        return self._repository.delete(safe_repository_id(bucket_id, context="bucket_id"))
 
     def check(self, *, bucket_id: str) -> ApoderadoStatus:
         """Read-only live verification (sealed pending live-read wiring).

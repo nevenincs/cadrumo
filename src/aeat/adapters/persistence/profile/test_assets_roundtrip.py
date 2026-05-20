@@ -1,7 +1,7 @@
-"""Strict roundtrip across the assets + amortization ledger repos.
+"""Strict roundtrip across the assets + amortizacion ledger repos.
 
 Persists :class:`AssetsLedgerDocument` under
-``aeat.persistence.profile.assets`` and :class:`AmortizationLedger`
+``aeat.persistence.profile.assets`` and :class:`AmortizacionLedger`
 under ``aeat.persistence.profile.assets.amortization``, both at
 ``SensitivityClass.FINANCIAL``.
 
@@ -20,12 +20,13 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+import pydantic
 import pytest
 
 from ....core.config import Settings
 from ....domain.profile.assets import (
+    AmortizacionLedger,
     AmortizationEntry,
-    AmortizationLedger,
     AssetClass,
     AssetRecord,
     AssetsLedgerDocument,
@@ -36,7 +37,7 @@ from ...persistence.storage.sql import SecureObjectRepository
 from ...persistence.storage.sql._orm import Base
 from ...persistence.storage.sql.engine import create_engine_from_settings
 from .assets import (
-    AmortizationLedgerRepository,
+    AmortizacionLedgerRepository,
     AssetsLedgerRepository,
 )
 
@@ -73,7 +74,7 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """AssetsLedgerDocument + AmortizationLedger roundtrip through encrypted SQL."""
+    """AssetsLedgerDocument + AmortizacionLedger roundtrip through encrypted SQL."""
 
     provider = EphemeralMasterKeyProvider()
     with provider:
@@ -87,7 +88,7 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
             SecureObjectRepository(engine=engine)
 
             assets_repo = AssetsLedgerRepository()
-            amortization_repo = AmortizationLedgerRepository()
+            amortization_repo = AmortizacionLedgerRepository()
 
             asset = _populated_asset()
             original_doc = AssetsLedgerDocument(assets=(asset,))
@@ -105,7 +106,7 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
             assert loaded_asset.libertad_amortizacion.enabled is True
             assert loaded_asset.libertad_amortizacion.amount_limit == Decimal("5000.00")
 
-            original_ledger = AmortizationLedger(
+            original_ledger = AmortizacionLedger(
                 entries=(
                     AmortizationEntry(asset_id=asset.identifier, year=2024, amount=Decimal("2762.50")),
                     AmortizationEntry(asset_id=asset.identifier, year=2025, amount=Decimal("2762.50")),
@@ -183,16 +184,10 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
                 asset_dict["cost_basis"] = "5525.00"
                 row.payload = _json.dumps(document).encode("utf-8")
 
-            regression_caught = False
-            try:
+            with pytest.raises(
+                pydantic.ValidationError,
+                match="cost_basis must equal taxable_base plus non-deductible VAT",
+            ):
                 assets_repo.load()
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: corrupting cost_basis to "
-                "break the VAT-decomposition cross-check did NOT surface "
-                "on load. The assets ledger boundary is tautological and "
-                "every ledger roundtrip in the suite is suspect."
-            )
         finally:
             engine.dispose()

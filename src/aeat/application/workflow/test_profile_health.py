@@ -10,9 +10,9 @@ from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._orchestration import _ensure_profile_bucket_manifest
 from ...application.user_profile._testing import register_minimal_profile
+from ...core._bucket_pointer import BucketPointer
+from ...core._bucket_pointer_io import read_pointer, write_pointer
 from ...core.config import override_settings
-from ._bucket_pointer import BucketPointer
-from ._bucket_pointer_io import read_pointer, write_pointer
 from ._persistence import workflow_state_repository
 from ._profile_health import assess_active_profile_health, repair_active_profile_pointer
 

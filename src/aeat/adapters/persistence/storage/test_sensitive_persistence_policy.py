@@ -186,6 +186,81 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "scaffold",
         "open",
     ): "translation scaffold generation",
+    (
+        "src/aeat/adapters/persistence/storage/bucket/_lockfile.py",
+        "_try_create_lock",
+        "os.open",
+    ): "per-bucket concurrency lockfile; non-sensitive O_EXCL lock metadata only",
+    (
+        "src/aeat/adapters/persistence/storage/bucket/_lockfile.py",
+        "_try_create_lock",
+        "os.write",
+    ): "per-bucket concurrency lockfile writes the holding PID, not sensitive data",
+    (
+        "src/aeat/adapters/persistence/storage/bucket/_manifest_io.py",
+        "write_manifest",
+        "tmp.write_text",
+    ): "bucket directory manifest is plaintext TOML by design; carries no NIF/financial data",
+    (
+        "src/aeat/core/_bucket_pointer_io.py",
+        "write_pointer",
+        "tmp.write_text",
+    ): "active-profile pointer file is plaintext TOML by design; carries only the bucket id",
+    (
+        "src/aeat/adapters/outbound/storage/_local.py",
+        "put",
+        "tmp_path.write_bytes",
+    ): "local-filesystem storage adapter writes caller-supplied bytes through atomic temp-then-rename",
+    (
+        "src/aeat/adapters/outbound/storage/_local.py",
+        "put",
+        "sidecar_path.write_text",
+    ): "local-filesystem storage adapter writes the non-sensitive object-metadata sidecar",
+    (
+        "src/aeat/domain/calculations/registry/_workbook_parity.py",
+        "_converted_binary_xls_path",
+        "cached_path.write_bytes",
+    ): "registry workbook-parity conversion cache; non-user AEAT reference workbook bytes",
+    (
+        "src/aeat/entrypoints/cli/_config/__init__.py",
+        "config_profile_export",
+        "out.write_text",
+    ): "explicit operator-directed profile export to a caller-chosen path",
+    (
+        "src/aeat/application/ledger/_actions.py",
+        "export_ledger_transactions",
+        "command.output_path.write_bytes",
+    ): "explicit operator-directed ledger transaction export to a caller-chosen path",
+    (
+        "src/aeat/application/evidence/_service.py",
+        "_save",
+        "path.write_text",
+    ): "per-bucket evidence-bundle record store; typed pydantic JSONL in the operator-local bucket directory",
+    (
+        "src/aeat/application/ledger/_evidence.py",
+        "_save",
+        "path.write_text",
+    ): "per-bucket purchase-invoice-evidence record store; typed pydantic JSONL in the bucket directory",
+    (
+        "src/aeat/application/ledger/_business_operation_invoice.py",
+        "_save",
+        "path.write_text",
+    ): "per-bucket business-operation-invoice record store; typed pydantic JSONL in the bucket directory",
+    (
+        "src/aeat/application/inventory/_service.py",
+        "_save_document",
+        "path.write_text",
+    ): "per-bucket inventory-ledger record store; typed pydantic JSON in the operator-local bucket directory",
+    (
+        "src/aeat/application/live/_verify.py",
+        "_save",
+        "path.write_text",
+    ): "per-bucket live-verify observation record store; typed pydantic JSONL in the bucket directory",
+    (
+        "src/aeat/application/live/_snapshot_base.py",
+        "_write_all",
+        "path.write_text",
+    ): "per-bucket live-snapshot record store; typed pydantic JSONL in the operator-local bucket directory",
 }
 
 

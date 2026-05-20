@@ -854,11 +854,12 @@ def work_create(
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
+    resolved_year, resolved_period = _resolve_year_period(year, period)
     unit = create_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
-        filing_year=year,
-        period=period,
+        filing_year=resolved_year,
+        period=resolved_period,
         revision_id=revision,
         name=name,
     )

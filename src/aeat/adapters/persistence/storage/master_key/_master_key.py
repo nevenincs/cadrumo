@@ -56,6 +56,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 if TYPE_CHECKING:
     from .....core.config import Settings
 
+from .....core._bucket_pointer_io import resolve_active_bucket_id
 from .....core.locks import exclusive_file_lock, fsync_parent_dir
 from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
@@ -242,19 +243,18 @@ def _default_passphrase_callback() -> str:
     The env var is read but NOT popped from ``os.environ``. Earlier
     revisions popped on first read with the rationale that child
     processes spawned later would not inherit the value, but the
-    in-process cache is reset under several legitimate flows
-    (``aeat security recover`` calls ``_reset_for_tests`` then
-    ``_resolve_passphrase`` again; long-running test sessions cycle
-    the cache between sub-tests). After the pop, those second reads
-    block on ``getpass.getpass`` in non-TTY contexts (CI, batch
-    jobs, subprocess pipes), surfacing as opaque
-    ``MasterKeyPassphraseMismatchError`` once the cached operator
-    cancels and the substrate re-prompts. Keeping the env var lets
-    every cache-miss read resolve consistently; subprocesses that
-    inherit the parent's env always had access to the passphrase
-    anyway (env-var inheritance is a cooperative-isolation property,
-    not a confidentiality boundary the substrate can defend
-    on its own).
+    callback is invoked more than once under several legitimate flows
+    (``aeat security recover`` re-resolves the passphrase after a
+    re-mint; long-running test sessions resolve it repeatedly across
+    sub-tests). After a pop, those second reads block on
+    ``getpass.getpass`` in non-TTY contexts (CI, batch jobs,
+    subprocess pipes), surfacing as opaque
+    ``MasterKeyPassphraseMismatchError`` once the operator cancels and
+    the substrate re-prompts. Keeping the env var lets every read
+    resolve consistently; subprocesses that inherit the parent's env
+    always had access to the passphrase anyway (env-var inheritance is
+    a cooperative-isolation property, not a confidentiality boundary
+    the substrate can defend on its own).
 
     Trailing CRLF is stripped (some shells append it via
     ``$(cat .secret)``), but interior whitespace is preserved (some
@@ -391,12 +391,6 @@ class KeyringMasterKeyProvider:
 
     def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
         _provider_exit(self, exc_type, exc, tb)
-
-    @classmethod
-    def _reset_for_tests(cls) -> None:
-        """Compatibility hook for suites written against the retired cache."""
-
-        return
 
     def _probe_backend(self) -> None:
         """Refuse no-op keyring backends up-front, via the injected client.
@@ -535,12 +529,6 @@ class FileFallbackMasterKeyProvider:
 
     def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
         _provider_exit(self, exc_type, exc, tb)
-
-    @classmethod
-    def _reset_for_tests(cls) -> None:
-        """Compatibility hook for suites written against the retired cache."""
-
-        return
 
     @property
     def _salt_path(self) -> Path:
@@ -911,11 +899,6 @@ def _provider_enter(provider: object, *, fallback_bucket_id: str | None = None) 
     """
 
     from datetime import UTC, datetime
-
-    # Lazy application-layer resolver import keeps the adapter free of
-    # eager application coupling; resolve_active_bucket_id is the
-    # canonical precedence-chain helper.
-    from aeat.application.workflow._models import resolve_active_bucket_id
 
     from ..bucket._errors import NoActiveBucketError
     from ._active_session import activate_session

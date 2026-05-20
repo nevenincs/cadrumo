@@ -29,6 +29,7 @@ import pytest
 
 from ....core.config import Settings
 from ....domain.attachments._enums import AttachmentKind, AttachmentSource
+from ....domain.attachments._errors import AttachmentValidationError
 from ....domain.attachments._models import Attachment
 from . import EphemeralMasterKeyProvider
 from .attachment import AttachmentStore
@@ -181,17 +182,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
                 manifest["sha256"] = tampered_digest
                 row.payload = _json.dumps(envelope).encode("utf-8")
 
-            regression_caught = False
-            try:
+            with pytest.raises(AttachmentValidationError, match="invalid attachment manifest"):
                 store.load_manifest(attachment.attachment_id)
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: mutating sha256 without "
-                "rewriting attachment_id did NOT surface on load. The "
-                "attachment store's content-addressing guarantee is "
-                "tautological and bytes-on-disk no longer prove the "
-                "manifest's identity."
-            )
         finally:
             engine.dispose()

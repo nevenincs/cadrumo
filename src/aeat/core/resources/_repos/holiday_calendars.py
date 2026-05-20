@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from .._repository import Repository
+from .._repository import ResourceCacheRepository
 
 
-class HolidayCalendarRepository(Repository[object, int]):
+class HolidayCalendarRepository(ResourceCacheRepository[object, int]):
     """Year-keyed repository for BOE holiday calendars.
 
     Wraps :func:`aeat.domain.deadlines.load_holiday_calendar`.

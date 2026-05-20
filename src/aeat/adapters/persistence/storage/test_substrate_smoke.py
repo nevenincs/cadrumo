@@ -38,15 +38,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 def test_master_key_persists_across_provider_instances(tmp_path: Path) -> None:
     """The file-backend master key is stable across re-binding the provider."""
-    FileFallbackMasterKeyProvider._reset_for_tests()
-
     first = FileFallbackMasterKeyProvider(
         store_dir=tmp_path / "secrets",
         passphrase_callback=lambda: "smoke-passphrase",
     )
     key_a = first.get_master_key()
-
-    FileFallbackMasterKeyProvider._reset_for_tests()
 
     second = FileFallbackMasterKeyProvider(
         store_dir=tmp_path / "secrets",

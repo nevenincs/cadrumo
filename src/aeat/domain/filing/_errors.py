@@ -17,7 +17,7 @@ class ModeloBuilderError(ModeloDraftError):
     """Raised when builder selection or execution fails."""
 
 
-class ModeloValidationError(ModeloDraftError):
+class FilingValidationError(ModeloDraftError):
     """Raised when validation surfaces a blocking finding.
 
     The validator itself never raises; this error is reserved for
@@ -41,9 +41,9 @@ class ModeloImportError(ModeloDraftError):
     """Raised when importing a filing from a justificante PDF fails."""
 
 
-class ModeloExportError(ModeloDraftError):
+class FilingExportError(ModeloDraftError):
     """Raised when exporting a draft to an AEAT wire format fails."""
 
 
-class ModeloExportValidationError(ModeloExportError, ValueError):
+class FilingExportValidationError(FilingExportError, ValueError):
     """Raised on invalid export field values or layouts. Inherits from ValueError for Pydantic."""

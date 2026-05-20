@@ -16,6 +16,7 @@ from decimal import Decimal
 from typing import Literal
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
 from ....core.resources import bundled_path
@@ -29,6 +30,8 @@ from ._schema import (
     DataBindingDefinition,
     DeadlineWindowDefinition,
     DependencyClassificationDefinition,
+    DisenoCompletenessCasilla,
+    DisenoCompletenessManifest,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
@@ -774,6 +777,411 @@ def test_informative_modelo_with_relation_fails_validation() -> None:
     validator = RegistryValidator(catalogues)
     with pytest.raises(RegistryValidationError, match="informative modelo must not declare cross-model relations"):
         validator.validate_modelo(informative_modelo)
+
+
+# ---------------------------------------------------------------------------
+# Test: (segmento, number) casilla identity and segment-aware resolution
+# ---------------------------------------------------------------------------
+
+
+def _segmented_casilla(
+    casilla_id: str,
+    number: str,
+    segmento: str | None,
+) -> CasillaDefinition:
+    """A minimal manual casilla with an explicit number and segmento."""
+    return CasillaDefinition(
+        id=casilla_id,
+        number=number,
+        segmento=segmento,
+        label=f"Casilla {casilla_id}",
+        section=("test",),
+        input_kind="manual",
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+
+
+def test_same_number_distinct_segmento_casillas_validate() -> None:
+    """Two casillas sharing a number under distinct segmento values both validate.
+
+    This is the multi-segment AEAT shape (e.g. Modelo 200 casilla 00562
+    appearing in both the Liquidacion and ECPN record segments). The
+    casillas carry distinct ids and distinct segmento codes, so the
+    (segmento, number) identity pairs (DP200014, 00562) and
+    (DP200032, 00562) are unique and the validator must accept them.
+    """
+    from . import RegistryValidator
+
+    liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
+    ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
+    revision = _minimal_revision(casillas=(liquidacion, ecpn))
+    modelo = _minimal_modelo(revision)
+    # validate_modelo raises iff any failure is collected; a clean return
+    # proves the (segmento, number) pairs are accepted as distinct.
+    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_single_segment_duplicate_number_collision_fails() -> None:
+    """Two segmento-unset casillas sharing a number hard-fail on (None, number).
+
+    The casillas carry distinct ids, so the per-kind duplicate-id check
+    does NOT fire. Only the generalised (segmento, number) identity
+    invariant catches the collision: with segmento unset on both, the
+    pair degrades to (None, '00562') and the duplicate is reported with
+    the bare-number message, exactly as the prior duplicate-id check did.
+    """
+    from . import RegistryValidator
+
+    first = _segmented_casilla("00562", "00562", None)
+    second = _segmented_casilla("00562-alt", "00562", None)
+    revision = _minimal_revision(casillas=(first, second))
+    modelo = _minimal_modelo(revision)
+    with pytest.raises(RegistryValidationError, match=r"duplicate casilla number '00562'"):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_same_segmento_duplicate_number_collision_fails() -> None:
+    """Two casillas sharing a number within one segmento hard-fail.
+
+    Within a single record segment a casilla number must still be
+    unique; the (segmento, number) pair (DP200014, 00562) declared twice
+    is a duplicate and the validator reports it segment-qualified.
+    """
+    from . import RegistryValidator
+
+    first = _segmented_casilla("DP200014:00562", "00562", "DP200014")
+    second = _segmented_casilla("DP200014:00562-alt", "00562", "DP200014")
+    revision = _minimal_revision(casillas=(first, second))
+    modelo = _minimal_modelo(revision)
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"duplicate casilla number '00562' within segmento 'DP200014'",
+    ):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_single_segment_bare_number_reference_resolves() -> None:
+    """A formula referencing a casilla by its bare number resolves single-segment.
+
+    The casilla sets id == number with segmento unset, so the bare
+    number is the unambiguous reference token. A formula whose
+    expression reads that casilla and whose target is a computed casilla
+    must validate with no unknown-casilla failure.
+    """
+    from ._schema import FormulaDefinition, FormulaExpression
+    from ._validate import RegistryValidator
+
+    input_casilla = _segmented_casilla("01", "01", None)
+    computed_casilla = _segmented_casilla("02", "02", None).model_copy(
+        update={"input_kind": "computed", "formula": "test.formula"}
+    )
+    formula = FormulaDefinition(
+        id="test.formula",
+        target="02",
+        expression=FormulaExpression(casilla="01"),
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+    revision = _minimal_revision(casillas=(input_casilla, computed_casilla), formulas=(formula,))
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
+        _minimal_modelo(revision),
+        revision,
+    )
+    casilla_resolution_failures = [f for f in failures if "unknown casilla" in f]
+    assert casilla_resolution_failures == [], (
+        f"single-segment bare-number reference must resolve; got: {casilla_resolution_failures}"
+    )
+
+
+def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> None:
+    """A bare-number reference to a number reused across segments fails to resolve.
+
+    Casilla number 00562 occurs in two record segments, so the bare
+    number is ambiguous. A formula expression that references '00562'
+    directly must NOT resolve: the validator reports an unknown casilla,
+    forcing the formula to name the intended occurrence by its
+    segment-qualified id.
+    """
+    from ._schema import FormulaDefinition, FormulaExpression
+    from ._validate import RegistryValidator
+
+    liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
+    ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
+    target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
+        update={"input_kind": "computed", "formula": "test.formula"}
+    )
+    formula = FormulaDefinition(
+        id="test.formula",
+        target="DP200014:00999",
+        expression=FormulaExpression(casilla="00562"),
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+    revision = _minimal_revision(
+        casillas=(liquidacion, ecpn, target_casilla),
+        formulas=(formula,),
+    )
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
+        _minimal_modelo(revision),
+        revision,
+    )
+    unknown_casilla_failures = [f for f in failures if "unknown casilla '00562'" in f]
+    assert unknown_casilla_failures, (
+        "an ambiguous cross-segment bare-number reference must fail to resolve; "
+        f"got failures: {failures}"
+    )
+
+
+def test_bare_number_reference_resolves_when_id_is_segment_qualified() -> None:
+    """A bare-number reference resolves to a casilla whose id is segment-qualified.
+
+    This is the decisive segment-aware-resolution case. The casilla
+    number 00562 occurs exactly once on the revision but its id is the
+    segment-qualified 'DP200014:00562' — id is no longer equal to
+    number. A formula expression that references the bare number '00562'
+    must still resolve to that single occurrence: the bare number is
+    unambiguous within the revision, so it resolves within its segment
+    context without the formula having to repeat the segment qualifier.
+    """
+    from ._schema import FormulaDefinition, FormulaExpression
+    from ._validate import RegistryValidator
+
+    sole_occurrence = _segmented_casilla("DP200014:00562", "00562", "DP200014")
+    target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
+        update={"input_kind": "computed", "formula": "test.formula"}
+    )
+    formula = FormulaDefinition(
+        id="test.formula",
+        target="DP200014:00999",
+        expression=FormulaExpression(casilla="00562"),
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+    revision = _minimal_revision(
+        casillas=(sole_occurrence, target_casilla),
+        formulas=(formula,),
+    )
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
+        _minimal_modelo(revision),
+        revision,
+    )
+    unknown_casilla_failures = [f for f in failures if "unknown casilla" in f]
+    assert unknown_casilla_failures == [], (
+        "an unambiguous bare-number reference must resolve to a casilla whose id "
+        f"is segment-qualified; got: {unknown_casilla_failures}"
+    )
+
+
+def test_segment_qualified_reference_resolves_across_segments() -> None:
+    """A formula naming a casilla by its segment-qualified id resolves cleanly.
+
+    With number 00562 reused across two segments, a formula expression
+    that references the segment-qualified id 'DP200014:00562' resolves to
+    the intended Liquidacion occurrence and produces no unknown-casilla
+    failure.
+    """
+    from ._schema import FormulaDefinition, FormulaExpression
+    from ._validate import RegistryValidator
+
+    liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
+    ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
+    target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
+        update={"input_kind": "computed", "formula": "test.formula"}
+    )
+    formula = FormulaDefinition(
+        id="test.formula",
+        target="DP200014:00999",
+        expression=FormulaExpression(casilla="DP200014:00562"),
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+    revision = _minimal_revision(
+        casillas=(liquidacion, ecpn, target_casilla),
+        formulas=(formula,),
+    )
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
+        _minimal_modelo(revision),
+        revision,
+    )
+    unknown_casilla_failures = [f for f in failures if "unknown casilla" in f]
+    assert unknown_casilla_failures == [], (
+        f"a segment-qualified casilla reference must resolve; got: {unknown_casilla_failures}"
+    )
+
+
+def _single_segment_casilla() -> CasillaDefinition:
+    """A real single-segment casilla, the shape every existing modelo authors."""
+    return CasillaDefinition(
+        id="00592",
+        number="00592",
+        label="Cuota liquida",
+        section=("liquidacion",),
+        data_type="money",
+        legal_refs=("ley-58-2003:art-29",),
+        source_refs=("aeat-manual-modelo",),
+    )
+
+
+def test_casilla_segmento_defaults_unset() -> None:
+    """A single-segment casilla leaves segmento unset; the field defaults to None."""
+    casilla = _single_segment_casilla()
+
+    assert casilla.segmento is None
+
+
+def test_casilla_segmento_accepts_aeat_record_segment_code() -> None:
+    """A multi-segment casilla carries the AEAT record-segment code in segmento."""
+    casilla = _single_segment_casilla().model_copy(update={"segmento": "DP200014"})
+
+    assert casilla.segmento == "DP200014"
+
+
+def test_single_segment_casilla_validates_unchanged_with_segmento_unset() -> None:
+    """A single-segment casilla (segmento unset) survives a strict pydantic round-trip.
+
+    The segmento field is purely additive: every existing CasillaDefinition
+    that never declares segmento must validate exactly as before, with
+    segmento absent from the serialised payload's meaningful state.
+    """
+    casilla = _single_segment_casilla()
+
+    round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
+
+    assert round_tripped == casilla
+    assert round_tripped.segmento is None
+    assert "segmento" not in casilla.model_dump(exclude_defaults=True)
+
+
+def test_casilla_segmento_rejects_empty_string() -> None:
+    """An empty segmento is rejected so 'unset' stays distinct from 'empty'."""
+    with pytest.raises(ValidationError, match="segmento"):
+        CasillaDefinition.model_validate({**_single_segment_casilla().model_dump(), "segmento": ""})
+
+
+# ---------------------------------------------------------------------------
+# Test: Diseño-completeness gate
+# ---------------------------------------------------------------------------
+
+
+def _completeness_manifest(
+    casillas: tuple[DisenoCompletenessCasilla, ...],
+) -> DisenoCompletenessManifest:
+    """A minimal Diseño-completeness manifest grounded on the dummy catalogues."""
+    return DisenoCompletenessManifest(
+        source_ref=_DUMMY_SOURCE_ID,
+        casillas=casillas,
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+
+
+def test_revision_without_manifest_passes_completeness_gate() -> None:
+    """A revision with no completeness_manifest is not failed by the gate.
+
+    The completeness gate is rollout-staged: until a modelo's manifest is
+    authored, a casilla-bearing revision must keep validating. A minimal
+    revision that declares one casilla and no manifest must produce zero
+    completeness-gate failures.
+    """
+    from ._validate import RegistryValidator
+
+    revision = _minimal_revision(casillas=(_minimal_casilla("01"),))
+    modelo = _minimal_modelo(revision)
+    # A clean return proves the manifest-less revision clears the gate.
+    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_passes_when_manifest_matches_declared_casillas() -> None:
+    """A revision whose declared casillas exactly match its manifest validates.
+
+    The manifest enumerates the single declared casilla number; declared
+    and expected casilla sets are identical, so the gate raises nothing.
+    """
+    from ._validate import RegistryValidator
+
+    casilla = _minimal_casilla("01")
+    manifest = _completeness_manifest((DisenoCompletenessCasilla(number="01"),))
+    revision = _minimal_revision(casillas=(casilla,)).model_copy(
+        update={"completeness_manifest": manifest}
+    )
+    modelo = _minimal_modelo(revision)
+    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_fails_on_missing_casilla() -> None:
+    """A manifest expecting a casilla the revision omits hard-fails the gate.
+
+    The manifest enumerates casilla numbers '01' and '02' but the
+    revision declares only '01'. The completeness gate must report the
+    missing '02' as a hard RegistryValidationError.
+    """
+    from ._validate import RegistryValidator
+
+    manifest = _completeness_manifest(
+        (DisenoCompletenessCasilla(number="01"), DisenoCompletenessCasilla(number="02"))
+    )
+    revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(
+        update={"completeness_manifest": manifest}
+    )
+    modelo = _minimal_modelo(revision)
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"manifest expects casilla number '02' but the revision does not declare it",
+    ):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_fails_on_extra_casilla() -> None:
+    """A casilla the revision declares but the manifest omits hard-fails the gate.
+
+    The revision declares casilla numbers '01' and '02' but the manifest
+    enumerates only '01'. The completeness gate must report the extra
+    '02' as a hard RegistryValidationError.
+    """
+    from ._validate import RegistryValidator
+
+    manifest = _completeness_manifest((DisenoCompletenessCasilla(number="01"),))
+    revision = _minimal_revision(
+        casillas=(_minimal_casilla("01"), _minimal_casilla("02"))
+    ).model_copy(update={"completeness_manifest": manifest})
+    modelo = _minimal_modelo(revision)
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"revision declares casilla number '02' absent from the Diseño-completeness manifest",
+    ):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_fails_on_diverging_segment_qualified_manifest() -> None:
+    """A multi-segment manifest that diverges on a (segmento, number) pair fails.
+
+    Both the manifest and the revision use segment-qualified casillas.
+    The revision declares casilla 00562 under segmento DP200014; the
+    manifest expects 00562 under DP200032. The pairs (DP200014, 00562)
+    and (DP200032, 00562) are distinct identities, so the gate reports
+    both the missing manifest pair and the extra declared pair,
+    segment-qualified.
+    """
+    from ._validate import RegistryValidator
+
+    declared = _segmented_casilla("DP200014:00562", "00562", "DP200014")
+    manifest = _completeness_manifest(
+        (DisenoCompletenessCasilla(number="00562", segmento="DP200032"),)
+    )
+    revision = _minimal_revision(casillas=(declared,)).model_copy(
+        update={"completeness_manifest": manifest}
+    )
+    modelo = _minimal_modelo(revision)
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
+    missing = [f for f in failures if "expects casilla number '00562' within segmento 'DP200032'" in f]
+    extra = [
+        f
+        for f in failures
+        if "declares casilla number '00562' within segmento 'DP200014' absent" in f
+    ]
+    assert missing, f"diverging manifest must report the missing segment pair; got: {failures}"
+    assert extra, f"diverging manifest must report the extra segment pair; got: {failures}"
 
 
 def test_filing_modelo_with_formula_passes_invariant() -> None:

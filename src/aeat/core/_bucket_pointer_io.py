@@ -45,6 +45,46 @@ def read_pointer(root: Path) -> BucketPointer | None:
     return BucketPointer.from_toml(text)
 
 
+def resolve_active_bucket_id() -> str | None:
+    """Resolve the active bucket id via the operator-facing precedence chain.
+
+    Precedence, highest wins:
+
+    1. ``Settings.aeat_active_profile`` — surfaced from the
+       ``AEAT_ACTIVE_PROFILE`` environment variable (or an active
+       :func:`aeat.core.config.override_settings` block in tests).
+       Per-shell override useful for CI, headless invocations, and the
+       CLI ``--profile`` flag.
+    2. ``<aeat-root>/active-profile`` plaintext pointer file written by
+       ``profile create`` / ``profile switch``. This is the canonical
+       default for interactive sessions and resolves the chicken-and-egg
+       defect where an encrypted state row could not be read without
+       first knowing which bucket to unlock.
+
+    The CLI ``--profile`` flag, when supplied per-invocation, runs the
+    process under an :func:`aeat.core.config.override_settings` block
+    that sets ``aeat_active_profile`` so rung one handles it without a
+    fourth precedence rung.
+
+    This resolver lives in the core layer: it reads only the settings
+    object and the plaintext pointer file, both core-layer concerns. The
+    at-rest crypto substrate (master-key provider) resolves the active
+    bucket through this function, so it must sit at or below the adapter
+    layer to keep the dependency direction acyclic.
+    """
+
+    from .config import load_settings
+
+    settings = load_settings()
+    override = (settings.aeat_active_profile or "").strip()
+    if override:
+        return override
+    pointer = read_pointer(settings.aeat_local_storage_root)
+    if pointer is not None:
+        return pointer.bucket_id
+    return None
+
+
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
     """Atomically write the pointer file via write-then-rename.
 
@@ -61,4 +101,9 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
     os.replace(tmp, target)
 
 
-__all__ = ["pointer_path", "read_pointer", "write_pointer"]
+__all__ = [
+    "pointer_path",
+    "read_pointer",
+    "resolve_active_bucket_id",
+    "write_pointer",
+]

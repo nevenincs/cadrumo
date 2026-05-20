@@ -696,4 +696,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.setup._errors.WorkspaceBucketTornError",
+        ErrorCode(
+            code="REFUSED_WORKSPACE_BUCKET_TORN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.workspace_bucket_torn",
+            default_suggestion="aeat config repair profile --clear-active --yes",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

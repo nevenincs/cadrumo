@@ -11,7 +11,7 @@ from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
 from importlib import import_module
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, Protocol
 
 from ._bindings import (
     validate_invoice_binding_definition,
@@ -153,6 +153,125 @@ def _emit_combined_primary_id_failures(
         primary_ids.extend(ids_by_kind[kind])
     for duplicate in sorted(_duplicates(primary_ids)):
         failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
+
+
+def _resolvable_casilla_references(revision: ModeloRevision) -> frozenset[str]:
+    """Return every token that resolves to a casilla within ``revision``.
+
+    A casilla reference — a formula ``casilla`` leaf or ``target``, an
+    export field ``casilla``, a relation ``source_output``, an algorithm
+    binding input or output — is segment-aware.
+
+    A reference resolves when it is either:
+
+    * a casilla ``id`` declared on the revision (the stable
+      within-revision handle), or
+    * a bare ``number`` that occurs on exactly one casilla across the
+      whole revision, so the segment is unambiguous and the bare number
+      resolves within its segment context.
+
+    A bare ``number`` that recurs across distinct record segments is
+    NOT resolvable on its own: the reference must use the
+    segment-qualified ``id`` to name the intended occurrence. Only those
+    genuinely cross-segment numbers carry that cost.
+
+    For a single-segment modelo every casilla sets ``id == number`` and
+    every number is unique, so the resolvable set is exactly the set of
+    casilla ids — identical to the pre-change ``set(casilla_by_id)``
+    behaviour. Single-segment references resolve precisely as before.
+    """
+    ids = {casilla.id for casilla in revision.casillas}
+    number_counts: dict[str, int] = {}
+    for casilla in revision.casillas:
+        number_counts[casilla.number] = number_counts.get(casilla.number, 0) + 1
+    unambiguous_numbers = {number for number, count in number_counts.items() if count == 1}
+    return frozenset(ids | unambiguous_numbers)
+
+
+def _emit_casilla_identity_failures(
+    failures: list[str],
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Append a failure for every duplicate ``(segmento, number)`` casilla pair.
+
+    A casilla's identity is the pair ``(segmento, number)``: a
+    multi-segment AEAT modelo (e.g. Modelo 200) reuses the same bare
+    five-digit ``number`` across distinct record segments, so uniqueness
+    must be keyed on the pair, not on ``number`` alone.
+
+    For a single-segment modelo every casilla leaves ``segmento`` unset,
+    so the pair degrades to ``(None, number)`` and this check reproduces
+    the prior bare-number uniqueness exactly: two casillas sharing a
+    number with no ``segmento`` collide on ``(None, number)`` and
+    hard-fail precisely as the previous duplicate-id check did.
+    """
+    pairs = [(casilla.segmento, casilla.number) for casilla in revision.casillas]
+    seen: set[tuple[str | None, str]] = set()
+    reported: set[tuple[str | None, str]] = set()
+    for pair in pairs:
+        if pair in seen and pair not in reported:
+            reported.add(pair)
+        seen.add(pair)
+    for segmento, number in sorted(reported, key=lambda item: (item[0] or "", item[1])):
+        if segmento is None:
+            failures.append(f"{prefix}: duplicate casilla number {number!r}")
+        else:
+            failures.append(
+                f"{prefix}: duplicate casilla number {number!r} within segmento {segmento!r}"
+            )
+
+
+def _emit_completeness_gate_failures(
+    failures: list[str],
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Append a failure for every divergence from the Diseño-completeness manifest.
+
+    The completeness gate compares the revision's declared
+    ``(segmento, number)`` casilla set against the expected set in the
+    revision's checked-in Diseño-completeness manifest, derived
+    off-load-path from the official AEAT Diseño de Registros corpus.
+
+    The gate is **rollout-staged and per-modelo**. A revision that
+    declares a ``completeness_manifest`` is enforced strictly: a casilla
+    the manifest expects but the revision does not declare, or a casilla
+    the revision declares but the manifest does not list, is a hard
+    failure. A revision with no manifest declared yet is NOT a failure
+    here — manifest authoring is a staged migration, and a casilla-bearing
+    revision is allowed to load while its manifest is still being
+    authored. The fail-closed flip (missing manifest is itself a hard
+    error) lands once every casilla-bearing modelo carries a manifest.
+    """
+
+    manifest = revision.completeness_manifest
+    if manifest is None:
+        return
+    expected = manifest.identities()
+    declared = frozenset((casilla.segmento, casilla.number) for casilla in revision.casillas)
+    for segmento, number in sorted(expected - declared, key=lambda pair: (pair[0] or "", pair[1])):
+        if segmento is None:
+            failures.append(
+                f"{prefix}: Diseño-completeness manifest expects casilla number {number!r} "
+                "but the revision does not declare it"
+            )
+        else:
+            failures.append(
+                f"{prefix}: Diseño-completeness manifest expects casilla number {number!r} "
+                f"within segmento {segmento!r} but the revision does not declare it"
+            )
+    for segmento, number in sorted(declared - expected, key=lambda pair: (pair[0] or "", pair[1])):
+        if segmento is None:
+            failures.append(
+                f"{prefix}: revision declares casilla number {number!r} "
+                "absent from the Diseño-completeness manifest"
+            )
+        else:
+            failures.append(
+                f"{prefix}: revision declares casilla number {number!r} within segmento "
+                f"{segmento!r} absent from the Diseño-completeness manifest"
+            )
 
 
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
@@ -382,6 +501,8 @@ class RegistryValidator:
             failures.append(f"{prefix}: revision must declare official workbook parity coverage")
         _emit_per_kind_duplicate_failures(failures, prefix, ids_by_kind)
         _emit_combined_primary_id_failures(failures, prefix, ids_by_kind)
+        _emit_casilla_identity_failures(failures, prefix, revision)
+        _emit_completeness_gate_failures(failures, prefix, revision)
         # The ``_validate_support_removal_decisions`` call below still
         # consumes the per-kind lists as kwargs; expose them as local
         # aliases so the existing signature shape stays unchanged.
@@ -419,7 +540,11 @@ class RegistryValidator:
             classification.id: classification for classification in revision.dependency_classifications
         }
 
-        casillas = set(casilla_by_id)
+        # Segment-aware casilla reference resolution: a reference resolves
+        # against a casilla ``id`` or against an unambiguous bare
+        # ``number``. For single-segment modelos (``id == number``,
+        # every number unique) this set is exactly ``set(casilla_by_id)``.
+        casillas = set(_resolvable_casilla_references(revision))
         formulas = {formula.id: formula for formula in revision.formulas}
         bindings = set(binding_by_id)
         relations = set(relation_by_id)
@@ -2195,7 +2320,7 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_algorithm_provider_refs(checker, revision)
     _check_algorithm_binding_refs(checker, revision)
     _check_export_layout_refs(checker, revision)
-    _check_renta_first_slice_routing(checker, snapshot)
+    _check_cross_domain_snapshot_routing(checker, snapshot)
     _check_binding_selector_shapes(checker, revision)
 
     if checker.failures:
@@ -2396,26 +2521,54 @@ def _check_export_layout_refs(checker: _IdReferenceChecker, revision: ModeloRevi
                 checker.chk_legal_source_refs(efp, field.legal_refs, field.source_refs)
 
 
-def _check_renta_first_slice_routing(checker: _IdReferenceChecker, snapshot: RegistrySnapshot) -> None:
-    """Cross-domain referential integrity.
+class CrossDomainSnapshotCheck(Protocol):
+    """Snapshot-time referential-integrity check owned by a peer domain.
 
-    When the snapshot describes modelo 100, every casilla mentioned in the
-    renta first-slice routing table MUST be a real casilla on the revision.
-    A divergence between the BOE-prescribed routing in
-    :mod:`aeat.domain.renta._first_slice_routing` and the modelo-100
-    registry casilla set is a snapshot-build error, not a silent runtime
-    KeyError when the renta validator runs.
+    A peer domain (for example :mod:`aeat.domain.renta`) may need to
+    assert that the casilla ids it routes to are real casillas on a
+    registry snapshot. The registry must not import the peer domain
+    directly — that reverses the dependency direction the restructure
+    ADR fixes (defect F7, Wave 2 P04). Instead the peer domain
+    registers a :class:`CrossDomainSnapshotCheck` via
+    :func:`register_cross_domain_snapshot_check`; the registry calls
+    every registered check at snapshot-build time without naming the
+    peer.
+
+    A check receives the modelo id and the snapshot's casilla id set
+    and returns a list of failure strings (empty when consistent).
     """
-    if snapshot.modelo.id != "100":
-        return
-    from ...renta._first_slice_routing import first_slice_target_casillas
 
-    missing_first_slice = first_slice_target_casillas() - checker.casilla_ids
-    if missing_first_slice:
-        checker.failures.append(
-            f"{checker.prefix}: renta first-slice routing targets casillas "
-            f"{sorted(missing_first_slice)!r} that are absent from the modelo-100 revision"
-        )
+    def __call__(self, modelo_id: str, casilla_ids: frozenset[str]) -> list[str]: ...
+
+
+_CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
+
+
+def register_cross_domain_snapshot_check(check: CrossDomainSnapshotCheck) -> None:
+    """Register a peer-domain snapshot referential-integrity check.
+
+    Idempotent: registering the same callable twice is a no-op so a
+    peer-domain module re-imported in a fresh interpreter (or under
+    test reload) does not stack duplicate checks.
+    """
+
+    if check not in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+        _CROSS_DOMAIN_SNAPSHOT_CHECKS.append(check)
+
+
+def _check_cross_domain_snapshot_routing(checker: _IdReferenceChecker, snapshot: RegistrySnapshot) -> None:
+    """Run every registered peer-domain referential-integrity check.
+
+    The registry depends on the abstract :class:`CrossDomainSnapshotCheck`
+    Protocol only. Concrete checks (such as the renta first-slice
+    routing gate) are injected by their owning domain at import time
+    via :func:`register_cross_domain_snapshot_check`.
+    """
+
+    casilla_ids = frozenset(checker.casilla_ids)
+    for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+        for failure in check(snapshot.modelo.id, casilla_ids):
+            checker.failures.append(f"{checker.prefix}: {failure}")
 
 
 def _check_binding_selector_shapes(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:

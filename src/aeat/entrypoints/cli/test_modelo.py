@@ -598,3 +598,67 @@ def test_work_calculate_help_exposes_by_actor_flag() -> None:
     result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
     assert result.exit_code == 0, result.output
     assert "--by" in result.output
+
+
+# --- Fix 2: work create validates period token eagerly ---
+
+
+@pytest.mark.parametrize(
+    "period",
+    [
+        "2026Q1",   # year-prefixed form ambiguous to the resolver
+        "INVALID",  # completely invalid
+        "Q1X",      # garbled quarter token
+    ],
+)
+def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
+    """``work create`` must reject an un-parseable period token immediately
+    rather than storing it and failing later at ``calculate`` time.
+
+    Before fix: invalid tokens were accepted and stored as-is, only
+    failing when the registry tried to resolve them at calculate time.
+    After fix: ``typer.BadParameter`` fires at create time with a
+    human-readable message.
+    """
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            period,
+            "--revision",
+            "v1",
+        ]
+    )
+
+    assert result.exit_code != 0, f"period {period!r} should be rejected; got: {result.output}"
+    assert "Traceback" not in result.output
+    output_lower = result.output.lower()
+    assert "period must be" in output_lower or "invalid value" in output_lower
+
+
+@pytest.mark.parametrize(
+    "period,expected_normalized",
+    [
+        ("Q1", "1T"),
+        ("1T", "1T"),
+        ("Q4", "4T"),
+        ("0A", "0A"),
+        ("annual", "0A"),
+    ],
+)
+def test_work_create_normalizes_valid_period_tokens(period: str, expected_normalized: str) -> None:
+    """Valid period tokens (in any accepted form) must be normalized to the
+    canonical registry form (e.g. ``Q1`` → ``1T``) before being stored."""
+
+    from aeat.entrypoints.cli._modelo import _resolve_year_period
+
+    _, normalized = _resolve_year_period(2026, period)
+    assert normalized == expected_normalized, f"period {period!r} normalized to {normalized!r}, expected {expected_normalized!r}"

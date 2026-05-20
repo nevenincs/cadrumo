@@ -516,6 +516,25 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
                 )
             )
 
+        import json as _json
+
+        import typer as _typer
+
+        from ...core.click_context import json_output_requested
+
+        verb = "created" if mode == "create" else "updated"
+        if json_output_requested():
+            _typer.echo(
+                _json.dumps(
+                    {"profile_name": profile_name, "status": verb, "next": "aeat app modelo work create"},
+                    ensure_ascii=False,
+                )
+            )
+        else:
+            _typer.echo(f"profile\t{profile_name}")
+            _typer.echo(f"status\t{verb}")
+            _typer.echo("next\taeat app modelo work create")
+
     typed = typing.cast(typing.Any, _command)
     typed.__signature__ = inspect.Signature(parameters=list(parameters))
     typed.__annotations__ = {param.name: param.annotation for param in parameters}

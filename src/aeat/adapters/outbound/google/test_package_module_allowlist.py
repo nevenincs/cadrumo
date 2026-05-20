@@ -22,6 +22,7 @@ _PACKAGE_ROOT = Path(__file__).resolve().parent
 _ALLOWED_MODULES: frozenset[str] = frozenset(
     {
         "__init__.py",
+        "_api.py",
         "_calc_sheets_apply.py",
         "_calc_sheets_pull.py",
         "_errors.py",

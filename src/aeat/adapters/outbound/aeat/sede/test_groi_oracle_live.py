@@ -29,7 +29,7 @@ from aeat.domain.calculations.registry import (
     GroiOracle,
     RemoteStateGuardPolicy,
 )
-from aeat.entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

@@ -89,3 +89,51 @@ def test_envelope_message_renders_under_every_supported_language() -> None:
     assert set(rendered_per_language) == set(languages), (
         f"expected every locale to render, got {sorted(rendered_per_language)}"
     )
+
+
+# --- Fix 5: internal context keys are stripped from operator-facing output ---
+
+
+def test_scrub_error_context_strips_internal_keys_from_rendered_output() -> None:
+    """``prompt_key`` and ``question_id`` are internal implementation
+    details of the wizard widget layer.  They must not appear in either
+    the text or JSON error output the operator sees.
+
+    The keys must remain accessible on the exception's ``.context``
+    attribute so internal diagnostics and existing tests can still
+    inspect them.
+    """
+
+    from ._registry import _INTERNAL_CONTEXT_KEYS
+
+    error = LockAcquisitionError(
+        context={
+            "prompt_key": "wizard.setup.profile.tax-id.prompt",
+            "question_id": "tax-id",
+            "raw": "INVALID_NIF",
+            "detail": "not a valid NIF shape",
+        }
+    )
+
+    rendered_json = render_error_json(error)
+    rendered_text = render_error_text(error)
+
+    # Internal keys must NOT appear in rendered output.
+    assert "prompt_key" not in rendered_json
+    assert "question_id" not in rendered_json
+    assert "prompt_key" not in rendered_text
+    assert "question_id" not in rendered_text
+
+    # User-facing context keys must still appear.
+    assert "detail" in rendered_json
+    assert "raw" in rendered_json
+
+    # The keys must remain accessible on the original exception context
+    # (they are stripped only from the RENDERED output, not from the object).
+    assert error.context is not None
+    assert "prompt_key" in error.context
+    assert "question_id" in error.context
+
+    # The internal key set is a frozenset containing exactly these two names.
+    assert "prompt_key" in _INTERNAL_CONTEXT_KEYS
+    assert "question_id" in _INTERNAL_CONTEXT_KEYS

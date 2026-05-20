@@ -27,7 +27,7 @@ from ..errors import RepositoryError
 from . import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
-    ModeloRecord,
+    ModeloCatalogueRecord,
     ModeloRepository,
     PortalAuthMethod,
     PortalRecord,
@@ -52,7 +52,7 @@ def test_sqlite_foreign_keys_cascade(tmp_path: Path) -> None:
     engine = _schema_engine(tmp_path, "fk.db")
     try:
         with session_scope(engine) as session:
-            modelo = ModeloRepository(session).upsert(ModeloRecord(identifier="MODELO_130", name="Pagos"))
+            modelo = ModeloRepository(session).upsert(ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos"))
             assert modelo.id is not None
             CorpusArtifactRepository(session).upsert(
                 CorpusArtifactRecord(
@@ -78,7 +78,7 @@ def test_portal_auth_method_check_constraint(tmp_path: Path) -> None:
     engine = _schema_engine(tmp_path, "check.db")
     try:
         with session_scope(engine) as session:
-            modelo = ModeloRepository(session).upsert(ModeloRecord(identifier="MODELO_303", name="IVA"))
+            modelo = ModeloRepository(session).upsert(ModeloCatalogueRecord(identifier="MODELO_303", name="IVA"))
         with (
             pytest.raises(IntegrityError, match=r"CHECK constraint failed: ck_portals_auth_method"),
             session_scope(engine) as session,
@@ -99,7 +99,7 @@ def test_corpus_artifact_unique_identity(tmp_path: Path) -> None:
     engine = _schema_engine(tmp_path, "unique.db")
     try:
         with session_scope(engine) as session:
-            modelo = ModeloRepository(session).upsert(ModeloRecord(identifier="MODELO_100", name="IRPF"))
+            modelo = ModeloRepository(session).upsert(ModeloCatalogueRecord(identifier="MODELO_100", name="IRPF"))
             assert modelo.id is not None
             repo = CorpusArtifactRepository(session)
             record = CorpusArtifactRecord(
@@ -140,8 +140,8 @@ def test_modelo_upsert_natural_key(tmp_path: Path) -> None:
     try:
         with session_scope(engine) as session:
             repo = ModeloRepository(session)
-            first = repo.upsert(ModeloRecord(identifier="MODELO_130", name="Pagos fraccionados"))
-            second = repo.upsert(ModeloRecord(identifier="MODELO_130", name="Pagos fraccionados IRPF"))
+            first = repo.upsert(ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos fraccionados"))
+            second = repo.upsert(ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos fraccionados IRPF"))
         assert first.id == second.id
         assert second.name.endswith("IRPF")
     finally:

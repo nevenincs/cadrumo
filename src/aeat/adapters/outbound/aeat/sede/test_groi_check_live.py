@@ -32,7 +32,7 @@ from aeat.adapters.outbound.aeat.sede._groi_check import (
 )
 from aeat.core.config import Settings
 from aeat.domain.calculations.registry import AEAT_GROI_URL
-from aeat.entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

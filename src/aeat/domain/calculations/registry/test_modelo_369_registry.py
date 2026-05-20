@@ -340,9 +340,9 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
     from aeat.domain.iva import (
         EUMemberState,
         InvoiceKind,
+        IvaRateKind,
         OssIossRegime,
         TransactionKind,
-        IvaRateKind,
     )
 
     modelo, _ = _load_modelo_369()
@@ -393,20 +393,27 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
 
 
 def test_modelo_369_esquema_importacion_ioss_binding_resolves_low_value_sale() -> None:
-    """End-to-end smoke test for the IOSS Importación binding."""
+    """End-to-end smoke test for the IOSS Importación binding.
+
+    Asserts that the binding resolver populates the expected key and
+    that the resolved value equals the sum of iva_amounts from the
+    supplied observations — derived programmatically from the test's
+    own input data, not hand-computed.
+    """
     from decimal import Decimal
 
     from aeat.domain.iva import (
         EUMemberState,
         InvoiceKind,
+        IvaRateKind,
         OssIossRegime,
         TransactionKind,
-        IvaRateKind,
     )
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-importacion"]
 
+    iva_amounts = [Decimal("15.20"), Decimal("22.80")]
     observations = [
         OssIossLedgerObservation(
             ledger_id=f"ioss-de-{idx}",
@@ -421,15 +428,23 @@ def test_modelo_369_esquema_importacion_ioss_binding_resolves_low_value_sale() -
         )
         for idx, (base, iva) in enumerate(
             [
-                (Decimal("80"), Decimal("15.20")),
-                (Decimal("120"), Decimal("22.80")),
+                (Decimal("80"), iva_amounts[0]),
+                (Decimal("120"), iva_amounts[1]),
             ],
             start=1,
         )
     ]
 
     result = resolve_ledger_oss_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-369-importacion-de-low-value-21pct": Decimal("38.00")}
+
+    # Assert structural wiring: the expected binding key must be present.
+    expected_binding_key = "modelo-369-importacion-de-low-value-21pct"
+    assert expected_binding_key in result, f"{expected_binding_key!r} must be resolved by the IOSS binding"
+
+    # The binding aggregates iva_amount via sum — the resolved value must equal
+    # the sum of the iva_amounts from the observations provided to the resolver.
+    expected_total = sum(iva_amounts, Decimal("0"))
+    assert result[expected_binding_key] == expected_total
 
 
 def test_modelo_369_esquema_union_constructs_link_oss_bindings() -> None:
@@ -506,9 +521,9 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     from aeat.domain.iva import (
         EUMemberState,
         InvoiceKind,
+        IvaRateKind,
         OssIossRegime,
         TransactionKind,
-        IvaRateKind,
     )
 
     from . import (
@@ -596,9 +611,9 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
     from aeat.domain.iva import (
         EUMemberState,
         InvoiceKind,
+        IvaRateKind,
         OssIossRegime,
         TransactionKind,
-        IvaRateKind,
     )
 
     from . import (
@@ -652,14 +667,14 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         date_context={"filing_period": date(2025, 2, 15)},
     )
 
-    # Identity threading: low-value-cuota equals the resolver-computed binding fact.
-    # cuota-total is a sum-of-one identity over low-value-cuota; assert the values
-    # match without re-implementing the resolver's aggregation arithmetic.
-    assert (
-        result.values["iva.importacion.de.low-value-cuota"]
-        == binding_values["modelo-369-importacion-de-low-value-21pct"]
-    )
-    assert result.values["iva.importacion.cuota-total"] == result.values["iva.importacion.de.low-value-cuota"]
+    # Both casillas are anchored independently to the resolver-computed binding
+    # fact: low-value-cuota is the bound input, and cuota-total is a sum-of-one
+    # identity over it. Asserting each against the binding fact (rather than
+    # against the other SUT output) means a broken cuota-total formula cannot
+    # hide by collapsing both casillas to the same wrong value.
+    expected_cuota = binding_values["modelo-369-importacion-de-low-value-21pct"]
+    assert result.values["iva.importacion.de.low-value-cuota"] == expected_cuota
+    assert result.values["iva.importacion.cuota-total"] == expected_cuota
 
 
 def test_modelo_369_constructs_link_calculation_application_link() -> None:

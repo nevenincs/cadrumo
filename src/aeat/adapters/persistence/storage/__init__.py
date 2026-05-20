@@ -15,7 +15,7 @@ this stack.
 
 The public surface is intentionally narrow:
 
-- Pydantic v2 record models — :class:`ModeloRecord`, :class:`PortalRecord`,
+- Pydantic v2 record models — :class:`ModeloCatalogueRecord`, :class:`PortalRecord`,
   :class:`CorpusArtifactRecord`, plus :class:`PortalAuthMethod`.
 - Errors — :class:`StorageError`, :class:`RepositoryError`.
 - Engine and session helpers — :func:`get_engine`, :func:`dispose_engine`,
@@ -168,8 +168,8 @@ from .master_key._recovery import (
 )
 from .secret_store._secret_store import SecretRecord, SecretStore
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
-from .sql.records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
-from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository
+from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
+from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, SqlRecordRepository
 from .sql.session import get_sessionmaker, session_scope
 
 __all__ = [
@@ -218,7 +218,7 @@ __all__ = [
     "MasterKeyPassphraseMismatchError",
     "MasterKeyProvider",
     "MasterKeyUnavailableError",
-    "ModeloRecord",
+    "ModeloCatalogueRecord",
     "ModeloRepository",
     "NoActiveBucketSessionError",
     "NonceCollisionError",
@@ -230,7 +230,6 @@ __all__ = [
     "RecoveryKey",
     "RedactionRule",
     "RedactionStrategy",
-    "Repository",
     "RepositoryError",
     "RetentionPolicy",
     "RetentionPolicyError",
@@ -242,6 +241,7 @@ __all__ = [
     "SecretStore",
     "SecretStoreError",
     "SensitivityClass",
+    "SqlRecordRepository",
     "StorageError",
     "StorageValidationError",
     "UnsecuredMasterKeyProvider",

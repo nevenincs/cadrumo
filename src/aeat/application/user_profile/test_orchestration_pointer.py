@@ -28,8 +28,8 @@ from aeat.application.user_profile._orchestration import (
     select_profile,
 )
 from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._bucket_pointer_io import pointer_path, read_pointer
 from aeat.application.workflow._models import WorkflowState
+from aeat.core._bucket_pointer_io import pointer_path, read_pointer
 from aeat.core.config import Settings, load_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

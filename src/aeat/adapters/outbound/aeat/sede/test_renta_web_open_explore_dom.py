@@ -25,7 +25,7 @@ import pytest
 from .....core.config import Settings
 from .....core.paths import PROJECT_ROOT
 from .....domain.calculations.registry import RentaWebOpenLivePayload
-from .....entrypoints.cli._live import requires_live_enabled
+from aeat.tests.live_gate import requires_live_enabled
 from ..browser import default_browser_session_factory
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]

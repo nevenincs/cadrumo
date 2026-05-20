@@ -2,15 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
+from ...core._time import utc_now
 from ...domain.profile._normalise import _normalise_key
-
-
-def utc_now() -> datetime:
-    """Return an aware UTC timestamp for user-CLI workflow events."""
-
-    return datetime.now(tz=UTC)
-
 
 __all__ = ["_normalise_key", "utc_now"]
