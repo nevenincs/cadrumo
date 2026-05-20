@@ -214,7 +214,10 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
     record.args = ["safe-item", "token-secret"]  # ty: ignore[invalid-assignment]
 
     filter_.filter(record)
-    assert record.args == ["safe-item", "<redacted>"]
+    # The scrubber redacts list args and normalises the container to a
+    # tuple — ``logging.LogRecord.args`` is typed ``tuple | Mapping |
+    # None`` and ``list`` is not in that union (see SecretScrubbingFilter).
+    assert record.args == ("safe-item", "<redacted>")
 
 
 def test_non_sensitive_fields_pass_through_unchanged() -> None:
