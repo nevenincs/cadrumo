@@ -1,0 +1,28 @@
+# Modelo 200 calculation-completeness manifest.
+#
+# Enumerates the (segmento, number) casillas in the Modelo 200
+# calculation closure — the casilla set the cross-connecting calculation
+# engine traverses for the cuota-chain: the cuota liquida casilla 00592
+# (the expression input of the cuota-del-ejercicio formula) and the
+# cuota del ejercicio casilla 00599 (the formula target and the
+# verification-expectation operand). Both are declared under the
+# Liquidación IV record segment DP200014B.
+#
+# Derived off-load-path from the calculation closure intersected with the
+# official AEAT Diseño de Registros (source aeat-dr-200-2025); the Diseño
+# is authoritative on the DP200014B segment and the closure bounds the
+# set to the calculation surface. The off-load-path drift re-verification
+# test re-derives this set from the corpus Diseño.
+
+[revisions."2024-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-200-2025"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00592"
+segmento = "DP200014B"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00599"
+segmento = "DP200014B"
