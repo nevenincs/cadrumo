@@ -512,6 +512,9 @@ cli:
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
         discard_help: Mark a work unit as discarded (auditable state transition)
+        discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
+          app modelo work discard %{work_unit_id} --yes' to confirm.
+        discard_yes_help: Explicitly confirm the discard operation
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         from_filing_record_help: Stable id of the baseline filing record to amend.
@@ -555,8 +558,8 @@ cli:
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
-        year_out_of_range: 'Filing year %{year} is out of range; supply a year between
-          %{minimum} and %{maximum}.'
+        year_out_of_range: Filing year %{year} is out of range; supply a year between
+          %{minimum} and %{maximum}.
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required

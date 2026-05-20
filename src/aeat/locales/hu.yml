@@ -535,6 +535,9 @@ cli:
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
           revízió) kulcsra
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
+        discard_requires_yes: Az elvetés auditálható állapotátmenet. A megerősítéshez
+          futtassa újra az 'aeat app modelo work discard %{work_unit_id} --yes' parancsot.
+        discard_yes_help: Az elvetési művelet kifejezett megerősítése
         file_help: Ellenőrzött revízió belsőleg leadottként megjelölése. NEM küldi
           el az AEAT-nak
         from_filing_record_help: A helyesbítendő alap filing record stabil azonosítója.
@@ -579,8 +582,8 @@ cli:
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
-        year_out_of_range: 'A(z) %{year} adóév tartományon kívül esik; adjon meg egy
-          évet %{minimum} és %{maximum} között.'
+        year_out_of_range: A(z) %{year} adóév tartományon kívül esik; adjon meg egy
+          évet %{minimum} és %{maximum} között.
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges

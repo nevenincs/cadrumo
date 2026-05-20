@@ -587,6 +587,31 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
     assert f"amends_filing_record_id\t{amends_id}" in lines
 
 
+def test_work_discard_refuses_without_yes() -> None:
+    """``work discard`` without ``--yes`` is refused with the exact re-run command.
+
+    The discard gate is symmetric with ``config profile delete``: an
+    auditable state transition must not fire on an unconfirmed run.
+    """
+
+    work_unit_id = "a" * 64
+    result = invoke_cached_cli(["app", "modelo", "work", "discard", work_unit_id])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "--yes" in result.output
+    assert work_unit_id in result.output.replace("\n", "")
+
+
+def test_work_discard_help_advertises_yes_flag() -> None:
+    """``work discard --help`` advertises the ``--yes`` confirmation flag."""
+
+    result = invoke_cached_cli(["app", "modelo", "work", "discard", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "--yes" in result.output
+
+
 def test_work_calculate_help_exposes_by_actor_flag() -> None:
     """``aeat app modelo work calculate --help`` advertises a ``--by ACTOR``
     option so operators can attribute a calculation revision to a specific
