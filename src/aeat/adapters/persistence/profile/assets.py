@@ -1,7 +1,7 @@
-"""Encrypted SQL persistence for actividad economica asset and amortization ledgers.
+"""Encrypted SQL persistence for actividad economica asset and amortizacion ledgers.
 
 :class:`aeat.domain.profile.assets.AssetRecord` and
-:class:`aeat.domain.profile.assets.AmortizationLedger` payloads are stored
+:class:`aeat.domain.profile.assets.AmortizacionLedger` payloads are stored
 as FINANCIAL-class secure objects in the primary database.
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....domain.profile.assets import (
-    AmortizationLedger,
+    AmortizacionLedger,
     AssetRecord,
     AssetsLedgerDocument,
 )
@@ -72,27 +72,27 @@ def add_asset(asset: AssetRecord) -> AssetsLedgerDocument:
     return AssetsLedgerRepository().add(asset)
 
 
-def load_amortization_ledger() -> AmortizationLedger:
-    """Load the amortization ledger, returning an empty ledger when absent.
+def load_amortizacion_ledger() -> AmortizacionLedger:
+    """Load the amortizacion ledger, returning an empty ledger when absent.
 
     Returns:
-        Persisted amortization ledger or an empty one when no envelope exists.
+        Persisted amortizacion ledger or an empty one when no envelope exists.
     """
 
-    return AmortizationLedgerRepository().load()
+    return AmortizacionLedgerRepository().load()
 
 
-def save_amortization_ledger(ledger: AmortizationLedger) -> Path:
+def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
     """Persist ``ledger`` as a governed FINANCIAL-class encrypted envelope.
 
     Args:
-        ledger: Amortization ledger to persist.
+        ledger: Amortizacion ledger to persist.
 
     Returns:
         Logical secure-object marker for the persisted ledger.
     """
 
-    repository = AmortizationLedgerRepository()
+    repository = AmortizacionLedgerRepository()
     repository.save(ledger)
     return repository.envelope_path
 
@@ -194,11 +194,11 @@ class AssetsLedgerRepository:
         return _LEDGER_OBJECT_KEY
 
 
-class AmortizationLedgerRepository:
-    """Governed repository for the encrypted amortization ledger.
+class AmortizacionLedgerRepository:
+    """Governed repository for the encrypted amortizacion ledger.
 
-    Mirrors :class:`AssetsLedgerRepository` for amortization entries; the
-    payload type is :class:`aeat.domain.profile.assets.AmortizationLedger`.
+    Mirrors :class:`AssetsLedgerRepository` for amortizacion entries; the
+    payload type is :class:`aeat.domain.profile.assets.AmortizacionLedger`.
     """
 
     def __init__(self) -> None:
@@ -216,11 +216,11 @@ class AmortizationLedgerRepository:
 
         return Path("db://secure_objects") / _AMORTIZATION_NAMESPACE / "assets-amortization-ledger.lock"
 
-    def load(self) -> AmortizationLedger:
+    def load(self) -> AmortizacionLedger:
         """Load the ledger, returning an empty document when absent.
 
         Returns:
-            Decrypted amortization ledger.
+            Decrypted amortizacion ledger.
 
         Raises:
             :exc:`aeat.domain.profile.errors.AssetRecordError`: When the
@@ -235,25 +235,25 @@ class AmortizationLedgerRepository:
                 max_supported_version=_SECURE_OBJECT_VERSION,
             )
             if record is None:
-                return AmortizationLedger()
-            return AmortizationLedger.model_validate_json(record.payload.decode("utf-8"))
+                return AmortizacionLedger()
+            return AmortizacionLedger.model_validate_json(record.payload.decode("utf-8"))
         except (OSError, AeatError) as exc:
-            raise AssetRecordError(f"unable to load amortization ledger: {self._object_key}") from exc
+            raise AssetRecordError(f"unable to load amortizacion ledger: {self._object_key}") from exc
 
-    def save(self, ledger: AmortizationLedger) -> None:
+    def save(self, ledger: AmortizacionLedger) -> None:
         """Persist ``ledger`` as FINANCIAL-class ciphertext.
 
         Args:
-            ledger: Amortization ledger to encrypt and write.
+            ledger: Amortizacion ledger to encrypt and write.
         """
 
         self._save_unlocked(ledger)
-        _log.info("saved amortization ledger to secure object %s", self._object_key)
+        _log.info("saved amortizacion ledger to secure object %s", self._object_key)
 
-    def _load_unlocked(self) -> AmortizationLedger:
+    def _load_unlocked(self) -> AmortizacionLedger:
         return self.load()
 
-    def _save_unlocked(self, ledger: AmortizationLedger) -> None:
+    def _save_unlocked(self, ledger: AmortizacionLedger) -> None:
         from datetime import UTC, datetime
 
         self._objects.save(
@@ -271,11 +271,11 @@ class AmortizationLedgerRepository:
 
 
 __all__ = [
-    "AmortizationLedgerRepository",
+    "AmortizacionLedgerRepository",
     "AssetsLedgerRepository",
     "add_asset",
-    "load_amortization_ledger",
+    "load_amortizacion_ledger",
     "load_assets",
-    "save_amortization_ledger",
+    "save_amortizacion_ledger",
     "save_assets",
 ]
