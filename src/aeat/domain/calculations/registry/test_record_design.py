@@ -13,6 +13,7 @@ from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree, resolve_export_layout
 from ._record_design import (
+    derive_diseno_completeness_casillas,
     extract_record_design,
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
@@ -263,6 +264,124 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     assert all(parsed.values())
     assert {path.suffix.lower() for path in sources.values()} >= {".pdf", ".xls", ".xlsx"}
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(sources)
+
+
+# ---------------------------------------------------------------------------
+# Diseño-completeness manifest drift re-verification (off-load-path)
+# ---------------------------------------------------------------------------
+#
+# The completeness gate in RegistryValidator compares a revision's
+# declared casillas against a checked-in Diseño-completeness manifest.
+# The manifest itself is derived from the official AEAT Diseño de
+# Registros corpus. These tests re-run that derivation off the
+# snapshot-build hot path and fail CI if a checked-in manifest has
+# drifted from the corpus it claims to be derived from — the
+# audit-cadence re-verification the ADR mandates.
+
+
+def _revisions_with_completeness_manifest() -> list[tuple[str, str]]:
+    """Return ``(modelo_id, revision_id)`` for every revision carrying a manifest."""
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    return sorted(
+        (modelo.id, revision.id)
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        if revision.completeness_manifest is not None
+    )
+
+
+def test_completeness_manifests_match_their_corpus_diseno() -> None:
+    """Every machine-derivable manifest still matches its corpus Diseño.
+
+    For each checked-in Diseño-completeness manifest, re-run the
+    off-load-path derivation against the official AEAT Diseño de
+    Registros corpus the manifest declares as its source and assert the
+    derived ``(segmento, number)`` casilla set still equals the
+    manifest's enumerated set. A divergence means the corpus was updated
+    without regenerating the manifest, or the manifest was hand-edited
+    away from the source — both are CI failures.
+
+    A manifest flagged ``manual_extraction`` (a PDF-only Diseño that
+    resists machine extraction) is exempt from the machine re-derivation
+    but must carry a recorded ``manual_extraction_reason``; the exemption
+    is explicit and asserted, never a silent skip.
+    """
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    revisions_with_manifest = _revisions_with_completeness_manifest()
+
+    machine_checked = 0
+    manual_recorded = 0
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            manifest = revision.completeness_manifest
+            if manifest is None:
+                continue
+            if manifest.manual_extraction:
+                assert manifest.manual_extraction_reason, (
+                    f"modelo {modelo.id} revision {revision.id}: manual-extraction manifest "
+                    "must record a manual_extraction_reason, never a silent skip"
+                )
+                manual_recorded += 1
+                continue
+            source = catalogues.sources.get(manifest.source_ref)
+            assert source is not None, (
+                f"modelo {modelo.id} revision {revision.id}: manifest source_ref "
+                f"{manifest.source_ref!r} is absent from the source catalogue"
+            )
+            corpus_path = bundled_path() / source.corpus_path
+            multi_segment = any(casilla.segmento is not None for casilla in manifest.casillas)
+            derived = frozenset(
+                (casilla.segmento, casilla.number)
+                for casilla in derive_diseno_completeness_casillas(corpus_path, multi_segment=multi_segment)
+            )
+            assert derived == manifest.identities(), (
+                f"modelo {modelo.id} revision {revision.id}: Diseño-completeness manifest "
+                f"has drifted from corpus source {manifest.source_ref!r}; "
+                f"manifest-only casillas: {sorted(manifest.identities() - derived)}; "
+                f"corpus-only casillas: {sorted(derived - manifest.identities())}"
+            )
+            machine_checked += 1
+
+    # Discovery sanity: the count of machine-checked plus manual-recorded
+    # manifests equals the discovered manifest count. Guards against the
+    # re-verification loop silently skipping every manifest.
+    assert machine_checked + manual_recorded == len(revisions_with_manifest)
+
+
+def test_completeness_manifest_derivation_machinery_detects_corpus_casillas() -> None:
+    """The drift-derivation machinery extracts real casillas from a corpus Diseño.
+
+    Exercises the same `derive_diseno_completeness_casillas` derivation
+    the drift re-verification depends on, directly against the Modelo 200
+    2024 corpus Diseño. This proves the re-verification is load-bearing:
+    if the derivation could not extract casillas, the drift test above
+    would pass vacuously on every manifest. The Modelo 200 Liquidación
+    cuota-chain casillas must surface under the `DP200014` record
+    segment.
+    """
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
+    revision = next(iter(modelo_200.revisions.values()))
+    source_ref = next(
+        ref
+        for ref in revision.source_refs
+        if catalogues.sources[ref].kind == "record_design"
+    )
+    corpus_path = bundled_path() / catalogues.sources[source_ref].corpus_path
+
+    derived = derive_diseno_completeness_casillas(corpus_path, multi_segment=True)
+
+    derived_pairs = frozenset((casilla.segmento, casilla.number) for casilla in derived)
+    dp200014 = {number for segmento, number in derived_pairs if segmento == "DP200014"}
+    assert {"00552", "00558", "00562"} <= dp200014, (
+        "the Modelo 200 Liquidación cuota-chain casillas must be derivable "
+        f"from the corpus DP200014 segment; got {sorted(dp200014)}"
+    )
+    # The same number recurs across record segments — the multi-segment
+    # contract — so the segment-qualified pair count exceeds the bare
+    # distinct-number count.
+    distinct_numbers = {number for _, number in derived_pairs}
+    assert len(derived_pairs) > len(distinct_numbers)
 
 
 def test_modelo_registry_tests_use_public_record_design_dispatcher() -> None:
