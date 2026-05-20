@@ -408,6 +408,22 @@ def test_fragmented_modelos_do_not_keep_stale_single_file_siblings() -> None:
     assert offenders == []
 
 
+def test_multi_revision_modelos_do_not_use_single_file_layout() -> None:
+    """Multi-revision modelos must use directory layout, not inline copy-per-revision TOML."""
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    offenders: list[str] = []
+    for source in discover_modelo_sources(modelos_dir):
+        if source.layout != "single_file":
+            continue
+        modelo = load_modelo_source(source)
+        if len(modelo.revisions) <= 1:
+            continue
+        offenders.append(f"{source.modelo_id}: {len(modelo.revisions)} revisions in {source.path.name}")
+
+    assert offenders == []
+
+
 def test_fragmented_revision_directories_are_schema_owned() -> None:
     """Every committed revision fragment directory has a schema manifest and loads."""
 
