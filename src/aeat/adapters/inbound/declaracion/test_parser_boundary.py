@@ -1,7 +1,6 @@
 """Tests for the declaración parser boundary."""
 
 from __future__ import annotations
-from aeat.core.resources import resources
 
 from decimal import Decimal
 from pathlib import Path
@@ -10,6 +9,7 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from aeat.core.resources import resources
 from aeat.tests import FIXTURES_DIR
 
 from . import DeclaracionParseError, parse_declaracion
