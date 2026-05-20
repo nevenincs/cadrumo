@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from ...core.i18n import Translatable as tr
 from ...core.resources import bundled_path
 from ._errors import CategoryValidationError
-from ._profile import CategoryProfile, IvaCategory
+from ._profile import CategoryProfile, IvaDeductibilityHint
 from ._proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -146,7 +146,9 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
             "category": category,
             "display_label": tr(str(data.get("display_label"))),
             "proportionality": _parse_rule(raw_rule),
-            "vat_hint": IvaCategory(str(raw_vat_hint)) if raw_vat_hint is not None else None,
+            "vat_hint": (
+                IvaDeductibilityHint(str(raw_vat_hint)) if raw_vat_hint is not None else None
+            ),
         }
     )
 
