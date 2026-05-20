@@ -13,6 +13,7 @@ from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree, resolve_export_layout
 from ._record_design import (
+    build_diseno_coverage_report,
     derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
     extract_record_design,
@@ -440,6 +441,59 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     assert len(closure) < len(coverage), (
         "the calculation closure must be strictly bounded below the full-Diseño "
         f"coverage; closure has {len(closure)} pairs, coverage has {len(coverage)}"
+    )
+
+
+def test_diseno_coverage_report_is_an_advisory_inventory_not_a_load_gate() -> None:
+    """The full-Diseño coverage report inventories form data without redding the load.
+
+    `build_diseno_coverage_report` compares a modelo revision's declared
+    casillas against the full AEAT Diseño de Registros casilla set and
+    returns a `DisenoCoverageReport`: the total Diseño casilla count, the
+    subset the registry covers, and the coverage-gap subset the registry
+    has not yet authored. The report is produced off the snapshot-build
+    load path and is purely advisory — a coverage gap is information for
+    follow-up authoring, never a load failure.
+
+    The report is exercised against the Modelo 200 2024 corpus Diseño. Its
+    three casilla sets must partition the full Diseño coverage: covered
+    plus gap equals the full Diseño set, and covered and gap are disjoint.
+    The gap is non-empty because Modelo 200's Diseño is overwhelmingly
+    accounting-statement data-entry fields, the deliberate counterpart to
+    the bounded calculation-completeness gate that *is* enforced at load.
+
+    Building the report must not raise: an advisory inventory never reds a
+    load, so the same Modelo 200 that clears the load-blocking
+    calculation-completeness gate is freely inventoried here.
+    """
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
+    revision = next(iter(modelo_200.revisions.values()))
+    corpus_path = _modelo_200_record_design_corpus_path()
+
+    report = build_diseno_coverage_report(
+        corpus_path, modelo_200.id, revision, multi_segment=True
+    )
+
+    assert report.modelo_id == "200"
+    assert report.revision_id == revision.id
+
+    diseno = frozenset((c.segmento, c.number) for c in report.diseno_casillas)
+    covered = frozenset((c.segmento, c.number) for c in report.covered_casillas)
+    gap = frozenset((c.segmento, c.number) for c in report.coverage_gap_casillas)
+
+    assert covered | gap == diseno, (
+        "the coverage report must partition the full Diseño set into "
+        "covered and gap casillas"
+    )
+    assert covered & gap == frozenset(), (
+        "a Diseño casilla is either covered or a gap, never both"
+    )
+    assert report.covered_count + report.coverage_gap_count == report.diseno_casilla_count
+    assert report.coverage_gap_count > 0, (
+        "the Modelo 200 Diseño carries accounting-statement data-entry fields "
+        "outside the registry's calculation surface; the advisory report must "
+        "surface them as a coverage gap"
     )
 
 

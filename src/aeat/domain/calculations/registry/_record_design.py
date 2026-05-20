@@ -1460,6 +1460,106 @@ def derive_diseno_coverage_casillas(
     return tuple(bare)
 
 
+@dataclass(frozen=True)
+class DisenoCoverageReport:
+    """An off-load-path advisory inventory of one revision's Diseño coverage.
+
+    Compares a modelo revision's declared casillas against the *full*
+    AEAT Diseño de Registros casilla set — every five-digit casilla tag
+    AEAT embeds in the form's field descriptions, accounting-statement
+    data-entry fields included.
+
+    This report is **advisory**: it is produced off the snapshot-build
+    load path and never reds a load. A modelo whose registry is not yet
+    exhaustively backfilled against the full Diseño is reported here as
+    having a coverage gap, surfaced as information for follow-up
+    authoring. The load-blocking gate is the bounded
+    calculation-completeness gate, not this full-Diseño inventory — that
+    is the ADR-amendment separation: calculation-completeness is enforced
+    at load, full-Diseño coverage is inventoried off-load-path.
+
+    Fields:
+
+    - ``modelo_id`` / ``revision_id`` identify the revision inventoried.
+    - ``diseno_casillas`` is the full ``(segmento, number)`` set the
+      Diseño declares.
+    - ``covered_casillas`` is the subset the registry also declares —
+      the Diseño casillas the registry has backfilled.
+    - ``coverage_gap_casillas`` is the subset the Diseño declares that
+      the registry does not — the advisory follow-up inventory.
+    """
+
+    modelo_id: str
+    revision_id: str
+    diseno_casillas: tuple[DerivedDisenoCasilla, ...]
+    covered_casillas: tuple[DerivedDisenoCasilla, ...]
+    coverage_gap_casillas: tuple[DerivedDisenoCasilla, ...]
+
+    @property
+    def diseno_casilla_count(self) -> int:
+        """Total ``(segmento, number)`` casillas the Diseño declares."""
+        return len(self.diseno_casillas)
+
+    @property
+    def covered_count(self) -> int:
+        """Diseño casillas the registry also declares."""
+        return len(self.covered_casillas)
+
+    @property
+    def coverage_gap_count(self) -> int:
+        """Diseño casillas the registry does not yet declare."""
+        return len(self.coverage_gap_casillas)
+
+
+def build_diseno_coverage_report(
+    path: Path,
+    modelo_id: str,
+    revision: ModeloRevision,
+    *,
+    multi_segment: bool,
+) -> DisenoCoverageReport:
+    """Return the off-load-path full-Diseño coverage advisory report for a revision.
+
+    Extracts the full AEAT Diseño de Registros casilla set
+    (:func:`derive_diseno_coverage_casillas`) and compares it against the
+    revision's declared casillas, keyed on the ``(segmento, number)``
+    identity. The result is a :class:`DisenoCoverageReport` that
+    inventories how much of the form's data surface the registry covers
+    and which Diseño casillas remain to be authored.
+
+    This is an **advisory** inventory, never a load gate. It is produced
+    off the snapshot-build path — it parses the multi-megabyte Diseño
+    corpus — and must never run on the load path. A coverage gap reported
+    here does not fail any modelo: the load-blocking enforcement is the
+    bounded calculation-completeness gate, per the ADR amendment that
+    separates calculation-completeness (enforced at load) from
+    full-Diseño coverage (inventoried off-load-path).
+
+    For a ``multi_segment`` modelo the comparison is segment-aware: a
+    Diseño casilla under segment ``S`` is "covered" only when the
+    registry declares a casilla at the same ``(S, number)`` identity. For
+    a single-segment modelo ``segmento`` is unset on both sides and the
+    bare number alone identifies the casilla.
+    """
+
+    diseno = derive_diseno_coverage_casillas(path, multi_segment=multi_segment)
+    declared_identities = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
+    covered: list[DerivedDisenoCasilla] = []
+    gap: list[DerivedDisenoCasilla] = []
+    for casilla in diseno:
+        if (casilla.segmento, casilla.number) in declared_identities:
+            covered.append(casilla)
+        else:
+            gap.append(casilla)
+    return DisenoCoverageReport(
+        modelo_id=modelo_id,
+        revision_id=revision.id,
+        diseno_casillas=diseno,
+        covered_casillas=tuple(covered),
+        coverage_gap_casillas=tuple(gap),
+    )
+
+
 def _sheet_casilla_numbers(sheet: RecordDesignSheet) -> tuple[str, ...]:
     """Return the casilla tags declared in one record-design sheet, in field order."""
 
@@ -1480,8 +1580,10 @@ def _sheet_casilla_numbers(sheet: RecordDesignSheet) -> tuple[str, ...]:
 
 __all__ = [
     "DerivedDisenoCasilla",
+    "DisenoCoverageReport",
     "RecordDesignField",
     "RecordDesignSheet",
+    "build_diseno_coverage_report",
     "calculation_closure_numbers",
     "derive_calculation_completeness_casillas",
     "derive_diseno_coverage_casillas",
