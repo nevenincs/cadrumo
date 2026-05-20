@@ -169,10 +169,17 @@ class TestAggregate111:
 
     def test_unregistered_modelo_raises_domain_error(self) -> None:
         from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
-        from aeat.application.aggregation._retenciones import _filter_observations_for_modelo
+        from aeat.application.aggregation._grouping import filter_observations_for_modelo
+        from aeat.application.aggregation._retenciones import _MODELO_SCHEME_CATALOGUE
 
         with pytest.raises(AggregationUnsupportedModeloError, match="modelo '347'"):
-            _filter_observations_for_modelo((), modelo="347")
+            filter_observations_for_modelo(
+                (),
+                modelo="347",
+                catalogue=_MODELO_SCHEME_CATALOGUE,
+                attribute_fn=lambda obs: obs.scheme,
+                aggregator_label="retenciones aggregator",
+            )
 
 
 class TestAggregate123:

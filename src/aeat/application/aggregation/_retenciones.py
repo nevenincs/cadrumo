@@ -21,8 +21,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ._errors import AggregationUnsupportedModeloError, t
-from ._grouping import group_and_collect_names
+from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
 
 class RetencionScheme(StrEnum):
@@ -176,33 +175,26 @@ _MODELO_SCHEME_CATALOGUE: dict[str, frozenset[RetencionScheme]] = {
 }
 
 
-def _filter_observations_for_modelo(
-    observations: tuple[RetencionObservation, ...],
-    modelo: str,
-) -> tuple[RetencionObservation, ...]:
-    """Filter observations to those whose scheme is in-scope for ``modelo``.
-
-    Modelo 111 covers WORK_INCOME + ECONOMIC_ACTIVITY + PROFESSIONAL +
-    PRIZE. Modelo 115 covers URBAN_RENTAL. Modelo 123 covers capital
-    income schemes, and annual summaries 180/190/193 reuse the matching
-    quarterly scheme catalogue over an annual period.
-    """
-    if modelo not in _MODELO_SCHEME_CATALOGUE:
-        raise AggregationUnsupportedModeloError(
-            t(f"retenciones aggregator for modelo {modelo!r} is not registered"),
-        )
-    eligible = _MODELO_SCHEME_CATALOGUE[modelo]
-    return tuple(o for o in observations if o.scheme in eligible)
-
-
 def _aggregate_for_modelo(
     observations: tuple[RetencionObservation, ...],
     *,
     modelo: str,
     period: str,
 ) -> RetencionesAggregation:
-    """Shared per-modelo aggregation. Filters by scheme catalogue + rolls up."""
-    filtered = _filter_observations_for_modelo(observations, modelo=modelo)
+    """Shared per-modelo aggregation. Filters by scheme catalogue + rolls up.
+
+    Modelo 111 covers WORK_INCOME + ECONOMIC_ACTIVITY + PROFESSIONAL +
+    PRIZE. Modelo 115 covers URBAN_RENTAL. Modelo 123 covers capital
+    income schemes, and annual summaries 180/190/193 reuse the matching
+    quarterly scheme catalogue over an annual period.
+    """
+    filtered = filter_observations_for_modelo(
+        observations,
+        modelo=modelo,
+        catalogue=_MODELO_SCHEME_CATALOGUE,
+        attribute_fn=lambda obs: obs.scheme,
+        aggregator_label="retenciones aggregator",
+    )
     grouped, perceptor_names = group_and_collect_names(
         filtered,
         group_key_fn=lambda obs: (obs.source_kind, obs.perceptor_nif, obs.scheme),
