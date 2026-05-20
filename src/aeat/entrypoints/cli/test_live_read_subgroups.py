@@ -25,20 +25,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
     from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'live.db').as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_AUDIT_DIR", str(tmp_path / "audit"))
     dispose_engine()
-    try:
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="default"),
-        )
-        yield
-    finally:
-        dispose_engine()
+    with EphemeralMasterKeyProvider():
+        try:
+            workflow_state_repository().update(
+                lambda state: register_minimal_profile(state, profile_id="default"),
+            )
+            yield
+        finally:
+            dispose_engine()
 
 
 @pytest.fixture
