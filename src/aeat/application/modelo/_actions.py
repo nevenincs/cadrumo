@@ -14,6 +14,7 @@ service layer is unit-testable without a workflow-state fixture.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -109,9 +110,12 @@ _BUCKET_EVENT_PAYLOAD_VERSION = 2
 
 v1 -> v2: ``has_provenance`` key added on the
 ``modelo.calculation.created`` payload signalling whether the linked
-revision carries a non-empty typed observations tuple. Audit tools
-reading the event log alone can detect grounding-loss regressions
-without joining against the encrypted revision catalogue.
+revision carries a non-empty typed observations tuple. The same
+payload carries the explicit ``calculation_revision_id`` join key and
+the borrador participation triple (``borrador_participated``,
+``borrador_binding_count``, ``borrador_bindings_trace_sha256``) so that
+audit tools reading the event log alone can detect grounding-loss
+regressions without joining against the encrypted revision catalogue.
 """
 
 
@@ -900,6 +904,7 @@ def calculate_modelo_revision(
         object_type=BucketEventObjectType.CALCULATION_REVISION,
         object_id=revision_id,
         payload={
+            "calculation_revision_id": revision_id,
             "work_unit_id": work_unit_id,
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
@@ -909,7 +914,13 @@ def calculate_modelo_revision(
             "formula_count": str(len(engine_result.entries)),
             "source_transaction_count": str(len(source_transaction_ids)),
             "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
+            "borrador_participated": (
+                "true" if borrador_result.bindings_sourced_from_borrador else "false"
+            ),
             "borrador_binding_count": str(len(borrador_result.bindings_sourced_from_borrador)),
+            "borrador_bindings_trace_sha256": hashlib.sha256(
+                "\n".join(borrador_result.bindings_sourced_from_borrador).encode("utf-8")
+            ).hexdigest(),
             # Signals whether the linked calculation revision carries a
             # non-empty typed observations tuple. Audit tools reading
             # the event log alone can detect grounding-loss regressions
@@ -1049,6 +1060,11 @@ def calculate_modelo_revision_from_bucket_aggregation(
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
     )
+    _reject_caller_overrides_of_ledger_bindings(
+        revision=snapshot.revision,
+        caller_binding_values=binding_values or {},
+        caller_casilla_inputs=casilla_inputs or {},
+    )
     backend_inputs = _merge_bucket_bound_inputs(
         revision=snapshot.revision,
         casilla_inputs=casilla_inputs or {},
@@ -1142,6 +1158,44 @@ def _ledger_binding_ids(revision: ModeloRevision) -> frozenset[str]:
         for binding in revision.bindings
         if binding.source in {"ledger_iva_aggregation", "ledger_renta_expense_aggregation"}
     )
+
+
+def _ledger_bound_casilla_ids(revision: ModeloRevision) -> frozenset[str]:
+    ledger_binding_ids = _ledger_binding_ids(revision)
+    return frozenset(
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.input_kind == "bound" and casilla.binding in ledger_binding_ids
+    )
+
+
+def _reject_caller_overrides_of_ledger_bindings(
+    *,
+    revision: ModeloRevision,
+    caller_binding_values: Mapping[str, Decimal],
+    caller_casilla_inputs: Mapping[str, Decimal],
+) -> None:
+    """Refuse caller-supplied bindings or casilla inputs that collide with
+    values the bucket ledger aggregation owns.
+
+    Bucket-aggregation calculation derives ledger binding values (and the
+    casillas bound to them) from the transaction ledger. Letting a caller
+    override those silently would break calculation grounding: the
+    persisted revision would no longer reflect the ledger it claims to
+    aggregate. Both collisions are rejected before any value reaches the
+    engine.
+    """
+
+    rejected_bindings = sorted(set(caller_binding_values).intersection(_ledger_binding_ids(revision)))
+    if rejected_bindings:
+        raise ModeloAggregationBindingError(
+            f"caller binding values cannot override bucket-derived ledger bindings: {rejected_bindings!r}"
+        )
+    rejected_casillas = sorted(set(caller_casilla_inputs).intersection(_ledger_bound_casilla_ids(revision)))
+    if rejected_casillas:
+        raise ModeloAggregationBindingError(
+            f"caller casilla inputs cannot override bucket-derived ledger bound casillas: {rejected_casillas!r}"
+        )
 
 
 def list_calculation_revisions(

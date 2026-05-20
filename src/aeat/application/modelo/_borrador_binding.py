@@ -24,8 +24,9 @@ from ...domain.modelos._errors import ModeloError
 from ..live import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
-    SnapshotLifecycleState,
+    BorradorSnapshotNotFoundError,
     LiveApplicationInputError,
+    SnapshotLifecycleState,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -114,7 +115,7 @@ def resolve_modelo_100_borrador_bindings(
     repository = snapshot_repository or Borrador100SnapshotRepository(bucket_id=command.bucket_id)
     try:
         snapshot = repository.load(command.borrador_snapshot_id)
-    except LiveApplicationInputError as exc:
+    except (LiveApplicationInputError, BorradorSnapshotNotFoundError) as exc:
         raise Modelo100BorradorBindingError(
             str(exc),
             suggestion=exc.suggestion or "aeat app live borrador 100 list",
