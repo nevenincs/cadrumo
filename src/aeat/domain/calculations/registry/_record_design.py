@@ -1213,9 +1213,113 @@ _REVERSED_VISUAL_CHART_TOKENS = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Diseño-completeness manifest derivation (off-load-path)
+# ---------------------------------------------------------------------------
+#
+# The completeness gate compares a modelo revision's declared casillas
+# against a checked-in manifest. The manifest itself is derived once, off
+# the snapshot-build hot path, by running record-design extraction
+# against the official AEAT Diseño de Registros corpus and collecting the
+# five-digit casilla tags AEAT embeds in each field description. The
+# manifest-derivation helpers below are the off-load-path tool: they are
+# called by manifest-authoring scripts and by the drift re-verification
+# test, never by the registry loader.
+
+_CASILLA_TAG_RE = re.compile(r"\[(\d{5})\]")
+"""Matches the five-digit casilla tag AEAT embeds in Diseño field text.
+
+The official AEAT Diseño de Registros workbooks annotate every casilla
+field with its five-digit casilla number in square brackets within the
+field description (e.g. ``Liquidación III - ... - Base imponible
+[00552]``). This regex extracts those tags so the completeness manifest
+can enumerate the expected ``(segmento, number)`` casilla set.
+"""
+
+
+@dataclass(frozen=True)
+class DerivedManifestCasilla:
+    """One ``(segmento, number)`` casilla derived from a Diseño workbook.
+
+    ``segmento`` carries the AEAT record-segment code (the workbook sheet
+    name) for multi-segment modelos and is ``None`` for single-segment
+    modelos. ``number`` is the bare five-digit AEAT casilla number.
+    """
+
+    segmento: str | None
+    number: str
+
+
+def derive_diseno_completeness_casillas(
+    path: Path,
+    *,
+    multi_segment: bool,
+) -> tuple[DerivedManifestCasilla, ...]:
+    """Return the ``(segmento, number)`` casilla set declared by a Diseño.
+
+    Runs read-only record-design extraction against the official AEAT
+    Diseño de Registros source at ``path`` and collects every five-digit
+    casilla tag embedded in the field descriptions.
+
+    For a ``multi_segment`` modelo (e.g. Modelo 200, which reuses the
+    same casilla number across distinct record segments) every casilla
+    carries the workbook sheet name as its ``segmento``, so the same
+    number under two segments yields two distinct identity pairs. For a
+    single-segment modelo ``segmento`` is left unset and the bare number
+    alone identifies the casilla; a number that recurs across sheets of a
+    single-segment Diseño collapses to one identity, matching the
+    bare-number registry behaviour.
+
+    This is an off-load-path tool: it parses the multi-megabyte Diseño
+    corpus and must never run on the snapshot-build path.
+    """
+
+    sheets = extract_record_design(path)
+    if multi_segment:
+        seen: set[tuple[str | None, str]] = set()
+        ordered: list[DerivedManifestCasilla] = []
+        for sheet in sheets:
+            for number in _sheet_casilla_numbers(sheet):
+                identity = (sheet.name, number)
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                ordered.append(DerivedManifestCasilla(segmento=sheet.name, number=number))
+        return tuple(ordered)
+    seen_numbers: set[str] = set()
+    bare: list[DerivedManifestCasilla] = []
+    for sheet in sheets:
+        for number in _sheet_casilla_numbers(sheet):
+            if number in seen_numbers:
+                continue
+            seen_numbers.add(number)
+            bare.append(DerivedManifestCasilla(segmento=None, number=number))
+    return tuple(bare)
+
+
+def _sheet_casilla_numbers(sheet: RecordDesignSheet) -> tuple[str, ...]:
+    """Return the casilla tags declared in one record-design sheet, in field order."""
+
+    numbers: list[str] = []
+    seen: set[str] = set()
+    for design_field in sheet.fields:
+        for text in (design_field.description, design_field.validation, design_field.content):
+            if not text:
+                continue
+            for match in _CASILLA_TAG_RE.finditer(text):
+                number = match.group(1)
+                if number in seen:
+                    continue
+                seen.add(number)
+                numbers.append(number)
+    return tuple(numbers)
+
+
 __all__ = [
+    "DerivedManifestCasilla",
     "RecordDesignField",
     "RecordDesignSheet",
+    "derive_diseno_completeness_casillas",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",

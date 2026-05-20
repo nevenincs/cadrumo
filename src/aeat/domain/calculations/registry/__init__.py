@@ -139,8 +139,10 @@ from ._queries import (
     parse_modelo_period,
 )
 from ._record_design import (
+    DerivedManifestCasilla,
     RecordDesignField,
     RecordDesignSheet,
+    derive_diseno_completeness_casillas,
     extract_record_design,
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
@@ -273,6 +275,7 @@ __all__ = [
     "DataBindingDefinition",
     "DeadlineWindowDefinition",
     "DependencyClassificationDefinition",
+    "DerivedManifestCasilla",
     "DisenoCompletenessCasilla",
     "DisenoCompletenessManifest",
     "EvidenceTier",
@@ -386,6 +389,7 @@ __all__ = [
     "convert_binary_xls_with_libreoffice",
     "converted_binary_xls_with_libreoffice",
     "counterpart_binding_requirements",
+    "derive_diseno_completeness_casillas",
     "derive_export_layouts_from_bindings",
     "detect_workbook_runner",
     "discover_modelo_sources",
