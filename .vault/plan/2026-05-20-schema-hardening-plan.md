@@ -332,3 +332,4 @@ are accepting, and unexpected exceptions must keep propagating.
 - [x] `W08.P18.S128` - preserve the original `AttributeError` message when extraction-profile parser resolution fails, so dotted parser validation does not hide the failing attribute lookup.
 - [x] `W08.P18.S129` - extend the registry exception hygiene gate to reject bare `except:` handlers in production registry modules.
 - [x] `W08.P18.S130` - extend the registry exception hygiene gate so broad `Exception`/`BaseException` handlers must either re-raise or log the failure.
+- [x] `W08.P18.S132` - update the M100 registry test composition point to import `aeat.domain.renta`, proving the fail-fast first-slice cross-domain snapshot gate is registered in the focused M100 surface; the broader registry hardening pass over exception hygiene, directory layout, drift validation, and M100/M190/M200 passed with 81 tests.
