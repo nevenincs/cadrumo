@@ -184,26 +184,17 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
     from ...application.workflow._models import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
-    from ._errors import CliRefusedBoundaryError
 
     if is_bootstrap_exempt(_full_invocation_verb_path()):
         return
     if resolve_active_bucket_id() is None:
-        # The bare invocation (no subcommand) renders the landing card
-        # itself and must not be refused here. A non-exempt subcommand
-        # on a profile-less root is refused with a translated message
-        # rather than crashing later on the absent per-bucket database.
-        if ctx.invoked_subcommand is None:
-            return
-        raise CliRefusedBoundaryError(
-            tr(
-                "cli.common.errors.no_active_profile",
-                default=(
-                    "No active profile. Run `aeat config profile create NAME` "
-                    "before using profile-scoped data commands."
-                ),
-            ),
-        )
+        # No active profile: each non-exempt verb refuses for itself
+        # with a translated message (see the per-verb
+        # ``resolve_active_bucket_id() is None`` guards). Returning here
+        # avoids opening a session against an absent per-bucket
+        # database and keeps the bare-invocation landing card path
+        # (handled by the caller) intact.
+        return
     if has_active_bucket_session():
         return
     ctx.with_resource(get_master_key_provider())
