@@ -99,6 +99,7 @@ def persist_answers(
     profile_id: str,
     mode: WizardPersistMode,
     supplied_question_ids: Collection[str] | None = None,
+    prior_pointer_text: str | None = None,
 ) -> WorkflowState:
     """Persist ``answers`` into the profile bucket and return updated state.
 
@@ -136,6 +137,7 @@ def persist_answers(
             profile_id=profile_id,
             display_name=profile_name,
             facts=facts,
+            prior_pointer_text=prior_pointer_text,
         )
 
     if supplied_question_ids is None:

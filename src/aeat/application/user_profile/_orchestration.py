@@ -16,11 +16,10 @@ from __future__ import annotations
 
 import secrets
 from collections.abc import Iterable
-from datetime import UTC, date, datetime
+from datetime import date
 
-from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
-from ...adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
-from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
@@ -39,12 +38,11 @@ from ..workflow._utils import utc_now
 from . import (
     EditProfileFieldCommand,
     ProfileValidationService,
-    RegisterProfileCommand,
-    RemoveProfileCommand,
     RenameProfileCommand,
     UserProfileLifecycleRepository,
 )
 from ._lifecycle import ProfileLifecycleService
+from ._profile_repository import _CAPTURE_POINTER, ProfileRepository, _CapturePointerSentinel
 
 _SHARED_SCHEMA: ProfileSchemaDefinition | None = None
 _SENTINEL_DATE = date.min
@@ -141,6 +139,28 @@ class ProfileAlreadyRegisteredError(ProfileNotFoundError):
     """
 
 
+def capture_active_profile_pointer() -> str | None:
+    """Return the raw active-profile pointer text, or ``None`` if absent.
+
+    A caller that writes the active-profile pointer EARLY for the
+    cold-start load-order (so the per-bucket SQLAlchemy engine resolves
+    before :func:`register_active_profile` runs inside
+    ``workflow_state_repository().update``) captures the genuine prior
+    pointer with this helper first, then hands it to
+    :func:`register_active_profile` as ``prior_pointer_text`` so a
+    failed create rolls the pointer back to exactly its pre-create
+    state. The repository owns the rollback; this helper is the only
+    extra coordination a cold-start caller needs.
+    """
+
+    from ...core._bucket_pointer_io import pointer_path
+
+    target = pointer_path(load_settings().aeat_local_storage_root)
+    if not target.is_file():
+        return None
+    return target.read_text(encoding="utf-8")
+
+
 def register_active_profile(
     state: WorkflowState,
     *,
@@ -149,6 +169,7 @@ def register_active_profile(
     facts: tuple[UserProfileFact, ...] = (),
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
+    prior_pointer_text: str | None | _CapturePointerSentinel = _CAPTURE_POINTER,
 ) -> WorkflowState:
     """Atomically register a new profile and make it the active one.
 
@@ -158,58 +179,26 @@ def register_active_profile(
     bucket manifest and the encrypted record and plays no role in any
     key or path.
 
-    Five writes in sequence; failure at any step reverts the bucket
-    directory and manifest so the operator never sees a half-created
-    profile in ``profile list``:
+    This function is a thin :class:`WorkflowState` coordinator: the
+    cross-store write (bucket directory + manifest + encrypted record +
+    active-profile pointer), the duplicate-label refusal, and the
+    rollback on any failure all live solely in
+    :class:`ProfileRepository`. This function delegates the create and
+    threads the workflow-level event audit stream around it.
 
-    1. Refuse-if-duplicate-label: no live profile may already carry
-       ``display_name`` (case-insensitive).
-    2. Provision ``<root>/buckets/<profile_id>/`` + manifest
-       (``bucket_id`` = UUID, ``label`` = display name).
-    3. ``service.register`` writes the encrypted
-       :class:`UserProfileRecord` via the lifecycle service.
-    4. Append the workflow events.
-    5. Write the active-profile pointer file (the UUID).
-
-    On failure at step 3-5 the bucket directory + manifest are
-    removed via the trash-rename pattern so a crashed create
-    never leaves a phantom profile in the manifest scan.
+    ``prior_pointer_text`` is forwarded to the repository as the
+    rollback anchor; a cold-start caller captures it with
+    :func:`capture_active_profile_pointer` before writing the early
+    load-order pointer.
     """
 
-    _refuse_duplicate_label(display_name)
-    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    # Atomic-create ordering: the bucket directory + manifest land
-    # first, THEN the active-profile pointer, THEN the encrypted
-    # record. The pointer must precede `service.register` because
-    # `service.register` opens the per-bucket SQLAlchemy engine, and
-    # `Settings.aeat_database_url` resolves the engine URL from the
-    # active-profile pointer chain. Writing the pointer last left the
-    # URL empty during the first-run create — the cold-start
-    # chicken-and-egg the operator testimonies catalogued.
-    _ensure_profile_bucket_manifest(profile_id, label=display_name)
-    _write_active_profile_pointer(profile_id)
-    try:
-        service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
-    except Exception:
-        # Rollback reverts the directory + manifest AND clears the
-        # pointer so a crashed create leaves no phantom profile in
-        # the manifest scan and no dangling active-profile pointer.
-        # The per-bucket SQLAlchemy engine opened by `service.register`
-        # is disposed first: on Windows an open SQLite handle refuses
-        # the trash-rename and leaves a residual `db/aeat.db` behind,
-        # so the directory tree only fully unwinds once the engine
-        # releases its file handle. Directory removal stays best-effort
-        # — a residual bucket must not mask the original registration
-        # failure being raised.
-        from ...adapters.persistence.storage.sql.engine import dispose_engine
-
-        dispose_engine()
-        try:
-            remove_profile_bucket_directory(profile_id)
-        except OSError:
-            pass
-        _clear_active_profile_pointer()
-        raise
+    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+    repository.create(
+        label=display_name,
+        facts=facts,
+        profile_id=profile_id,
+        prior_pointer_text=prior_pointer_text,
+    )
     updated = state.model_copy(update={"updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
     updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
@@ -313,43 +302,6 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     shutil.rmtree(trash, ignore_errors=True)
 
 
-def _ensure_profile_bucket_manifest(profile_id: str, *, label: str) -> None:
-    """Ensure manifest-scan profile discovery can see the profile bucket.
-
-    Writes the plaintext manifest with ``bucket_id`` set to the
-    immutable UUID ``profile_id`` and ``label`` set to the
-    operator-chosen display name.
-    """
-
-    root = load_settings().aeat_local_storage_root
-    try:
-        paths = provision_bucket_directory(root, profile_id)
-    except FileExistsError:
-        paths = bucket_paths(root, profile_id)
-    if manifest_path(paths).is_file():
-        return
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=profile_id,
-            label=label,
-            created_at=datetime.now(UTC),
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=0x13,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=secrets.token_bytes(16),
-                output_length=32,
-            ),
-            recovery_enrolled=False,
-            schema_version=1,
-        ),
-    )
-
-
 def select_profile(
     state: WorkflowState,
     *,
@@ -362,15 +314,15 @@ def select_profile(
     Raises :class:`ProfileNotFoundError` if the profile does not
     already exist; registration is the explicit path
     (:func:`register_active_profile`).
+
+    This function is a thin :class:`WorkflowState` coordinator: the
+    profile load + integrity check + active-profile pointer write live
+    solely in :meth:`ProfileRepository.select`.
     """
 
-    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    service.read(profile_id)  # raises ProfileNotFoundError if missing
-    # WorkflowState.profiles is now computed at access time from a
-    # filesystem manifest scan; the bucket manifest already exists
-    # for any profile the service can read.
+    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+    repository.select(profile_id)  # raises ProfileNotFoundError if missing
     updated = state.model_copy(update={"updated_at": utc_now()})
-    _write_active_profile_pointer(profile_id)
     return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
 
 
@@ -426,12 +378,15 @@ def remove_active_profile(
     audit and history reads can still resolve the bucket; selecting
     the tombstoned profile via :func:`select_profile` will raise
     because the record is no longer live.
+
+    This function is a thin :class:`WorkflowState` coordinator: the
+    cross-store tombstone (encrypted-record tombstone + active-profile
+    pointer clear) lives solely in :meth:`ProfileRepository.delete`.
     """
 
     profile_id = _require_active(state)
-    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    service.remove(RemoveProfileCommand(profile_id=profile_id))
-    _clear_active_profile_pointer()
+    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+    repository.delete(profile_id)
     updated = state.model_copy(update={"updated_at": utc_now()})
     return _append_workflow_event(updated, action="profile.tombstoned", bucket_id=profile_id, object_id=profile_id)
 
