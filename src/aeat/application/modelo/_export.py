@@ -441,9 +441,9 @@ def export_modelo_revision(
     # derive / append / save sequence inline. The helper performs a
     # single-catalogue ``save_many`` write (via
     # ``BucketEventHistoryRepository.save``), which is exactly what
-    # export needs — there is no second write to bundle, so the W83
-    # multi-write co-transactional pattern does not apply here. The
-    # atomic-rename ordering is preserved: the event commits inside
+    # export needs — there is no second persisted record to bundle,
+    # so the multi-write co-transactional pattern does not apply here.
+    # The atomic-rename ordering is preserved: the event commits inside
     # the helper before ``tmp_output.replace`` runs, and a failure in
     # the helper unwinds the .tmp file before propagating.
     event_payload = {

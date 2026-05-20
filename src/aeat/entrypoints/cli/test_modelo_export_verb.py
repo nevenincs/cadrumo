@@ -182,7 +182,7 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     ``name`` as required export header keys. The export service must
     compose all of them — the operator name from the persisted profile
     facts — or ``_header_field_value`` raises ModeloExportValidationError.
-    This locks the W68 header-composition fix: a real registry-backed
+    This locks the header-composition contract: a real registry-backed
     export of a non-130 modelo succeeds.
     """
 
