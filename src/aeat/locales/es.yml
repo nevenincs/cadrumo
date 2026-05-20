@@ -607,6 +607,8 @@ cli:
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
+        year_out_of_range: 'El ejercicio fiscal %{year} está fuera de rango; indique
+          un año entre %{minimum} y %{maximum}.'
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)

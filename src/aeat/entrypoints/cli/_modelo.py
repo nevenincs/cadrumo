@@ -824,6 +824,37 @@ def _work_unit_lines(unit: WorkUnit) -> list[str]:
     return lines
 
 
+_FILING_YEAR_MIN = 2000
+_FILING_YEAR_MAX = 2099
+"""Filing-year bounds enforced by :class:`WorkUnit` (``ge=2000, le=2099``).
+
+Validating the bound at the CLI boundary turns an out-of-range year
+into a clean, translated, value-naming refusal instead of a generic
+pydantic-validation boundary error.
+"""
+
+
+def _validate_filing_year(year: int) -> None:
+    """Refuse a filing year outside the registry-supported range.
+
+    ``--year 1899`` previously composed the token ``1899-Q1``, passed
+    the period regex, then failed deep in :class:`WorkUnit` validation
+    and surfaced only the generic English "command input failed
+    validation" boundary error. The refusal now names the bad year and
+    renders in the operator's language.
+    """
+
+    if not _FILING_YEAR_MIN <= year <= _FILING_YEAR_MAX:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.year_out_of_range",
+                year=year,
+                minimum=_FILING_YEAR_MIN,
+                maximum=_FILING_YEAR_MAX,
+            )
+        )
+
+
 def _validate_registry_target(modelo: str, revision_id: str) -> None:
     """Refuse a work-unit create that names an unknown modelo or revision.
 
@@ -893,6 +924,7 @@ def work_create(
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
+    _validate_filing_year(year)
     _validate_registry_target(modelo, revision)
     resolved_year, resolved_period = _resolve_year_period(year, period)
     unit = create_work_unit(

@@ -579,6 +579,8 @@ cli:
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
+        year_out_of_range: 'A(z) %{year} adóév tartományon kívül esik; adjon meg egy
+          évet %{minimum} és %{maximum} között.'
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
