@@ -42,6 +42,7 @@ import click
 import typer
 from pydantic import ValidationError
 
+from ...core.click_context import json_output_requested
 from ...core.errors import (
     AeatError,
     build_error_envelope,
@@ -51,7 +52,6 @@ from ...core.errors import (
     render_error_text,
 )
 from ...core.logging import get_logger
-from ...core.click_context import json_output_requested
 
 _log = get_logger(__name__)
 
