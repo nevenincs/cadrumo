@@ -97,16 +97,23 @@ Source: UUID-identity ADR + aggregate ADR.
 
 Source: read-projection ADR.
 
-- [ ] `W04.S16` - `OperatorStateProjection` typed model (active
+- [x] `W04.S16` - `OperatorStateProjection` typed model (active
   profile + health, auth readiness, workspace summary, per-modelo
   readiness, pending obligations).
-- [ ] `W04.S17` - `build_operator_state_projection` as the single
+- [x] `W04.S17` - `build_operator_state_projection` as the single
   producer; each readiness value computed exactly once.
-- [ ] `W04.S18` - rewire `overview`, `auth status`, `auth test`,
+- [x] `W04.S18` - rewire `overview`, `auth status`, `auth test`,
   `modelo readiness`, `verify` to consume the projection; delete
   their bespoke per-surface state assembly.
-- [ ] `W04.S19` - tests proving the surfaces agree: one fixture
+- [x] `W04.S19` - tests proving the surfaces agree: one fixture
   state, every surface reports the same readiness and counts.
+
+Follow-up (tracked): rewire `WorkflowEngine._stage_computing_deadlines`
+(the `NO_PENDING_OBLIGATION` gate) to consume the projection's
+`pending_obligations` rather than computing its own schedule. Deferred
+from W04 because `_engine.py` carries another campaign's uncommitted
+WIP; the projection already carries the field, so the rewire is a
+clean later change.
 
 ## Wave `W05` - one state root and full verification
 
@@ -128,8 +135,8 @@ Source: UUID-identity ADR + aggregate ADR.
 | W01 | UUID identity model | identity | complete |
 | W02 | aggregate + repository + unit-of-work | aggregate | complete |
 | W03 | rename collapse + name-as-id sweep | identity + aggregate | complete (S15 testimonial regression pending) |
-| W04 | canonical read-projection | read-projection | in progress |
-| W05 | one state root + full verification | identity + aggregate | not started |
+| W04 | canonical read-projection | read-projection | complete (engine obligation-gate rewire tracked as follow-up) |
+| W05 | one state root + full verification | identity + aggregate | in progress |
 
 ## Audit cadence
 
