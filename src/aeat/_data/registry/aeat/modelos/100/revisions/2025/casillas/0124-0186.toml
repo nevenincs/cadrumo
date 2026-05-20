@@ -3,6 +3,7 @@ id = "0186"
 number = "0186"
 label = "Seguridad Social del titular de la actividad"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+semantic_role = "irpf_ed_seguridad_social_titular"
 input_kind = "bound"
 binding = "renta-2025-ledger-expense-0186-deductible"
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]

@@ -4,6 +4,7 @@ number = "*14"
 label = "Conyuge apellidos y nombre"
 section = ["datos_identificativos", "conyuge"]
 data_type = "text"
+semantic_role = "irpf_conyuge_apellidos_nombre"
 input_kind = "bound"
 binding = "renta-2025-profile-spouse-display-name"
 legal_refs = ["orden-hac-277-2026:art-3"]
