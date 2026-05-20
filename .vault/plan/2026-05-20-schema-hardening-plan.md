@@ -311,3 +311,4 @@ bounds.
 ### Phase `W07.P17` - file and row size gates
 
 - [x] `W07.P17.S119` - add a committed-corpus layout test capping single-file modelo TOMLs at 2,000 lines, any TOML fragment at 4,000 lines, and any TOML row at 1,200 characters.
+- [x] `W07.P17.S120` - add a committed-corpus layout test requiring every multi-revision modelo to use directory layout instead of inline single-file copy-per-revision TOML.
