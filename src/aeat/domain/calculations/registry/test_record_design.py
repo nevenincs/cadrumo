@@ -13,6 +13,7 @@ from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree, resolve_export_layout
 from ._record_design import (
+    derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
     extract_record_design,
     extract_record_design_pdf,
@@ -267,47 +268,68 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
 
 
 # ---------------------------------------------------------------------------
-# Diseño-completeness manifest drift re-verification (off-load-path)
+# Calculation-completeness manifest drift + full-Diseño coverage advisory
+# (off-load-path)
 # ---------------------------------------------------------------------------
 #
-# The completeness gate in RegistryValidator compares a revision's
-# declared casillas against a checked-in Diseño-completeness manifest.
-# The manifest itself is derived from the official AEAT Diseño de
-# Registros corpus. These tests re-run that derivation off the
-# snapshot-build hot path and fail CI if a checked-in manifest has
-# drifted from the corpus it claims to be derived from — the
-# audit-cadence re-verification the ADR mandates.
+# Two off-load-path concerns, neither on the snapshot-build hot path:
+#
+# - The load-blocking calculation-completeness gate in RegistryValidator
+#   compares a revision's declared casillas against a checked-in
+#   calculation-completeness manifest. The drift test below re-derives
+#   each checked-in manifest from its corpus Diseño (the calculation
+#   closure intersected with the Diseño) and fails CI if a manifest has
+#   drifted from the corpus it claims to be derived from.
+#
+# - The full-Diseño coverage report is an *advisory* inventory: it
+#   extracts every casilla AEAT declares in a Diseño — accounting-
+#   statement data-entry fields included — and surfaces form-level
+#   coverage as information, never as a load-blocking gate. It is the
+#   counterpart to the bounded calculation-completeness gate.
 
 
-def _revisions_with_completeness_manifest() -> list[tuple[str, str]]:
-    """Return ``(modelo_id, revision_id)`` for every revision carrying a manifest."""
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    return sorted(
-        (modelo.id, revision.id)
-        for modelo in modelos
-        for revision in modelo.revisions.values()
-        if revision.completeness_manifest is not None
+def _modelo_200_record_design_corpus_path() -> Path:
+    """Return the corpus path of the Modelo 200 record-design Diseño."""
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
+    revision = next(iter(modelo_200.revisions.values()))
+    source_ref = next(
+        ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"
     )
+    return bundled_path() / catalogues.sources[source_ref].corpus_path
 
 
-def test_completeness_manifests_match_their_corpus_diseno() -> None:
-    """Every machine-derivable manifest still matches its corpus Diseño.
+def test_calculation_completeness_manifests_match_their_corpus_diseno() -> None:
+    """Every machine-derivable calculation-completeness manifest still matches its corpus.
 
-    For each checked-in Diseño-completeness manifest, re-run the
-    off-load-path derivation against the official AEAT Diseño de
-    Registros corpus the manifest declares as its source and assert the
-    derived ``(segmento, number)`` casilla set still equals the
-    manifest's enumerated set. A divergence means the corpus was updated
-    without regenerating the manifest, or the manifest was hand-edited
-    away from the source — both are CI failures.
+    For each checked-in calculation-completeness manifest, re-run the
+    off-load-path derivation — the modelo's calculation closure
+    intersected with the official AEAT Diseño de Registros corpus the
+    manifest declares as its source — and assert the derived
+    ``(segmento, number)`` casilla set still equals the manifest's
+    enumerated set. A divergence means the corpus was updated without
+    regenerating the manifest, the calculation surface changed without a
+    manifest refresh, or the manifest was hand-edited away from the
+    source — all are CI failures.
 
     A manifest flagged ``manual_extraction`` (a PDF-only Diseño that
     resists machine extraction) is exempt from the machine re-derivation
     but must carry a recorded ``manual_extraction_reason``; the exemption
     is explicit and asserted, never a silent skip.
+
+    No calculation-completeness manifests are authored yet (the manifest
+    authoring is a later rollout phase), so the loop currently iterates
+    zero manifests. The discovery-sanity assertion stays load-bearing:
+    once a manifest lands the re-verification covers it automatically.
     """
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    revisions_with_manifest = _revisions_with_completeness_manifest()
+
+    discovered = sorted(
+        (modelo.id, revision.id)
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        if revision.completeness_manifest is not None
+    )
 
     machine_checked = 0
     manual_recorded = 0
@@ -332,56 +354,93 @@ def test_completeness_manifests_match_their_corpus_diseno() -> None:
             multi_segment = any(casilla.segmento is not None for casilla in manifest.casillas)
             derived = frozenset(
                 (casilla.segmento, casilla.number)
-                for casilla in derive_diseno_coverage_casillas(corpus_path, multi_segment=multi_segment)
+                for casilla in derive_calculation_completeness_casillas(
+                    corpus_path, revision, multi_segment=multi_segment
+                )
             )
             assert derived == manifest.identities(), (
-                f"modelo {modelo.id} revision {revision.id}: Diseño-completeness manifest "
-                f"has drifted from corpus source {manifest.source_ref!r}; "
+                f"modelo {modelo.id} revision {revision.id}: calculation-completeness "
+                f"manifest has drifted from corpus source {manifest.source_ref!r}; "
                 f"manifest-only casillas: {sorted(manifest.identities() - derived)}; "
-                f"corpus-only casillas: {sorted(derived - manifest.identities())}"
+                f"closure-only casillas: {sorted(derived - manifest.identities())}"
             )
             machine_checked += 1
 
     # Discovery sanity: the count of machine-checked plus manual-recorded
     # manifests equals the discovered manifest count. Guards against the
     # re-verification loop silently skipping every manifest.
-    assert machine_checked + manual_recorded == len(revisions_with_manifest)
+    assert machine_checked + manual_recorded == len(discovered)
 
 
-def test_completeness_manifest_derivation_machinery_detects_corpus_casillas() -> None:
-    """The drift-derivation machinery extracts real casillas from a corpus Diseño.
+def test_diseno_coverage_report_inventories_modelo_200_form_data() -> None:
+    """The full-Diseño coverage extraction is an advisory inventory, not a gate.
 
-    Exercises the same `derive_diseno_coverage_casillas` derivation
-    the drift re-verification depends on, directly against the Modelo 200
-    2024 corpus Diseño. This proves the re-verification is load-bearing:
-    if the derivation could not extract casillas, the drift test above
-    would pass vacuously on every manifest. The Modelo 200 Liquidación
-    cuota-chain casillas must surface under the `DP200014` record
-    segment.
+    Exercises `derive_diseno_coverage_casillas` — the full-Diseño
+    extraction — directly against the Modelo 200 2024 corpus Diseño. The
+    coverage report inventories every casilla AEAT declares on the form,
+    accounting-statement data-entry fields included; it surfaces
+    form-level coverage as advisory information and never reds the load.
+
+    The extraction must be load-bearing: it surfaces the Modelo 200
+    Liquidación cuota-chain casillas under the `DP200014` record segment,
+    and the same number recurring across record segments produces more
+    segment-qualified pairs than distinct bare numbers — the
+    multi-segment contract.
     """
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    corpus_path = _modelo_200_record_design_corpus_path()
+
+    coverage = derive_diseno_coverage_casillas(corpus_path, multi_segment=True)
+
+    coverage_pairs = frozenset((casilla.segmento, casilla.number) for casilla in coverage)
+    dp200014 = {number for segmento, number in coverage_pairs if segmento == "DP200014"}
+    assert {"00552", "00558", "00562"} <= dp200014, (
+        "the Modelo 200 Liquidación cuota-chain casillas must surface in the "
+        f"full-Diseño coverage report under the DP200014 segment; got {sorted(dp200014)}"
+    )
+    distinct_numbers = {number for _, number in coverage_pairs}
+    assert len(coverage_pairs) > len(distinct_numbers), (
+        "the multi-segment Modelo 200 coverage report must carry more "
+        "segment-qualified pairs than distinct bare numbers"
+    )
+
+
+def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
+    """The calculation closure is a strict subset of the full-Diseño coverage.
+
+    The refocused gate is keyed on the bounded calculation closure, not
+    on full-Diseño coverage. This test proves the bound is real: the
+    Modelo 200 calculation-completeness derivation (closure intersected
+    with the Diseño) yields strictly fewer ``(segmento, number)`` pairs
+    than the full-Diseño coverage report, because Modelo 200's Diseño is
+    overwhelmingly accounting-statement data-entry fields that feed no
+    calculation. A modelo can therefore clear the load-blocking gate
+    without an exhaustive full-form backfill — the design intent of the
+    ADR amendment.
+    """
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
-    source_ref = next(
-        ref
-        for ref in revision.source_refs
-        if catalogues.sources[ref].kind == "record_design"
-    )
-    corpus_path = bundled_path() / catalogues.sources[source_ref].corpus_path
+    corpus_path = _modelo_200_record_design_corpus_path()
 
-    derived = derive_diseno_coverage_casillas(corpus_path, multi_segment=True)
-
-    derived_pairs = frozenset((casilla.segmento, casilla.number) for casilla in derived)
-    dp200014 = {number for segmento, number in derived_pairs if segmento == "DP200014"}
-    assert {"00552", "00558", "00562"} <= dp200014, (
-        "the Modelo 200 Liquidación cuota-chain casillas must be derivable "
-        f"from the corpus DP200014 segment; got {sorted(dp200014)}"
+    coverage = frozenset(
+        (casilla.segmento, casilla.number)
+        for casilla in derive_diseno_coverage_casillas(corpus_path, multi_segment=True)
     )
-    # The same number recurs across record segments — the multi-segment
-    # contract — so the segment-qualified pair count exceeds the bare
-    # distinct-number count.
-    distinct_numbers = {number for _, number in derived_pairs}
-    assert len(derived_pairs) > len(distinct_numbers)
+    closure = frozenset(
+        (casilla.segmento, casilla.number)
+        for casilla in derive_calculation_completeness_casillas(
+            corpus_path, revision, multi_segment=True
+        )
+    )
+
+    assert closure <= coverage, (
+        "the calculation-completeness casilla set must be a subset of the "
+        f"full-Diseño coverage; closure-only pairs: {sorted(closure - coverage)}"
+    )
+    assert len(closure) < len(coverage), (
+        "the calculation closure must be strictly bounded below the full-Diseño "
+        f"coverage; closure has {len(closure)} pairs, coverage has {len(coverage)}"
+    )
 
 
 def test_modelo_registry_tests_use_public_record_design_dispatcher() -> None:
