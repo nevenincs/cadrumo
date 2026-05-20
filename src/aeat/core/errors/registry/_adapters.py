@@ -48,28 +48,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth.certificate.AeatLoginAssertionError",
-        ErrorCode(
-            code="AUTH_AUTH_CERTIFICATE_AEAT_LOGIN_ASSERTION",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_auth_certificate_aeat_login_assertion",
-            default_suggestion="aeat config auth test --provider certificate",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.aeat.auth.certificate.AeatSessionExpiredError",
-        ErrorCode(
-            code="AUTH_AUTH_CERTIFICATE_AEAT_SESSION_EXPIRED",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_auth_certificate_aeat_session_expired",
-            default_suggestion="aeat config auth test --provider certificate",
-            retryable=True,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.adapters.outbound.aeat.auth.certificate.CertificateError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE",
@@ -213,94 +191,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.financial.providers._base.FinancialProviderError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_PROVIDERS_BASE_FINANCIAL_PROVIDER",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_providers_base_financial_provider",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.inbound.financial.providers._base.InvalidFinancialSourceError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_PROVIDERS_BASE_INVALID_FINANCIAL_SOURCE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_providers_base_invalid_financial_source",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.inbound.financial.providers._base.UnsupportedFinancialSourceError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_PROVIDERS_BASE_UNSUPPORTED_FINANCIAL_SOURCE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_providers_base_unsupported_financial_source",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.llm._errors.LLMCacheError",
-        ErrorCode(
-            code="FAIL_LLM_L_M_CACHE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_llm_l_m_cache",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.llm._errors.LLMConfigError",
-        ErrorCode(
-            code="FAIL_LLM_L_M_CONFIG",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_llm_l_m_config",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.llm._errors.LLMError",
-        ErrorCode(
-            code="FAIL_LLM_L_M",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_llm_l_m",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.llm._errors.LLMProviderError",
-        ErrorCode(
-            code="FAIL_LLM_L_M_PROVIDER",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_llm_l_m_provider",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.llm._errors.LLMRateLimitError",
-        ErrorCode(
-            code="FAIL_LLM_L_M_RATE_LIMIT",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_llm_l_m_rate_limit",
-            default_suggestion=None,
-            retryable=True,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.adapters.outbound.aeat.sede._errors.ExpedienteNotFoundError",
         ErrorCode(
             code="ERROR_SEDE_EXPEDIENTE_NOT_FOUND",
@@ -361,61 +251,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_SEDE_PARSE",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_sede_parse",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.inbound.sanitizer._errors.AlreadySanitizedError",
-        ErrorCode(
-            code="REFUSED_SANITIZER_ALREADY_SANITIZED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_sanitizer_already_sanitized",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.inbound.sanitizer._errors.SanitizationError",
-        ErrorCode(
-            code="ERROR_SANITIZER",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_sanitizer",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.inbound.sanitizer._errors.SanitizerSourceParseError",
-        ErrorCode(
-            code="FAIL_SANITIZER_SOURCE_PARSE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_sanitizer_source_parse",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.inbound.sanitizer._errors.SignaturePresentError",
-        ErrorCode(
-            code="REFUSED_SANITIZER_SIGNATURE_PRESENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_sanitizer_signature_present",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.inbound.sanitizer._errors.UnknownSurfaceError",
-        ErrorCode(
-            code="ERROR_SANITIZER_UNKNOWN_SURFACE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_sanitizer_unknown_surface",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -710,28 +545,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.sanitizer._errors.SanitizerValidationError",
-        ErrorCode(
-            code="ERROR_SANITIZER_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_sanitizer_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.inbound.financial.providers._errors.FinancialValidationError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_PROVIDERS_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_providers_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.adapters.persistence.storage.errors.StorageValidationError",
         ErrorCode(
             code="INTEGRITY_STORAGE_VALIDATION",
@@ -770,17 +583,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_BROWSER_VALIDATION",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_browser_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.llm._errors.LLMError",
-        ErrorCode(
-            code="FAIL_LLM",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_llm",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
