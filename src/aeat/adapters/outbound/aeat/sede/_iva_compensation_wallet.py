@@ -136,8 +136,8 @@ def parse_iva_compensation_wallet_html(
         if not all(token in header for token in _HEADER_TOKENS):
             continue
         matched_wallet_table = True
-        for tr in table.find_all("tr"):
-            cells = [_normalised_text(cell.get_text(" ")) for cell in tr.find_all(["td", "th"])]
+        for table_row in table.find_all("tr"):
+            cells = [_normalised_text(cell.get_text(" ")) for cell in table_row.find_all(["td", "th"])]
             if len(cells) < 5 or _looks_like_header(cells):
                 continue
             try:
