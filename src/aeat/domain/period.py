@@ -82,6 +82,40 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
     raise PeriodValidationError(f"cannot map filing period {period!r} to a registry period")
 
 
+def period_start_date(filing_year: int, registry_period: str) -> date:
+    """Return the inclusive start-of-period date for a registry token.
+
+    Args:
+        filing_year: The filing year resolved from
+            :func:`parse_canonical_period`.
+        registry_period: One of ``"1T"`` … ``"4T"``, ``"01"`` … ``"12"``,
+            ``"0A"``.
+
+    Returns:
+        The first day of the period the token covers (e.g. ``"1T"`` →
+        ``YYYY-01-01``, ``"4T"`` → ``YYYY-10-01``, ``"0A"`` →
+        ``YYYY-01-01``, ``"03"`` → ``YYYY-03-01``).
+
+    Raises:
+        PeriodValidationError: When ``registry_period`` is not a recognised shape.
+    """
+
+    if registry_period == "1T":
+        return date(filing_year, 1, 1)
+    if registry_period == "2T":
+        return date(filing_year, 4, 1)
+    if registry_period == "3T":
+        return date(filing_year, 7, 1)
+    if registry_period == "4T":
+        return date(filing_year, 10, 1)
+    if registry_period == "0A":
+        return date(filing_year, 1, 1)
+    try:
+        return date(filing_year, int(registry_period), 1)
+    except ValueError as exc:
+        raise PeriodValidationError(f"invalid registry period {registry_period!r}") from exc
+
+
 def period_end_date(filing_year: int, registry_period: str) -> date:
     """Return the inclusive end-of-period date for a registry token.
 
@@ -115,4 +149,10 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
         raise PeriodValidationError(f"invalid registry period {registry_period!r}") from exc
 
 
-__all__ = ["PeriodError", "PeriodValidationError", "parse_canonical_period", "period_end_date"]
+__all__ = [
+    "PeriodError",
+    "PeriodValidationError",
+    "parse_canonical_period",
+    "period_end_date",
+    "period_start_date",
+]

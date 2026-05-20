@@ -11,6 +11,7 @@ from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.user_profile._orchestration import set_active_fields
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.domain.modelos._calculation_repository import (
@@ -25,6 +26,7 @@ from aeat.domain.modelos._calculation_revision import (
 from aeat.domain.modelos._codes import ModeloCode
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from aeat.domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from aeat.domain.user_profile import UserProfileFact
 from aeat.entrypoints.cli import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -97,6 +99,133 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
     return work_unit_id, calculation_revision_id
+
+
+_MODELO_111_INPUTS: dict[str, str] = {
+    "03": "180.25",
+    "06": "12.10",
+    "09": "300.00",
+    "12": "14.40",
+    "15": "25.00",
+    "18": "0.50",
+    "21": "7.00",
+    "24": "8.00",
+    "27": "9.00",
+    "29": "40.00",
+}
+
+
+def _seed_exportable_modelo_111_revision(
+    *, modelo: str = "111", filing_year: int = 2026, period: str = "2026Q1",
+) -> tuple[str, str]:
+    """Persist a verified-complete modelo-111 revision ready for export.
+
+    The work unit carries a canonical quarterly period token and the
+    revision captures a real modelo-111 casilla input snapshot so the
+    registry-backed draft build produces a populated fichero-BOE file.
+    """
+
+    state = workflow_state_repository().load()
+    bucket_id = state.active_profile_bucket_id()
+    assert bucket_id is not None
+    revision_id = "r" + "1" * 63
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+    )
+    now = datetime.now(UTC)
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode(modelo),
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=f"{modelo}-{filing_year}-{period}",
+        created_at=now,
+        updated_at=now,
+    )
+    repo = WorkUnitCatalogueRepository()
+    repo.save(upsert_work_unit(repo.load(), work_unit))
+
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot=_MODELO_111_INPUTS,
+        binding_overrides={},
+        casilla_values={},
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        inputs_snapshot=_MODELO_111_INPUTS,
+        created_at=now,
+        updated_at=now,
+        verified_at=now,
+        verified_by="operator",
+    )
+    cr_repo = CalculationRevisionCatalogueRepository()
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    return work_unit_id, calculation_revision_id
+
+
+def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
+    cli_runner: CliRunner, tmp_path: Path,
+) -> None:
+    """Exporting a verified-complete modelo-111 revision end-to-end
+    writes a fichero-BOE file without a header-validation error.
+
+    Modelo 111 declares ``declaration_type``, ``surnames``, and
+    ``name`` as required export header keys. The export service must
+    compose all of them — the operator name from the persisted profile
+    facts — or ``_header_field_value`` raises ModeloExportValidationError.
+    This locks the W68 header-composition fix: a real registry-backed
+    export of a non-130 modelo succeeds.
+    """
+
+    workflow_state_repository().update(
+        lambda state: set_active_fields(
+            state,
+            (
+                UserProfileFact(path="identity.name", value="Ana"),
+                UserProfileFact(path="identity.surnames", value="Export Test"),
+            ),
+        ),
+    )
+    work_unit_id, _ = _seed_exportable_modelo_111_revision()
+    out = tmp_path / "modelo-111.txt"
+
+    result = cli_runner.invoke(
+        app,
+        ["app", "modelo", "export", work_unit_id, "--output", str(out)],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
+def test_export_modelo_111_refuses_when_profile_name_missing(
+    cli_runner: CliRunner, tmp_path: Path,
+) -> None:
+    """When the active profile lacks ``identity.surnames`` the export
+    must refuse with a clear error naming the missing profile fact
+    rather than fabricating a placeholder name. ``register_minimal_profile``
+    sets ``identity.name`` but not ``identity.surnames``."""
+
+    work_unit_id, _ = _seed_exportable_modelo_111_revision()
+    out = tmp_path / "modelo-111.txt"
+
+    result = cli_runner.invoke(
+        app,
+        ["app", "modelo", "export", work_unit_id, "--output", str(out)],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert not out.exists()
 
 
 def test_export_requires_output_flag(cli_runner: CliRunner) -> None:

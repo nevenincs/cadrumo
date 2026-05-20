@@ -20,27 +20,34 @@ canonical tree) is a thin delegate over this service.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.i18n import tr
 from ...domain.buckets import (
-    BucketEvent,
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
 )
 from ...domain.deadlines import AutonomoProfile
-from ...domain.filing import ModeloExportError, ModeloExportValidationError
+from ...domain.filing import ModeloExportError as FilingDraftExportError
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionState,
+)
 from ...domain.modelos._errors import ModeloError, ModeloExportError
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._work_unit import WorkUnit
+from ...domain.period import (
+    PeriodValidationError,
+    parse_canonical_period,
+    period_end_date,
+    period_start_date,
+)
 from ..filing import (
     approve_draft,
     build_draft,
@@ -52,9 +59,27 @@ from ._actions import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     WorkUnitNotFoundError,
+    _emit_bucket_event,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+#: AEAT-assigned program-identifier code stamped into the optional
+#: ``program_version`` export header. AEAT requires a 4-character
+#: software code on the fichero-BOE envelope; this is the single
+#: sourced value the export path emits. It is intentionally distinct
+#: from the package ``__version__`` — AEAT program codes are assigned
+#: per submission tool, not per release.
+_PROGRAM_VERSION_CODE = "A001"
+
+#: Plain (non-amendment) declaration type. AEAT fichero-BOE layouts
+#: encode an ordinary autoliquidación as type ``"I"``; complementarias
+#: and sustitutivas carry their own marker headers alongside.
+_DECLARATION_TYPE_ORDINARY = "I"
+
+#: Canonical user-profile fact paths for the operator's legal name.
+_PROFILE_SURNAMES_PATH = "identity.surnames"
+_PROFILE_NAME_PATH = "identity.name"
 
 
 class ModeloExportCrossBucketRefusedError(ModeloError):
@@ -166,6 +191,148 @@ def _load_revision_for_export(
     return revision
 
 
+def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
+    """Return ``(surnames, name)`` from the active bucket's persisted profile.
+
+    The operator's legal name is not carried on the deadline-engine
+    :class:`AutonomoProfile` (which holds only ``tax_id``); it lives in
+    the schema-driven user-profile fact catalogue under the canonical
+    ``identity.surnames`` / ``identity.name`` paths. Export needs both
+    because every modelo fichero-BOE envelope declares ``surnames`` and
+    ``name`` as required header fields.
+
+    Raises:
+        ModeloExportError: When the active bucket has no persisted
+            profile, or the profile omits either name fact. The export
+            cannot fabricate a placeholder name — the operator must
+            populate the profile first.
+    """
+
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError as exc:
+        raise ModeloExportError(
+            f"export needs the operator name from the active profile bucket "
+            f"{bucket_id!r}, but no profile is persisted; run "
+            f"`aeat config profile` to populate identity.surnames and identity.name"
+        ) from exc
+    facts = record_to_path_values(record)
+    surnames = (facts.get(_PROFILE_SURNAMES_PATH) or "").strip()
+    name = (facts.get(_PROFILE_NAME_PATH) or "").strip()
+    missing = [
+        path
+        for path, value in ((_PROFILE_SURNAMES_PATH, surnames), (_PROFILE_NAME_PATH, name))
+        if not value
+    ]
+    if missing:
+        raise ModeloExportError(
+            f"export requires the operator name on the active profile, but "
+            f"profile fact(s) {', '.join(missing)} are not set; populate them via "
+            f"`aeat config profile` before exporting a modelo declaration"
+        )
+    return surnames, name
+
+
+def _ddmmaaaa(value: date) -> str:
+    """Render a date as the AEAT ``ddmmaaaa`` fixed-width header token."""
+
+    return f"{value.day:02d}{value.month:02d}{value.year:04d}"
+
+
+def _compose_export_headers(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: AutonomoProfile,
+    filing_year: int,
+    registry_period: str,
+) -> dict[str, str]:
+    """Compose the full fichero-BOE export header dict for a revision.
+
+    Supplies every header key the modelo export layouts may declare as
+    required (``declaration_type``, ``surnames``, ``name``,
+    ``fecha_inicio_periodo``, ``fecha_fin_periodo``) plus the optional
+    keys export can source cleanly (``tax_id``, ``presenter_nif``,
+    ``program_version``, ``devengo_start_date``, and the complementaria
+    triple when the revision is an amendment).
+
+    ``_header_field_value`` only raises when a key is both declared
+    ``required`` by the layout and missing, so over-supplying optional
+    keys is safe — the renderer ignores headers a layout never reads.
+    """
+
+    surnames, name = _operator_name_facts(work_unit.bucket_id)
+    period_start = period_start_date(filing_year, registry_period)
+    period_end = period_end_date(filing_year, registry_period)
+    tax_id = str(workflow_profile.tax_id)
+
+    # A complementaria / sustitutiva still files as declaration type
+    # "I" in the fichero-BOE envelope; the amendment is signalled by
+    # the dedicated ``complementaria`` marker header, not by a distinct
+    # declaration_type code.
+    headers: dict[str, str] = {
+        "declaration_type": _DECLARATION_TYPE_ORDINARY,
+        "surnames": surnames,
+        "name": name,
+        "fecha_inicio_periodo": _ddmmaaaa(period_start),
+        "fecha_fin_periodo": _ddmmaaaa(period_end),
+        "devengo_start_date": _ddmmaaaa(period_start),
+        "tax_id": tax_id,
+        "presenter_nif": tax_id,
+        "program_version": _PROGRAM_VERSION_CODE,
+    }
+
+    if revision.amendment_kind is not None:
+        headers["complementaria"] = (
+            "true" if revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA else "false"
+        )
+        headers["complementaria_page"] = headers["complementaria"]
+        if revision.amends_filing_record_id is not None:
+            headers["justificante_anterior"] = revision.amends_filing_record_id
+            headers["previous_justificante"] = revision.amends_filing_record_id
+
+    return headers
+
+
+def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
+    """Return ``(filing_year, registry_period, canonical_period)`` for export.
+
+    Work units persist either the registry-native period token
+    (``"4T"``, ``"0A"``, ``"03"``) or an already-canonical token
+    (``"2026Q1"``, ``"2026-03"``, ``"2026A"``). The two downstream
+    consumers want different shapes: ``build_runtime_schema_provider``
+    resolves the registry snapshot by the registry-native period,
+    while ``build_draft`` parses a canonical token. This helper
+    normalises whichever shape the work unit carries into both.
+
+    Raises:
+        ModeloExportError: When the work unit's period token cannot
+            be mapped to a registry period.
+    """
+
+    period = work_unit.period
+    if len(period) == 2 and period.endswith("T") and period[0].isdigit():
+        canonical = f"{work_unit.filing_year}Q{period[0]}"
+    elif period == "0A":
+        canonical = f"{work_unit.filing_year}A"
+    elif len(period) == 2 and period.isdigit():
+        canonical = f"{work_unit.filing_year}-{period}"
+    else:
+        canonical = period
+    try:
+        filing_year, registry_period = parse_canonical_period(canonical)
+    except PeriodValidationError as exc:
+        raise ModeloExportError(
+            f"work unit {work_unit.work_unit_id!r} carries period {period!r} "
+            f"which cannot be mapped to a registry filing period: {exc}",
+        ) from exc
+    return filing_year, registry_period, canonical
+
+
 def export_modelo_revision(
     command: ModeloExportCommand,
     *,
@@ -214,9 +381,10 @@ def export_modelo_revision(
         )
 
     now = clock or datetime.now(UTC)
+    filing_year, registry_period, canonical_period = _resolve_export_period(work_unit)
     schema_provider = build_runtime_schema_provider(
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        filing_year=filing_year,
+        period=registry_period,
         modelos=(work_unit.modelo,),
     )
     inputs: dict[str, object] = {
@@ -227,7 +395,7 @@ def export_modelo_revision(
     try:
         draft = build_draft(
             modelo=work_unit.modelo,
-            period=work_unit.period,
+            period=canonical_period,
             profile=filing_profile_from_autonomo(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
@@ -239,7 +407,7 @@ def export_modelo_revision(
             schema_provider=schema_provider,
             approved_at=now,
         )
-    except (ModeloExportError, ModeloExportValidationError) as exc:
+    except FilingDraftExportError as exc:
         raise ModeloExportError(
             f"could not approve draft for calculation_revision_id="
             f"{command.calculation_revision_id!r}: {exc}",
@@ -250,11 +418,17 @@ def export_modelo_revision(
     # operator-visible output path after the event commits. A crash
     # between the file write and the event persistence leaves only the
     # .tmp file, which carries no provenance and is safe to discard.
-    headers = {"tax_id": str(workflow_profile.tax_id)}
+    headers = _compose_export_headers(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=workflow_profile,
+        filing_year=filing_year,
+        registry_period=registry_period,
+    )
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
         receipt = export_draft(approved, output_path=tmp_output, headers=headers)
-    except (ModeloExportError, ModeloExportValidationError) as exc:
+    except FilingDraftExportError as exc:
         if tmp_output.exists():
             tmp_output.unlink()
         raise ModeloExportError(
@@ -262,6 +436,16 @@ def export_modelo_revision(
             f"to {command.output_path!s}: {exc}",
         ) from exc
 
+    # Route through the shared ``_emit_bucket_event`` helper every
+    # other modelo service uses rather than re-implementing the
+    # derive / append / save sequence inline. The helper performs a
+    # single-catalogue ``save_many`` write (via
+    # ``BucketEventHistoryRepository.save``), which is exactly what
+    # export needs — there is no second write to bundle, so the W83
+    # multi-write co-transactional pattern does not apply here. The
+    # atomic-rename ordering is preserved: the event commits inside
+    # the helper before ``tmp_output.replace`` runs, and a failure in
+    # the helper unwinds the .tmp file before propagating.
     event_payload = {
         "calculation_revision_id": command.calculation_revision_id,
         "work_unit_id": work_unit.work_unit_id,
@@ -273,31 +457,17 @@ def export_modelo_revision(
         "filing_year": str(work_unit.filing_year),
         "period": work_unit.period,
     }
-    event_id = derive_bucket_event_id(
-        bucket_id=work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_EXPORTED,
-        occurred_at=now,
-        actor=command.actor,
-        object_type=BucketEventObjectType.CALCULATION_REVISION,
-        object_id=command.calculation_revision_id,
-        payload=event_payload,
-    )
-    next_catalogue = append_bucket_event(
-        bv_repo.load(),
-        BucketEvent(
-            event_id=event_id,
+    try:
+        event = _emit_bucket_event(
+            repository=bv_repo,
             bucket_id=work_unit.bucket_id,
             event_type=BucketEventType.MODELO_EXPORTED,
             occurred_at=now,
             actor=command.actor,
             object_type=BucketEventObjectType.CALCULATION_REVISION,
             object_id=command.calculation_revision_id,
-            payload_version=1,
             payload=event_payload,
-        ),
-    )
-    try:
-        SecureObjectRepository().save_many((bv_repo.to_secure_object_write(next_catalogue),))
+        )
     except Exception:
         if tmp_output.exists():
             tmp_output.unlink()
@@ -317,7 +487,7 @@ def export_modelo_revision(
         format=receipt.format.value,
         exported_at=now,
         actor=command.actor,
-        bucket_event_id=event_id,
+        bucket_event_id=event.event_id,
     )
 
 
