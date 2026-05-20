@@ -92,17 +92,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.setup_reset.SetupResetUnconfirmedError",
-        ErrorCode(
-            code="REFUSED_SETUP_RESET_UNCONFIRMED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_setup_reset_unconfirmed",
-            default_suggestion="aeat config reset --scope all --yes",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.topics.TopicNotFoundError",
         ErrorCode(
             code="REFUSED_TOPIC_NOT_FOUND",

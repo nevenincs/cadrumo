@@ -47,4 +47,3 @@ Submodules
    aeat.application.config_reset
    aeat.application.diagnostics
    aeat.application.repair_integrity
-   aeat.application.setup_reset
