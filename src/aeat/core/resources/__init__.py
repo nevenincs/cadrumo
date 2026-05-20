@@ -5,10 +5,10 @@ Exposes:
 * The bundled-data boundary (``packaged_data``, ``bundled_path``,
   ``as_path``) inherited from the corpus-registry-packaging
   feature.
-* The typed Repository surface (``Repository``,
+* The typed repository surface (``ResourceCacheRepository``,
   ``ResourceRepository``) for read-only bundled resources.
 * The :func:`resources` factory and :class:`ResourceRegistry`
-  aggregate that holds every Repository.
+  aggregate that holds every repository.
 * The typed error hierarchy (``ResourceLoadError`` and its three
   top-level subclasses).
 
@@ -30,11 +30,11 @@ from ._errors import (
 )
 from ._keys import TypedResourceKey
 from ._registry import ResourceRegistry, resources
-from ._repository import Repository, ResourceRepository
+from ._repository import ResourceCacheRepository, ResourceRepository
 
 __all__ = [
-    "Repository",
     "ResourceBackendError",
+    "ResourceCacheRepository",
     "ResourceLoadError",
     "ResourceNotFoundError",
     "ResourceRegistry",

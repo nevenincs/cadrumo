@@ -6,7 +6,7 @@ Re-exports the engine factory (:func:`create_engine_from_settings`,
 (:func:`get_sessionmaker`, :func:`session_scope`), public pydantic record models
 (:class:`ModeloCatalogueRecord`, :class:`PortalRecord`, :class:`PortalAuthMethod`,
 :class:`CorpusArtifactRecord`), and the per-domain repositories
-(:class:`Repository`, :class:`ModeloRepository`, :class:`PortalRepository`,
+(:class:`SqlRecordRepository`, :class:`ModeloRepository`, :class:`PortalRepository`,
 :class:`CorpusArtifactRepository`).
 
 Schema is materialised from the ORM metadata on first engine access; the
@@ -21,7 +21,7 @@ from .repository import (
     CorpusArtifactRepository,
     ModeloRepository,
     PortalRepository,
-    Repository,
+    SqlRecordRepository,
 )
 from .secure_objects import SecureObjectMetadata, SecureObjectRecord, SecureObjectRepository, SecureObjectWrite
 from .session import get_sessionmaker, session_scope
@@ -34,11 +34,11 @@ __all__ = [
     "PortalAuthMethod",
     "PortalRecord",
     "PortalRepository",
-    "Repository",
     "SecureObjectMetadata",
     "SecureObjectRecord",
     "SecureObjectRepository",
     "SecureObjectWrite",
+    "SqlRecordRepository",
     "create_engine_from_settings",
     "dispose_engine",
     "get_engine",

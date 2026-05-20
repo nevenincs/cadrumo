@@ -6,8 +6,8 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.core.resources import (
-    Repository,
     ResourceBackendError,
+    ResourceCacheRepository,
     ResourceLoadError,
     ResourceNotFoundError,
     ResourceRegistry,
@@ -57,8 +57,8 @@ class _DummyKey(TypedResourceKey):
     name: str
 
 
-class _DummyRepository(Repository[str, _DummyKey]):
-    """A minimal Repository subclass that returns the key's name uppercased."""
+class _DummyRepository(ResourceCacheRepository[str, _DummyKey]):
+    """A minimal ResourceCacheRepository subclass returning the key's name uppercased."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -136,7 +136,7 @@ def test_error_hierarchy_subclasses_resource_load_error() -> None:
 
 
 def test_resource_repository_protocol_recognises_default_base() -> None:
-    """A :class:`Repository` subclass satisfies the :class:`ResourceRepository` protocol."""
+    """A :class:`ResourceCacheRepository` subclass satisfies the :class:`ResourceRepository` protocol."""
 
     repo = _DummyRepository()
 
@@ -151,9 +151,9 @@ def test_registry_clear_tolerates_empty_dataclass() -> None:
 
 
 def test_unimplemented_repository_get_raises_not_implemented_error() -> None:
-    """A Repository that forgets to override _load raises on first get."""
+    """A ResourceCacheRepository that forgets to override _load raises on first get."""
 
-    class _MissingRepo(Repository[str, _DummyKey]):
+    class _MissingRepo(ResourceCacheRepository[str, _DummyKey]):
         pass
 
     with pytest.raises(NotImplementedError):

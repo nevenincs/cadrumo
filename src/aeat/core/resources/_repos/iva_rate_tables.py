@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from .._repository import Repository
+from .._repository import ResourceCacheRepository
 
 
-class IvaRateTableRepository(Repository[object, type(None)]):
+class IvaRateTableRepository(ResourceCacheRepository[object, type(None)]):
     """Singleton-keyed repository for the bundled IVA rate table.
 
     Wraps :func:`aeat.domain.iva._rates.load_iva_rate_table`.

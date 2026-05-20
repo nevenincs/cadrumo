@@ -14,14 +14,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .._errors import ResourceNotFoundError
-from .._repository import Repository
+from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
     from ....domain.calculations.registry import ValidatedRegistryAuthority
     from ....domain.calculations.registry._schema import ModeloDefinition
 
 
-class StaticModeloRepository(Repository["ModeloDefinition", str]):
+class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
     """Modelo definitions keyed by their typed id (``"100"``, ``"180"``, …).
 
     Wraps :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`.

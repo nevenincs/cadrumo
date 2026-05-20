@@ -1,9 +1,9 @@
-"""Repository[T, K] base for the resource-management API.
+"""ResourceCacheRepository[T, K] base for the resource-management API.
 
 Every read-only bundled-data resource in the project is exposed
-through one Repository instance. The Repository owns its loader
-and its Identity Map cache; consumers do not import loader
-functions directly.
+through one ResourceCacheRepository instance. The repository owns
+its loader and its Identity Map cache; consumers do not import
+loader functions directly.
 
 The base class implements the ``get(key)`` / ``clear_cache``
 contract on top of an unbounded ``dict[K, T]``. Subclasses
@@ -39,7 +39,7 @@ class ResourceRepository(Protocol, Generic[T, K]):  # noqa: UP046
         ...
 
 
-class Repository(Generic[T, K]):  # noqa: UP046
+class ResourceCacheRepository(Generic[T, K]):  # noqa: UP046
     """Default Repository implementation with an Identity Map cache.
 
     Subclasses override :meth:`_load` to read and validate one

@@ -47,7 +47,7 @@ def _flush_or_wrap(session: Session, kind: str) -> None:
         raise RepositoryError(f"integrity violation during {kind} operation: {exc.orig}") from exc
 
 
-class Repository[RecordT](ABC):
+class SqlRecordRepository[RecordT](ABC):
     """Abstract base class for every typed record repository.
 
     Subclasses own a single SQLAlchemy mapper class and are responsible for
@@ -104,7 +104,7 @@ class Repository[RecordT](ABC):
         """
 
 
-class ModeloRepository(Repository[ModeloCatalogueRecord]):
+class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
     """Repository for :class:`ModeloCatalogueRecord`."""
 
     def list_all(self) -> list[ModeloCatalogueRecord]:
@@ -156,7 +156,7 @@ class ModeloRepository(Repository[ModeloCatalogueRecord]):
         return ModeloCatalogueRecord(id=row.id, identifier=row.identifier, name=row.name)
 
 
-class PortalRepository(Repository[PortalRecord]):
+class PortalRepository(SqlRecordRepository[PortalRecord]):
     """Repository for :class:`PortalRecord`."""
 
     def list_all(self) -> list[PortalRecord]:
@@ -230,7 +230,7 @@ class PortalRepository(Repository[PortalRecord]):
         )
 
 
-class CorpusArtifactRepository(Repository[CorpusArtifactRecord]):
+class CorpusArtifactRepository(SqlRecordRepository[CorpusArtifactRecord]):
     """Repository for :class:`CorpusArtifactRecord`."""
 
     def list_all(self) -> list[CorpusArtifactRecord]:
