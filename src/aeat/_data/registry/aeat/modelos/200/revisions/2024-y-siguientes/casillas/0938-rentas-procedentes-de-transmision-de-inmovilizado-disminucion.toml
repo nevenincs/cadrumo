@@ -4,6 +4,7 @@ number = "03316"
 label = "Rentas procedentes de transmisión de inmovilizado obtenidas por las Autoridades Portuarias (DA 68ª Ley 6/2018) - Disminución - Correcciones del ejercicio - Permanentes [03316]"
 section = ["rentas_procedentes_de_transmision_de_inmovilizado", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-03316"]

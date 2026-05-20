@@ -4,6 +4,7 @@ number = "00478"
 label = "Estado de cambios patrimonio neto (II) - Ingresos y gastos reconocidos en patrimonio neto - Ingresos fiscales a distribuir en varios ejercicios - Capital - Escriturado [00478]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-010-casilla-00478", "modelo-200-page-042-casilla-00478"]

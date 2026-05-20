@@ -4,6 +4,7 @@ number = "02311"
 label = "Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Gastos que sean objeto de la deducción por inversiones realizadas por las autoridades portuarias (art. 15 n) LIS) - Aument..."
 section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
+semantic_role = "is_liquidacion_i_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-012-casilla-02311"]

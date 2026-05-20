@@ -4,6 +4,7 @@ number = "01614"
 label = "Deducciones inversión Canarias - Activos fijos 2024 - Deducción pendiente/generada [01614]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2024"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016b-casilla-01614"]

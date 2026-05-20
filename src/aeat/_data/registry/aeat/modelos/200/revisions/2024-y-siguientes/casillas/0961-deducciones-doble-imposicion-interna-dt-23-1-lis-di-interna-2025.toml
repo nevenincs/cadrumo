@@ -4,6 +4,7 @@ number = "03411"
 label = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2025(*) - Deducción pendiente [03411]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2025"]
 data_type = "money"
+semantic_role = "is_deduccion_di_interna_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015b-casilla-03411"]

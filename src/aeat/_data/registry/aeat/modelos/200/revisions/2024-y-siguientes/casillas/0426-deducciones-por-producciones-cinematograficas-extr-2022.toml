@@ -4,6 +4,7 @@ number = "01309"
 label = "Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022) - Deducción pendiente/generada [01309]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
 data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-01309"]

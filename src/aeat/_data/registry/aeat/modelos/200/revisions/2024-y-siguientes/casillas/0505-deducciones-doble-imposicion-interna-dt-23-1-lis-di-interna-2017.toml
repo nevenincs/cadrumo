@@ -4,6 +4,7 @@ number = "01595"
 label = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2017 - Deducción pendiente [01595]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2017"]
 data_type = "money"
+semantic_role = "is_deduccion_di_interna_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015b-casilla-01595"]

@@ -4,6 +4,7 @@ number = "00083"
 label = "Tipo gravamen reducido para empresa emergente [00083]"
 section = ["tipo_gravamen_reducido_para_empresa_emergente"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00083", "modelo-200-page-014b-casilla-00083"]

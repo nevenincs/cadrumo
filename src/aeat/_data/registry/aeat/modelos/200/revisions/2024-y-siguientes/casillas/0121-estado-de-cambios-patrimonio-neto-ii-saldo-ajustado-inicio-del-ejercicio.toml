@@ -4,6 +4,7 @@ number = "00422"
 label = "Estado de cambios patrimonio neto (II) - Saldo ajustado, inicio del ejercicio - Capital - Escriturado [00422]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_ajustado_inicio_del_ejercicio"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-010-casilla-00422", "modelo-200-page-018c-casilla-00422", "modelo-200-page-043-casilla-00422"]

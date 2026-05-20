@@ -4,6 +4,7 @@ number = "00005"
 label = "Comunidades titulares de montes vecinales en mano común [00005]"
 section = ["comunidades_titulares_de_montes_vecinales_en_mano"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00005", "modelo-200-page-012-casilla-00005"]

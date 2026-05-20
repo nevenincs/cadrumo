@@ -4,6 +4,7 @@ number = "02309"
 label = "Detalle correcciones resultado pérdidas y ganancias - Saldo pendiente de correcciones temporarias a fin de ejercicio - Aumentos futuros [02309]"
 section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "saldo_pendiente_de_correcciones_temporarias_a_fin"]
 data_type = "money"
+semantic_role = "is_correcciones_temporarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020b-casilla-02309", "modelo-200-page-026g-casilla-02309"]

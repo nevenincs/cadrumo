@@ -4,6 +4,7 @@ number = "02606"
 label = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3 c) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02606]"
 section = ["libertad_de_amortizacion_de_gastos_de_investigacio", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02606"]

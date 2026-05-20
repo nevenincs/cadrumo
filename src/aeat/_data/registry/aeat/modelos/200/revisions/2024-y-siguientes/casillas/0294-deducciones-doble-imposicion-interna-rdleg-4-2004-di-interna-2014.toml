@@ -4,6 +4,7 @@ number = "00920"
 label = "Deducciones doble imposición interna RDLeg. 4/2004 - DI interna 2014 - Tipo gravamen período generación [00920]"
 section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2014"]
 data_type = "decimal"
+semantic_role = "is_deduccion_di_interna_rdleg_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015b-casilla-00920"]

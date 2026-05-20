@@ -4,6 +4,7 @@ number = "03151"
 label = "Minería e hidrocarburos: factor agotamiento (arts. 91 y 95 LIS) - Aumento - Correcciones del ejercicio - Permanentes [03151]"
 section = ["mineria_e_hidrocarburos_factor_agotamiento_arts_91", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03151"]

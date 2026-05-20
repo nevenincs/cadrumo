@@ -4,6 +4,7 @@ number = "02782"
 label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024 - Importe reserva dotada [02782]"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020b-casilla-02782"]

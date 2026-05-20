@@ -4,6 +4,7 @@ number = "00001"
 label = "Entidad sin ánimo de lucro acogida régimen fiscal Título II Ley 49/2002 [00001]"
 section = ["entidad_sin_animo_de_lucro_acogida_regimen_fiscal"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00001", "modelo-200-page-015b-casilla-00001"]

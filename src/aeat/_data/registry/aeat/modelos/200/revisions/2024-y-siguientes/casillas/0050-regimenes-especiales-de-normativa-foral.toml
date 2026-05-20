@@ -4,6 +4,7 @@ number = "00049"
 label = "Regímenes especiales de normativa foral [00049]"
 section = ["regimenes_especiales_de_normativa_foral"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00049"]

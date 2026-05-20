@@ -4,6 +4,7 @@ number = "00024"
 label = "Entidad de crédito [00024]"
 section = ["entidad_de_credito"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00024", "modelo-200-page-022-casilla-00024"]

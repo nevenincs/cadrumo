@@ -4,6 +4,7 @@ number = "00043"
 label = "Obligación información DT 5ª RIS [00043]"
 section = ["obligacion_informacion_dt_5a_ris"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00043"]

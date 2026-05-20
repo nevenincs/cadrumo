@@ -4,6 +4,7 @@ number = "03630"
 label = "Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2025 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [03630]"
 section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2025"]
 data_type = "money"
+semantic_role = "is_reserva_inversiones_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022-casilla-03630"]

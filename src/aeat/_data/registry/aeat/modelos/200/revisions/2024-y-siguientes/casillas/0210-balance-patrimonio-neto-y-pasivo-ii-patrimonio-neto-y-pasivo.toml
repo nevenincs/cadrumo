@@ -4,6 +4,7 @@ number = "00703"
 label = "Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Provisiones por derechos emisión de gases de efecto invernadero [00703]"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-006-casilla-00703", "modelo-200-page-015b-casilla-00703"]

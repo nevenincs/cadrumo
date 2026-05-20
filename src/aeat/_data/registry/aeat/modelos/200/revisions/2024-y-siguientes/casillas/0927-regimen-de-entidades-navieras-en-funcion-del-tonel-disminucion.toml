@@ -4,6 +4,7 @@ number = "03256"
 label = "Régimen de entidades navieras en función del tonelaje (capítulo XVI del título VII LIS) - Disminución - Correcciones del ejercicio - Permanentes [03256]"
 section = ["regimen_de_entidades_navieras_en_funcion_del_tonel", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-03256"]

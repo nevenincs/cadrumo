@@ -4,6 +4,7 @@ number = "00592"
 label = "Cuota liquida"
 section = ["liquidacion", "cuota_liquida"]
 data_type = "money"
+semantic_role = "is_cuota_liquida"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-010-casilla-00592", "modelo-200-page-014b-casilla-00592", "modelo-200-page-043-casilla-00592"]

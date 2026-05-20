@@ -4,6 +4,7 @@ number = "02596"
 label = "Amortización de inmovilizado afecto a actividades de investigación y desarrollo (art. 12.3 b) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02596]"
 section = ["amortizacion_de_inmovilizado_afecto_a_actividades", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02596"]

@@ -4,6 +4,7 @@ number = "00008"
 label = "Sociedad de inversión de capital variable que no cumpla los requisitos del art. 29.4 a) LIS [00008]"
 section = ["sociedad_de_inversion_de_capital_variable_que_no_c"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00008"]

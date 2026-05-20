@@ -4,6 +4,7 @@ number = "00801"
 label = "Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [00801]"
 section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "disminucion"]
 data_type = "money"
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-00801"]

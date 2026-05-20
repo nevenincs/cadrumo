@@ -4,6 +4,7 @@ number = "01050"
 label = "Deducciones doble imposición internacional LIS - DI internacional 2015 - Tipo gravamen período generación [01050]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2015"]
 data_type = "decimal"
+semantic_role = "is_deduccion_di_internacional_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016-casilla-01050"]

@@ -4,6 +4,7 @@ number = "01240"
 label = "Limitación deducibilidad gastos financieros - Límite art. 16.5 y/o 83 LIS - a) Gastos financieros del período impositivo derivados de deudas por adquisición de particip. afectados por el art. 16.5 ..."
 section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_5_y_o_83_lis"]
 data_type = "money"
+semantic_role = "is_gastos_financieros_limitacion_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020-casilla-01240"]

@@ -4,6 +4,7 @@ number = "03376"
 label = "Correcciones específicas de entidades sometidas a la normativa foral - Disminución - Correcciones del ejercicio - Permanentes [03376]"
 section = ["correcciones_especificas_de_entidades_sometidas_a", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026g-casilla-03376"]

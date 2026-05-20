@@ -4,6 +4,7 @@ number = "01683"
 label = "Deducc. para incentivar determ.actividades - 2026(****) Otras deducciones relativas a programas de apoyo a acontecimientos de excepcional interés público - Deducción pendiente/generada [01683]"
 section = ["deducc_para_incentivar_determ_actividades", "2026_otras_deducciones_relativas_a_programas_de_ap"]
 data_type = "money"
+semantic_role = "is_deduccion_idi_otras"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-01683"]

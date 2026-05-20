@@ -4,6 +4,7 @@ number = "00712"
 label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondo de reserva obligatorio de cooperativas [00712]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-005-casilla-00712", "modelo-200-page-016b-casilla-00712"]

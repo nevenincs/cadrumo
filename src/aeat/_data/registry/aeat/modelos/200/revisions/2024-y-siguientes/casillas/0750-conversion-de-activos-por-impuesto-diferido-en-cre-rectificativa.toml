@@ -4,6 +4,7 @@ number = "02490"
 label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de conversión de AID tras regularización: Compensaci..."
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
 data_type = "money"
+semantic_role = "is_conversion_aid_rectificativa"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015-casilla-02490", "modelo-200-did-casilla-02490"]

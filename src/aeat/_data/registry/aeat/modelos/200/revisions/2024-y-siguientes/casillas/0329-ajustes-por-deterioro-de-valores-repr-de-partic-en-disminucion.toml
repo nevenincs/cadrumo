@@ -4,6 +4,7 @@ number = "01009"
 label = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS) - Disminución - Saldo pendiente a principio de ejercicio [01009]"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026c-casilla-01009"]

@@ -4,6 +4,7 @@ number = "01767"
 label = "Rég. cooperativas - Detalle compensación cuotas. 2017 Pendiente aplicación al principio del periodo [01767]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2017_pendiente_aplicac"]
 data_type = "money"
+semantic_role = "is_cooperativa_compensacion_cuotas"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022-casilla-01767"]

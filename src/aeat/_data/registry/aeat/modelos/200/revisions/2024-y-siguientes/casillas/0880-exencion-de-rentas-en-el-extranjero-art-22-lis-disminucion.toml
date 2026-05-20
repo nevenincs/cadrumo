@@ -4,6 +4,7 @@ number = "03026"
 label = "Exención de rentas en el extranjero (art. 22 LIS) - Disminución - Correcciones del ejercicio - Permanentes [03026]"
 section = ["exencion_de_rentas_en_el_extranjero_art_22_lis", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03026"]

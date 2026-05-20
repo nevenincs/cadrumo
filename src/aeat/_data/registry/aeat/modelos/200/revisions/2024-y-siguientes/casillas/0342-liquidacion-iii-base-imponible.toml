@@ -4,6 +4,7 @@ number = "01032"
 label = "Liquidación III - Base imponible - Reserva de capitalización [01032]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
+semantic_role = "is_base_imponible"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014-casilla-01032", "modelo-200-page-020b-casilla-01032"]

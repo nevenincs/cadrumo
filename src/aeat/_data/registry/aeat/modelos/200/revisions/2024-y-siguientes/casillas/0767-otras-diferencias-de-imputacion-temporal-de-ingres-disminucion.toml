@@ -4,6 +4,7 @@ number = "02556"
 label = "Otras diferencias de imputación temporal de ingresos y gastos (art. 11 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02556]"
 section = ["otras_diferencias_de_imputacion_temporal_de_ingres", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02556"]

@@ -4,6 +4,7 @@ number = "02646"
 label = "Libertad de amortización sin mantenimiento de empleo (RDL 13/2010 y DT 13ª.2 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02646]"
 section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02646"]

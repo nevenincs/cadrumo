@@ -4,6 +4,7 @@ number = "02976"
 label = "Exención sobre dividendos o participaciones en beneficios de entidades no residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [02976]"
 section = ["exencion_sobre_dividendos_o_participaciones_en_ben", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026d-casilla-02976"]

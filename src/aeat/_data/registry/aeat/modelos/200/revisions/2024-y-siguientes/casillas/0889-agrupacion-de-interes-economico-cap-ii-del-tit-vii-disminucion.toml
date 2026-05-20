@@ -4,6 +4,7 @@ number = "03076"
 label = "Agrupación de interés económico (Cap. II del Tít. VII LIS) - Disminución - Correcciones del ejercicio - Permanentes [03076]"
 section = ["agrupacion_de_interes_economico_cap_ii_del_tit_vii", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03076"]

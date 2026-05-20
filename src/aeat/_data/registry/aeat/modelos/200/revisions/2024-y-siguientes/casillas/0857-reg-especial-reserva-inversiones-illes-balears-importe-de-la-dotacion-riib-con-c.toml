@@ -4,6 +4,7 @@ number = "02918"
 label = "Rég. especial reserva inversiones Illes Balears - Importe de la dotación RIIB con cargo a beneficios de 2024 [02918]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "importe_de_la_dotacion_riib_con_cargo_a_beneficios"]
 data_type = "money"
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022b-casilla-02918"]
