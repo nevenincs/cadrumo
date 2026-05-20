@@ -55,8 +55,9 @@ class TestComputeRunId:
 class TestWorkflowStepValidation:
     """Strict pydantic validation on workflow step records."""
 
-    def test_details_dict_str_str_accepted(self) -> None:
-        """The single sanctioned ``dict[str, str]`` escape hatch works."""
+    def test_details_mapping_coerced_to_typed_record(self) -> None:
+        """A free-form mapping is coerced to the typed WorkflowStepDetails
+        record while keeping mapping-style read access."""
         now = datetime(2026, 4, 12, tzinfo=UTC)
         step = WorkflowStep(
             stage=WorkflowStage.LOADING_PROFILE,
@@ -66,22 +67,27 @@ class TestWorkflowStepValidation:
             summary="translation",
             details={"key": "value"},
         )
-        assert step.details == {"key": "value"}
+        assert step.details is not None
+        assert step.details["key"] == "value"
+        assert "key" in step.details
+        assert step.details.get("missing", "fallback") == "fallback"
 
-    def test_details_rejects_non_string_value(self) -> None:
-        """Strict validation rejects non-string values in the details dict."""
+    def test_details_carries_heterogeneous_values(self) -> None:
+        """WorkflowStepDetails carries diagnostic values heterogeneously
+        (``extra='allow'``); non-string values are stored, not rejected."""
         now = datetime(2026, 4, 12, tzinfo=UTC)
-        with pytest.raises(ValidationError, match=r"valid string"):
-            WorkflowStep.model_validate(
-                {
-                    "stage": WorkflowStage.LOADING_PROFILE,
-                    "started_at": now,
-                    "ended_at": now,
-                    "success": True,
-                    "summary": "translation",
-                    "details": {"key": 42},
-                }
-            )
+        step = WorkflowStep.model_validate(
+            {
+                "stage": WorkflowStage.LOADING_PROFILE,
+                "started_at": now,
+                "ended_at": now,
+                "success": True,
+                "summary": "translation",
+                "details": {"error_count": 42},
+            }
+        )
+        assert step.details is not None
+        assert step.details["error_count"] == 42
 
 
 class TestSiteHealthAlert:

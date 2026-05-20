@@ -15,7 +15,7 @@ import pytest
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
+from ...adapters.persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
 from ...core.config import Settings
 from ..auth._models import AuthState
 from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
@@ -25,6 +25,7 @@ from ._models import (
     WorkflowState,
 )
 from ._persistence import WorkflowStateRepository
+from ._profile_bucket_scan import list_profile_buckets
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -86,6 +87,7 @@ def _populated_workflow_state() -> WorkflowState:
 
 def test_workflow_state_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A populated WorkflowState saved through the repository loads back equal.
 
@@ -109,9 +111,10 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "workflow-state-roundtrip.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+        database_url = f"sqlite:///{db_path.as_posix()}"
+        monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
+        dispose_engine()
+        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
@@ -146,9 +149,13 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
             assert loaded_ledger.transaction_id == "transaction-2024-abc"
         finally:
             engine.dispose()
+            dispose_engine()
 
 
-def test_workflow_state_absent_load_returns_empty_state(tmp_path: Path) -> None:
+def test_workflow_state_absent_load_returns_empty_state(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The repository's empty-state fallback survives the boundary.
 
     When no row exists, ``load()`` must return a default
@@ -159,9 +166,10 @@ def test_workflow_state_absent_load_returns_empty_state(tmp_path: Path) -> None:
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "workflow-state-empty.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+        database_url = f"sqlite:///{db_path.as_posix()}"
+        monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
+        dispose_engine()
+        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
@@ -170,11 +178,11 @@ def test_workflow_state_absent_load_returns_empty_state(tmp_path: Path) -> None:
             loaded = repo.load()
 
             # Empty-default identity: no declarations, empty event tuple.
-            # (profiles is a computed property scanning tmp_path/buckets,
-            # which has none provisioned in this test, so it also reads
-            # as empty.)
-            assert loaded.profiles == {}
+            # Registered profiles are a filesystem-manifest scan, not a
+            # persisted field; no buckets are provisioned in this test.
+            assert list_profile_buckets(root=tmp_path) == {}
             assert loaded.declarations == {}
             assert loaded.bucket_events == ()
         finally:
             engine.dispose()
+            dispose_engine()
