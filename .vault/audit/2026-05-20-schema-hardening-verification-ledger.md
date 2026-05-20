@@ -322,3 +322,27 @@ revision modelos`, `c1563e2ff`, `c389b07bb`, `690ed3e6e`) - **not by
 this session's M100/M200 work**. They are pre-existing schema-hardening
 regressions, in scope for the campaign, tracked here as R10. The
 registry validation / drift / semantic-role tests all pass.
+
+### 2026-05-20 - R10 M303/M202 over-reach corrected
+
+The R10 relation-removal pass over-reached: while removing the
+malformed M130/M131 carry-forward relations (correct - those modelos'
+bindings are self-sufficient), it also removed the M303 and M202
+intra-modelo carry-forward relations on a pattern match, WITHOUT
+running the M303/M202-specific registry tests. The full registry suite
+then surfaced 3 `test_modelo_303_registry.py` failures: those tests
+assert the relation requirement resolves - the M303 relation is
+genuinely used, not redundant.
+
+Correction: the M303 relation and the 9 M202 relation/dependency
+fragments were restored to their pre-R10 state. The real fix for the
+self-referencing-relation contract violation is Option A, not removal:
+a `previous_period` relation models legitimate intra-modelo
+prior-period carry-forward. The cross-dependency contract was updated
+to accept `kind == "previous_period"` in three places (the hierarchy
+self-reference check, the formula-consumption `required` set, and the
+`direct_calculation` role contract). 104 targeted registry tests pass.
+
+Lesson logged: a relation-removal "same structural violation" pattern
+match must be validated against each modelo's own test suite before
+being applied - structural similarity does not imply redundancy.
