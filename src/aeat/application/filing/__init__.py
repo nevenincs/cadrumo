@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
+from ...core._time import utc_now
 from ...core.errors import BaseSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import (
@@ -448,11 +449,6 @@ def iter_findings(
     for finding in draft.findings:
         if _SEVERITY_RANK[finding.severity] >= threshold:
             yield finding
-
-
-def utc_now() -> datetime:
-    """Return the current UTC time, used by tests for determinism hooks."""
-    return datetime.now(tz=UTC)
 
 
 __all__ = [

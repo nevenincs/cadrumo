@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
@@ -11,6 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
+from ....core._toml import freeze_toml, read_toml
 from ._errors import RegistryLoadError
 from ._schema import (
     LegalParameter,
@@ -90,28 +90,6 @@ class ModeloSource:
     revision_sources: tuple[ModeloRevisionSource, ...] = ()
 
 
-def _read_toml(path: Path) -> dict[str, object]:
-    try:
-        with path.open("rb") as fh:
-            return tomllib.load(fh)
-    except tomllib.TOMLDecodeError as exc:
-        raise RegistryLoadError(f"{path}: invalid TOML: {exc}") from exc
-    except OSError as exc:
-        raise RegistryLoadError(f"{path}: cannot read TOML: {exc}") from exc
-
-
-def _freeze_toml_value(value: object) -> object:
-    if isinstance(value, list):
-        return tuple(_freeze_toml_value(item) for item in value)
-    if isinstance(value, dict):
-        return {key: _freeze_toml_value(item) for key, item in value.items()}
-    return value
-
-
-def _freeze_toml(data: dict[str, object]) -> dict[str, object]:
-    return {key: _freeze_toml_value(value) for key, value in data.items()}
-
-
 def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:
     forbidden = {"source", "sources", "legal", "legal_refs_catalogue"}
     present = sorted(forbidden.intersection(data))
@@ -131,7 +109,7 @@ def load_modelo_file(path: Path) -> ModeloDefinition:
 def _load_modelo_file_cached(path: str, byte_count: int, modified_ns: int) -> ModeloDefinition:
     del byte_count, modified_ns
     source_path = Path(path)
-    data = _freeze_toml(_read_toml(source_path))
+    data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
     return _build_modelo_definition_from_data(source_path, data)
 
 
@@ -233,7 +211,7 @@ def _load_modelo_directory_cached(
 def _load_modelo_manifest(resolved: Path) -> dict[str, object]:
     """Load the directory-mode manifest.toml and reject inlined [revisions]."""
     manifest_path = resolved / "manifest.toml"
-    manifest_data = _freeze_toml(_read_toml(manifest_path))
+    manifest_data = freeze_toml(read_toml(manifest_path, error_factory=RegistryLoadError))
     if "revisions" in manifest_data:
         raise RegistryLoadError(
             f"{manifest_path}: directory-mode manifest must not declare [revisions]; "
@@ -265,7 +243,7 @@ def _load_modelo_revisions(resolved: Path) -> dict[str, object]:
 
 def _merge_revision_file(path: Path, merged_revisions: dict[str, object]) -> None:
     """Validate one revisions/*.toml file and append its revisions into ``merged_revisions``."""
-    rev_data = _freeze_toml(_read_toml(path))
+    rev_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
     _reject_local_catalogues(path, rev_data)
     if "modelo" in rev_data:
         raise RegistryLoadError(f"{path}: revision file must not declare [modelo]; that lives in manifest.toml")
@@ -302,7 +280,7 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
 
 def _merge_revision_fragment(path: Path, expected_revision_id: str, merged_revision: dict[str, object]) -> None:
     """Merge one fragment TOML into a single raw revision payload."""
-    fragment_data = _freeze_toml(_read_toml(path))
+    fragment_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
     _reject_local_catalogues(path, fragment_data)
     if "modelo" in fragment_data:
         raise RegistryLoadError(f"{path}: revision fragment must not declare [modelo]; that lives in manifest.toml")
@@ -507,7 +485,7 @@ def load_catalogue_file(path: Path) -> RegistryCatalogues:
 def _load_catalogue_file_cached(path: str, byte_count: int, modified_ns: int) -> RegistryCatalogues:
     del byte_count, modified_ns
     source_path = Path(path)
-    data = _freeze_toml(_read_toml(source_path))
+    data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
     legal = _validate_catalogue_section(
         source_path,
         raw=data.get("legal"),
@@ -668,7 +646,7 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
         return ()
     sources: list[ModeloRevisionSource] = []
     for path in sorted(revisions_dir.glob("*.toml")):
-        rev_data = _freeze_toml(_read_toml(path))
+        rev_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
         file_revisions = rev_data.get("revisions")
         if not isinstance(file_revisions, dict) or not file_revisions:
             raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")

@@ -2,36 +2,15 @@
 
 from __future__ import annotations
 
-import tomllib
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import ValidationError
 
+from ...core._toml import freeze_toml, read_toml
 from ...core.resources import bundled_path
 from ._errors import UserProfileSchemaLoadError
 from ._schema import ProfileSchemaDefinition
-
-def _read_toml(path: Path) -> dict[str, object]:
-    try:
-        with path.open("rb") as fh:
-            return tomllib.load(fh)
-    except tomllib.TOMLDecodeError as exc:
-        raise UserProfileSchemaLoadError(f"{path}: invalid TOML: {exc}") from exc
-    except OSError as exc:
-        raise UserProfileSchemaLoadError(f"{path}: cannot read TOML: {exc}") from exc
-
-
-def _freeze_toml_value(value: object) -> object:
-    if isinstance(value, list):
-        return tuple(_freeze_toml_value(item) for item in value)
-    if isinstance(value, dict):
-        return {key: _freeze_toml_value(item) for key, item in value.items()}
-    return value
-
-
-def _freeze_toml(data: dict[str, object]) -> dict[str, object]:
-    return {key: _freeze_toml_value(value) for key, value in data.items()}
 
 
 def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinition:
@@ -58,7 +37,7 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
 def _load_user_profile_schema_cached(path: str, byte_count: int, modified_ns: int) -> ProfileSchemaDefinition:
     del byte_count, modified_ns
     source_path = Path(path)
-    data = _freeze_toml(_read_toml(source_path))
+    data = freeze_toml(read_toml(source_path, error_factory=UserProfileSchemaLoadError))
     raw_schema = data.get("schema")
     if not isinstance(raw_schema, dict):
         raise UserProfileSchemaLoadError(f"{source_path}: missing [schema] table")

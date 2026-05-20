@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
@@ -13,6 +13,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ...core._time import utc_now
 from ._errors import UserProfileValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -75,12 +76,6 @@ class UserProfileStatus(StrEnum):
 
     ACTIVE = "active"
     TOMBSTONED = "tombstoned"
-
-
-def utc_now() -> datetime:
-    """Return a timezone-aware UTC timestamp."""
-
-    return datetime.now(tz=UTC)
 
 
 def new_profile_snapshot_id(profile_id: str, *, created_at: datetime | None = None) -> str:
