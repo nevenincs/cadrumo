@@ -41,7 +41,14 @@ _Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, 
 type ProfileFactValue = str | bool | int | Decimal | date | None
 
 
-_DECIMAL_STRING_RE = re.compile(r"^-?\d+(?:\.\d+)?$")
+# A JSON-encoded canonical Decimal never carries an insignificant leading
+# zero: ``Decimal`` normalises ``08001`` to ``8001`` and ``model_dump(mode=
+# "json")`` emits that normalised form. A multi-digit string whose integer
+# part starts with ``0`` (``08001``) is therefore never a round-tripped
+# Decimal — it is a zero-significant identifier such as a Spanish 5-digit
+# postcode, and must stay a ``str``. The integer-part alternative below
+# matches a lone ``0`` or any digit run that does not start with ``0``.
+_DECIMAL_STRING_RE = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?$")
 _DATE_STRING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
