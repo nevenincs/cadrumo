@@ -2631,6 +2631,8 @@ def _semantic_role_looks_like_typo(role: str, index: _SemanticRoleTypoIndex) -> 
                 continue
             if _semantic_roles_are_tax_domain_siblings(role, known):
                 continue
+            if _semantic_roles_are_axis_siblings(role, known):
+                continue
             matcher.set_seq2(known)
             if matcher.real_quick_ratio() < _SEMANTIC_ROLE_TYPO_RATIO:
                 continue
@@ -2658,6 +2660,39 @@ def _semantic_roles_are_tax_domain_siblings(left: str, right: str) -> bool:
         and left_parts[-1] in domain_suffixes
         and right_parts[-1] in domain_suffixes
     )
+
+
+_SEMANTIC_ROLE_AXIS_SUFFIXES: tuple[tuple[str, ...], ...] = (
+    ("permanente", "aumento"),
+    ("permanente", "disminucion"),
+    ("temporaria", "ejercicio", "aumento"),
+    ("temporaria", "ejercicio", "disminucion"),
+    ("temporaria", "anteriores", "aumento"),
+    ("temporaria", "anteriores", "disminucion"),
+    ("saldo", "inicial", "aumento"),
+    ("saldo", "final", "aumento"),
+)
+
+
+def _semantic_roles_are_axis_siblings(left: str, right: str) -> bool:
+    left_stem, left_axis = _split_semantic_role_axis_suffix(left)
+    right_stem, right_axis = _split_semantic_role_axis_suffix(right)
+    return (
+        left_stem is not None
+        and right_stem is not None
+        and left_stem == right_stem
+        and left_axis != right_axis
+    )
+
+
+def _split_semantic_role_axis_suffix(role: str) -> tuple[tuple[str, ...] | None, tuple[str, ...] | None]:
+    parts = tuple(role.split("_"))
+    for suffix in _SEMANTIC_ROLE_AXIS_SUFFIXES:
+        if len(parts) <= len(suffix):
+            continue
+        if parts[-len(suffix):] == suffix:
+            return parts[: -len(suffix)], suffix
+    return None, None
 
 
 # Plan C W05 validator hard-flip surface (semantic_role requirement).
