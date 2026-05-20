@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -10,13 +11,27 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _isolate_workflow(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@contextmanager
+def _isolated_workflow(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
+    """Isolate the workflow store and bind an active bucket session.
+
+    The column-level encrypt path resolves its DEK through the active
+    :class:`BucketSession`; ``EphemeralMasterKeyProvider`` opens and
+    activates one for the duration of the block.
+    """
+
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'reset.db').as_posix()}")
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _profile_facts(overrides: Mapping[str, object] | None = None):
@@ -49,20 +64,16 @@ def _register_profile(profile_id: str, *, overrides: Mapping[str, object] | None
     )
 
 
-def _save_profile_in_bucket(*, profile_id: str, bucket_id: str) -> None:
-    from aeat.domain.user_profile import UserProfileRecord
-
-    from .user_profile import UserProfileLifecycleRepository
-
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
-        UserProfileRecord(profile_id=profile_id, display_name=profile_id, facts=_profile_facts())
-    )
-
-
 def _profile_exists(profile_id: str, *, bucket_id: str | None = None) -> bool:
     from .user_profile import UserProfileLifecycleRepository
 
     return UserProfileLifecycleRepository(bucket_id=bucket_id or profile_id).exists(profile_id)
+
+
+def _registered_profile_names() -> tuple[str, ...]:
+    from .workflow._profile_bucket_scan import list_profile_buckets
+
+    return tuple(sorted(list_profile_buckets()))
 
 
 def test_reset_config_refuses_without_confirmation(
@@ -72,9 +83,9 @@ def test_reset_config_refuses_without_confirmation(
     """The function must raise ConfigResetUnconfirmedError when confirmed=False."""
     from .config_reset import ConfigResetScope, ConfigResetUnconfirmedError, reset_config
 
-    _isolate_workflow(monkeypatch, tmp_path)
-    with pytest.raises(ConfigResetUnconfirmedError, match=r"config|reset|unconfirmed"):
-        reset_config(ConfigResetScope.ALL, confirmed=False)
+    with _isolated_workflow(monkeypatch, tmp_path):
+        with pytest.raises(ConfigResetUnconfirmedError, match=r"config reset|confirmed must be True"):
+            reset_config(ConfigResetScope.ALL, confirmed=False)
 
 
 def test_reset_profile_only_clears_active_profile_record(
@@ -86,22 +97,21 @@ def test_reset_profile_only_clears_active_profile_record(
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
 
-    _isolate_workflow(monkeypatch, tmp_path)
-    repository = workflow_state_repository()
-    _register_profile("operator", overrides={"identity.name": "Design Operator"})
-    repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
+    with _isolated_workflow(monkeypatch, tmp_path):
+        repository = workflow_state_repository()
+        _register_profile("operator", overrides={"identity.name": "Design Operator"})
+        repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
 
-    report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
-    assert isinstance(report, ConfigResetReport)
-    assert report.scope is ConfigResetScope.PROFILE
-    assert "operator" in report.removed_profile_names
-    assert report.removed_auth_session is False
+        report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
+        assert isinstance(report, ConfigResetReport)
+        assert report.scope is ConfigResetScope.PROFILE
+        assert "operator" in report.removed_profile_names
+        assert report.removed_auth_session is False
 
-    state_after = workflow_state_repository().load()
-    assert state_after.profiles == {}
-    assert state_after.active_profile is None
-    assert state_after.auth.provider == "clave_movil"
-    assert not _profile_exists("operator")
+        state_after = workflow_state_repository().load()
+        assert _registered_profile_names() == ()
+        assert state_after.auth.provider == "clave_movil"
+        assert not _profile_exists("operator")
 
 
 def test_reset_auth_only_clears_session(
@@ -113,45 +123,38 @@ def test_reset_auth_only_clears_session(
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
 
-    _isolate_workflow(monkeypatch, tmp_path)
-    repository = workflow_state_repository()
-    _register_profile("operator", overrides={"identity.name": "Design Operator"})
-    repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
+    with _isolated_workflow(monkeypatch, tmp_path):
+        repository = workflow_state_repository()
+        _register_profile("operator", overrides={"identity.name": "Design Operator"})
+        repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
 
-    report = reset_config(ConfigResetScope.AUTH, confirmed=True)
-    assert report.scope is ConfigResetScope.AUTH
-    assert report.removed_auth_session is True
-    assert report.removed_profile_names == ()
+        report = reset_config(ConfigResetScope.AUTH, confirmed=True)
+        assert report.scope is ConfigResetScope.AUTH
+        assert report.removed_auth_session is True
+        assert report.removed_profile_names == ()
 
-    state_after = workflow_state_repository().load()
-    assert state_after.auth.provider is None
-    assert "operator" in state_after.profiles
-    assert _profile_exists("operator")
+        state_after = workflow_state_repository().load()
+        assert state_after.auth.provider is None
+        assert "operator" in _registered_profile_names()
+        assert _profile_exists("operator")
 
 
-def test_reset_profile_deletes_bucket_id_when_profile_key_differs(
+def test_reset_profile_deletes_registered_bucket_record(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """PROFILE scope removes the stored bucket id, not just the profile-map key."""
+    """PROFILE scope deletes the persisted bucket record, not just a state key."""
     from .config_reset import ConfigResetScope, reset_config
-    from .workflow._models import WorkflowState
-    from .workflow._persistence import workflow_state_repository
 
-    _isolate_workflow(monkeypatch, tmp_path)
-    _save_profile_in_bucket(profile_id="alias", bucket_id="actual-bucket")
-    workflow_state_repository().save(
-        WorkflowState.model_validate(
-            {
-                "profiles": {"alias": {"bucket_id": "actual-bucket"}},
-            }
-        )
-    )
+    with _isolated_workflow(monkeypatch, tmp_path):
+        _register_profile("operator")
+        assert _profile_exists("operator")
 
-    report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
+        report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
 
-    assert "alias" in report.removed_profile_names
-    assert not _profile_exists("alias", bucket_id="actual-bucket")
+        assert "operator" in report.removed_profile_names
+        assert not _profile_exists("operator")
+        assert _registered_profile_names() == ()
 
 
 def test_reset_data_invokes_quarantine_pipeline(
@@ -160,21 +163,19 @@ def test_reset_data_invokes_quarantine_pipeline(
 ) -> None:
     """DATA scope returns a quarantine count; profile + auth untouched."""
     from .config_reset import ConfigResetScope, reset_config
-    from .workflow._persistence import workflow_state_repository
 
-    _isolate_workflow(monkeypatch, tmp_path)
-    _register_profile("operator")
+    with _isolated_workflow(monkeypatch, tmp_path):
+        _register_profile("operator")
 
-    report = reset_config(ConfigResetScope.DATA, confirmed=True)
-    assert report.scope is ConfigResetScope.DATA
-    assert report.removed_profile_names == ()
-    assert report.removed_auth_session is False
-    # No unreadable rows in a fresh temp DB -> quarantine count is 0.
-    assert report.quarantined_namespace_count == 0
+        report = reset_config(ConfigResetScope.DATA, confirmed=True)
+        assert report.scope is ConfigResetScope.DATA
+        assert report.removed_profile_names == ()
+        assert report.removed_auth_session is False
+        # No unreadable rows in a fresh temp DB -> quarantine count is 0.
+        assert report.quarantined_namespace_count == 0
 
-    state_after = workflow_state_repository().load()
-    assert "operator" in state_after.profiles
-    assert _profile_exists("operator")
+        assert "operator" in _registered_profile_names()
+        assert _profile_exists("operator")
 
 
 def test_reset_all_combines_all_scopes(
@@ -186,17 +187,17 @@ def test_reset_all_combines_all_scopes(
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
 
-    _isolate_workflow(monkeypatch, tmp_path)
-    repository = workflow_state_repository()
-    _register_profile("operator", overrides={"identity.name": "Design Operator"})
-    repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
+    with _isolated_workflow(monkeypatch, tmp_path):
+        repository = workflow_state_repository()
+        _register_profile("operator", overrides={"identity.name": "Design Operator"})
+        repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
 
-    report = reset_config(ConfigResetScope.ALL, confirmed=True)
-    assert report.scope is ConfigResetScope.ALL
-    assert "operator" in report.removed_profile_names
-    assert report.removed_auth_session is True
+        report = reset_config(ConfigResetScope.ALL, confirmed=True)
+        assert report.scope is ConfigResetScope.ALL
+        assert "operator" in report.removed_profile_names
+        assert report.removed_auth_session is True
 
-    state_after = workflow_state_repository().load()
-    assert state_after.profiles == {}
-    assert state_after.auth.provider is None
-    assert not _profile_exists("operator")
+        state_after = workflow_state_repository().load()
+        assert _registered_profile_names() == ()
+        assert state_after.auth.provider is None
+        assert not _profile_exists("operator")
