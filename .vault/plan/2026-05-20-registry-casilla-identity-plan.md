@@ -111,7 +111,7 @@ Register the M200 Liquidacion III/IV page-14 cuota-chain casillas from the corpu
 - [x] `P04.S16` - Register the M200 Liquidacion cuota liquida casilla 00592 under segmento DP200014B as a new fragment file carrying legal_refs and source_refs from the corpus 2024 Diseno xlsx; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-00592-cuota-liquida.toml`.
 - [x] `P04.S17` - Register the M200 Liquidacion cuota del ejercicio casilla 00599 under segmento DP200014B as a new fragment file carrying legal_refs and source_refs from the corpus 2024 Diseno xlsx; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-00599-cuota-del-ejercicio.toml`.
 - [x] `P04.S18` - Register the M200 Liquidacion cuota diferencial casilla 00611 under segmento DP200014B as a new fragment file carrying legal_refs and source_refs from the corpus 2024 Diseno xlsx; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-00611-cuota-diferencial.toml`.
-- [ ] `P04.S19` - Re-point the M200 page-014 export field binding for casilla 00562 from the ECPN occurrence to the new Liquidacion DP200014 casilla; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0017-modelo-200-page-014.toml`.
+- [x] `P04.S19` - Re-point the M200 page-014 export field binding for casilla 00562 from the ECPN occurrence to the new Liquidacion DP200014 casilla; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0017-modelo-200-page-014.toml`.
 
 ### Phase `P05` - Verification and rollout
 
