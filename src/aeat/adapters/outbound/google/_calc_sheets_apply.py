@@ -42,12 +42,10 @@ from ....application.storage.calc_sheets import (
 from ....core.config import Settings as _Settings
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
-    OutboundStorageError,
     OutboundStorageNetworkError,
-    OutboundStorageNotFoundError,
-    OutboundStoragePermissionError,
     OutboundStorageValidationError,
 )
+from ._api import execute_request
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
@@ -102,36 +100,6 @@ def _sheets_service(credentials: object) -> Any:
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-def _execute(request: Any, *, action: str) -> Any:
-    try:
-        return request.execute()
-    except OutboundStorageError:
-        raise
-    except Exception as exc:
-        from googleapiclient.errors import HttpError
-
-        if isinstance(exc, HttpError):
-            status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
-            if status in (401, 403):
-                raise OutboundStoragePermissionError(
-                    f"Google {action} refused (HTTP {status}): {exc}",
-                    suggestion="aeat config google login",
-                    context={"action": action, "status": status},
-                    translated_message="adapters.google.calc_sheets.errors.api_call_refused",
-                ) from exc
-            if status == 404:
-                raise OutboundStorageNotFoundError(
-                    f"Google {action} target not found (HTTP 404): {exc}",
-                    context={"action": action},
-                    translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
-                ) from exc
-        raise OutboundStorageNetworkError(
-            f"Google {action} failed: {exc}",
-            context={"action": action},
-            translated_message="adapters.google.calc_sheets.errors.api_call_failed",
-        ) from exc
-
-
 def _find_folder(
     drive: Any,
     *,
@@ -147,7 +115,7 @@ def _find_folder(
     # browser/session.py.
     safe_name = name.replace("'", "\\'")
     query = f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{_FOLDER_MIME}' and trashed = false"
-    response = _execute(
+    response = execute_request(
         drive.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
         action="drive.files.list",
     )
@@ -158,7 +126,7 @@ def _find_folder(
         if not existing:
             # Backfill the marker on a folder we created on a previous
             # run that predated marker stamping.
-            _execute(
+            execute_request(
                 drive.files().update(
                     fileId=entry["id"],
                     body={"appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE}},
@@ -192,7 +160,7 @@ def _create_folder(
         "parents": [parent_id],
         "appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE},
     }
-    return _execute(
+    return execute_request(
         drive.files().create(body=body, fields="id,name,appProperties"),
         action="drive.files.create.folder",
     )
@@ -221,7 +189,7 @@ def _find_spreadsheet(
     query = (
         f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{_SPREADSHEET_MIME}' and trashed = false"
     )
-    response = _execute(
+    response = execute_request(
         drive.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
         action="drive.files.list.spreadsheet",
     )
@@ -230,7 +198,7 @@ def _find_spreadsheet(
         if existing.get(_OWNERSHIP_KEY) == _OWNERSHIP_VALUE:
             return entry
         if not existing:
-            _execute(
+            execute_request(
                 drive.files().update(
                     fileId=entry["id"],
                     body={"appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE}},
@@ -265,7 +233,7 @@ def _create_spreadsheet(
         "properties": {"title": title, "locale": "en_US"},
         "sheets": [{"properties": {"title": tab_name}} for tab_name in tab_names],
     }
-    spreadsheet = _execute(
+    spreadsheet = execute_request(
         sheets.spreadsheets().create(body=body, fields="spreadsheetId,spreadsheetUrl,sheets.properties"),
         action="sheets.spreadsheets.create",
     )
@@ -273,12 +241,12 @@ def _create_spreadsheet(
     # Move the freshly created spreadsheet into the target folder and
     # stamp the ownership marker. `files.update` with `addParents` +
     # `removeParents=root` is the canonical move pattern.
-    file_meta = _execute(
+    file_meta = execute_request(
         drive.files().get(fileId=spreadsheet_id, fields="parents"),
         action="drive.files.get.parents",
     )
     remove_parents = ",".join(file_meta.get("parents") or [])
-    _execute(
+    execute_request(
         drive.files().update(
             fileId=spreadsheet_id,
             addParents=parent_id,
@@ -738,7 +706,7 @@ def apply_export_plan(
             tab_names=tab_titles,
         )
     else:
-        spreadsheet = _execute(
+        spreadsheet = execute_request(
             sheets.spreadsheets().get(
                 spreadsheetId=existing["id"],
                 fields="spreadsheetId,spreadsheetUrl,sheets.properties",
@@ -753,7 +721,7 @@ def apply_export_plan(
     # separator stays a comma. Applies on every run so a workbook
     # created under a previous engine version (which may have used
     # `es_ES`) is corrected on the next export.
-    _execute(
+    execute_request(
         sheets.spreadsheets().batchUpdate(
             spreadsheetId=spreadsheet_id,
             body={
@@ -780,7 +748,7 @@ def apply_export_plan(
     missing_tabs = [tab for tab in tab_titles if tab not in sheet_id_by_tab]
     if missing_tabs:
         add_sheet_requests = [{"addSheet": {"properties": {"title": tab}}} for tab in missing_tabs]
-        result = _execute(
+        result = execute_request(
             sheets.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
                 body={"requests": add_sheet_requests},
@@ -799,7 +767,7 @@ def apply_export_plan(
     # the grid in one structural request before any value write.
     resize_requests = _build_grid_resize_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     if resize_requests:
-        _execute(
+        execute_request(
             sheets.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
                 body={"requests": resize_requests},
@@ -810,7 +778,7 @@ def apply_export_plan(
     # Clear every tab the engine will (re)populate so a re-apply is
     # not contaminated by leftover values from the previous run.
     clear_ranges = [f"'{tab}'" for tab in tab_titles]
-    _execute(
+    execute_request(
         sheets.spreadsheets()
         .values()
         .batchClear(
@@ -830,7 +798,7 @@ def apply_export_plan(
         "valueInputOption": "USER_ENTERED",
         "data": value_data + formula_data,
     }
-    _execute(
+    execute_request(
         sheets.spreadsheets()
         .values()
         .batchUpdate(
@@ -859,7 +827,7 @@ def apply_export_plan(
     )
     structural_requests = metadata_requests + protected_requests + constraint_requests + note_requests
     if structural_requests:
-        _execute(
+        execute_request(
             sheets.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
                 body={"requests": structural_requests},
