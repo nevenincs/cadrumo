@@ -52,9 +52,20 @@ def test_engine_creates_parent_directory(tmp_path: Path) -> None:
         dispose_engine(settings)
 
 
-def test_engine_rejects_empty_url() -> None:
-    """An empty URL is fail-fast, not a silent fallback."""
-    settings = _settings_for("")
+def test_engine_rejects_empty_url(tmp_path: Path) -> None:
+    """An empty URL is fail-fast, not a silent fallback.
+
+    The active-profile resolver leaves ``aeat_database_url`` empty only
+    when no profile is selected and no pointer file exists; the test
+    anchors ``aeat_local_storage_root`` at an empty tmp directory so the
+    resolver cannot pick up a real worktree profile.
+    """
+    settings = Settings(
+        aeat_database_url="",
+        aeat_active_profile=None,
+        aeat_local_storage_root=tmp_path / "empty-storage-root",
+    )
+    assert settings.aeat_database_url == ""
     with pytest.raises(StorageError):
         create_engine_from_settings(settings)
 
