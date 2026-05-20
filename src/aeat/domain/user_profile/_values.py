@@ -78,6 +78,20 @@ class UserProfileStatus(StrEnum):
     TOMBSTONED = "tombstoned"
 
 
+def new_profile_id() -> str:
+    """Mint a fresh immutable profile identity.
+
+    A profile's identity is a generated UUIDv4 in the canonical
+    hyphenated 36-character form. It is created once at profile
+    creation and never changes — the bucket directory, keystore
+    directory, secure-object key, and active-profile pointer all key
+    on it. The operator-chosen display name is a fully decoupled
+    mutable label with no role in any key or path.
+    """
+
+    return str(uuid4())
+
+
 def new_profile_snapshot_id(profile_id: str, *, created_at: datetime | None = None) -> str:
     """Create a deterministic-shape but unique snapshot id."""
 

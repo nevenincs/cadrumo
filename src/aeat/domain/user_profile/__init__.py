@@ -40,6 +40,7 @@ from ._values import (
     UserProfileRecord,
     UserProfileSnapshot,
     UserProfileStatus,
+    new_profile_id,
     new_profile_snapshot_id,
 )
 
@@ -70,6 +71,7 @@ __all__ = [
     "UserProfileStatus",
     "build_user_profile_selector_index",
     "load_user_profile_schema",
+    "new_profile_id",
     "new_profile_snapshot_id",
     "validate_user_profile_registry_contract",
 ]
