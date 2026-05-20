@@ -36,6 +36,7 @@ from aeat.application.user_profile._orchestration import (
     _write_active_profile_pointer,
     capture_active_profile_pointer,
     register_active_profile,
+    restore_active_profile_pointer,
 )
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
@@ -80,26 +81,32 @@ def _backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
 def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
     """Run the atomic create for ``profile_id`` against ``facts``.
 
-    The genuine pre-create pointer is captured BEFORE the early
-    load-order pointer write so the repository's rollback restores the
-    pointer to exactly its pre-create state — the same cold-start
-    sequence ``initialize_workspace`` and the wizard ``create`` path
-    perform.
+    Mirrors the production cold-start sequence: the active-profile
+    pointer is written early so ``workflow_state_repository()`` resolves
+    its per-bucket engine, and the whole span is wrapped in a
+    ``try``/``except`` that restores the captured prior pointer on any
+    failure — closing the window the repository's own rollback cannot
+    see. ``ProfileRepository.create`` itself owns the rollback of the
+    bucket directory, manifest, and pointer for failures inside the
+    create.
     """
 
-    prior_pointer_text = capture_active_profile_pointer()
-    _write_active_profile_pointer(profile_id)
     fact_tuple = tuple(UserProfileFact(path=path, value=value) for path, value in facts.items())
-    with EphemeralMasterKeyProvider():
-        workflow_state_repository().update(
-            lambda state: register_active_profile(
-                state,
-                profile_id=profile_id,
-                display_name=profile_id.capitalize(),
-                facts=fact_tuple,
-                prior_pointer_text=prior_pointer_text,
+    prior_pointer = capture_active_profile_pointer()
+    _write_active_profile_pointer(profile_id)
+    try:
+        with EphemeralMasterKeyProvider():
+            workflow_state_repository().update(
+                lambda state: register_active_profile(
+                    state,
+                    profile_id=profile_id,
+                    display_name=profile_id.capitalize(),
+                    facts=fact_tuple,
+                )
             )
-        )
+    except Exception:
+        restore_active_profile_pointer(prior_pointer)
+        raise
 
 
 def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> None:

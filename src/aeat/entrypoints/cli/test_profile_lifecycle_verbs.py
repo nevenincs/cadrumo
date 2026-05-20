@@ -5,17 +5,56 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner, Result
 
+from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
+from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
+from aeat.core.config import load_settings
 from aeat.entrypoints.cli import app as root_app
 from aeat.entrypoints.cli._config import profile_app, repair_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
+    """Stage a bucket directory + manifest with no secure record.
+
+    A bucket directory and plaintext manifest with no encrypted
+    profile-value row is exactly the ``missing_profile_record`` torn
+    state these CLI verbs must detect; this helper materialises that
+    state directly through the bucket-layout primitives, since
+    ``ProfileRepository`` always writes the record alongside.
+    """
+
+    root = load_settings().aeat_local_storage_root
+    paths = provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=label,
+            created_at=datetime.now(UTC),
+            last_unlocked_at=None,
+            kdf_params=ManifestKdfParams(
+                algorithm="argon2id",
+                version=0x13,
+                memory_cost=19_456,
+                time_cost=2,
+                parallelism=1,
+                salt=b"0123456789abcdef",
+                output_length=32,
+            ),
+            recovery_enrolled=False,
+            schema_version=1,
+        ),
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -64,9 +103,7 @@ def test_config_profile_switch_refuses_unknown_profile(cli_runner: CliRunner) ->
 
 
 def test_config_profile_switch_reports_manifest_without_profile_record(cli_runner: CliRunner) -> None:
-    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
-
-    _ensure_profile_bucket_manifest("operator", label="operator")
+    _stage_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(profile_app, ["switch", "operator"])
 
@@ -77,9 +114,7 @@ def test_config_profile_switch_reports_manifest_without_profile_record(cli_runne
 
 
 def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runner: CliRunner) -> None:
-    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
-
-    _ensure_profile_bucket_manifest("operator", label="operator")
+    _stage_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(profile_app, ["show", "operator"])
 
@@ -90,9 +125,7 @@ def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runn
 
 
 def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunner) -> None:
-    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
-
-    _ensure_profile_bucket_manifest("operator", label="operator")
+    _stage_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(
         profile_app,
@@ -117,13 +150,10 @@ def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunn
 
 
 def test_repair_profile_named_active_clear_active_clears_pointer(cli_runner: CliRunner, tmp_path: Path) -> None:
-    from aeat.application.user_profile._orchestration import (
-        _ensure_profile_bucket_manifest,
-        _write_active_profile_pointer,
-    )
+    from aeat.application.user_profile._orchestration import _write_active_profile_pointer
     from aeat.core._bucket_pointer_io import read_pointer
 
-    _ensure_profile_bucket_manifest("operator", label="operator")
+    _stage_bucket_manifest("operator", label="operator")
     _write_active_profile_pointer("operator")
 
     result = cli_runner.invoke(repair_app, ["profile", "--profile", "operator", "--clear-active", "--yes"])
