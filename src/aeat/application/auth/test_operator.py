@@ -12,9 +12,26 @@ from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ._operator import configure_operator_auth
+from ._operator import configure_operator_auth, test_operator_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def test_test_operator_auth_reports_the_active_profile() -> None:
+    """`test_operator_auth` is the operator's auth-readiness check. It must
+    resolve the active profile so the report tells the user whether auth is
+    ready *for their profile* - not return empty profile fields."""
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(state, profile_id="operator")
+    )
+
+    result = test_operator_auth("certificate")
+
+    assert result.active_profile == "operator"
+    assert result.active_profile_registered is True
+    assert result.active_profile_record_present is True
+    assert result.active_profile_status
 
 
 @pytest.fixture(autouse=True)
