@@ -153,17 +153,26 @@ def register_active_profile(
 
     _refuse_duplicate_profile(profile_id)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+    # Atomic-create ordering (disaster ADR Ruling 3): the bucket
+    # directory + manifest land first, THEN the active-profile
+    # pointer, THEN the encrypted record. The pointer must precede
+    # `service.register` because `service.register` opens the
+    # per-bucket SQLAlchemy engine, and `Settings.aeat_database_url`
+    # resolves the engine URL from the active-profile pointer chain.
+    # Writing the pointer last (the prior ordering) left the URL
+    # empty during the first-run create — the F3 cold-start
+    # chicken-and-egg the operator testimonies catalogued.
     _ensure_profile_bucket_manifest(profile_id)
+    _write_active_profile_pointer(profile_id)
     try:
         service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
     except Exception:
+        # Rollback reverts the directory + manifest AND clears the
+        # pointer so a crashed create leaves no phantom profile in
+        # the manifest scan and no dangling active-profile pointer.
         _rollback_profile_bucket(profile_id)
+        _clear_active_profile_pointer()
         raise
-    # WorkflowState.profiles is now computed at access time from a
-    # filesystem manifest scan; provisioning the bucket directory +
-    # writing its manifest is what makes the profile appear in the
-    # scan. No state mutation needed beyond the event log and the
-    # active-profile pointer file.
     updated = state.model_copy(update={"updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
     updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
@@ -173,7 +182,6 @@ def register_active_profile(
             updated = _append_workflow_event(
                 updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id
             )
-    _write_active_profile_pointer(profile_id)
     return updated
 
 

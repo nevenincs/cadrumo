@@ -4,6 +4,7 @@ number = "02347"
 label = "Deducciones inversión Canarias - Inversiones Canarias 2021 - Deducción pendiente/generada [02347]"
 section = ["deducciones_inversion_canarias", "inversiones_canarias_2021"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016b-casilla-02347"]

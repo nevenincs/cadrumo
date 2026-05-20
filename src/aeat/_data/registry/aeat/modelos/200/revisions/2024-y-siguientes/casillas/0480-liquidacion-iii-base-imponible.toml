@@ -4,6 +4,7 @@ number = "01509"
 label = "Liquidación III - Base imponible - - Rentas que no limitan compensación de bases imponibles - Rentas correspondientes a la reversión de deterioros (DT 16ª.8 LIS) - Disminuciones [01509]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
+semantic_role = "is_compensacion_bases_negativas"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014-casilla-01509"]

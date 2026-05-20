@@ -4,6 +4,7 @@ number = "02526"
 label = "Reversión del deterioro del valor de los elementos patrimoniales (art. 11.6 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02526]"
 section = ["reversion_del_deterioro_del_valor_de_los_elementos", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02526"]

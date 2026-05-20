@@ -4,6 +4,7 @@ number = "03366"
 label = "Entidades en rég. de atribución de rentas const. en el extranj. con presencia en territ. español (art. 38 TRLIRNR) - Disminución - Correcciones del ejercicio - Permanentes [03366]"
 section = ["entidades_en_reg_de_atribucion_de_rentas_const_en", "disminucion"]
 data_type = "money"
+semantic_role = "is_atribucion_rentas_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026g-casilla-03366"]

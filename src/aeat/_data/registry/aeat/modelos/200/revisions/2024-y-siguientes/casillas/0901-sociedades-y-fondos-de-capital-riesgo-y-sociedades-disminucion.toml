@@ -4,6 +4,7 @@ number = "03136"
 label = "Sociedades y fondos de capital-riesgo y sociedades de desarrollo industrial regional (capítulo IV del título VII LIS) - Disminución - Correcciones del ejercicio - Permanentes [03136]"
 section = ["sociedades_y_fondos_de_capital_riesgo_y_sociedades", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03136"]

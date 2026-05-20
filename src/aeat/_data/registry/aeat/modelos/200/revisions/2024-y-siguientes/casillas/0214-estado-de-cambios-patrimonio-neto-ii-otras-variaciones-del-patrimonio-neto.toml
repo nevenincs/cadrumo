@@ -4,6 +4,7 @@ number = "00715"
 label = "Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Movimiento reserva revalorización - Capital - Escriturado [00715]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-010-casilla-00715", "modelo-200-page-015b-casilla-00715"]

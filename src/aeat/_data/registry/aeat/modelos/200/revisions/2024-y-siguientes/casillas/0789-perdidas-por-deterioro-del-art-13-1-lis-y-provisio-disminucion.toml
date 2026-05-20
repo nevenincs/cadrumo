@@ -4,6 +4,7 @@ number = "02666"
 label = "Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1 LIS. - Disminución - Correcciones del ejercicio - Permanentes [0..."
 section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026c-casilla-02666"]

@@ -4,6 +4,7 @@ number = "01245"
 label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - e) Gastos financieros del período impositivo no afectados por art. 16.5 y/o 83 LIS (sin signo) [01245]"
 section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
 data_type = "money"
+semantic_role = "is_gastos_financieros_limitacion_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020-casilla-01245"]

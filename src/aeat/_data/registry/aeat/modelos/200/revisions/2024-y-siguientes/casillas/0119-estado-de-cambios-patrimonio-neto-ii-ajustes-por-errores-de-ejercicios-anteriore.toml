@@ -4,6 +4,7 @@ number = "00408"
 label = "Estado de cambios patrimonio neto (II) - Ajustes por errores de ejercicios anteriores - Capital - Escriturado [00408]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_errores_de_ejercicios_anteriores"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-010-casilla-00408", "modelo-200-page-014-casilla-00408", "modelo-200-page-041-casilla-00408"]

@@ -4,6 +4,7 @@ number = "02791"
 label = "Gastos por donativos y liberalidades (art. 15 e) LIS) - Aumento - Correcciones del ejercicio - Permanentes [02791]"
 section = ["gastos_por_donativos_y_liberalidades_art_15_e_lis", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026c-casilla-02791"]

@@ -4,6 +4,7 @@ number = "02215"
 label = "Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2020 - Deducción pendiente/generada [02215]"
 section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2020"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016b-casilla-02215"]

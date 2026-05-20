@@ -4,6 +4,7 @@ number = "02289"
 label = "XXXVII Copa América Barcelona (Ley 31/2022) - Disminución - Saldo pendiente a principio de ejercicio [02289]"
 section = ["xxxvii_copa_america_barcelona_ley_31_2022", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-02289"]

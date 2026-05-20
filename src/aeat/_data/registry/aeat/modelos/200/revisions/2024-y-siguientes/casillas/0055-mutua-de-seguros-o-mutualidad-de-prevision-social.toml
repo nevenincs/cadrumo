@@ -4,6 +4,7 @@ number = "00058"
 label = "Mutua de seguros o Mutualidad de previsión social [00058]"
 section = ["mutua_de_seguros_o_mutualidad_de_prevision_social"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00058"]

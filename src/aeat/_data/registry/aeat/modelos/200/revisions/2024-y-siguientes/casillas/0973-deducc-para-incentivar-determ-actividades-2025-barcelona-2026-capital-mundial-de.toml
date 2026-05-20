@@ -4,6 +4,7 @@ number = "03526"
 label = "Deducc. para incentivar determ.actividades - 2025: Barcelona 2026 Capital Mundial de la Arquitectura (B26) - Deducción pendiente/generada [03526]"
 section = ["deducc_para_incentivar_determ_actividades", "2025_barcelona_2026_capital_mundial_de_la_arquitec"]
 data_type = "money"
+semantic_role = "is_deduccion_idi_evento_especial"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-03526"]

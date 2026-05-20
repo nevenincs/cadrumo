@@ -4,6 +4,7 @@ number = "00089"
 label = "Partícipe de agrupación de interés económico o de unión temporal de empresas [00089]"
 section = ["participe_de_agrupacion_de_interes_economico_o_de"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00089"]

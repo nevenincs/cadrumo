@@ -526,9 +526,9 @@ def test_calculate_is_idempotent_on_identical_inputs(repos) -> None:
     assert len(revisions) == 1
 
 
-def test_mark_verified_complete_requires_draft_state(repos) -> None:
-    """A revision in any state other than DRAFT cannot be marked
-    verified-complete."""
+def test_mark_verificado_completo_requires_borrador_state(repos) -> None:
+    """A revision in any state other than BORRADOR cannot be marked
+    verificado-completo."""
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
@@ -559,8 +559,8 @@ def test_mark_verified_complete_requires_draft_state(repos) -> None:
         )
 
 
-def test_file_requires_verified_complete_state(repos) -> None:
-    """A draft revision cannot be filed; only verified-complete
+def test_file_requires_verificado_completo_state(repos) -> None:
+    """A borrador revision cannot be filed; only verificado-completo
     revisions are eligible."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
@@ -1252,9 +1252,9 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     assert refreshed.state is CalculationRevisionState.BORRADOR
 
 
-def test_verify_rejects_non_draft_revision_real_registry(repos) -> None:
-    """Real e2e: a verified-complete revision cannot be re-verified.
-    The operator must produce a fresh draft (which lands as DRAFT)
+def test_verify_rejects_non_borrador_revision_real_registry(repos) -> None:
+    """Real e2e: a verificado-completo revision cannot be re-verified.
+    The operator must produce a fresh draft (which lands as BORRADOR)
     to verify again."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos

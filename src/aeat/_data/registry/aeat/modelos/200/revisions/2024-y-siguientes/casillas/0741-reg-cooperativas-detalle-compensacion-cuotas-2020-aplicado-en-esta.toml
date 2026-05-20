@@ -4,6 +4,7 @@ number = "02453"
 label = "Rég. cooperativas - Detalle compensación cuotas. 2020 Aplicado en esta liquidación [02453]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2020_aplicado_en_esta"]
 data_type = "money"
+semantic_role = "is_cooperativa_compensacion_cuotas"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022-casilla-02453"]

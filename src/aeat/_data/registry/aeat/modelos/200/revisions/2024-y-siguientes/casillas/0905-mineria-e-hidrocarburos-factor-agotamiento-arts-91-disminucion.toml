@@ -4,6 +4,7 @@ number = "03156"
 label = "Minería e hidrocarburos: factor agotamiento (arts. 91 y 95 LIS) - Disminución - Correcciones del ejercicio - Permanentes [03156]"
 section = ["mineria_e_hidrocarburos_factor_agotamiento_arts_91", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03156"]

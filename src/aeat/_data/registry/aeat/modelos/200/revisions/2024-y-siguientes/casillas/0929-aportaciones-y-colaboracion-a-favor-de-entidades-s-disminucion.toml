@@ -4,6 +4,7 @@ number = "03266"
 label = "Aportaciones y colaboración a favor de entidades sin fines lucrativos - Disminución - Correcciones del ejercicio - Permanentes [03266]"
 section = ["aportaciones_y_colaboracion_a_favor_de_entidades_s", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-03266"]

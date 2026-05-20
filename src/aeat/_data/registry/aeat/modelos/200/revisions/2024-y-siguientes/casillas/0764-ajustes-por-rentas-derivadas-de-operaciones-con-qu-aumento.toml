@@ -4,6 +4,7 @@ number = "02541"
 label = "Ajustes por rentas derivadas de operaciones con quita o espera (art. 11.13 LIS) - Aumento - Correcciones del ejercicio - Permanentes [02541]"
 section = ["ajustes_por_rentas_derivadas_de_operaciones_con_qu", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02541"]

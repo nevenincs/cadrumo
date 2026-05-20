@@ -98,8 +98,15 @@ def get_active_master_key() -> bytes:
     return session.dek
 
 
+def has_active_bucket_session() -> bool:
+    """Return whether an active :class:`BucketSession` is bound."""
+
+    return _active_session.get() is not None
+
+
 __all__ = [
     "NoActiveBucketSessionError",
     "activate_session",
     "get_active_master_key",
+    "has_active_bucket_session",
 ]

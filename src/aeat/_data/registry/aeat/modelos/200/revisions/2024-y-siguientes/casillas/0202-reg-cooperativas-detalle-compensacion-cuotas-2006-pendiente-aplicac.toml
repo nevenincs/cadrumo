@@ -4,6 +4,7 @@ number = "00691"
 label = "Rég. cooperativas - Detalle compensación cuotas. 2006 Pendiente aplicación al principio del periodo [00691]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2006_pendiente_aplicac"]
 data_type = "money"
+semantic_role = "is_cooperativa_compensacion_cuotas"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022-casilla-00691"]

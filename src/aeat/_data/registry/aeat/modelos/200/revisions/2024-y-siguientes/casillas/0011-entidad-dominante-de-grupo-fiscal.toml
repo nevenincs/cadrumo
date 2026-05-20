@@ -4,6 +4,7 @@ number = "00009"
 label = "Entidad dominante de grupo fiscal [00009]"
 section = ["entidad_dominante_de_grupo_fiscal"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00009", "modelo-200-page-015-casilla-00009"]

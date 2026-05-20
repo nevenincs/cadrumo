@@ -399,12 +399,25 @@ def _casilla_schema(
 def _value_type(data_type: str) -> str:
     if data_type in {"decimal", "money", "ratio"}:
         return "decimal"
-    if data_type == "integer":
+    if data_type in {"integer", "year"}:
         return "int"
-    if data_type == "text":
+    if data_type in {
+        "text",
+        "nif",
+        "nif_iva",
+        "name",
+        "period_code",
+        "country_code",
+        "province_code",
+        "municipality_code",
+        "postal_code",
+        "iban",
+    }:
         return "str"
     if data_type == "boolean":
         return "bool"
+    if data_type == "date":
+        return "date"
     raise ModeloBuilderError(f"unsupported registry casilla data type {data_type!r}")
 
 

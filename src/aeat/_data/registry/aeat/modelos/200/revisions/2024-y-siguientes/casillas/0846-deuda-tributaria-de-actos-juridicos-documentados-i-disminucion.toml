@@ -4,6 +4,7 @@ number = "02876"
 label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02876]"
 section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026d-casilla-02876"]

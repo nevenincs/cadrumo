@@ -4,6 +4,7 @@ number = "00075"
 label = "Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023 y RDL 7/2026) - Aumento - Saldo pendiente a principio de ejercicio [00075]"
 section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-00075"]

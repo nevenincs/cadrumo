@@ -4,6 +4,7 @@ number = "02866"
 label = "Disminución de valor originada por criterio de valor razonable (art. 15 l) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02866]"
 section = ["disminucion_de_valor_originada_por_criterio_de_val", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026d-casilla-02866"]

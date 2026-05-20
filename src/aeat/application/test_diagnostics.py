@@ -117,7 +117,9 @@ def test_config_repair_report_contains_registry_and_setup_checks(
         "profile.readiness",
         "auth.readiness",
     }
-    assert report.overall in {"ok", "warn"}
+    statuses = {check.status for check in report.checks}
+    expected_overall = "fail" if "fail" in statuses else "warn" if "warn" in statuses else "ok"
+    assert report.overall == expected_overall
 
 
 def test_render_config_repair_text_is_operator_readable(
@@ -131,9 +133,11 @@ def test_render_config_repair_text_is_operator_readable(
 
     rendered = render_config_repair_text(build_config_repair_report())
 
-    assert "Overall\t" in rendered
+    from aeat.core.i18n import tr
+
+    assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered
     assert "registry.load" in rendered
-    assert "Logs\t" in rendered
+    assert f"{tr('cli.diagnostics.repair.logs_label')}\t" in rendered
 
 
 def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_master_key(
@@ -204,7 +208,8 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
             report = build_config_repair_report()
             integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
             assert integrity_check.status == "warn"
-            assert "unreadable row" in integrity_check.summary
+            assert str(report.secure_objects.unreadable_total) in integrity_check.summary
+            assert str(report.secure_objects.readable_total) in integrity_check.summary
             assert integrity_check.next_action == "aeat config repair quarantine --yes"
 
             ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)

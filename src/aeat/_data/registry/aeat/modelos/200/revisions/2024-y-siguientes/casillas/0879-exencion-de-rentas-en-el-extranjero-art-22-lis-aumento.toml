@@ -4,6 +4,7 @@ number = "03021"
 label = "Exención de rentas en el extranjero (art. 22 LIS) - Aumento - Correcciones del ejercicio - Permanentes [03021]"
 section = ["exencion_de_rentas_en_el_extranjero_art_22_lis", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03021"]

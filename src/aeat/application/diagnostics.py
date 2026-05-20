@@ -202,44 +202,55 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     ]
 
     setup_report: WizardStatusReport | None = None
+    provider_context: object | None = None
     try:
-        state = workflow_state_repository().load()
-        checks.append(
-            DiagnosticCheck(
-                name="secure_state.load",
-                status="ok",
-                summary=tr("cli.diagnostics.summary.state_backend_readable"),
-            )
-        )
-        profile_health = assess_active_profile_health(state)
-        checks.append(_active_profile_storage_check(profile_health))
-        setup_report = build_wizard_status(state)
-        checks.append(_profile_check(setup_report, profile_health=profile_health))
-        checks.append(_auth_check(setup_report))
-    except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
-        _log.debug("config repair secure state probe failed", exc_info=True)
-        profile_health = assess_active_profile_health()
-        missing_active_bucket_session = _is_missing_active_bucket_session(exc)
-        checks.append(
-            DiagnosticCheck(
-                name="secure_state.load",
-                status="warn" if missing_active_bucket_session else "fail",
-                summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
-                detail=f"{type(exc).__name__}: {exc}",
-                next_action=(
-                    profile_health.next_action
-                    or "aeat config profile switch NAME"
-                    if missing_active_bucket_session
-                    else "aeat config repair reset-state --yes"
-                ),
-            )
-        )
-        checks.append(_active_profile_storage_check(profile_health))
-        checks.append(_profile_unavailable_check(profile_health))
-        checks.append(_auth_unavailable_check(profile_health))
+        try:
+            from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+            from .workflow._models import resolve_active_bucket_id
 
-    secure_objects = _probe_secure_objects_integrity()
-    checks.append(_secure_objects_integrity_check(secure_objects))
+            if not has_active_bucket_session() and resolve_active_bucket_id() is not None:
+                provider_context = get_master_key_provider()
+                provider_context.__enter__()  # type: ignore[attr-defined]
+            state = workflow_state_repository().load()
+            checks.append(
+                DiagnosticCheck(
+                    name="secure_state.load",
+                    status="ok",
+                    summary=tr("cli.diagnostics.summary.state_backend_readable"),
+                )
+            )
+            profile_health = assess_active_profile_health(state)
+            checks.append(_active_profile_storage_check(profile_health))
+            setup_report = build_wizard_status(state)
+            checks.append(_profile_check(setup_report, profile_health=profile_health))
+            checks.append(_auth_check(setup_report))
+        except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
+            _log.debug("config repair secure state probe failed", exc_info=True)
+            profile_health = assess_active_profile_health()
+            missing_active_bucket_session = _is_missing_active_bucket_session(exc)
+            checks.append(
+                DiagnosticCheck(
+                    name="secure_state.load",
+                    status="warn" if missing_active_bucket_session else "fail",
+                    summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
+                    detail=_compact_exception(exc),
+                    next_action=(
+                        profile_health.next_action
+                        or "aeat config profile switch NAME"
+                        if missing_active_bucket_session
+                        else "aeat config repair reset-state --yes"
+                    ),
+                )
+            )
+            checks.append(_active_profile_storage_check(profile_health))
+            checks.append(_profile_unavailable_check(profile_health))
+            checks.append(_auth_unavailable_check(profile_health))
+
+        secure_objects = _probe_secure_objects_integrity()
+        checks.append(_secure_objects_integrity_check(secure_objects))
+    finally:
+        if provider_context is not None:
+            provider_context.__exit__(None, None, None)  # type: ignore[attr-defined]
 
     checks.append(_registry_cross_domain_integrity_check(root))
 
@@ -318,7 +329,6 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
         ),
         observed_at=datetime.now(tz=UTC),
     )
-
 
 def render_config_repair_text(report: ConfigRepairReport) -> str:
     """Render a compact human-readable repair report."""
@@ -613,7 +623,7 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
                 default="Authentication provider %{provider} has no ready session",
                 provider=report.auth_provider,
             ),
-            next_action="aeat config auth test --provider certificate",
+            next_action=f"aeat config auth test --provider {report.auth_provider}",
         )
     return DiagnosticCheck(
         name="auth.readiness",
@@ -633,6 +643,14 @@ def _is_missing_active_bucket_session(exc: BaseException) -> bool:
             return True
         current = current.__cause__ or current.__context__
     return "NoActiveBucketSessionError" in f"{type(exc).__name__}: {exc}"
+
+
+def _compact_exception(exc: BaseException) -> str:
+    root = getattr(exc, "orig", None)
+    if isinstance(root, BaseException):
+        exc = root
+    message = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
+    return f"{type(exc).__name__}: {message}"
 
 
 def _windows_stale_sync_check() -> DiagnosticCheck | None:

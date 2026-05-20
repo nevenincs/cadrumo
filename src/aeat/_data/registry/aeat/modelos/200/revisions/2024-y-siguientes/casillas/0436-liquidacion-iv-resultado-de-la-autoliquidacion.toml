@@ -4,6 +4,7 @@ number = "01332"
 label = "Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - D. Forales/Navarra (Totales) [01332]"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014b-casilla-01332", "modelo-200-page-026-casilla-01332"]

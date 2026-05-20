@@ -4,6 +4,7 @@ number = "00925"
 label = "Liquidación III - Base imponible - Rentas que no limitan compensación de bases imponibles - Rentas correspondientes a la reversión de las pérdidas por deterioro de valores representativos de la par..."
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
+semantic_role = "is_compensacion_bases_negativas"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014-casilla-00925"]

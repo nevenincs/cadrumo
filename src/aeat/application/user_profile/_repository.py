@@ -34,6 +34,37 @@ _USER_PROFILE_VALUE_VERSION = 1
 _USER_PROFILE_SNAPSHOT_VERSION = 1
 
 
+def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
+    """Return a :class:`SecureObjectRepository` bound to ``bucket_id``'s database.
+
+    The disaster ADR mandates one SQLite database per bucket. A
+    cross-bucket operation — most notably ``profile switch``, which
+    reads profile X's record while the operator is still active on
+    profile Y — must address X's own database, not the active
+    profile's. The default ``SecureObjectRepository()`` resolves its
+    engine from ``Settings.aeat_database_url``, which is computed
+    from the *active* profile pointer; that routes a
+    ``build_lifecycle_service(bucket_id=X)`` call at the active
+    profile's database and the record is never found.
+
+    This helper computes ``bucket_id``'s database URL directly
+    (``sqlite:///<aeat_local_storage_root>/buckets/<bucket_id>/db/aeat.db``)
+    and constructs the repository against that engine, so the
+    lifecycle service always reads and writes the bucket it names.
+    """
+
+    from ...adapters.persistence.storage.sql import create_engine_from_settings
+    from ...core.config import Settings, load_settings
+
+    root = load_settings().aeat_local_storage_root
+    db_path = root / "buckets" / bucket_id / "db" / "aeat.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    return SecureObjectRepository(engine=engine)
+
+
 def _clear_output_language_cache() -> None:
     """Invalidate cached i18n output-language resolution after a profile write.
 
@@ -81,7 +112,10 @@ class UserProfileLifecycleRepository:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise ValueError("bucket_id must not be blank")
-        self._objects = objects or SecureObjectRepository()
+        # Bind to THIS bucket's own database when no repository is
+        # injected — cross-bucket operations must address the named
+        # bucket, not whichever profile is currently active.
+        self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
 
     @property
     def bucket_id(self) -> str:
@@ -167,7 +201,10 @@ class UserProfileSnapshotRepository:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise ValueError("bucket_id must not be blank")
-        self._objects = objects or SecureObjectRepository()
+        # Bind to THIS bucket's own database when no repository is
+        # injected — cross-bucket operations must address the named
+        # bucket, not whichever profile is currently active.
+        self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
 
     @property
     def bucket_id(self) -> str:

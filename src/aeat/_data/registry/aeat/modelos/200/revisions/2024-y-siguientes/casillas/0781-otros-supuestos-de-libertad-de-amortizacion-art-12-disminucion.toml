@@ -4,6 +4,7 @@ number = "02626"
 label = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [02626]"
 section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02626"]

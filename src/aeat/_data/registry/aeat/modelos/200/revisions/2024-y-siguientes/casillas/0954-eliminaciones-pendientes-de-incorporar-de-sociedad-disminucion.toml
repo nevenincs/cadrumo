@@ -4,6 +4,7 @@ number = "03386"
 label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Disminución - Correcciones del ejercicio - Permanentes [03386]"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026g-casilla-03386"]

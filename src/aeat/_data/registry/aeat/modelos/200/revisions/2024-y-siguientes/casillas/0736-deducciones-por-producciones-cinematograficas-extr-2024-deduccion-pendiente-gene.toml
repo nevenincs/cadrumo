@@ -4,6 +4,7 @@ number = "02445"
 label = "Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2024 -Deducción pendiente/generada [02445]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2024_deduccion_pendiente_generada"]
 data_type = "money"
+semantic_role = "is_deduccion_cinematografica_pendiente_generada"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-02445"]

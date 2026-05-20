@@ -181,13 +181,15 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     2026-05-19 operator testimonies catalogued.
     """
 
-    from ...adapters.persistence.storage import get_master_key_provider
+    from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
     from ...application.workflow._models import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
 
     if is_bootstrap_exempt(_full_invocation_verb_path()):
         return
     if resolve_active_bucket_id() is None:
+        return
+    if has_active_bucket_session():
         return
     ctx.with_resource(get_master_key_provider())
 

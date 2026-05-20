@@ -4,6 +4,7 @@ number = "02764"
 label = "Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023 - Pendiente aplicación a principio del período - Por límite [02764]"
 section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"]
 data_type = "money"
+semantic_role = "is_gastos_financieros_limitacion_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020-casilla-02764"]

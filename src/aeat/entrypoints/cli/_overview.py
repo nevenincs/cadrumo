@@ -10,6 +10,7 @@ from ...application.overview import (
     build_overview_calendar,
     build_overview_status_report,
 )
+from ...core.i18n import tr
 from ._common import (
     _bad,
     _canonical_period,
@@ -19,7 +20,6 @@ from ._common import (
     _profile_to_autonomo,
     _state,
 )
-from ...core.i18n import tr
 from ._overview_rendering import render_cli_overview_status_lines
 
 app = typer.Typer(
@@ -42,8 +42,12 @@ def overview_status(
     app-overview-shape ADR's Consequences section. No compatibility
     shim is preserved; callers must use the dedicated verb.
     """
-    current = _state()
+    from ...application.workflow._models import resolve_active_bucket_id
+
+    current = _state() if resolve_active_bucket_id() is not None else None
     if period is not None:
+        if current is None:
+            raise _bad(tr("cli.config.errors.no_active_profile"))
         drafts = _load_drafts()
         canonical = _canonical_period(period)
         per_modelo_drafts = [d for d in drafts if d.period == canonical]

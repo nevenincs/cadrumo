@@ -4,6 +4,7 @@ number = "01802"
 label = "Deducciones inversión Canarias - Inversiones Canarias 2024 - Deducción pendiente/generada [01802]"
 section = ["deducciones_inversion_canarias", "inversiones_canarias_2024"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016b-casilla-01802"]

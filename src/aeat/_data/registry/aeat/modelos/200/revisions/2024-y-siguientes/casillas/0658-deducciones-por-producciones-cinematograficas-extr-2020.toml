@@ -4,6 +4,7 @@ number = "02168"
 label = "Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2020 - Deducción pendiente/generada [02168]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2020"]
 data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_periodo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-018b-casilla-02168", "modelo-200-page-031-casilla-02168"]

@@ -4,6 +4,7 @@ number = "00700"
 label = "Balance: Activo (I) - Activo - Propiedad intelectual [00700]"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
+semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-003-casilla-00700", "modelo-200-page-016-casilla-00700"]

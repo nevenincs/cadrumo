@@ -33,6 +33,7 @@ def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))

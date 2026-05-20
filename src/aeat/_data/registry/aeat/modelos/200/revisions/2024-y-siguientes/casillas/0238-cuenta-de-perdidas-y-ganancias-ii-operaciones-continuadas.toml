@@ -4,6 +4,7 @@ number = "00796"
 label = "Cuenta de pérdidas y ganancias (II) - Operaciones continuadas - Intereses y retorno obligatorio de las aportaciones al capital social y de otros fondos calificados con características de deuda (coo..."
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_continuadas"]
 data_type = "money"
+semantic_role = "is_cuenta_perdidas_ganancias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-008-casilla-00796"]

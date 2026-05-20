@@ -4,6 +4,7 @@ number = "00101"
 label = "Balance: Activo (I) - Activo - ACTIVO NO CORRIENTE [00101]"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
+semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-003-casilla-00101", "modelo-200-page-015b-casilla-00101", "modelo-200-page-027-casilla-00101", "modelo-200-page-034-casilla-00101", "modelo-200-page-044-casilla-00101", "modelo-200-page-049-casilla-00101"]

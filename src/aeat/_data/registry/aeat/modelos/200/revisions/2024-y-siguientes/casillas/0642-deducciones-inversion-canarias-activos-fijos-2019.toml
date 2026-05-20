@@ -4,6 +4,7 @@ number = "02116"
 label = "Deducciones inversión Canarias - Activos fijos 2019 - Deducción pendiente/generada [02116]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2019"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016b-casilla-02116"]

@@ -4,6 +4,7 @@ number = "03196"
 label = "Empresas de reducida dimensión: amortización acelerada (art. 103 LIS y DT 28ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [03196]"
 section = ["empresas_de_reducida_dimension_amortizacion_aceler", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-03196"]

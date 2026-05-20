@@ -4,6 +4,7 @@ number = "01042"
 label = "Liquidación IV - Resultado de la autoliquidación - Abono deducciones por producciones cinematográficas extranjeras - Estado [01042]"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014b-casilla-01042"]

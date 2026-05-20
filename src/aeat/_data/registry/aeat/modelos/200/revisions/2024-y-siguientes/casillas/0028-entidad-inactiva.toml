@@ -4,6 +4,7 @@ number = "00026"
 label = "Entidad inactiva [00026]"
 section = ["entidad_inactiva"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00026", "modelo-200-page-015b-casilla-00026"]

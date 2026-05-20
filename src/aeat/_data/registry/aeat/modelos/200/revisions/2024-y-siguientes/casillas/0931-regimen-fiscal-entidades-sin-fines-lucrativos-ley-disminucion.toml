@@ -4,6 +4,7 @@ number = "03276"
 label = "Régimen fiscal entidades sin fines lucrativos (Ley 49/2002) - Disminución - Correcciones del ejercicio - Permanentes [03276]"
 section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-03276"]

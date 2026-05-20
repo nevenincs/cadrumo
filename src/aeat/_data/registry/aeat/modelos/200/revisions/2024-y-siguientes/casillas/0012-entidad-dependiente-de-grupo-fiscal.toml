@@ -4,6 +4,7 @@ number = "00010"
 label = "Entidad dependiente de grupo fiscal [00010]"
 section = ["entidad_dependiente_de_grupo_fiscal"]
 data_type = "decimal"
+semantic_role = "is_identificacion_flag"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-001-casilla-00010", "modelo-200-page-015-casilla-00010"]

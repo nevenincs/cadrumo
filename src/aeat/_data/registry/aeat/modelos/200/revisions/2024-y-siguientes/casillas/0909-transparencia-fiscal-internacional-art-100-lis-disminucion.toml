@@ -4,6 +4,7 @@ number = "03176"
 label = "Transparencia fiscal internacional (art. 100 LIS) - Disminución - Correcciones del ejercicio - Permanentes [03176]"
 section = ["transparencia_fiscal_internacional_art_100_lis", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-03176"]

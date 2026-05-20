@@ -4,6 +4,7 @@ number = "02362"
 label = "Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2023 - Pendiente de dotar RIIB a principio de período [02362]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "inversiones_anticipadas_2023"]
 data_type = "money"
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022b-casilla-02362"]

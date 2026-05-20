@@ -4,6 +4,7 @@ number = "03306"
 label = "Exención transmisión bienes inmuebles (DA 6ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [03306]"
 section = ["exencion_transmision_bienes_inmuebles_da_6a_lis", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026f-casilla-03306"]

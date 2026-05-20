@@ -4,6 +4,7 @@ number = "02926"
 label = "Transmisiones lucrativas y societarias: aplicación del valor de mercado (art. 17.4 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02926]"
 section = ["transmisiones_lucrativas_y_societarias_aplicacion", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026d-casilla-02926"]

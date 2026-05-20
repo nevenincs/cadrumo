@@ -4,6 +4,7 @@ number = "01022"
 label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en formulas de colaboración análog..."
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
+semantic_role = "is_liquidacion_ii_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-013-casilla-01022"]

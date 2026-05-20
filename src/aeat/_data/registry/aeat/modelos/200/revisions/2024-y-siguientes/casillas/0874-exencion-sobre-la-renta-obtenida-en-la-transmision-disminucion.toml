@@ -4,6 +4,7 @@ number = "02996"
 label = "Exención sobre la renta obtenida en la transmisión de valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [02996]"
 section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-02996"]

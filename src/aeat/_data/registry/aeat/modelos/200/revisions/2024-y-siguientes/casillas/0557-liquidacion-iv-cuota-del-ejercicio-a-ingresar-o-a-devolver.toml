@@ -4,6 +4,7 @@ number = "01784"
 label = "Liquidación IV - Cuota del ejercicio a ingresar o a devolver - Total retenciones e ingresos a cuenta - Imputados por AIEs y UTEs [01784]"
 section = ["liquidacion_iv", "cuota_del_ejercicio_a_ingresar_o_a_devolver"]
 data_type = "money"
+semantic_role = "is_retenciones_ingresos_a_cuenta"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014b-casilla-01784"]

@@ -4,6 +4,7 @@ number = "02578"
 label = "Deducción del 30% importe gastos de amortiz. contable (excluidas emp. reducida dimensión) (art. 7 Ley 16/2012) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios ant..."
 section = ["deduccion_del_30_importe_gastos_de_amortiz_contabl", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02578"]

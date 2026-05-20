@@ -4,6 +4,7 @@ number = "00670"
 label = "Detalle compensación bases imponibles negativas - TOTAL - Pendiente aplicación a principio del período/generada en el período [00670]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "total"]
 data_type = "money"
+semantic_role = "is_bin_total_pendiente"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015-casilla-00670"]

@@ -235,7 +235,7 @@ class TestReconcileDivergent:
 
     def test_tax_id_mismatch_surfaces(self) -> None:
         justificante = _justificante("130", "2024-1T")
-        draft = _draft_for_130(period="2024Q1", profile_tax_id="X9999999Z")
+        draft = _draft_for_130(period="2024Q1", profile_tax_id="X1234567L")
 
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 

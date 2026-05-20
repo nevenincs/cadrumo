@@ -4,6 +4,7 @@ number = "03161"
 label = "Hidrocarburos: Amortización de inversiones intangibles y gastos de investigación (art. 99 LIS) - Aumento - Correcciones del ejercicio - Permanentes [03161]"
 section = ["hidrocarburos_amortizacion_de_inversiones_intangib", "aumento"]
 data_type = "money"
+semantic_role = "is_correccion_aumento"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03161"]

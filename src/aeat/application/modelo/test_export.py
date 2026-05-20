@@ -163,12 +163,12 @@ def test_export_refuses_unknown_revision(
         )
 
 
-def test_export_refuses_draft_revision(
+def test_export_refuses_borrador_revision(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """A revision still in DRAFT state cannot be exported; only
-    verified-complete or filed revisions are legal export sources.
+    """A revision still in BORRADOR state cannot be exported; only
+    verificado-completo or filed revisions are legal export sources.
 
     Locks the contract from app-modelo-shape ADR §export: the export
     artefact must reflect a revision the operator has already

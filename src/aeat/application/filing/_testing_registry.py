@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloScalar
+from ...domain.period import PeriodValidationError, parse_canonical_period
 from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
 
@@ -32,7 +33,8 @@ def build_registry_filing_draft(
     """Build a filing draft through the validated registry runtime path."""
 
     runtime_period = _runtime_period(period, filing_year=filing_year)
-    schema_provider = build_runtime_schema_provider(modelos=(modelo,), filing_year=filing_year, period=runtime_period)
+    snapshot_year, registry_period_token = _snapshot_year_and_token(runtime_period)
+    schema_provider = build_runtime_schema_provider(modelos=(modelo,), filing_year=snapshot_year, period=registry_period_token)
     draft = build_draft(
         modelo=modelo,
         period=runtime_period,
@@ -89,6 +91,21 @@ def build_registry_filing_draft_from_decimals(
 _QUARTER_TOKEN_RE = re.compile(r"^(?P<quarter>[1-4])T$")
 _ANNUAL_TOKEN_RE = re.compile(r"^0A$")
 _RUNTIME_PERIOD_RE = re.compile(r"^\d{4}(?:Q[1-4]|A)$|^\d{4}-(?:0[1-9]|1[0-2])$")
+
+
+def _snapshot_year_and_token(runtime_period: str) -> tuple[int, str]:
+    """Return ``(filing_year, registry_period_token)`` for a canonical runtime period.
+
+    Translates the canonical ``{year}Q{n}`` / ``{year}A`` / ``{year}-{mm}``
+    format produced by :func:`_runtime_period` back to the registry-native
+    token (``"1T"``…``"4T"``, ``"0A"``, ``"01"``…``"12"``) and the year
+    encoded in the period string.  The registry's ``period_selector.periods``
+    stores native tokens, so snapshot lookups must use the native form.
+    """
+    try:
+        return parse_canonical_period(runtime_period)
+    except PeriodValidationError as exc:
+        raise ModeloBuilderError(f"cannot resolve snapshot period for {runtime_period!r}: {exc}") from exc
 
 
 def _runtime_period(period: str, *, filing_year: int) -> str:

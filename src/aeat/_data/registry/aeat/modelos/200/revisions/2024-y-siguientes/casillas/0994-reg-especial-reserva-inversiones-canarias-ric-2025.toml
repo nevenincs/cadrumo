@@ -4,6 +4,7 @@ number = "03627"
 label = "Rég. especial reserva inversiones Canarias - RIC 2025 - Integrado en BI por incumplimiento de requisitos [03627]"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2025"]
 data_type = "money"
+semantic_role = "is_reserva_inversiones_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-022-casilla-03627"]

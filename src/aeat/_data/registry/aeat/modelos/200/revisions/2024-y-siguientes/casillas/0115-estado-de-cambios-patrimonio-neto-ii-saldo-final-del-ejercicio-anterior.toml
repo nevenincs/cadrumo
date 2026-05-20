@@ -4,6 +4,7 @@ number = "00380"
 label = "Estado de cambios patrimonio neto (II) - Saldo, final del ejercicio anterior - Capital - Escriturado [00380]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "saldo_final_del_ejercicio_anterior"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-010-casilla-00380", "modelo-200-page-013-casilla-00380", "modelo-200-page-040-casilla-00380"]

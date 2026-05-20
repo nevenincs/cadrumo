@@ -4,6 +4,7 @@ number = "00886"
 label = "Deducciones inversión Canarias - Total - Deducción pendiente/generada [00886]"
 section = ["deducciones_inversion_canarias", "total"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_total"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016b-casilla-00886"]

@@ -4,6 +4,7 @@ number = "00329"
 label = "Cuenta de pérdidas y ganancias (II) - Operaciones continuadas - Otros ingresos y gastos de carácter financiero [00329]"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_continuadas"]
 data_type = "money"
+semantic_role = "is_cuenta_perdidas_ganancias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-008-casilla-00329", "modelo-200-page-013-casilla-00329", "modelo-200-page-032-casilla-00329", "modelo-200-page-039-casilla-00329"]

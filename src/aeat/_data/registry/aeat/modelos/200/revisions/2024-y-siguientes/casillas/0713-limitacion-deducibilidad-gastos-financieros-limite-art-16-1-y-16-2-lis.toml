@@ -4,6 +4,7 @@ number = "02368"
 label = "Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i6) Ingresos,gastos o rentas que forman parte del beneficio operativo que no se integran en la base imponible [02368]"
 section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
 data_type = "money"
+semantic_role = "is_gastos_financieros_limitacion_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020-casilla-02368"]

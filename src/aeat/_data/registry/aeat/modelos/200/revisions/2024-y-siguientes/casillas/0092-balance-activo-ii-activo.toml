@@ -4,6 +4,7 @@ number = "00149"
 label = "Balance: Activo (II) - Activo - Deudores comerciales y otras cuentas a cobrar [00149]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
+semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-004-casilla-00149", "modelo-200-page-016b-casilla-00149", "modelo-200-page-027b-casilla-00149", "modelo-200-page-034-casilla-00149", "modelo-200-page-044-casilla-00149", "modelo-200-page-049-casilla-00149"]

@@ -4,6 +4,7 @@ number = "02506"
 label = "Cambio de criterios contables (art. 11.3.2º LIS) - Disminución - Correcciones del ejercicio - Permanentes [02506]"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026b-casilla-02506"]

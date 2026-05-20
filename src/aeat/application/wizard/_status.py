@@ -133,7 +133,7 @@ def _next_wizard_action(
     if not auth_provider:
         return "aeat config auth configure --provider certificate --file PATH"
     if not login_ready:
-        return "aeat config auth test --provider certificate"
+        return f"aeat config auth test --provider {auth_provider}"
     return "aeat app overview status"
 
 

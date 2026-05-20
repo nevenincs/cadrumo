@@ -4,6 +4,7 @@ number = "03146"
 label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Correcciones del ejercicio - Permanentes [03146]"
 section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03146"]

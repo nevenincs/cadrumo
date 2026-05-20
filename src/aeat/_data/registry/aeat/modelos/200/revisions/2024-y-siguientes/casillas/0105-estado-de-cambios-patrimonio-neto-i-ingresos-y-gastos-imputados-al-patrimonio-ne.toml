@@ -4,6 +4,7 @@ number = "00336"
 label = "Estado de cambios patrimonio neto (I) - Ingresos y gastos imputados al patrimonio neto - Por valoración de instrumentos financieros [00336]"
 section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-009-casilla-00336", "modelo-200-page-012-casilla-00336", "modelo-200-page-033-casilla-00336", "modelo-200-page-040-casilla-00336"]

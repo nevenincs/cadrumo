@@ -4,6 +4,7 @@ number = "01881"
 label = "Liquidación IV - Resultado de la autoliquidación - Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994) - D. Forales/Navarra [01881]"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014b-casilla-01881", "modelo-200-page-026-casilla-01881"]

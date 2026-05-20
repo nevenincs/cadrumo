@@ -4,6 +4,7 @@ number = "00464"
 label = "Estado de cambios patrimonio neto (II) - Ingresos y gastos reconocidos en patrimonio neto - Capital - Escriturado [00464]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
+semantic_role = "is_estado_cambios_patrimonio_neto_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-010-casilla-00464", "modelo-200-page-020b-casilla-00464", "modelo-200-page-043-casilla-00464"]

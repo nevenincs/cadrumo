@@ -4,6 +4,7 @@ number = "00785"
 label = "Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Fondo de Educación, Formación y Promoción a corto plazo (cooperativas) [00785]"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
+semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-006-casilla-00785", "modelo-200-page-016b-casilla-00785"]

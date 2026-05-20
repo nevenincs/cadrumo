@@ -4,6 +4,7 @@ number = "02906"
 label = "Operaciones de aumento de capital o fondos propios por compensación de créditos (art. 17.2 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02906]"
 section = ["operaciones_de_aumento_de_capital_o_fondos_propios", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026d-casilla-02906"]

@@ -4,6 +4,7 @@ number = "01886"
 label = "Régimen especial de buques y empresas navieras en Canarias: desglose de la compensación de bases imponibles negativas - Subtotal de compensación de base imponible especial - Pendiente aplicación a ..."
 section = ["regimen_especial_de_buques_y_empresas_navieras_en", "subtotal_de_compensacion_de_base_imponible_especia"]
 data_type = "money"
+semantic_role = "is_naviera_base_imponible_negativa"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-015-casilla-01886"]

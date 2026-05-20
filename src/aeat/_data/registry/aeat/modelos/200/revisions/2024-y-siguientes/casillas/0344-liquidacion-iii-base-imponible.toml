@@ -4,6 +4,7 @@ number = "01037"
 label = "Liquidación III - Base imponible - Sólo sociedades cooperativas - Aplicación del límite del art.11.12 LIS a las perdidas por deterioro del art. 13.1 LIS y provisiones y gastos - Disminuciones [01037]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
+semantic_role = "is_base_imponible"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-014-casilla-01037"]

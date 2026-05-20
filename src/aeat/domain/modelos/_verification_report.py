@@ -2,7 +2,7 @@
 
 A :class:`VerificationReport` is the decision artifact the verify
 command persists for every run. It captures whether the target
-calculation revision meets the ``verified_complete`` contract,
+calculation revision meets the ``verificado_completo`` contract,
 which blocking findings prevent that transition, which inputs are
 missing, which casillas are unresolved, which waivers were
 accepted, and what the operator should do next.

@@ -4,6 +4,7 @@ number = "03126"
 label = "Bases imp. negativas generadas dentro del grupo fiscal por la ent. transmitida y que hayan sido compensadas (art. 62.2 LIS) - Disminución - Correcciones del ejercicio - Permanentes [03126]"
 section = ["bases_imp_negativas_generadas_dentro_del_grupo_fis", "disminucion"]
 data_type = "money"
+semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-026e-casilla-03126"]

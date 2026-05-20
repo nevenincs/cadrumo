@@ -4,6 +4,7 @@ number = "01590"
 label = "Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª LIS - Ejercicio generación - Total 2008 a 2015 - AID aplicados en el..."
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_dt_33a_y_da_13a_lis"]
 data_type = "money"
+semantic_role = "is_conversion_aid_dt33a_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-020c-casilla-01590"]
