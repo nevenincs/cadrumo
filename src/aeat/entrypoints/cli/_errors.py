@@ -189,6 +189,19 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
                 raise
             if _UNDER_TEST.get():
                 raise
+            # SQLAlchemy wraps an exception raised inside bind-param
+            # processing (e.g. NoActiveBucketSessionError raised by an
+            # encrypted-column codec when no session is unlocked) into
+            # a StatementError. The wrapped cause is a typed AeatError
+            # carrying a clean operator refusal. Unwrap it and forward
+            # the refusal verbatim — otherwise the no-session refusal
+            # is mis-classified as an unexpected internal error and a
+            # full traceback is written to the log file, where
+            # `aeat config repair logs` later echoes it back at the
+            # operator as if it were a live crash.
+            wrapped = _unwrap_aeat_error(error)
+            if wrapped is not None:
+                _emit_error_and_exit(wrapped)
             _log.error(
                 "command_error_boundary: unexpected exception in %s",
                 getattr(callback, "__name__", repr(callback)),
@@ -343,6 +356,37 @@ def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
     """Narrow ``stream`` to a text stream that exposes ``reconfigure``."""
 
     return hasattr(stream, "reconfigure")
+
+
+def _unwrap_aeat_error(error: BaseException) -> AeatError | None:
+    """Return the typed :class:`AeatError` wrapped inside ``error``, if any.
+
+    A library boundary (notably SQLAlchemy) can catch an
+    :class:`AeatError` raised inside its own machinery and re-raise it
+    wrapped in a library-specific exception. The typed refusal is then
+    reachable only through the ``orig`` attribute SQLAlchemy sets, or
+    through the standard ``__cause__`` / ``__context__`` chain. This
+    helper walks both so the refusal can be forwarded verbatim rather
+    than mis-reported as an unexpected internal error.
+
+    The walk is depth-bounded to avoid pathological cycles.
+    """
+
+    seen: set[int] = set()
+    current: BaseException | None = error
+    depth = 0
+    while current is not None and depth < 16:
+        if isinstance(current, AeatError):
+            return current
+        if id(current) in seen:
+            return None
+        seen.add(id(current))
+        depth += 1
+        nxt = getattr(current, "orig", None)
+        if not isinstance(nxt, BaseException):
+            nxt = current.__cause__ or current.__context__
+        current = nxt
+    return None
 
 
 def _is_click_control_flow(error: Exception) -> bool:
