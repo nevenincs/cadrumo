@@ -17,7 +17,7 @@ class _CategoryProfileStrictFrozenModel(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class IvaCategory(StrEnum):
+class IvaDeductibilityHint(StrEnum):
     """Local IVA hint kept decoupled from the IVA taxonomy branch."""
 
     GENERAL = "general"
@@ -31,7 +31,7 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
     category: SpendingCategory
     display_label: tr
     proportionality: ProportionalityRule
-    vat_hint: IvaCategory | None = None
+    vat_hint: IvaDeductibilityHint | None = None
 
     @model_validator(mode="after")
     def _validate_profile(self) -> CategoryProfile:
