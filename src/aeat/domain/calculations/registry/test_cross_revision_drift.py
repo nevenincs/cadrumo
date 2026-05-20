@@ -10,6 +10,7 @@ legal_refs).
 
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import pytest
@@ -147,3 +148,20 @@ def test_backend_registry_validation_accepts_committed_corpus_drift_gate() -> No
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
+
+
+def test_singleton_semantic_role_warning_count_does_not_regress() -> None:
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
+
+    singleton_warnings = [
+        str(item.message)
+        for item in captured
+        if "semantic_role" in str(item.message)
+        and "appears on exactly one casilla" in str(item.message)
+    ]
+
+    assert len(singleton_warnings) <= 239, singleton_warnings[:10]
