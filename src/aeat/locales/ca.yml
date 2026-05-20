@@ -203,6 +203,8 @@ application:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
   user_profile:
     errors:
+      duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
+        contribuent ha de tenir un sol perfil.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa `aeat config
         profile switch NAME` per activar-lo o `aeat config profile delete NAME` primer.

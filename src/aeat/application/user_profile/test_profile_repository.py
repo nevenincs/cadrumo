@@ -38,6 +38,7 @@ from ...domain.user_profile import (
 )
 from ..workflow._profile_bucket_scan import read_profile_bucket
 from ._integrity import ProfileIntegrityError
+from ._orchestration import ProfileAlreadyRegisteredError
 from ._profile_repository import ProfileRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -51,11 +52,24 @@ _VALID_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="iva.regime", value="GENERAL"),
     UserProfileFact(path="provenance.source", value="manual_cli"),
 )
+# A second valid fact set carrying a DISTINCT tax id. ``create``
+# refuses two profiles that share a tax id, so a test registering a
+# second profile alongside one built from ``_VALID_FACTS`` must use a
+# different taxpayer identity.
+_SECOND_FACTS: tuple[UserProfileFact, ...] = tuple(
+    UserProfileFact(path="identity.tax_id", value="00000001R")
+    if fact.path == "identity.tax_id"
+    else fact
+    for fact in _VALID_FACTS
+)
 # An incomplete fact set: the required ``iva.regime`` field is dropped,
 # so the schema validator rejects the record inside the lifecycle
-# service's ``register`` — a real failure, not a patched one.
+# service's ``register`` — a real failure, not a patched one. Built
+# from ``_SECOND_FACTS`` so its tax id is distinct from a profile
+# registered with ``_VALID_FACTS``; the rejection under test is the
+# schema failure, not the duplicate-tax-id refusal.
 _INCOMPLETE_FACTS: tuple[UserProfileFact, ...] = tuple(
-    fact for fact in _VALID_FACTS if fact.path != "iva.regime"
+    fact for fact in _SECOND_FACTS if fact.path != "iva.regime"
 )
 
 
@@ -94,6 +108,46 @@ def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
     assert loaded.record.facts == _VALID_FACTS
     assert loaded.recovery_enrolled is False
     assert loaded.kdf_params.algorithm == "argon2id"
+
+
+def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
+    """A second profile carrying an existing tax id is refused.
+
+    Two profiles sharing a NIF / NIE / CIF silently split one
+    taxpayer's filing history. ``create`` scans the registered
+    profiles and refuses the duplicate before any store write.
+    """
+
+    repository = ProfileRepository()
+    first = repository.create(label="Original", facts=_VALID_FACTS)
+
+    # `_VALID_FACTS` carries tax id 00000000T; a second create with the
+    # same id under a different label must be refused.
+    duplicate_facts = tuple(
+        UserProfileFact(path="identity.tax_id", value="00000000T")
+        if fact.path == "identity.tax_id"
+        else fact
+        for fact in _SECOND_FACTS
+    )
+    with pytest.raises(ProfileAlreadyRegisteredError, match=r"00000000T|Original"):
+        repository.create(label="Duplicate", facts=duplicate_facts)
+
+    # The refusal fired before any store write: no half-live profile.
+    assert read_profile_bucket("Duplicate", root=_backend) is None
+    # The original is untouched and still loads.
+    assert repository.load(first.profile_id).label == "Original"
+
+
+def test_create_allows_distinct_tax_ids(_backend: Path) -> None:
+    """Two profiles with distinct tax ids both register cleanly."""
+
+    repository = ProfileRepository()
+    first = repository.create(label="First", facts=_VALID_FACTS)
+    second = repository.create(label="Second", facts=_SECOND_FACTS)
+
+    assert first.profile_id != second.profile_id
+    assert repository.load(first.profile_id).label == "First"
+    assert repository.load(second.profile_id).label == "Second"
 
 
 def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
@@ -227,7 +281,7 @@ def test_delete_clears_pointer_before_tombstoning(_backend: Path) -> None:
 
     repository = ProfileRepository()
     active = repository.create(label="Active One", facts=_VALID_FACTS)
-    other = repository.create(label="Other One", facts=_VALID_FACTS)
+    other = repository.create(label="Other One", facts=_SECOND_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=active.profile_id, schema_version=1))
 
     repository.delete(active.profile_id)
@@ -246,7 +300,7 @@ def test_list_summarises_every_registered_profile(_backend: Path) -> None:
 
     repository = ProfileRepository()
     first = repository.create(label="First", facts=_VALID_FACTS)
-    second = repository.create(label="Second", facts=_VALID_FACTS)
+    second = repository.create(label="Second", facts=_SECOND_FACTS)
 
     summaries = repository.list()
     by_id = {summary.profile_id: summary for summary in summaries}

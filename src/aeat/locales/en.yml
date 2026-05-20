@@ -182,6 +182,8 @@ application:
         modelo_blank: Modelo identifier must not be blank.
   user_profile:
     errors:
+      duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
+        one taxpayer must have one profile.
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run `aeat config
         profile switch NAME` to activate it or `aeat config profile delete NAME` first.

@@ -197,6 +197,8 @@ application:
         modelo_blank: A modelo azonosító nem lehet üres.
   user_profile:
     errors:
+      duplicate_tax_id: A(z) '%{tax_id}' adóazonosítót már használja a(z) '%{profile}'
+        profil; egy adóalanynak egy profilja lehet.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
       profile_already_exists: A(z) '%{profile}' profil már létezik; futtasd az `aeat
         config profile switch NAME` parancsot az aktiválásához, vagy előbb az `aeat

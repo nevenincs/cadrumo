@@ -61,6 +61,25 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _BUCKETS_DIRNAME = "buckets"
 
 
+_TAX_ID_FACT_PATH = "identity.tax_id"
+"""Profile-fact path carrying the taxpayer's Spanish NIF / NIE / CIF."""
+
+
+def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
+    """Return the canonical (upper-cased, trimmed) tax id from ``facts``.
+
+    Returns :data:`None` when no ``identity.tax_id`` fact is present or
+    it carries no value, so a profile without a tax id never collides.
+    """
+
+    for fact in facts:
+        if fact.path == _TAX_ID_FACT_PATH and fact.value is not None:
+            text = str(fact.value).strip().upper()
+            if text:
+                return text
+    return None
+
+
 def _default_kdf_params() -> ManifestKdfParams:
     """Return the OWASP-baseline Argon2id parameters for a fresh bucket.
 
@@ -196,6 +215,7 @@ class ProfileRepository:
                 f"profile {resolved_id!r} already has a registered bucket manifest at {paths.bucket_dir}"
             )
         self._refuse_duplicate_label(label)
+        self._refuse_duplicate_tax_id(facts)
 
         kdf_params = _default_kdf_params()
         created_at = datetime.now(UTC)
@@ -514,6 +534,43 @@ class ProfileRepository:
                 profile=label,
             ),
         )
+
+    def _refuse_duplicate_tax_id(self, facts: Sequence[UserProfileFact]) -> None:
+        """Refuse a create whose tax id is already carried by a live profile.
+
+        The Spanish tax id (NIF / NIE / CIF) identifies the taxpayer; two
+        profiles carrying the same id are an operator mistake — a second
+        profile for the same person silently splits that taxpayer's
+        filing history. The refusal scans every registered profile's
+        encrypted record, compares the canonical (upper-cased, trimmed)
+        tax id, and fires before any store write so there is nothing to
+        roll back. A torn bucket whose record cannot be loaded cannot
+        claim a tax id and is skipped.
+        """
+
+        new_tax_id = _canonical_tax_id(facts)
+        if new_tax_id is None:
+            return
+        from ._orchestration import ProfileAlreadyRegisteredError
+
+        for summary in self.list():
+            try:
+                aggregate = self.load(summary.profile_id)
+            except Exception:  # noqa: BLE001 — a torn / unreadable bucket cannot claim an id
+                continue
+            existing_tax_id = _canonical_tax_id(aggregate.record.facts)
+            if existing_tax_id is not None and existing_tax_id == new_tax_id:
+                raise ProfileAlreadyRegisteredError(
+                    tr(
+                        "application.user_profile.errors.duplicate_tax_id",
+                        default=(
+                            "Tax id '%{tax_id}' is already used by profile "
+                            "'%{profile}'; one taxpayer must have one profile."
+                        ),
+                        tax_id=new_tax_id,
+                        profile=summary.label,
+                    ),
+                )
 
     def _lifecycle_repository(self, profile_id: str) -> UserProfileLifecycleRepository:
         """Return a secure-record repository bound to ``profile_id``'s db.
