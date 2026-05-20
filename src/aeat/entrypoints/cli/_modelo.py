@@ -1700,26 +1700,26 @@ def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
 def work_amend(
     ctx: typer.Context,
     from_filing_record_id: Annotated[
-        str,
+        str | None,
         typer.Option(
             "--from-filing-record",
             help=tr("cli.app.modelo.work.from_filing_record_help"),
         ),
-    ],
+    ] = None,
     kind: Annotated[
-        str,
+        str | None,
         typer.Option(
             "--kind",
             help=tr("cli.app.modelo.work.amendment_kind_help"),
         ),
-    ],
+    ] = None,
     reason: Annotated[
-        str,
+        str | None,
         typer.Option(
             "--reason",
             help=tr("cli.app.modelo.work.amendment_reason_help"),
         ),
-    ],
+    ] = None,
     actor: Annotated[
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
@@ -1729,7 +1729,37 @@ def work_amend(
         typer.Option("--set", help=tr("cli.app.modelo.work.set_override_help")),
     ] = None,
 ) -> None:
-    """Build a complementaria amendment over an externally-filed return."""
+    """Build a complementaria amendment over an externally-filed return.
+
+    The four required inputs (``--from-filing-record``, ``--kind``,
+    ``--reason``, and at least one ``--set``) are batch-validated so a
+    run missing several flags reports every absent one in a single
+    refusal instead of forcing the operator to rediscover them one
+    invocation at a time.
+    """
+
+    missing: list[str] = []
+    if not from_filing_record_id or not from_filing_record_id.strip():
+        missing.append("--from-filing-record")
+    if not kind or not kind.strip():
+        missing.append("--kind")
+    if not reason or not reason.strip():
+        missing.append("--reason")
+    if not set_overrides:
+        missing.append("--set")
+    if missing:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.amend_missing_options",
+                missing=", ".join(missing),
+            )
+        )
+
+    # The batch check above guarantees all four required inputs are
+    # present and non-blank; narrow the optional types for the calls.
+    assert from_filing_record_id is not None
+    assert kind is not None
+    assert reason is not None
 
     try:
         amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
