@@ -60,3 +60,17 @@ def test_registry_production_code_does_not_use_contextlib_suppress() -> None:
                     offenders.append(f"{relative}:{node.lineno}")
 
     assert offenders == []
+
+
+def test_registry_production_code_does_not_use_bare_except() -> None:
+    """Registry code must name the exception class it is prepared to handle."""
+
+    offenders: list[str] = []
+    for path in _production_modules():
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ExceptHandler) and node.type is None:
+                relative = path.relative_to(_REGISTRY_PACKAGE)
+                offenders.append(f"{relative}:{node.lineno}")
+
+    assert offenders == []
