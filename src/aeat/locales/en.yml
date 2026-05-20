@@ -183,8 +183,8 @@ application:
   setup:
     errors:
       workspace_bucket_torn: Profile bucket '%{profile}' has a manifest but no profile
-        record; initialization did not complete. Run `aeat config repair profile
-        --clear-active --yes`, then create the profile again.
+        record; initialization did not complete. Run `aeat config repair profile --clear-active
+        --yes`, then create the profile again.
   user_profile:
     errors:
       no_active_profile_selected: No active profile selected.
