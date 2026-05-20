@@ -56,7 +56,7 @@ unblocks every operator-facing verb.
 - [x] `P02.S14` - wire `BucketSession.is_expired` polling into `SecureObjectRepository`; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `P02.S15` - raise a translated `CliRefusedBoundaryError` on expired session naming `profile switch` as next action; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `P02.S16` - wire `BucketSession.touch` from the same repository hook; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P02.S17` - add roundtrip test exercising session-open → verb → expiry → refusal across the CLI root; `src/aeat/entrypoints/cli/test_session_lifecycle_roundtrip.py`.
+- [x] `P02.S17` - add roundtrip test exercising session-open → verb → expiry → refusal across the CLI root; `src/aeat/entrypoints/cli/test_session_lifecycle_roundtrip.py`.
 
 ### Phase `P03` - state-model collapse + atomic create (Rulings 2 + 3)
 
@@ -67,15 +67,15 @@ resolve the create/read disagreement and the dual-profile pain.
 - [x] `P03.S19` - add AST-guard test asserting no module under `src/aeat/` re-implements the precedence-chain parse outside `resolve_active_bucket_id` and `read_pointer`; `src/aeat/application/workflow/_test_resolver_uniqueness.py`.
 - [x] `P03.S20` - introduce `initialize_profile_bucket(profile_id, *, facts, ...)` owning the atomic five-write sequence (dir + manifest + session + record + pointer) with all-or-nothing rollback; `src/aeat/application/setup/_service.py`.
 - [x] `P03.S21` - rewrite the wizard create path to route through `initialize_profile_bucket`; `src/aeat/application/wizard/_persistence.py`.
-- [ ] `P03.S22` - rewrite `aeat config profile import` to route through `initialize_profile_bucket`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P03.S23` - rewrite `aeat config profile create --copy-from SOURCE` to route through `initialize_profile_bucket`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P03.S24` - retire `register_active_profile` from `user_profile/_orchestration.py`; `the responsibilities move into `initialize_profile_bucket`; `src/aeat/application/user_profile/_orchestration.py`.
+- [x] `P03.S22` - rewrite `aeat config profile import` to route through `initialize_profile_bucket`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P03.S23` - rewrite `aeat config profile create --copy-from SOURCE` to route through `initialize_profile_bucket`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P03.S24` - retire `register_active_profile` from `user_profile/_orchestration.py`; `the responsibilities move into `initialize_profile_bucket`; `src/aeat/application/user_profile/_orchestration.py`.
 - [x] `P03.S25` - rewrite `select_profile` to refuse when the manifest does not exist (today it checks only the encrypted UserProfileRecord); `src/aeat/application/user_profile/_orchestration.py`.
 - [x] `P03.S26` - switch `profile list` from `state.active_profile_record()` to `list_profile_buckets()`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P03.S27` - refuse duplicate-name `profile create` with translated error; `src/aeat/application/setup/_service.py`.
-- [ ] `P03.S28` - migrate the 4 tests that still call `state.profiles[name]` to call `list_profile_buckets()` or `read_profile_bucket(name)`; `src/aeat/application/`.
-- [ ] `P03.S29` - add roundtrip test asserting create → list → show → switch → show all return consistent identity for the same profile; `src/aeat/application/setup/_test_atomic_create_roundtrip.py`.
-- [ ] `P03.S30` - add anti-tautology test asserting failure at step 4 of `initialize_profile_bucket` cleanly rolls back steps 1-3; `src/aeat/application/setup/_test_atomic_create_rollback.py`.
+- [x] `P03.S28` - migrate the 4 tests that still call `state.profiles[name]` to call `list_profile_buckets()` or `read_profile_bucket(name)`; `src/aeat/application/`.
+- [x] `P03.S29` - add roundtrip test asserting create → list → show → switch → show all return consistent identity for the same profile; `src/aeat/application/setup/_test_atomic_create_roundtrip.py`.
+- [x] `P03.S30` - add anti-tautology test asserting failure at step 4 of `initialize_profile_bucket` cleanly rolls back steps 1-3; `src/aeat/application/setup/_test_atomic_create_rollback.py`.
 
 ### Phase `P04` - --version and --help fast-path (Ruling 4)
 
@@ -83,8 +83,8 @@ Remove every state read from the help/version surfaces.
 
 - [x] `P04.S31` - rewrite `build_cli_version_report` to return name + version only via `importlib.metadata`; `remove `ValidatedRegistryAuthority.load()`; `src/aeat/application/diagnostics.py`.
 - [x] `P04.S32` - short-circuit `--help` and `--version` in the CLI root callback before any state-touching call; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `P04.S33` - move full registry validation behind a dedicated opt-in verb `aeat config repair integrity registry`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P04.S34` - add roundtrip test asserting `aeat --version` and `aeat --help` complete in under 200 ms on a clean storage root; `src/aeat/entrypoints/cli/test_fast_path_no_state.py`.
+- [x] `P04.S33` - move full registry validation behind a dedicated opt-in verb `aeat config repair integrity registry`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P04.S34` - add roundtrip test asserting `aeat --version` and `aeat --help` complete in under 200 ms on a clean storage root; `src/aeat/entrypoints/cli/test_fast_path_no_state.py`.
 
 ### Phase `P05` - `CliUnexpectedBoundaryError` retires + repair family rewrite (Rulings 5 + 6)
 
@@ -97,7 +97,7 @@ that actually works.
 - [x] `P05.S38` - rewrite `aeat config repair reset-state` to delete via SQL DELETE-by-key without a load-then-delete pattern; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P05.S39` - rewrite `aeat config repair logs` as a streaming tail (seek-from-end, last N lines); `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P05.S40` - mark every `repair` family verb as bootstrap-exempt; `src/aeat/entrypoints/cli/_bootstrap_exempt.py`.
-- [ ] `P05.S41` - add roundtrip test asserting every `repair` verb runs cleanly without an active session on a fresh storage root; `src/aeat/entrypoints/cli/test_repair_bootstrap_exempt.py`.
+- [x] `P05.S41` - add roundtrip test asserting every `repair` verb runs cleanly without an active session on a fresh storage root; `src/aeat/entrypoints/cli/test_repair_bootstrap_exempt.py`.
 
 ### Phase `P06` - re-test gate (final verification)
 
