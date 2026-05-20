@@ -77,7 +77,7 @@ Establish a uniform terminology glossary and merge overlapping classification lo
 
 Retire the insecure local file-based borrador.py snapshotting strategy and consolidate all Modelo 100 draft persistence under borrador_100.py.
 
-- [ ] `W03.P05.S16` - Migrate all active commands from local file-based borrador storage to secure borrador_100 object repository; `src/aeat/application/live/_borrador_100.py`.
+- [x] `W03.P05.S16` - Migrate all active commands from local file-based borrador storage to secure borrador_100 object repository; `src/aeat/application/live/_borrador_100.py`.
 - [x] `W03.P05.S17` - Delete deprecated local filesystem-based borrador parser file-caching implementation; `src/aeat/application/live/_borrador.py`.
 
 ## Wave `W04` - Spanish-Stem Terminology Renames
@@ -237,12 +237,12 @@ Consolidate the five near-clone snapshot services (Borrador legacy retired, Borr
 
 Introduce a shared SnapshotService[TPayload] base class and a StatelessSnapshotService variant under src/aeat/application/live/_snapshot_base.py, then refactor Censo, Expedientes, and Notifications snapshot services to inherit it. The Borrador100 base class work (Phase 1 of the snapshot proposal) and the legacy _borrador.py retirement are already complete; this phase covers Phases 2, 3, 4 (shared exception hierarchy via SnapshotNotFoundError) and Phase 5 (final retire-legacy validation pass).
 
-- [ ] `W05.P14.S128` - Create the SnapshotService[TPayload] generic base class, StatelessSnapshotService variant, SnapshotLifecycleState, and SnapshotNotFoundError shared exception base in a new _snapshot_base module; `src/aeat/application/live/_snapshot_base.py`.
-- [ ] `W05.P14.S129` - Refactor CensoSnapshotService to inherit SnapshotService[CensoSnapshot] and drop the duplicate validator and supersession code; `src/aeat/application/live/_censo.py`.
-- [ ] `W05.P14.S130` - Refactor ExpedientesSnapshotService to inherit StatelessSnapshotService; `src/aeat/application/live/_expedientes.py`.
-- [ ] `W05.P14.S131` - Refactor NotificationsSnapshotService to inherit StatelessSnapshotService; `src/aeat/application/live/_notifications.py`.
-- [ ] `W05.P14.S132` - Align BorradorSnapshotNotFoundError and analogous per-service not-found errors under the shared SnapshotNotFoundError base, preserving per-service identity; `src/aeat/application/live/_borrador_100.py`.
-- [ ] `W05.P14.S133` - Verify the retirement of legacy _borrador.py is complete by confirming no production callsite imports it and remove any residual references in tests and fixtures; `src/aeat/application/live/_borrador.py`.
+- [x] `W05.P14.S128` - Create the SnapshotService[TPayload] generic base class, StatelessSnapshotService variant, SnapshotLifecycleState, and SnapshotNotFoundError shared exception base in a new _snapshot_base module; `src/aeat/application/live/_snapshot_base.py`.
+- [x] `W05.P14.S129` - Refactor CensoSnapshotService to inherit SnapshotService[CensoSnapshot] and drop the duplicate validator and supersession code; `src/aeat/application/live/_censo.py`.
+- [x] `W05.P14.S130` - Refactor ExpedientesSnapshotService to inherit StatelessSnapshotService; `src/aeat/application/live/_expedientes.py`.
+- [x] `W05.P14.S131` - Refactor NotificationsSnapshotService to inherit StatelessSnapshotService; `src/aeat/application/live/_notifications.py`.
+- [x] `W05.P14.S132` - Align BorradorSnapshotNotFoundError and analogous per-service not-found errors under the shared SnapshotNotFoundError base, preserving per-service identity; `src/aeat/application/live/_borrador_100.py`.
+- [x] `W05.P14.S133` - Verify the retirement of legacy _borrador.py is complete by confirming no production callsite imports it and remove any residual references in tests and fixtures; `src/aeat/application/live/_borrador.py`.
 
 ### Phase `W05.P15` - Rental to Fincas Package and SQL Rename
 
