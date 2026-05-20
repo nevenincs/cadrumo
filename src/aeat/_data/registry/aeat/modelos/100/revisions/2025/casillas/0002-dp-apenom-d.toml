@@ -4,6 +4,7 @@ number = "*02"
 label = "Primer declarante apellidos y nombre"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
+semantic_role = "irpf_declarante_apellidos_nombre"
 required = true
 input_kind = "bound"
 binding = "renta-2025-profile-display-name"

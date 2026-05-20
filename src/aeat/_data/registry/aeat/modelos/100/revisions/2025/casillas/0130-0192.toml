@@ -3,6 +3,7 @@ id = "0192"
 number = "0192"
 label = "Arrendamientos y canones"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+semantic_role = "irpf_ed_arrendamientos_canones"
 input_kind = "bound"
 binding = "renta-2025-ledger-expense-0192-deductible"
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]

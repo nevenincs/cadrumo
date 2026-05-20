@@ -4,6 +4,7 @@ number = "*05"
 label = "Primer declarante sexo"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
+semantic_role = "irpf_declarante_sexo"
 required = true
 input_kind = "bound"
 binding = "renta-2025-profile-taxpayer-sex"

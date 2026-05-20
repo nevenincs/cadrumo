@@ -4,6 +4,7 @@ number = "*93"
 label = "Ascendiente clave discapacidad"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "text"
+semantic_role = "irpf_ascendiente_clave_discapacidad"
 input_kind = "bound"
 binding = "renta-2025-family-ascendant-disability-grade"
 legal_refs = ["orden-hac-277-2026:art-3"]

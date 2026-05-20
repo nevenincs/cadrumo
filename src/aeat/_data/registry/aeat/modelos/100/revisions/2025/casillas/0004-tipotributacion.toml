@@ -4,6 +4,7 @@ number = "*68 *69"
 label = "Opcion de tributacion elegida"
 section = ["datos_identificativos", "declaracion"]
 data_type = "text"
+semantic_role = "irpf_declaracion_tipo_tributacion"
 required = true
 input_kind = "bound"
 binding = "renta-2025-profile-declaration-type"
