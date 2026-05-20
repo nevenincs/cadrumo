@@ -3,6 +3,7 @@ id = "0670"
 number = "0670"
 label = "Resultado de la declaracion"
 section = ["resultado_declaracion"]
+semantic_role = "irpf_resultado_declaracion"
 input_kind = "computed"
 formula = "renta-2025-resultado-declaracion"
 legal_refs = ["ley-35-2006:art-103", "orden-hac-277-2026:art-3"]
