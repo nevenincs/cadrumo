@@ -275,5 +275,19 @@ contract orthogonal axes):
   downstream `aeat app modelo work calculate`.
 
 All three ledger verbs follow the W71 orthogonal-axis pattern: they
-sit alongside the canonical CRUD spine on the ledger noun-group, do
-not introduce new sub-noun-groups, and emit no bucket events.
+sit alongside the canonical CRUD spine on the ledger noun-group and
+do not introduce new sub-noun-groups.
+
+Event-emission clarification (2026-05-19): `check` and `preflight`
+are pure read/probe verbs and emit no bucket events. `link` mutates
+a ledger transaction (it patches invoice / evidence / counterpart
+reference fields), and that mutation legitimately emits a single
+`LEDGER_TRANSACTION_UPDATED` event through the canonical
+`update_manual_transaction_fields` path. The earlier blanket "emit
+no bucket events" wording is corrected: it applies to `check` and
+`preflight` only. A `link` that silently patched a transaction
+without an audit-trail event would break ledger provenance — the
+update event is the correct, intended behaviour and is normative for
+`link`. `link` introduces no event type beyond the existing
+`LEDGER_TRANSACTION_UPDATED` already emitted by every manual ledger
+field patch.
