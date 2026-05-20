@@ -124,12 +124,12 @@ def register(profile_app: typer.Typer) -> None:
             "snapshot_id": snapshot.snapshot_id,
             "profile_id": snapshot.profile_id,
             "captured_at": snapshot.captured_at.isoformat(),
-            "facts": dict(snapshot.census_facts),
+            "facts": dict(snapshot.censo_facts),
         }
         lines = [
             f"snapshot_id\t{snapshot.snapshot_id}",
             f"captured_at\t{snapshot.captured_at.isoformat()}",
-            f"facts\t{len(snapshot.census_facts)}",
+            f"facts\t{len(snapshot.censo_facts)}",
         ]
         _emit(ctx, payload, lines)
 
@@ -168,14 +168,14 @@ def register(profile_app: typer.Typer) -> None:
             "captured_at": snapshot.captured_at.isoformat(),
             "source_url": snapshot.source_url,
             "state": snapshot.state.value,
-            "facts": dict(snapshot.census_facts),
+            "facts": dict(snapshot.censo_facts),
         }
         lines = [
             f"snapshot_id\t{snapshot.snapshot_id}",
             f"captured_at\t{snapshot.captured_at.isoformat()}",
             f"state\t{snapshot.state.value}",
         ]
-        for path, value in sorted(snapshot.census_facts.items()):
+        for path, value in sorted(snapshot.censo_facts.items()):
             lines.append(f"{path}\t{value}")
         _emit(ctx, payload, lines)
 

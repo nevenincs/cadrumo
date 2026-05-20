@@ -175,7 +175,7 @@ class CensoSyncService:
             profile_id=profile_id,
             captured_at=datetime.now(UTC),
             source_url=source_url,
-            census_facts=facts,
+            censo_facts=facts,
         )
 
     async def refresh_census_from_sede(
@@ -223,7 +223,7 @@ class CensoSyncService:
             profile_id=profile_id,
             captured_at=datetime.now(UTC),
             source_url=G313_LAUNCHER_URL,
-            census_facts=facts,
+            censo_facts=facts,
         )
 
     def show_census(
@@ -259,7 +259,7 @@ class CensoSyncService:
         snapshot = self.show_census(profile_id=profile_id, snapshot_id=snapshot_id)
         profile = self._load_profile_or_empty(profile_id)
         profile_facts = _profile_facts_by_path(profile)
-        rows = _compare(snapshot.census_facts, profile_facts)
+        rows = _compare(snapshot.censo_facts, profile_facts)
         return CensoProfileComparison(
             snapshot_id=snapshot.snapshot_id,
             profile_id=profile_id.strip(),
@@ -297,13 +297,13 @@ class CensoSyncService:
         profile = self._profiles.load(profile_id)
         before = _profile_facts_by_path(profile)
         retained = tuple(fact for fact in profile.facts if fact.source != CENSUS_SOURCE_TAG)
-        new_census_facts = tuple(
+        new_censo_facts = tuple(
             UserProfileFact(path=path, value=value, source=CENSUS_SOURCE_TAG)
-            for path, value in sorted(snapshot.census_facts.items())
+            for path, value in sorted(snapshot.censo_facts.items())
         )
         updated = profile.model_copy(
             update={
-                "facts": retained + new_census_facts,
+                "facts": retained + new_censo_facts,
                 "updated_at": datetime.now(UTC),
             },
         )
@@ -311,7 +311,7 @@ class CensoSyncService:
         seeded = self._seed_home_office_usage_ratios_from_snapshot(snapshot)
         written: list[str] = []
         unchanged: list[str] = []
-        for path, value in sorted(snapshot.census_facts.items()):
+        for path, value in sorted(snapshot.censo_facts.items()):
             if before.get(path) == value:
                 unchanged.append(path)
             else:
@@ -344,8 +344,8 @@ class CensoSyncService:
             save_usage_ratios,
         )
 
-        total_raw = snapshot.census_facts.get("vivienda_office.total_m2")
-        office_raw = snapshot.census_facts.get("vivienda_office.office_m2")
+        total_raw = snapshot.censo_facts.get("vivienda_office.total_m2")
+        office_raw = snapshot.censo_facts.get("vivienda_office.office_m2")
         if total_raw is None or office_raw is None:
             return ()
         try:
@@ -390,8 +390,8 @@ class CensoSyncService:
         snapshot = self._snapshots.latest_active(profile_id=profile_id)
         if snapshot is None:
             return None
-        total_raw = snapshot.census_facts.get("vivienda_office.total_m2")
-        office_raw = snapshot.census_facts.get("vivienda_office.office_m2")
+        total_raw = snapshot.censo_facts.get("vivienda_office.total_m2")
+        office_raw = snapshot.censo_facts.get("vivienda_office.office_m2")
         if total_raw is None or office_raw is None:
             return None
         try:

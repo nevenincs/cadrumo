@@ -12,7 +12,7 @@ DISCARDED state machine. Re-fetch auto-supersedes the prior ACTIVE
 snapshot for the same profile.
 
 The CLI-facing `CensoSyncService` is the only caller; the
-sede G313 adapter populates `census_facts` from the live
+sede G313 adapter populates `censo_facts` from the live
 Mis Datos Censales endpoint.
 """
 
@@ -52,7 +52,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 CENSUS_SNAPSHOT_NAMESPACE = "aeat.application.live.census_snapshot"
 _CENSUS_SNAPSHOT_VERSION = 1
 
-# census_facts values are always strings: enum values, ISO date strings,
+# censo_facts values are always strings: enum values, ISO date strings,
 # NIF strings, and decimal-as-string for the vivienda_office m2 inputs.
 # A union Decimal | str silently coerces numeric-looking strings (e.g.
 # "15") into Decimal on JSON round-trip, breaking equality and the
@@ -60,13 +60,13 @@ _CENSUS_SNAPSHOT_VERSION = 1
 # value is "15" not Decimal("15")). The sede HTML extractor produces
 # strings; the engine that consumes the snapshot parses the m2 strings
 # back to Decimal at calculation time.
-type _CensusFactValue = str
+type _CensoFactValue = str
 
 
 class CensoSnapshot(BaseModel):
     """Captured 036 census facts available to application consumers.
 
-    `census_facts` is a flat mapping keyed by the dotted schema path
+    `censo_facts` is a flat mapping keyed by the dotted schema path
     (e.g. ``census.activity_start_date``, ``vivienda_office.office_m2``,
     ``contact.fiscal_address_cadastral_reference``). Values are either
     decimal strings (for the raw m2 inputs) or short literals
@@ -74,7 +74,7 @@ class CensoSnapshot(BaseModel):
 
     Attributes:
         snapshot_id: Content-addressed SHA-256 hex over
-            ``(profile_id, captured_at, source_url, census_facts)``.
+            ``(profile_id, captured_at, source_url, censo_facts)``.
         bucket_id: Active profile bucket id at capture time. Snapshots
             are bucket-scoped so cross-profile leakage is impossible.
         profile_id: Operator profile identifier the snapshot belongs
@@ -85,7 +85,7 @@ class CensoSnapshot(BaseModel):
             from. Audited so operators can trace each capture back to
             its AEAT origin.
         state: Lifecycle state from :class:`SnapshotLifecycleState`.
-        census_facts: Flat mapping from dotted schema path to the
+        censo_facts: Flat mapping from dotted schema path to the
             AEAT-side value. The CensoSyncService.compare verb
             walks this mapping against the local profile.
         superseded_by_snapshot_id: Pointer to the snapshot that
@@ -103,7 +103,7 @@ class CensoSnapshot(BaseModel):
     captured_at: datetime
     source_url: str = Field(min_length=1, max_length=2048)
     state: SnapshotLifecycleState
-    census_facts: Mapping[str, _CensusFactValue] = Field(default_factory=dict)
+    censo_facts: Mapping[str, _CensoFactValue] = Field(default_factory=dict)
     superseded_by_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
@@ -118,7 +118,7 @@ class CensoSnapshot(BaseModel):
             discarded_by=self.discarded_by,
             discard_reason=self.discard_reason,
         )
-        blank_keys = sorted(key for key in self.census_facts if not key.strip())
+        blank_keys = sorted(key for key in self.censo_facts if not key.strip())
         if blank_keys:
             raise LiveApplicationInputError("census fact keys must not be blank")
         return self
@@ -141,7 +141,7 @@ def derive_census_snapshot_id(
     profile_id: str,
     captured_at: datetime,
     source_url: str,
-    census_facts: Mapping[str, _CensusFactValue],
+    censo_facts: Mapping[str, _CensoFactValue],
 ) -> str:
     """Return the content-addressed id for one census capture.
 
@@ -155,7 +155,7 @@ def derive_census_snapshot_id(
             "profile_id": profile_id.strip(),
             "captured_at": captured_at.isoformat(),
             "source_url": source_url,
-            "census_facts": dict(sorted(census_facts.items())),
+            "censo_facts": dict(sorted(censo_facts.items())),
         }
     )
 
@@ -314,7 +314,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         profile_id: str,
         captured_at: datetime,
         source_url: str,
-        census_facts: Mapping[str, _CensusFactValue],
+        censo_facts: Mapping[str, _CensoFactValue],
     ) -> CensoSnapshot:
         """Persist a new census snapshot and auto-supersede prior ACTIVE.
 
@@ -327,7 +327,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             profile_id=profile_id,
             captured_at=captured_at,
             source_url=source_url,
-            census_facts=census_facts,
+            censo_facts=censo_facts,
         )
 
     def list_snapshots(  # type: ignore[override]
@@ -390,7 +390,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             profile_id=kwargs["profile_id"],
             captured_at=kwargs["captured_at"],
             source_url=kwargs["source_url"],
-            census_facts=kwargs["census_facts"],
+            censo_facts=kwargs["censo_facts"],
         )
 
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> CensoSnapshot:
@@ -401,7 +401,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             captured_at=kwargs["captured_at"],
             source_url=kwargs["source_url"],
             state=SnapshotLifecycleState.ACTIVE,
-            census_facts=dict(kwargs["census_facts"]),
+            censo_facts=dict(kwargs["censo_facts"]),
         )
 
     def _payload_axis_key(self, payload: CensoSnapshot) -> tuple[Any, ...]:
