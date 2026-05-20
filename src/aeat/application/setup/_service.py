@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import contextlib
-
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from ...core.config import load_settings
+from ...core.i18n import tr
 from ...domain.user_profile import UserProfileFact
 from ..auth import AuthProviderReservedError, configure_operator_auth
+from ..user_profile import UserProfileLifecycleRepository
 from ..user_profile._orchestration import (
     ProfileAlreadyRegisteredError,
     _write_active_profile_pointer,
@@ -15,6 +15,7 @@ from ..user_profile._orchestration import (
 )
 from ..workflow._persistence import workflow_state_repository
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
+from ._errors import WorkspaceBucketTornError
 
 
 def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorkspaceResult:
@@ -50,10 +51,21 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
     #    surface. ``register_active_profile`` writes the bucket
     #    manifest, the encrypted profile record, and rolls every
     #    write back on failure. A profile whose manifest already
-    #    exists is refused; the workspace is already initialized in
-    #    that case, so the refusal is a no-op.
+    #    exists is refused with ``ProfileAlreadyRegisteredError``.
+    #
+    #    That refusal carries two distinct states. A genuinely
+    #    initialized workspace has both the manifest AND the encrypted
+    #    profile record, so a re-run is a benign no-op. A bucket that
+    #    crashed between disaster-ADR Ruling-3 steps 2 and 4 has the
+    #    manifest but NOT the record — a torn bucket. Distinguish the
+    #    two with a no-decryption DB-existence check: the profile
+    #    value object key is plaintext, so ``exists`` is a pure
+    #    SELECT-by-key that needs no master key. A present record means
+    #    idempotent re-run (return normally); an absent record means
+    #    the bucket is torn and the operator must route through an
+    #    explicit repair verb rather than silently overlay new data.
     repository = workflow_state_repository()
-    with contextlib.suppress(ProfileAlreadyRegisteredError):
+    try:
         repository.update(
             lambda state: register_active_profile(
                 state,
@@ -62,6 +74,21 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
                 facts=tuple(facts),
             )
         )
+    except ProfileAlreadyRegisteredError:
+        lifecycle = UserProfileLifecycleRepository(bucket_id=command.profile_name)
+        if not lifecycle.exists(command.profile_name):
+            raise WorkspaceBucketTornError(
+                tr(
+                    "application.setup.errors.workspace_bucket_torn",
+                    default=(
+                        "Profile bucket '%{profile}' has a manifest but no profile "
+                        "record; initialization did not complete. Run `aeat config "
+                        "repair profile --clear-active --yes`, then create the "
+                        "profile again."
+                    ),
+                    profile=command.profile_name,
+                ),
+            ) from None
 
     # 2. Configure auth
     auth_configured = False

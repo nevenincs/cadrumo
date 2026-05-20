@@ -131,8 +131,7 @@ application:
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
-          manifest but no readable profile record (status=%{status}). Run `aeat config
-          repair profile --clear-active --yes`, then switch to or create a valid profile
+          manifest but no readable profile record (status=%{status}). Run `%{next_action}`
           before configuring authentication.
     provider_impact:
       certificate_ready: Certificate auth is ready. The operator keeps the same CLI
@@ -181,6 +180,11 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
+  setup:
+    errors:
+      workspace_bucket_torn: Profile bucket '%{profile}' has a manifest but no profile
+        record; initialization did not complete. Run `aeat config repair profile
+        --clear-active --yes`, then create the profile again.
   user_profile:
     errors:
       no_active_profile_selected: No active profile selected.
@@ -593,10 +597,20 @@ cli:
       diagnostics:
         help: Inspect encrypted auth diagnostics.
         id_help: Diagnostic id.
+        invalid_phone_state: 'Invalid phone state ''%{phone_state}''. Expected one
+          of: %{choices}.'
         list_help: List encrypted Cl@ve auth diagnostics.
+        not_found: 'Auth diagnostic not found: %{diagnostic_id}.'
+        phone_state_help: 'One of: app_prompted_and_accepted, app_prompted_not_accepted,
+          app_did_not_prompt, operator_did_not_check.'
+        report_help: Record the operator-observed Cl@ve app state for one auth diagnostic.
         show_help: Show one redacted encrypted auth diagnostic.
       file_help: Path to the credential file (certificate or key)
       help: Configure the active authentication provider
+      login_fresh_help: Force a new live authentication instead of reusing a saved
+        AEAT session
+      login_help: Acquire or verify a live AEAT session
+      login_reset_lock_help: Clear a stale auth acquisition lock before starting
       no_active_bucket: No active profile bucket. Run 'aeat config profile create
         NAME' before configuring authentication.
       provider_help: Authentication provider id (e.g. certificado-electronico)
@@ -789,7 +803,10 @@ cli:
       logs_lines_help: Number of recent log lines to show
       profile_clear_active_help: Clear a pointer-file active profile only when it
         points at unreadable profile state.
+      profile_clear_active_mismatch: --clear-active can only clear the active profile
+        pointer; '%{profile}' is not active.
       profile_help: Inspect and repair the active-profile pointer.
+      profile_name_help: Inspect a specific registered profile bucket.
       profile_requires_yes: Pass --yes to clear the active-profile pointer.
       quarantine_help: Move undecryptable rows into a quarantine table (destructive;
         requires --yes)

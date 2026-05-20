@@ -195,6 +195,12 @@ application:
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.
+  setup:
+    errors:
+      workspace_bucket_torn: A(z) '%{profile}' profil bucket manifesttel rendelkezik,
+        de nincs profilrekordja; az inicializálás nem fejeződött be. Futtasd az
+        `aeat config repair profile --clear-active --yes` parancsot, majd hozd
+        létre újra a profilt.
   user_profile:
     errors:
       no_active_profile_selected: Nincs kiválasztva aktív profil.
