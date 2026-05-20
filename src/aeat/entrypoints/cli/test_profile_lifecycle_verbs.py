@@ -79,8 +79,15 @@ def cli_runner() -> CliRunner:
     return CliRunner()
 
 
-def _seed(name: str = "default") -> None:
-    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=name))
+def _seed(name: str = "default", *, tax_id: str | None = None) -> None:
+    # ``register_minimal_profile`` derives a profile-unique NIF by
+    # default so two ``_seed`` calls never collide on the
+    # duplicate-tax-id refusal; a test that asserts a specific tax id
+    # passes it explicitly.
+    overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(state, profile_id=name, overrides=overrides)
+    )
 
 
 def _json_payload(result: Result) -> dict[str, object]:
@@ -240,7 +247,7 @@ def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunn
 
 
 def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -> None:
-    _seed("operator")
+    _seed("operator", tax_id="00000000T")
     result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code == 0, result.output
     assert "profile_id\toperator" in result.output
@@ -248,8 +255,8 @@ def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -
 
 
 def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: CliRunner) -> None:
-    _seed("operator")
-    _seed("spouse")
+    _seed("operator", tax_id="00000001R")
+    _seed("spouse", tax_id="00000000T")
     result = cli_runner.invoke(profile_app, ["show", "spouse"])
     assert result.exit_code == 0, result.output
     assert "profile_id\tspouse" in result.output
@@ -457,13 +464,30 @@ def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iter
         dispose_engine()
 
 
-def _create_via_cli(runner: CliRunner, name: str) -> None:
+_NIF_CONTROL_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
+
+
+def _distinct_nif(name: str) -> str:
+    """Return a checksum-valid NIF derived deterministically from ``name``.
+
+    ``profile create`` refuses two profiles that share a tax id, so a
+    test creating several profiles needs a distinct, valid NIF per
+    profile rather than one hard-coded literal.
+    """
+
+    import hashlib
+
+    number = int(hashlib.sha256(name.encode("utf-8")).hexdigest(), 16) % 100_000_000
+    return f"{number:08d}{_NIF_CONTROL_LETTERS[number % 23]}"
+
+
+def _create_via_cli(runner: CliRunner, name: str, *, tax_id: str | None = None) -> None:
     result = runner.invoke(
         root_app,
         [
             "config", "profile", "create", name,
             "--quiet",
-            "--tax-id", "12345678Z",
+            "--tax-id", tax_id or _distinct_nif(name),
             "--name", name.capitalize(),
             "--activity", "design",
             "--iva-regime", "GENERAL",

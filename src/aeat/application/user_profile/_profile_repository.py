@@ -164,8 +164,16 @@ class ProfileRepository:
         label: str,
         facts: Sequence[UserProfileFact] = (),
         profile_id: str | None = None,
+        enforce_unique_tax_id: bool = True,
     ) -> ProfileAggregate:
         """Create a new profile as a cross-store unit of work.
+
+        ``enforce_unique_tax_id`` (default :data:`True`) refuses a create
+        whose tax id is already carried by a live profile — a fresh
+        ``config profile create`` must not split one taxpayer's filing
+        history across two profiles. ``config profile duplicate`` and
+        ``config profile import`` legitimately reproduce an existing
+        profile's tax id and pass :data:`False`.
 
         Mints a fresh UUID identity (unless ``profile_id`` is supplied
         for a caller that already minted one), then performs the
@@ -215,7 +223,8 @@ class ProfileRepository:
                 f"profile {resolved_id!r} already has a registered bucket manifest at {paths.bucket_dir}"
             )
         self._refuse_duplicate_label(label)
-        self._refuse_duplicate_tax_id(facts)
+        if enforce_unique_tax_id:
+            self._refuse_duplicate_tax_id(facts)
 
         kdf_params = _default_kdf_params()
         created_at = datetime.now(UTC)

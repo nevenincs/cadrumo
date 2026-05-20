@@ -144,6 +144,7 @@ def register_active_profile(
     facts: tuple[UserProfileFact, ...] = (),
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
+    enforce_unique_tax_id: bool = True,
 ) -> WorkflowState:
     """Atomically register a new profile and make it the active one.
 
@@ -172,7 +173,12 @@ def register_active_profile(
     """
 
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-    repository.create(label=display_name, facts=facts, profile_id=profile_id)
+    repository.create(
+        label=display_name,
+        facts=facts,
+        profile_id=profile_id,
+        enforce_unique_tax_id=enforce_unique_tax_id,
+    )
     updated = state.model_copy(update={"updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
     updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
