@@ -469,6 +469,14 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
             active = _prompter if _prompter is not None else QuestionaryPrompter()
             answers = run_flow(flow, active, defaults=canonical)
 
+        # Capture create-vs-edit BEFORE any write. Once the pointer
+        # is pre-written below, a re-derived existence check can no
+        # longer distinguish a first-run create from an edit.
+        from ..user_profile._orchestration import _write_active_profile_pointer
+        from ..workflow._profile_bucket_scan import read_profile_bucket
+
+        profile_existed = read_profile_bucket(profile_name) is not None
+
         # Write the active-profile pointer BEFORE constructing the
         # workflow-state repository. `workflow_state_repository()`
         # eagerly opens the per-bucket SQLAlchemy engine in its
@@ -480,13 +488,19 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
         # catalogued. `register_active_profile` re-writes the pointer
         # idempotently at the tail of its work; this early write is
         # purely the engine-URL load-order requirement.
-        from ..user_profile._orchestration import _write_active_profile_pointer
-
         _write_active_profile_pointer(profile_name)
         provider = get_master_key_provider()
         with activate_master_key_provider(provider, fallback_bucket_id=profile_name):
             repository = workflow_state_repository()
-            repository.update(lambda state: persist_answers(flow, answers, state=state, profile_name=profile_name))
+            repository.update(
+                lambda state: persist_answers(
+                    flow,
+                    answers,
+                    state=state,
+                    profile_name=profile_name,
+                    profile_existed=profile_existed,
+                )
+            )
 
     typed = typing.cast(typing.Any, _command)
     typed.__signature__ = inspect.Signature(parameters=list(parameters))

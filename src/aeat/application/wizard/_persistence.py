@@ -74,21 +74,27 @@ def persist_answers(
     *,
     state: WorkflowState,
     profile_name: str,
+    profile_existed: bool,
 ) -> WorkflowState:
     """Persist ``answers`` into the profile bucket and return updated state.
 
     Each profile-bound question contributes one canonical-token entry to
-    the active profile bucket.
+    the profile bucket.
+
+    ``profile_existed`` is the create-vs-edit discriminator. It MUST be
+    captured by the caller BEFORE any pointer or manifest write — once
+    the wizard pre-writes the active-profile pointer (the engine-URL
+    load-order requirement), a re-derived check inside this function
+    can no longer tell a first-run create from an edit. ``False``
+    routes to :func:`register_active_profile` (which refuses a
+    duplicate name); ``True`` routes to the edit path.
     """
 
     from ...domain.user_profile import ProfileNotFoundError, UserProfileFact
-    from ..workflow._models import resolve_active_bucket_id
-    from ..workflow._profile_bucket_scan import read_profile_bucket
 
     canonical = serialise_answers(flow, answers)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
-    pointer = read_profile_bucket(profile_name)
-    if pointer is None or resolve_active_bucket_id() != profile_name:
+    if not profile_existed:
         return register_active_profile(
             state,
             profile_id=profile_name,
