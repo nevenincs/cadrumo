@@ -322,6 +322,7 @@ def test_config_profile_create_quiet_emits_confirmation(cli_runner: CliRunner) -
     assert result.exit_code == 0, result.output
     assert "profile\tfreshprofile" in result.output
     assert "status\tcreated" in result.output
+    assert "active_profile\tfreshprofile" in result.output
     assert "next\t" in result.output
 
 

@@ -537,16 +537,24 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         from ...core.click_context import json_output_requested
 
         verb = "created" if mode == "create" else "updated"
+        payload: dict[str, object] = {
+            "profile_name": profile_name,
+            "status": verb,
+            "next": "aeat app modelo work create",
+        }
+        # `create` writes the active-profile pointer above, so the new
+        # profile is now the active one. Surface that explicitly — the
+        # operator otherwise cannot see the silent promotion (the same
+        # `active_profile` line `switch` emits).
+        if mode == "create":
+            payload["active_profile"] = profile_name
         if json_output_requested():
-            _typer.echo(
-                _json.dumps(
-                    {"profile_name": profile_name, "status": verb, "next": "aeat app modelo work create"},
-                    ensure_ascii=False,
-                )
-            )
+            _typer.echo(_json.dumps(payload, ensure_ascii=False))
         else:
             _typer.echo(f"profile\t{profile_name}")
             _typer.echo(f"status\t{verb}")
+            if mode == "create":
+                _typer.echo(f"active_profile\t{profile_name}")
             _typer.echo("next\taeat app modelo work create")
 
     typed = typing.cast(typing.Any, _command)
