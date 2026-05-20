@@ -326,6 +326,313 @@ required = true
     assert actual == expected
 
 
+def test_directory_mode_merges_export_record_field_fragments_by_record_id(tmp_path: Path) -> None:
+    """Large fixed-width records can be split across multiple field fragments."""
+
+    single_file = tmp_path / "999.toml"
+    single_file.write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "latin-1"
+line_ending = "crlf"
+required = true
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field-a"
+offset = 1
+length = 1
+kind = "literal"
+literal = "A"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field-b"
+offset = 2
+length = 1
+kind = "literal"
+literal = "B"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    expected = load_modelo_file(single_file)
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "export").mkdir(parents=True)
+    (target / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export" / "record-a.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "latin-1"
+line_ending = "crlf"
+required = true
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field-a"
+offset = 1
+length = 1
+kind = "literal"
+literal = "A"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export" / "record-b.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field-b"
+offset = 2
+length = 1
+kind = "literal"
+literal = "B"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+def test_directory_mode_merges_construct_member_fragments_by_construct_id(tmp_path: Path) -> None:
+    """Large construct membership lists can be split without redeclaring the construct."""
+
+    single_file = tmp_path / "999.toml"
+    single_file.write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".constructs]]
+id = "modelo-999-workflow"
+title = "Modelo 999 workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+casillas = ["0001"]
+formulas = ["formula-1"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    expected = load_modelo_file(single_file)
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "constructs").mkdir(parents=True)
+    (target / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "constructs" / "casillas.toml").write_text(
+        """
+[[revisions."2025".constructs]]
+id = "modelo-999-workflow"
+title = "Modelo 999 workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+casillas = ["0001"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "constructs" / "formulas.toml").write_text(
+        """
+[[revisions."2025".constructs]]
+id = "modelo-999-workflow"
+formulas = ["formula-1"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+def test_directory_mode_rejects_export_record_scalar_conflict(tmp_path: Path) -> None:
+    """Same-id record fragments must not silently override record metadata."""
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "export").mkdir(parents=True)
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "x"\n', encoding="utf-8")
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        '[revisions."2025"]\nvalid_from = 2025-01-01\n',
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export" / "record-a.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "layout"
+
+[[revisions."2025".export_layouts.records]]
+id = "record"
+record_type = "1"
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export" / "record-b.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "layout"
+
+[[revisions."2025".export_layouts.records]]
+id = "record"
+record_type = "2"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="field 'record_type' conflicts"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_construct_scalar_conflict(tmp_path: Path) -> None:
+    """Same-id construct fragments must not silently override construct metadata."""
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "constructs").mkdir(parents=True)
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "x"\n', encoding="utf-8")
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        '[revisions."2025"]\nvalid_from = 2025-01-01\n',
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "constructs" / "one.toml").write_text(
+        """
+[[revisions."2025".constructs]]
+id = "workflow"
+title = "One"
+casillas = ["0001"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "constructs" / "two.toml").write_text(
+        """
+[[revisions."2025".constructs]]
+id = "workflow"
+title = "Two"
+formulas = ["formula-1"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="field 'title' conflicts"):
+        load_modelo_directory(target)
+
+
 def test_directory_mode_rejects_fragment_revision_id_mismatch(tmp_path: Path) -> None:
     """Fragments under ``revisions/<id>/`` must declare the same revision id."""
 

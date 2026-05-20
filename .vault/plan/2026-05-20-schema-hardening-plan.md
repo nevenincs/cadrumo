@@ -314,3 +314,4 @@ bounds.
 - [x] `W07.P17.S120` - add a committed-corpus layout test requiring every multi-revision modelo to use directory layout instead of inline single-file copy-per-revision TOML.
 - [x] `W07.P17.S121` - add generic `dispatch_table_entries` formula authoring support that normalizes to the existing `dispatch_table` runtime contract, enabling long dispatch maps to be authored as reviewable entry arrays.
 - [x] `W07.P17.S122` - migrate the long M100 autonomic dispatch formula rows to `dispatch_table_entries`; the committed-corpus row-size gate now caps TOML rows at 800 characters with the live maximum at 704 characters.
+- [x] `W07.P17.S123` - add generic same-id fragment merging for large export-record field lists and construct membership lists so M200 can be split below the 2,000-line fragment target without model-specific loader rules.
