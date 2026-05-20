@@ -30,6 +30,7 @@ from ...domain.user_profile import (
     UserProfileRecord,
     UserProfileStatus,
 )
+from . import _language_resolver as _language_resolver  # side-effect: registers the core.i18n language resolver
 
 if TYPE_CHECKING:
     from ._censo_errors import (
