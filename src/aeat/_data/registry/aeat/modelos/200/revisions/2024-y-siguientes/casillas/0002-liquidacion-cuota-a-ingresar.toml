@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00599"
 number = "00599"
+segmento = "DP200014B"
 label = "Cuota del ejercicio a ingresar o a devolver"
 section = ["liquidacion", "cuota_a_ingresar"]
 data_type = "money"
