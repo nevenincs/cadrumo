@@ -47,12 +47,24 @@ forbidden_modules =
 # into application.wizard remain as Wave-future cleanup. Wave 3 P04 set
 # up the register_profile_keys() injection pattern; full elimination of
 # these five edges requires further refactor not yet scheduled.
+#
+# core.resources._repos.topics deferred loader import (resource-management-api
+# ADR, 2026-05-16): TopicCatalogueRepository._load contains a function-local
+# `from aeat.application.topics import load_topic_catalogue` import. It runs
+# only at first resource access, never at module-import time, so
+# core/resources/ stays an acyclic leaf. The ADR places the concrete
+# Repository implementations in core/resources/ and chose lazy loading as the
+# default (ADR Q5). This is the same edge the core-not-outer and layered
+# contracts already document; this contract reaches it transitively (a domain
+# test imports core.resources, which lazily loads core.resources._repos.topics).
+# Pinned individually (no wildcard) so a new non-deferred edge is still caught.
 ignore_imports =
     aeat.domain.deadlines._profiles -> aeat.application.wizard._catalogue
     aeat.domain.deadlines._profiles -> aeat.application.wizard._persistence
     aeat.domain.deadlines._profiles -> aeat.application.wizard._setup_answers
     aeat.domain.profile._keys -> aeat.application.wizard._catalogue
     aeat.domain.profile._keys -> aeat.application.wizard._compiler
+    aeat.core.resources._repos.topics -> aeat.application.topics
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
     aeat.domain.calculations.registry.test_cross_boundary_roundtrip -> aeat.application.workflow._models
     aeat.domain.calculations.registry.test_detail_record_modelo_coverage -> aeat.application.storage.calc_sheets
