@@ -367,3 +367,15 @@ documented needs-review (the `Indique si ... NIF` boolean flags; the
 0831/0834/00559 amounts) - and the role namespace carries legitimate
 single-revision singletons (re-baselined, typo-twin heuristic improved,
 zero actual typos found). No FATAL validator or test failure remains.
+
+### 2026-05-20 - R7 extended corpus-wide (24 small modelos)
+
+The R7 sweep originally covered M100 + M200 (97% of casillas). Extended
+to the remaining 24 modelos: all 175 roles reviewed against full labels
+by 3 agents. 36 `semantic_role` corrections applied - 9 renames
+(English->Spanish, `immueble` typo, wrong-frame roles), 3 splits
+(`pago_fraccionado` IRPF vs IS; OSS cuota per destination country), 2
+outliers (M184 entity-member NIF, M840 IAE census event). Zero
+data_type/constraints divergences. The semantic-correctness review is
+now corpus-wide: every role in all 26 modelos has been read against its
+casillas' true labels.
