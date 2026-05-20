@@ -1,14 +1,16 @@
 """Real-behaviour tests for NormativeRepository.
 
-The bundled normatives catalogue currently contains records
-that fail strict pydantic validation (a pre-existing data
-curation issue unrelated to this migration). These tests focus
-on the Repository surface contract — construction, root
-override, cache clearing, and failure mode through the typed
-error hierarchy — rather than the catalogue's content.
+These tests exercise the Repository surface contract —
+construction, root override, cache clearing — and the
+parse-error-surfacing path. The parse-error test points the
+repository at a deliberately schema-invalid catalogue so the
+failure mode is genuinely exercised rather than relying on the
+bundled corpus being malformed.
 """
 
 from __future__ import annotations
+
+from pathlib import Path
 
 import pytest
 
@@ -39,15 +41,22 @@ def test_normative_repository_clear_cache_is_safe_on_empty_cache() -> None:
     assert repo._cache == {}
 
 
-def test_normative_repository_get_surfaces_parse_error_on_bad_catalogue() -> None:
-    """Schema-invalid entries in the bundled catalogue surface NormativeParseError.
+def test_normative_repository_get_surfaces_parse_error_on_bad_catalogue(tmp_path: Path) -> None:
+    """A schema-invalid normative file surfaces NormativeParseError.
 
-    NormativeParseError is a domain-level error; after the
-    error-hierarchy unification in P09 it becomes a subclass of
-    ResourceValidationError. This test asserts the current
-    behaviour holds.
+    Construct a catalogue directory holding one structurally
+    malformed normative JSON file and point a
+    :class:`NormativeRepository` at it via the root override. The
+    loader must reject the file and raise
+    :class:`NormativeParseError` rather than silently producing a
+    partial catalogue.
     """
-    repo = NormativeRepository()
+    bad_normative = tmp_path / "ley-bad.json"
+    # Valid JSON, but the payload omits every required field of
+    # NormativeReference, so strict pydantic validation rejects it.
+    bad_normative.write_text('{"id": "ley-bad"}', encoding="utf-8")
+
+    repo = NormativeRepository(root=tmp_path)
 
     with pytest.raises(NormativeParseError):
         _ = repo.singleton
