@@ -29,7 +29,7 @@ import typing
 from collections import deque
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import click
 import typer
@@ -41,9 +41,6 @@ from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
 from ._prompter import Prompter, QuestionaryPrompter, ScriptedPrompter
 from ._runner import run_flow
-
-if TYPE_CHECKING:
-    from ...core._bucket_pointer import BucketPointer
 
 
 def _flag_name(question: WizardQuestion) -> str:
@@ -456,9 +453,7 @@ def _run_full_flow(
     """
 
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ...core._bucket_pointer_io import read_pointer
-    from ...core.config import load_settings
-    from ..user_profile._orchestration import _write_active_profile_pointer
+    from ..user_profile._orchestration import _write_active_profile_pointer, capture_active_profile_pointer
     from ..workflow._persistence import workflow_state_repository
     from ._persistence import persist_answers
 
@@ -499,59 +494,32 @@ def _run_full_flow(
     # the active-profile pointer chain. On a first-run `profile create`
     # the pointer does not exist yet, so the URL is empty and the
     # engine open crashes. The pointer stores the immutable profile
-    # UUID; `register_active_profile` re-writes it idempotently at the
-    # tail of its work.
+    # UUID; `ProfileRepository.create` re-writes it idempotently.
     #
-    # A `create` must be strictly all-or-nothing. `register_active_
-    # profile`'s own rollback only fires when the encrypted-record
-    # write raises; a failure BETWEEN this early pointer write and that
-    # rollback (engine open, master-key provider, workflow-state load)
-    # would otherwise strand the pointer with no profile record — the
-    # `missing_profile_record` torn state `repair profile` reports. The
-    # prior pointer state is captured here and restored on any create
-    # failure so a crashed create leaves the active-profile pointer
-    # exactly as it was found.
-    settings = load_settings()
-    prior_pointer = read_pointer(settings.aeat_local_storage_root) if mode == "create" else None
+    # A `create` must be strictly all-or-nothing. The genuine
+    # pre-create pointer text is captured here and handed to
+    # `register_active_profile` as the rollback anchor: the cross-store
+    # rollback (directory removal + pointer restore) lives solely in
+    # `ProfileRepository.create`, so a crashed create leaves the
+    # active-profile pointer exactly as it was found without this
+    # caller carrying its own rollback copy.
+    prior_pointer_text = capture_active_profile_pointer() if mode == "create" else None
     _write_active_profile_pointer(profile_id)
-    try:
-        provider = get_master_key_provider()
-        with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
-            repository = workflow_state_repository()
-            repository.update(
-                lambda state: persist_answers(
-                    flow,
-                    answers,
-                    state=state,
-                    profile_name=profile_name,
-                    profile_id=profile_id,
-                    mode=mode,
-                    supplied_question_ids=supplied_question_ids,
-                )
+    provider = get_master_key_provider()
+    with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
+        repository = workflow_state_repository()
+        repository.update(
+            lambda state: persist_answers(
+                flow,
+                answers,
+                state=state,
+                profile_name=profile_name,
+                profile_id=profile_id,
+                mode=mode,
+                supplied_question_ids=supplied_question_ids,
+                prior_pointer_text=prior_pointer_text,
             )
-    except Exception:
-        if mode == "create":
-            _restore_pointer(settings.aeat_local_storage_root, prior_pointer)
-        raise
-
-
-def _restore_pointer(root: Path, prior: BucketPointer | None) -> None:
-    """Restore the active-profile pointer to a captured prior state.
-
-    Used by the `create` failure path to undo the early load-order
-    pointer write so a crashed create never strands a pointer at a
-    profile whose record was never persisted. When no pointer existed
-    before, the early write is removed outright.
-    """
-
-    from ...core._bucket_pointer_io import pointer_path, write_pointer
-
-    if prior is not None:
-        write_pointer(root, prior)
-        return
-    target = pointer_path(root)
-    if target.is_file():
-        target.unlink()
+        )
 
 
 def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:

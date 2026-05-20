@@ -556,11 +556,13 @@ def _atomic_create_profile(*, display_name, facts) -> str:
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ....application.user_profile._orchestration import (
         _write_active_profile_pointer,
+        capture_active_profile_pointer,
         register_active_profile,
     )
     from ....domain.user_profile import new_profile_id
 
     profile_id = new_profile_id()
+    prior_pointer_text = capture_active_profile_pointer()
     _write_active_profile_pointer(profile_id)
     provider = get_master_key_provider()
     with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
@@ -571,6 +573,7 @@ def _atomic_create_profile(*, display_name, facts) -> str:
                 profile_id=profile_id,
                 display_name=display_name,
                 facts=facts,
+                prior_pointer_text=prior_pointer_text,
             )
         )
     return profile_id
@@ -877,36 +880,32 @@ def config_profile_delete(
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
 
-    from ....application.user_profile import RemoveProfileCommand
-    from ....application.user_profile._orchestration import (
-        _clear_active_profile_pointer,
-        build_lifecycle_service,
-    )
+    from ....application.user_profile._profile_repository import ProfileRepository
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
         raise CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
-    repository = _profile_state()
-    repository.load()
+    workflow_state = _profile_state()
+    workflow_state.load()
     pointer = _resolve_profile_by_label(name)
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    # The cross-store tombstone (encrypted-record tombstone +
+    # active-profile pointer clear) lives solely in ProfileRepository.
     try:
-        result = service.remove(RemoveProfileCommand(profile_id=pointer.bucket_id))
+        aggregate = ProfileRepository().delete(pointer.bucket_id)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    if resolve_active_bucket_id() == pointer.bucket_id:
-        _clear_active_profile_pointer()
+    record = aggregate.record
     _emit(
         ctx,
         {
-            "profile_id": result.profile.profile_id,
-            "display_name": result.profile.display_name,
-            "status": result.profile.status.value,
+            "profile_id": record.profile_id,
+            "display_name": record.display_name,
+            "status": record.status.value,
         },
         (
-            f"profile_id\t{result.profile.profile_id}",
-            f"display_name\t{result.profile.display_name}",
-            f"status\t{result.profile.status.value}",
+            f"profile_id\t{record.profile_id}",
+            f"display_name\t{record.display_name}",
+            f"status\t{record.status.value}",
         ),
     )
 
