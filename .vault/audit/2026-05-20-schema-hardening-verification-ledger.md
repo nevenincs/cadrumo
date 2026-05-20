@@ -102,7 +102,7 @@ All five are manual-input leaves with no `formula`, `binding`, or
 | R2 | T percentage type defects (5) | OPEN | 5 | - |
 | R3 | M200 correcciones reconciliation | DONE | 0 shared roles, fractured | 631 casillas, one 24-axis scheme |
 | R4 | M200 deducciones coherence | DONE (no defect) | suspected fracture | 853 casillas, 62 roles, 0 incoherent |
-| R5 | 561 escaped-quote re-verification | OPEN | 561 | - |
+| R5 | 561 escaped-quote re-verification | IN PROGRESS | 561 | 114 boolean-flag clean; AEIP family defect found |
 | R6 | singleton-role review | OPEN | 506 | - |
 | R7 | Full semantic-correctness agent sweep | OPEN | - | - |
 | R8 | Source-data changes re-verification | OPEN | 5 changes | - |
@@ -131,3 +131,20 @@ reverted to their correct pre-reconciliation roles. This surfaced via
 the drift gate (a constraints-signature divergence on `00027`).
 Blast radius: `semantic_role` only; no `data_type`/label/constraint
 edits. Post-state: 0 data_type divergences, 0 constraints divergences.
+
+### 2026-05-20 - R5 escaped-quote re-verification (in progress)
+
+Re-checked all 561 casillas whose true label contains a quote char and
+was therefore truncated in the agent cluster-dumps.
+
+- **114** "Marque ... X ..." boolean-flag casillas: all clean
+  (`*_flag` role + `boolean` data_type). The section path carried
+  enough signal despite the truncation.
+- **AEIP family defect found.** ~307 casillas in
+  `anexo_a_res.deducciones_inversion_empresarial_res` whose labels are
+  quoted public-event names (`"<event>": Aplicado en esta declaracion`)
+  — all the same concept (AEIP event-sponsorship deduction amount) —
+  are scattered across **7 roles**, 5 of them plainly wrong (energy-
+  efficiency excess, pension contributions, Balearic reserve, anexo-B
+  carry-forward). Caused directly by truncated-label classification.
+  A focused agent is determining the canonical role; fix pending.
