@@ -27,7 +27,11 @@ import io
 
 import pytest
 
-from aeat.entrypoints.cli._stdio import configure_stdio_for_utf8
+from aeat.entrypoints.cli._stdio import (
+    _MIN_HELP_RENDER_COLUMNS,
+    _ensure_help_render_width,
+    configure_stdio_for_utf8,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -171,3 +175,67 @@ def test_configure_stdio_for_utf8_tolerates_non_reconfigurable_explicit_streams(
 
     # Must not raise.
     configure_stdio_for_utf8(stdout=out, stderr=err)
+
+
+# --- help-surface render width ---------------------------------------------
+
+
+def test_help_invocation_below_floor_widens_columns(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A `--help` invocation with a narrow COLUMNS widens to the floor.
+
+    Rich ellipsises long wizard flag names (`--address-postco…`) when
+    the console is narrower than the flag. Bumping COLUMNS for the
+    help surface keeps the names readable.
+    """
+
+    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "create", "FOO", "--help"])
+    monkeypatch.setenv("COLUMNS", "80")
+
+    _ensure_help_render_width()
+
+    import os
+
+    assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
+
+
+def test_help_invocation_keeps_wider_columns(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A genuinely wide terminal keeps its real width on a help surface."""
+
+    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "create", "FOO", "-h"])
+    monkeypatch.setenv("COLUMNS", "300")
+
+    _ensure_help_render_width()
+
+    import os
+
+    assert os.environ["COLUMNS"] == "300"
+
+
+def test_non_help_invocation_leaves_columns_untouched(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ordinary command output keeps the real terminal width.
+
+    The widening is scoped to `--help`; piping a non-help command into
+    another tool must not see an inflated 200-column render.
+    """
+
+    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "list"])
+    monkeypatch.setenv("COLUMNS", "80")
+
+    _ensure_help_render_width()
+
+    import os
+
+    assert os.environ["COLUMNS"] == "80"
+
+
+def test_non_help_invocation_without_columns_set(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A non-help invocation does not set COLUMNS when it was unset."""
+
+    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "list"])
+    monkeypatch.delenv("COLUMNS", raising=False)
+
+    _ensure_help_render_width()
+
+    import os
+
+    assert "COLUMNS" not in os.environ

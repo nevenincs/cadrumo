@@ -24,8 +24,60 @@ which is strictly worse than leaving the stream as-is.
 from __future__ import annotations
 
 import logging
+import os
+import shutil
 import sys
 from typing import TextIO
+
+# Minimum render width for the help surface. The wizard `profile
+# create` / `edit` verbs expose ~40 flags, including long negatable
+# boolean flag pairs that carry both `--x` and `--no-x` in one
+# options-column cell. Rich's help formatter ellipsises a flag name
+# (`--address-postco…`) when the console is too narrow to fit it,
+# and piped / redirected output defaults to an 80-column console.
+# Bumping the width floor for help rendering keeps full flag names
+# readable. The widening is scoped to `--help` invocations only, so
+# ordinary command output keeps the real terminal width.
+_MIN_HELP_RENDER_COLUMNS = 200
+
+#: argv tokens that request the help surface.
+_HELP_TOKENS = frozenset({"--help", "-h"})
+
+
+def _help_surface_requested() -> bool:
+    """Return whether the current invocation renders a ``--help`` surface."""
+
+    return any(token in _HELP_TOKENS for token in sys.argv[1:])
+
+
+def _ensure_help_render_width() -> None:
+    """Raise the console width floor for ``--help`` so flag names are not truncated.
+
+    Rich (used by Typer for ``--help``) derives its console width from
+    the ``COLUMNS`` environment variable, falling back to the terminal
+    size. When output is piped the fallback is 80 columns, which
+    ellipsises long option names in the wizard help tables. This sets
+    ``COLUMNS`` to :data:`_MIN_HELP_RENDER_COLUMNS` only when a help
+    surface is being rendered and the resolved width is below the
+    floor, so ordinary command output and genuinely wide terminals
+    keep their real width.
+    """
+
+    if not _help_surface_requested():
+        return
+    resolved = os.environ.get("COLUMNS")
+    if resolved is not None:
+        try:
+            current = int(resolved)
+        except ValueError:
+            current = 0
+        if current >= _MIN_HELP_RENDER_COLUMNS:
+            return
+    else:
+        current = shutil.get_terminal_size(fallback=(80, 24)).columns
+        if current >= _MIN_HELP_RENDER_COLUMNS:
+            return
+    os.environ["COLUMNS"] = str(_MIN_HELP_RENDER_COLUMNS)
 
 
 def _set_windows_console_utf8() -> None:
@@ -112,6 +164,7 @@ def configure_stdio_for_utf8(
     """
 
     _set_windows_console_utf8()
+    _ensure_help_render_width()
     _reconfigure_stream(sys.stdout if stdout is None else stdout)
     _reconfigure_stream(sys.stderr if stderr is None else stderr)
 
