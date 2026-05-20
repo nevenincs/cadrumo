@@ -198,9 +198,9 @@ application:
   setup:
     errors:
       workspace_bucket_torn: A(z) '%{profile}' profil bucket manifesttel rendelkezik,
-        de nincs profilrekordja; az inicializálás nem fejeződött be. Futtasd az
-        `aeat config repair profile --clear-active --yes` parancsot, majd hozd
-        létre újra a profilt.
+        de nincs profilrekordja; az inicializálás nem fejeződött be. Futtasd az `aeat
+        config repair profile --clear-active --yes` parancsot, majd hozd létre újra
+        a profilt.
   user_profile:
     errors:
       no_active_profile_selected: Nincs kiválasztva aktív profil.
@@ -347,8 +347,8 @@ cli:
       from_year_help: Első benyújtási év
       iva_wallet:
         app_help: Az AEAT áfa-kompenzációs tárcájának rögzítése (csak olvasható).
-        capture_history_help: Élőben rögzíti a benyújtott Modelo 303 előzményeket, és
-          biztonságosan eltárolja az áfa-kompenzációs állapotot.
+        capture_history_help: Élőben rögzíti a benyújtott Modelo 303 előzményeket,
+          és biztonságosan eltárolja az áfa-kompenzációs állapotot.
         history_help: Listázza a benyújtott Modelo 303 rögzítésekből származó, helyben
           biztonságosan tárolt áfa-kompenzációs előzményeket.
         pull_help: Élőben letölti és eltárolja az AEAT áfa-kompenzációs tárcáját.
@@ -622,10 +622,17 @@ cli:
       diagnostics:
         help: Titkosított hitelesítési diagnosztikák vizsgálata.
         id_help: Diagnosztika azonosítója.
+        invalid_phone_state: 'Érvénytelen telefonállapot: ''%{phone_state}''. A várt értékek egyike: %{choices}.'
         list_help: Titkosított Cl@ve hitelesítési diagnosztikák listázása.
+        not_found: 'Hitelesítési diagnosztika nem található: %{diagnostic_id}.'
+        phone_state_help: 'Az alábbiak egyike: app_prompted_and_accepted, app_prompted_not_accepted, app_did_not_prompt, operator_did_not_check.'
+        report_help: 'A kezelő által megfigyelt Cl@ve alkalmazásállapot rögzítése egy hitelesítési diagnosztikához.'
         show_help: Egy szerkesztett, titkosított hitelesítési diagnosztika megjelenítése.
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
       help: Az aktív hitelesítési szolgáltató beállítása
+      login_fresh_help: 'Új élő hitelesítés kényszerítése mentett AEAT-munkamenet újrafelhasználása helyett.'
+      login_help: 'Élő AEAT-munkamenet megszerzése vagy ellenőrzése.'
+      login_reset_lock_help: 'Elavult hitelesítési zárolás törlése indítás előtt.'
       no_active_bucket: Nincs aktív profilbucket. Futtasd az 'aeat config profile
         create NAME' parancsot a hitelesítés beállítása előtt.
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
@@ -822,7 +829,9 @@ cli:
       logs_lines_help: Megjelenítendő friss naplósorok száma
       profile_clear_active_help: Mutatófájlból származó aktív profil törlése csak
         akkor, ha olvashatatlan profilállapotra mutat.
+      profile_clear_active_mismatch: 'A --clear-active csak az aktív profilmutatót törölheti; a(z) ''%{profile}'' nem aktív.'
       profile_help: Az aktív profilmutató vizsgálata és javítása.
+      profile_name_help: 'Egy adott regisztrált profil-bucket vizsgálata.'
       profile_requires_yes: Add meg a --yes kapcsolót az aktív profilmutató törléséhez.
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
         --yes szükséges)

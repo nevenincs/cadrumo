@@ -204,9 +204,9 @@ application:
   setup:
     errors:
       workspace_bucket_torn: El bucket de perfil '%{profile}' tiene un manifiesto
-        pero no tiene un registro de perfil; la inicialización no se completó.
-        Ejecuta `aeat config repair profile --clear-active --yes` y después crea
-        el perfil de nuevo.
+        pero no tiene un registro de perfil; la inicialización no se completó. Ejecuta
+        `aeat config repair profile --clear-active --yes` y después crea el perfil
+        de nuevo.
   user_profile:
     errors:
       no_active_profile_selected: No hay un perfil activo seleccionado.
@@ -514,8 +514,8 @@ cli:
         period_help: Token de periodo (p. ej. Q1, annual).
         revision_help: Identificador de revisión del registro.
         year_help: Ejercicio de presentación.
-      readiness_help: Informa de si el perfil activo está listo para presentar un modelo
-        / ejercicio / periodo.
+      readiness_help: Informa de si el perfil activo está listo para presentar un
+        modelo / ejercicio / periodo.
       reconcile:
         errors:
           exclusive_source: --from-justificante y --from-declaration son mutuamente
@@ -649,10 +649,17 @@ cli:
       diagnostics:
         help: Inspecciona los diagnósticos de autenticación cifrados.
         id_help: Identificador del diagnóstico.
+        invalid_phone_state: 'Estado de teléfono no válido ''%{phone_state}''. Se esperaba uno de: %{choices}.'
         list_help: Lista los diagnósticos de autenticación Cl@ve cifrados.
+        not_found: 'Diagnóstico de autenticación no encontrado: %{diagnostic_id}.'
+        phone_state_help: 'Uno de: app_prompted_and_accepted, app_prompted_not_accepted, app_did_not_prompt, operator_did_not_check.'
+        report_help: 'Registrar el estado de la app Cl@ve observado por el operador para un diagnóstico de autenticación.'
         show_help: Muestra un diagnóstico de autenticación cifrado y redactado.
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
+      login_fresh_help: 'Forzar una nueva autenticación en vivo en lugar de reutilizar una sesión AEAT guardada.'
+      login_help: 'Adquirir o verificar una sesión AEAT en vivo.'
+      login_reset_lock_help: 'Eliminar un bloqueo de adquisición de autenticación obsoleto antes de empezar.'
       no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config profile
         create NAME' antes de configurar la autenticación.
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
@@ -851,7 +858,9 @@ cli:
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
       profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
         cuando apunta a estado de perfil ilegible.
+      profile_clear_active_mismatch: '--clear-active solo puede borrar el puntero del perfil activo; ''%{profile}'' no está activo.'
       profile_help: Inspeccionar y reparar el puntero de perfil activo.
+      profile_name_help: 'Inspeccionar un bucket de perfil registrado concreto.'
       profile_requires_yes: Pasa --yes para limpiar el puntero de perfil activo.
       quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
         destructiva, requiere --yes)
