@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
-from typing import Self
 
 from pydantic import ValidationError
 
@@ -220,6 +219,76 @@ class WorkflowStateRepository:
         return updated
 
 
+class WorkflowRunRepository:
+    """Encrypted SQL object repository for :class:`WorkflowResult` runs."""
+
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        self._objects = objects or SecureObjectRepository()
+
+    def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
+        """Persist one workflow result in the secure object backend."""
+
+        run_id = _validate_run_id(result.run_id)
+        marker_dir = runs_dir or Settings().aeat_workflow_runs_dir
+        envelope = Envelope[WorkflowResult](
+            schema_version=_RUN_VERSION,
+            written_at=utc_now(),
+            classification=SensitivityClass.FINANCIAL,
+            payload=result,
+        )
+        self._objects.save(
+            namespace=_RUN_NAMESPACE,
+            object_key=run_id,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_RUN_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+        return marker_dir / run_id
+
+    def load(self, run_id: str) -> WorkflowResult:
+        """Load one persisted workflow result from the secure backend."""
+
+        safe_run_id = _validate_run_id(run_id)
+        record = self._objects.load(
+            _RUN_NAMESPACE,
+            safe_run_id,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_RUN_VERSION,
+        )
+        if record is None:
+            raise WorkflowError(f"workflow run not found: {safe_run_id}")
+        envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not SensitivityClass.FINANCIAL:
+            raise ClassificationError(
+                f"workflow run has classification {envelope.classification}; "
+                f"consumer expected {SensitivityClass.FINANCIAL}",
+            )
+        if envelope.schema_version > _RUN_VERSION:
+            raise EnvelopeVersionError(
+                f"workflow run is at version {envelope.schema_version}; consumer supports up to {_RUN_VERSION}",
+            )
+        return envelope.payload
+
+    def list(self, *, since: date | None = None) -> tuple[WorkflowResult, ...]:
+        """List persisted workflow runs newest-first, optionally filtered by date."""
+
+        records = self._objects.list_records(
+            _RUN_NAMESPACE,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_RUN_VERSION,
+        )
+        runs: list[WorkflowResult] = []
+        for record in records:
+            envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
+            result = envelope.payload
+            if since is not None and result.started_at.date() < since:
+                continue
+            runs.append(result)
+        runs.sort(key=lambda item: item.started_at, reverse=True)
+        return tuple(runs)
+
+
 def workflow_state_repository() -> WorkflowStateRepository:
     """Return the repository bound to the configured run-state directory."""
 
@@ -263,64 +332,16 @@ def save_run(result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
     and tests, but no plaintext run file is written there.
     """
 
-    run_id = _validate_run_id(result.run_id)
-    marker_dir = runs_dir or Settings().aeat_workflow_runs_dir
-    envelope = Envelope[WorkflowResult](
-        schema_version=_RUN_VERSION,
-        written_at=utc_now(),
-        classification=SensitivityClass.FINANCIAL,
-        payload=result,
-    )
-    SecureObjectRepository().save(
-        namespace=_RUN_NAMESPACE,
-        object_key=run_id,
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=_RUN_VERSION,
-        written_at=envelope.written_at,
-        payload=envelope.model_dump_json().encode("utf-8"),
-    )
-    return marker_dir / run_id
+    return WorkflowRunRepository().save(result, runs_dir=runs_dir)
 
 
 def load_run(run_id: str) -> WorkflowResult:
     """Load one persisted workflow result from the secure backend."""
 
-    safe_run_id = _validate_run_id(run_id)
-    record = SecureObjectRepository().load(
-        _RUN_NAMESPACE,
-        safe_run_id,
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=_RUN_VERSION,
-    )
-    if record is None:
-        raise WorkflowError(f"workflow run not found: {safe_run_id}")
-    envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
-    if envelope.classification is not SensitivityClass.FINANCIAL:
-        raise ClassificationError(
-            f"workflow run has classification {envelope.classification}; "
-            f"consumer expected {SensitivityClass.FINANCIAL}",
-        )
-    if envelope.schema_version > _RUN_VERSION:
-        raise EnvelopeVersionError(
-            f"workflow run is at version {envelope.schema_version}; consumer supports up to {_RUN_VERSION}",
-        )
-    return envelope.payload
+    return WorkflowRunRepository().load(run_id)
 
 
 def list_runs(*, since: date | None = None) -> tuple[WorkflowResult, ...]:
     """List persisted workflow runs newest-first, optionally filtered by date."""
 
-    records = SecureObjectRepository().list_records(
-        _RUN_NAMESPACE,
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=_RUN_VERSION,
-    )
-    runs: list[WorkflowResult] = []
-    for record in records:
-        envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
-        result = envelope.payload
-        if since is not None and result.started_at.date() < since:
-            continue
-        runs.append(result)
-    runs.sort(key=lambda item: item.started_at, reverse=True)
-    return tuple(runs)
+    return WorkflowRunRepository().list(since=since)

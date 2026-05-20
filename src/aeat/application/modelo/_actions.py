@@ -95,8 +95,8 @@ from ..workflow import (
     RegistryModeloDraftProtocol,
     WorkflowEngine,
     WorkflowResult,
+    WorkflowRunRepository,
     WorkflowStage,
-    save_run,
 )
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
@@ -423,6 +423,7 @@ def _run_revision_workflow_gate(
     work_unit: WorkUnit,
     today: date,
     runs_dir: Path | None,
+    run_repository: WorkflowRunRepository,
     resumed_from: str | None = None,
 ) -> WorkflowResult:
     result = asyncio.run(
@@ -434,7 +435,7 @@ def _run_revision_workflow_gate(
             resumed_from=resumed_from,
         )
     )
-    save_run(result, runs_dir=runs_dir)
+    run_repository.save(result, runs_dir=runs_dir)
     if result.final_stage is WorkflowStage.ABORTED:
         raise ModeloWorkflowGateError(result)
     return result
@@ -1455,6 +1456,7 @@ def verify_modelo_revision(
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    run_repo = WorkflowRunRepository(objects=bv_repo.secure_object_repository)
 
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
@@ -1515,6 +1517,7 @@ def verify_modelo_revision(
             work_unit=work_unit,
             today=now.date(),
             runs_dir=workflow_runs_dir,
+            run_repository=run_repo,
         )
 
     # Persist the report regardless of outcome — failed attempts
@@ -1790,6 +1793,7 @@ def file_modelo_revision(
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    run_repo = WorkflowRunRepository(objects=bv_repo.secure_object_repository)
 
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
@@ -1823,6 +1827,7 @@ def file_modelo_revision(
         work_unit=work_unit,
         today=now.date(),
         runs_dir=workflow_runs_dir,
+        run_repository=run_repo,
     )
 
     new_filing_id = derive_filing_record_id(
