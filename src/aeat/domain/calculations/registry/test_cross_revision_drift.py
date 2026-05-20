@@ -168,4 +168,4 @@ def test_singleton_semantic_role_warning_count_does_not_regress() -> None:
     # semantic-axis sibling filter. Remaining warnings are still active
     # hardening work; this guard prevents the unresolved inventory from
     # growing while those groups are classified.
-    assert len(singleton_warnings) <= 64, singleton_warnings[:10]
+    assert len(singleton_warnings) <= 49, singleton_warnings[:10]

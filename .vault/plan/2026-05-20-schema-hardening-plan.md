@@ -297,3 +297,4 @@ need an explicit policy.
 - [x] `W06.P16.S114` - add a generic semantic-role axis-sibling rule to the typo-warning detector so legal axis variants are not reported as spelling twins while same-axis near-duplicates still warn; live baseline lowered from 224 to 84 warnings.
 - [x] `W06.P16.S115` - tighten the committed singleton-warning regression cap to the live 84-warning baseline after the indexed scan and semantic-axis sibling filter.
 - [x] `W06.P16.S116` - extend the generic sibling detector to token-axis pairs (`clave`/`subclave`, `count`/`amount`, prior/future, internal/international, roman buckets) and optional `sin` legal variants; live baseline lowered from 84 to 64 warnings.
+- [x] `W06.P16.S117` - extend the generic sibling detector to legal-reference axes (`art*`, `dt*`, `rdleg`, `lis`) and detail/other scope axes; M200 singleton warning inventory is now clean and the live baseline is 49 M100-only warnings.
