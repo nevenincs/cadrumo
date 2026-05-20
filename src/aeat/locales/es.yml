@@ -1416,6 +1416,8 @@ cli:
       transactions_empty: Aun no se han importado movimientos bancarios.
       transactions_present: '%{count} movimiento(s) bancarios estan disponibles en
         el libro.'
+      work_units_empty: cli.overview.status.work_units_empty
+      work_units_present: cli.overview.status.work_units_present
     status_help: Mostrar el estado del perfil, libro y modelos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
@@ -1552,6 +1554,8 @@ cli:
     app_help_help: Mostrar ayuda del flujo de app
     debug_help: Mostrar logs internos de depuración en stderr
     detail_help: Mostrar también el resumen detallado del registro
+    errors:
+      did_you_mean_command: ¿Quería decir '%{command}'?
     format_help: Formato de salida para los resultados del comando
     help_help: Mostrar ayuda orientada al flujo de trabajo
     landing:

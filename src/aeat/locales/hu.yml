@@ -1376,6 +1376,8 @@ cli:
       title: Munkaterulet allapota
       transactions_empty: Meg nincs importalt banki tranzakcio.
       transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
+      work_units_empty: cli.overview.status.work_units_empty
+      work_units_present: cli.overview.status.work_units_present
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
@@ -1509,6 +1511,8 @@ cli:
     app_help_help: Show app workflow help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
+    errors:
+      did_you_mean_command: "Erre gondolt: '%{command}'?"
     format_help: A parancseredmények kimeneti formátuma
     help_help: Show workflow-oriented help
     landing:
