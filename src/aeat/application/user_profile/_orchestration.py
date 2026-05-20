@@ -314,7 +314,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
             raise OSError(
                 f"profile bucket directory {target} could not be removed "
                 "(a file handle is still held); the bucket survives on disk"
-            )
+            ) from None
         return
     shutil.rmtree(trash, ignore_errors=True)
 

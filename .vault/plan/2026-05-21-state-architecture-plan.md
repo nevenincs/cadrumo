@@ -62,17 +62,17 @@ Source: UUID-identity ADR.
 
 Source: aggregate ADR.
 
-- [ ] `W02.S06` - `ProfileAggregate` typed model (identity, label,
+- [x] `W02.S06` - `ProfileAggregate` typed model (identity, label,
   manifest fields, secure record, lifecycle state).
-- [ ] `W02.S07` - `ProfileRepository`
+- [x] `W02.S07` - `ProfileRepository`
   (`create`/`load`/`save`/`delete`/`list`) as the sole writer of
   profile physical stores.
-- [ ] `W02.S08` - cross-store unit-of-work for `create` and `delete`:
+- [x] `W02.S08` - cross-store unit-of-work for `create` and `delete`:
   staged filesystem, transactional SQLite commit, pointer last,
   rollback / detectable-garbage on failure.
-- [ ] `W02.S09` - `verify_profile_integrity` read-time validator
+- [x] `W02.S09` - `verify_profile_integrity` read-time validator
   generalising `assess_active_profile_health`; run on every `load`.
-- [ ] `W02.S10` - roundtrip + anti-tautology tests for the
+- [x] `W02.S10` - roundtrip + anti-tautology tests for the
   repository unit-of-work, including a simulated mid-`create`
   failure that must leave no half-live profile.
 
@@ -126,9 +126,9 @@ Source: UUID-identity ADR + aggregate ADR.
 | Wave | Intent | ADR | State |
 |---|---|---|---|
 | W01 | UUID identity model | identity | complete |
-| W02 | aggregate + repository + unit-of-work | aggregate | in progress |
+| W02 | aggregate + repository + unit-of-work | aggregate | complete |
 | W03 | rename collapse + name-as-id sweep | identity + aggregate | complete (S15 testimonial regression pending) |
-| W04 | canonical read-projection | read-projection | not started |
+| W04 | canonical read-projection | read-projection | in progress |
 | W05 | one state root + full verification | identity + aggregate | not started |
 
 ## Audit cadence
