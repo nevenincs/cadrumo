@@ -824,6 +824,45 @@ def _work_unit_lines(unit: WorkUnit) -> list[str]:
     return lines
 
 
+def _validate_registry_target(modelo: str, revision_id: str) -> None:
+    """Refuse a work-unit create that names an unknown modelo or revision.
+
+    Without this gate ``modelo work create --modelo 999 --revision
+    nonexistent`` provisions a work unit that ``calculate`` then
+    silently treats as a Modelo 303 default. Both axes are checked
+    against the validated registry authority — the single source of
+    truth for modelo / revision identity — and refused cleanly with a
+    translated error naming the unknown value.
+    """
+
+    from ...core.resources import resources
+
+    authority = resources().modelos.authority
+    modelo_code = modelo.strip()
+    try:
+        definition = authority.modelo(modelo_code)
+    except RegistrySnapshotError as exc:
+        known = ", ".join(sorted(str(item.id) for item in authority.modelos))
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.unknown_modelo",
+                modelo=modelo_code,
+                known=known,
+            )
+        ) from exc
+    revision = revision_id.strip()
+    if revision not in definition.revisions:
+        declared = ", ".join(sorted(str(item) for item in definition.revisions))
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.unknown_revision",
+                revision=revision,
+                modelo=modelo_code,
+                declared=declared,
+            )
+        )
+
+
 @work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
 def work_create(
     ctx: typer.Context,
@@ -854,6 +893,7 @@ def work_create(
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
+    _validate_registry_target(modelo, revision)
     resolved_year, resolved_period = _resolve_year_period(year, period)
     unit = create_work_unit(
         bucket_id=bucket_id,

@@ -547,6 +547,10 @@ cli:
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
         status_help: Show the metadata of one work unit
+        unknown_modelo: 'Unknown modelo %{modelo}; the calculation registry knows
+          these modelos: %{known}.'
+        unknown_revision: 'Unknown revision %{revision} for modelo %{modelo}; declared
+          revisions: %{declared}.'
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit

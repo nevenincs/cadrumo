@@ -599,6 +599,10 @@ cli:
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
         status_help: Mostrar los metadatos de una unidad de trabajo
+        unknown_modelo: 'Modelo desconocido %{modelo}; el registro de cálculo conoce
+          estos modelos: %{known}.'
+        unknown_revision: 'Revisión desconocida %{revision} para el modelo %{modelo};
+          revisiones declaradas: %{declared}.'
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo

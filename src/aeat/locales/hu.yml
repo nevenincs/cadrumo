@@ -571,6 +571,10 @@ cli:
         set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy kötelező)
         status_help: Egy munkaegység metaadatainak megjelenítése
+        unknown_modelo: 'Ismeretlen modelo %{modelo}; a kalkulációs nyilvántartás
+          ezeket a modellóket ismeri: %{known}.'
+        unknown_revision: 'Ismeretlen revízió %{revision} a(z) %{modelo} modellóhoz;
+          deklarált revíziók: %{declared}.'
         verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója

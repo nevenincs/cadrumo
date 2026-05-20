@@ -586,6 +586,10 @@ cli:
         set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
           almenys un requerit)
         status_help: Mostrar les metadades d'una unitat de treball
+        unknown_modelo: 'Model desconegut %{modelo}; el registre de càlcul coneix
+          aquests models: %{known}.'
+        unknown_revision: 'Revisió desconeguda %{revision} per al model %{modelo};
+          revisions declarades: %{declared}.'
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
