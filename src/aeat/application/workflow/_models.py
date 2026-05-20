@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ...core._bucket_pointer_io import resolve_active_bucket_id
 from ...core.i18n import tr
 from ..auth._models import AuthState
 from ._utils import utc_now
@@ -184,41 +185,6 @@ class WorkflowState(BaseModel):
         """Return the active profile's secure bucket id via the precedence chain."""
 
         return resolve_active_bucket_id()
-
-
-def resolve_active_bucket_id() -> str | None:
-    """Resolve the active bucket id via the operator-facing precedence chain.
-
-    Precedence, highest wins:
-
-    1. ``Settings.aeat_active_profile`` — surfaced from the
-       ``AEAT_ACTIVE_PROFILE`` environment variable (or an active
-       :func:`aeat.core.config.override_settings` block in tests).
-       Per-shell override useful for CI, headless invocations, and the
-       CLI ``--profile`` flag.
-    2. ``<aeat-root>/active-profile`` plaintext pointer file written by
-       ``profile create`` / ``profile switch``. This is the canonical
-       default for interactive sessions and resolves the chicken-and-egg
-       defect where an encrypted state row could not be read without
-       first knowing which bucket to unlock.
-
-    The CLI ``--profile`` flag, when supplied per-invocation, runs the
-    process under an :func:`aeat.core.config.override_settings` block
-    that sets ``aeat_active_profile`` so rung one handles it without a
-    fourth precedence rung.
-    """
-
-    from ...core._bucket_pointer_io import read_pointer
-    from ...core.config import load_settings
-
-    settings = load_settings()
-    override = (settings.aeat_active_profile or "").strip()
-    if override:
-        return override
-    pointer = read_pointer(settings.aeat_local_storage_root)
-    if pointer is not None:
-        return pointer.bucket_id
-    return None
 
 
 def active_bucket_id_or_raise() -> str:

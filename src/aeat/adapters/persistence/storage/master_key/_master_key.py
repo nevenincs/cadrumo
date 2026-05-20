@@ -56,6 +56,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 if TYPE_CHECKING:
     from .....core.config import Settings
 
+from .....core._bucket_pointer_io import resolve_active_bucket_id
 from .....core.locks import exclusive_file_lock, fsync_parent_dir
 from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
@@ -898,11 +899,6 @@ def _provider_enter(provider: object, *, fallback_bucket_id: str | None = None) 
     """
 
     from datetime import UTC, datetime
-
-    # Lazy application-layer resolver import keeps the adapter free of
-    # eager application coupling; resolve_active_bucket_id is the
-    # canonical precedence-chain helper.
-    from aeat.application.workflow._models import resolve_active_bucket_id
 
     from ..bucket._errors import NoActiveBucketError
     from ._active_session import activate_session
