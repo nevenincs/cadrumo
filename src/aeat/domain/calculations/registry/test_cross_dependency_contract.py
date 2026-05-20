@@ -80,7 +80,12 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for relation in revision.relations:
-                assert relation.source_modelo != modelo.id, f"{modelo.id}/{revision.id}/{relation.id}"
+                # `previous_period` relations model intra-modelo
+                # prior-period carry-forward (a modelo reading its own
+                # earlier filing); they legitimately self-reference,
+                # unlike true cross-model relations.
+                if relation.kind != "previous_period":
+                    assert relation.source_modelo != modelo.id, f"{modelo.id}/{revision.id}/{relation.id}"
                 _assert_relation_role_contract(relation, scope=f"{modelo.id}/{revision.id}/{relation.id}")
 
 
@@ -101,7 +106,11 @@ def _assert_instalment_to_final_settlement_contract(relation, *, scope: str) -> 
 
 
 def _assert_direct_calculation_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
-    assert relation.kind == "cross_model_output", scope
+    # A direct-calculation relation feeds a value into a calculation:
+    # either a cross-model output, or an intra-modelo prior-period
+    # carry-forward (`previous_period`) where a modelo reads its own
+    # earlier filing.
+    assert relation.kind in ("cross_model_output", "previous_period"), scope
     assert relation.target_periods, scope
 
 
@@ -174,7 +183,13 @@ def test_formula_bearing_revisions_consume_calculation_relations() -> None:
                 continue
             consumed = _formula_relation_refs(revision) | _algorithm_relation_refs(revision)
             required = {
-                relation.id for relation in revision.relations if relation.dependency_role in _CALCULATION_ROLES
+                relation.id
+                for relation in revision.relations
+                if relation.dependency_role in _CALCULATION_ROLES
+                # `previous_period` carry-forward relations deliver their
+                # value through a `target_binding`, not a formula
+                # expression, so they are not formula-consumed.
+                and relation.kind != "previous_period"
             }
             assert required.issubset(consumed), f"{modelo.id}/{revision.id}: {sorted(required - consumed)}"
 
