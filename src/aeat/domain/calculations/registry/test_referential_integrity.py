@@ -30,6 +30,8 @@ from ._schema import (
     DataBindingDefinition,
     DeadlineWindowDefinition,
     DependencyClassificationDefinition,
+    DisenoCompletenessCasilla,
+    DisenoCompletenessManifest,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
@@ -1055,6 +1057,131 @@ def test_casilla_segmento_rejects_empty_string() -> None:
     """An empty segmento is rejected so 'unset' stays distinct from 'empty'."""
     with pytest.raises(ValidationError, match="segmento"):
         CasillaDefinition.model_validate({**_single_segment_casilla().model_dump(), "segmento": ""})
+
+
+# ---------------------------------------------------------------------------
+# Test: Diseño-completeness gate
+# ---------------------------------------------------------------------------
+
+
+def _completeness_manifest(
+    casillas: tuple[DisenoCompletenessCasilla, ...],
+) -> DisenoCompletenessManifest:
+    """A minimal Diseño-completeness manifest grounded on the dummy catalogues."""
+    return DisenoCompletenessManifest(
+        source_ref=_DUMMY_SOURCE_ID,
+        casillas=casillas,
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+
+
+def test_revision_without_manifest_passes_completeness_gate() -> None:
+    """A revision with no completeness_manifest is not failed by the gate.
+
+    The completeness gate is rollout-staged: until a modelo's manifest is
+    authored, a casilla-bearing revision must keep validating. A minimal
+    revision that declares one casilla and no manifest must produce zero
+    completeness-gate failures.
+    """
+    from ._validate import RegistryValidator
+
+    revision = _minimal_revision(casillas=(_minimal_casilla("01"),))
+    modelo = _minimal_modelo(revision)
+    # A clean return proves the manifest-less revision clears the gate.
+    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_passes_when_manifest_matches_declared_casillas() -> None:
+    """A revision whose declared casillas exactly match its manifest validates.
+
+    The manifest enumerates the single declared casilla number; declared
+    and expected casilla sets are identical, so the gate raises nothing.
+    """
+    from ._validate import RegistryValidator
+
+    casilla = _minimal_casilla("01")
+    manifest = _completeness_manifest((DisenoCompletenessCasilla(number="01"),))
+    revision = _minimal_revision(casillas=(casilla,)).model_copy(
+        update={"completeness_manifest": manifest}
+    )
+    modelo = _minimal_modelo(revision)
+    RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_fails_on_missing_casilla() -> None:
+    """A manifest expecting a casilla the revision omits hard-fails the gate.
+
+    The manifest enumerates casilla numbers '01' and '02' but the
+    revision declares only '01'. The completeness gate must report the
+    missing '02' as a hard RegistryValidationError.
+    """
+    from ._validate import RegistryValidator
+
+    manifest = _completeness_manifest(
+        (DisenoCompletenessCasilla(number="01"), DisenoCompletenessCasilla(number="02"))
+    )
+    revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(
+        update={"completeness_manifest": manifest}
+    )
+    modelo = _minimal_modelo(revision)
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"manifest expects casilla number '02' but the revision does not declare it",
+    ):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_fails_on_extra_casilla() -> None:
+    """A casilla the revision declares but the manifest omits hard-fails the gate.
+
+    The revision declares casilla numbers '01' and '02' but the manifest
+    enumerates only '01'. The completeness gate must report the extra
+    '02' as a hard RegistryValidationError.
+    """
+    from ._validate import RegistryValidator
+
+    manifest = _completeness_manifest((DisenoCompletenessCasilla(number="01"),))
+    revision = _minimal_revision(
+        casillas=(_minimal_casilla("01"), _minimal_casilla("02"))
+    ).model_copy(update={"completeness_manifest": manifest})
+    modelo = _minimal_modelo(revision)
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"revision declares casilla number '02' absent from the Diseño-completeness manifest",
+    ):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_completeness_gate_fails_on_diverging_segment_qualified_manifest() -> None:
+    """A multi-segment manifest that diverges on a (segmento, number) pair fails.
+
+    Both the manifest and the revision use segment-qualified casillas.
+    The revision declares casilla 00562 under segmento DP200014; the
+    manifest expects 00562 under DP200032. The pairs (DP200014, 00562)
+    and (DP200032, 00562) are distinct identities, so the gate reports
+    both the missing manifest pair and the extra declared pair,
+    segment-qualified.
+    """
+    from ._validate import RegistryValidator
+
+    declared = _segmented_casilla("DP200014:00562", "00562", "DP200014")
+    manifest = _completeness_manifest(
+        (DisenoCompletenessCasilla(number="00562", segmento="DP200032"),)
+    )
+    revision = _minimal_revision(casillas=(declared,)).model_copy(
+        update={"completeness_manifest": manifest}
+    )
+    modelo = _minimal_modelo(revision)
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
+    missing = [f for f in failures if "expects casilla number '00562' within segmento 'DP200032'" in f]
+    extra = [
+        f
+        for f in failures
+        if "declares casilla number '00562' within segmento 'DP200014' absent" in f
+    ]
+    assert missing, f"diverging manifest must report the missing segment pair; got: {failures}"
+    assert extra, f"diverging manifest must report the extra segment pair; got: {failures}"
 
 
 def test_filing_modelo_with_formula_passes_invariant() -> None:
