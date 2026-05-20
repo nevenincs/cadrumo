@@ -24,6 +24,7 @@ from pydantic import ValidationError
 from ._schema import CasillaAlias, CasillaConstraints, CasillaDefinition
 from ._validate import (
     _emit_semantic_role_typo_twin_warnings,
+    _validate_semantic_role_cardinality,
     _validate_semantic_role_consistency,
 )
 
@@ -35,6 +36,8 @@ def _casilla(
     cid: str = "test_casilla",
     data_type: str = "money",
     semantic_role: str | None = None,
+    semantic_role_cardinality: str = "shared",
+    semantic_role_cardinality_reason: str | None = None,
     aliases: Iterable[CasillaAlias] = (),
     constraints: CasillaConstraints | None = None,
 ) -> CasillaDefinition:
@@ -45,6 +48,8 @@ def _casilla(
         section=("test",),
         data_type=data_type,  # type: ignore[arg-type]
         semantic_role=semantic_role,
+        semantic_role_cardinality=semantic_role_cardinality,  # type: ignore[arg-type]
+        semantic_role_cardinality_reason=semantic_role_cardinality_reason,
         aliases=tuple(aliases),
         constraints=constraints,
         legal_refs=("ley-58-2003:art-29",),
@@ -89,6 +94,37 @@ class TestSemanticRoleFieldShape:
     def test_empty_role_string_rejected(self) -> None:
         with pytest.raises(ValidationError):
             _casilla(semantic_role="")
+
+    def test_intentional_singleton_role_requires_semantic_role(self) -> None:
+        with pytest.raises(ValidationError):
+            _casilla(
+                semantic_role_cardinality="intentional_singleton",
+                semantic_role_cardinality_reason="2025-only legal slot",
+            )
+
+    def test_intentional_singleton_role_requires_reason(self) -> None:
+        with pytest.raises(ValidationError):
+            _casilla(
+                semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
+                semantic_role_cardinality="intentional_singleton",
+            )
+
+    def test_singleton_reason_requires_intentional_singleton_cardinality(self) -> None:
+        with pytest.raises(ValidationError):
+            _casilla(
+                semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
+                semantic_role_cardinality_reason="2025-only legal slot",
+            )
+
+    def test_intentional_singleton_cardinality_round_trips(self) -> None:
+        c = _casilla(
+            semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
+            semantic_role_cardinality="intentional_singleton",
+            semantic_role_cardinality_reason="2025-only legal slot",
+        )
+        rebuilt = CasillaDefinition.model_validate(c.model_dump())
+        assert rebuilt.semantic_role_cardinality == "intentional_singleton"
+        assert rebuilt.semantic_role_cardinality_reason == "2025-only legal slot"
 
     def test_aliases_round_trip(self) -> None:
         alias = CasillaAlias(
@@ -141,6 +177,34 @@ class TestValidateSemanticRoleConsistency:
         assert any("constraints" in f for f in failures)
 
 
+class TestValidateSemanticRoleCardinality:
+    def test_intentional_singleton_role_with_single_occurrence_passes(self) -> None:
+        c = _casilla(
+            semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
+            semantic_role_cardinality="intentional_singleton",
+            semantic_role_cardinality_reason="2025-only legal slot",
+        )
+        m = _modelo("202", "2025-y-siguientes", [c])
+        assert _validate_semantic_role_cardinality([m]) == ()
+
+    def test_intentional_singleton_role_repeated_elsewhere_fails(self) -> None:
+        a = _casilla(
+            cid="a",
+            semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
+            semantic_role_cardinality="intentional_singleton",
+            semantic_role_cardinality_reason="2025-only legal slot",
+        )
+        b = _casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
+        m1 = _modelo("202", "2025-y-siguientes", [a])
+        m2 = _modelo("202", "2026-y-siguientes", [b])
+        failures = _validate_semantic_role_cardinality([m1, m2])
+        assert failures == (
+            "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
+            "202.2025-y-siguientes.a declares semantic_role_cardinality "
+            "'intentional_singleton' but role appears 2 times",
+        )
+
+
 class TestTypoTwinWarning:
     def test_single_occurrence_role_emits_warning(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer-nif", data_type="nif")  # note hyphen typo
@@ -149,6 +213,30 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("taxpayer-nif" in str(w.message) for w in captured)
+
+    def test_single_occurrence_near_duplicate_role_emits_warning(self) -> None:
+        typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
+        canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
+        canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
+        m = _modelo("180", "2023", [typo, canonical_a, canonical_b])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert any("taxpayer_niff" in str(w.message) for w in captured)
+
+    def test_intentional_singleton_role_does_not_emit_warning(self) -> None:
+        a = _casilla(
+            cid="a",
+            semantic_role="taxpayer-nif",
+            data_type="nif",
+            semantic_role_cardinality="intentional_singleton",
+            semantic_role_cardinality_reason="legacy source spelling is legally unique",
+        )
+        m = _modelo("180", "2023", [a])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
 
     def test_repeated_role_does_not_warn(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
@@ -160,3 +248,63 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m1, m2])
         role_warnings = [w for w in captured if "taxpayer_nif" in str(w.message)]
         assert role_warnings == []
+
+    def test_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
+        aumento = _casilla(
+            cid="a",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+        )
+        disminucion = _casilla(
+            cid="b",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
+        )
+        m = _modelo("200", "2024-y-siguientes", [aumento, disminucion])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_near_duplicate_with_same_axis_still_warns(self) -> None:
+        typo = _casilla(
+            cid="a",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanent_aumento",
+        )
+        canonical = _casilla(
+            cid="b",
+            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+        )
+        m = _modelo("200", "2024-y-siguientes", [typo, canonical])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert any("permanent_aumento" in str(w.message) for w in captured)
+
+    def test_token_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
+        anteriores = _casilla(
+            cid="a",
+            semantic_role="iva_compensacion_pendiente_anteriores",
+        )
+        posteriores = _casilla(
+            cid="b",
+            semantic_role="iva_compensacion_pendiente_posteriores",
+        )
+        m = _modelo("303", "2009-y-siguientes", [anteriores, posteriores])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []
+
+    def test_optional_negation_sibling_roles_do_not_warn_as_typos(self) -> None:
+        con_mantenimiento = _casilla(
+            cid="a",
+            semantic_role="is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+        )
+        sin_mantenimiento = _casilla(
+            cid="b",
+            semantic_role="is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+        )
+        m = _modelo("200", "2024-y-siguientes", [con_mantenimiento, sin_mantenimiento])
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings([m])
+        assert captured == []

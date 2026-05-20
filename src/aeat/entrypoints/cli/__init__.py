@@ -188,6 +188,12 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     if is_bootstrap_exempt(_full_invocation_verb_path()):
         return
     if resolve_active_bucket_id() is None:
+        # No active profile: each non-exempt verb refuses for itself
+        # with a translated message (see the per-verb
+        # ``resolve_active_bucket_id() is None`` guards). Returning here
+        # avoids opening a session against an absent per-bucket
+        # database and keeps the bare-invocation landing card path
+        # (handled by the caller) intact.
         return
     if has_active_bucket_session():
         return

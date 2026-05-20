@@ -128,40 +128,6 @@ def test_app_overview_status_bare_renders_counts(monkeypatch: pytest.MonkeyPatch
     assert payload["drafts"] == 0
 
 
-def test_app_overview_status_calendar_renders_period_table(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate(monkeypatch, tmp_path)
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "overview",
-            "status",
-            "--calendar",
-            "--from",
-            "2026-01-01",
-            "--to",
-            "2026-04-30",
-        ]
-    )
-    assert result.exit_code == 0
-    payload = json.loads(result.output)
-    assert "calendar" in payload
-    assert payload["calendar"]["range"]["from_date"] == "2026-01-01"
-
-
-def test_app_overview_status_calendar_requires_dates(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate(monkeypatch, tmp_path)
-    result = _invoke(["app", "overview", "status", "--calendar"])
-    assert result.exit_code != 0
-
-
 def test_app_ledger_import_dry_run_does_not_persist(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -273,13 +239,18 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
 
 def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
     """Persist a usage-ratio profile so the next allocate verb can resolve TELEFONIA_MOVIL."""
+    from aeat.adapters.persistence.storage import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
     from aeat.domain.categories import SpendingCategory
     from aeat.domain.usage_ratios import UsageRatioProfile, save_usage_ratios
 
-    save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")}),
-        bucket_id=bucket_id,
-    )
+    with activate_master_key_provider(get_master_key_provider()):
+        save_usage_ratios(
+            UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")}),
+            bucket_id=bucket_id,
+        )
 
 
 def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
@@ -453,6 +424,10 @@ def _drive_ledger_lifecycle_round_trip(
 
 def _seed_purchase_invoice_evidence() -> str:
     """Persist one RECEIVED purchase invoice and return its id."""
+    from aeat.adapters.persistence.storage import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
     from aeat.domain.invoices import (
         Invoice,
         InvoiceCatalogue,
@@ -488,7 +463,8 @@ def _seed_purchase_invoice_evidence() -> str:
             "payment_status": PaymentStatus.PAID,
         }
     )
-    InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
+    with activate_master_key_provider(get_master_key_provider()):
+        InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     return purchase_evidence.invoice_id
 
 

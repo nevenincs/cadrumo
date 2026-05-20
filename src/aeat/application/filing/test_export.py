@@ -308,12 +308,12 @@ def _approved_modelo_123_2019_registry_draft():
             display_name="Export registry test",
         ),
         inputs={
-            "01": Decimal("5"),
-            "02": Decimal("1201.00"),
-            "03": Decimal("228.19"),
-            "04": Decimal("0"),
-            "05": Decimal("7.50"),
-            "07": Decimal("12.25"),
+            "01-legacy": Decimal("5"),
+            "02-legacy": Decimal("1201.00"),
+            "03-legacy": Decimal("228.19"),
+            "04-legacy": Decimal("0"),
+            "05-legacy": Decimal("7.50"),
+            "07-legacy": Decimal("12.25"),
         },
         schema_provider=provider,
     )
@@ -756,14 +756,14 @@ def test_export_writes_modelo_123_2019_registry_layout(tmp_path: Path) -> None:
     assert receipt.modelo == "123"
     assert receipt.byte_size == len(payload)
     assert exported_values == {
-        "01": Decimal("5"),
-        "02": Decimal("1201.00"),
-        "03": Decimal("228.19"),
-        "04": Decimal("0.00"),
-        "05": Decimal("7.50"),
-        "06": Decimal("235.69"),
-        "07": Decimal("12.25"),
-        "08": Decimal("223.44"),
+        "01-legacy": Decimal("5"),
+        "02-legacy": Decimal("1201.00"),
+        "03-legacy": Decimal("228.19"),
+        "04-legacy": Decimal("0.00"),
+        "05-legacy": Decimal("7.50"),
+        "06-legacy": Decimal("235.69"),
+        "07-legacy": Decimal("12.25"),
+        "08-legacy": Decimal("223.44"),
     }
 
 

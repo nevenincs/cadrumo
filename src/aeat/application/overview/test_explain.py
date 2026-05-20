@@ -47,7 +47,7 @@ def test_explain_refuses_unknown_modelo() -> None:
 def test_explain_refuses_blank_modelo() -> None:
     """A blank modelo identifier is refused at the service boundary."""
 
-    with pytest.raises(OverviewExplainError, match=r"must not be blank"):
+    with pytest.raises(OverviewExplainError, match=r"no puede estar en blanco"):
         build_overview_explain(_profile(), modelo="  ", year=2026)
 
 

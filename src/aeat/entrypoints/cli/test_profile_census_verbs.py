@@ -78,13 +78,10 @@ def _seed_active_profile() -> None:
 
 def _capture_snapshot() -> str:
     from aeat.application.workflow._models import resolve_active_bucket_id
-    from aeat.application.workflow._persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
     active = resolve_active_bucket_id()
     assert active is not None, "active profile must be seeded before capture"
-    bucket_id = state.profiles[active].bucket_id
-    service = CensoSnapshotService(bucket_id=bucket_id)
+    service = CensoSnapshotService(bucket_id=active)
     snapshot = service.capture(
         profile_id=active,
         captured_at=datetime.now(UTC),

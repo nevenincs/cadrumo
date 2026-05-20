@@ -112,10 +112,15 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
             original = _populated_record()
-            repo = UserProfileLifecycleRepository(bucket_id="probe-bucket")
+            # Inject the secure-object store so the lifecycle repo and
+            # the direct corruption query below both address the same
+            # database. Without the injection the repo self-resolves
+            # to its own per-bucket database and the corruption query
+            # would target an empty file.
+            repo = UserProfileLifecycleRepository(bucket_id="probe-bucket", objects=objects)
             repo.save(original)
 
             baseline = repo.load(original.profile_id)

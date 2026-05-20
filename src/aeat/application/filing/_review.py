@@ -101,8 +101,8 @@ def compute_current_approval_basis(
         A freshly computed :class:`ModeloApprovalBasis`.
     """
 
-    catalogue = transaction_catalogue or _load_transaction_catalogue(bucket_id)
-    profiles = category_profiles or resolve_category_profiles(2025)
+    catalogue = transaction_catalogue if transaction_catalogue is not None else _load_transaction_catalogue(bucket_id)
+    profiles = category_profiles if category_profiles is not None else resolve_category_profiles(2025)
     return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
         draft_review_fingerprint=_draft_review_fingerprint(draft),

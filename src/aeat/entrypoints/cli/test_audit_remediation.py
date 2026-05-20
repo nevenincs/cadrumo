@@ -92,8 +92,7 @@ def test_overview_calendar_for_general_iva_includes_modelo_303() -> None:
             "json",
             "app",
             "overview",
-            "status",
-            "--calendar",
+            "calendar",
             "--from",
             "2026-01-01",
             "--to",
@@ -105,7 +104,7 @@ def test_overview_calendar_for_general_iva_includes_modelo_303() -> None:
     assert result.exit_code == 0
     _assert_no_internal_leak(_combined_output(result))
     payload = json.loads(result.output)
-    modelos = {entry["modelo"] for entry in payload["calendar"]["entries"]}
+    modelos = {entry["modelo"] for entry in payload["entries"]}
     assert "303" in modelos
 
 
@@ -144,6 +143,13 @@ def test_typer_help_sources_are_direct_translations() -> None:
     failures: list[str] = []
     for module in Path("src/aeat").rglob("*.py"):
         if module.name.startswith(("test_", "_test_")):
+            continue
+        # The `aeat.diagnostics` package is an engineer-only internal
+        # tool exposed through its own `python -m aeat.diagnostics`
+        # entrypoint, not the operator-facing `aeat` CLI. Its help
+        # text is intentionally English-only and outside the operator
+        # localization contract this test enforces.
+        if "diagnostics" in module.parts:
             continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
         failures.extend(_typer_help_violations(tree, module=module))

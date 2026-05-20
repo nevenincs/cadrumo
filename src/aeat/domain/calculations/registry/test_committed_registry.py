@@ -43,7 +43,10 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
 
     assert snapshot.revision.id == "2019-y-siguientes"
     assert snapshot.revision.period_selector.year_from == 2019
-    assert {entry.target for entry in result.entries} == {"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"}
+    assert {entry.target for entry in result.entries} == {
+        "03", "04", "07", "09", "11", "12", "13", "14", "17", "19",
+        "saldo-negativo-fin-periodo",
+    }
     assert "rd-439-2007:art-110" in snapshot.legal
     assert "aeat-dr-130-2019-v12" in snapshot.sources
 
@@ -140,28 +143,28 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
-            "01": Decimal("2"),
-            "02": Decimal("1201.00"),
-            "03": Decimal("228.19"),
-            "04": Decimal("0"),
-            "05": Decimal("7.50"),
-            "07": Decimal("12.25"),
+            "01-legacy": Decimal("2"),
+            "02-legacy": Decimal("1201.00"),
+            "03-legacy": Decimal("228.19"),
+            "04-legacy": Decimal("0"),
+            "05-legacy": Decimal("7.50"),
+            "07-legacy": Decimal("12.25"),
         },
         date_context={"filing_period": date(2023, 12, 31)},
     )
 
     assert snapshot.revision.id == "2019-2023"
     assert tuple(casilla.id for casilla in snapshot.revision.casillas) == (
-        "01",
-        "02",
-        "03",
-        "04",
-        "05",
-        "06",
-        "07",
-        "08",
+        "01-legacy",
+        "02-legacy",
+        "03-legacy",
+        "04-legacy",
+        "05-legacy",
+        "06-legacy",
+        "07-legacy",
+        "08-legacy",
     )
-    assert {entry.target for entry in result.entries} == {"06", "08"}
+    assert {entry.target for entry in result.entries} == {"06-legacy", "08-legacy"}
 
 
 @pytest.mark.parametrize(
@@ -201,7 +204,9 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
 
     assert snapshot.revision.id == revision_id
     entries = {entry.target: entry for entry in result.entries}
-    assert set(entries) == {"04", "06", "07", "10", "13", "15"}
+    assert set(entries) == {
+        "04", "06", "07", "10", "13", "15", "saldo-negativo-fin-periodo",
+    }
     assert entries["04"].operand_refs == ("03", "irpf.objective_no_base_fractional_payment_rate")
     assert entries["06"].operand_refs == ("05", "irpf.objective_agriculture_fractional_payment_rate")
     assert entries["07"].operand_refs == ("02", "04", "06")

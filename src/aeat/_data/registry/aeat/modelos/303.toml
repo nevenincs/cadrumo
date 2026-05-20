@@ -573,29 +573,6 @@ source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
-[[revisions."2009-y-siguientes".relations]]
-id = "modelo-303-rel-self-compensacion-anteriores"
-kind = "previous_period"
-dependency_role = "direct_calculation"
-source_modelo = "303"
-source_revision_selector = { filing_year_delta = 0 }
-source_output = "iva.compensacion-disponible-fin-periodo"
-target_binding = "modelo-303-compensacion-pendiente-anteriores"
-period_alignment = { mode = "previous_quarter" }
-target_periods = ["1T", "2T", "3T", "4T"]
-source_period_offset_from_target = -1
-aggregation = { op = "copy" }
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
-
-[[revisions."2009-y-siguientes".dependency_classifications]]
-id = "modelo-303-dep-self-prior-quarter"
-source_modelo = "303"
-treatment = "factual_evidence"
-target_constructs = ["modelo-303-iva-autoliquidacion"]
-relation_refs = ["modelo-303-rel-self-compensacion-anteriores"]
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "decl.ejercicio"
@@ -911,8 +888,6 @@ bindings = [
     "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
     "modelo-303-compensacion-pendiente-anteriores",
 ]
-relations = ["modelo-303-rel-self-compensacion-anteriores"]
-dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
 workbook_parity_refs = ["modelo-303-dr-2025"]
 live_cross_references = [
     "modelo-303-static-documentation",

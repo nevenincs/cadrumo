@@ -160,12 +160,12 @@ def test_borrador_binding_command_rejects_unknown_fields() -> None:
 
 
 def test_borrador_binding_command_rejects_blank_caller_binding_keys() -> None:
-    with pytest.raises(Modelo100BorradorBindingError, match="caller binding keys"):
+    with pytest.raises(Modelo100BorradorBindingError, match="claves de binding"):
         _command(borrador_snapshot_id="snap-1", caller_binding_values={" ": Decimal("1")})
 
 
 def test_borrador_binding_result_requires_trace_to_match_values() -> None:
-    with pytest.raises(Modelo100BorradorBindingError, match="source trace"):
+    with pytest.raises(Modelo100BorradorBindingError, match="traza de origen"):
         Modelo100BorradorBindingResult(
             borrador_snapshot_id="snap-1",
             binding_values={_DECIMAL_BINDING: Decimal("1")},
@@ -403,7 +403,7 @@ def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(sna
 
 
 def test_borrador_resolution_rejects_non_modelo_100_consumers(snapshot_repository) -> None:
-    with pytest.raises(Modelo100BorradorBindingError, match="exclusive to modelo 100"):
+    with pytest.raises(Modelo100BorradorBindingError, match="registry snapshot modelo does not match"):
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="snapshot-does-not-need-loading", modelo="303"),
             registry_snapshot=_modelo_100_registry_snapshot(),

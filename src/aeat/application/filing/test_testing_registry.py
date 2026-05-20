@@ -7,6 +7,7 @@ from decimal import Decimal, InvalidOperation
 import pytest
 from pydantic import ValidationError
 
+from ...domain.filing._errors import ModeloBuilderError
 from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloValueKind
 from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
@@ -71,7 +72,7 @@ def test_non_approved_status_clears_approval_fields() -> None:
 
 
 def test_unsupported_modelo_fails_at_registry_boundary() -> None:
-    with pytest.raises(Exception, match="not present in the calculation registry"):
+    with pytest.raises(ModeloBuilderError, match="missing requested modelo definitions"):
         build_registry_filing_draft(
             modelo="999",
             period="0A",

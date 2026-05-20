@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
+from ...core.errors import BaseSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     RegistrySnapshot,
@@ -32,10 +32,12 @@ from ...domain.filing import (
     ModeloApprovalBasis,
     ModeloBindingValue,
     ModeloBuilderError,
+    ModeloCode,
     ModeloComputationError,
     ModeloDraft,
     ModeloDraftError,
     ModeloDraftStatus,
+    ModeloIdentity,
     ModeloImportError,
     ModeloInputs,
     ModeloProfile,
@@ -45,8 +47,6 @@ from ...domain.filing import (
     ModeloValidator,
     ModeloValue,
     ModeloValueKind,
-    ModeloCode,
-    ModeloIdentity,
     apply_validation,
     compute_modelo_draft_id,
     derive_validation_status,
@@ -332,7 +332,10 @@ def _binding_row_index(binding_id: str, row_key: object) -> int:
 
 def _binding_input(binding_id: str, value: object, binding: object) -> ModeloScalar:
     selector = getattr(binding, "selector", None)
-    data_type = str(getattr(selector, "data_type", None) or "decimal")
+    raw_data_type = (
+        selector.get("data_type") if isinstance(selector, Mapping) else getattr(selector, "data_type", None)
+    )
+    data_type = str(raw_data_type or "decimal")
     if data_type == "text":
         return str(value)
     if data_type == "integer":
@@ -469,6 +472,7 @@ __all__ = [
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
+    "JustificanteImportResult",
     "ModeloAmendmentError",
     "ModeloAmendmentValidationError",
     "ModeloApplicationError",
@@ -477,12 +481,14 @@ __all__ = [
     "ModeloBindingValue",
     "ModeloBuilderError",
     "ModeloCalculateError",
+    "ModeloCode",
     "ModeloComputationError",
     "ModeloDraft",
     "ModeloDraftError",
     "ModeloDraftStatus",
     "ModeloHistory",
     "ModeloHistoryEntry",
+    "ModeloIdentity",
     "ModeloImportError",
     "ModeloInputs",
     "ModeloOperatorProfile",
@@ -493,9 +499,6 @@ __all__ = [
     "ModeloValidator",
     "ModeloValue",
     "ModeloValueKind",
-    "JustificanteImportResult",
-    "ModeloCode",
-    "ModeloIdentity",
     "apply_validation",
     "approval_stale_reasons",
     "approve_draft",

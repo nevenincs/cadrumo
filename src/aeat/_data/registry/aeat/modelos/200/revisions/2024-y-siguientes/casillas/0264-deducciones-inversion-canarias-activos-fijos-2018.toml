@@ -16,6 +16,7 @@ number = "00853"
 label = "Deducciones inversión Canarias - Activos fijos 2018 - Aplicado en esta liquidación [00853]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2018"]
 data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-200-page-016b-casilla-00853"]

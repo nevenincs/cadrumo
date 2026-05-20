@@ -21,8 +21,6 @@ workbook_parity_refs = ["modelo-202-2023-2024-dr-xlsx"]
 live_cross_references = ["modelo-202-2023-2024-static-documentation"]
 export_layouts = ["modelo-202-2023-2024-fichero-boe"]
 bindings = ["modelo-202-2023-2024-pagos-fraccionados-anteriores"]
-relations = ["modelo-202-2023-2024-rel-self-pagos-2p", "modelo-202-2023-2024-rel-self-pagos-3p"]
-dependency_classifications = ["modelo-202-2023-2024-dep-self-prior-pagos"]
 application_links = [
     "modelo-202-2023-2024-portal",
     "modelo-202-2023-2024-calculation",

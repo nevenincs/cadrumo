@@ -94,17 +94,29 @@ def reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport:
     quarantined_namespace_count = 0
 
     if scope in {SetupResetScope.PROFILE, SetupResetScope.ALL}:
+        from ..adapters.persistence.storage.sql import dispose_engine
         from .user_profile import UserProfileLifecycleRepository
+        from .user_profile._orchestration import remove_profile_bucket_directory
+        from .workflow._profile_bucket_scan import list_profile_buckets
 
+        # Registered profiles are a filesystem-manifest scan, not a
+        # persisted WorkflowState field; profile id and bucket id are
+        # 1:1 per the profile-lifecycle disaster ADR.
         profile_targets = tuple(
-            sorted((profile_id, pointer.bucket_id) for profile_id, pointer in current.profiles.items())
+            sorted((profile_id, pointer.bucket_id) for profile_id, pointer in list_profile_buckets().items())
         )
         removed_profile_names = tuple(profile_id for profile_id, _bucket_id in profile_targets)
         for profile_id, bucket_id in profile_targets:
             UserProfileLifecycleRepository(bucket_id=bucket_id).delete(profile_id)
+            # Dispose the cached per-bucket engine so its SQLite file
+            # handle is released before the directory is removed —
+            # an open handle blocks the rename on Windows.
+            dispose_engine()
+            # The bucket manifest is the existence claim; removing the
+            # directory clears the profile from the manifest scan.
+            remove_profile_bucket_directory(profile_id)
         new_state = new_state.model_copy(
             update={
-                "profiles": {},
                 "declarations": {},
                 "invoice_reviews": {},
                 "ledger_reviews": {},

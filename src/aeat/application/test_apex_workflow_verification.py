@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.auth import clear_operator_auth, configure_operator_auth
 from aeat.application.operator_surface import require_accepted_root, retired_surface_suggestion
@@ -22,10 +23,13 @@ def _isolated_workflow_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    try:
-        yield
-    finally:
-        dispose_engine()
+    # The column-level encrypt path resolves its DEK through the active
+    # BucketSession; EphemeralMasterKeyProvider opens and activates one.
+    with EphemeralMasterKeyProvider():
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestions() -> None:

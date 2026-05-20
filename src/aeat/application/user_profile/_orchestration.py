@@ -186,7 +186,7 @@ def register_active_profile(
         # Rollback reverts the directory + manifest AND clears the
         # pointer so a crashed create leaves no phantom profile in
         # the manifest scan and no dangling active-profile pointer.
-        _rollback_profile_bucket(profile_id)
+        remove_profile_bucket_directory(profile_id)
         _clear_active_profile_pointer()
         raise
     updated = state.model_copy(update={"updated_at": utc_now()})
@@ -201,28 +201,31 @@ def register_active_profile(
     return updated
 
 
-def _refuse_duplicate_profile(profile_id: str) -> None:
+def _refuse_duplicate_profile(
+    profile_id: str,
+) -> None:
     """Refuse a ``profile create`` when the manifest already exists.
 
-    The manifest-scan helper is the canonical "is this profile
-    registered?" oracle (disaster ADR Ruling 2). If the manifest is
-    already on disk the operator already has a profile with this
-    name; ``profile create`` must refuse rather than overwrite.
+    The manifest is the existence claim. A manifest-only bucket is
+    degraded state, not an invitation to recreate in place; recovery
+    must use explicit repair verbs so the operator does not silently
+    mix new profile data into a torn bucket.
     """
 
     from ..workflow._profile_bucket_scan import read_profile_bucket
 
-    if read_profile_bucket(profile_id) is not None:
-        raise ProfileAlreadyRegisteredError(
-            tr(
-                "application.user_profile.errors.profile_already_exists",
-                default=(
-                    "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
-                    "to activate it or `aeat config profile delete NAME` first."
-                ),
-                profile=profile_id,
+    if read_profile_bucket(profile_id) is None:
+        return
+    raise ProfileAlreadyRegisteredError(
+        tr(
+            "application.user_profile.errors.profile_already_exists",
+            default=(
+                "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
+                "to activate it or `aeat config profile delete NAME` first."
             ),
-        )
+            profile=profile_id,
+        ),
+    )
 
 
 def _require_registered_profile(profile_id: str) -> None:
@@ -247,16 +250,19 @@ def _require_registered_profile(profile_id: str) -> None:
         )
 
 
-def _rollback_profile_bucket(profile_id: str) -> None:
-    """Trash-rename a half-created bucket directory after a failed register.
+def remove_profile_bucket_directory(profile_id: str) -> None:
+    """Trash-rename and remove a profile's on-disk bucket directory.
 
-    Atomic-create rollback (disaster ADR Ruling 3 step 4 / 5
-    rollback contract). The directory is renamed to a trash-prefix
-    sibling rather than recursively unlinked so a crashed rollback
-    leaves a recoverable on-disk trace. The follow-on cleanup is a
-    best-effort recursive delete.
+    Used both by atomic-create rollback (disaster ADR Ruling 3 step
+    4 / 5 rollback contract) and by scoped config reset. The
+    directory is first renamed to a trash-prefix sibling so a crashed
+    removal leaves a recoverable on-disk trace, then recursively
+    deleted. When the rename is refused — Windows denies renaming a
+    directory whose SQLite file was only just closed — the directory
+    is removed in place so the bucket does not survive the reset.
     """
 
+    import gc
     import shutil
 
     root = load_settings().aeat_local_storage_root
@@ -267,6 +273,10 @@ def _rollback_profile_bucket(profile_id: str) -> None:
     try:
         target.rename(trash)
     except OSError:
+        # The crash-safe rename was refused (file handle still held);
+        # release lingering handles and remove the directory in place.
+        gc.collect()
+        shutil.rmtree(target, ignore_errors=True)
         return
     shutil.rmtree(trash, ignore_errors=True)
 

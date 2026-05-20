@@ -44,7 +44,7 @@ def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple
         payload.setdefault("kind", kind.value)
         raw_kind = payload.get("kind")
         if isinstance(raw_kind, str):
-            payload["kind"] = raw_kind.upper()
+            payload["kind"] = raw_kind.lower()
 
         payload.setdefault("currency", "EUR")
         payload.setdefault("counterparty_country", "ES")
@@ -132,7 +132,7 @@ def _synthesise_single_line_if_needed(payload: dict[str, object]) -> None:
 def _coerce_kind(kind: InvoiceKind | str) -> InvoiceKind:
     if isinstance(kind, InvoiceKind):
         return kind
-    return InvoiceKind(kind.strip().upper())
+    return InvoiceKind(kind.strip().lower())
 
 
 __all__ = [

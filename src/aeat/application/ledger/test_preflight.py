@@ -13,6 +13,7 @@ from sqlalchemy.engine import Engine
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core.config import Settings
 from ...domain.categories import SpendingCategory
 from ...domain.transactions import (
@@ -33,17 +34,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+def secure_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Engine]:
+    database_url = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
+    monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
+    dispose_engine()
     provider = EphemeralMasterKeyProvider()
     with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
+        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
         Base.metadata.create_all(engine)
         try:
             yield engine
         finally:
             engine.dispose()
+            dispose_engine()
 
 
 def _raw_transaction(
@@ -250,10 +253,11 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_engine: Engine)
     assert report.issues == ()
 
 
-def test_preflight_rejects_repository_bucket_mismatch() -> None:
+def test_preflight_rejects_repository_bucket_mismatch(secure_engine: Engine) -> None:
+    objects = SecureObjectRepository(engine=secure_engine)
     with pytest.raises(TransactionValidationError, match="bucket_id"):
         preflight_ledger_tax_readiness(
             bucket_id="bucket-a",
             period="2026Q2",
-            transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-b"),
+            transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-b", objects=objects),
         )

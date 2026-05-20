@@ -3,6 +3,6 @@ id = "0370"
 number = "0370"
 label = "Pérdida patrimonial pendiente {0} de imputación"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
-semantic_role = "irpf_perdida_otros_pendiente_2"
+semantic_role = "irpf_perdida_otros_pendiente"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

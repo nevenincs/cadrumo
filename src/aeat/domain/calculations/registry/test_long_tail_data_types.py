@@ -12,20 +12,17 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ._errors import RegistryValidationError
 from ._schema import (
+    BicString,
     CalendarDate,
     CasillaDefinition,
     CCAACode,
-    BicString,
-    IbanString,
     MunicipalityCode,
     NifIvaString,
     PersonOrEntityName,
     PostalCode,
     ProvinceCode,
 )
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -40,6 +37,19 @@ def _casilla_with(data_type: str, label: str = "Test casilla") -> CasillaDefinit
         legal_refs=("ley-58-2003:art-29",),
         source_refs=("aeat-manual-modelo",),
     )
+
+
+def test_semantic_role_accepts_long_cross_modelo_domain_identifier() -> None:
+    casilla = _casilla_with(
+        "decimal",
+        label="Rendimiento capital mobiliario general propiedad intelectual no autor",
+    )
+    rebuilt = CasillaDefinition.model_validate({
+        **casilla.model_dump(),
+        "semantic_role": "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor",
+    })
+
+    assert rebuilt.semantic_role == "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor"
 
 
 # ---- name ----------------------------------------------------------------

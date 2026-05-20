@@ -31,6 +31,7 @@ from sqlalchemy.engine import Engine
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core.config import Settings
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.transactions import (
@@ -53,17 +54,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+def secure_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Engine]:
+    database_url = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
+    monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
+    dispose_engine()
     provider = EphemeralMasterKeyProvider()
     with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
+        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
         Base.metadata.create_all(engine)
         try:
             yield engine
         finally:
             engine.dispose()
+            dispose_engine()
 
 
 def _repositories(engine: Engine, *, bucket_id: str = "bucket-a"):

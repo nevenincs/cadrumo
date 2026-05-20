@@ -56,6 +56,22 @@ def _first_registry_modelo() -> str:
     return _registry_modelos()[0]
 
 
+@pytest.fixture(autouse=True)
+def _isolated_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Point the encrypted SQL engine at a per-test SQLite database.
+
+    The filed-state verification tests construct a
+    :class:`FiledDeclaracionObservationStore`, which opens a
+    :class:`SecureObjectRepository` and therefore needs a resolvable
+    ``aeat_database_url``. Registry-only tests are unaffected.
+    """
+
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'registry-cli.db').as_posix()}")
+    dispose_engine()
+
+
 @pytest.fixture(scope="module")
 def _registry_inspect_payload() -> dict[str, object]:
     """Run ``app registry inspect --format json`` once per module.

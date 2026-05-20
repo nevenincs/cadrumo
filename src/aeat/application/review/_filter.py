@@ -264,12 +264,12 @@ def _enum_value_or_raise[E: StrEnum](
         scope: Stable scope tag carried in the raised error code so the
             CLI can surface a per-scope repair hint.
         case_fold: When ``True``, the lookup compares
-            ``clause.value.upper()`` against the enum member values.
+            ``clause.value.lower()`` against the enum member values.
             Used for :class:`aeat.domain.invoices.InvoiceKind`, whose
-            members are uppercase (``ISSUED`` / ``RECEIVED``) but the
-            The CLI grammar lowercases command-line values.
+            members are lowercase (``issued`` / ``received``) so that
+            operators may pass either case on the command line.
     """
-    candidate = clause.value.upper() if case_fold else clause.value
+    candidate = clause.value.lower() if case_fold else clause.value
     valid = {member.value for member in enum_cls}
     if candidate not in valid:
         raise FilterParseError(

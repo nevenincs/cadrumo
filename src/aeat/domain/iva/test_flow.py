@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import tomllib
-from pathlib import Path
 
 import pytest
 
 from aeat.core.resources import bundled_path
 from aeat.domain.iva import (
     InvoiceKind,
-    IvaFlowDirection,
     IvaCategory,
+    IvaFlowDirection,
     derive_flow_for_classification,
 )
 
@@ -124,7 +123,9 @@ def test_iva_flow_legal_articles_carry_required_text_quotes() -> None:
 
 def test_iva_flow_corpus_excerpts_present_with_boe_quotes() -> None:
     for art in ("84", "88", "92"):
-        excerpt = Path(f"corpus/normatives/html/ley-37-1992-art-{art}.html")
+        # corpus ships under the bundled data root (src/aeat/_data/);
+        # resolve via bundled_path, not a CWD-relative path.
+        excerpt = bundled_path("corpus", "normatives", "html", f"ley-37-1992-art-{art}.html")
         assert excerpt.exists()
         body = excerpt.read_text(encoding="utf-8")
         assert f"Artículo {art}." in body or f"Artículo&nbsp;{art}." in body
