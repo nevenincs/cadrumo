@@ -1780,3 +1780,74 @@ Detail and per-step reopen list lives in the audit document.
 | R20 | partial | three event types named in plan are absent or named differently in the enum |
 | R21 | partial | `registry/aeat/modelos/349.toml` migrated to per-direction `collectible_invoice` / `payable_invoice` (per audit) — done |
 | R24 | partial | `aeat app modelo reconcile from-justificante PATH` and Modelo 036 `alta` / `modificacion` / `baja` lifecycle verbs absent |
+
+## 2026-05-20 amendment — testimonial-driven CLI verification
+
+A testimonial-driven CLI verification campaign (nine human-persona
+agents operating the real CLI end-to-end; method locked in
+`[[2026-05-20-testimonial-driven-cli-verification-playbook]]`,
+findings in `[[2026-05-20-cli-testimonial-findings-inventory]]`)
+exercised the redesigned CLI as real taxpayers. It confirms several
+apex R-rows from live use and surfaces CLI-surface proposals that
+belong here.
+
+### Shell defects — fixed, no ADR surface change
+
+Nine operator-shell defects were fixed in place (auth-readiness check,
+ledger allocate classification, profile-rename atomicity, silent
+profile-create, period-token validation, exit codes, auth-status
+consistency, error field scrubbing, Windows console UTF-8). These are
+implementation defects within the already-ADR'd surface; they do not
+alter the root contract. Detail and regression tests in the inventory.
+
+### Confirmation of existing R-rows from live use
+
+- **R17 (overview `agenda`/`calendar`/`backlog`/`explain` absent)** —
+  confirmed live: `aeat app overview status` answers workspace state
+  but cannot answer "what must I file and when?". A non-expert
+  persona's primary use-case is unmet until R17's remaining verbs land
+  under the `app-overview-shape` child ADR.
+- **R23 evidence / `app ledger attach`** — confirmed gap: `attach`
+  requires an evidence id but no CLI surface creates one. The
+  evidence-creation path designed in the `receipt-ocr-pdf-evidence`
+  child ADR (§7) is unshipped; until it lands, `attach` is unreachable.
+
+### New CLI-surface proposal — obligation registration for `verify`
+
+`aeat app modelo work verify` dead-ends at `NO_PENDING_OBLIGATION`,
+and no verb registers a filing obligation, so `create → calculate →
+verify → export` cannot complete (personas Elena, Teresa). The apex
+must adjudicate where the "pending obligation" originates:
+
+- **Option A (preferred): derive it from the deadline engine.** When
+  R17's `agenda`/`calendar` surface lands, an obligation becomes
+  *pending* automatically once its period window opens; `verify`
+  consumes that derived obligation. No new verb — the gap closes as a
+  dependency of R17. This keeps obligations a property of the
+  deadline/agenda surface, not a manual operator action.
+- **Option B: an explicit `aeat app modelo work register-obligation`
+  verb** under the existing `modelo work` group, for cases where a
+  taxpayer files outside the derived calendar (late, complementaria).
+
+Recommendation: adopt Option A as the default and Option B only as the
+escape hatch for off-calendar filings. The `modelo-verify` and
+`app-overview-shape` child ADRs must jointly own this; whichever
+lands, `verify` must surface an actionable `next:` pointing at the
+obligation step rather than a bare `NO_PENDING_OBLIGATION` refusal.
+
+### Smaller surface proposals (for child-ADR adjudication)
+
+- `aeat app modelo list` shows all 26 modelos unfiltered; propose a
+  profile-applicability filter / `--mine` flag so a taxpayer sees only
+  their modelos. Owner: `app-modelo-shape` child ADR.
+- Profiles carry no individual-vs-company entity-type discriminator;
+  a company admin sees IRPF/personal fields. Propose an entity-type
+  field on the profile. Owner: `config-profile-*` child ADRs.
+
+### Cross-references
+
+- Verification method: `[[2026-05-20-testimonial-driven-cli-verification-playbook]]`
+- Findings inventory: `[[2026-05-20-cli-testimonial-findings-inventory]]`
+- R17 owner: `[[2026-05-12-cli-workflow-redesign-app-overview-shape-adr]]`
+- verify owner: `[[2026-05-12-cli-workflow-redesign-modelo-verify-adr]]`
+- evidence owner: `[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]`
