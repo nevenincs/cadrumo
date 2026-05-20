@@ -44,7 +44,7 @@ class _StrictFrozen(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True)
 
 
-class ModeloRecord(_StrictFrozen):
+class ModeloCatalogueRecord(_StrictFrozen):
     """Public record for a row in the ``modelos`` table.
 
     Attributes:
@@ -66,7 +66,7 @@ class PortalRecord(_StrictFrozen):
         identifier: Stable natural key (e.g. ``SEDE_ELECTRONICA_ROOT``).
         base_url: Canonical URL for the portal.
         auth_method: Authentication method (closed enum).
-        modelo_id: Optional foreign key to :class:`ModeloRecord`.
+        modelo_id: Optional foreign key to :class:`ModeloCatalogueRecord`.
         label: Human-readable label (translatable, see module note).
     """
 
@@ -84,7 +84,7 @@ class CorpusArtifactRecord(_StrictFrozen):
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
         year: Tax year this artifact belongs to.
-        modelo_id: Foreign key to the owning :class:`ModeloRecord`.
+        modelo_id: Foreign key to the owning :class:`ModeloCatalogueRecord`.
         file_path: Project-relative path to the on-disk artifact.
         sha256: Hex digest of the artifact bytes.
         source_url: URL the artifact was fetched from.
