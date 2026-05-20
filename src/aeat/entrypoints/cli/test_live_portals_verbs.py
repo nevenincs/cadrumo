@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from typer.testing import CliRunner
 
+from aeat.core.i18n import tr
 from aeat.domain.portals import PORTAL_REGISTRY
 from aeat.entrypoints.cli._app_live import portals_app
 
@@ -43,6 +46,32 @@ def test_portals_view_does_not_emit_raw_translation_keys(cli_runner: CliRunner) 
     result = cli_runner.invoke(portals_app, ["view", portal.portal.value])
     assert result.exit_code == 0, result.output
     assert "entries.portal_" not in result.output, result.output
+
+
+def test_portals_list_resolves_genuine_labels(cli_runner: CliRunner) -> None:
+    """Every portal label must resolve to a real translation, not a stub.
+
+    When a label key carries no locale entry, ``tr()`` falls back to a
+    humanised key segment such as ``Label 323061``. A genuine catalogue
+    name never matches that ``Label <digits>`` shape, so its absence
+    proves the locale catalogue actually carries the translations.
+    """
+
+    result = cli_runner.invoke(portals_app, ["list"])
+    assert result.exit_code == 0, result.output
+    assert not re.search(r"\bLabel \d+\b", result.output), result.output
+
+
+def test_every_portal_label_has_a_translation() -> None:
+    """The portal-catalogue label key must resolve to a non-stub value."""
+
+    for metadata in PORTAL_REGISTRY.values():
+        key = str(metadata.label)
+        rendered = tr(key)
+        assert rendered != key, key
+        # `_humanise_key` stubs surface the final dotted segment, e.g.
+        # `Label` — a genuine translation is never the bare word.
+        assert rendered.lower() != "label", key
 
 
 def test_portals_list_refuses_mutually_exclusive_filters(cli_runner: CliRunner) -> None:

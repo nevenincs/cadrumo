@@ -26,7 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m131_pago_fraccionado_eo.label_128460",
+    label="entries.portal_m131_pago_fraccionado_eo.label",
     purpose="entries.portal_m131_pago_fraccionado_eo.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 131 procedure page."""

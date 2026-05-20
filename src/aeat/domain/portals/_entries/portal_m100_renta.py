@@ -27,7 +27,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.REFERENCE_NUMBER,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m100_renta.label_331643",
+    label="entries.portal_m100_renta.label",
     purpose="entries.portal_m100_renta.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 100 IRPF Renta page."""

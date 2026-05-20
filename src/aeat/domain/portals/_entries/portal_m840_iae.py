@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m840_iae.label_017824",
+    label="entries.portal_m840_iae.label",
     purpose="entries.portal_m840_iae.purpose",
 )
 """Portal entry for Modelo 840 (Impuesto sobre Actividades Económicas — IAE)."""

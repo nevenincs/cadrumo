@@ -20,7 +20,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CERTIFICATE,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_cert_validation_rest.label_050984",
+    label="entries.portal_cert_validation_rest.label",
     purpose="entries.portal_cert_validation_rest.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the certificate-validation page."""

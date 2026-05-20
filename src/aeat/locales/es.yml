@@ -1584,6 +1584,146 @@ cli:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
 dotted:
   key: Clave con puntos
+entries:
+  portal_calendario_contribuyente:
+    label: Calendario del contribuyente
+    purpose: Calendario anual de plazos y obligaciones tributarias.
+  portal_cert_selection:
+    label: Selección de certificado electrónico
+    notes:
+      '0': El navegador debe tener instalado el certificado en su almacén.
+    purpose: Pasarela de selección del certificado digital para autenticarse.
+  portal_cert_validation_rest:
+    label: Validación de certificados electrónicos
+    purpose: Servicio de comprobación de validez de certificados digitales.
+  portal_clave_gestiones:
+    label: Cl@ve PIN — Gestiones
+    purpose: Gestión y obtención del Cl@ve PIN de acceso temporal.
+  portal_clave_idp_root:
+    label: Cl@ve — Identificación electrónica
+    purpose: Proveedor de identidad Cl@ve para autenticación ante la AEAT.
+  portal_clave_sede_entry:
+    label: Acceso con Cl@ve
+    purpose: Punto de acceso a la Sede mediante el sistema Cl@ve.
+  portal_consulta_pagos:
+    label: Consulta de pagos y devoluciones
+    purpose: Consulta del estado de pagos y devoluciones tributarias.
+  portal_dnie_sede_entry:
+    label: Acceso con DNI electrónico
+    purpose: Punto de acceso a la Sede mediante DNIe.
+  portal_domiciliacion_bancaria:
+    label: Domiciliación bancaria de pagos
+    purpose: Domiciliación bancaria de autoliquidaciones y pagos tributarios.
+  portal_m036_censal:
+    label: Modelo 036 — Declaración censal
+    purpose: Alta, modificación y baja en el censo de empresarios y profesionales.
+  portal_m037_censal_simplificada:
+    label: Modelo 037 — Declaración censal simplificada (retirado)
+    notes:
+      '0': Suprimido por la Orden HAC/1526/2024, con efecto desde 2025-02-03.
+      '1': Use el Modelo 036 para cualquier trámite censal posterior.
+    purpose: Declaración censal simplificada para autónomos, suprimida en 2025.
+  portal_m100_renta:
+    label: Modelo 100 — Declaración de la Renta (IRPF)
+    purpose: Declaración anual del Impuesto sobre la Renta de las Personas Físicas.
+  portal_m111_retenciones_trabajo:
+    label: Modelo 111 — Retenciones del trabajo y actividades
+    purpose: Autoliquidación de retenciones e ingresos a cuenta del IRPF sobre rendimientos
+      del trabajo.
+  portal_m115_retenciones_arrendamientos:
+    label: Modelo 115 — Retenciones por arrendamiento de inmuebles
+    purpose: Autoliquidación de retenciones del IRPF por alquiler de inmuebles urbanos.
+  portal_m123_retenciones_capital:
+    label: Modelo 123 — Retenciones del capital mobiliario
+    purpose: Autoliquidación de retenciones del IRPF sobre rendimientos del capital
+      mobiliario.
+  portal_m130_pago_fraccionado_ed:
+    label: Modelo 130 — Pago fraccionado IRPF (estimación directa)
+    purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación directa.
+  portal_m131_pago_fraccionado_eo:
+    label: Modelo 131 — Pago fraccionado IRPF (estimación objetiva)
+    purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación objetiva
+      (módulos).
+  portal_m180_resumen_arrendamientos:
+    label: Modelo 180 — Resumen anual de arrendamientos
+    purpose: Resumen anual de retenciones por arrendamiento de inmuebles urbanos.
+  portal_m190_resumen_trabajo:
+    label: Modelo 190 — Resumen anual de retenciones del trabajo
+    purpose: Resumen anual de retenciones e ingresos a cuenta sobre rendimientos del
+      trabajo.
+  portal_m193_resumen_capital:
+    label: Modelo 193 — Resumen anual de retenciones del capital
+    purpose: Resumen anual de retenciones sobre rendimientos del capital mobiliario.
+  portal_m200_sociedades_anual:
+    label: Modelo 200 — Impuesto sobre Sociedades
+    purpose: Declaración anual del Impuesto sobre Sociedades.
+  portal_m202_sociedades_fraccionado:
+    label: Modelo 202 — Pago fraccionado del Impuesto sobre Sociedades
+    purpose: Pago fraccionado a cuenta del Impuesto sobre Sociedades.
+  portal_m232_vinculadas:
+    label: Modelo 232 — Operaciones vinculadas
+    purpose: Declaración informativa de operaciones con personas o entidades vinculadas.
+  portal_m303_iva_autoliquidacion:
+    label: Modelo 303 — Autoliquidación del IVA
+    purpose: Autoliquidación periódica del Impuesto sobre el Valor Añadido.
+  portal_m347_operaciones_terceros:
+    label: Modelo 347 — Operaciones con terceras personas
+    purpose: Declaración informativa anual de operaciones con terceros superiores
+      a 3.005,06 €.
+  portal_m349_intracomunitarias:
+    label: Modelo 349 — Operaciones intracomunitarias
+    purpose: Declaración recapitulativa de operaciones intracomunitarias de bienes
+      y servicios.
+  portal_m369_oss_ioss:
+    label: Modelo 369 — Ventanilla única IVA (OSS/IOSS)
+    purpose: Autoliquidación del IVA en los regímenes de ventanilla única OSS e IOSS.
+  portal_m390_resumen_iva:
+    label: Modelo 390 — Resumen anual del IVA
+    purpose: Declaración resumen anual del Impuesto sobre el Valor Añadido.
+  portal_m720_bienes_extranjero:
+    label: Modelo 720 — Bienes y derechos en el extranjero
+    purpose: Declaración informativa de bienes y derechos situados en el extranjero.
+  portal_m840_iae:
+    label: Modelo 840 — Impuesto sobre Actividades Económicas
+    purpose: Declaración del Impuesto sobre Actividades Económicas (IAE).
+  portal_mi_area_personal:
+    label: Mi Área Personal
+    purpose: Área personal autenticada del contribuyente en la Sede.
+  portal_mis_datos_censales:
+    label: Mis datos censales
+    purpose: Consulta de los datos censales registrados del contribuyente.
+  portal_mis_documentos_pendientes_firma:
+    label: Documentos pendientes de firma
+    purpose: Portafirmas con los documentos pendientes de firma electrónica.
+  portal_mis_expedientes:
+    label: Mis expedientes
+    purpose: Consulta del estado de los expedientes y trámites del contribuyente.
+  portal_mis_notificaciones:
+    label: Mis notificaciones
+    purpose: Buzón electrónico de notificaciones y comunicaciones de la AEAT.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pago de autoliquidación por cargo en cuenta
+    purpose: Pago de autoliquidaciones mediante cargo en cuenta bancaria.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pago de autoliquidación con tarjeta o Bizum
+    purpose: Pago de autoliquidaciones con tarjeta bancaria o Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pago de liquidaciones y deudas
+    purpose: Pago de liquidaciones practicadas por la AEAT y deudas tributarias.
+  portal_pre303_ayuda:
+    label: Pre303 — Servicio de ayuda al Modelo 303
+    purpose: Servicio de ayuda Pre303 para preparar el borrador del Modelo 303.
+  portal_presentar_consultar_index:
+    label: Presentar y consultar declaraciones
+    purpose: Índice de modelos para presentar o consultar declaraciones.
+  portal_renta_web_borrador:
+    label: Renta WEB — Borrador IRPF
+    notes:
+      '0': El borrador se genera a partir de los datos fiscales de la AEAT.
+    purpose: Servicio Renta WEB para revisar y presentar el borrador del IRPF.
+  portal_sede_root:
+    label: AEAT Sede Electrónica
+    purpose: Página de inicio de la Sede Electrónica de la AEAT.
 errors:
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.

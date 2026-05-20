@@ -1559,6 +1559,144 @@ cli:
       slug: Identificador del tema (kebab-case, ex. iva-regime)
 dotted:
   key: Clau amb punts
+entries:
+  portal_calendario_contribuyente:
+    label: Calendari del contribuent
+    purpose: Calendari anual de terminis i obligacions tributàries.
+  portal_cert_selection:
+    label: Selecció de certificat electrònic
+    notes:
+      '0': El navegador ha de tenir el certificat instal·lat al seu magatzem.
+    purpose: Passarel·la de selecció del certificat digital per autenticar-se.
+  portal_cert_validation_rest:
+    label: Validació de certificats electrònics
+    purpose: Servei de comprovació de validesa de certificats digitals.
+  portal_clave_gestiones:
+    label: Cl@ve PIN — Gestions
+    purpose: Gestió i obtenció del Cl@ve PIN d'accés temporal.
+  portal_clave_idp_root:
+    label: Cl@ve — Identificació electrònica
+    purpose: Proveïdor d'identitat Cl@ve per a l'autenticació davant l'AEAT.
+  portal_clave_sede_entry:
+    label: Accés amb Cl@ve
+    purpose: Punt d'accés a la Seu mitjançant el sistema Cl@ve.
+  portal_consulta_pagos:
+    label: Consulta de pagaments i devolucions
+    purpose: Consulta de l'estat de pagaments i devolucions tributàries.
+  portal_dnie_sede_entry:
+    label: Accés amb DNI electrònic
+    purpose: Punt d'accés a la Seu mitjançant el DNIe.
+  portal_domiciliacion_bancaria:
+    label: Domiciliació bancària de pagaments
+    purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
+  portal_m036_censal:
+    label: Model 036 — Declaració censal
+    purpose: Alta, modificació i baixa en el cens d'empresaris i professionals.
+  portal_m037_censal_simplificada:
+    label: Model 037 — Declaració censal simplificada (retirat)
+    notes:
+      '0': Suprimit per l'Ordre HAC/1526/2024, amb efecte des de 2025-02-03.
+      '1': Utilitzeu el Model 036 per a qualsevol tràmit censal posterior.
+    purpose: Declaració censal simplificada per a autònoms, suprimida el 2025.
+  portal_m100_renta:
+    label: Model 100 — Declaració de la Renda (IRPF)
+    purpose: Declaració anual de l'Impost sobre la Renda de les Persones Físiques.
+  portal_m111_retenciones_trabajo:
+    label: Model 111 — Retencions del treball i activitats
+    purpose: Autoliquidació de retencions i ingressos a compte de l'IRPF sobre rendiments
+      del treball.
+  portal_m115_retenciones_arrendamientos:
+    label: Model 115 — Retencions per arrendament d'immobles
+    purpose: Autoliquidació de retencions de l'IRPF per lloguer d'immobles urbans.
+  portal_m123_retenciones_capital:
+    label: Model 123 — Retencions del capital mobiliari
+    purpose: Autoliquidació de retencions de l'IRPF sobre rendiments del capital mobiliari.
+  portal_m130_pago_fraccionado_ed:
+    label: Model 130 — Pagament fraccionat IRPF (estimació directa)
+    purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
+      directa.
+  portal_m131_pago_fraccionado_eo:
+    label: Model 131 — Pagament fraccionat IRPF (estimació objectiva)
+    purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
+      objectiva (mòduls).
+  portal_m180_resumen_arrendamientos:
+    label: Model 180 — Resum anual d'arrendaments
+    purpose: Resum anual de retencions per arrendament d'immobles urbans.
+  portal_m190_resumen_trabajo:
+    label: Model 190 — Resum anual de retencions del treball
+    purpose: Resum anual de retencions i ingressos a compte sobre rendiments del treball.
+  portal_m193_resumen_capital:
+    label: Model 193 — Resum anual de retencions del capital
+    purpose: Resum anual de retencions sobre rendiments del capital mobiliari.
+  portal_m200_sociedades_anual:
+    label: Model 200 — Impost sobre Societats
+    purpose: Declaració anual de l'Impost sobre Societats.
+  portal_m202_sociedades_fraccionado:
+    label: Model 202 — Pagament fraccionat de l'Impost sobre Societats
+    purpose: Pagament fraccionat a compte de l'Impost sobre Societats.
+  portal_m232_vinculadas:
+    label: Model 232 — Operacions vinculades
+    purpose: Declaració informativa d'operacions amb persones o entitats vinculades.
+  portal_m303_iva_autoliquidacion:
+    label: Model 303 — Autoliquidació de l'IVA
+    purpose: Autoliquidació periòdica de l'Impost sobre el Valor Afegit.
+  portal_m347_operaciones_terceros:
+    label: Model 347 — Operacions amb terceres persones
+    purpose: Declaració informativa anual d'operacions amb tercers superiors a 3.005,06
+      €.
+  portal_m349_intracomunitarias:
+    label: Model 349 — Operacions intracomunitàries
+    purpose: Declaració recapitulativa d'operacions intracomunitàries de béns i serveis.
+  portal_m369_oss_ioss:
+    label: Model 369 — Finestreta única IVA (OSS/IOSS)
+    purpose: Autoliquidació de l'IVA en els règims de finestreta única OSS i IOSS.
+  portal_m390_resumen_iva:
+    label: Model 390 — Resum anual de l'IVA
+    purpose: Declaració resum anual de l'Impost sobre el Valor Afegit.
+  portal_m720_bienes_extranjero:
+    label: Model 720 — Béns i drets a l'estranger
+    purpose: Declaració informativa de béns i drets situats a l'estranger.
+  portal_m840_iae:
+    label: Model 840 — Impost sobre Activitats Econòmiques
+    purpose: Declaració de l'Impost sobre Activitats Econòmiques (IAE).
+  portal_mi_area_personal:
+    label: La Meva Àrea Personal
+    purpose: Àrea personal autenticada del contribuent a la Seu.
+  portal_mis_datos_censales:
+    label: Les meves dades censals
+    purpose: Consulta de les dades censals registrades del contribuent.
+  portal_mis_documentos_pendientes_firma:
+    label: Documents pendents de signatura
+    purpose: Portasignatures amb els documents pendents de signatura electrònica.
+  portal_mis_expedientes:
+    label: Els meus expedients
+    purpose: Consulta de l'estat dels expedients i tràmits del contribuent.
+  portal_mis_notificaciones:
+    label: Les meves notificacions
+    purpose: Bústia electrònica de notificacions i comunicacions de l'AEAT.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pagament d'autoliquidació per càrrec en compte
+    purpose: Pagament d'autoliquidacions mitjançant càrrec en compte bancari.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pagament d'autoliquidació amb targeta o Bizum
+    purpose: Pagament d'autoliquidacions amb targeta bancària o Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pagament de liquidacions i deutes
+    purpose: Pagament de liquidacions practicades per l'AEAT i deutes tributaris.
+  portal_pre303_ayuda:
+    label: Pre303 — Servei d'ajuda al Model 303
+    purpose: Servei d'ajuda Pre303 per preparar l'esborrany del Model 303.
+  portal_presentar_consultar_index:
+    label: Presentar i consultar declaracions
+    purpose: Índex de models per presentar o consultar declaracions.
+  portal_renta_web_borrador:
+    label: Renta WEB — Esborrany IRPF
+    notes:
+      '0': L'esborrany es genera a partir de les dades fiscals de l'AEAT.
+    purpose: Servei Renta WEB per revisar i presentar l'esborrany de l'IRPF.
+  portal_sede_root:
+    label: AEAT Seu Electrònica
+    purpose: Pàgina d'inici de la Seu Electrònica de l'AEAT.
 errors:
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.

@@ -25,7 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label="entries.portal_m390_resumen_iva.label_101607",
+    label="entries.portal_m390_resumen_iva.label",
     purpose="entries.portal_m390_resumen_iva.purpose",
 )
 """Portal entry for Modelo 390 (annual VAT summary)."""

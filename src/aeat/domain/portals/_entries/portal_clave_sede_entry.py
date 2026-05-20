@@ -19,7 +19,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_clave_sede_entry.label_975912",
+    label="entries.portal_clave_sede_entry.label",
     purpose="entries.portal_clave_sede_entry.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Sede Cl@ve gateway page."""

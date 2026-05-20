@@ -8,22 +8,26 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
+from ....core.config import Settings
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
 
+_PRE303 = Settings.external_constants().aeat.pre303
+
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_PRE303_AYUDA,
-    path="/Sede/iva/autoliquidacion-iva-modelo-303/pre303.html",
-    subdomain=Subdomain.SEDE,
+    path=_PRE303.presentation_service_path,
+    subdomain=Subdomain.WWW1,
     category=PortalCategory.BORRADOR,
     auth_methods=(
         AuthMethod.CERTIFICATE,
-        AuthMethod.CLAVE_PERMANENTE,
+        AuthMethod.DNIE,
+        AuthMethod.CLAVE_PIN,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label="entries.portal_pre303_ayuda.label_935129",
+    label="entries.portal_pre303_ayuda.label",
     purpose="entries.portal_pre303_ayuda.purpose",
 )
 """Portal entry for the Pre303 pre-filled VAT helper (Modelo 303 borrador)."""
