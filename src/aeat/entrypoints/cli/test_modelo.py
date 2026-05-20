@@ -634,7 +634,7 @@ def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
             "--period",
             period,
             "--revision",
-            "v1",
+            "2009-y-siguientes",
         ]
     )
 
@@ -642,6 +642,62 @@ def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
     assert "Traceback" not in result.output
     output_lower = result.output.lower()
     assert "period must be" in output_lower or "invalid value" in output_lower
+
+
+def test_work_create_rejects_unknown_modelo() -> None:
+    """``work create --modelo 999`` is refused naming the registry's known modelos.
+
+    Before fix: an unknown modelo code provisioned a work unit that
+    ``calculate`` then silently treated as a Modelo 303 default.
+    After fix: a ``typer.BadParameter`` fires at create time grounded
+    in the validated registry authority.
+    """
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "999",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+            "--revision",
+            "2009-y-siguientes",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "999" in result.output
+
+
+def test_work_create_rejects_unknown_revision() -> None:
+    """``work create --revision nope`` is refused naming the modelo's revisions."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+            "--revision",
+            "nonexistent-revision",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "nonexistent-revision" in result.output
 
 
 @pytest.mark.parametrize(
