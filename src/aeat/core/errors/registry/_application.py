@@ -696,4 +696,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.user_profile._integrity.ProfileIntegrityError",
+        ErrorCode(
+            code="ERROR_PROFILE_CROSS_STORE_DRIFT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_cross_store_drift",
+            default_suggestion="aeat config repair profile",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
