@@ -583,6 +583,10 @@ def _atomic_create_profile(*, display_name, facts) -> str:
                     profile_id=profile_id,
                     display_name=display_name,
                     facts=facts,
+                    # `duplicate` and `import` legitimately reproduce an
+                    # existing profile's tax id; the duplicate-tax-id
+                    # refusal applies to a fresh `profile create` only.
+                    enforce_unique_tax_id=False,
                 )
             )
     except Exception:

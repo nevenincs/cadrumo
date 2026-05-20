@@ -558,6 +558,29 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
     parameters = (*mode_params, *question_params)
 
     def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
+        import contextlib
+
+        from ...core.config import override_settings
+        from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+
+        with contextlib.ExitStack() as _language_stack:
+            # When the operator supplies `--output-language` on the
+            # command line, that language must drive every operator-
+            # facing string this command renders — including a
+            # creation-time refusal raised before the profile exists
+            # (e.g. a missing `--activity` under `--quiet`). The flag
+            # value is already parsed; apply it as a settings override
+            # for the whole command body so the error boundary renders
+            # in the requested language rather than falling back to the
+            # default. The override unwinds when the command returns.
+            requested_language = kwargs.get("output_language")
+            if isinstance(requested_language, str) and requested_language in SUPPORTED_OUTPUT_LANGUAGES:
+                _language_stack.enter_context(
+                    override_settings(aeat_output_language=requested_language)
+                )
+            _command_body(_prompter=_prompter, **kwargs)
+
+    def _command_body(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
         from ...domain.user_profile import new_profile_id
         from ..user_profile._orchestration import _refuse_duplicate_label, _require_registered_label
         from ..workflow._profile_bucket_scan import read_profile_bucket
