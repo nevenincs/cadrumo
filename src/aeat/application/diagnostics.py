@@ -134,6 +134,22 @@ class ConfigRepairReport(BaseModel):
     checks: tuple[DiagnosticCheck, ...]
 
 
+class RegistryIntegrityReport(BaseModel):
+    """Result of the opt-in full registry-validation probe.
+
+    Disaster ADR Ruling 4 moves the full registry TOML parse +
+    cross-domain referential-integrity gate off the ``--version`` and
+    bare-invocation surfaces into the explicit
+    ``aeat config repair integrity registry`` verb. This typed
+    report is what that verb renders.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    registry: RegistryVersionSummary
+    check: DiagnosticCheck
+
+
 def build_cli_version_report(
     registry_root: Path | None = None,
     *,
@@ -512,6 +528,23 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     )
 
 
+def build_registry_integrity_report(registry_root: Path | None = None) -> RegistryIntegrityReport:
+    """Run the full registry validation as a standalone, opt-in probe.
+
+    Backs the ``aeat config repair integrity registry`` verb. Bundles
+    the registry version summary with the cross-domain
+    referential-integrity check so the engineer-facing verb can render
+    both the registry's identity and its validation verdict. Disaster
+    ADR Ruling 4 keeps this off every fast-path surface.
+    """
+
+    root = registry_root or bundled_path("registry", "aeat")
+    return RegistryIntegrityReport(
+        registry=_build_registry_version_summary(root),
+        check=_registry_cross_domain_integrity_check(root),
+    )
+
+
 def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     """Render pointer/manifest/profile-record health before semantic readiness."""
 
@@ -771,10 +804,12 @@ __all__ = [
     "CliVersionReport",
     "ConfigRepairReport",
     "DiagnosticCheck",
+    "RegistryIntegrityReport",
     "RegistryVersionSummary",
     "SecureObjectIntegrityReport",
     "build_cli_version_report",
     "build_config_repair_report",
+    "build_registry_integrity_report",
     "probe_browser_connectivity",
     "quarantine_unreadable_secure_objects",
     "render_browser_connectivity_text",
