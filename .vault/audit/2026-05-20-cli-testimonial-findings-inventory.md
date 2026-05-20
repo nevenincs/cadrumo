@@ -660,3 +660,72 @@ Command log: `.vault-scratch/fix-rename-cmdlog.txt`
 ### Test results
 
 73/73 passed (`test_profile_lifecycle_verbs.py` + `user_profile/` suite).
+
+---
+
+# Round 3 - catalogue-driven personas (2026-05-21)
+
+Seven personas drawn from the persona-task catalogue: Carmen
+(regression), Javier (explain/review), Ines (adversarial), Rosa
+(M111), Quim (mixed-use categorization), Teo (complementaria), Marta
+(live filed).
+
+## What this round confirmed works
+
+- Modelo calculation engine: M111 (Rosa) and quarterly drafts compute
+  correct casilla totals when given direct inputs.
+- `overview agenda` / `backlog` / `calendar` / `explain` now EXIST for
+  quarterly modelos (Javier) - R17 partially shipped further than the
+  apex ADR's last-known state.
+- The `amend` command exists with `--kind complementaria
+  --from-filing-record --set` (Teo) - the correction workflow is built.
+
+## New verified defects
+
+- **Ledger -> calculation disconnect** (Quim, blocker-class): M303/M130
+  compute all-zero casillas from classified ledger entries; the
+  `ledger_iva_aggregation` binding does not resolve from the ledger;
+  every IVA binding is `borrador_capable:False`. The product computes
+  nothing from the user's own data. Root cause analysed in the
+  state-architecture research.
+- **`profile rename` left a broken profile** (Carmen) - fixed this
+  session (secure-object re-key); see the rename root-cause section.
+- **`overview status` blind to work units** (Rosa): reports "no saved
+  drafts" after `calculate` produced them. A reader/store mismatch.
+- **`overview explain` / `calendar` break for annual modelos** (Javier):
+  `explain` crashes for 100/347/390/184 ("No registry deadline windows
+  registered"); `calendar` silently omits 100/390/190. R17 annual is
+  broken even though R17 quarterly works.
+- **Zombie work unit for a nonexistent modelo** (Ines): `modelo work
+  create --modelo 999` succeeds and creates a work unit. No code check.
+- **No range validation on `ledger update --iva-rate`** (Ines): a 900%
+  rate (`--iva-rate 999`) is accepted silently.
+- **N26 importer accepts wrong-column CSV silently** (Ines).
+- **Internal leaks in errors** (Ines): `aeat_database_url` env-var name
+  exposed; raw OFX library tracebacks printed on failed import.
+- **`ledger allocate` business_pct not visible in `ledger view`**
+  (Quim, Carmen): written but not surfaced - reader/writer mismatch.
+
+## Recurring transient: import-graph fragility
+
+Across the session, personas hit at least five distinct transient
+`ImportError` crashes (`_bucket_pointer`, `core.resources`,
+`_registry`, `DisenoCompletenessCasilla`, `DerivedManifestCasilla`)
+as parallel campaigns rename schema/module symbols mid-flight. Each
+resolved within the session. This is not a stable defect but it is a
+real process risk - it repeatedly blocks whole CLI subtrees. Standing
+recommendation: a CI import-smoke gate that imports every module
+including live-gated ones.
+
+## Architecture triage
+
+The state-consistency findings (rename corruption, overview blindness,
+ledger->calc disconnect, reader/writer disagreement, ghost profiles)
+are one architectural problem, analysed in
+`[[2026-05-20-cli-state-architecture-research]]`: no aggregate owns a
+logical entity across its physical stores; identity is coupled to
+location; events are an audit log, not the state source. That research
+should become a `state-architecture` ADR. The Ines validation gaps
+(zombie modelo, unbounded IVA rate, silent wrong-format import) are a
+second, smaller theme: no consistent input-validation boundary at the
+CLI edge.
