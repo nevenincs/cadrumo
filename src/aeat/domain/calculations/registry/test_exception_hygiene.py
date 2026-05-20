@@ -74,3 +74,37 @@ def test_registry_production_code_does_not_use_bare_except() -> None:
                 offenders.append(f"{relative}:{node.lineno}")
 
     assert offenders == []
+
+
+def test_registry_production_broad_exception_handlers_raise_or_log() -> None:
+    """Broad exception handlers must preserve failure visibility."""
+
+    offenders: list[str] = []
+    for path in _production_modules():
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ExceptHandler) or node.type is None:
+                continue
+            if not _is_broad_exception_type(node.type):
+                continue
+            has_raise = any(isinstance(child, ast.Raise) for child in ast.walk(node))
+            has_log = any(_is_logging_call(child) for child in ast.walk(node))
+            if not has_raise and not has_log:
+                relative = path.relative_to(_REGISTRY_PACKAGE)
+                offenders.append(f"{relative}:{node.lineno}")
+
+    assert offenders == []
+
+
+def _is_broad_exception_type(node: ast.expr) -> bool:
+    if isinstance(node, ast.Name):
+        return node.id in {"Exception", "BaseException"}
+    if isinstance(node, ast.Tuple):
+        return any(_is_broad_exception_type(item) for item in node.elts)
+    return False
+
+
+def _is_logging_call(node: ast.AST) -> bool:
+    if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+        return False
+    return node.func.attr in {"debug", "info", "warning", "error", "exception", "critical"}
