@@ -367,6 +367,18 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         # math captured at construction; the assertion targets the
         # round-tripped copy, not an aggregator output.
         "src/aeat/domain/invoices/test_secure_storage_roundtrip.py::test_invoice_catalogue_survives_encrypted_storage_roundtrip",
+        # HTML parser extraction-fidelity test. Every row amount
+        # (generado/aplicado/pendiente) is read verbatim from the AEAT
+        # wallet HTML table — the HTML is the oracle. total_pending is
+        # the parser's sum-of-rows convenience field; asserting it
+        # exercises parser aggregation, not a registry calc formula.
+        "src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py::test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total",
+        # The 1200.00 target is a fixture INPUT (prior-303 compensation
+        # balance + wallet pending amount), threaded through the engine
+        # unchanged. The gate coincidentally matches 1000+200 (an
+        # unrelated repercutido cuota and a pendiente-posteriores
+        # value); no aggregation produces the 1200.
+        "src/aeat/application/modelo/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history",
     }
 )
 """Functions whose hand-summed pattern is documented as legitimate.
