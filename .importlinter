@@ -120,6 +120,8 @@ ignore_imports =
     aeat.core.test_external_constants -> aeat.domain.portals._categories
     aeat.core.resources._repos.test_manuals -> aeat.domain.manuals.errors
     aeat.core.resources._repos.test_normatives -> aeat.domain.normatives.errors
+    aeat.core.resources._repos.test_singletons -> aeat.domain.auth.apoderamientos._catalogue
+    aeat.core.resources._repos.test_singletons -> aeat.domain.user_profile._schema
     # ── core/resources/_repos deferred loader imports (ADR-sanctioned, see above) ──
     aeat.core.resources._repos.apoderamientos -> aeat.domain.auth.apoderamientos
     aeat.core.resources._repos.category_profiles -> aeat.domain.categories
@@ -322,6 +324,8 @@ ignore_imports =
     aeat.core.test_external_constants -> aeat.domain.portals._categories
     aeat.core.resources._repos.test_manuals -> aeat.domain.manuals.errors
     aeat.core.resources._repos.test_normatives -> aeat.domain.normatives.errors
+    aeat.core.resources._repos.test_singletons -> aeat.domain.auth.apoderamientos._catalogue
+    aeat.core.resources._repos.test_singletons -> aeat.domain.user_profile._schema
     # ── core/resources/_repos deferred loader imports ──
     # Function-local imports inside Repository._load / _resolve_authority
     # methods. The resource-management-api ADR (2026-05-16) places the
