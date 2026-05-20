@@ -75,8 +75,13 @@ class LedgerImportDiagnostic(BaseModel):
 
         if not value or not str(value).strip():
             raise ValueError("message must be a non-empty Translatable key")
-        rendered = tr(str(value), locale="es")
-        if rendered == str(value):
+        # tr() humanises unknown keys into a readable fallback, so a plain
+        # round-trip comparison no longer detects missing entries. Pass a
+        # unique sentinel default: a key with no Spanish catalogue entry
+        # renders back the sentinel verbatim.
+        sentinel = f"\x00no-translation\x00{value}"
+        rendered = tr(str(value), locale="es", default=sentinel)
+        if rendered == sentinel:
             raise ValueError(f"message key {value!r} has no authoritative Spanish translation")
         return value
 
