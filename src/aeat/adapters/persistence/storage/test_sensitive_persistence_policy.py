@@ -207,6 +207,16 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tmp.write_text",
     ): "active-profile pointer file is plaintext TOML by design; carries only the bucket id",
     (
+        "src/aeat/application/user_profile/_profile_repository.py",
+        "_restore_pointer_text",
+        "target.write_text",
+    ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) during a failed-create rollback",
+    (
+        "src/aeat/application/user_profile/_orchestration.py",
+        "restore_active_profile_pointer",
+        "target.write_text",
+    ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) when a cold-start create span fails",
+    (
         "src/aeat/adapters/outbound/storage/_local.py",
         "put",
         "tmp_path.write_bytes",
