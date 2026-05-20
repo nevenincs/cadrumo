@@ -4,11 +4,17 @@ Serialises a typed answers model back to canonical-token strings, then
 persists profile facts through canonical user-profile orchestration.
 The reverse projection (``project_answers``) builds the typed answers
 model from a raw canonical-token dict.
+
+``persist_answers`` distinguishes the two wizard verbs. ``create``
+registers a fresh profile from the full answer set. ``edit`` is a true
+patch: only the questions the operator explicitly supplied on the
+command line are written, so editing one field never reverts the rest
+of a populated profile to its descriptor defaults.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from pathlib import Path
 from typing import Literal
 
@@ -57,10 +63,18 @@ def _field_to_question(flow: WizardFlow) -> Mapping[str, WizardQuestion]:
     return table
 
 
-def serialise_answers(flow: WizardFlow, answers: BaseModel) -> dict[str, str]:
+def serialise_answers(
+    flow: WizardFlow,
+    answers: BaseModel,
+    *,
+    only_question_ids: Collection[str] | None = None,
+) -> dict[str, str]:
     """Project a typed answers model into the canonical-token dict.
 
-    Only profile-bound questions contribute a key.
+    Only profile-bound questions contribute a key. When
+    ``only_question_ids`` is supplied, the projection is restricted to
+    those question ids — the patch behaviour the ``edit`` verb relies
+    on so an unsupplied field is never written back at its default.
     """
 
     typed = answers.model_dump()
@@ -69,6 +83,8 @@ def serialise_answers(flow: WizardFlow, answers: BaseModel) -> dict[str, str]:
     for field_name, value in typed.items():
         question = mapping.get(field_name)
         if question is None or question.profile_key is None:
+            continue
+        if only_question_ids is not None and question.id not in only_question_ids:
             continue
         result[question.profile_key] = _canonicalise(question, value)
     return result
@@ -82,6 +98,7 @@ def persist_answers(
     profile_name: str,
     profile_id: str,
     mode: WizardPersistMode,
+    supplied_question_ids: Collection[str] | None = None,
 ) -> WorkflowState:
     """Persist ``answers`` into the profile bucket and return updated state.
 
@@ -96,24 +113,72 @@ def persist_answers(
     ``mode`` is the create-vs-edit discriminator and is the wizard
     verb itself, not a runtime-detected fact. ``"create"`` routes to
     :func:`register_active_profile`, which refuses a label that already
-    belongs to a live profile. ``"edit"`` routes to
-    :func:`set_active_fields`, which upserts facts on the active
-    profile. The caller guards both refusals before the wizard runs;
-    this branch only selects the persistence pathway.
+    belongs to a live profile and writes the full answer set. ``"edit"``
+    routes to :func:`set_active_fields`, which upserts facts on the
+    active profile.
+
+    ``supplied_question_ids`` names the questions the operator
+    explicitly supplied on the command line. On the ``"edit"`` path it
+    scopes the write to exactly those questions: ``edit`` is a patch,
+    so a field the operator did not name must be left untouched on the
+    stored profile rather than rewritten at its descriptor default. It
+    must be supplied for ``"edit"``; it is ignored for ``"create"``,
+    which always registers the full set.
     """
 
     from ...domain.user_profile import UserProfileFact
 
-    canonical = serialise_answers(flow, answers)
-    facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
     if mode == "create":
+        canonical = serialise_answers(flow, answers)
+        facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
         return register_active_profile(
             state,
             profile_id=profile_id,
             display_name=profile_name,
             facts=facts,
         )
+
+    if supplied_question_ids is None:
+        raise ValueError("persist_answers(mode='edit') requires supplied_question_ids — edit is a patch, not a rewrite")
+    canonical = serialise_answers(flow, answers, only_question_ids=supplied_question_ids)
+    facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
     return set_active_fields(state, facts)
+
+
+def persist_patch(
+    flow: WizardFlow,
+    supplied: Mapping[str, str],
+    *,
+    state: WorkflowState,
+) -> WorkflowState:
+    """Patch the active profile with only the explicitly supplied flags.
+
+    ``supplied`` is the canonical-token dict keyed by *question id*,
+    carrying exactly the flags the operator named on a non-interactive
+    ``edit`` (``--quiet`` / ``--accept-defaults``). This is the true
+    patch path: it never constructs the full :class:`SetupAnswers`
+    model — which would demand every required field — and never seeds a
+    descriptor default for an unsupplied question. Each supplied value
+    is re-validated through its widget validator, mapped to its
+    ``profile_key``, and upserted via :func:`set_active_fields`. A
+    question with no ``profile_key`` is not a profile fact and is
+    skipped.
+    """
+
+    from ...domain.user_profile import UserProfileFact
+    from ._widgets import validate_widget_answer
+
+    questions = _question_by_id(flow)
+    facts: list[UserProfileFact] = []
+    for question_id, raw in supplied.items():
+        question = questions.get(question_id)
+        if question is None or question.profile_key is None:
+            continue
+        validated = validate_widget_answer(question, raw)
+        if not validated:
+            continue
+        facts.append(UserProfileFact(path=question.profile_key, value=validated))
+    return set_active_fields(state, tuple(facts))
 
 
 def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
@@ -161,6 +226,7 @@ def _parse_canonical(question: WizardQuestion, raw: str) -> object:
 __all__ = [
     "WizardPersistMode",
     "persist_answers",
+    "persist_patch",
     "project_answers",
     "serialise_answers",
 ]
