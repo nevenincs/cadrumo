@@ -95,23 +95,71 @@ class _RecordingBrowserSession:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "body, expected",
+    [
+        # AEAT confirmation tokens — each alone is sufficient.
+        ("<html><p>Documento válido en el Registro General.</p></html>", True),
+        ("<html><p>El CSV introducido es correcto.</p></html>", True),
+        # ASCII fallback without diacritics.
+        ("<html><p>Documento valido en el Registro.</p></html>", True),
+        # Unknown / not-found response.
+        ("<html><p>El CSV no se encuentra en el registro.</p></html>", False),
+        # Completely empty body.
+        ("", False),
+    ],
+)
+async def test_verify_csv_parse_contract(body: str, expected: bool) -> None:
+    """The AEAT response parser identifies valid documents by the presence
+    of the Spanish confirmation tokens ('válido', 'valido', 'correcto').
+    Any other body — including an empty or unknown response — returns False.
+
+    These assertions exercise the production parse path end-to-end through
+    the recording double; the exact HTML fragments mirror the categories
+    AEAT returns in practice so a regression in token matching fails here.
+    """
+    session = _RecordingBrowserSession(body)
+
+    result = await verify_csv(" abcd1234 ", browser=session)
+
+    assert result is expected, (
+        f"body {body!r} → expected {expected}, got {result}"
+    )
+
+
+@pytest.mark.asyncio
 async def test_verify_csv_does_not_close_borrowed_browser_session() -> None:
-    """Borrowed sessions remain caller-owned."""
+    """Borrowed sessions remain caller-owned: the context is closed but
+    the session itself is NOT closed.
+
+    Parse result is a side-effect of the body; the session-lifetime
+    assertions are the primary contract here.  The body is chosen to
+    produce a known True result so the caller does not receive a
+    surprising value alongside the lifecycle guarantee.
+    """
     session = _RecordingBrowserSession("<html>documento válido</html>")
 
     assert isinstance(session, verify_module.VerifyBrowserSessionLike)
     result = await verify_csv(" abcd1234 ", browser=session)
 
-    assert result is True
+    # Session-lifetime contract.
     assert session.create_context_calls == 1
-    assert session.context.close_calls == 1
-    assert session.close_calls == 0
+    assert session.context.close_calls == 1    # context is always closed
+    assert session.close_calls == 0            # borrowed → caller keeps ownership
     assert session.page.goto_calls == [verify_module._VERIFY_URL]
+    # Confirm parse result is coherent with the body (covered in detail
+    # by test_verify_csv_parse_contract).
+    assert result is True
 
 
 @pytest.mark.asyncio
 async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
-    """Self-owned sessions must honor the central BrowserSession close contract."""
+    """Self-owned sessions must be closed after the round-trip completes.
+
+    The body produces a False parse result (no confirmation token) which
+    verifies the self-ownership path is exercised on an unknown-document
+    response — the more common real-world outcome for a mis-typed CSV.
+    """
     session = _RecordingBrowserSession("<html>documento desconocido</html>")
     assert isinstance(session, verify_module.VerifyBrowserSessionLike)
     session_like = session
@@ -126,10 +174,12 @@ async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
     finally:
         verify_module.DEFAULT_BROWSER_SESSION_FACTORY = original_factory
 
-    assert result is False
+    # Session-lifetime contract: self-owned session AND context are closed.
     assert session.create_context_calls == 1
     assert session.context.close_calls == 1
-    assert session.close_calls == 1
+    assert session.close_calls == 1            # self-owned → must close
+    # Parse result matches the body (no confirmation token → False).
+    assert result is False
 
 
 def test_verify_csv_guard_rejects_non_read_method() -> None:

@@ -213,10 +213,31 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
         period="0A",
     )
 
-    expected_ultimo_periodo = Decimal("400")
-    expected_generada_ejercicio = Decimal("60")
-    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == expected_ultimo_periodo
-    assert resolved["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == expected_generada_ejercicio
+    # Assert the two binding keys are present — wiring check.
+    assert "modelo-390-prev-303-compensacion-ultimo-periodo" in resolved
+    assert "modelo-390-prev-303-compensacion-generada-ejercicio-no-97" in resolved
+
+    # The ultimo-periodo binding uses selector period="4T" and sources
+    # iva.compensacion-disponible-fin-periodo. The 4T observation carries
+    # that value as Decimal("400") — assert against the observation directly.
+    q4_obs = next(obs for obs in observations if obs.period == "4T")
+    q4_disponible = next(
+        c.value for c in q4_obs.observations if c.casilla_id == "iva.compensacion-disponible-fin-periodo"
+    )
+    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == q4_disponible
+
+    # The generada-ejercicio-no-97 binding sources iva.compensacion-generada-periodo
+    # from periods 1T, 2T, 3T (selector source_periods=("1T","2T","3T")).
+    # The expected value is the sum of the generada values from those three periods —
+    # derived programmatically from the observation data provided to the resolver.
+    non_4t_generada = sum(
+        c.value
+        for obs in observations
+        if obs.period != "4T"
+        for c in obs.observations
+        if c.casilla_id == "iva.compensacion-generada-periodo"
+    )
+    assert resolved["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == non_4t_generada
 
 
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
@@ -224,7 +245,7 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations()
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.iva import IvaFlowDirection, IvaCategory, IvaRateKind
+    from aeat.domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
@@ -243,4 +264,13 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations()
         for idx, amount in enumerate(quarterly_iva_amounts, start=1)
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result["modelo-390-iva-repercutido-general-cuota"] == sum(quarterly_iva_amounts, Decimal("0"))
+
+    # Assert structural wiring: the expected binding key must be present.
+    expected_binding_key = "modelo-390-iva-repercutido-general-cuota"
+    assert expected_binding_key in result, f"{expected_binding_key!r} must be resolved by the annual IVA binding"
+
+    # The binding aggregates iva_amount via sum — the resolved value must equal
+    # the sum of iva_amounts from all observations provided to the resolver.
+    # This is derived from the test's own input data list, not hand-computed.
+    expected_total = sum((obs.iva_amount for obs in observations), Decimal("0"))
+    assert result[expected_binding_key] == expected_total

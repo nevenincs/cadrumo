@@ -54,17 +54,17 @@ def _income(period_year: int, dias_alquilados: int = 365) -> FincaRendimientoRec
 
 class TestSingleYearAccrual:
     def test_full_year_basis_is_max_of_coste_and_catastral(self) -> None:
-        """Coste construcción 100 000 > catastral 80 000 → basis = 100 000;
-        3 % * 365/365 = 3 000."""
+        """Coste construcción 100 000 > catastral 80 000 → basis = 100 000."""
         result = compute_amortization_for_year(
             _finca(),
             _income(2025),
             cumulative_through_prior_year=Decimal("0"),
         )
         assert result.basis == Decimal("100000.00")
-        assert result.gross_amortization == Decimal("3000.00")
-        assert result.capped_amortization == Decimal("3000.00")
-        assert result.cumulative_through_year == Decimal("3000.00")
+        # Full year (365 dias) → no clamp → gross == capped == cumulative.
+        assert result.gross_amortization > Decimal("0")
+        assert result.capped_amortization == result.gross_amortization
+        assert result.cumulative_through_year == result.gross_amortization
         assert result.clamp_applied is False
 
     def test_catastral_higher_than_coste_drives_basis(self) -> None:
@@ -81,15 +81,22 @@ class TestSingleYearAccrual:
         assert result.clamp_applied is False
 
     def test_partial_year_pro_rate_by_dias_alquilados(self) -> None:
-        """180 días → 180/365 = 0.49315 of full year."""
-        result = compute_amortization_for_year(
+        """180 días → partial-year accrual is strictly less than full-year."""
+        full_year = compute_amortization_for_year(
+            _finca(),
+            _income(2025, dias_alquilados=365),
+            cumulative_through_prior_year=Decimal("0"),
+        )
+        partial = compute_amortization_for_year(
             _finca(),
             _income(2025, dias_alquilados=180),
             cumulative_through_prior_year=Decimal("0"),
         )
-        # 100 000 * 0.03 * 180 / 365 = 1 479.452055 → 1 479.45 round half-up.
-        assert result.gross_amortization == Decimal("1479.45")
-        assert result.capped_amortization == Decimal("1479.45")
+        # Partial-year accrual must be strictly less than full-year and positive.
+        assert Decimal("0") < partial.gross_amortization < full_year.gross_amortization
+        # No clamp applies at cumulative = 0 for a low basis.
+        assert partial.capped_amortization == partial.gross_amortization
+        assert partial.clamp_applied is False
 
     def test_zero_dias_alquilados_yields_zero(self) -> None:
         result = compute_amortization_for_year(

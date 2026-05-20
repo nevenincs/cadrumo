@@ -649,8 +649,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
-    observations = (
-        # Two distinct operators in non-rectification scope, base sum 1500.50.
+    non_rect_obs = (
         InvoiceObservation(
             invoice_id="inv-de-1",
             party_tax_id="DE111",
@@ -667,29 +666,46 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
             base_amount=Decimal("500.50"),
             intracommunity_clave="S",
         ),
-        # One rectification: previous 180, new 200 → delta 20.
-        InvoiceObservation(
-            invoice_id="inv-it-1-rect",
-            party_tax_id="IT333",
-            country_code="IT",
-            transaction_date=date(2026, 3, 8),
-            base_amount=Decimal("200.00"),
-            intracommunity_clave="E",
-            is_rectification=True,
-            rectified_base_previous=Decimal("180.00"),
-            rectified_period="4T",
-            rectified_year=2025,
-        ),
     )
+    rect_obs = InvoiceObservation(
+        invoice_id="inv-it-1-rect",
+        party_tax_id="IT333",
+        country_code="IT",
+        transaction_date=date(2026, 3, 8),
+        base_amount=Decimal("200.00"),
+        intracommunity_clave="E",
+        is_rectification=True,
+        rectified_base_previous=Decimal("180.00"),
+        rectified_period="4T",
+        rectified_year=2025,
+    )
+    observations = (*non_rect_obs, rect_obs)
 
     resolved = resolve_invoice_binding_values(revision, observations)
 
-    assert resolved == {
-        "vat-349-declarante-numero-operadores": Decimal("2"),
-        "vat-349-declarante-importe-operaciones": Decimal("1500.50"),
-        "vat-349-declarante-numero-rectificaciones": Decimal("1"),
-        "vat-349-declarante-importe-rectificaciones": Decimal("20.00"),
+    # Assert the four expected binding keys are all present.
+    expected_keys = {
+        "vat-349-declarante-numero-operadores",
+        "vat-349-declarante-importe-operaciones",
+        "vat-349-declarante-numero-rectificaciones",
+        "vat-349-declarante-importe-rectificaciones",
     }
+    assert expected_keys == set(resolved.keys()), "resolver must populate exactly the four declarant bindings"
+
+    # Operator count and total base are derived directly from the non-rectification
+    # observations — the resolver must sum distinct operators and their base amounts.
+    expected_num_operators = Decimal(len({obs.party_tax_id for obs in non_rect_obs}))
+    expected_importe_operaciones = sum((obs.base_amount for obs in non_rect_obs), Decimal("0"))
+    assert resolved["vat-349-declarante-numero-operadores"] == expected_num_operators
+    assert resolved["vat-349-declarante-importe-operaciones"] == expected_importe_operaciones
+
+    # Rectification count is the number of rectification observations.
+    assert resolved["vat-349-declarante-numero-rectificaciones"] == Decimal("1")
+
+    # Rectification importe is the absolute delta between new and previous base,
+    # derived from the rectification observation supplied to the resolver.
+    expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
+    assert resolved["vat-349-declarante-importe-rectificaciones"] == expected_rect_delta
 
 
 def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
@@ -863,7 +879,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
-    observations = (
+    non_rect_obs = (
         InvoiceObservation(
             invoice_id="inv-de-1",
             party_tax_id="DE111",
@@ -880,26 +896,48 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
             base_amount=Decimal("500.50"),
             intracommunity_clave="S",
         ),
-        InvoiceObservation(
-            invoice_id="inv-it-1-rect",
-            party_tax_id="IT333",
-            country_code="IT",
-            transaction_date=date(2026, 3, 8),
-            base_amount=Decimal("200.00"),
-            intracommunity_clave="E",
-            is_rectification=True,
-            rectified_base_previous=Decimal("180.00"),
-            rectified_period="4T",
-            rectified_year=2025,
-        ),
     )
+    rect_obs = InvoiceObservation(
+        invoice_id="inv-it-1-rect",
+        party_tax_id="IT333",
+        country_code="IT",
+        transaction_date=date(2026, 3, 8),
+        base_amount=Decimal("200.00"),
+        intracommunity_clave="E",
+        is_rectification=True,
+        rectified_base_previous=Decimal("180.00"),
+        rectified_period="4T",
+        rectified_year=2025,
+    )
+    observations = (*non_rect_obs, rect_obs)
 
     binding_values = resolve_invoice_binding_values(revision, observations)
     casilla_values = resolve_bound_casilla_inputs(revision, binding_values)
 
-    assert casilla_values == {
-        "decl.numero-operadores": Decimal("2"),
-        "decl.importe-operaciones": Decimal("1500.50"),
-        "decl.numero-rectificaciones": Decimal("1"),
-        "decl.importe-rectificaciones": Decimal("20.00"),
+    # Assert the four expected casilla keys are present — wiring check.
+    expected_casilla_keys = {
+        "decl.numero-operadores",
+        "decl.importe-operaciones",
+        "decl.numero-rectificaciones",
+        "decl.importe-rectificaciones",
     }
+    assert expected_casilla_keys == set(casilla_values.keys()), (
+        "invoice-to-casilla pipeline must produce exactly the four declarant casillas"
+    )
+
+    # Operator and importe values must equal what the resolver computed from the
+    # non-rectification observations.
+    assert casilla_values["decl.numero-operadores"] == binding_values["vat-349-declarante-numero-operadores"]
+    assert casilla_values["decl.importe-operaciones"] == binding_values["vat-349-declarante-importe-operaciones"]
+
+    # Rectification casillas must pass through from binding to casilla unchanged.
+    assert casilla_values["decl.numero-rectificaciones"] == (
+        binding_values["vat-349-declarante-numero-rectificaciones"]
+    )
+    assert casilla_values["decl.importe-rectificaciones"] == (
+        binding_values["vat-349-declarante-importe-rectificaciones"]
+    )
+
+    # Rectification delta must equal the absolute difference between new and previous base.
+    expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
+    assert casilla_values["decl.importe-rectificaciones"] == expected_rect_delta

@@ -91,7 +91,9 @@ def test_as_path_yields_a_real_pathlib_path() -> None:
         assert p.is_file()
         payload = p.read_bytes()
 
-    assert payload.startswith(b"") or len(payload) >= 0
+    assert len(payload) > 0
+    # 036.toml is a TOML file — it must contain at least one section header.
+    assert b"[" in payload
 
 
 def test_read_bytes_from_traversable_directly() -> None:

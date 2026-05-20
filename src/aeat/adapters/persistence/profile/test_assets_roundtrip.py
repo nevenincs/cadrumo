@@ -20,6 +20,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+import pydantic
 import pytest
 
 from ....core.config import Settings
@@ -183,16 +184,10 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
                 asset_dict["cost_basis"] = "5525.00"
                 row.payload = _json.dumps(document).encode("utf-8")
 
-            regression_caught = False
-            try:
+            with pytest.raises(
+                pydantic.ValidationError,
+                match="cost_basis must equal taxable_base plus non-deductible VAT",
+            ):
                 assets_repo.load()
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: corrupting cost_basis to "
-                "break the VAT-decomposition cross-check did NOT surface "
-                "on load. The assets ledger boundary is tautological and "
-                "every ledger roundtrip in the suite is suspect."
-            )
         finally:
             engine.dispose()
