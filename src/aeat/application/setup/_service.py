@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import contextlib
-
-from ...adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from ...core.config import load_settings
 from ...domain.user_profile import UserProfileFact, new_profile_id
 from ..auth import AuthProviderReservedError, configure_operator_auth
 from ..user_profile._orchestration import (
     _write_active_profile_pointer,
     capture_active_profile_pointer,
     register_active_profile,
+    restore_active_profile_pointer,
 )
 from ..workflow._persistence import workflow_state_repository
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
@@ -34,39 +31,29 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
     # chosen ``profile_name`` becomes the decoupled display label.
     profile_id = new_profile_id()
 
-    # 1. Cold-start provisioning: the per-bucket directory tree
-    #    (db/, blobs/, audit/) must exist so the per-bucket SQLite
-    #    engine can open, and the active-profile pointer must aim at
-    #    the new UUID so ``Settings.aeat_database_url`` resolves to the
-    #    per-bucket DB before the workflow-state repository eagerly
-    #    opens its engine. ``ProfileRepository.create`` tolerates this
-    #    pre-staged bare directory and rewrites the pointer idempotently
-    #    — the cross-store write itself (manifest + record + rollback)
-    #    lives solely in ``ProfileRepository``.
-    root = load_settings().aeat_local_storage_root
-    prior_pointer_text = capture_active_profile_pointer()
-    with contextlib.suppress(FileExistsError):
-        provision_bucket_directory(root, profile_id)
+    # Cold-start: the active-profile pointer must aim at the new UUID
+    # before ``workflow_state_repository()`` opens its per-bucket
+    # engine. ``ProfileRepository.create`` (inside ``register_active_
+    # profile``) owns the cross-store unit of work — bucket directory,
+    # manifest, encrypted record, AND the pointer — and rolls every
+    # store back on a failure inside the create. The genuine prior
+    # pointer is captured here and restored if the surrounding span
+    # fails BEFORE or AROUND ``create`` (engine open, master-key
+    # activation), the window the repository's own rollback cannot see.
+    prior_pointer = capture_active_profile_pointer()
     _write_active_profile_pointer(profile_id)
-
-    # 2. Register the profile. ``register_active_profile`` is a thin
-    #    coordinator that delegates the cross-store create to
-    #    ``ProfileRepository`` and threads the workflow-level event
-    #    stream. The genuine pre-create pointer is handed down as the
-    #    rollback anchor so a failed create restores it exactly. A
-    #    label already carried by a live profile is refused with
-    #    ``ProfileAlreadyRegisteredError``; that refusal propagates to
-    #    the caller unchanged.
-    repository = workflow_state_repository()
-    repository.update(
-        lambda state: register_active_profile(
-            state,
-            profile_id=profile_id,
-            display_name=command.profile_name,
-            facts=tuple(facts),
-            prior_pointer_text=prior_pointer_text,
+    try:
+        workflow_state_repository().update(
+            lambda state: register_active_profile(
+                state,
+                profile_id=profile_id,
+                display_name=command.profile_name,
+                facts=tuple(facts),
+            )
         )
-    )
+    except Exception:
+        restore_active_profile_pointer(prior_pointer)
+        raise
 
     # 2. Configure auth
     auth_configured = False

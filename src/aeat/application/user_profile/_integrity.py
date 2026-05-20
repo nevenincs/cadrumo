@@ -8,11 +8,14 @@ profile silently is the ``missing_profile_record`` / ghost-profile
 defect class.
 
 :func:`verify_profile_integrity` is the read-time gate
-:class:`ProfileRepository.load` runs on every load. It checks the
-manifest ``bucket_id``, the on-disk directory name, and the decrypted
-:class:`UserProfileRecord.profile_id` all agree, and that the record
-decrypts and validates. It raises :class:`ProfileIntegrityError` —
-never returns an inconsistent aggregate.
+:class:`ProfileRepository.load` runs on every load. It checks that the
+manifest ``bucket_id``, the on-disk directory name, and the
+:class:`UserProfileRecord.profile_id` all agree on the profile UUID.
+Decryption and pydantic validation of the record happen earlier in
+``load`` itself — by the time this gate runs the record is already a
+validated object, so this function is a pure cross-store identity
+comparison. It raises :class:`ProfileIntegrityError` on any
+disagreement — the repository never returns an inconsistent aggregate.
 """
 
 from __future__ import annotations
