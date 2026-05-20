@@ -675,6 +675,40 @@ def test_work_create_rejects_unknown_modelo() -> None:
     assert "999" in result.output
 
 
+@pytest.mark.parametrize("year", ["1899", "2100", "1000"])
+def test_work_create_rejects_out_of_range_year(year: str) -> None:
+    """``work create --year 1899`` is refused with the bad year named.
+
+    Before fix: an out-of-range year built a token like ``1899-Q1``,
+    passed the period regex, then failed deep in WorkUnit validation
+    and surfaced only the generic English "command input failed
+    validation" boundary error.
+    After fix: the refusal names the year and the supported range.
+    """
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "303",
+            "--year",
+            year,
+            "--period",
+            "Q1",
+            "--revision",
+            "2009-y-siguientes",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert year in result.output
+    assert "config repair" not in result.output
+
+
 def test_work_create_rejects_unknown_revision() -> None:
     """``work create --revision nope`` is refused naming the modelo's revisions."""
 
