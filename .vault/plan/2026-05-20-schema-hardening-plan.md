@@ -316,3 +316,4 @@ bounds.
 - [x] `W07.P17.S122` - migrate the long M100 autonomic dispatch formula rows to `dispatch_table_entries`; the committed-corpus row-size gate now caps TOML rows at 800 characters with the live maximum at 704 characters.
 - [x] `W07.P17.S123` - add generic same-id fragment merging for large export-record field lists and construct membership lists so M200 can be split below the 2,000-line fragment target without model-specific loader rules.
 - [x] `W07.P17.S124` - split the oversized M200 2024+ export-record field fragments and foundation construct membership fragment into ordered part files; the committed-corpus fragment-size gate now caps TOML fragments at 2,200 lines, with M111/M349 revision files identified as the remaining blockers to a 2,000-line cap.
+- [x] `W07.P17.S125` - split the M111 and M349 revision files into generic top-level revision fragments; the committed-corpus fragment-size gate now caps all TOML fragments at 2,000 lines.
