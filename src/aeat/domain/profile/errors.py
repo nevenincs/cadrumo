@@ -19,8 +19,8 @@ class AssetValidationError(AssetRecordError, ValueError):
     """Raised when an asset record fails Pydantic validation."""
 
 
-class AmortizationLedgerError(AeatError):
-    """Raised when an amortization ledger operation is invalid."""
+class AmortizacionLedgerError(AeatError):
+    """Raised when an amortizacion ledger operation is invalid."""
 
 
 class InventoryLedgerError(AeatError):
@@ -51,12 +51,12 @@ class LIFOForbiddenError(InventoryLedgerError):
         )
 
 
-class BasisCapExceededError(AmortizationLedgerError):
+class BasisCapExceededError(AmortizacionLedgerError):
     """Raised when cumulative amortization would exceed cost basis."""
 
 
 __all__ = [
-    "AmortizationLedgerError",
+    "AmortizacionLedgerError",
     "AssetRecordError",
     "AssetValidationError",
     "BasisCapExceededError",

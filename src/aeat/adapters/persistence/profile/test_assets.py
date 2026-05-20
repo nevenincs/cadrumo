@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.profile.assets import AmortizacionLedger, AmortizationEntry, AssetClass, AssetRecord
+from ....domain.profile.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from ..storage import EphemeralMasterKeyProvider
 from ..storage.sql import dispose_engine
 from .assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
@@ -76,7 +76,7 @@ def test_asset_persistence_is_encrypted_financial_secure_object(tmp_path) -> Non
 
 
 def test_amortizacion_ledger_persistence_round_trip() -> None:
-    ledger = AmortizacionLedger(entries=(AmortizationEntry(asset_id="pc", year=2025, amount=Decimal("100.00")),))
+    ledger = AmortizacionLedger(entries=(AmortizacionEntry(asset_id="pc", year=2025, amount=Decimal("100.00")),))
 
     save_amortizacion_ledger(ledger)
 

@@ -25,8 +25,8 @@ import pytest
 
 from ....core.config import Settings
 from ....domain.profile.assets import (
+    AmortizacionEntry,
     AmortizacionLedger,
-    AmortizationEntry,
     AssetClass,
     AssetRecord,
     AssetsLedgerDocument,
@@ -88,7 +88,7 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
             SecureObjectRepository(engine=engine)
 
             assets_repo = AssetsLedgerRepository()
-            amortization_repo = AmortizacionLedgerRepository()
+            amortizacion_repo = AmortizacionLedgerRepository()
 
             asset = _populated_asset()
             original_doc = AssetsLedgerDocument(assets=(asset,))
@@ -108,12 +108,12 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
 
             original_ledger = AmortizacionLedger(
                 entries=(
-                    AmortizationEntry(asset_id=asset.identifier, year=2024, amount=Decimal("2762.50")),
-                    AmortizationEntry(asset_id=asset.identifier, year=2025, amount=Decimal("2762.50")),
+                    AmortizacionEntry(asset_id=asset.identifier, year=2024, amount=Decimal("2762.50")),
+                    AmortizacionEntry(asset_id=asset.identifier, year=2025, amount=Decimal("2762.50")),
                 ),
             )
-            amortization_repo.save(original_ledger)
-            loaded_ledger = amortization_repo.load()
+            amortizacion_repo.save(original_ledger)
+            loaded_ledger = amortizacion_repo.load()
 
             assert loaded_ledger == original_ledger
             assert len(loaded_ledger.entries) == 2
