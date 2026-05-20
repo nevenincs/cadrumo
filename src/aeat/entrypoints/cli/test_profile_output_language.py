@@ -155,6 +155,74 @@ def test_config_profile_create_validates_profile_output_language(
         assert fact_value(reloaded, "preferences.output_language") == "ca"
 
 
+def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """`profile edit --quiet` writes only the supplied flags.
+
+    The wizard `--quiet` path used to seed descriptor defaults for
+    every unsupplied question and persist the full answer set, so
+    editing one field silently reverted every other field to its
+    default (`output_language` flipped en->es). `edit` must be a true
+    patch: a field the operator did not name on the command line is
+    left exactly as stored.
+    """
+
+    from aeat.adapters.persistence.storage import get_master_key_provider
+    from aeat.application.user_profile._orchestration import fact_value
+    from aeat.application.workflow._persistence import workflow_state_repository
+
+    _isolate(monkeypatch, tmp_path)
+
+    create_result = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "default",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--output-language",
+            "en",
+            "--address-postcode",
+            "08001",
+            "--iva-regime",
+            "EXENTO",
+        ]
+    )
+    assert create_result.exit_code == 0, create_result.output
+
+    # Edit ONE unrelated field; the operator supplies nothing else.
+    edit_result = _invoke(
+        [
+            "config",
+            "profile",
+            "edit",
+            "default",
+            "--quiet",
+            "--address-postcode",
+            "28010",
+        ]
+    )
+    assert edit_result.exit_code == 0, edit_result.output
+
+    with get_master_key_provider():
+        record = workflow_state_repository().load().active_profile_record()
+        assert record is not None
+        # The supplied field is patched.
+        assert fact_value(record, "contact.postcode") == "28010"
+        # Every other field the operator did NOT supply is unchanged —
+        # the wizard must not have rewritten them to descriptor defaults.
+        assert fact_value(record, "preferences.output_language") == "en"
+        assert fact_value(record, "identity.tax_id") == "00000000T"
+        assert fact_value(record, "activities.description") == "Servicios"
+        assert fact_value(record, "iva.regime") == "EXENTO"
+
+
 def test_global_language_flag_overrides_profile_for_invocation(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

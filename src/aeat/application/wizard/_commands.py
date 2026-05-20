@@ -38,7 +38,7 @@ from ...core.i18n import tr
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardMissingFlagError
 from ._models import WizardFlow, WizardQuestion, WizardWidget
-from ._persistence import WizardPersistMode, persist_answers
+from ._persistence import WizardPersistMode
 from ._prompter import Prompter, QuestionaryPrompter, ScriptedPrompter
 from ._runner import run_flow
 
@@ -415,6 +415,104 @@ def _collect_flag_values(
     return canonical
 
 
+def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile_id: str) -> None:
+    """Persist a non-interactive ``edit`` as a true patch.
+
+    Only the flags the operator named on the command line are written;
+    every other stored field is left untouched. No full-flow walk, no
+    ``SetupAnswers`` model construction, no descriptor-default seeding.
+    """
+
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ..user_profile._orchestration import _write_active_profile_pointer
+    from ..workflow._persistence import workflow_state_repository
+    from ._persistence import persist_patch
+
+    _write_active_profile_pointer(profile_id)
+    provider = get_master_key_provider()
+    with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
+        repository = workflow_state_repository()
+        repository.update(lambda state: persist_patch(flow, explicit_flags, state=state))
+
+
+def _run_full_flow(
+    flow: WizardFlow,
+    canonical: dict[str, str],
+    *,
+    _prompter: Prompter | None,
+    quiet: bool,
+    accept_defaults: bool,
+    profile_name: str,
+    profile_id: str,
+    mode: WizardPersistMode,
+) -> None:
+    """Walk the full wizard flow and persist the resulting answer set.
+
+    Used for ``create`` (every path) and for an interactive ``edit``,
+    where the operator re-walks and confirms every visible question.
+    """
+
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ..user_profile._orchestration import _write_active_profile_pointer
+    from ..workflow._persistence import workflow_state_repository
+    from ._persistence import persist_answers
+
+    if accept_defaults:
+        seeded: dict[str, str] = {
+            question.id: question.default or ""
+            for section in flow.sections
+            for question in section.questions
+            if question.default is not None
+        }
+        seeded.update(canonical)
+        canonical = seeded
+
+    if quiet:
+        missing = _missing_required_flags(flow, canonical)
+        if missing:
+            raise WizardMissingFlagError(
+                tr("application.wizard.errors.quiet_missing_flags"),
+                context={"flow_id": flow.id, "missing": missing},
+            )
+        answers = run_flow(flow, _scripted_from_canonical(flow, canonical))
+    elif accept_defaults:
+        answers = run_flow(flow, _scripted_from_canonical(flow, canonical))
+    else:
+        active = _prompter if _prompter is not None else QuestionaryPrompter()
+        answers = run_flow(flow, active, defaults=canonical)
+
+    # `create` writes the full answer set. An interactive `edit`
+    # re-walks every visible question, so the full answer set is the
+    # operator's confirmed intent.
+    supplied_question_ids = frozenset(
+        question.id for section in flow.sections for question in section.questions
+    )
+
+    # Write the active-profile pointer BEFORE constructing the
+    # workflow-state repository. `workflow_state_repository()` eagerly
+    # opens the per-bucket SQLAlchemy engine, whose URL resolves from
+    # the active-profile pointer chain. On a first-run `profile create`
+    # the pointer does not exist yet, so the URL is empty and the
+    # engine open crashes. The pointer stores the immutable profile
+    # UUID; `register_active_profile` re-writes it idempotently at the
+    # tail of its work.
+    _write_active_profile_pointer(profile_id)
+    provider = get_master_key_provider()
+    with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
+        repository = workflow_state_repository()
+        repository.update(
+            lambda state: persist_answers(
+                flow,
+                answers,
+                state=state,
+                profile_name=profile_name,
+                profile_id=profile_id,
+                mode=mode,
+                supplied_question_ids=supplied_question_ids,
+            )
+        )
+
+
 def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
@@ -435,14 +533,8 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
     parameters = (*mode_params, *question_params)
 
     def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
-        from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
         from ...domain.user_profile import new_profile_id
-        from ..user_profile._orchestration import (
-            _refuse_duplicate_label,
-            _require_registered_label,
-            _write_active_profile_pointer,
-        )
-        from ..workflow._persistence import workflow_state_repository
+        from ..user_profile._orchestration import _refuse_duplicate_label, _require_registered_label
         from ..workflow._profile_bucket_scan import read_profile_bucket
 
         raw_profile_name = kwargs.pop("profile_name")
@@ -477,57 +569,31 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         accept_defaults = bool(kwargs.pop("accept_defaults", False))
         canonical = _collect_flag_values(flow, kwargs)
 
-        if accept_defaults:
-            seeded: dict[str, str] = {
-                question.id: question.default or ""
-                for section in flow.sections
-                for question in section.questions
-                if question.default is not None
-            }
-            seeded.update(canonical)
-            canonical = seeded
+        # The keys present in `canonical` BEFORE any default seeding are
+        # exactly the question ids the operator named on the command
+        # line. A non-interactive `edit` (`--quiet` / `--accept-
+        # defaults`) is a patch: it writes only these explicit flags
+        # and leaves every other stored field untouched. It must never
+        # be routed through `run_flow`, which constructs the full
+        # `SetupAnswers` model and seeds descriptor defaults for the
+        # unsupplied questions — the silent full-rewrite that flipped
+        # `output_language` while editing an unrelated field.
+        explicit_flags: dict[str, str] = dict(canonical)
+        non_interactive = quiet or accept_defaults
+        patch_edit = mode == "edit" and non_interactive
 
-        if quiet:
-            missing = _missing_required_flags(flow, canonical)
-            if missing:
-                raise WizardMissingFlagError(
-                    tr("application.wizard.errors.quiet_missing_flags"),
-                    context={"flow_id": flow.id, "missing": missing},
-                )
-            scripted = _scripted_from_canonical(flow, canonical)
-            answers = run_flow(flow, scripted)
-        elif accept_defaults:
-            scripted = _scripted_from_canonical(flow, canonical)
-            answers = run_flow(flow, scripted)
+        if patch_edit:
+            _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
         else:
-            active = _prompter if _prompter is not None else QuestionaryPrompter()
-            answers = run_flow(flow, active, defaults=canonical)
-
-        # Write the active-profile pointer BEFORE constructing the
-        # workflow-state repository. `workflow_state_repository()`
-        # eagerly opens the per-bucket SQLAlchemy engine in its
-        # `SecureObjectRepository.__init__`, and the engine URL
-        # resolves from the active-profile pointer chain. On a
-        # first-run `profile create` the pointer does not exist yet,
-        # so the URL is empty and the engine open crashes — the
-        # cold-start chicken-and-egg the operator testimonies
-        # catalogued. The pointer stores the immutable profile UUID,
-        # never the operator label. `register_active_profile` re-writes
-        # the pointer idempotently at the tail of its work; this early
-        # write is purely the engine-URL load-order requirement.
-        _write_active_profile_pointer(profile_id)
-        provider = get_master_key_provider()
-        with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
-            repository = workflow_state_repository()
-            repository.update(
-                lambda state: persist_answers(
-                    flow,
-                    answers,
-                    state=state,
-                    profile_name=profile_name,
-                    profile_id=profile_id,
-                    mode=mode,
-                )
+            _run_full_flow(
+                flow,
+                canonical,
+                _prompter=_prompter,
+                quiet=quiet,
+                accept_defaults=accept_defaults,
+                profile_name=profile_name,
+                profile_id=profile_id,
+                mode=mode,
             )
 
         import json as _json
