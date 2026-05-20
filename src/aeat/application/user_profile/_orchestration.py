@@ -19,7 +19,6 @@ from collections.abc import Iterable
 from datetime import date
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
-from ...adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
@@ -32,17 +31,15 @@ from ...domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
-from ...domain.user_profile._errors import UserProfileValidationError
 from ..workflow._models import WorkflowEvent, WorkflowState
 from ..workflow._utils import utc_now
 from . import (
     EditProfileFieldCommand,
     ProfileValidationService,
-    RenameProfileCommand,
     UserProfileLifecycleRepository,
 )
 from ._lifecycle import ProfileLifecycleService
-from ._profile_repository import _CAPTURE_POINTER, ProfileRepository, _CapturePointerSentinel
+from ._profile_repository import ProfileRepository
 
 _SHARED_SCHEMA: ProfileSchemaDefinition | None = None
 _SENTINEL_DATE = date.min
@@ -139,28 +136,6 @@ class ProfileAlreadyRegisteredError(ProfileNotFoundError):
     """
 
 
-def capture_active_profile_pointer() -> str | None:
-    """Return the raw active-profile pointer text, or ``None`` if absent.
-
-    A caller that writes the active-profile pointer EARLY for the
-    cold-start load-order (so the per-bucket SQLAlchemy engine resolves
-    before :func:`register_active_profile` runs inside
-    ``workflow_state_repository().update``) captures the genuine prior
-    pointer with this helper first, then hands it to
-    :func:`register_active_profile` as ``prior_pointer_text`` so a
-    failed create rolls the pointer back to exactly its pre-create
-    state. The repository owns the rollback; this helper is the only
-    extra coordination a cold-start caller needs.
-    """
-
-    from ...core._bucket_pointer_io import pointer_path
-
-    target = pointer_path(load_settings().aeat_local_storage_root)
-    if not target.is_file():
-        return None
-    return target.read_text(encoding="utf-8")
-
-
 def register_active_profile(
     state: WorkflowState,
     *,
@@ -169,7 +144,6 @@ def register_active_profile(
     facts: tuple[UserProfileFact, ...] = (),
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
-    prior_pointer_text: str | None | _CapturePointerSentinel = _CAPTURE_POINTER,
 ) -> WorkflowState:
     """Atomically register a new profile and make it the active one.
 
@@ -180,25 +154,25 @@ def register_active_profile(
     key or path.
 
     This function is a thin :class:`WorkflowState` coordinator: the
-    cross-store write (bucket directory + manifest + encrypted record +
-    active-profile pointer), the duplicate-label refusal, and the
-    rollback on any failure all live solely in
-    :class:`ProfileRepository`. This function delegates the create and
-    threads the workflow-level event audit stream around it.
+    entire cross-store write — bucket directory, manifest, encrypted
+    record, AND the active-profile pointer — plus the duplicate-label
+    refusal and the all-or-nothing rollback are a single unit of work
+    owned by :meth:`ProfileRepository.create`. This function delegates
+    that create and threads the workflow-level event audit stream onto
+    the supplied :class:`WorkflowState`.
 
-    ``prior_pointer_text`` is forwarded to the repository as the
-    rollback anchor; a cold-start caller captures it with
-    :func:`capture_active_profile_pointer` before writing the early
-    load-order pointer.
+    The repository owns every store write, the pointer included. A
+    caller that performs the cold-start pointer write early (so the
+    workflow-state engine can resolve before this function runs inside
+    ``workflow_state_repository().update``) is responsible for
+    restoring that early pointer if the surrounding span fails before
+    or after ``create`` — :func:`capture_active_profile_pointer` and a
+    ``try``/``except`` around the span cover the steps the repository's
+    own rollback cannot see (engine open, master-key activation).
     """
 
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-    repository.create(
-        label=display_name,
-        facts=facts,
-        profile_id=profile_id,
-        prior_pointer_text=prior_pointer_text,
-    )
+    repository.create(label=display_name, facts=facts, profile_id=profile_id)
     updated = state.model_copy(update={"updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
     updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
@@ -209,6 +183,49 @@ def register_active_profile(
                 updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id
             )
     return updated
+
+
+def capture_active_profile_pointer() -> str | None:
+    """Return the raw active-profile pointer text, or ``None`` if absent.
+
+    A cold-start caller — one that must write the active-profile pointer
+    early so ``workflow_state_repository()`` can resolve its per-bucket
+    engine before :func:`register_active_profile` runs — captures the
+    genuine pre-write pointer with this helper, then restores it in a
+    ``try``/``except`` if the create span fails. This closes the window
+    the repository's own rollback cannot reach: a failure between the
+    early pointer write and ``ProfileRepository.create`` (engine open,
+    master-key activation) would otherwise strand the pointer at a
+    profile whose record was never persisted.
+    """
+
+    from ...core._bucket_pointer_io import pointer_path
+
+    target = pointer_path(load_settings().aeat_local_storage_root)
+    if not target.is_file():
+        return None
+    return target.read_text(encoding="utf-8")
+
+
+def restore_active_profile_pointer(prior_text: str | None) -> None:
+    """Restore the active-profile pointer to a previously captured state.
+
+    Counterpart to :func:`capture_active_profile_pointer`. A cold-start
+    caller calls this from the ``except`` arm of the span it wraps: if
+    there was no prior pointer the early write is removed, otherwise the
+    captured bytes are written back, so a failed create leaves the
+    pointer exactly as it was found.
+    """
+
+    from ...core._bucket_pointer_io import pointer_path
+
+    target = pointer_path(load_settings().aeat_local_storage_root)
+    if prior_text is None:
+        if target.is_file():
+            target.unlink()
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(prior_text, encoding="utf-8")
 
 
 def _refuse_duplicate_label(
@@ -454,48 +471,19 @@ def rename_profile(
     """Rename a profile by updating its display label only.
 
     The profile identity (``profile_id``), bucket directory, keystore
-    directory, and secure-object key are immutable and never move. This
-    helper updates the operator-visible label in two places that hold a
-    copy of it: the encrypted :class:`UserProfileRecord.display_name`
-    and the plaintext bucket manifest ``label``. No directory move, no
-    re-key, no rollback machinery — a label is a pure metadata edit.
+    directory, and secure-object key are immutable and never move. A
+    rename is a pure label edit across the two stores that hold a copy
+    of the label — the encrypted :class:`UserProfileRecord.display_name`
+    and the plaintext manifest ``label``.
 
-    Refuses if ``new_label`` is already carried by another live profile
-    (case-insensitive uniqueness).
+    This function is a thin coordinator: the cross-store label write —
+    record AND manifest — lives solely in :meth:`ProfileRepository.rename`.
+    Refuses if ``new_label`` is already carried by another live profile.
     """
 
-    from ..workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
-
-    pointer = read_profile_bucket_by_id(profile_id)
-    if pointer is None:
-        raise ProfileNotFoundError(f"profile {profile_id!r} has no registered bucket")
-
-    trimmed = new_label.strip()
-    if not trimmed:
-        raise UserProfileValidationError("profile label must not be blank")
-
-    if trimmed.casefold() != pointer.label.casefold():
-        clash = read_profile_bucket(trimmed)
-        if clash is not None and clash.bucket_id != profile_id:
-            raise ProfileAlreadyRegisteredError(
-                tr(
-                    "application.user_profile.errors.profile_already_exists",
-                    default=(
-                        "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
-                        "to activate it or `aeat config profile delete NAME` first."
-                    ),
-                    profile=trimmed,
-                ),
-            )
-
-    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    result = service.rename(RenameProfileCommand(profile_id=profile_id, target_display_name=trimmed))
-
-    root = load_settings().aeat_local_storage_root
-    paths = bucket_paths(root, profile_id)
-    manifest = read_manifest(paths)
-    write_manifest(paths, manifest.model_copy(update={"label": trimmed}))
-    return result.profile
+    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+    aggregate = repository.rename(profile_id, new_label=new_label)
+    return aggregate.record
 
 
 __all__ = [
