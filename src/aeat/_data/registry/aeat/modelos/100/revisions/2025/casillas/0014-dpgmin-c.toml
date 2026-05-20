@@ -4,6 +4,7 @@ number = "*61"
 label = "Conyuge grado de discapacidad"
 section = ["datos_identificativos", "conyuge"]
 data_type = "text"
+semantic_role = "irpf_conyuge_grado_discapacidad"
 input_kind = "bound"
 binding = "renta-2025-profile-spouse-disability-grade"
 legal_refs = ["orden-hac-277-2026:art-3"]

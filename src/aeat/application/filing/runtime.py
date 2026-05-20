@@ -10,7 +10,7 @@ and schema providers through.
 
 Key entry points:
 
-* :class:`FilingOperatorProfile` — pydantic v2 record satisfying the
+* :class:`ModeloOperatorProfile` — pydantic v2 record satisfying the
   filing-profile Protocol.
 * :func:`filing_profile_from_autonomo` — projects taxpayer identity from a
   domain :class:`aeat.domain.deadlines.AutonomoProfile` into the runtime
@@ -59,7 +59,7 @@ class AutonomoProfileIdentity(Protocol):
         ...
 
 
-class FilingOperatorProfile(BaseModel):
+class ModeloOperatorProfile(BaseModel):
     """Concrete runtime implementation of the filing-profile Protocol.
 
     Strict, frozen pydantic v2 model satisfying the filing layer's
@@ -119,7 +119,7 @@ class RegistryCasillaCollection:
 
 
 @dataclass(frozen=True, slots=True)
-class RegistryFilingSubview:
+class RegistryModeloSubview:
     """Snapshot-backed filing details for one modelo revision."""
 
     modelo_id: str
@@ -143,7 +143,7 @@ class RegistrySchemaProvider:
     """Registry-backed filing schema provider."""
 
     collections: dict[str, RegistryCasillaCollection]
-    subviews: dict[str, RegistryFilingSubview]
+    subviews: dict[str, RegistryModeloSubview]
 
     def get_collection(self, modelo: str) -> CasillaCollection:
         try:
@@ -151,7 +151,7 @@ class RegistrySchemaProvider:
         except KeyError as exc:
             raise ModeloBuilderError(f"modelo {modelo!r} is not present in the calculation registry") from exc
 
-    def get_subview(self, modelo: str) -> RegistryFilingSubview:
+    def get_subview(self, modelo: str) -> RegistryModeloSubview:
         """Return the validated registry subview backing ``modelo``."""
 
         try:
@@ -164,8 +164,8 @@ def filing_profile_from_autonomo(
     profile: AutonomoProfileIdentity,
     *,
     display_name: str | None = None,
-) -> FilingOperatorProfile:
-    """Project an :class:`AutonomoProfile` into a :class:`FilingOperatorProfile`.
+) -> ModeloOperatorProfile:
+    """Project an :class:`AutonomoProfile` into a :class:`ModeloOperatorProfile`.
 
     This helper deliberately copies only taxpayer identity. Modelo
     applicability is legal filing truth and must come from validated
@@ -177,9 +177,9 @@ def filing_profile_from_autonomo(
             ``profile.tax_id``.
 
     Returns:
-        A frozen :class:`FilingOperatorProfile`.
+        A frozen :class:`ModeloOperatorProfile`.
     """
-    return FilingOperatorProfile(
+    return ModeloOperatorProfile(
         tax_id=profile.tax_id,
         display_name=(display_name or profile.tax_id).strip(),
     )
@@ -188,12 +188,12 @@ def filing_profile_from_autonomo(
 def load_default_filing_profile(
     *,
     display_name: str | None = None,
-) -> FilingOperatorProfile:
+) -> ModeloOperatorProfile:
     """Load the active profile bucket for runtime filing commands.
 
     Resolves the active workflow profile via the wizard descriptor's
     typed projection and re-shapes it as a runtime
-    :class:`FilingOperatorProfile`. Operator profile values stored in
+    :class:`ModeloOperatorProfile`. Operator profile values stored in
     the profile bucket are the single source of truth.
 
     Args:
@@ -201,7 +201,7 @@ def load_default_filing_profile(
             returned profile.
 
     Returns:
-        The loaded :class:`FilingOperatorProfile`.
+        The loaded :class:`ModeloOperatorProfile`.
 
     Raises:
         ModeloBuilderError: When no profile is active in the workflow
@@ -346,13 +346,13 @@ def _collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColl
     )
 
 
-def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryFilingSubview:
+def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
     reconciliation_total_casillas = {
         kind: casilla_id
         for expectation in snapshot.revision.verification_expectations
         for kind, casilla_id in expectation.reconciliation_totals.items()
     }
-    return RegistryFilingSubview(
+    return RegistryModeloSubview(
         modelo_id=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
         schema_version=f"registry:{snapshot.modelo.id}:{snapshot.revision.id}",
@@ -422,10 +422,10 @@ def _value_type(data_type: str) -> str:
 
 
 __all__ = [
-    "FilingOperatorProfile",
+    "ModeloOperatorProfile",
     "RegistryCasillaCollection",
     "RegistryCasillaSchema",
-    "RegistryFilingSubview",
+    "RegistryModeloSubview",
     "RegistrySchemaProvider",
     "build_runtime_schema_provider",
     "filing_profile_from_autonomo",

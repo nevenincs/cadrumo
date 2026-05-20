@@ -47,9 +47,9 @@ from ._models import (
 from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
-    FilingDraftBuilderProtocol,
-    FilingInputsProviderProtocol,
-    RegistryFilingDraftProtocol,
+    ModeloDraftBuilderProtocol,
+    ModeloInputsProviderProtocol,
+    RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
 )
 
@@ -175,11 +175,11 @@ class WorkflowEngine:
         self,
         *,
         deadline_engine: DeadlineEngineProtocol,
-        filing_draft_builder: FilingDraftBuilderProtocol,
+        filing_draft_builder: ModeloDraftBuilderProtocol,
         submission_engine: SubmissionEngineProtocol,
         session: AeatSession | None,
         certificate_bundle: CertificateBundleProtocol | None,
-        inputs_provider: FilingInputsProviderProtocol,
+        inputs_provider: ModeloInputsProviderProtocol,
         settings: Settings,
         expedientes_source: ExpedientesSource | None = None,
         notifications_source: NotificationsSource | None = None,
@@ -329,7 +329,7 @@ class WorkflowEngine:
 
         steps: list[WorkflowStep] = []
         obligation: ModeloDeadline | None = None
-        draft: RegistryFilingDraftProtocol | None = None
+        draft: RegistryModeloDraftProtocol | None = None
         final_stage: WorkflowStage = WorkflowStage.ABORTED
         aborted_reason: WorkflowAbortReason | None = None
         abort_summary: str | None = None
@@ -638,7 +638,7 @@ class WorkflowEngine:
         obligation: ModeloDeadline,
         fail_on_warning: bool,
         steps: list[WorkflowStep],
-    ) -> RegistryFilingDraftProtocol:
+    ) -> RegistryModeloDraftProtocol:
         """Stage 5 — consult the status reader, load inputs, build the draft.
 
         Aborts with ``ALREADY_FILED`` if the (optional) status reader
@@ -785,7 +785,7 @@ class WorkflowEngine:
     def _require_registry_draft_for_obligation(
         self,
         *,
-        draft: RegistryFilingDraftProtocol,
+        draft: RegistryModeloDraftProtocol,
         obligation: ModeloDeadline,
         profile: AutonomoProfile,
         started: datetime,
@@ -836,7 +836,7 @@ class WorkflowEngine:
     def _stage_validating_draft(
         self,
         *,
-        draft: RegistryFilingDraftProtocol,
+        draft: RegistryModeloDraftProtocol,
         steps: list[WorkflowStep],
     ) -> None:
         """Stage 6 — re-scan the built draft for ERROR-severity findings."""
@@ -873,7 +873,7 @@ class WorkflowEngine:
     def _stage_running_preflight(
         self,
         *,
-        draft: RegistryFilingDraftProtocol,
+        draft: RegistryModeloDraftProtocol,
         today: date,
         steps: list[WorkflowStep],
     ) -> None:

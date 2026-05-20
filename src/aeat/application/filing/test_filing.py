@@ -12,7 +12,7 @@ from ...core.i18n import Translatable as tr
 from ...domain.transactions import TransactionCatalogue
 from . import (
     CasillaSchemaProvider,
-    FilingCalculateError,
+    ModeloCalculateError,
     ModeloDraft,
     ModeloDraftError,
     ModeloDraftStatus,
@@ -28,16 +28,16 @@ from . import (
     validate_draft,
 )
 from .testing import (
-    FilingTestDeadlineChecker,
-    FilingTestDeadlineStatus,
-    FilingTestProfile,
+    ModeloTestDeadlineChecker,
+    ModeloTestDeadlineStatus,
+    ModeloTestProfile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _profile() -> FilingTestProfile:
-    return FilingTestProfile(
+def _profile() -> ModeloTestProfile:
+    return ModeloTestProfile(
         tax_id="12345678Z",
         display_name="Registry boundary test",
     )
@@ -315,7 +315,7 @@ def test_iter_findings_threshold() -> None:
     assert finding_error in warnings_or_errors
     assert finding_info not in warnings_or_errors
     assert finding_info in list(iter_findings(draft, severity_at_least="INFO"))
-    with pytest.raises(FilingCalculateError, match=r"Unknown severity"):
+    with pytest.raises(ModeloCalculateError, match=r"Unknown severity"):
         list(iter_findings(draft, severity_at_least="HUGE"))
 
 
@@ -502,8 +502,8 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
 def test_deadline_validator_still_reports_overdue_status() -> None:
     findings = ModeloValidator(
         schema_provider=_schema_provider(),
-        deadline_checker=FilingTestDeadlineChecker(
-            status=FilingTestDeadlineStatus(
+        deadline_checker=ModeloTestDeadlineChecker(
+            status=ModeloTestDeadlineStatus(
                 due_date=date(2026, 4, 20),
                 is_overdue=True,
             )

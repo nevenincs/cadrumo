@@ -4,6 +4,7 @@ number = "*70"
 label = "Comunidad autonoma de la declaracion"
 section = ["datos_identificativos", "declaracion"]
 data_type = "text"
+semantic_role = "irpf_declaracion_ccaa"
 required = true
 input_kind = "bound"
 binding = "renta-2025-profile-tax-residence-ccaa"

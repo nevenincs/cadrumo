@@ -4,6 +4,7 @@ number = "*91"
 label = "Ascendiente apellidos y nombre"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "text"
+semantic_role = "irpf_ascendiente_apellidos_nombre"
 input_kind = "bound"
 binding = "renta-2025-family-ascendant-display-name"
 legal_refs = ["orden-hac-277-2026:art-3"]

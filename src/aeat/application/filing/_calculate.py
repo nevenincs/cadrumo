@@ -28,7 +28,7 @@ from ...domain.filing import (
     ModeloDraft,
     ModeloDraftStatus,
 )
-from .errors import FilingCalculateError
+from .errors import ModeloCalculateError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
@@ -118,10 +118,10 @@ class DeclaracionCalculateSummary(BaseModel):
         """
         if self.next_action is DeclaracionCalculateNextAction.RESOLVE_BLOCKERS:
             if not self.repair_hints:
-                raise FilingCalculateError("repair_hints must be non-empty when next_action is RESOLVE_BLOCKERS")
+                raise ModeloCalculateError("repair_hints must be non-empty when next_action is RESOLVE_BLOCKERS")
         else:
             if self.repair_hints:
-                raise FilingCalculateError("repair_hints must be empty unless next_action is RESOLVE_BLOCKERS")
+                raise ModeloCalculateError("repair_hints must be empty unless next_action is RESOLVE_BLOCKERS")
         return self
 
 
@@ -184,7 +184,7 @@ def summarise_calculation(
         A frozen :class:`DeclaracionCalculateSummary`.
 
     Raises:
-        FilingCalculateError: When ``repair_hints`` violates the
+        ModeloCalculateError: When ``repair_hints`` violates the
             ``RESOLVE_BLOCKERS`` invariant.
     """
     counts: dict[BaseSeverity, int] = {

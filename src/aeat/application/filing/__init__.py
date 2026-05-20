@@ -71,10 +71,10 @@ from ._export import (
     export_draft,
     verify_export,
 )
-from ._history_models import FilingHistory, FilingHistoryEntry
+from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._import import JustificanteImportResult, import_filing_from_justificante
 from ._review import (
-    FilingApprovalStaleReason,
+    ModeloApprovalStaleReason,
     approval_stale_reasons,
     approve_draft,
     compute_current_approval_basis,
@@ -83,9 +83,9 @@ from ._review import (
     refresh_review_status,
     unapprove_draft,
 )
-from .errors import FilingApplicationError, FilingCalculateError
+from .errors import ModeloApplicationError, ModeloCalculateError
 from .runtime import (
-    FilingOperatorProfile,
+    ModeloOperatorProfile,
     build_runtime_schema_provider,
     filing_profile_from_autonomo,
     load_default_filing_profile,
@@ -123,7 +123,7 @@ def build_draft(
     snapshot_ref = RegistrySnapshotRef(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
-        filing_year=filing_year,
+        modelo_year=filing_year,
         period=registry_period,
     )
     collection = schema_provider.get_collection(modelo)
@@ -441,7 +441,7 @@ def iter_findings(
     try:
         threshold = _SEVERITY_RANK[BaseSeverity[severity_at_least]]
     except KeyError as exc:
-        raise FilingCalculateError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
+        raise ModeloCalculateError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
     for finding in draft.findings:
         if _SEVERITY_RANK[finding.severity] >= threshold:
             yield finding
@@ -471,21 +471,21 @@ __all__ = [
     "DeclaracionVerifyVerdict",
     "ModeloAmendmentError",
     "ModeloAmendmentValidationError",
-    "FilingApplicationError",
+    "ModeloApplicationError",
     "ModeloApprovalBasis",
-    "FilingApprovalStaleReason",
+    "ModeloApprovalStaleReason",
     "ModeloBindingValue",
     "ModeloBuilderError",
-    "FilingCalculateError",
+    "ModeloCalculateError",
     "ModeloComputationError",
     "ModeloDraft",
     "ModeloDraftError",
     "ModeloDraftStatus",
-    "FilingHistory",
-    "FilingHistoryEntry",
+    "ModeloHistory",
+    "ModeloHistoryEntry",
     "ModeloImportError",
     "ModeloInputs",
-    "FilingOperatorProfile",
+    "ModeloOperatorProfile",
     "ModeloProfile",
     "ModeloScalar",
     "ModeloValidationError",

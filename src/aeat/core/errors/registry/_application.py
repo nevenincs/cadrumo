@@ -367,7 +367,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing.errors.FilingApplicationError",
+        "aeat.application.filing.errors.ModeloApplicationError",
         ErrorCode(
             code="ERROR_FILING_APPLICATION",
             category=ErrorCategory.ERROR,
@@ -378,7 +378,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing.errors.FilingCalculateError",
+        "aeat.application.filing.errors.ModeloCalculateError",
         ErrorCode(
             code="REFUSED_FILING_CALCULATE",
             category=ErrorCategory.REFUSED,

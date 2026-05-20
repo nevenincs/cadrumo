@@ -1,4 +1,4 @@
-"""Tests for the governed-persistence :class:`FilingHistoryRepository`.
+"""Tests for the governed-persistence :class:`ModeloHistoryRepository`.
 
 Exercises round-trip save/load, list/iter, deletion, the AUDIT
 classification gate, unsafe-modelo rejection, and the per-modelo lock
@@ -15,16 +15,16 @@ import pytest
 from ...adapters.persistence.storage.errors import ClassificationError
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...domain._identifiers import ModeloIdentifier
-from ._history_models import FilingHistory, FilingHistoryEntry
-from ._history_repository import FilingHistoryRepository
+from ._history_models import ModeloHistory, ModeloHistoryEntry
+from ._history_repository import ModeloHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _make_history(*, modelo: str = "130", n_entries: int = 2) -> FilingHistory:
+def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
     base = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     entries = tuple(
-        FilingHistoryEntry(
+        ModeloHistoryEntry(
             modelo=ModeloIdentifier(modelo),
             period=f"2026Q{i + 1}",
             submitted_at=base.replace(month=1 + 3 * i),
@@ -32,7 +32,7 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> FilingHistory:
         )
         for i in range(n_entries)
     )
-    return FilingHistory(modelo=ModeloIdentifier(modelo), entries=entries)
+    return ModeloHistory(modelo=ModeloIdentifier(modelo), entries=entries)
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
@@ -41,24 +41,24 @@ def _database_bytes(tmp_path: Path) -> bytes:
 
 class TestEmptyState:
     def test_load_returns_none_when_absent(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         assert repo.load("130") is None
 
     def test_object_marker_identifies_secure_backend(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         assert repo.envelope_path_for("130").as_posix().endswith("aeat.application.filing.history/130")
 
 
 class TestSaveLoad:
     def test_round_trip(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         history = _make_history(modelo="130")
         repo.save(history)
-        loaded = FilingHistoryRepository().load("130")
+        loaded = ModeloHistoryRepository().load("130")
         assert loaded == history
 
     def test_save_idempotent(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         history = _make_history(modelo="130")
         repo.save(history)
         repo.save(history)
@@ -67,13 +67,13 @@ class TestSaveLoad:
 
 class TestListIter:
     def test_list_modelos_sorted(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         repo.save(_make_history(modelo="303"))
         repo.save(_make_history(modelo="130"))
         assert repo.list_modelos() == ("130", "303")
 
     def test_iter_histories_yields_tuples(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         h130 = _make_history(modelo="130")
         h303 = _make_history(modelo="303")
         repo.save(h130)
@@ -84,19 +84,19 @@ class TestListIter:
 
 class TestDelete:
     def test_delete_removes(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         repo.save(_make_history(modelo="130"))
         assert repo.delete("130") is True
         assert repo.load("130") is None
 
     def test_delete_missing_returns_false(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         assert repo.delete("nonexistent") is False
 
 
 class TestClassificationGate:
     def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         repo.save(_make_history(modelo="130"))
         raw = _database_bytes(tmp_path)
         assert b"secure_objects" in raw
@@ -108,13 +108,13 @@ class TestClassificationGate:
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         history = _make_history(modelo="130")
-        bad = Envelope[FilingHistory](
+        bad = Envelope[ModeloHistory](
             schema_version=1,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.OPERATIONAL,
             payload=history,
         )
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         SecureObjectRepository().save(
             namespace="aeat.application.filing.history",
             object_key="130",
@@ -133,14 +133,14 @@ class TestUnsafeModelo:
         ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
     )
     def test_unsafe_modelo_rejected(self, bad: str) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
 
 
 class TestPerModeloLockIsolation:
     def test_lock_target_per_modelo(self) -> None:
-        repo = FilingHistoryRepository()
+        repo = ModeloHistoryRepository()
         a = repo.lock_target_for("130")
         b = repo.lock_target_for("303")
         assert a != b

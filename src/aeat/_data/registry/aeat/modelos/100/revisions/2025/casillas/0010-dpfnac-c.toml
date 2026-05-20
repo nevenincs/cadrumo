@@ -4,6 +4,7 @@ number = "*60"
 label = "Conyuge fecha de nacimiento"
 section = ["datos_identificativos", "conyuge"]
 data_type = "text"
+semantic_role = "irpf_conyuge_fecha_nacimiento"
 input_kind = "bound"
 binding = "renta-2025-profile-spouse-birth-date"
 legal_refs = ["orden-hac-277-2026:art-3"]

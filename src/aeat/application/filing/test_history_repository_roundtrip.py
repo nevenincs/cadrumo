@@ -1,7 +1,7 @@
-"""Strict roundtrip across the encrypted FilingHistoryRepository boundary.
+"""Strict roundtrip across the encrypted ModeloHistoryRepository boundary.
 
-``FilingHistoryRepository`` persists :class:`FilingHistory` (a typed
-tuple of ``FilingHistoryEntry`` rows) per modelo at
+``ModeloHistoryRepository`` persists :class:`ModeloHistory` (a typed
+tuple of ``ModeloHistoryEntry`` rows) per modelo at
 ``SensitivityClass.AUDIT``.
 """
 
@@ -19,32 +19,32 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...core.config import Settings
-from ._history_models import FilingHistory, FilingHistoryEntry
-from ._history_repository import FilingHistoryRepository
+from ._history_models import ModeloHistory, ModeloHistoryEntry
+from ._history_repository import ModeloHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
-def _populated_history() -> FilingHistory:
-    """Build a FilingHistory with multiple entries spanning distinct periods."""
+def _populated_history() -> ModeloHistory:
+    """Build a ModeloHistory with multiple entries spanning distinct periods."""
 
     now = datetime.now(UTC).replace(microsecond=0)
-    return FilingHistory(
+    return ModeloHistory(
         modelo="303",
         entries=(
-            FilingHistoryEntry(
+            ModeloHistoryEntry(
                 modelo="303",
                 period="2025Q1",
                 submitted_at=now - timedelta(days=90),
                 status="ACEPTADA",
             ),
-            FilingHistoryEntry(
+            ModeloHistoryEntry(
                 modelo="303",
                 period="2025Q2",
                 submitted_at=now - timedelta(days=30),
                 status="ACEPTADA",
             ),
-            FilingHistoryEntry(
+            ModeloHistoryEntry(
                 modelo="303",
                 period="2025Q3",
                 submitted_at=now,
@@ -58,7 +58,7 @@ def test_filing_history_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """FilingHistory entries tuple round-trips strictly with non-default statuses."""
+    """ModeloHistory entries tuple round-trips strictly with non-default statuses."""
 
     provider = EphemeralMasterKeyProvider()
     with provider:
@@ -72,7 +72,7 @@ def test_filing_history_survives_encrypted_storage_roundtrip(
             SecureObjectRepository(engine=engine)
 
             original = _populated_history()
-            repo = FilingHistoryRepository()
+            repo = ModeloHistoryRepository()
             repo.save(original)
             loaded = repo.load("303")
 

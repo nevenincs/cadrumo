@@ -92,7 +92,7 @@ from ..filing import (
 from ..live import Borrador100SnapshotRepository
 from ..workflow import (
     DeadlineEngineAdapter,
-    RegistryFilingDraftProtocol,
+    RegistryModeloDraftProtocol,
     WorkflowEngine,
     WorkflowResult,
     WorkflowStage,
@@ -206,7 +206,7 @@ class AmendmentTargetStateError(ModeloError):
     superseded by a later filing)."""
 
 
-class ExternalFilingImportError(ModeloError):
+class ExternalModeloImportError(ModeloError):
     """Raised when the external-filing import path cannot persist an
     imported baseline (e.g., empty casilla values, missing evidence
     reference)."""
@@ -342,7 +342,7 @@ class _RevisionDraftBuilder:
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ) -> RegistryFilingDraftProtocol:
+    ) -> RegistryModeloDraftProtocol:
         draft = build_draft(
             modelo=modelo,
             period=period,
@@ -1332,14 +1332,14 @@ def _reject_unknown_import_casillas(
     try:
         authority = _authority_via_resources()
     except FileNotFoundError as exc:
-        raise ExternalFilingImportError(
+        raise ExternalModeloImportError(
             f"registry root {_registry_root()} is missing; cannot validate imported casilla ids"
         ) from exc
 
     try:
         snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
     except RegistrySnapshotError as exc:
-        raise ExternalFilingImportError(
+        raise ExternalModeloImportError(
             f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
             f"period={period!r}; cannot validate imported casilla ids"
         ) from exc
@@ -1347,7 +1347,7 @@ def _reject_unknown_import_casillas(
     known = {str(casilla.id) for casilla in snapshot.revision.casillas}
     unknown = sorted(casilla_id for casilla_id in casilla_values if casilla_id not in known)
     if unknown:
-        raise ExternalFilingImportError(
+        raise ExternalModeloImportError(
             f"external-filing import carries casilla ids that are not declared in registry "
             f"modelo={modelo!r} filing_year={filing_year} period={period!r}: {unknown!r}"
         )
@@ -2302,7 +2302,7 @@ def import_external_filing_evidence(
     Raises:
         WorkUnitNotFoundError: when ``work_unit_id`` is absent.
         WorkUnitMutationRefusedError: when the work unit is discarded.
-        ExternalFilingImportError: when ``casilla_values`` is empty or
+        ExternalModeloImportError: when ``casilla_values`` is empty or
             ``evidence_reference_id`` is empty.
     """
 
@@ -2312,12 +2312,12 @@ def import_external_filing_evidence(
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     if not casilla_values:
-        raise ExternalFilingImportError(
+        raise ExternalModeloImportError(
             tr("application.modelo.errors.external_filing_no_casilla_values")
         )
     cleaned_reference = evidence_reference_id.strip()
     if not cleaned_reference:
-        raise ExternalFilingImportError(
+        raise ExternalModeloImportError(
             tr("application.modelo.errors.external_filing_evidence_reference_blank")
         )
 
@@ -2348,7 +2348,7 @@ def import_external_filing_evidence(
     )
     revisions = cr_repo.load()
     if revision_id in revisions:
-        raise ExternalFilingImportError(
+        raise ExternalModeloImportError(
             f"calculation revision id={revision_id!r} already exists in the catalogue; "
             f"an identical import was already recorded"
         )
@@ -2475,7 +2475,7 @@ __all__ = [
     "CalculationRegistryUnavailableError",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
-    "ExternalFilingImportError",
+    "ExternalModeloImportError",
     "ModeloAggregationBindingError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloRecordNotFoundError",

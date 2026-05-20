@@ -4,6 +4,7 @@ number = "*10"
 label = "Primer declarante fecha de nacimiento"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
+semantic_role = "irpf_declarante_fecha_nacimiento"
 required = true
 input_kind = "bound"
 binding = "renta-2025-profile-taxpayer-birth-date"

@@ -16,7 +16,7 @@ from .. import build_runtime_schema_provider
 from ..runtime import RegistrySchemaProvider
 from ..testing import build_registry_filing_draft
 from . import (
-    FilingDivergenceKind,
+    ModeloDivergenceKind,
     ReconciliationStatus,
     reconcile,
 )
@@ -207,7 +207,7 @@ class TestReconcileMatch:
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.DIVERGENTE
-        assert any(mismatch.kind is FilingDivergenceKind.PERIOD_MISMATCH for mismatch in report.mismatches)
+        assert any(mismatch.kind is ModeloDivergenceKind.PERIOD_MISMATCH for mismatch in report.mismatches)
 
 
 class TestReconcileNotYetFound:
@@ -219,7 +219,7 @@ class TestReconcileNotYetFound:
         assert report.status is ReconciliationStatus.NOT_YET_FOUND
         assert report.justificante is None
         assert len(report.mismatches) == 1
-        assert report.mismatches[0].kind is FilingDivergenceKind.FILING_NOT_YET_FOUND
+        assert report.mismatches[0].kind is ModeloDivergenceKind.FILING_NOT_YET_FOUND
 
 
 class TestReconcileDivergent:
@@ -231,7 +231,7 @@ class TestReconcileDivergent:
 
         kinds = tuple(m.kind for m in report.mismatches)
         assert report.status is ReconciliationStatus.DIVERGENTE
-        assert FilingDivergenceKind.MODELO_MISMATCH in kinds
+        assert ModeloDivergenceKind.MODELO_MISMATCH in kinds
 
     def test_tax_id_mismatch_surfaces(self) -> None:
         justificante = _justificante("130", "2024-1T")
@@ -241,7 +241,7 @@ class TestReconcileDivergent:
 
         kinds = tuple(m.kind for m in report.mismatches)
         assert report.status is ReconciliationStatus.DIVERGENTE
-        assert FilingDivergenceKind.TAX_ID_MISMATCH in kinds
+        assert ModeloDivergenceKind.TAX_ID_MISMATCH in kinds
 
     def test_tax_id_comparison_is_case_insensitive(self) -> None:
         justificante = _justificante("130", "2024-1T")
@@ -267,7 +267,7 @@ class TestReconcileDivergent:
         report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.DIVERGENTE
-        assert any(mismatch.kind is FilingDivergenceKind.TOTAL_INGRESAR_MISMATCH for mismatch in report.mismatches)
+        assert any(mismatch.kind is ModeloDivergenceKind.TOTAL_INGRESAR_MISMATCH for mismatch in report.mismatches)
 
 
 class TestRegistryGate:

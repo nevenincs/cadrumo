@@ -4,6 +4,7 @@ number = "*97"
 label = "Ascendiente fecha de fallecimiento"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "text"
+semantic_role = "irpf_ascendiente_fecha_fallecimiento"
 input_kind = "bound"
 binding = "renta-2025-family-ascendant-death-date"
 legal_refs = ["orden-hac-277-2026:art-3"]

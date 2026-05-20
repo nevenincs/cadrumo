@@ -4,6 +4,7 @@ number = "*11"
 label = "Primer declarante grado de discapacidad"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
+semantic_role = "irpf_declarante_grado_discapacidad"
 input_kind = "bound"
 binding = "renta-2025-profile-taxpayer-disability-grade"
 legal_refs = ["orden-hac-277-2026:art-3"]

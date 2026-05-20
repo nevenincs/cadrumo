@@ -46,7 +46,7 @@ class TestObservationContract:
     def test_bare_invoice_source_kind_rejected(self) -> None:
         from pydantic import ValidationError
 
-        with pytest.raises(ValidationError, match="bare 'invoice'"):
+        with pytest.raises(ValidationError, match="unsupported source_kind"):
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", source_kind="invoice")
 
     def test_lowercase_country_rejected(self) -> None:

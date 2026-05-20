@@ -46,7 +46,7 @@ def test_parser_extracts_registry_profile_targets_from_pdf(tmp_path: Path) -> No
     # resolved against.
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "130"
-    assert filing.registry_snapshot_ref.filing_year == 2024
+    assert filing.registry_snapshot_ref.modelo_year == 2024
     assert filing.registry_snapshot_ref.period == "1T"
 
 

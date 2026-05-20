@@ -11,7 +11,7 @@ and produces a :class:`~aeat.domain.iva.ProrrataInputs` value the
 The aggregator is a pure function: it does not touch the registry,
 persistence, or the CLI. The caller — typically the modelo 303 or 390
 binding provider — supplies a sequence of already-classified
-:class:`VatOperation` records sourced from the active bucket's
+:class:`IvaOperation` records sourced from the active bucket's
 collectible invoices and ledger transactions. The classification step
 itself happens upstream in :mod:`aeat.domain.iva._classification`; this
 module relies on the upstream decision and only routes amounts.
@@ -53,7 +53,7 @@ from ...domain.iva import (
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 
 
-class VatOperationKind(StrEnum):
+class IvaOperationKind(StrEnum):
     """Routing of a single IVA operation into the prorrata pools.
 
     * ``GRANTS_DEDUCTION`` — the operation grants the right to deduct
@@ -89,7 +89,7 @@ _NonEmptyShortString = Annotated[
 ]
 
 
-class VatOperation(BaseModel):
+class IvaOperation(BaseModel):
     """A single revenue operation classified for prorrata routing.
 
     Source records (collectible invoices, ledger transactions, or
@@ -105,7 +105,7 @@ class VatOperation(BaseModel):
     operation_id: _NonEmptyShortString
     operation_date: date
     base_amount: Decimal = Field(..., ge=Decimal("0"))
-    kind: VatOperationKind
+    kind: IvaOperationKind
     classification_source: _NonEmptyShortString
 
 
@@ -135,7 +135,7 @@ class ProrrataAggregation(BaseModel):
 
 
 def aggregate_prorrata_inputs(
-    operations: Sequence[VatOperation],
+    operations: Sequence[IvaOperation],
     *,
     year: int,
 ) -> ProrrataAggregation:
@@ -165,13 +165,13 @@ def aggregate_prorrata_inputs(
     for operation in operations:
         if operation.operation_date.year != year:
             continue
-        if operation.kind is VatOperationKind.GRANTS_DEDUCTION:
+        if operation.kind is IvaOperationKind.GRANTS_DEDUCTION:
             con_derecho += operation.base_amount
             count_con += 1
-        elif operation.kind is VatOperationKind.EXEMPT_WITHOUT_DEDUCTION:
+        elif operation.kind is IvaOperationKind.EXEMPT_WITHOUT_DEDUCTION:
             sin_derecho += operation.base_amount
             count_sin += 1
-        elif operation.kind is VatOperationKind.EXCLUDED_BY_ART_104:
+        elif operation.kind is IvaOperationKind.EXCLUDED_BY_ART_104:
             excluded_total += operation.base_amount
             count_excluded += 1
 
@@ -194,7 +194,7 @@ def aggregate_prorrata_inputs(
 
 
 def aggregate_provisional_prorrata(
-    prior_year_operations: Sequence[VatOperation],
+    prior_year_operations: Sequence[IvaOperation],
     *,
     prior_year: int,
     current_year: int,
@@ -242,7 +242,7 @@ def aggregate_provisional_prorrata(
 
 
 def aggregate_definitiva_prorrata(
-    current_year_operations: Sequence[VatOperation],
+    current_year_operations: Sequence[IvaOperation],
     *,
     year: int,
 ) -> tuple[ProrrataResult, ProrrataAggregation]:
@@ -267,8 +267,8 @@ def aggregate_definitiva_prorrata(
 
 __all__ = (
     "ProrrataAggregation",
-    "VatOperation",
-    "VatOperationKind",
+    "IvaOperation",
+    "IvaOperationKind",
     "aggregate_definitiva_prorrata",
     "aggregate_prorrata_inputs",
     "aggregate_provisional_prorrata",

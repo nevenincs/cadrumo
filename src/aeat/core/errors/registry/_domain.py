@@ -1150,7 +1150,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ExternalFilingImportError",
+        "aeat.application.modelo._actions.ExternalModeloImportError",
         ErrorCode(
             code="ERROR_MODELO_EXTERNAL_FILING_IMPORT",
             category=ErrorCategory.ERROR,

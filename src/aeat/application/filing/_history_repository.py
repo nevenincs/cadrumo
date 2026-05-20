@@ -14,18 +14,18 @@ from typing import ClassVar
 from ...adapters.persistence.storage import SensitivityClass
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ._history_models import FilingHistory
+from ._history_models import ModeloHistory
 
 
-class FilingHistoryRepository(SecureBoundRepository[FilingHistory]):
+class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     """Repository over encrypted SQL-backed filing history records."""
 
     namespace: ClassVar[str] = "aeat.application.filing.history"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
-    payload_type: ClassVar[type[FilingHistory]] = FilingHistory
+    payload_type: ClassVar[type[ModeloHistory]] = ModeloHistory
 
-    def extract_identifier(self, payload: FilingHistory) -> str:
+    def extract_identifier(self, payload: ModeloHistory) -> str:
         return str(payload.modelo)
 
     def list_modelos(self) -> tuple[str, ...]:
@@ -33,7 +33,7 @@ class FilingHistoryRepository(SecureBoundRepository[FilingHistory]):
 
         return tuple(self.iter_ids())
 
-    def iter_histories(self) -> Iterator[tuple[str, FilingHistory]]:
+    def iter_histories(self) -> Iterator[tuple[str, ModeloHistory]]:
         """Yield ``(modelo, history)`` tuples for every persisted modelo."""
 
         for history in self.iter_records():
@@ -43,6 +43,6 @@ class FilingHistoryRepository(SecureBoundRepository[FilingHistory]):
 __all__ = [
     "ClassificationError",
     "EnvelopeVersionError",
-    "FilingHistory",
-    "FilingHistoryRepository",
+    "ModeloHistory",
+    "ModeloHistoryRepository",
 ]

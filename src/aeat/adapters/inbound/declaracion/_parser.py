@@ -184,7 +184,7 @@ def _parse_declaracion_pages(
     snapshot_ref = RegistrySnapshotRef(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
-        filing_year=snapshot.filing_year,
+        modelo_year=snapshot.filing_year,
         period=snapshot.period,
     )
     return DeclaracionObservation(
