@@ -157,6 +157,37 @@ def test_lookup_bracket_by_ccaa_dispatches_to_cataluna_when_residence_is_catalun
     assert result == Decimal("2213.25")
 
 
+def test_lookup_bracket_by_ccaa_dispatches_with_entry_array_table() -> None:
+    """The reviewable dispatch_table_entries authoring shape behaves identically."""
+    expression = FormulaExpression.model_validate(
+        {
+            "op": "lookup_bracket_by_ccaa",
+            "args": (
+                {"literal": Decimal("20000")},
+                {"binding": "renta-2025-profile-tax-residence-ccaa"},
+                {
+                    "dispatch_table_entries": [
+                        {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
+                        {"key": "cataluna", "parameter": "renta-2025-escala-autonomica-cataluna-base-general"},
+                    ]
+                },
+            ),
+        }
+    )
+    parameters = {
+        "renta-2025-escala-autonomica-madrid-base-general": _madrid_bracket_param(),
+        "renta-2025-escala-autonomica-cataluna-base-general": _cataluna_bracket_param(),
+    }
+
+    result = _evaluate(
+        expression,
+        parameters=parameters,
+        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+    )
+
+    assert result == Decimal("1835.90")
+
+
 def test_lookup_bracket_by_ccaa_raises_on_missing_dispatch_key() -> None:
     """A CCAA value not in the dispatch_table raises RegistryValidationError."""
     expression = _dispatch_expression(Decimal("20000"))

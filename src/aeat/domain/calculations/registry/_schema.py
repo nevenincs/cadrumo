@@ -1157,6 +1157,35 @@ class ModeloScheduleDefinition(RegistryModel):
         return self
 
 
+def _normalise_dispatch_table_entries(value: object) -> object:
+    if not isinstance(value, Mapping) or "dispatch_table_entries" not in value:
+        return value
+    if "dispatch_table" in value:
+        raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
+
+    raw_entries = value["dispatch_table_entries"]
+    if not isinstance(raw_entries, tuple | list):
+        raise RegistryValidationError("dispatch_table_entries must be an array")
+
+    dispatch_table: dict[str, object] = {}
+    for raw_entry in raw_entries:
+        if not isinstance(raw_entry, Mapping):
+            raise RegistryValidationError("dispatch_table_entries entries must be tables")
+        if set(raw_entry) != {"key", "parameter"}:
+            raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
+        key = raw_entry["key"]
+        if not isinstance(key, str):
+            raise RegistryValidationError("dispatch_table_entries key must be a string")
+        if key in dispatch_table:
+            raise RegistryValidationError(f"dispatch_table_entries duplicate key {key!r}")
+        dispatch_table[key] = raw_entry["parameter"]
+
+    normalised = dict(value)
+    normalised.pop("dispatch_table_entries")
+    normalised["dispatch_table"] = dispatch_table
+    return normalised
+
+
 class FormulaExpression(RegistryModel):
     op: FormulaOperator | None = None
     args: tuple[FormulaExpression, ...] = ()
@@ -1166,6 +1195,11 @@ class FormulaExpression(RegistryModel):
     relation: RelationId | None = None
     literal: DecimalValue | None = None
     dispatch_table: Mapping[str, ParameterId] | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalise_dispatch_table_entries(cls, value: object) -> object:
+        return _normalise_dispatch_table_entries(value)
 
     @model_validator(mode="after")
     def _validate_expression(self) -> FormulaExpression:
