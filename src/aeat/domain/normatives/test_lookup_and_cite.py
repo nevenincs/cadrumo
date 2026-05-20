@@ -25,15 +25,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _catalogue() -> NormativeCatalogue:
     articulo = Articulo(
         numero="32",
-        titulo="normatives.test_lookup_and_cite.titulo_466358",
-        summary="normatives.test_lookup_and_cite.summary_132271",
+        titulo={"es": "Reducciones"},
+        summary={"es": "Resumen del artículo."},
         permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
     )
     reference = NormativeReference(
         id="ley-35-2006",
         kind=NormativeKind.LEY,
         number="35/2006",
-        title="normatives.test_lookup_and_cite.title_086099",
+        title={"es": "Ley 35/2006 del IRPF"},
         published_at=date(2006, 11, 29),
         boe_url=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"),
         boe_id="BOE-A-2006-20764",
