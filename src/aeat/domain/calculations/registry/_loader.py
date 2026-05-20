@@ -43,6 +43,28 @@ _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     }
 )
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
+_REVISION_CONSTRUCTS = "constructs"
+_CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
+    {
+        "casillas",
+        "formulas",
+        "parameters",
+        "bindings",
+        "algorithm_providers",
+        "algorithm_bindings",
+        "relations",
+        "export_layouts",
+        "extraction_profiles",
+        "live_cross_references",
+        "workbook_parity_refs",
+        "verification_expectations",
+        "application_links",
+        "deadline_windows",
+        "filing_schedules",
+        "support_removal_decisions",
+        "dependency_classifications",
+    }
+)
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 
@@ -308,6 +330,20 @@ def _merge_revision_fragment_field(
     value: object,
     merged_revision: dict[str, object],
 ) -> None:
+    if key == _REVISION_CONSTRUCTS:
+        if not isinstance(value, tuple):
+            raise RegistryLoadError(f"{path}: revision fragment field 'constructs' must be an array")
+        existing = merged_revision.get(key, ())
+        if not isinstance(existing, tuple):
+            raise RegistryLoadError(f"{path}: revision fragment field 'constructs' conflicts with a non-array field")
+        merged_revision[key] = _merge_table_array_fragments(
+            path,
+            existing,
+            value,
+            item_label="construct",
+            append_array_fields=_CONSTRUCT_APPEND_ARRAYS,
+        )
+        return
     if key in _REVISION_APPEND_ARRAYS:
         if not isinstance(value, tuple):
             raise RegistryLoadError(f"{path}: revision fragment field {key!r} must be an array")
@@ -375,12 +411,86 @@ def _merge_export_layout_by_id(
             existing_records = merged.get("records", ())
             if not isinstance(existing_records, tuple):
                 raise RegistryLoadError(f"{path}: export layout {layout_id!r} existing records are not an array")
-            merged["records"] = (*existing_records, *value)
+            merged["records"] = _merge_table_array_fragments(
+                path,
+                existing_records,
+                value,
+                item_label=f"export layout {layout_id!r} record",
+                append_array_fields=frozenset({"fields"}),
+            )
             continue
         if key in merged and merged[key] != value:
             raise RegistryLoadError(
                 f"{path}: export layout {layout_id!r} field {key!r} conflicts with another fragment"
             )
+        merged[key] = value
+    return merged
+
+
+def _merge_table_array_fragments(
+    path: Path,
+    existing: tuple[object, ...],
+    incoming: tuple[object, ...],
+    *,
+    item_label: str,
+    append_array_fields: frozenset[str],
+) -> tuple[object, ...]:
+    """Merge fragment table arrays by ``id``, appending explicitly mergeable arrays."""
+
+    items: list[object] = list(existing)
+    index_by_id: dict[str, int] = {}
+    for index, item in enumerate(items):
+        if isinstance(item, dict) and isinstance(item.get("id"), str):
+            index_by_id[item["id"]] = index
+    for item in incoming:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            items.append(item)
+            continue
+        item_id = item["id"]
+        existing_index = index_by_id.get(item_id)
+        if existing_index is None:
+            index_by_id[item_id] = len(items)
+            items.append(item)
+            continue
+        existing_item = items[existing_index]
+        if not isinstance(existing_item, dict):
+            raise RegistryLoadError(f"{path}: {item_label} {item_id!r} conflicts with a non-table fragment")
+        items[existing_index] = _merge_table_fragment_by_id(
+            path,
+            existing_item,
+            item,
+            item_label=item_label,
+            item_id=item_id,
+            append_array_fields=append_array_fields,
+        )
+    return tuple(items)
+
+
+def _merge_table_fragment_by_id(
+    path: Path,
+    existing: dict[str, object],
+    incoming: dict[str, object],
+    *,
+    item_label: str,
+    item_id: str,
+    append_array_fields: frozenset[str],
+) -> dict[str, object]:
+    merged = dict(existing)
+    for key, value in incoming.items():
+        if key == "id":
+            continue
+        if key in append_array_fields:
+            if not isinstance(value, tuple):
+                raise RegistryLoadError(f"{path}: {item_label} {item_id!r} field {key!r} must be an array")
+            existing_values = merged.get(key, ())
+            if not isinstance(existing_values, tuple):
+                raise RegistryLoadError(
+                    f"{path}: {item_label} {item_id!r} field {key!r} conflicts with a non-array fragment"
+                )
+            merged[key] = (*existing_values, *value)
+            continue
+        if key in merged and merged[key] != value:
+            raise RegistryLoadError(f"{path}: {item_label} {item_id!r} field {key!r} conflicts with another fragment")
         merged[key] = value
     return merged
 
