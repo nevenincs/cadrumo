@@ -26,36 +26,10 @@ import logging
 import os
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO
+from typing import TextIO
 
 from ._models import RunEvent
-
-if TYPE_CHECKING:
-    from ..classification import RedactionRule
-
-
-# The DIAGNOSTIC-class rule set is resolved lazily on first emit so the
-# observability package does not pull aeat.adapters.persistence.storage (which imports
-# Alembic plugin discovery and emits INFO log lines on stderr at import
-# time) into every CLI command's import chain. The cost of resolving
-# the rule set once is negligible compared with one-time Alembic
-# discovery.
-_DIAGNOSTIC_RULES: tuple[RedactionRule, ...] | None = None
-
-
-def _diagnostic_rules() -> tuple[RedactionRule, ...]:
-    """Return the DIAGNOSTIC-class default rule set, resolved on first call.
-
-    Cached at module scope after first resolution so subsequent emits
-    do not re-import the redaction substrate.
-    """
-    global _DIAGNOSTIC_RULES
-    if _DIAGNOSTIC_RULES is None:
-        from ..classification import SensitivityClass
-        from ..redaction import default_rules_for_class
-
-        _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
-    return _DIAGNOSTIC_RULES
+from ._redaction_rules import diagnostic_rules
 
 
 class JsonlRunSink(logging.Handler):
@@ -129,7 +103,7 @@ class JsonlRunSink(logging.Handler):
             # mutual exclusion.
             from ..redaction import redact_structured
 
-            redacted = redact_structured(event.model_dump(mode="json"), rules=_diagnostic_rules())
+            redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
             line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
             with self._lock:
                 handle = self._open()
