@@ -74,7 +74,7 @@ def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
 
 def test_register_rejects_schema_violations(secure_objects, schema) -> None:
     svc = _service(secure_objects, schema)
-    with pytest.raises(ProfileSchemaValidationError, match="required_field_missing"):
+    with pytest.raises(ProfileSchemaValidationError, match=r"required field .* is missing"):
         svc.register(RegisterProfileCommand(profile_id="operator", display_name="Op", facts=()))
 
 

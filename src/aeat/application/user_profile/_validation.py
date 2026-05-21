@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
+import re
 from collections.abc import Iterable
+from datetime import date
 
+from ...core.errors import BaseSeverity
 from ...domain.user_profile import (
     ProfileFieldDefinition,
+    ProfileFieldType,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
     UserProfileFact,
@@ -16,6 +19,15 @@ from . import (
     ProfileValidationIssue,
     ProfileValidationReport,
 )
+
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+"""The single accepted date layout: zero-padded ``YYYY-MM-DD``.
+
+``datetime.date.fromisoformat`` alone would also accept the compact
+basic form (``19780315``), which the rest of the profile stack does
+not canonicalise back to a :class:`datetime.date`. Anchoring the
+extended hyphenated layout keeps every persisted date fact in one
+shape."""
 
 
 class ProfileValidationService:
@@ -73,8 +85,58 @@ class ProfileValidationService:
                 ),
             )
         section, field = binding
-        section_or_field_issue = self._validate_effective_window(section, field, fact)
-        return section_or_field_issue
+        return (
+            *self._validate_value_type(field, fact),
+            *self._validate_effective_window(section, field, fact),
+        )
+
+    def _validate_value_type(
+        self,
+        field: ProfileFieldDefinition,
+        fact: UserProfileFact,
+    ) -> tuple[ProfileValidationIssue, ...]:
+        """Reject a fact whose value does not satisfy its declared field type.
+
+        Currently enforces :attr:`ProfileFieldType.DATE`: a date field
+        must carry a real ISO-8601 calendar day in the zero-padded
+        ``YYYY-MM-DD`` layout. A :class:`datetime.date` is already
+        valid; a string is accepted only when it matches that layout
+        and :meth:`datetime.date.fromisoformat` parses it — together
+        that rejects a non-ISO layout (``15/03/1978``), the compact
+        basic form (``19780315``), an impossible month or day
+        (``1978-13-45``), a non-calendar day (``1978-02-30``), and
+        plain garbage (``not-a-date``) without any hand-rolled
+        calendar maths.
+        """
+
+        if field.type is not ProfileFieldType.DATE or fact.value is None:
+            return ()
+        if isinstance(fact.value, date):
+            return ()
+        if isinstance(fact.value, str) and _ISO_DATE_RE.match(fact.value):
+            try:
+                date.fromisoformat(fact.value)
+            except ValueError:
+                return (self._invalid_date_issue(field, fact),)
+            return ()
+        return (self._invalid_date_issue(field, fact),)
+
+    @staticmethod
+    def _invalid_date_issue(
+        field: ProfileFieldDefinition,
+        fact: UserProfileFact,
+    ) -> ProfileValidationIssue:
+        """Build the ERROR issue for a date field carrying a non-date value."""
+
+        return ProfileValidationIssue(
+            severity=BaseSeverity.ERROR,
+            code="invalid_date_value",
+            path=fact.path,
+            message=(
+                f"field {fact.path!r} must be a valid ISO-8601 calendar date "
+                f"(YYYY-MM-DD); got {fact.value!r}"
+            ),
+        )
 
     def _validate_effective_window(
         self,
