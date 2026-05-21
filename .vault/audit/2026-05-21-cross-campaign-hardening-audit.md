@@ -109,7 +109,11 @@ report.
 
 ### PERS-8 — MED — `BucketManifest` datetime fields: no on-disk TOML ISO-format inspection.
 
+**Resolution (2026-05-21, P07.S28, 7110dbf26) — fixed.** Added `test_manifest_datetimes_are_written_as_rfc3339_offset_datetimes`: reads the raw `manifest.toml`, asserts `created_at`/`last_unlocked_at` are bare (unquoted) timezone-aware UTC RFC-3339 offset datetimes, and that `tomllib` parses them back to the exact aware `datetime`.
+
 ### PERS-9 — MED — `EncryptionMetadata.associated_data_b64` defaults to `""` — missing vs zero-length AAD indistinguishable.
+
+**Resolution (2026-05-21, P07.S28, 7110dbf26) — fixed.** `associated_data_b64` made a required field (the `default=""` removed) so persisted metadata that omits the AAD member is rejected at validation, distinguishing legacy/malformed metadata from an explicitly empty AAD. 28 envelope tests green.
 
 ### PERS-10 — LOW — KDF cost params (`time_cost`/`parallelism`/`output_length`) under-witnessed in the manifest roundtrip.
 
