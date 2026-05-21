@@ -110,3 +110,34 @@ suite — `test_cross_boundary_roundtrip.py` fails because a concurrent
 campaign's in-flight edit corrupted `src/aeat/locales/es.yml` into
 invalid YAML; that file is outside this follow-up's scope and untouched
 here.
+
+## Correction: cross-modelo binding-selector exclusion narrowed
+
+A subsequent code review found the closure-exclusion invariant stated
+above to be too broad. The original generalisation claimed every binding
+`source_casillas` / `source_output` selector is cross-modelo and dropped
+all of them from the calculation closure. That invariant is false: the
+three Modelo 202 `previous_filing` self-binding selectors carry
+`source_modelo = "202"` — `source_modelo` equals the modelo being
+derived, so their `source_output = "34"` names a within-modelo casilla,
+a genuine closure member. A blanket drop would silently shrink a real
+closure the first time a `previous_filing` self-binding landed on an
+otherwise-non-closure casilla.
+
+The closure walkers now actively walk binding `source_casillas` /
+`source_output` selectors and `RelationDefinition.source_output`, and
+exclude a selector from the closure **only when it is genuinely
+cross-modelo** — when the selector explicitly names a `source_modelo`
+that differs from the modelo being derived. A selector that omits
+`source_modelo` or sets it equal to the modelo id is a within-modelo
+self-binding / self-relation and stays in the closure.
+`calculation_closure_numbers`, `calculation_closure_identities`, and
+`derive_calculation_completeness_casillas` now take an explicit
+`modelo_id` argument so the predicate can be applied; the false
+"all selectors are cross-modelo" docstring wording was replaced with the
+accurate `source_modelo`-comparison rule. Modelo 202's manifest is
+unchanged — casilla 34 was already in-closure via its formula-target and
+verification-operand paths. The drift re-verification test re-derives
+every manifest with the corrected closure and all 39 stay identical; the
+gate stays live for the 24 calculation-bearing modelos and all 26
+modelos load valid.

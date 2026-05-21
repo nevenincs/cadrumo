@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -28,6 +29,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _MODELO_131_WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_131", "files")
 _MODELO_131_CURRENT = _MODELO_131_WORKBOOK_ROOT / "01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx"
 _RECORD_DESIGN_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
+
+
+@cache
+def _committed_registry_tree():
+    return load_registry_tree(bundled_path("registry", "aeat"))
 
 
 def test_modelo_131_current_record_design_exposes_dpa_and_did_records() -> None:
@@ -254,7 +260,7 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
 
 
 def test_registered_record_design_sources_are_discovered_and_parseable() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = _committed_registry_tree()
     sources = {
         source_id: bundled_path() / source.corpus_path
         for source_id, source in catalogues.sources.items()
@@ -292,7 +298,7 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
 
 def _modelo_200_record_design_corpus_path() -> Path:
     """Return the corpus path of the Modelo 200 record-design Diseño."""
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
     source_ref = next(
@@ -325,7 +331,7 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
     multi-segment Diseño verification; a single-segment modelo's manifest
     is registry-keyed and needs no corpus parse.
     """
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
 
     discovered = sorted(
         (modelo.id, revision.id)
@@ -361,7 +367,10 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
             derived = frozenset(
                 (casilla.segmento, casilla.number)
                 for casilla in derive_calculation_completeness_casillas(
-                    revision, multi_segment=multi_segment, diseno_path=diseno_path
+                    revision,
+                    modelo.id,
+                    multi_segment=multi_segment,
+                    diseno_path=diseno_path,
                 )
             )
             assert derived == manifest.identities(), (
@@ -393,13 +402,13 @@ def test_calculation_completeness_gate_is_live_for_every_calculation_bearing_mod
     could not carry a passing manifest; this assertion would then fail,
     surfacing the gap rather than masking it.
     """
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
 
     gated = 0
     dormant = 0
     for modelo in modelos:
         for revision in modelo.revisions.values():
-            closure = calculation_closure_identities(revision)
+            closure = calculation_closure_identities(revision, modelo.id)
             manifest = revision.completeness_manifest
             if closure:
                 assert manifest is not None, (
@@ -465,7 +474,7 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     without an exhaustive full-form backfill — the design intent of the
     ADR amendment.
     """
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
     corpus_path = _modelo_200_record_design_corpus_path()
@@ -477,7 +486,7 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     closure = frozenset(
         (casilla.segmento, casilla.number)
         for casilla in derive_calculation_completeness_casillas(
-            revision, multi_segment=True, diseno_path=corpus_path
+            revision, modelo_200.id, multi_segment=True, diseno_path=corpus_path
         )
     )
 
@@ -513,7 +522,7 @@ def test_diseno_coverage_report_is_an_advisory_inventory_not_a_load_gate() -> No
     load, so the same Modelo 200 that clears the load-blocking
     calculation-completeness gate is freely inventoried here.
     """
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
     corpus_path = _modelo_200_record_design_corpus_path()
@@ -618,7 +627,7 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
     workbook_name: str,
     source_ref: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
@@ -648,7 +657,7 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
 
 
 def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="4T")
     sheets = {
@@ -687,7 +696,7 @@ def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
     filing_year: int,
     workbook_name: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     page = next(
@@ -738,7 +747,7 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
     workbook_name: str,
     palma_legal_ref: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     page = next(
@@ -762,7 +771,7 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
 
 
 def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meaning() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="1T")
     page = next(sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
@@ -784,7 +793,7 @@ def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meanin
 
 @pytest.mark.parametrize("filing_year", [2024, 2025, 2026])
 def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_year: int) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     layout = resolve_export_layout(snapshot).layout
@@ -818,7 +827,7 @@ def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_y
 
 @pytest.mark.parametrize("filing_year", [2023, 2024, 2025, 2026])
 def test_modelo_131_submitted_file_profiles_target_exported_casillas(filing_year: int) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     layout = resolve_export_layout(snapshot).layout
