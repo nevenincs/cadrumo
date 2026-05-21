@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
-from graphlib import CycleError, TopologicalSorter
 from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -17,7 +16,6 @@ from ._bindings import (
 )
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
-from ._runtime_graph import expression_casilla_refs
 from ._schema import (
     CasillaDefinition,
     ConstructDefinition,
@@ -28,7 +26,6 @@ from ._schema import (
     ExportRecordDefinition,
     ExtractionProfileDefinition,
     FormulaDefinition,
-    FormulaExpression,
     LegalReference,
     ModeloDefinition,
     ModeloRevision,
@@ -41,6 +38,7 @@ from ._sources import verify_source_catalogue
 from ._text import normalise_corpus_text
 from ._validate_application_links import validate_application_link_closure
 from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
+from ._validate_formulas import validate_formula_dag, validate_formula_expression
 from ._validate_relation_sources import (
     period_selectors_overlap,
     validate_previous_filing_binding_closure,
@@ -470,7 +468,7 @@ class RegistryValidator:
                 },
             )
         )
-        failures.extend(self._validate_formula_dag(prefix, revision))
+        failures.extend(validate_formula_dag(prefix, revision))
         return failures
 
     def _validate_casilla_section(
@@ -546,7 +544,7 @@ class RegistryValidator:
             if formula.target not in casillas:
                 failures.append(f"{prefix}: formula {formula.id!r} targets unknown casilla {formula.target!r}")
             failures.extend(
-                self._validate_formula_expression(
+                validate_formula_expression(
                     prefix,
                     formula.id,
                     formula.expression,
@@ -1223,21 +1221,6 @@ class RegistryValidator:
         return failures
 
     @staticmethod
-    def _validate_formula_dag(scope: str, revision: ModeloRevision) -> list[str]:
-        formula_targets = {formula.target for formula in revision.formulas}
-        sorter: TopologicalSorter[str] = TopologicalSorter()
-        for formula in revision.formulas:
-            dependencies = [
-                casilla for casilla in expression_casilla_refs(formula.expression) if casilla in formula_targets
-            ]
-            sorter.add(formula.target, *dependencies)
-        try:
-            tuple(sorter.static_order())
-        except CycleError as exc:
-            return [f"{scope}: formula graph cycle: {exc}"]
-        return []
-
-    @staticmethod
     def _validate_reconciliation_total_closure(scope: str, revision: ModeloRevision) -> list[str]:
         failures: list[str] = []
         declared: dict[str, str] = {}
@@ -1486,45 +1469,3 @@ class RegistryValidator:
         _NORMALISED_SOURCE_TEXT_CACHE[source_key] = (source_path, normalised)
         self._source_text_cache[source.id] = normalised
         return normalised
-
-    @classmethod
-    def _validate_formula_expression(
-        cls,
-        scope: str,
-        formula_id: str,
-        expression: FormulaExpression,
-        *,
-        casillas: set[str],
-        bindings: set[str],
-        parameters: set[str],
-        relations: set[str],
-    ) -> list[str]:
-        failures: list[str] = []
-        if expression.casilla is not None and expression.casilla not in casillas:
-            failures.append(f"{scope}: formula {formula_id!r} references unknown casilla {expression.casilla!r}")
-        if expression.binding is not None and expression.binding not in bindings:
-            failures.append(f"{scope}: formula {formula_id!r} references unknown binding {expression.binding!r}")
-        if expression.parameter is not None and expression.parameter not in parameters:
-            failures.append(f"{scope}: formula {formula_id!r} references unknown parameter {expression.parameter!r}")
-        if expression.dispatch_table:
-            for key, dispatched in expression.dispatch_table.items():
-                if dispatched not in parameters:
-                    failures.append(
-                        f"{scope}: formula {formula_id!r} dispatch_table[{key!r}] "
-                        f"references unknown parameter {dispatched!r}"
-                    )
-        if expression.relation is not None and expression.relation not in relations:
-            failures.append(f"{scope}: formula {formula_id!r} references unknown relation {expression.relation!r}")
-        for arg in expression.args:
-            failures.extend(
-                cls._validate_formula_expression(
-                    scope,
-                    formula_id,
-                    arg,
-                    casillas=casillas,
-                    bindings=bindings,
-                    parameters=parameters,
-                    relations=relations,
-                )
-            )
-        return failures
