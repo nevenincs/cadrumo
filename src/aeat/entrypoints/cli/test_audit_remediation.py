@@ -107,6 +107,24 @@ def test_overview_calendar_for_general_iva_includes_modelo_303() -> None:
     )
     assert init.exit_code == 0
 
+    # Modelo applicability is derived from the taxpayer model — declare
+    # an autónomo (natural person with actividad económica) so Modelo
+    # 303 is positively applicable rather than reported as incomplete.
+    declared = _invoke(
+        [
+            "config",
+            "profile",
+            "edit",
+            "operator",
+            "--quiet",
+            "--entity-type",
+            "natural_person",
+            "--irpf-income-categories",
+            "actividad_economica",
+        ]
+    )
+    assert declared.exit_code == 0, declared.output
+
     result = _invoke(
         [
             "--format",

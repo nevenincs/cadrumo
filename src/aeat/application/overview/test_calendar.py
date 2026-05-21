@@ -7,6 +7,9 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ...domain.deadlines import (
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
     IVARegime,
     ObligationStatus,
     TaxpayerProfile,
@@ -24,8 +27,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _profile() -> TaxpayerProfile:
+    """A declared autónomo en estimación directa.
+
+    The structural calendar tests need a profile whose taxpayer model
+    produces obligations. An autónomo with rendimientos de actividades
+    económicas under estimación directa is the unchanged-by-design
+    persona — Modelo 130 / 303 stay applicable, exactly as before the
+    taxpayer-type derivation landed.
+    """
+
     return TaxpayerProfile(
         tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
         iva_regime=IVARegime.GENERAL,
         has_employees=False,
         pays_professionals_with_retencion=False,
@@ -372,3 +387,60 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
     assert "pays_professionals_with_retencion" in cal.completeness.defaulted_keys
     assert "pays_rent_with_retencion" in cal.completeness.defaulted_keys
     assert "uses_objective_estimation_irpf" in cal.completeness.defaulted_keys
+
+
+# ---------------------------------------------------------------------
+# W02.S10 — taxpayer-model derivation at the calendar surface
+# ---------------------------------------------------------------------
+
+
+def _landlord_profile() -> TaxpayerProfile:
+    """A pure landlord: rendimientos del capital inmobiliario only."""
+
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.CAPITAL_INMOBILIARIO}),
+        iva_regime=IVARegime.EXENTO,
+    )
+
+
+def _undeclared_profile() -> TaxpayerProfile:
+    """A profile with no taxpayer model declared at all."""
+
+    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+
+
+def test_calendar_landlord_never_shows_modelo_130() -> None:
+    """The round-3 Q1 fix at the calendar surface: a pure landlord's
+    calendar must not list Modelo 130, even across a full year where
+    every quarterly window is registered."""
+
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_landlord_profile(), rng, today=date(2026, 4, 1))
+    assert cal.taxpayer_model_declared is True
+    modelos = {entry.modelo for entry in cal.entries}
+    assert "130" not in modelos
+    assert "303" not in modelos
+
+
+def test_calendar_autonomo_still_shows_modelo_130() -> None:
+    """The autónomo persona is unchanged: Modelo 130 still appears."""
+
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_profile(), rng, today=date(2026, 4, 1))
+    modelos = {entry.modelo for entry in cal.entries}
+    assert "130" in modelos
+
+
+def test_calendar_undeclared_profile_yields_incomplete_empty_calendar() -> None:
+    """W02.S09: an undeclared taxpayer model yields an empty calendar
+    flagged taxpayer_model_declared=False — never the autónomo guess."""
+
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_undeclared_profile(), rng, today=date(2026, 4, 1))
+    assert cal.taxpayer_model_declared is False
+    assert cal.entries == ()
+    assert cal.incomplete_reason is not None
+    # The reason is the localised "declare your taxpayer model" guidance.
+    assert "perfil" in cal.incomplete_reason
