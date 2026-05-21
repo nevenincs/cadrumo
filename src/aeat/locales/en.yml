@@ -1713,6 +1713,10 @@ errors:
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
   financial:
     source_file_not_found: 'Source file does not exist: {path}'
+  internal:
+    internal_cli_unexpected_boundary: 'The command failed due to an unexpected internal error.'
+  refused:
+    refused_cli_validation_boundary: 'The command input failed validation. Run `aeat config repair` or reset the profile state.'
   transaction:
     import_source_invalid: the source is not a valid ledger document
     ledger_import_failed: 'The ledger file cannot be imported: {reason}'
@@ -1726,6 +1730,9 @@ filing:
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
 profile:
+  errors:
+    foral_regime: '{tax_region} is a foral regime outside the scope of this profile.'
+    not_configured: 'No tax-residence profile is configured for RENTA.'
   keys:
     description: Profile configuration keys and their descriptions
     tax:

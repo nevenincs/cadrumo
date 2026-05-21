@@ -1756,6 +1756,10 @@ errors:
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
+  internal:
+    internal_cli_unexpected_boundary: 'L''ordre ha fallat per un error intern inesperat.'
+  refused:
+    refused_cli_validation_boundary: 'L''entrada de l''ordre no ha superat la validació. Executa `aeat config repair` o restableix l''estat del perfil.'
   transaction:
     import_source_invalid: l'origen no és un extracte bancari vàlid
     ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'
@@ -1769,6 +1773,9 @@ filing:
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
 profile:
+  errors:
+    foral_regime: '{tax_region} és un règim foral fora de l''abast d''aquest perfil.'
+    not_configured: 'No hi ha cap perfil de residència fiscal configurat per a RENTA.'
   keys:
     description: Profile configuration keys and their descriptions
     tax:
