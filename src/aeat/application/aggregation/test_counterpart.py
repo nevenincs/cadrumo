@@ -10,6 +10,7 @@ from aeat.application.aggregation._counterpart import (
     THRESHOLD_347_EUR,
     CounterpartAggregation,
     CounterpartObservation,
+    CounterpartSourceKind,
     OperationKind347,
     OperationKind349,
     aggregate_counterpart_347,
@@ -28,7 +29,7 @@ def _obs(
     invoice_total: str | None = None,
     name: str = "",
     country: str = "ES",
-    source_kind: str = "ledger_transaction",
+    source_kind: CounterpartSourceKind = "ledger_transaction",
     source_id: str = "tx-001",
     period: str = "2025",
     accrued: str = "2025-03-15",
@@ -51,8 +52,20 @@ class TestObservationContract:
     def test_observation_rejects_bare_invoice_source_kind(self) -> None:
         from pydantic import ValidationError
 
+        payload = {
+            "source_kind": "invoice",
+            "source_object_id": "tx-001",
+            "counterparty_nif": "X1",
+            "counterparty_name": "",
+            "counterparty_country": "ES",
+            "operation_kind": OperationKind347.DELIVERY.value,
+            "operation_period": "2025",
+            "taxable_base": "100",
+            "invoice_total": "100",
+            "accrued_on": "2025-03-15",
+        }
         with pytest.raises(ValidationError, match="unsupported source_kind"):
-            _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="100", source_kind="invoice")
+            CounterpartObservation.model_validate(payload)
 
     def test_observation_rejects_lowercase_country(self) -> None:
         from pydantic import ValidationError
