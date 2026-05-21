@@ -78,7 +78,7 @@ Enroll profile, previous filing, relation, borrador, and IVA wallet sources as e
 
 Adapt invoice, evidence, payable, collectible, counterpart, and withholding sources into repository-backed source resolution.
 
-- [ ] `W02.P05.S25` - Adapt InvoiceCatalogue observations into source mesh resolution; `src/aeat/application/invoices/_source_resolver.py`.
+- [x] `W02.P05.S25` - Adapt InvoiceCatalogue observations into source mesh resolution; `src/aeat/application/invoices/_source_resolver.py`.
 - [ ] `W02.P05.S26` - Adapt purchase invoice evidence records into source mesh resolution; `src/aeat/application/ledger/_evidence.py`.
 - [ ] `W02.P05.S27` - Adapt payable invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
 - [ ] `W02.P05.S28` - Adapt collectible invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.

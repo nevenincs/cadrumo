@@ -15,6 +15,7 @@ related:
   - '[[2026-05-21-calculation-source-connectivity-W02-P04-S21]]'
   - '[[2026-05-21-calculation-source-connectivity-W02-P04-S22]]'
   - '[[2026-05-21-calculation-source-connectivity-W02-P04-S23]]'
+  - '[[2026-05-21-calculation-source-connectivity-W02-P05-S25]]'
   - '[[2026-05-21-calculation-source-connectivity-code-review]]'
   - '[[2026-05-21-calculation-source-connectivity-reference]]'
 ---
@@ -42,6 +43,7 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-21-calculation-source-connectivity-W02-P04-S21` - `calculation-source-connectivity` `W02.P04.S21`
 - `2026-05-21-calculation-source-connectivity-W02-P04-S22` - `calculation-source-connectivity` `W02.P04.S22`
 - `2026-05-21-calculation-source-connectivity-W02-P04-S23` - `calculation-source-connectivity` `W02.P04.S23`
+- `2026-05-21-calculation-source-connectivity-W02-P05-S25` - `calculation-source-connectivity` `W02.P05.S25`
 
 ### plan
 
