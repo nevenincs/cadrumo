@@ -125,19 +125,40 @@ _GOOGLE_ERROR_KEY_SUFFIX: dict[str, str] = {
 }
 
 
+def _refusal_detail(exc: GoogleAuthError | OutboundStorageError) -> str:
+    """Return the locale-rendered ``{detail}`` text for a wrapped failure.
+
+    Errors raised inside the `aeat config google` wrappers themselves
+    carry a `translated_message` key (a `cli.config.google.detail.*`
+    namespace) plus interpolation `context`; those render through
+    `tr()` so the adapter-specific detail is localised. Errors that
+    bubble up from the Google adapter with only a positional English
+    `message` keep `str(exc)` — the adapter boundary owns that text.
+    """
+
+    translated_message = getattr(exc, "translated_message", None)
+    if translated_message is not None:
+        context = getattr(exc, "context", None) or {}
+        return tr(translated_message, **context)
+    return str(exc)
+
+
 def _google_refusal(exc: GoogleAuthError | OutboundStorageError) -> CliRefusedBoundaryError:
     """Wrap a Google adapter failure in a locale-rendered CLI refusal.
 
     Dispatches on the concrete exception type to a
     `cli.config.google.errors.*` translation key — the f-string key
-    registers that namespace with the locale scanner. The adapter's own
-    message rides along as ``{detail}`` for the keys that interpolate
-    it; an unrecognised type falls back to the generic ``auth_failed``
+    registers that namespace with the locale scanner. The failure's
+    detail rides along as ``{detail}`` for the keys that interpolate
+    it, localised via `translated_message` when the wrapper raised it;
+    an unrecognised type falls back to the generic ``auth_failed``
     frame.
     """
 
     suffix = _GOOGLE_ERROR_KEY_SUFFIX.get(type(exc).__name__, "auth_failed")
-    return CliRefusedBoundaryError(tr(f"cli.config.google.errors.{suffix}", detail=str(exc)))
+    return CliRefusedBoundaryError(
+        tr(f"cli.config.google.errors.{suffix}", detail=_refusal_detail(exc))
+    )
 
 
 def _coerce_client_json(path: Path) -> OAuthClient:
@@ -153,25 +174,25 @@ def _coerce_client_json(path: Path) -> OAuthClient:
         raw = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         raise GoogleAuthValidationError(
-            f"failed to read client JSON from {path}: {exc}",
-            context={"path": str(path)},
+            translated_message="cli.config.google.detail.client_json_unreadable",
+            context={"path": str(path), "reason": str(exc)},
         ) from exc
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise GoogleAuthValidationError(
-            f"client JSON at {path} is not valid JSON: {exc.msg}",
-            context={"path": str(path), "line": exc.lineno, "column": exc.colno},
+            translated_message="cli.config.google.detail.client_json_invalid",
+            context={"path": str(path), "reason": exc.msg},
         ) from exc
     if not isinstance(payload, dict) or "installed" not in payload:
         raise GoogleAuthValidationError(
-            f'client JSON at {path} is not a Cloud Console Desktop client; expected an "installed" wrapper key',
-            context={"path": str(path), "keys": sorted(payload.keys()) if isinstance(payload, dict) else []},
+            translated_message="cli.config.google.detail.client_json_not_desktop",
+            context={"path": str(path)},
         )
     inner = payload["installed"]
     if not isinstance(inner, dict):
         raise GoogleAuthValidationError(
-            f"client JSON at {path} has a non-object 'installed' wrapper",
+            translated_message="cli.config.google.detail.client_json_bad_wrapper",
             context={"path": str(path)},
         )
     # Cloud Console writes redirect_uris as a JSON array; strict pydantic
@@ -183,8 +204,8 @@ def _coerce_client_json(path: Path) -> OAuthClient:
         return OAuthClient.model_validate(coerced)
     except ValidationError as exc:
         raise GoogleAuthValidationError(
-            f"client JSON at {path} failed schema validation: {exc.errors(include_url=False)}",
-            context={"path": str(path)},
+            translated_message="cli.config.google.detail.client_json_schema_invalid",
+            context={"path": str(path), "reason": str(exc.errors(include_url=False))},
         ) from exc
 
 
@@ -244,7 +265,7 @@ def google_login(
         client = load_client(active)
         if client is None:
             raise GoogleAuthClientNotRegisteredError(
-                f"no OAuth client registered for profile {active!r}",
+                translated_message="cli.config.google.detail.client_unregistered",
                 context={"profile": active},
                 suggestion="aeat config google register --client-json <path>",
             )
@@ -252,7 +273,7 @@ def google_login(
             metadata = load_metadata(active)
             if metadata is None:
                 raise GoogleAuthExpiredError(
-                    f"no OAuth metadata for profile {active!r}; cannot refresh without a prior login",
+                    translated_message="cli.config.google.detail.no_metadata_for_refresh",
                     context={"profile": active},
                     suggestion="aeat config google login",
                 )

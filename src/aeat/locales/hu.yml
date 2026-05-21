@@ -733,6 +733,14 @@ cli:
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
     google:
       client_json_help: A Cloud Console Desktop OAuth kliens JSON fájl útvonala
+      detail:
+        client_json_bad_wrapper: 'a kliens JSON itt: {path} – az "installed" burkoló nem objektum'
+        client_json_invalid: 'a kliens JSON itt: {path} – nem érvényes JSON: {reason}'
+        client_json_not_desktop: 'a kliens JSON itt: {path} – nem Cloud Console asztali kliens; "installed" burkoló kulcs szükséges'
+        client_json_schema_invalid: 'a kliens JSON itt: {path} – nem ment át a sémaellenőrzésen: {reason}'
+        client_json_unreadable: 'nem sikerült beolvasni a kliens JSON-t innen: {path}: {reason}'
+        client_unregistered: a(z) {profile} profilhoz nincs regisztrált OAuth-kliens
+        no_metadata_for_refresh: a(z) {profile} profilhoz nincs OAuth-munkamenet; korábbi bejelentkezés nélkül nem frissíthető
       errors:
         auth_failed: 'A Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült böngészőt megnyitni a Google-hozzáférés engedélyezéséhez:
@@ -995,12 +1003,18 @@ cli:
       target_label: Cél
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_integrity_internal: Belső alkalmazáshiba; nem a profilod hibája, és
+        nem olyasmi, amit te ki tudnál javítani.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
+      audience_internal: belső alkalmazáshiba
       auth_label: Hitelesítés
       checks_heading: Ellenőrzések
       detail_label: Részlet
+      finding_label: '-'
+      finding_optional: opcionális
+      finding_required: kötelező
       logs_label: Naplók
       next_label: Következő
       note_label: Megjegyzés
