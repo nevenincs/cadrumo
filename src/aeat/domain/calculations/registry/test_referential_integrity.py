@@ -52,7 +52,7 @@ from ._schema import (
     VerificationExpectationDefinition,
     WorkbookParityReference,
 )
-from ._validate import _check_all_id_references
+from ._validate_references import _check_all_id_references
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
