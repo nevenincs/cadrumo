@@ -238,7 +238,7 @@ def test_audit_replay_help_disclaims_aeat_contact(cli_runner: CliRunner) -> None
 
 
 def test_audit_verbs_refuse_without_active_profile(cli_runner: CliRunner) -> None:
-    """All four audit verbs route through `_audit_bucket_id`, which raises
+    """All four audit verbs route through `_active_bucket_id`, which raises
     when no active profile bucket exists. Each verb must surface that
     refusal at the CLI boundary rather than crashing or emitting a
     half-built payload."""
