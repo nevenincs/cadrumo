@@ -283,7 +283,12 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     name="secure_state.load",
                     status="warn" if missing_active_bucket_session else "fail",
                     summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
-                    detail=_compact_exception(exc),
+                    # A missing bucket session on a cold start is an
+                    # expected diagnostic verdict, not a fault to report
+                    # verbatim. Surfacing the raw NoActiveBucketSession
+                    # exception text leaks internal plumbing; the
+                    # summary + next_action already guide the operator.
+                    detail=None if missing_active_bucket_session else _compact_exception(exc),
                     next_action=(
                         profile_health.next_action
                         or "aeat config profile switch NAME"
