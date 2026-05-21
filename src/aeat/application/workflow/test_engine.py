@@ -174,7 +174,7 @@ class _ConcreteExpedientesSource:
 
     async def __call__(
         self,
-        session: AeatSession,
+        session: object,
         modelo: str | None,
     ) -> tuple[Expediente, ...]:
         del session, modelo
@@ -187,7 +187,7 @@ class _ConcreteNotificationsSource:
 
     rows: tuple[RemoteNotification, ...] = ()
 
-    async def __call__(self, session: AeatSession) -> NotificationsSnapshot:
+    async def __call__(self, session: object) -> NotificationsSnapshot:
         del session
         return NotificationsSnapshot(
             rows=self.rows,

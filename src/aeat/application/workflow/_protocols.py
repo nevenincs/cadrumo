@@ -122,19 +122,30 @@ class ModeloInputsProviderProtocol(Protocol):
 
 
 class WorkflowExpedienteProtocol(Protocol):
-    modelo: str | None
-    ejercicio: int | None
+    @property
+    def modelo(self) -> str | None: ...
+
+    @property
+    def ejercicio(self) -> int | None: ...
 
 
 class WorkflowNotificationProtocol(Protocol):
-    tipo: str
-    leida: bool | None
-    certificado_id: str
-    concepto: str
+    @property
+    def tipo(self) -> str: ...
+
+    @property
+    def leida(self) -> bool | None: ...
+
+    @property
+    def certificado_id(self) -> str: ...
+
+    @property
+    def concepto(self) -> str: ...
 
 
 class WorkflowNotificationsSnapshotProtocol(Protocol):
-    rows: Sequence[WorkflowNotificationProtocol]
+    @property
+    def rows(self) -> Sequence[WorkflowNotificationProtocol]: ...
 
 
 ExpedientesSource = Callable[[object, str | None], Awaitable[tuple[WorkflowExpedienteProtocol, ...]]]
