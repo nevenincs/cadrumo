@@ -1859,6 +1859,7 @@ def apoderado_clear(ctx: typer.Context) -> None:
 def apoderado_check(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoLiveCheckUnavailableError, ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
+    from ....core.errors import resolve_error_message
 
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
@@ -1870,7 +1871,10 @@ def apoderado_check(ctx: typer.Context) -> None:
     try:
         result = svc.check(bucket_id=pointer.bucket_id)
     except ApoderadoLiveCheckUnavailableError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        # ApoderadoLiveCheckUnavailableError is a registered AeatError;
+        # str(exc) is empty when it is raised message-key-based, so
+        # render through resolve_error_message to keep the refusal text.
+        raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     payload = result.model_dump(mode="json")
     lines = [
