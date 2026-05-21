@@ -428,7 +428,7 @@ artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
-    {casilla_id = "decl.ejercicio", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio\s+al\s+que\s+se\s+refiere\s+la\s+informaci[oó]n'},
     {casilla_id = "decl.tipo-declaracion", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Tipo\s+de\s+declaraci[oó]n'},
 ]
 confidence = "strict"

@@ -208,9 +208,9 @@ artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
-    {casilla_id = "decl.total-perceptores", match_strategy = "numeric_casilla", value_kind = "amount"},
-    {casilla_id = "decl.base-total", match_strategy = "numeric_casilla", value_kind = "amount"},
-    {casilla_id = "decl.retenciones-total", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "decl.total-perceptores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'N[uú]mero\s+total\s+de\s+perceptores'},
+    {casilla_id = "decl.base-total", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Base\s+retenciones\s+e\s+ingresos\s+a\s+cuenta\s+total'},
+    {casilla_id = "decl.retenciones-total", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Retenciones\s+e\s+ingresos\s+a\s+cuenta\s+total'},
 ]
 confidence = "strict"
 min_coverage = "1.0"
