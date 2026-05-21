@@ -9,7 +9,7 @@ related:
   - "[[2026-05-21-state-read-projection-adr]]"
 ---
 
-# `cli-workflow-redesign` adr: `work verify validates a calculation and is independent of the filing-window deadline` | (**status:** `proposed`)
+# `cli-workflow-redesign` adr: `work verify validates a calculation and is independent of the filing-window deadline` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -53,6 +53,14 @@ working offline cannot verify their own calculation at all.
 - **No live AEAT call is involved.** Verification is a local,
   registry-grounded check. Gating it on an obligation the operator
   cannot create offline strands the whole workflow with no recourse.
+- **Pre-calculation is a first-class use case (owner-confirmed).**
+  The project owner confirmed that calculations are normally done
+  once a filing window opens, but that operators legitimately want to
+  *pre-calculate ahead of time*: pre-calculating the Renta to estimate
+  the year-end payment burden, and pre-calculating IVA modelos to know
+  upcoming amounts due. Pre-calculation is, by definition, work done
+  before the filing window opens - so verification of a pre-calculated
+  modelo must not require an open window.
 
 ## Constraints
 
@@ -107,5 +115,9 @@ verification or the no-file-without-obligation safety property.
 - The `WorkflowEngine` deadline-stage wiring changes; because that
   engine carries concurrent foreign WIP, the change is sequenced as a
   tracked follow-up rather than an immediate patch.
-- This is a workflow-semantics decision; it is recorded `proposed`
-  and should be confirmed by the project owner before implementation.
+- **Owner decision (2026-05-21): accepted.** The project owner
+  confirmed pre-calculation (Renta year-end-burden estimation, IVA
+  upcoming-amounts) as a first-class use case, which this decision
+  enables. Implementation is sequenced behind the in-flight
+  modelo/bindings remediation (it shares `_modelo.py`) and around the
+  `WorkflowEngine` foreign WIP.
