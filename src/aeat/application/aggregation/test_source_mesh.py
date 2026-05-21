@@ -52,7 +52,7 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
         "modelo-303-iva-repercutido-general-cuota": "21.00"
     }
     with pytest.raises(ValidationError, match="Extra inputs"):
-        CalculationSourceResolution(resolver_id="ledger-iva", unexpected=True)  # type: ignore[call-arg]
+        CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
 
 
 def test_source_resolution_merge_rejects_duplicate_binding_ownership() -> None:
@@ -71,9 +71,11 @@ def test_source_resolution_merge_rejects_duplicate_binding_ownership() -> None:
         merge_source_resolutions((left, right))
 
     assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_binding_owner"
-    assert exc_info.value.context["binding_id"] == "modelo-303-iva-repercutido-general-cuota"
-    assert exc_info.value.context["first_resolver"] == "ledger-iva"
-    assert exc_info.value.context["second_resolver"] == "manual-bridge"
+    context = exc_info.value.context
+    assert context is not None
+    assert context["binding_id"] == "modelo-303-iva-repercutido-general-cuota"
+    assert context["first_resolver"] == "ledger-iva"
+    assert context["second_resolver"] == "manual-bridge"
 
 
 def test_source_resolution_merge_rejects_duplicate_bound_casilla_ownership() -> None:
@@ -92,9 +94,11 @@ def test_source_resolution_merge_rejects_duplicate_bound_casilla_ownership() -> 
         merge_source_resolutions((left, right))
 
     assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_bound_casilla_owner"
-    assert exc_info.value.context["casilla_id"] == "iva.repercutido.general"
-    assert exc_info.value.context["first_resolver"] == "ledger-iva"
-    assert exc_info.value.context["second_resolver"] == "invoice"
+    context = exc_info.value.context
+    assert context is not None
+    assert context["casilla_id"] == "iva.repercutido.general"
+    assert context["first_resolver"] == "ledger-iva"
+    assert context["second_resolver"] == "invoice"
 
 
 def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -> None:

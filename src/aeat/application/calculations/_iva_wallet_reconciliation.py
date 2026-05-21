@@ -10,12 +10,15 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.outbound.aeat.sede._schema import IvaCompensationWalletObservation
 from ...domain.calculations.registry._schema import RegistrySnapshot
+
+if TYPE_CHECKING:
+    from ._binding_prefill import LocalIvaCompensationRecurrence
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
@@ -422,7 +425,9 @@ def _authority_sources(
     return tuple(sources)
 
 
-def _local_recurrence_authority_source(recurrence: object | None) -> IvaCompensationAuthoritySource | None:
+def _local_recurrence_authority_source(
+    recurrence: LocalIvaCompensationRecurrence | None,
+) -> IvaCompensationAuthoritySource | None:
     if recurrence is None:
         return None
     amount = Decimal(recurrence.amount)

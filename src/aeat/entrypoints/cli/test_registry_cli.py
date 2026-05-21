@@ -31,6 +31,7 @@ from aeat.application.live import (
     select_declarations_for_capture,
 )
 from aeat.application.registry import (
+    RegistryTreeReport,
     verify_filed_state,
 )
 from aeat.core.access_gate import AeatLiveReadNotEnabledError
@@ -79,14 +80,16 @@ def _isolated_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
 
 
 @pytest.fixture(scope="module")
-def _registry_inspect_payload() -> dict[str, object]:
+def _registry_inspect_payload() -> RegistryTreeReport:
     """Run ``app registry inspect --format json`` once per module.
 
     Reused across every test_registry_inspect_* assertion so the CLI
     invocation (registry load + walk + payload synthesis) is paid
     once instead of per-assertion. Module scope is the correct
     bound: nothing in this file mutates the registry under
-    ``_REGISTRY_ROOT``.
+    ``_REGISTRY_ROOT``. Validating the emitted JSON back into
+    ``RegistryTreeReport`` also asserts the CLI payload roundtrips
+    against its declared schema.
     """
     result = invoke_cached_cli(
         [
@@ -100,17 +103,17 @@ def _registry_inspect_payload() -> dict[str, object]:
         ],
     )
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)
+    return RegistryTreeReport.model_validate_json(result.output)
 
 
-def test_registry_inspect_cli_reports_unverified_state(_registry_inspect_payload: dict[str, object]) -> None:
-    assert _registry_inspect_payload["verified"] is False
+def test_registry_inspect_cli_reports_unverified_state(_registry_inspect_payload: RegistryTreeReport) -> None:
+    assert _registry_inspect_payload.verified is False
 
 
-def test_registry_inspect_cli_lists_every_registry_modelo(_registry_inspect_payload: dict[str, object]) -> None:
+def test_registry_inspect_cli_lists_every_registry_modelo(_registry_inspect_payload: RegistryTreeReport) -> None:
     registry_modelos = _registry_modelos()
-    assert _registry_inspect_payload["modelos"] == list(registry_modelos)
-    assert _registry_inspect_payload["modelo_count"] == len(registry_modelos)
+    assert _registry_inspect_payload.modelos == registry_modelos
+    assert _registry_inspect_payload.modelo_count == len(registry_modelos)
 
 
 _INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS = (
@@ -128,49 +131,50 @@ _INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS = (
 
 @pytest.mark.parametrize("count_key", _INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS)
 def test_registry_inspect_cli_reports_non_zero_count(
-    _registry_inspect_payload: dict[str, object], count_key: str
+    _registry_inspect_payload: RegistryTreeReport, count_key: str
 ) -> None:
-    assert _registry_inspect_payload[count_key] > 0, f"{count_key}={_registry_inspect_payload[count_key]!r}"
+    count = getattr(_registry_inspect_payload, count_key)
+    assert count > 0, f"{count_key}={count!r}"
 
 
 def test_registry_inspect_cli_reports_at_least_one_revision(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
-    assert _registry_inspect_payload["revision_count"] >= 1
+    assert _registry_inspect_payload.revision_count >= 1
 
 
 def test_registry_inspect_cli_advertises_expected_relation_role(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
-    assert "periodic_to_annual_summary" in _registry_inspect_payload["relation_dependency_roles"]
+    assert "periodic_to_annual_summary" in _registry_inspect_payload.relation_dependency_roles
 
 
 def test_registry_inspect_cli_matches_registry_application_surfaces(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
-    assert set(_registry_inspect_payload["application_link_surfaces"]) == _registry_application_surfaces()
+    assert set(_registry_inspect_payload.application_link_surfaces) == _registry_application_surfaces()
 
 
 def test_registry_inspect_cli_revision_details_match_revision_count(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
-    assert len(_registry_inspect_payload["revision_details"]) == _registry_inspect_payload["revision_count"]
+    assert len(_registry_inspect_payload.revision_details) == _registry_inspect_payload.revision_count
 
 
 def test_registry_inspect_cli_first_revision_resolves_against_modelo_list(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
-    revision = _registry_inspect_payload["revision_details"][0]
-    assert revision["modelo"] in _registry_inspect_payload["modelos"]
-    assert revision["revision"]
+    revision = _registry_inspect_payload.revision_details[0]
+    assert revision.modelo in _registry_inspect_payload.modelos
+    assert revision.revision
 
 
 def test_registry_inspect_cli_first_revision_carries_legal_and_source_refs(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
-    revision = _registry_inspect_payload["revision_details"][0]
-    assert revision["legal_refs"]
-    assert revision["source_refs"]
+    revision = _registry_inspect_payload.revision_details[0]
+    assert revision.legal_refs
+    assert revision.source_refs
 
 
 _REVISION_COUNT_PAIRS = (
@@ -183,45 +187,45 @@ _REVISION_COUNT_PAIRS = (
 
 @pytest.mark.parametrize(("count_key", "ids_key"), _REVISION_COUNT_PAIRS)
 def test_registry_inspect_cli_first_revision_count_matches_id_list(
-    _registry_inspect_payload: dict[str, object], count_key: str, ids_key: str
+    _registry_inspect_payload: RegistryTreeReport, count_key: str, ids_key: str
 ) -> None:
-    revision = _registry_inspect_payload["revision_details"][0]
-    assert revision[count_key] == len(revision[ids_key])
+    revision = _registry_inspect_payload.revision_details[0]
+    assert getattr(revision, count_key) == len(getattr(revision, ids_key))
 
 
 def test_registry_inspect_cli_first_revision_has_workbook_parity(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
-    assert _registry_inspect_payload["revision_details"][0]["workbook_parity"]
+    assert _registry_inspect_payload.revision_details[0].workbook_parity
 
 
 def test_registry_inspect_cli_export_revision_has_record_and_field_counts(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
     export_revision = next(
-        detail for detail in _registry_inspect_payload["revision_details"] if detail["export_field_count"] > 0
+        detail for detail in _registry_inspect_payload.revision_details if detail.export_field_count > 0
     )
-    assert export_revision["export_record_count"] > 0
+    assert export_revision.export_record_count > 0
 
 
 def test_registry_inspect_cli_guarded_revision_lists_portal_guard_policies(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
     guarded_revision = next(
-        detail for detail in _registry_inspect_payload["revision_details"] if detail["portal_guard_policy_ids"]
+        detail for detail in _registry_inspect_payload.revision_details if detail.portal_guard_policy_ids
     )
-    assert guarded_revision["portal_guard_policy_ids"]
+    assert guarded_revision.portal_guard_policy_ids
 
 
 def test_registry_inspect_cli_workbook_reference_resolves_against_revision(
-    _registry_inspect_payload: dict[str, object],
+    _registry_inspect_payload: RegistryTreeReport,
 ) -> None:
-    revision = _registry_inspect_payload["revision_details"][0]
-    workbook_reference = revision["workbook_parity"][0]
-    assert workbook_reference["id"]
-    assert workbook_reference["workbook_source"] in revision["source_refs"]
-    assert workbook_reference["formula_coverage"]
-    assert workbook_reference["runner_required"] is False or workbook_reference["output_cell_count"] > 0
+    revision = _registry_inspect_payload.revision_details[0]
+    workbook_reference = revision.workbook_parity[0]
+    assert workbook_reference.id
+    assert workbook_reference.workbook_source in revision.source_refs
+    assert workbook_reference.formula_coverage
+    assert workbook_reference.runner_required is False or workbook_reference.output_cell_count > 0
 
 
 def test_registry_verify_cli_validates_sources_and_catalogues() -> None:

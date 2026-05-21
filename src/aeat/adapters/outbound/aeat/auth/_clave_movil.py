@@ -29,6 +29,7 @@ import json
 import re
 import sys
 import time
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -678,7 +679,7 @@ class ClaveMovilAuthProvider:
         except ClaveMovilConfigurationError:
             identity_kind = "invalid_or_missing"
         auth_mode = "non_qr" if self._settings.aeat_clave_prefer_non_qr else "qr"
-        context = {
+        context: dict[str, object] = {
             "auth_mode": auth_mode,
             "identity_kind": identity_kind,
             "clave_identity_configured": bool(identity),
@@ -829,7 +830,7 @@ class ClaveMovilAuthProvider:
     def _persist_session(
         storage_state_path: Path,
         *,
-        storage_state: dict[str, object],
+        storage_state: Mapping[str, object],
         metadata: _ClaveMovilSessionMetadata,
     ) -> None:
         _session_store.save(
@@ -1514,13 +1515,20 @@ class ClaveMovilAuthProvider:
             RemoteOperation(kind="browser_action", action=_OWN_NAME_REPRESENTATION_ACTION),
         )
         pre303 = self._settings.external_constants().aeat.pre303
+        wait_for = getattr(page, "wait_for_selector", None)
+        click = getattr(page, "click", None)
+        if wait_for is None or click is None:
+            raise AeatLoginAssertionError(
+                "Playwright page does not expose wait_for_selector()/click(); "
+                "cannot drive AEAT own-name representation gate"
+            )
         try:
-            await page.wait_for_selector(
+            await wait_for(
                 pre303.representation_own_name_label_selector,
                 timeout=self._settings.aeat_browser_selector_probe_timeout_ms,
             )
-            await page.click(pre303.representation_own_name_label_selector)
-            await page.click(pre303.representation_submit_selector)
+            await click(pre303.representation_own_name_label_selector)
+            await click(pre303.representation_submit_selector)
         except PlaywrightError as exc:
             raise AeatLoginAssertionError(
                 "AEAT representation gate did not expose the own-name continuation expected for the "

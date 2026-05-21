@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -262,7 +262,7 @@ class _RecordingBrowserSession:
         *,
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
-        storage_state: dict[str, object] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> _RecordingContext:
         del provisioner
         # Resume paths construct contexts with a storage-state path; those
@@ -286,7 +286,7 @@ class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
         *,
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
-        storage_state: dict[str, object] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> _SelectorDispatchContext:
         del provisioner, storage_state_path, storage_state
         context = _SelectorDispatchContext(target_path=self._target_path)
