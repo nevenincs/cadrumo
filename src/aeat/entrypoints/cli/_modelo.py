@@ -9,7 +9,7 @@ from contextlib import suppress
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 import typer
 
@@ -32,6 +32,7 @@ from ...application.modelo import (
     create_work_unit,
     discard_work_unit,
     file_modelo_revision,
+    get_calculation_revision,
     get_filing_record,
     get_verification_report,
     get_work_unit,
@@ -52,6 +53,9 @@ from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date, _profile_to_autonomo
+
+if TYPE_CHECKING:
+    from ...application.modelo._reconcile import ModeloReconciliationReport
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 
@@ -76,6 +80,28 @@ def _validate_work_unit_id(value: str) -> str:
             tr(
                 "cli.app.modelo.work.invalid_work_unit_id",
                 default=(f"work_unit_id must be a 64-character lowercase hex string (SHA-256 digest); got {value!r}"),
+            )
+        )
+    return stripped
+
+
+def _validate_calculation_revision_id(value: str) -> str:
+    """Validate that *value* is a 64-character lowercase hex string.
+
+    A ``calculation_revision_id`` is a SHA-256 digest, sharing the same
+    shape as a ``work_unit_id``. Rejecting a malformed identifier at the
+    CLI boundary keeps the application layer free of input-shape checks.
+    """
+
+    stripped = value.strip()
+    if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_calculation_revision_id",
+                default=(
+                    "calculation_revision_id must be a 64-character lowercase "
+                    f"hex string (SHA-256 digest); got {value!r}"
+                ),
             )
         )
     return stripped
@@ -224,10 +250,18 @@ def modelo_readiness(
         f"filing_year\t{filing_year}",
         f"period\t{period or ''}",
         f"ready\t{report.ready}",
+        f"profile_ready\t{report.profile_ready}",
         f"missing\t{len(report.missing)}",
+        f"ledger_preflight_required\t{report.ledger_preflight_required}",
+        f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
+        f"ledger_period\t{report.ledger_period or ''}",
+        f"ledger_checked\t{report.ledger_checked_transaction_count}",
+        f"ledger_issues\t{len(report.ledger_issues)}",
     ]
     for requirement in report.missing:
         lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
+    for issue in report.ledger_issues:
+        lines.append(f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
     _emit(ctx, payload, lines)
 
 
@@ -281,6 +315,7 @@ def describe_modelo(
             f"Tax domain\t{report.tax_domain}",
             f"Cadence\t{report.cadence}",
             f"Revision\t{report.revision}",
+            f"Revision ids\t{', '.join(report.revision_ids)}",
             f"Periods\t{', '.join(report.periods)}",
             f"Casillas\t{report.casilla_count}",
             f"Bindings\t{report.binding_count}",
@@ -388,11 +423,21 @@ def _parse_kv_spec[T](
     """
 
     if "=" not in spec:
-        raise typer.BadParameter(f"{flag} must be {key_label}={value_label}; got {spec!r}")
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.kv_format_error",
+                flag=flag,
+                key_label=key_label,
+                value_label=value_label,
+                spec=spec,
+            )
+        )
     key, _, value = spec.partition("=")
     key = key.strip()
     if not key:
-        raise typer.BadParameter(f"{flag} key must be non-empty; got {spec!r}")
+        raise typer.BadParameter(
+            tr("cli.app.modelo.work.kv_empty_key_error", flag=flag, spec=spec)
+        )
     if key_validator is not None:
         key_validator(key, spec)
     return key, transform(value)
@@ -727,8 +772,14 @@ def bindings_preview(
     if unknown_keys:
         suggestion = ", ".join(sorted(known_ids))
         raise typer.BadParameter(
-            f"unknown --binding key(s) {unknown_keys!r}; known bindings for "
-            f"{report.code}@{report.revision} ({report.period}): {suggestion}"
+            tr(
+                "cli.app.modelo.bindings.unknown_keys",
+                keys=unknown_keys,
+                code=report.code,
+                revision=report.revision,
+                period=report.period,
+                suggestion=suggestion,
+            )
         )
     payload = {
         "operation": "registry.modelo.bindings.preview",
@@ -835,9 +886,11 @@ def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[
         try:
             value = json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise typer.BadParameter(f"{flag} must be a JSON object; invalid JSON at byte {exc.pos}") from exc
+            raise typer.BadParameter(
+                tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)
+            ) from exc
         if not isinstance(value, dict):
-            raise typer.BadParameter(f"{flag} must be a JSON object")
+            raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_not_object", flag=flag))
         parsed.append(value)
     return tuple(parsed)
 
@@ -1037,6 +1090,65 @@ def _validate_registry_target(modelo: str, revision_id: str) -> None:
         )
 
 
+#: Registry-validation translated-message keys that signal an
+#: unsatisfied calculation input the operator can supply with
+#: ``--binding`` / ``--relation``. The first ``work calculate`` of a
+#: modelo that consumes a binding fails with one of these; the guidance
+#: helper turns the bare refusal into a self-correcting message.
+_MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
+    {
+        "errors.calc.binding_value_missing",
+        "errors.calc.enum_binding_value_missing",
+        "errors.calc.relation_value_missing",
+    }
+)
+
+
+def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str) -> str:
+    """Return the missing-binding refusal enriched with operator guidance.
+
+    The registry engine names the unsatisfied binding / relation but
+    leaves the operator with no path forward. When the failure is a
+    missing-input class, append the ``--binding KEY=VALUE`` syntax and a
+    concrete ``bindings list --missing`` command scoped to the work
+    unit's modelo / year / period so the next attempt can succeed.
+    Non-input registry-validation errors fall through unchanged.
+    """
+
+    base = (
+        tr(error.translated_message, **(error.context or {}))
+        if error.translated_message is not None
+        else str(error)
+    )
+    if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
+        return base
+
+    discover_command = "aeat app modelo bindings list --missing"
+    # Loading the work unit only refines the discovery command with the
+    # concrete modelo / year / period. It is best-effort enrichment: any
+    # failure (missing unit, no active session) degrades to the generic
+    # bindings-list command rather than masking the original refusal.
+    try:
+        unit: WorkUnit | None = get_work_unit(work_unit_id)
+    except Exception:
+        unit = None
+    if unit is not None:
+        discover_command = (
+            f"aeat app modelo bindings list --modelo {unit.modelo} "
+            f"--year {unit.filing_year} --period {unit.period} --missing"
+        )
+    return tr(
+        "cli.app.modelo.work.missing_binding_guidance",
+        default=(
+            "{base} Supply the value with --binding KEY=VALUE on this "
+            "command, or run `{discover}` to list every binding the "
+            "calculation still needs."
+        ),
+        base=base,
+        discover=discover_command,
+    )
+
+
 @work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
 def work_create(
     ctx: typer.Context,
@@ -1057,12 +1169,16 @@ def work_create(
         typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
     ],
     bucket_id: Annotated[
-        str,
+        str | None,
         typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = "default",
+    ] = None,
     name: Annotated[
         str | None,
         typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
+    ] = None,
+    actor: Annotated[
+        str | None,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
@@ -1076,19 +1192,96 @@ def work_create(
     _validate_registry_target(modelo, revision)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
+    # --bucket-id is an explicit override; without it the work unit binds
+    # to the active profile's bucket (never the literal string "default").
+    resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
+    resolved_actor = actor or _resolve_default_actor()
+
+    # create_work_unit is idempotent on the four-axis key but returns a
+    # bare WorkUnit, losing the create-vs-reuse distinction. Resolve the
+    # pre-existing unit here so the operator is told plainly whether a
+    # new unit was provisioned or an existing one returned.
+    existing_units = list_work_units(bucket_id=resolved_bucket, include_discarded=True)
+    prior = next(
+        (
+            candidate
+            for candidate in existing_units
+            if str(candidate.modelo) == modelo
+            and candidate.filing_year == resolved_year
+            and candidate.period == resolved_period
+            and candidate.revision_id == revision
+        ),
+        None,
+    )
+    reused = prior is not None
+
     unit = create_work_unit(
-        bucket_id=bucket_id,
+        bucket_id=resolved_bucket,
         modelo=modelo,
         filing_year=resolved_year,
         period=resolved_period,
         revision_id=revision,
         name=name,
+        actor=resolved_actor,
     )
+
+    # A --name supplied on a reuse is not silently dropped: it is applied
+    # as a rename so the operator's intent is honoured, and the result
+    # reports the rename. On a fresh create the name is already set.
+    name_applied: str | None = None
+    if reused and name is not None and name.strip() and name.strip() != unit.name:
+        unit = rename_work_unit(unit.work_unit_id, name, actor=resolved_actor)
+        name_applied = unit.name
+
+    status = "reused" if reused else "created"
+    if reused:
+        if name_applied is not None:
+            status_message = tr(
+                "cli.app.modelo.work.create_reused_renamed",
+                default=(
+                    "Existing work unit returned (idempotent on modelo/year/period/revision); "
+                    "nothing new was created. The supplied --name was applied as a rename "
+                    "to %{name}."
+                ),
+                name=name_applied,
+            )
+        elif name is not None and name.strip():
+            status_message = tr(
+                "cli.app.modelo.work.create_reused_name_match",
+                default=(
+                    "Existing work unit returned (idempotent on modelo/year/period/revision); "
+                    "nothing new was created. The supplied --name matches the stored name."
+                ),
+            )
+        else:
+            status_message = tr(
+                "cli.app.modelo.work.create_reused",
+                default=(
+                    "Existing work unit returned (idempotent on modelo/year/period/revision); "
+                    "nothing new was created. Rename it with `aeat app modelo work rename`."
+                ),
+            )
+        operation = "modelo.work.reuse"
+    else:
+        status_message = tr(
+            "cli.app.modelo.work.create_created",
+            default="New work unit created.",
+        )
+        operation = "modelo.work.create"
+
     payload = {
-        "operation": "modelo.work.create",
+        "operation": operation,
+        "status": status,
+        "status_message": status_message,
+        "name_applied": name_applied,
         **_work_unit_payload(unit),
     }
-    lines = ["operation\tmodelo.work.create", *_work_unit_lines(unit)]
+    lines = [
+        f"operation\t{operation}",
+        f"status\t{status}",
+        *_work_unit_lines(unit),
+        status_message,
+    ]
     _emit(ctx, payload, lines)
 
 
@@ -1477,7 +1670,9 @@ def work_calculate(
         try:
             casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(f"--casilla value for {k!r} is not a decimal: {v!r}") from exc
+            raise typer.BadParameter(
+                tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)
+            ) from exc
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
@@ -1495,7 +1690,7 @@ def work_calculate(
             relation_values[key] = Decimal(raw_value)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(
-                f"--relation value for {key!r} is not a decimal: {raw_value!r}"
+                tr("cli.app.modelo.work.relation_not_decimal", key=key, value=raw_value)
             ) from exc
 
     try:
@@ -1508,6 +1703,13 @@ def work_calculate(
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
             relation_values=relation_values or None,
         )
+    except RegistryValidationError as exc:
+        # A formula that consumes an unsatisfied binding / enum-binding /
+        # relation raises RegistryValidationError. The bare message names
+        # the missing key but gives the operator no path forward; append
+        # the --binding KEY=VALUE syntax and the bindings-list discovery
+        # command so the first calculate failure is self-correcting.
+        raise typer.BadParameter(_missing_binding_guidance(exc, work_unit_id)) from exc
     except (
         WorkUnitNotFoundError,
         WorkUnitMutationRefusedError,
@@ -1517,11 +1719,33 @@ def work_calculate(
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
+    # The casilla table alone gives the operator no signal that the
+    # result was persisted. Each calculate writes a `borrador` revision
+    # that survives the session; the confirmation line states that
+    # explicitly and names the verbs to resume or re-inspect it.
+    saved_confirmation = tr(
+        "cli.app.modelo.work.calculate_saved",
+        default=(
+            "Saved as draft calculation revision %{revision_id} "
+            "(state: %{state}). It is persisted and can be resumed later; "
+            "list revisions with `aeat app modelo work revisions %{work_unit_id}` "
+            "and re-inspect this one with `aeat app modelo work revision %{revision_id}`."
+        ),
+        revision_id=revision.calculation_revision_id,
+        state=revision.state.value,
+        work_unit_id=revision.work_unit_id,
+    )
     payload = {
         "operation": "modelo.work.calculate",
+        "saved": True,
+        "saved_confirmation": saved_confirmation,
         **_calculation_revision_payload(revision),
     }
-    lines = ["operation\tmodelo.work.calculate", *_calculation_revision_lines(revision)]
+    lines = [
+        "operation\tmodelo.work.calculate",
+        *_calculation_revision_lines(revision),
+        saved_confirmation,
+    ]
     _emit(ctx, payload, lines)
 
 
@@ -1530,7 +1754,7 @@ def work_revisions(
     ctx: typer.Context,
     work_unit_id: Annotated[
         str | None,
-        typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ] = None,
 ) -> None:
     """List calculation revisions, optionally filtered to one work unit."""
@@ -1555,6 +1779,34 @@ def work_revisions(
         f"{rev.calculation_revision_id}\t{rev.work_unit_id}\t{rev.state.value}\t{rev.created_at.isoformat()}"
         for rev in revisions
     )
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("revision", help=tr("cli.app.modelo.work.revision_show_help"))
+def work_revision(
+    ctx: typer.Context,
+    calculation_revision_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
+    ],
+) -> None:
+    """Show one stored calculation revision's persisted casilla values.
+
+    Read-only: the persisted revision is rendered as-is, never
+    recomputed. Use ``work revisions`` to discover a revision id.
+    """
+
+    calculation_revision_id = _validate_calculation_revision_id(calculation_revision_id)
+    _require_active_profile()
+    try:
+        revision = get_calculation_revision(calculation_revision_id)
+    except CalculationRevisionNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    payload = {
+        "operation": "modelo.work.revision",
+        **_calculation_revision_payload(revision),
+    }
+    lines = ["operation\tmodelo.work.revision", *_calculation_revision_lines(revision)]
     _emit(ctx, payload, lines)
 
 
@@ -1850,7 +2102,9 @@ def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
         try:
             return Decimal(value.strip())
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(f"--set value must be a decimal; got {value!r}") from exc
+            raise typer.BadParameter(
+                tr("cli.app.modelo.work.set_not_decimal", value=value)
+            ) from exc
 
     return _parse_kv_spec(
         spec,
@@ -1932,7 +2186,11 @@ def work_amend(
         amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
     except ValueError as exc:
         raise typer.BadParameter(
-            f"--kind must be one of {', '.join(repr(k.value) for k in CalculationRevisionAmendmentKind)}; got {kind!r}"
+            tr(
+                "cli.app.modelo.work.invalid_amendment_kind",
+                choices=", ".join(repr(k.value) for k in CalculationRevisionAmendmentKind),
+                kind=kind,
+            )
         ) from exc
 
     overrides: dict[str, Decimal] = {}
@@ -1940,7 +2198,7 @@ def work_amend(
         key, value = _parse_amendment_casilla(spec)
         overrides[key] = value
     if not overrides:
-        raise typer.BadParameter("--set is required at least once for an amendment")
+        raise typer.BadParameter(tr("cli.app.modelo.work.amend_set_required"))
 
     try:
         record = amend_modelo_revision(
@@ -2169,14 +2427,20 @@ def filing_record_import(
         kind = ExternalEvidenceKind(evidence_kind)
     except ValueError as exc:
         canonical = ", ".join(repr(k.value) for k in ExternalEvidenceKind)
-        raise typer.BadParameter(f"--evidence-kind must be one of {canonical}; got {evidence_kind!r}") from exc
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.filing_record.invalid_evidence_kind",
+                canonical=canonical,
+                kind=evidence_kind,
+            )
+        ) from exc
 
     casilla_values: dict[str, Decimal] = {}
     for spec in set_overrides or ():
         key, value = _parse_amendment_casilla(spec)
         casilla_values[key] = value
     if not casilla_values:
-        raise typer.BadParameter("--set is required at least once for an import")
+        raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
 
     try:
         record = import_external_filing_evidence(
@@ -2243,7 +2507,7 @@ def _evidence_bundle_service():
     return EvidenceBundleService()
 
 
-def _audit_bucket_id() -> str:
+def _active_bucket_id() -> str:
     from ...application.workflow._models import active_bucket_id_or_raise
 
     try:
@@ -2266,7 +2530,7 @@ def audit_show(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
-    bucket_id = _audit_bucket_id()
+    bucket_id = _active_bucket_id()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
     payload = bundle.model_dump(mode="json")
     lines = [
@@ -2294,7 +2558,7 @@ def audit_check(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
-    bucket_id = _audit_bucket_id()
+    bucket_id = _active_bucket_id()
     report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
     payload = report.model_dump(mode="json")
     lines = [
@@ -2338,7 +2602,7 @@ def audit_export(
         ),
     ] = False,
 ) -> None:
-    bucket_id = _audit_bucket_id()
+    bucket_id = _active_bucket_id()
     service = _evidence_bundle_service()
     output_path = service.export(
         bucket_id=bucket_id,
@@ -2377,7 +2641,7 @@ def audit_replay(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
-    bucket_id = _audit_bucket_id()
+    bucket_id = _active_bucket_id()
     report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
     payload = report.model_dump(mode="json")
     lines = [
@@ -2484,7 +2748,7 @@ def modelo_history(
     _emit(ctx, payload, lines)
 
 
-def _render_reconciliation_report(ctx: typer.Context, report: object) -> None:
+def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport) -> None:
     """Render a :class:`ModeloReconciliationReport` to the active emitter."""
 
     payload = report.model_dump(mode="json")
@@ -2708,6 +2972,7 @@ def modelo_export_verb(
 ) -> None:
     """Export a verified-complete or filed modelo revision to disk."""
 
+    from ...application.modelo import ModeloIvaWalletReconciliationBlocked
     from ...application.modelo._export import (
         ModeloExportCommand,
         ModeloExportCrossBucketRefusedError,
@@ -2760,6 +3025,7 @@ def modelo_export_verb(
         WorkUnitNotFoundError,
         ModeloExportCrossBucketRefusedError,
         ModeloExportNoActiveBucketError,
+        ModeloIvaWalletReconciliationBlocked,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 

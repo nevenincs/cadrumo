@@ -667,14 +667,22 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         date_context={"filing_period": date(2025, 2, 15)},
     )
 
-    # Both casillas are anchored independently to the resolver-computed binding
-    # fact: low-value-cuota is the bound input, and cuota-total is a sum-of-one
-    # identity over it. Asserting each against the binding fact (rather than
-    # against the other SUT output) means a broken cuota-total formula cannot
-    # hide by collapsing both casillas to the same wrong value.
+    # The Esquema Importación registers a single destination/rate construct
+    # (DE low-value 21%), so the registry cuota-total formula is an `add` over
+    # exactly one operand. The two ledger observations above (80 + 120 base,
+    # 15.20 + 22.80 IVA) exercise genuine resolver aggregation INTO that single
+    # bound casilla, so a broken aggregation surfaces in the bound input.
     expected_cuota = binding_values["modelo-369-importacion-de-low-value-21pct"]
     assert result.values["iva.importacion.de.low-value-cuota"] == expected_cuota
     assert result.values["iva.importacion.cuota-total"] == expected_cuota
+
+    # Mirror the union companion test: verify the cuota-total formula
+    # structurally. Asserting the formula entry's operand_refs defends the
+    # wiring — a registry edit that drops or mis-points the operand fails
+    # here even though the single-operand arithmetic stays an identity.
+    importacion_total_entry = next(e for e in result.entries if e.target == "iva.importacion.cuota-total")
+    assert importacion_total_entry.op == "add"
+    assert set(importacion_total_entry.operand_refs) == {"iva.importacion.de.low-value-cuota"}
 
 
 def test_modelo_369_constructs_link_calculation_application_link() -> None:

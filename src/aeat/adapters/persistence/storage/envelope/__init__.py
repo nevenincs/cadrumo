@@ -7,7 +7,9 @@ file-backed persistence consumers. Re-exports the typed
 record, the :class:`EnvelopeMigrator` extension protocol, and the
 plaintext / ciphertext save/load helpers (:func:`save_envelope`,
 :func:`load_envelope`, :func:`save_encrypted_envelope`,
-:func:`load_encrypted_envelope`, :func:`reencrypt_envelope_file`).
+:func:`load_encrypted_envelope`, :func:`reencrypt_envelope_file`),
+and the :class:`SecureBoundRepository` generic base that domain
+repositories subclass for encrypted-object persistence.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from ._envelope import (
     save_encrypted_envelope,
     save_envelope,
 )
+from ._secure_repository import SecureBoundRepository
 
 __all__ = [
     "AeadAlgorithm",
@@ -31,6 +34,7 @@ __all__ = [
     "EncryptionMetadata",
     "Envelope",
     "EnvelopeMigrator",
+    "SecureBoundRepository",
     "load_encrypted_envelope",
     "load_envelope",
     "reencrypt_envelope_file",

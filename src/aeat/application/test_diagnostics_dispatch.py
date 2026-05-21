@@ -139,9 +139,9 @@ def test_profile_check_no_active_profile_returns_warn_with_setup_next_action() -
 
 
 def test_profile_check_missing_required_keys_returns_warn_with_canonical_next_action() -> None:
-    """When the profile exists but isn't ready, the diagnostic
-    row carries the canonical profile-create literal so
-    every operator surface points at the same recovery command.
+    """When the profile exists but isn't ready, the diagnostic row routes
+    the operator to the guided editor and names each missing key as a
+    typed finding — not a bare counter buried in the summary.
     """
     report = _wizard_status(
         profile_ready=False,
@@ -153,9 +153,10 @@ def test_profile_check_missing_required_keys_returns_warn_with_canonical_next_ac
 
     assert result.name == "profile.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
-    assert "tax_id" in result.summary
-    assert "ccaa" in result.summary
+    assert result.next_action == "aeat config profile edit NAME"
+    finding_keys = {finding.summary.split(" — ", 1)[0] for finding in result.findings}
+    assert "tax_id" in finding_keys
+    assert "ccaa" in finding_keys
 
 
 def test_profile_check_happy_path_returns_ok_with_present_total_summary() -> None:

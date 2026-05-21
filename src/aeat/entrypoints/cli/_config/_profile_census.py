@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import typer
 
+from ....core.errors import resolve_error_message
 from ....core.i18n import tr
 from ....domain.profile._constants import ProfileName
 from .._common import _emit
@@ -113,7 +114,7 @@ def register(profile_app: typer.Typer) -> None:
         try:
             snapshot = asyncio.run(service.refresh_census_from_sede(profile_id=profile_id))
         except CensoNotAvailableError as exc:
-            raise CliRefusedBoundaryError(str(exc)) from exc
+            raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         _emit_census_event(
             bucket_id=bucket_id,
             event_type=BucketEventType.CENSUS_REFRESHED,
@@ -161,7 +162,7 @@ def register(profile_app: typer.Typer) -> None:
                 snapshot_id=snapshot_id or None,
             )
         except CensoNotAvailableError as exc:
-            raise CliRefusedBoundaryError(str(exc)) from exc
+            raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         payload = {
             "snapshot_id": snapshot.snapshot_id,
             "profile_id": snapshot.profile_id,
@@ -207,7 +208,7 @@ def register(profile_app: typer.Typer) -> None:
                 snapshot_id=snapshot_id or None,
             )
         except CensoNotAvailableError as exc:
-            raise CliRefusedBoundaryError(str(exc)) from exc
+            raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         payload = comparison.model_dump(mode="json")
         lines = [
             f"snapshot_id\t{comparison.snapshot_id}",
@@ -254,9 +255,9 @@ def register(profile_app: typer.Typer) -> None:
                 snapshot_id=snapshot_id or None,
             )
         except CensoNotAvailableError as exc:
-            raise CliRefusedBoundaryError(str(exc)) from exc
+            raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         except CensoApplyConflictError as exc:
-            raise CliRefusedBoundaryError(str(exc)) from exc
+            raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         _emit_census_event(
             bucket_id=bucket_id,
             event_type=BucketEventType.CENSUS_APPLIED,

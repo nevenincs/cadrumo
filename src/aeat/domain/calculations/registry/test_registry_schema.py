@@ -667,6 +667,7 @@ def test_validator_rejects_literal_export_field_longer_than_declared_length() ->
     layout = revision.export_layouts[0]
     record = layout.records[0]
     field = next(item for item in record.fields if item.kind == "literal" and item.length is not None)
+    assert field.length is not None
     oversized = field.model_copy(update={"literal": "X" * (field.length + 1)})
     fields = tuple(oversized if item.id == field.id else item for item in record.fields)
     records = tuple(

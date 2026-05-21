@@ -304,8 +304,8 @@ def test_create_error_renders_in_command_line_output_language(
     assert spanish.exit_code != 0, spanish.output
     # The English run names the missing flag in English prose; the
     # Spanish run does not carry the English wording.
-    assert "Required flags are missing" in english.output
-    assert "Required flags are missing" not in spanish.output
+    assert "is missing required details" in english.output
+    assert "is missing required details" not in spanish.output
 
 
 def test_config_repair_labels_render_in_profile_output_language(

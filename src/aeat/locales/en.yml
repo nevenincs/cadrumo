@@ -81,6 +81,8 @@ aggregation:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
         aggregation bucket.
+      candidate_outside_period: aggregation.iva_ledger.errors.candidate_outside_period
+      unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
   modelo_bindings:
     errors:
       unsupported_period: Unsupported modelo period for ledger aggregation.
@@ -124,6 +126,12 @@ application:
         operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
     operator:
       errors:
+        certificate_file_required: The certificate provider requires a certificate
+          file. Run `aeat config auth configure --provider certificate --file PATH`
+          with the path to your PKCS#12 (.p12/.pfx) bundle.
+        certificate_file_unresolved: The certificate path '%{certificate_path}' does
+          not resolve to an existing file. Run `aeat config auth configure --provider
+          certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
         dangling_active_profile: Active profile pointer '%{active_profile}' does not
           resolve to a registered profile bucket. Run `aeat config profile list` to
           inspect registered profiles, then `aeat config profile switch NAME` or `aeat
@@ -193,7 +201,9 @@ application:
     errors:
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
         fallback).
-      quiet_missing_flags: Required flags are missing for a --quiet wizard run.
+      quiet_missing_flags: 'This --quiet run is missing required details. Add these
+        flags and run the command again: %{missing_flags}. Or run it without --quiet
+        from an interactive terminal to use the guided setup.'
     status:
       errors:
         missing_tax_id: Active profile is missing tax.id.
@@ -301,6 +311,7 @@ cli:
       borrador:
         app_help: Modelo 100 borrador snapshots
         filing_year_help: Filing year (e.g. 2024)
+        invalid_state: '--state must be one of: active, superseded, discarded, all.'
         latest_help: Show the most recent active snapshot for a filing year
         list_help: List persisted Modelo 100 borrador snapshots
         modelo_100_help: Modelo 100 borrador snapshot commands
@@ -342,9 +353,11 @@ cli:
       portals:
         app_help: Read-only local AEAT portal catalogue
         category_help: Filter by portal category
+        category_modelo_exclusive: --category and --modelo are mutually exclusive.
         list_help: List portal catalogue entries
         modelo_help: Filter by portals linked to a modelo
         portal_id_help: Portal identifier
+        unknown_category: 'Unknown portal category: {category}.'
         view_help: Show a portal catalogue entry
       registry_root_help: Registry root
       source_root_help: Project source root
@@ -352,6 +365,7 @@ cli:
       verify:
         app_help: Read-only NIF verification audit log
         expected_help: Optional expected result (valid, invalid, or unknown)
+        expected_values_error: '--expected must be one of: valid, invalid, unknown.'
         latest_help: Show the most recent observation for surface and NIF
         latest_nif_help: NIF to look up
         latest_surface_help: 'Verification surface: nif_iva or tgvi'
@@ -360,10 +374,12 @@ cli:
         nif_iva_arg_help: NIF-IVA value (e.g. ESB12345678)
         nif_iva_help: Verify an intra-community NIF-IVA in AEAT IXVI and save the
           observation
+        no_observation_for_nif: No observation was returned for NIF {nif}.
         observation_id_help: Observation id (or unambiguous prefix)
         surface_help: 'Filter by surface: nif_iva or tgvi'
         tgvi_arg_help: Spanish NIF/NIE to check
         tgvi_help: Verify a NIF's ROI/VIES registration in GROI and save the observation
+        unknown_surface: 'Unknown verify surface: {surface} (expected nif_iva or tgvi).'
         view_help: Show a saved verification observation
       year_help: Filing year
     modelo:
@@ -374,6 +390,8 @@ cli:
         foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
+        json_not_object: '{flag} must be a JSON object.'
+        json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: Aggregation period passed to the backend service.
@@ -409,6 +427,8 @@ cli:
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
         preview_help: Preview bindings with temporary overrides without mutating state
+        unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
+          ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -449,7 +469,9 @@ cli:
           at least one required)
         import_help: Persist an externally-filed return as a baseline filing record
           carrying imported AEAT-attested evidence
+        import_set_required: --set is required at least once for an import.
         include_superseded_help: Include superseded filing records (excluded by default)
+        invalid_evidence_kind: --evidence-kind must be one of {canonical}; got {kind}.
         list_help: List registered filing records
         view_help: Show one filing record by id
       formulas:
@@ -504,6 +526,7 @@ cli:
           Requires a filing record with imported AEAT-attested evidence
         amend_missing_options: 'An amendment requires every one of these options:
           %{missing}.'
+        amend_set_required: --set is required at least once for an amendment.
         amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
@@ -513,10 +536,23 @@ cli:
           caller --binding overrides always take precedence.
         bucket_id_help: Bucket identifier the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
+        calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
+          %{state}). It is persisted and can be resumed later; list revisions with
+          `aeat app modelo work revisions %{work_unit_id}` and re-inspect this one
+          with `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
+        casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
+        create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
+        create_reused: Existing work unit returned (idempotent on modelo/year/period/revision);
+          nothing new was created. Rename it with `aeat app modelo work rename`.
+        create_reused_name_match: Existing work unit returned (idempotent on modelo/year/period/revision);
+          nothing new was created. The supplied --name matches the stored name.
+        create_reused_renamed: Existing work unit returned (idempotent on modelo/year/period/revision);
+          nothing new was created. The supplied --name was applied as a rename to
+          %{name}.
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -530,17 +566,27 @@ cli:
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
+        invalid_amendment_kind: --kind must be one of {choices}; got {kind}.
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
           plus . _ : - separators, max 128 chars)'
+        invalid_calculation_revision_id: calculation_revision_id must be a 64-character
+          lowercase hex string (SHA-256 digest)
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
           (SHA-256 digest)
+        kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
+        kv_format_error: '{flag} must be {key_label}={value_label}; got {spec}.'
         list_help: List registered work units, optionally filtered by bucket
+        missing_binding_guidance: '%{base} Supply the value with --binding KEY=VALUE
+          on this command, or run `%{discover}` to list every binding the calculation
+          still needs.'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
         notes_help: Optional notes attached to the filing record
-        override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
+        override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
+          app modelo bindings list --missing` to see the bindings the calculation
+          needs.
         period_help: Work-unit period token; for Modelo 036 use alta, modificacion,
           or baja; periodic examples include Q1, 4T, 0A, and 01
         period_token_invalid: '--period ''%{token}'' is not a valid period token for
@@ -554,13 +600,18 @@ cli:
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
+        relation_not_decimal: 'The --relation value for {key} is not a decimal: {value}.'
         rename_help: Update the display name of a work unit
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT
         resume_workflow_run_id_help: 16-character workflow run id
-        revision_help: Stable id of the targeted registry modelo revision
+        revision_help: Stable id of the targeted registry modelo revision; run `aeat
+          app modelo describe MODELO` to see the available revision ids.
+        revision_show_help: Show one stored calculation revision's persisted casilla
+          values (without recomputing)
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
+        set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
         status_help: Show the metadata of one work unit
@@ -642,6 +693,10 @@ cli:
       bucket_id_help: Bucket identifier whose event history should be inspected
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
+      history:
+        invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00);
+          got {raw}.'
+        since_after_until: --since must be before or equal to --until.
       history_help: Show the append-only event history for one bucket
       object_id_help: Filter the history to events targeting a specific object_id
         (exact match)
@@ -660,6 +715,41 @@ cli:
       key_help: Key to read (e.g. tax.id, iva.regime)
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
+      detail:
+        client_json_bad_wrapper: client JSON at {path} has a non-object "installed"
+          wrapper
+        client_json_invalid: 'client JSON at {path} is not valid JSON: {reason}'
+        client_json_not_desktop: client JSON at {path} is not a Cloud Console Desktop
+          client; expected an "installed" wrapper key
+        client_json_schema_invalid: 'client JSON at {path} failed schema validation:
+          {reason}'
+        client_json_unreadable: 'could not read client JSON from {path}: {reason}'
+        client_unregistered: no OAuth client is registered for profile {profile}
+        no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh
+          without a prior login
+      errors:
+        auth_failed: 'Google authentication failed: {detail}'
+        browser_open: 'Could not open a browser to authorise Google access: {detail}'
+        client_not_registered: No Google OAuth client is registered for this profile.
+          Run `aeat config google register --client-json <path>` first.
+        client_revoked: The registered Google OAuth client has been revoked. Re-register
+          it with `aeat config google register`.
+        keychain_locked: The system keychain that stores the Google credentials is
+          locked or unavailable.
+        loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
+        network: 'Could not reach Google: {detail}'
+        profile_unbound: No active profile. Run `aeat config profile switch <name>`
+          or pass `--profile`.
+        scope_insufficient: The access granted for Google is missing required permissions.
+          Run `aeat config google login` and accept every permission.
+        storage: 'Could not reach Google Drive storage: {detail}'
+        token_expired: Google access has expired (testing-project tokens lapse after
+          7 days). Run `aeat config google login`.
+        token_revoked: Google access has been revoked. Run `aeat config google login`
+          to authorise again.
+        unsecured_mode: Google access is blocked while the secret store runs in unsecured
+          mode for a profile with a real NIF.
+        validation: 'The data supplied for Google did not pass validation: {detail}'
       folder:
         folder_id_help: Google Drive folder id
         get_help: Show the configured Google Drive root folder
@@ -753,6 +843,9 @@ cli:
         show_help: Show the latest census AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
       create_help: Initialize a new active profile and config bucket.
+      delete_active_cleared: The deleted profile was the active one; the active-profile
+        pointer has been cleared. Run 'aeat config profile switch NAME' or 'aeat config
+        profile create NAME' to resume work.
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
@@ -890,12 +983,18 @@ cli:
       target_label: Target
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_integrity_internal: Internal application problem; not a fault in your
+        profile and not something you can fix yourself.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
+      audience_internal: internal application issue
       auth_label: Auth
       checks_heading: Checks
       detail_label: Detail
+      finding_label: '-'
+      finding_optional: optional
+      finding_required: required
       logs_label: Logs
       next_label: Next
       note_label: Note
@@ -980,6 +1079,9 @@ cli:
       id_help: Ledger transaction id to attach evidence to
       purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
         transaction
+    categories:
+      header: RECOGNISED LEDGER SPENDING CATEGORIES
+      help: List the spending-category ids accepted by --category-id, grouped by family
     check:
       bucket_id_help: Bucket id to probe (defaults to the active profile bucket).
       help: Probe ledger transactions in the addressed bucket (defaults to the active
@@ -996,6 +1098,8 @@ cli:
       iva_rate_help: IVA rate as a decimal, for example 0.21
       taxable_base_help: Taxable base amount
     errors:
+      command_input_invalid: 'Refused. The transaction is invalid: {details}'
+      command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation, or
         use --dry-run first
       filter_parse_error: Failed to parse ledger filter
@@ -1008,6 +1112,10 @@ cli:
       id_prefix_too_long: Transaction id prefix %{prefix!r} is longer than 64 characters
         (a full SHA-256 digest).
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
+      unknown_category: Unrecognised --category-id {category!r}. Run `aeat app ledger
+        categories` to list the recognised spending-category ids.
+      unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
+        {providers}.'
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
@@ -1020,11 +1128,16 @@ cli:
       include_split_siblings_help: Expand the chain to include events for every split
         sibling that shares a split_group_id with this transaction
     import:
+      all_rows_skipped: 'No new entries were imported: all {skipped} parsed row(s)
+        already exist in the ledger (duplicate transaction ids).'
       dry_run_help: Run the import in dry-run mode (without saving)
       help: Import bank statements or records into the accounting ledger
+      no_rows_imported: 'No entries were imported: the file parsed but contained no
+        data rows. A bank CSV must have a header row naming a date, an amount, and
+        a description column followed by at least one data row.'
       path_help: Path to the bank statement file or directory
       period_help: Fiscal period for the import
-      provider_help: Statement format provider (e.g., N26, Revolut)
+      provider_help: 'Statement format provider. Recognised values: {providers}'
       source_help: Original file used to verify imported rows
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
@@ -1033,21 +1146,32 @@ cli:
       amount: Amount
       archived: Archived
       bucket: Bucket
+      business_classification: Classification
+      business_pct: Business %
+      category_id: Category
       checked: Checked transactions
       children: Children
+      counterparty: Counterparty
       created_event_id: Created bucket event
+      currency: Currency
       date: Date
       description: Description
       dialect: Detected format
+      direction: Direction
       dry_run: DRY RUN MODE
       event_count: Event count
       event_id: Event id
       export_id: Export ID
       id: ID
       imported: Entries imported
+      irpf_category: IRPF category
+      iva_amount: IVA amount
+      iva_rate: IVA rate
       lifecycle_state: Lifecycle state
       merged_id: Merged transaction id
       'no': 'No'
+      notes: Notes
+      notice: Notice
       output: Output
       parent_id: Parent transaction id
       pending: Pending review
@@ -1064,7 +1188,9 @@ cli:
       source: Source
       split_group_id: Split group id
       stashed: Stashed
+      taxable_base: Taxable base
       valid: Valid
+      value_date: Value date
       warnings: Warnings
       'yes': 'Yes'
     link:
@@ -1342,6 +1468,8 @@ cli:
     period_help: Tax period to review (for example, 2026-Q1)
     status:
       drafts_empty: No saved declaration drafts were found.
+      drafts_empty_with_work_units: No legacy declaration drafts are saved - this
+        is normal and does not affect your modelo work units below.
       drafts_present: '%{count} saved declaration draft(s) exist in this local storage.
         A fresh empty workspace normally has 0, so this profile/database already contains
         local draft state.'
@@ -1353,7 +1481,13 @@ cli:
       next_import_command: '  aeat app ledger import <bank-statement.csv> --provider
         csv - import bank transactions.'
       next_landing_command: '  aeat --help - return to the command guide.'
+      next_modelo_work_command: '  aeat app modelo work create - start a modelo declaration
+        from your ledger data.'
       next_review_command: '  aeat app ledger review - review imported rows.'
+      next_work_calculate_command: '  aeat app modelo work list - resume an in-progress
+        modelo work unit.'
+      next_work_create_command: '  aeat app modelo work create - start a work unit
+        for another modelo.'
       profile_active: You are working in profile `%{profile}`.
       profile_missing: No active profile is configured. Run `aeat config profile create
         NAME` before importing data.
@@ -1366,7 +1500,12 @@ cli:
       transactions_empty: No bank transactions have been imported yet.
       transactions_present: '%{count} bank transaction(s) are available in the ledger.'
       work_units_empty: No modelo work units have been started yet.
-      work_units_present: '%{count} modelo work unit(s) exist in this local storage.'
+      work_units_present: '%{count} modelo work unit(s) are in progress in this local
+        storage - your modelo work is saved; resume it with `aeat app modelo work
+        list`.'
+      work_units_present_with_discarded: '%{count} active modelo work unit(s) (%{discarded}
+        discarded) in this local storage - your active modelo work is saved; resume
+        it with `aeat app modelo work list`.'
     status_help: Show profile, ledger, and modelo readiness
     verbose_help: Show details and next action when available
   registry:
@@ -1532,6 +1671,8 @@ cli:
       welcome_profile: Welcome back. Active profile is `%{profile}`.
     language_help: Output language for this command (overrides the active profile)
     quiet_help: Show only errors on stderr
+    startup_import_error: 'Cannot start the AEAT command surface: missing dependency
+      {dependency}. Run `aeat config repair`.'
     unavailable_app_help: App commands are unavailable because an optional dependency
       is missing
     verbose_help: Show internal informational logs on stderr
@@ -1685,6 +1826,68 @@ entries:
     label: AEAT Electronic Office
     purpose: Landing page of the AEAT Electronic Office.
 errors:
+  auth:
+    auth_aeat_login_assertion: The post-login verification with the AEAT could not
+      be produced.
+    auth_aeat_session_expired: The authenticated AEAT session has expired. Authenticate
+      again to continue.
+    auth_auth: An AEAT authentication error occurred.
+    auth_auth_authenticator_persisted_session_invalid: The persisted AEAT browser
+      session cannot be trusted. Authenticate again.
+    auth_auth_certificate: A certificate-authentication error occurred.
+    auth_auth_certificate_expired: The digital certificate has expired. Renew the
+      certificate before authenticating.
+    auth_auth_certificate_handshake: The TLS handshake input is not valid. Check the
+      URL provided.
+    auth_auth_certificate_load: The PKCS#12 certificate data could not be parsed.
+      Check that the file is not corrupted.
+    auth_auth_certificate_nif_parse: No NIF or NIE could be extracted from the certificate
+      subject. Check that the certificate belongs to an individual.
+    auth_auth_certificate_password: The certificate password is missing or wrong.
+      Set the environment variable to the correct password.
+    auth_auth_certificate_pre_expiry: The digital certificate is about to expire.
+      Renew it before it expires to avoid interruptions.
+    auth_auth_clave_movil_clave_movil_approval_timeout: Cl@ve authentication did not
+      complete in time. Approve the request on your device and try again.
+    auth_auth_clave_movil_clave_movil_configuration: Required Cl@ve Móvil settings
+      are missing or malformed. Review the Cl@ve configuration.
+    auth_auth_configuration: Required authentication settings are missing or malformed.
+      Review the authentication configuration.
+    auth_auth_validation: The authentication parameters failed validation. Correct
+      the values shown and try again.
+    auth_google: A Google authentication error occurred.
+    auth_google_client_not_registered: No Google Desktop OAuth client is registered
+      for the active profile. Register a client to use Google features.
+    auth_google_client_revoked: The registered Google Desktop OAuth client has been
+      revoked. Register a new client.
+    auth_google_expired: The Google refresh token has expired under the 7-day Testing-project
+      cap. Re-authorize Google access.
+    auth_google_revoked: The Google refresh token has been revoked. Re-authorize Google
+      access.
+    auth_google_scope_insufficient: The granted Google scopes do not include every
+      scope this operation requires. Re-authorize, granting all requested scopes.
+    auth_outbound_storage_permission: The active credentials lack the permission required
+      for this storage operation.
+    auth_session_corrupt: The persisted session metadata cannot be parsed. Authenticate
+      again to create a fresh session.
+    auth_session_unavailable: No verified active AEAT session is available. Authenticate
+      before continuing.
+    auth_storage_bucket_recovery_verification: The recovery code entered is not valid.
+      Re-type the 24 words exactly as they appear in the backup.
+    auth_storage_keyring_unavailable: The operating-system keychain is unavailable.
+      Check that a credential store is installed and active.
+    auth_storage_master_key_kdf_version: The master-key file uses a key-derivation
+      version this build does not support. Update the application.
+    auth_storage_master_key_keychain_locked: The operating-system keychain is locked.
+      Unlock it (Touch ID, Windows Hello or your credential-manager unlock) and try
+      again.
+    auth_storage_master_key_material_missing: No master-key material exists. The secure
+      store has not been provisioned yet.
+    auth_storage_master_key_passphrase_mismatch: The passphrase does not unwrap the
+      master key. Re-enter it; if you have forgotten it, recover with your recovery
+      key.
+    auth_storage_master_key_unavailable: The master key could not be acquired from
+      any provider. Check the keychain or the file-fallback passphrase.
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
@@ -1711,13 +1914,579 @@ errors:
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
+  censo:
+    no_snapshot_captured: No census snapshot has been captured for profile {profile_id}.
+    profile_not_found: Profile {profile_id} does not exist; create it before applying
+      census.
+    sede_g313_no_census: AEAT sede G313 returned no readable census for profile {profile_id};
+      confirm your certificate or Cl@ve is registered against this NIF.
+    sede_no_census: AEAT's sede returned no readable census for profile {profile_id}.
+  error:
+    error_access_gate_submission: The access-gate policy rejected a submission operation.
+    error_access_gate_submission_preflight: Access-gate preflight rejected a write
+      operation.
+    error_aeat_core: An internal application error occurred.
+    error_aeat_observability: An error occurred in the application telemetry.
+    error_application_live: The live AEAT read orchestration failed.
+    error_application_registry: The modelo registry orchestration failed or was refused.
+    error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
+      100 borrador shape.
+    error_calculations_registry: An error occurred loading, resolving or validating
+      the calculation registry.
+    error_calculations_registry_load: The calculation registry files could not be
+      parsed.
+    error_calculations_registry_snapshot: A filing-grade registry snapshot could not
+      be selected.
+    error_calculations_registry_validation: The calculation registry definitions are
+      incomplete or contradictory.
+    error_categories: An error occurred in the expense categories.
+    error_categories_validation: A category record failed validation.
+    error_deadlines_deadline: An error occurred in the deadline calculation.
+    error_deadlines_profile: The self-employed profile could not be loaded or validated
+      for the deadline calculation.
+    error_deadlines_schedule_computation: The engine could not produce a valid deadline
+      schedule. Check the year requested and the profile facts.
+    error_deadlines_validation: A deadline record failed validation.
+    error_declaracion_template_not_detected: The declaration PDF's template revision
+      could not be auto-detected.
+    error_domain: A domain logic error occurred.
+    error_domain_submission: A submission-domain error occurred.
+    error_domain_submission_preflight: The draft could not pass the local submission
+      preflight.
+    error_domain_validation: A domain identifier or model is not valid.
+    error_filing_amendment: An amendment-related filing error occurred.
+    error_filing_application: An error occurred in the filing application layer.
+    error_filing_builder: Filing builder selection or execution failed.
+    error_filing_computation: The builder could not evaluate a formula casilla.
+    error_filing_draft: An error occurred in the filing draft.
+    error_filing_export: Exporting the draft to the AEAT wire format failed.
+    error_filing_export_validation: An export field value or layout is not valid.
+    error_financial_aggregation: An error occurred while aggregating the financial
+      transactions.
+    error_financial_aggregation_period: The requested filing period could not be parsed
+      unambiguously.
+    error_financial_aggregation_validation: The aggregation payload or state is not
+      valid.
+    error_financial_attachments_attachment: An attachment-service error occurred.
+    error_financial_attachments_attachment_not_found: The requested attachment was
+      not found.
+    error_financial_invoices_invoice: An invoice-catalogue error occurred.
+    error_financial_invoices_invoice_catalogue: The invoice catalogue is invalid or
+      inconsistent.
+    error_financial_invoices_invoice_link: The invoice and transaction could not be
+      linked.
+    error_financial_invoices_invoice_not_found: The requested invoice was not found.
+    error_financial_provider: An error occurred while importing the financial document.
+    error_financial_transactions_transaction: A transaction-catalogue error occurred.
+    error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
+    error_financial_vat: A VAT calculation error occurred.
+    error_financial_vat_catalogue: The VAT catalogue could not be loaded, resolved
+      or validated.
+    error_financial_vat_category_not_found: The requested VAT category was not found
+      in the catalogue.
+    error_financial_vat_classification: The VAT could not be classified deterministically.
+    error_financial_vat_rate_not_found: No VAT rate was found for the requested member
+      state and kind.
+    error_financial_vat_rate_overlap: Two VAT rates share an effective-date window.
+    error_fixture_provisioning: The test fixtures could not be provisioned.
+    error_invoice_link_inconsistency: The link left the invoice and transaction catalogues
+      out of sync. Reconcile both catalogues manually.
+    error_invoice_validation: An invoice record failed validation.
+    error_justificante: A receipt-related error occurred.
+    error_justificante_csv_not_found: The PDF does not contain a Código Seguro de
+      Verificación.
+    error_llm: A language-model error occurred.
+    error_manuals_manual: A manuals-related error occurred.
+    error_manuals_manual_not_found: The requested manual, year or part was not found.
+    error_manuals_manual_review_required: A manual record lacks reviewer metadata.
+    error_manuals_rule_extraction: Manual rule extraction is not available.
+    error_manuals_validation: A manual record failed validation.
+    error_modelo_aggregation_binding: The bucket-derived aggregation bindings conflict
+      with the input provided.
+    error_modelo_amendment_evidence_missing: A filing cannot be amended without imported
+      official evidence. Import the original filing receipt first.
+    error_modelo_amendment_target_state: A filing not in the current state cannot
+      be amended; it has already been superseded by a later one.
+    error_modelo_calculation_registry_unavailable: The registry snapshot for the work
+      unit's modelo, year and period could not be resolved.
+    error_modelo_calculation_revision_not_found: The requested calculation revision
+      was not found.
+    error_modelo_calculation_revision_state: The requested state transition is not
+      compatible with the calculation revision's current state.
+    error_modelo_casilla_provenance_missing: An engine-result casilla has no definition
+      in the registry.
+    error_modelo_external_filing_import: The imported external filing could not be
+      persisted. Check the casilla values and the evidence reference.
+    error_modelo_filing_record_not_found: The requested filing record was not found.
+    error_modelo_iva_wallet_reconciliation_blocked: The Modelo 303 calculation is
+      blocked by IVA wallet reconciliation. Resolve the pending reconciliation before
+      continuing.
+    error_modelo_verification_report_not_found: The requested verification report
+      was not found.
+    error_modelo_work_unit_already_discarded: The work unit is already discarded.
+    error_modelo_work_unit_mutation_refused: A discarded work unit cannot be modified.
+    error_modelo_work_unit_not_found: The requested work unit was not found.
+    error_modelos: A tax-modelo error occurred.
+    error_modelos_validation: A modelo code violates its shape invariants.
+    error_normatives_normative: A normative-related error occurred.
+    error_normatives_normative_not_found: The requested normative or article was not
+      found.
+    error_normatives_validation: A normative field value is not valid.
+    error_outbound_storage_not_found: The requested storage object or namespace does
+      not exist.
+    error_pdf_import_pdf_modelo_import: Importing the filing from the PDF failed.
+    error_pdf_import_scrub: A safe version of the PDF could not be produced.
+    error_period: A period-related error occurred.
+    error_period_validation: The period token provided is malformed.
+    error_portals_portal_registry: An error occurred in the AEAT portal registry.
+    error_portals_unknown_portal: The AEAT portal provided does not exist.
+    error_portals_validation: A portal's metadata failed validation.
+    error_profile_amortization_ledger: A profile amortization ledger operation is
+      not valid.
+    error_profile_asset_record: A profile asset record is structurally invalid.
+    error_profile_cross_store_drift: A profile's physical stores disagree on its identity.
+      The profile is not usable.
+    error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
+    error_profile_tax_residence: A tax-residence profile error occurred.
+    error_profile_validation: A profile record failed validation.
+    error_renta: An error occurred in the RENTA calculation.
+    error_renta_validation: A RENTA field value is not valid.
+    error_rental_amortization_cap_exceeded: The cumulative amortization would exceed
+      the legal cap for the rental asset.
+    error_rental_contract_not_found: The rental contract provided was not found.
+    error_rental_finca_not_found: The property provided was not found.
+    error_rental_register: An error occurred in the rental register.
+    error_rental_tier_resolution: The rental contract data is inconsistent and the
+      applicable reduction tier could not be resolved.
+    error_rental_validation: A rental record failed validation.
+    error_resources_backend: An error occurred while reading the bundled application
+      data.
+    error_resources_load: A bundled application resource could not be loaded.
+    error_resources_not_found: The requested bundled resource was not found.
+    error_resources_validation: A bundled application file failed strict validation.
+    error_review: A review error occurred.
+    error_sanitization: An error occurred while sanitizing the document.
+    error_sede: An error occurred in the AEAT electronic Sede.
+    error_sede_expediente_not_found: No expediente matched the requested filter.
+    error_sede_navigation: A navigation step in the AEAT Sede failed.
+    error_storage_bucket: An error occurred in the storage bucket lifecycle.
+    error_submission_validation: A submission model failed validation.
+    error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
+    error_transaction_llm_classifier: The transaction classification by the language
+      model failed.
+    error_transaction_not_found: The requested transaction was not found.
+    error_transaction_persistence: The transaction catalogue could not be persisted.
+    error_transaction_validation: A transaction field value is not valid.
+    error_usage_ratios_validation: A usage-ratio profile violates its domain invariants.
+    error_user_profile: A user-profile error occurred.
+    error_vat_prorrata: An error occurred in the IVA prorrata calculation.
+    error_vat_prorrata_input: The IVA prorrata inputs violate their invariants.
+    error_vat_prorrata_sector: The sectoral-separation inputs for the IVA prorrata
+      are inconsistent.
+    error_vat_validation: A VAT field value is not valid.
+    error_wizard: A wizard error occurred.
+    error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
+    error_workflow: A workflow error occurred.
+    error_workflow_component: A workflow component raised an unexpected exception.
+  fail:
+    census_sync: The Modelo 036 census sync failed.
+    currency_error: Currency normalization failed.
+    declaration_parse: The filed declaration export could not be parsed for reconciliation.
+    exchange_rate_provider: The exchange-rate provider did not respond.
+    fail_borrador_parse: The Modelo 100 borrador PDF could not be parsed into a filing.
+    fail_browser_evasion: Browser evasion setup could not be applied.
+    fail_browser_session_browser: A browser session error occurred.
+    fail_browser_validation: The browser parameters failed validation.
+    fail_declaracion_parse: The PDF could not be parsed into a declaration.
+    fail_export: An error occurred while exporting to the AEAT.
+    fail_export_format: The filing draft could not be serialized to the BOE format
+      requested.
+    fail_filing_import: The filing could not be imported from the receipt PDF.
+    fail_financial_attachments_attachment_persistence: The attachment store could
+      not read or write the data.
+    fail_financial_invoices_invoice_persistence: The invoice catalogue could not be
+      saved or loaded.
+    fail_financial_ledger_storage: The bucket-scoped ledger storage could not be resolved
+      or used.
+    fail_financial_usage_ratios_usage_ratio_persistence: The usage-ratio profile could
+      not be read or written.
+    fail_google_browser_open: The browser could not be opened to show the Google consent
+      page. Open the link manually.
+    fail_google_loopback_bind: The local HTTP receiver could not bind a port. Close
+      other applications that may be using it and try again.
+    fail_google_network: The Google server could not be reached. Check your internet
+      connection and try again.
+    fail_justificante_parse: The PDF could not be parsed into a receipt.
+    fail_llm_cache: A language-model cache entry could not be read, written or parsed.
+    fail_llm_provider: The language-model provider returned an unrecoverable error.
+    fail_llm_rate_limit: The language-model provider rejected the request due to rate
+      limits. Wait a few minutes and try again.
+    fail_locale_manager: An error occurred while managing or parsing the locale files.
+    fail_manuals_manual_parse: A manual record failed schema validation.
+    fail_mcp_launch: The MCP server could not be launched.
+    fail_modelo_calculation_revision_persistence: The calculation-revision catalogue
+      could not be saved or loaded.
+    fail_modelo_filing_record_persistence: The filing-record catalogue could not be
+      saved or loaded.
+    fail_modelo_verification_report_persistence: The verification-report catalogue
+      could not be saved or loaded.
+    fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
+      or loaded.
+    fail_normatives_normative_parse: A normative record failed schema validation.
+    fail_outbound_storage: A storage-provider error occurred.
+    fail_outbound_storage_network: The storage service could not be reached. Check
+      your internet connection and try again.
+    fail_outbound_storage_unavailable: The storage service is temporarily unavailable.
+      Wait a few minutes and try again.
+    fail_review_source_load: The source file is present but could not be parsed.
+    fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
+    fail_sede_census_parse: A value on the AEAT Sede census page could not be parsed.
+    fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
+      or the file is malformed.
+    fail_sede_parse: The captured AEAT Sede page could not be parsed.
+    fail_sede_validation: The data captured from the AEAT Sede does not have the expected
+      shape.
+    fail_site_health: The site health check failed.
+    fail_storage: A storage error occurred.
+    fail_storage_blob_not_found: The requested object was not found in the encrypted
+      store.
+    fail_storage_bucket_recovery_unavailable: The recovery wrap for the active bucket
+      could not be loaded. Recovery may never have been enrolled.
+    fail_storage_persistence: A persistence error occurred in the secure store.
+    fail_storage_repository: A repository operation failed.
+    fail_storage_secret_not_found: No secret was found for the requested key.
+    fail_storage_secret_store: An input/output error occurred in the secret store.
+    fail_user_profile_not_found: The requested user profile section or field was not
+      found.
+    fail_user_profile_schema_load: The user-profile schema could not be loaded.
+    ledger_check: A ledger consistency check surfaced a blocking finding.
+    ledger_link: A ledger transaction could not be linked to a modelo binding.
+    missing_exchange_rate: An exchange rate is missing for the date and currency provided.
+    modelo_036_lifecycle: An error occurred in the Modelo 036 lifecycle (registration,
+      modification or deregistration).
+    modelo_export: An error occurred while exporting the modelo revision.
+    modelo_export_manifest: The modelo export manifest could not be built or validated.
+    overview: An error occurred while building the overview.
+    overview_agenda: The overview could not enumerate the next-due actions.
+    overview_backlog: The overview could not classify the past-due obligations.
+    overview_calendar: The overview calendar could not be assembled for the requested
+      window.
+    overview_explain: The overview explanation could not be decomposed for the requested
+      obligation.
+    profile_export: An error occurred while exporting the profile archive.
+    profile_import: An error occurred while importing the profile archive.
+    reconciliation: An error occurred while reconciling the periodic filings with
+      the annual summary.
+    stale_exchange_rate: The only available exchange rate is outside the acceptable
+      freshness window.
   financial:
     source_file_not_found: 'Source file does not exist: {path}'
+  identity:
+    cif_check_char_mismatch_mixed: 'CIF check character is incorrect (kind {kind}):
+      expected {expected} or {alt}, got {got}.'
+    cif_check_digit_mismatch: 'CIF check digit is incorrect (kind {kind}): expected
+      {expected}, got {got}.'
+    cif_check_letter_mismatch_kind: 'CIF check letter is incorrect (kind {kind}):
+      expected {expected}, got {got}.'
+    cif_invalid_shape: '{candidate} is not shaped like a CIF: a CIF is a leading letter
+      (A-H, J, N, P-S, U, V or W) followed by 7 digits and a check character.'
+    document_empty: The identity document is empty.
+    nie_check_letter_mismatch: 'NIE check letter is incorrect: for {body} the check
+      letter must be {expected}, not {got}. Correct the NIE to {body}{expected}.'
+    nie_invalid_shape: '{candidate} is not shaped like a NIE: a NIE starts with X,
+      Y or Z, followed by 7 digits and a check letter.'
+    nif_check_letter_mismatch: 'NIF check letter is incorrect: for {digits} the check
+      letter must be {expected}, not {got}. Correct the NIF to {digits}{expected}.'
+    nif_invalid_shape: '{candidate} is not shaped like a NIF: a NIF is 8 digits followed
+      by a check letter.'
+    validate_expects_str: Identity validation expects a text value; got {got_type}.
+  integrity:
+    integrity_aeat_core_validation: An internal data-integrity check failed.
+    integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
+    integrity_filing_amendment_validation: The amendment violates a legal or structural
+      invariant.
+    integrity_filing_fixture: The filing fixture data is not valid.
+    integrity_filing_validation: Filing validation surfaced a blocking finding.
+    integrity_financial_attachments_attachment_validation: The attachment failed validation.
+      Check the file and attach it again.
+    integrity_identity_document: The identity document provided is not a valid Spanish
+      NIF, NIE or CIF.
+    integrity_justificante_verification: The receipt verification with the AEAT could
+      not be completed.
+    integrity_manuals_manifest: The manual manifest failed its schema or hash checks.
+    integrity_observability_aeat_corpus_drift: Replay detected that the AEAT reference
+      corpus has drifted from the recorded state.
+    integrity_observability_run_trace_validation: The persisted run trace failed strict
+      validation.
+    integrity_outbound_storage: The fetched payload failed integrity checks (hash,
+      size or etag).
+    integrity_portals_portal_integrity: The AEAT portal registry violates a structural
+      invariant.
+    integrity_profile_snapshot_hash_mismatch: The profile snapshot hash does not match
+      the current projection.
+    integrity_profile_snapshot_not_found: No profile snapshot exists with the identifier
+      provided.
+    integrity_storage_blob: A stored object's SHA-256 hash disagrees with its manifest.
+    integrity_storage_classification: A record's declared sensitivity class is incompatible
+      with its repository.
+    integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
+      validated.
+    integrity_storage_corpus_manifest_drift: 'The on-disk corpus diverges from its
+      manifest: files have been added, removed or modified.'
+    integrity_storage_corpus_manifest_tamper: The corpus manifest's self-attesting
+      digest does not match its body. The manifest may be corrupted or tampered with.
+    integrity_storage_decryption: Decryption of a stored object failed. The data may
+      be corrupted or the key is wrong.
+    integrity_storage_encryption: An encryption or decryption error occurred in the
+      secure store.
+    integrity_storage_envelope_version: An on-disk object's version does not match
+      what the application expects.
+    integrity_storage_key_derivation: A key-derivation step failed in the secure store.
+    integrity_storage_nonce_collision: A nonce collision was detected in the secure
+      store.
+    integrity_storage_path_containment: A computed path escapes the configured root
+      directory.
+    integrity_storage_retention_policy: A record's retention metadata violates its
+      classification policy.
+    integrity_storage_secure_object_unreadable: A stored secure object could not be
+      decrypted under the current master key.
+    integrity_storage_validation: A storage parameter failed validation.
+    integrity_verification: Verification failed unrecoverably. The reference data
+      or the calculation engine may be corrupted.
+    profile_import_signature: The profile archive failed its signature or integrity
+      check. Do not import archives from an untrusted source.
+  internal:
+    internal_cli_unexpected_boundary: The command failed due to an unexpected internal
+      error.
+    internal_observability_run_context_missing: 'Internal error: a telemetry event
+      was recorded outside an active run context.'
+    internal_output_rendering: 'Internal error: the command output could not be rendered
+      safely.'
+    internal_wizard_script_overflow: 'Internal error: the wizard closed with unconsumed
+      scripted answers.'
+    internal_wizard_script_underflow: 'Internal error: the wizard asked for more answers
+      than it had scripted.'
+    internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort
+      signal.'
+  locked:
+    locked_access_gate_live_submit_forbidden: Live submission to the AEAT is permanently
+      forbidden. This application builds, validates and exports filings; the filing
+      itself must be done outside the application.
+    locked_auth_acquisition: Another process is acquiring AEAT authentication right
+      now. Wait for it to finish and try again.
+    locked_google_keychain: The operating-system keychain holding the Google credentials
+      is locked or unreachable. Unlock the keychain and try again.
+    locked_storage_bucket_busy: The storage bucket is in use by another process. Wait
+      for that process to finish and try again.
+    locked_storage_bucket_session: This operation requires an unlocked storage bucket.
+      Run `aeat config unlock` and try again.
+    locked_storage_lock_acquisition: The exclusive file lock could not be acquired
+      within the timeout. Another process holds it; wait and try again.
+  refused:
+    auth_configure_no_active_bucket: Authentication cannot be configured without an
+      active profile. Create a profile with `aeat config profile create NAME` and
+      try again.
+    auth_profile_identity_mismatch: The active profile identity cannot own the requested
+      authentication session.
+    bootstrap_already_complete: A profile already exists; first-run setup runs only
+      once. Use `aeat config profile switch NAME` to change profile.
+    census_apply_conflict: The census cannot be applied because there is in-flight
+      work on a dependent unit. Resolve the pending state first.
+    census_field_validation: The AEAT census returned a value the schema cannot accept.
+      Review the field named with your adviser.
+    census_not_available: The AEAT returned no readable census. You may not be registered
+      for IAE, or your certificate may not be registered against your NIF.
+    ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
+      fileable.
+    modelo_036_prior_alta_required: A Modelo 036 modification or deregistration cannot
+      be requested without a prior registration.
+    modelo_036_terminal_state: The Modelo 036 record is already deregistered and accepts
+      no further operations.
+    modelo_census_stale: 'The operation is refused because you applied a new census
+      after this work was produced. The AEAT is the binding legal source: regenerate
+      it against the current census.'
+    modelo_export_cross_bucket: The addressed revision belongs to a bucket other than
+      the active profile's. Export only operates within the active profile bucket.
+    modelo_export_no_active_bucket: Export requires an active profile. Create or select
+      a profile and try again.
+    profile_already_registered: A profile with that name already exists. Use `aeat
+      config profile switch NAME` to switch to it.
+    profile_import_collision: The imported profile identifier collides with an existing
+      one.
+    profile_locked: This operation requires an unlocked profile. Run `aeat config
+      unlock` and try again.
+    profile_name_collision: The profile name provided is already in use. Choose a
+      different name.
+    reconciliation_cross_bucket: The addressed work unit belongs to a bucket other
+      than the active profile's. Reconciliation only operates within the active profile
+      bucket.
+    reconciliation_declaration_source_unsupported: Reconciliation from a declaration
+      is not available yet.
+    reconciliation_drift: Reconciliation detected arithmetic or identity drift across
+      declarations. Review the amounts before continuing.
+    reconciliation_evidence_invalid: The external evidence provided could not be parsed.
+      Check the receipt file.
+    refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
+      This operation cannot contact the AEAT under the current configuration.
+    refused_apoderado_live_check_unavailable: The live check of representatives is
+      unavailable, or contact with the AEAT failed.
+    refused_apoderado_not_configured: No representative is configured. Configure the
+      representative before checking its status.
+    refused_apoderado_unknown_scope: The representation scope provided is not in the
+      available catalogue.
+    refused_application_live_input: The live AEAT read request cannot be executed
+      with the input provided.
+    refused_application_registry_input: The modelo registry request cannot be executed
+      with the input provided.
+    refused_calculations_casilla_constraint: A computed casilla value falls outside
+      the limits declared for that casilla. Review the calculation inputs.
+    refused_cli_boundary: The command refused the request.
+    refused_cli_log_level_resolution: The log-level options provided are contradictory.
+      Use only one of --quiet, --verbose or --debug.
+    refused_cli_non_tty: This command needs interactive input, but standard input
+      is piped. Run it in an interactive terminal.
+    refused_cli_validation_boundary: The command input failed validation. Run `aeat
+      config repair` or reset the profile state.
+    refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
+      the command confirming the operation.
+    refused_evidence_bundle_not_found: No evidence bundle exists with the identifier
+      provided.
+    refused_evidence_bundle_verification: Evidence-bundle verification failed and
+      the operation was not forced.
+    refused_filing_calculate: The filing calculation or summary failed its invariants.
+    refused_financial_aggregation_category_coverage: A transaction lacks category
+      or profile coverage. Classify the transaction before aggregating.
+    refused_financial_aggregation_missing_classification: Some in-period transactions
+      still need classification. Classify them all before aggregating.
+    refused_financial_aggregation_unsupported_modelo: No aggregation contract is available
+      for the requested modelo.
+    refused_financial_ledger_no_active_bucket: The ledger operation requires an active
+      profile. Create or select a profile and try again.
+    refused_financial_ledger_transaction_id_prefix: The transaction-id prefix matches
+      zero or multiple transactions. Provide a longer prefix.
+    refused_financial_provider_invalid_source: The source document is unreadable or
+      structurally invalid.
+    refused_financial_provider_unsupported_source: No provider can interpret this
+      source document.
+    refused_financial_provider_validation: A field in the financial document (date
+      or amount) failed validation.
+    refused_financial_usage_ratios_census_mismatch: A saved home-office usage ratio
+      disagrees with the census, which is the binding legal source. Align it with
+      the census value.
+    refused_google_profile_unbound: No active profile is bound. Select a profile or
+      use --profile.
+    refused_google_unsecured_mode: Google cannot be authorized in unsecured-storage
+      mode with a profile that carries a real NIF.
+    refused_google_validation: The Google parameters provided failed validation.
+    refused_inventory_actividad_conflict: An inventory already exists for that activity
+      and year.
+    refused_inventory_actividad_not_found: No inventory exists for the activity and
+      year provided.
+    refused_inventory_service_input: An input provided violates the inventory contract.
+      Correct the input and try again.
+    refused_ledger_business_operation_invoice_input: An input provided violates the
+      business-operation invoice contract. Correct the input and try again.
+    refused_ledger_business_operation_invoice_not_found: No business-operation invoice
+      exists with the identifier provided.
+    refused_ledger_evidence_input: An evidence input provided violates the purchase-invoice
+      contract. Correct the input and try again.
+    refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the
+      identifier provided.
+    refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
+      with the identifier provided.
+    refused_live_censo_snapshot_not_found: No Modelo 036 census snapshot exists with
+      the identifier provided.
+    refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
+      the identifier provided.
+    refused_live_notifications_snapshot_not_found: No notifications snapshot exists
+      with the identifier provided.
+    refused_live_portal_not_found: No AEAT portal exists with the identifier provided.
+    refused_live_verify_observation_not_found: No verification observation exists
+      with the identifier provided.
+    refused_llm_config: The language-model client configuration is invalid or incomplete.
+    refused_llm_validation: A language-model object failed validation.
+    refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
+      consumed for the calculation.
+    refused_modelo_amendment_override_casilla: An amendment override targets a casilla
+      the registry does not declare for that modelo, year and period.
+    refused_modelo_amendment_verification: The corrected casilla map of the amendment
+      failed verification. Required casillas are missing.
+    refused_modelo_workflow_gate: The workflow gate refused the filing transition.
+      The declaration cannot be considered legally filed.
+    refused_no_active_profile: This operation requires an active profile. Create or
+      select a profile and try again.
+    refused_operator_surface_contract: The requested surface is outside the accepted
+      contract.
+    refused_outbound_storage_conflict: The storage operation collides with an object
+      that already exists.
+    refused_outbound_storage_quota: The storage backend rejected the operation because
+      the quota is exhausted.
+    refused_outbound_storage_validation: The storage operation parameters failed validation.
+    refused_output_format: The requested output format is not supported.
+    refused_profile_already_exists: A profile with those details already exists.
+    refused_profile_asset_validation: A profile asset record failed validation.
+    refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
+      asset's cost basis.
+    refused_profile_binding_resolution: A profile fact required for the calculation
+      could not be resolved into the correct binding channel.
+    refused_profile_foral_regime: The foral regime selected is not modelled by this
+      profile. Select a supported regime.
+    refused_profile_inventory_validation: A profile inventory ledger failed validation.
+    refused_profile_lifo_forbidden: LIFO stock valuation is not admitted for tax purposes.
+      Use FIFO, weighted average price, or average cost.
+    refused_profile_not_configured: RENTA verification needs a tax-residence profile.
+      Complete the profile before continuing.
+    refused_profile_not_found: No profile exists with the identifier provided.
+    refused_profile_preflight_missing: Modelo preflight could not find a required
+      profile selector. Complete the profile before continuing.
+    refused_profile_schema_validation: The profile data violates the schema contract.
+      Correct the values shown.
+    refused_review_edit_parse: '`--set KEY=VALUE` could not be parsed. Check the syntax
+      of the value provided.'
+    refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
+      the syntax of the filter provided.'
+    refused_review_kind_reserved: The `--kind` value provided is reserved and cannot
+      be used.
+    refused_sanitization_already_sanitized: The source document has already been sanitized.
+    refused_sanitization_signature_present: The source PDF carries a digital signature.
+      Modifying it would invalidate the signature; human review is required.
+    refused_sanitization_unknown_surface: A personal-data surface was detected that
+      the sanitizer cannot handle. Human review is required.
+    refused_sanitization_validation: The sanitizer parameters failed validation.
+    refused_storage_bucket_already_present: The import collides with a storage bucket
+      that already exists.
+    refused_storage_bucket_no_active: No active bucket could be resolved. Select a
+      profile and try again.
+    refused_storage_master_key_no_active_session: Encryption requires an active session.
+      Run `aeat config unlock` and try again.
+    refused_storage_passphrase_too_short: The passphrase is too short. It must be
+      at least 8 characters long.
+    refused_storage_secret_already_exists: A secret with that key already exists.
+      Use the overwrite option to replace it.
+    refused_storage_session_expired: The active session expired due to inactivity.
+      Re-activate it with `aeat config profile switch NAME`.
+    refused_storage_unsecured_mode: The unsecured storage backend was requested without
+      the required opt-in. It is not safe for real data.
+    refused_topic_not_found: The requested topic was not found.
+    refused_user_profile_validation: A user profile value is not valid. Correct the
+      field shown.
+    refused_wizard_missing_flag: The --quiet invocation omitted a required question.
+      Provide the missing value or run the wizard interactively.
+    refused_wizard_status: The wizard could not resolve the active profile.
+    refused_wizard_unsupported_console: The current terminal cannot host the interactive
+      wizard. Run it in a supported terminal.
+    refused_wizard_validation: A wizard answer failed validation. Correct the value
+      shown.
+    refused_workflow_aborted: The workflow was aborted.
+    refused_workflow_resume: The prior workflow run cannot be resumed.
+    unsupported_currency: The currency code provided is not supported.
   transaction:
     import_source_invalid: the source is not a valid ledger document
     ledger_import_failed: 'The ledger file cannot be imported: {reason}'
     ledger_import_requires_bucket: Ledger source import requires an active profile
       unless dry-run mode is used.
+    unknown_ledger_provider: 'Unknown ledger provider {provider!r}. Recognised providers:
+      {providers}.'
 filing:
   validation:
     deadline_missed: Submission deadline has passed
@@ -1726,6 +2495,9 @@ filing:
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
 profile:
+  errors:
+    foral_regime: '{tax_region} is a foral regime outside the scope of this profile.'
+    not_configured: No tax-residence profile is configured for RENTA.
   keys:
     description: Profile configuration keys and their descriptions
     tax:
@@ -1871,16 +2643,16 @@ wizard:
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
       is 5 digits (province code 01-52 followed by three digits).'
-    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
+    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "The guided setup could not open an interactive prompt in\
-      \ this run.\nNothing has been saved yet.\n\nTry the guided setup again from\
-      \ an interactive terminal session:\n  aeat config profile create NAME\n\nIf\
-      \ this profile state may be stale or corrupt, inspect it first:\n  aeat config\
-      \ repair\n\nTo discard only local profile state and start over:\n  aeat config\
-      \ reset --scope profile --yes"
+    unsupported_console: "The guided setup needs an interactive terminal, and this\
+      \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
+      \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
+      \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
+      2. Or create it in one step by supplying the required details as flags:\n  \
+      \   aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
@@ -2183,6 +2955,22 @@ wizard:
         prompt: First taxpayer sex code
       title: First taxpayer
     title: Setup wizard
+    verifier:
+      activity_present: 'Economic activity: check that the profile declares an activity.'
+      eu_eea_country_missing: 'Spouse residence: you indicated EU or EEA residence
+        but the country is missing. Add the country of residence.'
+      eu_eea_country_ok: 'Spouse residence: the EU or EEA country of residence is
+        consistent.'
+      obligations_consistency_ok: 'Withholding obligations: the withholding answers
+        are consistent.'
+      obligations_inconsistent: 'Withholding obligations: you declared professional
+        withholding but not that you pay professionals with withholding. Review these
+        answers.'
+      spouse_consistency_missing: 'Joint taxation: the spouse''s tax identification
+        is missing. Add it to file jointly.'
+      spouse_consistency_ok: 'Joint taxation: the spouse details are consistent.'
+      tax_id_present: 'Tax identification: check that the profile carries a NIF or
+        NIE.'
   test:
     description: Test your configuration and connectivity
     example:

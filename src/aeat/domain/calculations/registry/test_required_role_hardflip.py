@@ -16,12 +16,11 @@ from typing import Any
 import pytest
 
 from ._schema import CasillaDefinition
-from ._validate import (
+from ._validate_semantic_roles import (
     _REQUIRED_ROLE_LABEL_PATTERNS,
     _validate_required_role_declarations,
     collect_casillas_by_semantic_role,
 )
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -33,16 +32,16 @@ def _casilla(
     data_type: str = "money",
     semantic_role: str | None = None,
 ) -> CasillaDefinition:
-    return CasillaDefinition(
-        id=cid,
-        number="01",
-        label=label,
-        section=("test",),
-        data_type=data_type,  # type: ignore[arg-type]
-        semantic_role=semantic_role,
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-manual",),
-    )
+    return CasillaDefinition.model_validate({
+        "id": cid,
+        "number": "01",
+        "label": label,
+        "section": ("test",),
+        "data_type": data_type,
+        "semantic_role": semantic_role,
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual",),
+    })
 
 
 def _modelo(modelo_id: str, revision_id: str, casillas: list[CasillaDefinition]) -> Any:

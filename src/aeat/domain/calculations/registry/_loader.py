@@ -465,12 +465,30 @@ def _merge_table_fragment_by_id(
                 raise RegistryLoadError(
                     f"{path}: {item_label} {item_id!r} field {key!r} conflicts with a non-array fragment"
                 )
+            _reject_duplicate_appended_table_ids(path, existing_values, value, item_label, item_id, key)
             merged[key] = (*existing_values, *value)
             continue
         if key in merged and merged[key] != value:
             raise RegistryLoadError(f"{path}: {item_label} {item_id!r} field {key!r} conflicts with another fragment")
         merged[key] = value
     return merged
+
+
+def _reject_duplicate_appended_table_ids(
+    path: Path,
+    existing: tuple[object, ...],
+    incoming: tuple[object, ...],
+    item_label: str,
+    item_id: str,
+    field: str,
+) -> None:
+    existing_ids = {item["id"] for item in existing if isinstance(item, dict) and isinstance(item.get("id"), str)}
+    incoming_ids = {item["id"] for item in incoming if isinstance(item, dict) and isinstance(item.get("id"), str)}
+    duplicate_ids = sorted(existing_ids.intersection(incoming_ids))
+    if duplicate_ids:
+        raise RegistryLoadError(
+            f"{path}: {item_label} {item_id!r} field {field!r} appends duplicate ids {duplicate_ids!r}"
+        )
 
 
 def load_catalogue_file(path: Path) -> RegistryCatalogues:

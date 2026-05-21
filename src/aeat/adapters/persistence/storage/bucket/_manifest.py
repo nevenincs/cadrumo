@@ -115,13 +115,16 @@ class BucketManifest(BaseModel):
     kdf_params: ManifestKdfParams
     recovery_enrolled: bool
     schema_version: int = Field(ge=1)
-    status: BucketLifecycleStatus = BucketLifecycleStatus.ACTIVE
+    status: BucketLifecycleStatus
     """Plaintext mirror of the encrypted record's lifecycle status.
 
-    Defaults to :attr:`BucketLifecycleStatus.ACTIVE` so a manifest
-    written before this field existed hydrates as a live profile; the
-    :class:`ProfileRepository` flips it to ``TOMBSTONED`` in the same
-    write that tombstones the encrypted record.
+    Required, with no default. A manifest that omits ``status`` is
+    rejected at the read boundary (fail-closed) rather than silently
+    hydrating as a live profile — a silent default would risk leaking a
+    tombstoned bucket back onto the operator surface. The
+    :class:`ProfileRepository` sets it explicitly on every write:
+    ``ACTIVE`` at creation, ``TOMBSTONED`` in the same write that
+    tombstones the encrypted record.
     """
 
     @field_validator("status", mode="before")

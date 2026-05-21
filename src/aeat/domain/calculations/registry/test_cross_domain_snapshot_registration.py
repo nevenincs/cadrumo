@@ -70,7 +70,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
         from aeat.core.resources import bundled_path
         from aeat.domain.calculations.registry import load_registry_tree
         from aeat.domain.calculations.registry._snapshot import _build_validated_snapshot
-        from aeat.domain.calculations.registry._validate import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "aeat.domain.renta" not in sys.modules, (
             "renta must not be imported before the snapshot build on this path"
@@ -124,7 +124,7 @@ def test_m100_build_succeeds_when_renta_is_imported() -> None:
         from aeat.core.resources import bundled_path
         from aeat.domain.calculations.registry import load_registry_tree
         from aeat.domain.calculations.registry._snapshot import _build_validated_snapshot
-        from aeat.domain.calculations.registry._validate import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
             "importing renta must register at least one cross-domain check"
@@ -171,7 +171,7 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         from aeat.core.resources import bundled_path
         from aeat.domain.calculations.registry import load_registry_tree
         from aeat.domain.calculations.registry._snapshot import _build_validated_snapshot
-        from aeat.domain.calculations.registry._validate import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "aeat.domain.renta" not in sys.modules, (
             "renta must not be imported on this path"

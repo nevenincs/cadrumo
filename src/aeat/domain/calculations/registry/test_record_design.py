@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from aeat.core.resources import bundled_path
 from . import build_snapshot, load_registry_tree, resolve_export_layout
 from ._record_design import (
     build_diseno_coverage_report,
+    calculation_closure_identities,
     derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
     extract_record_design,
@@ -27,6 +29,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _MODELO_131_WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_131", "files")
 _MODELO_131_CURRENT = _MODELO_131_WORKBOOK_ROOT / "01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx"
 _RECORD_DESIGN_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
+
+
+@cache
+def _committed_registry_tree():
+    return load_registry_tree(bundled_path("registry", "aeat"))
 
 
 def test_modelo_131_current_record_design_exposes_dpa_and_did_records() -> None:
@@ -253,7 +260,7 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
 
 
 def test_registered_record_design_sources_are_discovered_and_parseable() -> None:
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = _committed_registry_tree()
     sources = {
         source_id: bundled_path() / source.corpus_path
         for source_id, source in catalogues.sources.items()
@@ -291,7 +298,7 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
 
 def _modelo_200_record_design_corpus_path() -> Path:
     """Return the corpus path of the Modelo 200 record-design Diseño."""
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
     source_ref = next(
@@ -300,30 +307,31 @@ def _modelo_200_record_design_corpus_path() -> Path:
     return bundled_path() / catalogues.sources[source_ref].corpus_path
 
 
-def test_calculation_completeness_manifests_match_their_corpus_diseno() -> None:
-    """Every machine-derivable calculation-completeness manifest still matches its corpus.
+def test_calculation_completeness_manifests_match_their_calculation_surface() -> None:
+    """Every checked-in calculation-completeness manifest still matches its closure.
 
     For each checked-in calculation-completeness manifest, re-run the
-    off-load-path derivation — the modelo's calculation closure
-    intersected with the official AEAT Diseño de Registros corpus the
-    manifest declares as its source — and assert the derived
-    ``(segmento, number)`` casilla set still equals the manifest's
-    enumerated set. A divergence means the corpus was updated without
-    regenerating the manifest, the calculation surface changed without a
-    manifest refresh, or the manifest was hand-edited away from the
-    source — all are CI failures.
+    off-load-path derivation — the modelo's calculation closure keyed on
+    each closure casilla's own registry ``(segmento, number)`` identity —
+    and assert the derived casilla set still equals the manifest's
+    enumerated set. A divergence means the calculation surface changed
+    without a manifest refresh, or the manifest was hand-edited away from
+    the registry — both are CI failures.
 
-    A manifest flagged ``manual_extraction`` (a PDF-only Diseño that
-    resists machine extraction) is exempt from the machine re-derivation
-    but must carry a recorded ``manual_extraction_reason``; the exemption
-    is explicit and asserted, never a silent skip.
+    The derivation is *vocabulary-agnostic*: only Modelo 200's casilla
+    numbers are five-digit AEAT Diseño tags, so the manifest is derived
+    from the modelo's calculation surface keyed on the registry identity
+    each closure casilla declares. For a multi-segment modelo the derived
+    segments are additionally verified against the official AEAT Diseño
+    de Registros corpus — the Diseño remains authoritative on which
+    record segment carries each number — by passing the corpus path to
+    the derivation.
 
-    No calculation-completeness manifests are authored yet (the manifest
-    authoring is a later rollout phase), so the loop currently iterates
-    zero manifests. The discovery-sanity assertion stays load-bearing:
-    once a manifest lands the re-verification covers it automatically.
+    A modelo's ``record_design`` source corpus is parsed only for the
+    multi-segment Diseño verification; a single-segment modelo's manifest
+    is registry-keyed and needs no corpus parse.
     """
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
 
     discovered = sorted(
         (modelo.id, revision.id)
@@ -332,45 +340,93 @@ def test_calculation_completeness_manifests_match_their_corpus_diseno() -> None:
         if revision.completeness_manifest is not None
     )
 
-    machine_checked = 0
-    manual_recorded = 0
+    checked = 0
     for modelo in modelos:
         for revision in modelo.revisions.values():
             manifest = revision.completeness_manifest
             if manifest is None:
                 continue
-            if manifest.manual_extraction:
-                assert manifest.manual_extraction_reason, (
-                    f"modelo {modelo.id} revision {revision.id}: manual-extraction manifest "
-                    "must record a manual_extraction_reason, never a silent skip"
-                )
-                manual_recorded += 1
-                continue
-            source = catalogues.sources.get(manifest.source_ref)
-            assert source is not None, (
-                f"modelo {modelo.id} revision {revision.id}: manifest source_ref "
-                f"{manifest.source_ref!r} is absent from the source catalogue"
+            multi_segment = any(
+                casilla.segmento is not None for casilla in manifest.casillas
             )
-            corpus_path = bundled_path() / source.corpus_path
-            multi_segment = any(casilla.segmento is not None for casilla in manifest.casillas)
+            diseno_path: Path | None = None
+            if multi_segment:
+                record_design_refs = [
+                    ref
+                    for ref in revision.source_refs
+                    if catalogues.sources[ref].kind == "record_design"
+                ]
+                assert record_design_refs, (
+                    f"modelo {modelo.id} revision {revision.id}: a multi-segment "
+                    "calculation-completeness manifest requires a record_design "
+                    "source to verify its record segments"
+                )
+                diseno_path = (
+                    bundled_path() / catalogues.sources[record_design_refs[0]].corpus_path
+                )
             derived = frozenset(
                 (casilla.segmento, casilla.number)
                 for casilla in derive_calculation_completeness_casillas(
-                    corpus_path, revision, multi_segment=multi_segment
+                    revision,
+                    modelo.id,
+                    multi_segment=multi_segment,
+                    diseno_path=diseno_path,
                 )
             )
             assert derived == manifest.identities(), (
                 f"modelo {modelo.id} revision {revision.id}: calculation-completeness "
-                f"manifest has drifted from corpus source {manifest.source_ref!r}; "
+                "manifest has drifted from the registry calculation surface; "
                 f"manifest-only casillas: {sorted(manifest.identities() - derived)}; "
                 f"closure-only casillas: {sorted(derived - manifest.identities())}"
             )
-            machine_checked += 1
+            checked += 1
 
-    # Discovery sanity: the count of machine-checked plus manual-recorded
-    # manifests equals the discovered manifest count. Guards against the
-    # re-verification loop silently skipping every manifest.
-    assert machine_checked + manual_recorded == len(discovered)
+    # Discovery sanity: every discovered manifest is machine-checked.
+    # Guards against the re-verification loop silently skipping a manifest.
+    assert checked == len(discovered)
+    assert checked > 0, "expected at least one calculation-completeness manifest"
+
+
+def test_calculation_completeness_gate_is_live_for_every_calculation_bearing_modelo() -> None:
+    """Every modelo with a calculation closure carries a manifest; the gate is live.
+
+    The calculation-completeness gate is per-modelo: it enforces a
+    revision only once that revision declares a ``completeness_manifest``.
+    This test proves the gate is live for the whole calculation-bearing
+    corpus: every modelo revision whose calculation closure is non-empty
+    declares a manifest, and every modelo revision whose closure is empty
+    (no formulas, no verification expectations — no calculation surface)
+    declares none.
+
+    A modelo whose closure had a genuinely missing or ungrounded casilla
+    could not carry a passing manifest; this assertion would then fail,
+    surfacing the gap rather than masking it.
+    """
+    modelos, _ = _committed_registry_tree()
+
+    gated = 0
+    dormant = 0
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            closure = calculation_closure_identities(revision, modelo.id)
+            manifest = revision.completeness_manifest
+            if closure:
+                assert manifest is not None, (
+                    f"modelo {modelo.id} revision {revision.id}: has a calculation "
+                    f"closure of {len(closure)} casillas but declares no "
+                    "completeness_manifest; the gate is not live for it"
+                )
+                gated += 1
+            else:
+                assert manifest is None, (
+                    f"modelo {modelo.id} revision {revision.id}: declares a "
+                    "completeness_manifest but has an empty calculation closure"
+                )
+                dormant += 1
+
+    assert gated > 0, "expected calculation-bearing modelo revisions"
+    # Modelo 308 and Modelo 360 carry no calculation surface.
+    assert dormant == 2
 
 
 def test_diseno_coverage_report_inventories_modelo_200_form_data() -> None:
@@ -418,7 +474,7 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     without an exhaustive full-form backfill — the design intent of the
     ADR amendment.
     """
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
     corpus_path = _modelo_200_record_design_corpus_path()
@@ -430,7 +486,7 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     closure = frozenset(
         (casilla.segmento, casilla.number)
         for casilla in derive_calculation_completeness_casillas(
-            corpus_path, revision, multi_segment=True
+            revision, modelo_200.id, multi_segment=True, diseno_path=corpus_path
         )
     )
 
@@ -466,7 +522,7 @@ def test_diseno_coverage_report_is_an_advisory_inventory_not_a_load_gate() -> No
     load, so the same Modelo 200 that clears the load-blocking
     calculation-completeness gate is freely inventoried here.
     """
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
     corpus_path = _modelo_200_record_design_corpus_path()
@@ -571,7 +627,7 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
     workbook_name: str,
     source_ref: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
@@ -601,7 +657,7 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
 
 
 def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="4T")
     sheets = {
@@ -640,7 +696,7 @@ def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
     filing_year: int,
     workbook_name: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     page = next(
@@ -691,7 +747,7 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
     workbook_name: str,
     palma_legal_ref: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     page = next(
@@ -715,7 +771,7 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
 
 
 def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meaning() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="1T")
     page = next(sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
@@ -737,7 +793,7 @@ def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meanin
 
 @pytest.mark.parametrize("filing_year", [2024, 2025, 2026])
 def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_year: int) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     layout = resolve_export_layout(snapshot).layout
@@ -771,7 +827,7 @@ def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_y
 
 @pytest.mark.parametrize("filing_year", [2023, 2024, 2025, 2026])
 def test_modelo_131_submitted_file_profiles_target_exported_casillas(filing_year: int) -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     layout = resolve_export_layout(snapshot).layout

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from ....domain.normatives._schema import Articulo
 
 
-class NormativeRepository(ResourceCacheRepository["NormativeCatalogue", type(None)]):
+class NormativeRepository(ResourceCacheRepository["NormativeCatalogue", None]):
     """Singleton-keyed repository for the bundled normatives catalogue.
 
     Wraps :func:`aeat.domain.normatives.load_catalogue`. The

@@ -31,5 +31,6 @@ def test_census_stale_refused_carries_context_through_init() -> None:
         context={"work_unit_id": "wu-1", "census_snapshot_id": "snap-xyz"},
     )
 
+    assert error.context is not None
     assert error.context["work_unit_id"] == "wu-1"
     assert error.context["census_snapshot_id"] == "snap-xyz"

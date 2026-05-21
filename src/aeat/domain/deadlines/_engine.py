@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Protocol, runtime_checkable
 
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
@@ -381,6 +382,64 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
         return None
     upcoming.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
     return upcoming[0]
+
+
+@runtime_checkable
+class ScheduleProducer(Protocol):
+    """Structural surface over :class:`DeadlineEngine.compute`.
+
+    :func:`compute_obligation_schedule` is typed against this Protocol
+    rather than the concrete :class:`DeadlineEngine` so the workflow
+    engine — which injects a protocol-typed deadline engine — and the
+    state projection — which uses a concrete :class:`DeadlineEngine` —
+    can both feed the same single-producer function.
+    """
+
+    def compute(
+        self,
+        profile: AutonomoProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ) -> Schedule:
+        """Return a :class:`Schedule` for ``profile`` in ``year``."""
+        ...
+
+
+def compute_obligation_schedule(
+    engine: ScheduleProducer,
+    profile: AutonomoProfile,
+    *,
+    today: date,
+) -> Schedule:
+    """Compute the obligation :class:`Schedule` from one canonical call.
+
+    This is the single producer of the pending-obligation datum. Both
+    the operator state read-projection (``pending_obligations``) and the
+    :class:`~aeat.application.workflow.WorkflowEngine`
+    ``NO_PENDING_OBLIGATION`` gate route their schedule computation
+    through here, so the gate and the projection cannot draw a divergent
+    obligation set: identical ``(engine, profile, today)`` always yields
+    an equal schedule (modulo :attr:`Schedule.generated_at`).
+
+    The fiscal year is derived from ``today`` so neither consumer can
+    pass a mismatched ``(year, today)`` pair.
+
+    Args:
+        engine: The deadline engine to compute with. Any
+            :class:`ScheduleProducer` — a concrete
+            :class:`DeadlineEngine` or the workflow engine's
+            protocol-typed injected deadline engine.
+        profile: The autónomo profile to schedule obligations for.
+        today: Reference date; the fiscal year and obligation status
+            classification are both derived from it.
+
+    Returns:
+        The :class:`Schedule` of obligations applicable to ``profile``
+        for ``today``'s fiscal year.
+    """
+
+    return engine.compute(profile, today.year, today=today)
 
 
 def applies_to(profile: AutonomoProfile, modelo: str) -> bool:

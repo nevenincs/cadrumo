@@ -97,7 +97,9 @@ def test_load_active_autonomo_profile_raises_wizard_status_error_when_no_profile
     state = WorkflowState()
     with pytest.raises(WizardStatusError) as exc_info:
         load_active_autonomo_profile(state)
-    assert exc_info.value.context["workflow_state"] == "no_active_profile"
+    context = exc_info.value.context
+    assert context is not None
+    assert context["workflow_state"] == "no_active_profile"
 
 
 def test_load_active_autonomo_profile_returns_autonomo_record_for_minimal_profile() -> None:

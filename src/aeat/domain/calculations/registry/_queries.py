@@ -59,6 +59,14 @@ class ModeloDescribeReport(BaseModel):
     cadence: str
     jurisdiction: str
     revision: str
+    revision_ids: tuple[str, ...]
+    """Every declared revision id for the modelo, oldest valid_from first.
+
+    ``revision`` names the single revision the describe query resolved
+    against; ``revision_ids`` lists all valid ``--revision`` values an
+    operator can pass to ``modelo work create``, so the id is
+    discoverable up front rather than only after a failed guess.
+    """
     filing_year: int | None
     period: str | None
     valid_from: date
@@ -184,6 +192,13 @@ class RegistryQueryService:
             cadence=definition.cadence,
             jurisdiction=definition.jurisdiction,
             revision=str(revision.id),
+            revision_ids=tuple(
+                str(item.id)
+                for item in sorted(
+                    definition.revisions.values(),
+                    key=lambda candidate: (candidate.valid_from, str(candidate.id)),
+                )
+            ),
             filing_year=filing_year,
             period=registry_period,
             valid_from=revision.valid_from,

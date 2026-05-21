@@ -43,6 +43,24 @@ def test_query_service_lists_and_describes_committed_modelo() -> None:
     assert described.formula_count > 0
 
 
+def test_describe_lists_every_declared_revision_id() -> None:
+    """``describe_modelo`` surfaces all declared revision ids so an
+    operator can discover the valid ``--revision`` value for
+    ``modelo work create`` without first guessing wrong."""
+
+    service = _service()
+    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
+
+    described = service.describe_modelo("303", period="2026Q1")
+    expected = {str(item.id) for item in authority.modelo("303").revisions.values()}
+
+    assert set(described.revision_ids) == expected
+    # The resolved revision is always one of the listed ids.
+    assert described.revision in described.revision_ids
+    # The list is non-empty and oldest valid_from first (deterministic).
+    assert len(described.revision_ids) == len(expected)
+
+
 def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision() -> None:
     service = _service()
 

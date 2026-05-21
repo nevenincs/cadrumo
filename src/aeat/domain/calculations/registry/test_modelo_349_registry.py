@@ -704,6 +704,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
 
     # Rectification importe is the absolute delta between new and previous base,
     # derived from the rectification observation supplied to the resolver.
+    assert rect_obs.rectified_base_previous is not None
     expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
     assert resolved["vat-349-declarante-importe-rectificaciones"] == expected_rect_delta
 
@@ -939,5 +940,6 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     )
 
     # Rectification delta must equal the absolute difference between new and previous base.
+    assert rect_obs.rectified_base_previous is not None
     expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
     assert casilla_values["decl.importe-rectificaciones"] == expected_rect_delta

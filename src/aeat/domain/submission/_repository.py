@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from typing import ClassVar
 
 from ...adapters.persistence.storage import SensitivityClass
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...core.logging import get_logger
 from ._models import ModeloPresentado

@@ -21,6 +21,8 @@ from . import load_registry_tree
 from ._schema import CasillaDefinition
 from ._validate import (
     RegistryValidator,
+)
+from ._validate_cross_revision import (
     _validate_cross_revision_casilla_consistency,
     validate_cross_revision_casilla_consistency,
 )
@@ -37,16 +39,16 @@ def _casilla(
     semantic_role: str | None = None,
     legal_refs: tuple[str, ...] = ("ley-58-2003:art-29",),
 ) -> CasillaDefinition:
-    return CasillaDefinition(
-        id=cid,
-        number=cid,
-        label=label,
-        section=section,
-        data_type=data_type,  # type: ignore[arg-type]
-        semantic_role=semantic_role,
-        legal_refs=legal_refs,
-        source_refs=("aeat-manual",),
-    )
+    return CasillaDefinition.model_validate({
+        "id": cid,
+        "number": cid,
+        "label": label,
+        "section": section,
+        "data_type": data_type,
+        "semantic_role": semantic_role,
+        "legal_refs": legal_refs,
+        "source_refs": ("aeat-manual",),
+    })
 
 
 def _modelo(modelo_id: str, revs: dict[str, list[CasillaDefinition]]) -> Any:

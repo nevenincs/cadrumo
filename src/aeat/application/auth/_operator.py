@@ -38,12 +38,22 @@ class AuthProvidersReport(BaseModel):
 
 
 class AuthConfigureResult(BaseModel):
-    """Result of configuring an auth provider in workflow state."""
+    """Result of configuring an auth provider in workflow state.
+
+    ``complete`` reports whether the provider is now operationally
+    usable. The certificate provider configured without a resolvable
+    ``--file`` records the provider selection but is NOT operationally
+    ready: ``complete`` is ``False`` and ``incomplete_reason`` states a
+    certificate path is still required. The operator must never be told
+    "configured" when the provider cannot yet be used.
+    """
 
     model_config = _STRICT_FROZEN
 
     provider: str
     file: str = ""
+    complete: bool = True
+    incomplete_reason: str = ""
     active_profile: str = ""
     profile_tax_id_present: bool = False
     provider_identity_present: bool = False
@@ -318,19 +328,53 @@ def _auth_configure_result(
             alignment = "matches"
         else:
             alignment = "mismatch"
+    complete, incomplete_reason = _certificate_completeness(provider, certificate_path)
+    if not complete:
+        next_action = f"aeat config auth configure --provider {provider} --file PATH"
+    elif provider == AuthProviderKind.CLAVE_MOVIL.value:
+        next_action = "aeat config auth test --provider clave_movil"
+    else:
+        next_action = f"aeat config auth test --provider {provider}"
     return AuthConfigureResult(
         provider=provider,
         file=str(certificate_path) if certificate_path is not None else "",
+        complete=complete,
+        incomplete_reason=incomplete_reason,
         active_profile=active_profile,
         profile_tax_id_present=bool(profile_tax_id),
         provider_identity_present=bool(provider_identity) if provider == AuthProviderKind.CLAVE_MOVIL.value else True,
         identity_alignment=alignment,
-        next_action=(
-            "aeat config auth test --provider clave_movil"
-            if provider == AuthProviderKind.CLAVE_MOVIL.value
-            else f"aeat config auth test --provider {provider}"
-        ),
+        next_action=next_action,
     )
+
+
+def _certificate_completeness(
+    provider: str,
+    certificate_path: Path | None,
+) -> tuple[bool, str]:
+    """Report whether a configured provider is operationally complete.
+
+    The certificate provider is operationally complete only when a
+    certificate path is supplied AND it resolves to an existing file.
+    Selecting the provider without a usable ``--file`` records the
+    selection but leaves the slot unusable; the operator must be told
+    the configuration is incomplete, not that it succeeded.
+    """
+
+    if provider != AuthProviderKind.CERTIFICATE.value:
+        return True, ""
+    if certificate_path is None:
+        return False, tr("application.auth.operator.errors.certificate_file_required")
+    try:
+        resolves = certificate_path.is_file()
+    except OSError:
+        resolves = False
+    if not resolves:
+        return False, tr(
+            "application.auth.operator.errors.certificate_file_unresolved",
+            certificate_path=str(certificate_path),
+        )
+    return True, ""
 
 
 def test_operator_auth(provider: str | None = None) -> AuthStatusResult:
@@ -343,16 +387,23 @@ def test_operator_auth(provider: str | None = None) -> AuthStatusResult:
     projection's ``probe_live_backend`` performs) and feeds only the
     separate ``available`` / ``health_*`` fields; it never recomputes
     ``configured``.
+
+    When the operator passes ``--provider`` the requested provider is
+    actively probed. When no provider is requested, ``auth test`` scopes
+    the readiness to whatever provider is configured in workflow state;
+    if none is configured it does NOT invent a default and probe it —
+    that would let ``auth test`` report a provider ``available`` while
+    ``auth status`` reports no provider at all. Both surfaces report the
+    same "no provider configured" state on the same state.
     """
 
     provider_kind = _provider_kind_or_none(provider)
-    if provider_kind is None:
-        provider_kind = _configured_or_default_provider(Settings())
+    requested_provider = provider_kind.value if provider_kind is not None else None
 
     from ..state_projection import build_operator_state_projection
 
     projection = build_operator_state_projection(
-        requested_provider=provider_kind.value,
+        requested_provider=requested_provider,
         probe_live_backend=True,
     )
     return _auth_status_from_projection(projection)

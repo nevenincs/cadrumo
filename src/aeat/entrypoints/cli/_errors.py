@@ -86,7 +86,7 @@ class CliValidationBoundaryError(AeatError):
         """
 
         super().__init__(
-            "The command input failed validation. Run `aeat config repair` or reset the profile state.",
+            translated_message="errors.refused.refused_cli_validation_boundary",
             context={
                 "recovery": "aeat config repair",
             },
@@ -123,7 +123,7 @@ class CliUnexpectedBoundaryError(AeatError):
         # The diagnostics surface dumps a structured report from a
         # process that never opens an encrypted session.
         super().__init__(
-            "The command failed due to an unexpected internal error.",
+            translated_message="errors.internal.internal_cli_unexpected_boundary",
             context={
                 "recovery": "python -m aeat.diagnostics report",
             },

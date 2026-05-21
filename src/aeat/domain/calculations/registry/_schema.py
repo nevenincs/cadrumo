@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from itertools import pairwise
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
@@ -1160,10 +1160,13 @@ class ModeloScheduleDefinition(RegistryModel):
 def _normalise_dispatch_table_entries(value: object) -> object:
     if not isinstance(value, Mapping) or "dispatch_table_entries" not in value:
         return value
-    if "dispatch_table" in value:
+    # TOML fragments always parse to string-keyed tables; the narrowed
+    # ``Mapping`` carries an ``Unknown`` key type the type system cannot prove.
+    mapping = cast("Mapping[str, object]", value)
+    if "dispatch_table" in mapping:
         raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
 
-    raw_entries = value["dispatch_table_entries"]
+    raw_entries = mapping["dispatch_table_entries"]
     if not isinstance(raw_entries, tuple | list):
         raise RegistryValidationError("dispatch_table_entries must be an array")
 
@@ -1171,16 +1174,17 @@ def _normalise_dispatch_table_entries(value: object) -> object:
     for raw_entry in raw_entries:
         if not isinstance(raw_entry, Mapping):
             raise RegistryValidationError("dispatch_table_entries entries must be tables")
-        if set(raw_entry) != {"key", "parameter"}:
+        entry = cast("Mapping[str, object]", raw_entry)
+        if set(entry) != {"key", "parameter"}:
             raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
-        key = raw_entry["key"]
+        key = entry["key"]
         if not isinstance(key, str):
             raise RegistryValidationError("dispatch_table_entries key must be a string")
         if key in dispatch_table:
             raise RegistryValidationError(f"dispatch_table_entries duplicate key {key!r}")
-        dispatch_table[key] = raw_entry["parameter"]
+        dispatch_table[key] = entry["parameter"]
 
-    normalised = dict(value)
+    normalised = dict(mapping)
     normalised.pop("dispatch_table_entries")
     normalised["dispatch_table"] = dispatch_table
     return normalised
@@ -1579,18 +1583,25 @@ class CalculationCompletenessCasilla(RegistryModel):
 
     A casilla's identity is the pair ``(segmento, number)``. A
     single-segment modelo leaves ``segmento`` unset, so the pair degrades
-    to ``(None, number)`` and the manifest enumerates bare numbers
-    exactly as the AEAT Diseño de Registros declares them.
+    to ``(None, number)`` and the manifest enumerates bare numbers.
+
+    ``number`` carries the registry ``number`` of the closure casilla
+    verbatim. Only Modelo 200's casilla numbers are five-digit AEAT
+    Diseño tags; the other calculation-bearing modelos identify casillas
+    by semantic slug (``iva.cuota-devengada-total``) or short ordinal
+    (``01``-``19``), so the manifest carries whatever vocabulary the
+    modelo's registry uses. The field is unbounded above to match the
+    unconstrained ``CasillaDefinition.number``.
 
     The manifest enumerates only the casillas inside a modelo's
     *calculation closure* — formula targets, the casillas referenced
-    inside any formula expression, binding and relation endpoint
-    casillas, and verification-expectation operands. Pure
-    accounting-statement data-entry fields that feed no calculation are
-    intentionally absent from this required set.
+    inside any formula expression, formula and binding endpoint casillas,
+    and verification-expectation operands. Pure accounting-statement
+    data-entry fields that feed no calculation are intentionally absent
+    from this required set.
     """
 
-    number: str = Field(min_length=1, max_length=32)
+    number: str = Field(min_length=1)
     segmento: str | None = Field(
         default=None,
         min_length=1,

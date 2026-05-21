@@ -1,7 +1,7 @@
 [modelo]
 id = "232"
-title = "Operaciones vinculadas y paraisos fiscales (informativa anual)"
-official_name = "Modelo 232. Declaracion informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paises o territorios calificados como paraisos fiscales."
+title = "Operaciones vinculadas y paraísos fiscales (informativa anual)"
+official_name = "Modelo 232. Declaración informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con países o territorios calificados como paraísos fiscales."
 tax_domain = "is"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

@@ -179,7 +179,7 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
             "--description", "cash office supplies",
             "--counterparty", "Proveedor SL",
             "--classification", "BUSINESS",
-            "--category-id", "office-supplies",
+            "--category-id", "material_oficina",
             "--taxable-base", "100.00",
             "--iva-rate", "0.21",
             "--iva-amount", "21.00",
@@ -237,7 +237,7 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
             "app", "ledger", "classify",
             "--id", transaction_id,
             "--classification", "BUSINESS",
-            "--category-id", "office-supplies-adjusted",
+            "--category-id", "software_suscripcion",
             "--taxable-base", "100.00",
             "--iva-rate", "0.21",
             "--iva-amount", "21.00",
@@ -245,7 +245,7 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
     )
     transaction = cast(dict[str, object], classified["transaction"])
     assert transaction["business_classification"] == "BUSINESS"
-    assert transaction["category_id"] == "office-supplies-adjusted"
+    assert transaction["category_id"] == "software_suscripcion"
     assert classified["review_status"] == "reviewed"
     return classified
 

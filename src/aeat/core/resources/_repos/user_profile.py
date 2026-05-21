@@ -5,7 +5,7 @@ from __future__ import annotations
 from .._repository import ResourceCacheRepository
 
 
-class UserProfileSchemaRepository(ResourceCacheRepository[object, type(None)]):
+class UserProfileSchemaRepository(ResourceCacheRepository[object, None]):
     """Singleton-keyed repository for the bundled user-profile schema.
 
     Wraps :func:`aeat.domain.user_profile.load_user_profile_schema`.

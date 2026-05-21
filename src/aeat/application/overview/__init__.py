@@ -309,11 +309,19 @@ class OverviewStatusReport(BaseModel):
     invoices: int = Field(ge=0)
     drafts: int = Field(ge=0)
     work_units: int = Field(default=0, ge=0)
-    """Count of ``WorkUnitCatalogue`` entries written by ``modelo work create``.
+    """Count of *active* (``BORRADOR``) ``WorkUnitCatalogue`` entries.
 
     Carried distinctly from ``drafts`` (the legacy ``ModeloDraft``
     store) so an operator who used the ``modelo work`` flow does not
-    see a silently-zero counter.
+    see a silently-zero counter. Discarded units are excluded here and
+    counted in ``discarded_work_units`` so the operator is never told a
+    misleading total.
+    """
+    discarded_work_units: int = Field(default=0, ge=0)
+    """Count of ``DESCARTADO`` ``WorkUnitCatalogue`` entries.
+
+    Surfaced alongside ``work_units`` so ``overview status`` can state
+    the active / discarded split instead of a single inflated count.
     """
     calculation_revisions: int = Field(default=0, ge=0)
     """Count of ``CalculationRevisionCatalogue`` entries written by ``modelo work calculate``."""
@@ -505,6 +513,7 @@ def overview_status_report_from_projection(projection: OperatorStateProjection) 
         invoices=projection.workspace.invoices,
         drafts=projection.workspace.drafts,
         work_units=projection.workspace.work_units,
+        discarded_work_units=projection.workspace.discarded_work_units,
         calculation_revisions=projection.workspace.calculation_revisions,
         unreadable_rows=projection.workspace.unreadable_rows,
     )
@@ -539,6 +548,7 @@ def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...
         f"invoices\t{report.invoices}",
         f"drafts\t{report.drafts}",
         f"work_units\t{report.work_units}",
+        f"discarded_work_units\t{report.discarded_work_units}",
         f"calculation_revisions\t{report.calculation_revisions}",
     ]
     if report.unreadable_rows > 0:

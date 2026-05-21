@@ -19,11 +19,21 @@ class SiteHealthEvidenceLike(Protocol):
     type its payload without importing the adapter layer that produces
     it. The concrete record is
     :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthEvidence`.
+
+    Members are read-only properties so the protocol matches
+    covariantly: a concrete record may carry narrower member types
+    (e.g. ``AnyHttpUrl`` for ``url``) and still satisfy the structural
+    view, which a mutable attribute declaration would reject.
     """
 
-    url: object
-    http_status: object
-    detected_markers: Sequence[object]
+    @property
+    def url(self) -> object: ...
+
+    @property
+    def http_status(self) -> object: ...
+
+    @property
+    def detected_markers(self) -> Sequence[object]: ...
 
 
 @runtime_checkable
@@ -34,12 +44,24 @@ class SiteHealthStatusLike(Protocol):
     accept the status without a runtime or type-checking import of the
     adapter layer. The concrete record is
     :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`.
+
+    Members are read-only properties so the protocol matches
+    covariantly: the concrete ``SiteHealthStatus`` carries a concrete
+    ``SiteHealthEvidence`` for ``evidence``, which satisfies the
+    ``SiteHealthEvidenceLike`` view only when the member is read-only.
     """
 
-    state: object
-    evidence: SiteHealthEvidenceLike
-    observed_at: datetime
-    retry_after_seconds: int | None
+    @property
+    def state(self) -> object: ...
+
+    @property
+    def evidence(self) -> SiteHealthEvidenceLike: ...
+
+    @property
+    def observed_at(self) -> datetime: ...
+
+    @property
+    def retry_after_seconds(self) -> int | None: ...
 
 
 class AeatError(Exception):

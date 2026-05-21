@@ -31,6 +31,7 @@ from aeat.application.aggregation import (
     declarable_counterparty_nifs_347,
     get_per_modelo_aggregation_contract,
 )
+from aeat.application.aggregation._counterpart import CounterpartSourceKind
 from aeat.core.errors import get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -52,7 +53,7 @@ def _retencion_obs(*, source_kind: str = "ledger_transaction") -> RetencionObser
 def _counterpart_obs(
     *,
     nif: str = "B00000001",
-    source_kind: str = "ledger_transaction",
+    source_kind: CounterpartSourceKind = "ledger_transaction",
     operation_kind: str = "entregas_y_prestaciones",
     country: str = "ES",
     invoice_total: str = "2000.00",

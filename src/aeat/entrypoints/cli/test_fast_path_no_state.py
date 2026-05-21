@@ -25,11 +25,15 @@ from __future__ import annotations
 import time
 from collections.abc import Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.tests.cli_runner import invoke_cached_cli
+
+if TYPE_CHECKING:
+    from click.testing import Result
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -62,12 +66,14 @@ def _warm() -> None:
     invoke_cached_cli(["--help"])
 
 
-def _fastest_ms(args: list[str], *, runs: int = 5) -> tuple[float, object]:
+def _fastest_ms(args: list[str], *, runs: int = 5) -> tuple[float, Result]:
     """Return the fastest wall-clock of ``runs`` invocations and the last result."""
 
     best = float("inf")
-    result = None
-    for _ in range(runs):
+    start = time.perf_counter()
+    result = invoke_cached_cli(args)
+    best = min(best, (time.perf_counter() - start) * 1000.0)
+    for _ in range(runs - 1):
         start = time.perf_counter()
         result = invoke_cached_cli(args)
         best = min(best, (time.perf_counter() - start) * 1000.0)

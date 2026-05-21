@@ -1,7 +1,7 @@
 [modelo]
 id = "180"
 title = "Resumen anual de retenciones sobre arrendamientos urbanos"
-official_name = "Modelo 180. Declaracion Informativa. Retenciones e ingresos a cuenta. Rendimientos procedentes del arrendamiento de inmuebles urbanos. Resumen anual."
+official_name = "Modelo 180. Declaración Informativa. Retenciones e ingresos a cuenta. Rendimientos procedentes del arrendamiento de inmuebles urbanos. Resumen anual."
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

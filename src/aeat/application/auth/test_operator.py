@@ -11,8 +11,14 @@ from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
+from ...core.config import Settings
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from . import AuthProviderKind
 from ._operator import configure_operator_auth, inspect_operator_auth, test_operator_auth
+from ._sessions import (
+    AuthProfileIdentityMismatchError,
+    _assert_active_profile_identity_matches_provider,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -175,14 +181,24 @@ def test_inspect_operator_auth_configured_is_false_without_certificate_path() ->
     assert result.certificate_path == ""
 
 
-def test_inspect_operator_auth_configured_is_true_with_certificate_path(tmp_path: Path) -> None:
-    """``inspect_operator_auth`` must report ``configured: True`` when the
-    certificate provider is selected and a ``--file`` path is recorded
-    in workflow state."""
+def test_inspect_operator_auth_configured_is_true_with_certificate_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``inspect_operator_auth`` reports ``configured: True`` when the
+    certificate provider is selected, a ``--file`` path is recorded in
+    workflow state, and the backend health probe resolves the same path.
+
+    ``configured`` is operational readiness, and it must stay coherent
+    with ``health_summary``: the live backend probe sources the
+    certificate path from ``Settings.aeat_certificate_path``. When that
+    path resolves, the backend no longer reports ``certificate path not
+    configured`` and the canonical ``configured`` is ``True``.
+    """
 
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
+    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(cert_path))
 
     configure_operator_auth("certificate", certificate_path=cert_path)
 
@@ -193,6 +209,183 @@ def test_inspect_operator_auth_configured_is_true_with_certificate_path(tmp_path
         f"configured must be True when certificate_path is set — got {result.configured!r}"
     )
     assert result.certificate_path == str(cert_path)
+    assert result.health_summary != "certificate path not configured", (
+        "health_summary must not contradict configured: True"
+    )
+
+
+def test_inspect_operator_auth_configured_false_when_backend_path_unset(tmp_path: Path) -> None:
+    """``configured`` must stay coherent with ``health_summary``.
+
+    Regression for the self-contradictory ``auth status`` output where
+    ``configured: True`` co-existed with ``health_summary: certificate
+    path not configured``. A certificate path recorded only in workflow
+    state, while the live backend probe (sourced from
+    ``Settings.aeat_certificate_path``) sees no path, must NOT report
+    ``configured: True`` — that contradicts the health summary the same
+    probe produces.
+    """
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    cert_path = tmp_path / "operator.p12"
+    cert_path.write_bytes(b"placeholder cert")
+
+    configure_operator_auth("certificate", certificate_path=cert_path)
+
+    result = inspect_operator_auth()
+
+    assert result.provider == "certificate"
+    assert result.health_summary == "certificate path not configured"
+    assert result.configured is False, (
+        "configured must be False when the health probe reports the path is not "
+        f"configured — got configured={result.configured!r}, "
+        f"health_summary={result.health_summary!r}"
+    )
+
+
+def test_configure_operator_auth_certificate_without_file_is_incomplete() -> None:
+    """``configure_operator_auth`` for the certificate provider with no
+    certificate path must NOT report plain success.
+
+    The certificate provider cannot be used without a certificate file;
+    configuring it without ``--file`` records only the provider
+    selection. The result must mark itself ``complete=False``, carry an
+    ``incomplete_reason``, and point ``next_action`` at the command that
+    supplies the file — never tell the operator the provider is
+    configured when it is not usable.
+    """
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+
+    result = configure_operator_auth("certificate")  # no certificate_path
+
+    assert result.provider == "certificate"
+    assert result.complete is False, (
+        f"configuring certificate without --file must not report success — got complete={result.complete!r}"
+    )
+    assert result.incomplete_reason, "an incomplete result must explain what is missing"
+    assert "certificate" in result.incomplete_reason.lower()
+    assert "--file" in result.next_action and "configure" in result.next_action, (
+        f"next_action must name the command that supplies the file — got {result.next_action!r}"
+    )
+
+
+def test_configure_operator_auth_certificate_with_file_is_complete(tmp_path: Path) -> None:
+    """``configure_operator_auth`` for the certificate provider with a
+    resolvable ``--file`` reports a complete configuration."""
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    cert_path = tmp_path / "operator.p12"
+    cert_path.write_bytes(b"placeholder cert")
+
+    result = configure_operator_auth("certificate", certificate_path=cert_path)
+
+    assert result.complete is True, f"a supplied resolvable file must be complete — got {result.complete!r}"
+    assert result.incomplete_reason == ""
+    assert result.file == str(cert_path)
+
+
+def test_configure_operator_auth_certificate_with_unresolved_file_is_incomplete(tmp_path: Path) -> None:
+    """``configure_operator_auth`` for the certificate provider with a
+    ``--file`` that does not resolve to an existing file must report an
+    incomplete configuration, not plain success."""
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    ghost = tmp_path / "missing.p12"
+
+    result = configure_operator_auth("certificate", certificate_path=ghost)
+
+    assert result.complete is False, (
+        f"an unresolvable certificate path must not report success — got complete={result.complete!r}"
+    )
+    assert result.incomplete_reason
+    assert "--file" in result.next_action and "configure" in result.next_action
+
+
+def test_auth_status_and_test_agree_when_no_provider_configured() -> None:
+    """``auth status`` and ``auth test`` must report the same state.
+
+    Regression for the cross-surface contradiction where, in a fresh
+    state with no provider configured, ``auth status`` reported
+    ``provider: ""`` / ``available: False`` while ``auth test``
+    silently defaulted to ``clave_movil``, live-probed it, and reported
+    ``available: True``. With no provider configured and none
+    requested, ``auth test`` must not invent a default — it reports the
+    same "no provider configured" state ``auth status`` reports.
+    """
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+
+    status = inspect_operator_auth()
+    probe = test_operator_auth()
+
+    assert status.provider == ""
+    assert status.provider == probe.provider, (
+        f"auth status / auth test disagree on provider — status={status.provider!r}, test={probe.provider!r}"
+    )
+    assert status.available == probe.available, (
+        f"auth status / auth test disagree on available — status={status.available}, test={probe.available}"
+    )
+    assert status.configured == probe.configured
+    assert status.health_summary == probe.health_summary
+
+
+def test_auth_test_probes_the_provider_when_one_is_configured() -> None:
+    """``auth test`` still actively scopes readiness to the configured
+    provider when workflow state has one — it only declines to invent a
+    default when nothing is configured and nothing is requested."""
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    configure_operator_auth("certificate")
+
+    probe = test_operator_auth()
+
+    assert probe.provider == "certificate"
+
+
+def test_auth_test_probes_explicitly_requested_provider() -> None:
+    """``auth test --provider clave_movil`` actively probes the requested
+    provider even when nothing is configured in workflow state."""
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+
+    probe = test_operator_auth("clave_movil")
+
+    assert probe.provider == "clave_movil"
+
+
+def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> None:
+    """A Cl@ve live read may proceed only when the active profile owns the Cl@ve identity."""
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="operator",
+            overrides={"identity.tax_id": "12345678Z"},
+        )
+    )
+    settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": "12345678Z"})
+
+    assert (
+        _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
+        == "12345678Z"
+    )
+
+
+def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> None:
+    """A Cl@ve session for one taxpayer must never be persisted under another profile."""
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="operator",
+            overrides={"identity.tax_id": "00000000T"},
+        )
+    )
+    settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": "00000001R"})
+
+    with pytest.raises(AuthProfileIdentityMismatchError, match="does not match"):
+        _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
 
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:

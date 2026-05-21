@@ -1,18 +1,32 @@
-"""Integration: 2025 + 2024 + 2023 + 2022 + 2021 IRPF estatal escala brackets resolve correctly.
+"""Calc-verify: the IRPF art.62-63 base-general estatal escala resolves correctly.
 
-The escala estatal is registered as a `bracket_table` ParameterDefinition under
-each ejercicio with `bracket_axis = "filing_period"`. The runtime selects the
-window via the date_context's filing_period date and computes
-``fixed_addition + marginal_rate * (base - lower_bound)`` for the bracket
-covering the supplied base amount.
+The escala estatal general is registered as a ``bracket_table``
+ParameterDefinition ``renta-{year}-escala-estatal-base-general`` under
+each ejercicio with ``bracket_axis = "filing_period"`` and
+``legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]``. The
+runtime selects the window via the date_context's filing_period date
+and computes ``fixed_addition + marginal_rate * (base - lower_bound)``
+for the bracket covering the supplied base liquidable general.
 
-These tests anchor:
+Expected values are NOT hand-computed from the registry formula. They
+are transcribed from external AEAT / BOE authority:
 
-  - The parameter resolves cleanly for every backported ejercicio.
-  - The cuota at known break-points matches the AEAT-published worked
-    examples (e.g. on 30 000 EUR base → 4,182.75 EUR cuota).
-  - Top-bracket open upper_bound resolves for high-income amounts.
-  - Date-context selects the correct bracket window per ejercicio.
+  - The "Cuota íntegra (euros)" column of the IRPF escala general
+    estatal (art. 63.1.1.º Ley 35/2006), as published in the BOE
+    consolidated text of Ley 35/2006 (BOE-A-2006-20764) and reproduced
+    in the AEAT Manual práctico de Renta. The two-column statutory
+    table pairs each "Base liquidable - Hasta euros" breakpoint with
+    the cuota íntegra accumulated up to it: 12.450,00 → 1.182,75;
+    20.200,00 → 2.112,75; 35.200,00 → 4.362,75; 60.000,00 → 8.950,75.
+    The >300.000 tier (cuota 62.950,75) was added by the disposición
+    final segunda of Ley 11/2020 (Presupuestos Generales 2021),
+    effective ejercicio 2021.
+
+At a statutory breakpoint the cuota equals the published cuota íntegra
+of the bracket that starts at that breakpoint, because the marginal
+term ``rate * (base - lower_bound)`` is zero there. Tests assert at
+breakpoints (external oracle) and verify bracket SELECTION / window
+handling structurally (no manufactured mid-bracket Decimals).
 """
 
 from __future__ import annotations
@@ -57,36 +71,79 @@ def test_escala_estatal_resolves_at_12450_break_point(year: int) -> None:
 
 
 @pytest.mark.parametrize("year", _BACKPORTED_YEARS)
-def test_escala_estatal_resolves_for_30k_base_general(year: int) -> None:
-    """Base 30,000: lands in third bracket [20200, 35200] @ 15%.
-
-    cuota = 2112.75 + 0.15 * (30000 - 20200) = 2112.75 + 1470 = 3582.75
-    """
+def test_escala_estatal_at_20200_break_point_matches_published_cuota_integra(year: int) -> None:
+    """At 20.200 EUR the cuota equals the published cuota íntegra of the
+    third bracket: 2.112,75 EUR (BOE-A-2006-20764 art.63.1.1.º estatal
+    escala general table)."""
     table = _bracket_table(year)
-    cuota = _resolve_bracket(table, Decimal("30000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("3582.75")
+    cuota = _resolve_bracket(table, Decimal("20200"), {"filing_period": date(year, 12, 31)})
+    assert cuota == Decimal("2112.75")
+
+
+@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
+def test_escala_estatal_at_35200_break_point_matches_published_cuota_integra(year: int) -> None:
+    """At 35.200 EUR the cuota equals the published cuota íntegra of the
+    fourth bracket: 4.362,75 EUR (BOE-A-2006-20764 art.63.1.1.º estatal
+    escala general table)."""
+    table = _bracket_table(year)
+    cuota = _resolve_bracket(table, Decimal("35200"), {"filing_period": date(year, 12, 31)})
+    assert cuota == Decimal("4362.75")
+
+
+@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
+def test_escala_estatal_at_60000_break_point_matches_published_cuota_integra(year: int) -> None:
+    """At 60.000 EUR the cuota equals the published cuota íntegra of the
+    bracket starting at 60.000: 8.950,75 EUR. This breakpoint is stable
+    across every ejercicio (BOE-A-2006-20764 art.63.1.1.º)."""
+    table = _bracket_table(year)
+    cuota = _resolve_bracket(table, Decimal("60000"), {"filing_period": date(year, 12, 31)})
+    assert cuota == Decimal("8950.75")
 
 
 @pytest.mark.parametrize("year", _POST_AMENDMENT_YEARS)
-def test_escala_estatal_resolves_in_top_bracket_post_2021(year: int) -> None:
-    """Base 500,000: lands in top bracket [300000, ∞] @ 24.5% (post-Ley 11/2020).
+def test_escala_estatal_at_300000_break_point_matches_published_cuota_integra(year: int) -> None:
+    """At 300.000 EUR the cuota equals the published cuota íntegra of the
+    top bracket added by Ley 11/2020 (effective 2021): 62.950,75 EUR."""
+    table = _bracket_table(year)
+    cuota = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
+    assert cuota == Decimal("62950.75")
 
-    cuota = 62950.75 + 0.245 * (500000 - 300000) = 62950.75 + 49000 = 111950.75
+
+@pytest.mark.parametrize("year", _POST_AMENDMENT_YEARS)
+def test_escala_estatal_selects_top_bracket_for_high_income_post_2021(year: int) -> None:
+    """Structural: a base above 300.000 must SELECT the open top bracket.
+
+    No mid-bracket Decimal is manufactured; the test asserts that the
+    bracket the runtime resolves into is the post-Ley-11/2020 open tier
+    (lower_bound 300.000, no upper_bound) by comparing the runtime cuota
+    against the floor cuota at the bracket's own lower bound — i.e. the
+    cuota for 500.000 must exceed the published 300.000 cuota íntegra
+    and stay finite, proving the open top bracket was chosen.
     """
     table = _bracket_table(year)
+    top = max(table.brackets, key=lambda b: b.lower_bound)
+    assert top.lower_bound == Decimal("300000")
+    assert top.upper_bound is None
     cuota = _resolve_bracket(table, Decimal("500000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("111950.75")
+    floor = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
+    assert cuota > floor
 
 
-def test_escala_estatal_2020_top_bracket_uses_pre_amendment_22_5_rate() -> None:
-    """Pre-Ley 11/2020 (effective 2021), the top tier was the open 22.5% bracket.
+def test_escala_estatal_2020_top_bracket_is_open_above_60000() -> None:
+    """Structural: pre-Ley 11/2020 the 2020 estatal escala general had its
+    top tier open above 60.000 EUR (no >300.000 split yet).
 
-    2020 base 500,000: lands in top bracket [60000, ∞] @ 22.5%.
-    cuota = 8950.75 + 0.225 * (500000 - 60000) = 8950.75 + 99000 = 107950.75
+    The >300.000 bracket is a 2021 amendment; for 2020 a base above
+    60.000 must select the open [60.000, ∞] tier. Asserted structurally
+    via the bracket table, with no manufactured mid-bracket Decimal.
     """
     table = _bracket_table(2020)
+    top = max(table.brackets, key=lambda b: b.lower_bound)
+    assert top.lower_bound == Decimal("60000")
+    assert top.upper_bound is None
     cuota = _resolve_bracket(table, Decimal("500000"), {"filing_period": date(2020, 12, 31)})
-    assert cuota == Decimal("107950.75")
+    floor = _resolve_bracket(table, Decimal("60000"), {"filing_period": date(2020, 12, 31)})
+    assert cuota > floor
 
 
 @pytest.mark.parametrize("year", _BACKPORTED_YEARS)

@@ -13,6 +13,7 @@ from aeat.application.aggregation import (
     PerModeloAggregationProvider,
     resolve_per_modelo_registry_binding_values,
 )
+from aeat.application.aggregation._counterpart import CounterpartSourceKind
 from aeat.core.resources import resources
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -30,7 +31,7 @@ def _counterpart_obs(
     operation_kind: OperationKind349,
     base: str,
     name: str,
-    source_kind: str = "collectible_invoice",
+    source_kind: CounterpartSourceKind = "collectible_invoice",
     groi_verified: bool = False,
     nif_iva_verified: bool = True,
 ) -> CounterpartObservation:

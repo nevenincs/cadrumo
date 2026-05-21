@@ -1580,3 +1580,59 @@ consumer = "aeat.application.workflow"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
+
+# Calculation-completeness manifest for revision 2024: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed on each casilla's own registry (segmento, number)
+# identity. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.
+[revisions."2024".completeness_manifest]
+source_ref = "aeat-dr-131-2024"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "02"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "03"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "04"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "05"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "06"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "07"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "08"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "09"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "10"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "11"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "12"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "13"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "14"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "15"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "saldo-negativo-fin-periodo"

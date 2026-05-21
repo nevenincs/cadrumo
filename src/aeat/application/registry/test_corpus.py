@@ -160,7 +160,7 @@ def test_topic_projection_rejects_unknown_locale_with_application_error(caplog: 
     assert envelope.context == {
         "registry_service": "registry.topics",
         "locale": "zz",
-        "allowed_locales": "('es', 'en', 'ca', 'hu')",
+        "allowed_locales": "es, en, ca, hu",
     }
     records = [record for record in caplog.records if getattr(record, "registry_service", "") == "registry.topics"]
     assert len(records) == 1

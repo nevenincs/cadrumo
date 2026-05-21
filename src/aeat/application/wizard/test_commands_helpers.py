@@ -27,6 +27,7 @@ from ._commands import (
     _SETUP_OPTION_INFOS,
     _canonical_from_flag_value,
     _flag_name,
+    _format_missing_flags,
     _help_key,
     _missing_required_flags,
     _no_flag_name,
@@ -219,6 +220,26 @@ def test_missing_required_flags_treats_empty_string_value_as_missing() -> None:
     missing = _missing_required_flags(flow, canonical)
 
     assert missing == ("tax_id",)
+
+
+# ---------------------------------------------------------------------------
+# _format_missing_flags
+# ---------------------------------------------------------------------------
+
+
+def test_format_missing_flags_renders_question_ids_as_long_options() -> None:
+    """A missing-flag refusal must name the actual `--flag` an operator
+    types, never a raw Python identifier tuple."""
+
+    assert _format_missing_flags(("tax-id", "activity")) == "--tax-id --activity"
+
+
+def test_format_missing_flags_single_question_id() -> None:
+    assert _format_missing_flags(("activity",)) == "--activity"
+
+
+def test_format_missing_flags_empty_tuple_renders_empty_string() -> None:
+    assert _format_missing_flags(()) == ""
 
 
 # ---------------------------------------------------------------------------

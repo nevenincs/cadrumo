@@ -18,6 +18,7 @@ from typing import ClassVar
 
 import pytest
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy import Engine
 
 from .. import EphemeralMasterKeyProvider, SensitivityClass
 from ..errors import EnvelopeVersionError
@@ -52,7 +53,7 @@ class _DummyRepository(SecureBoundRepository[_DummyPayload]):
         return payload.id
 
 
-def _bound_repo_with_engine(tmp_path: Path) -> tuple[_DummyRepository, object]:
+def _bound_repo_with_engine(tmp_path: Path) -> tuple[_DummyRepository, Engine]:
     """Build an isolated SQLite engine + repository against ``tmp_path``."""
 
     db_path = tmp_path / "secure-bound-roundtrip.db"
@@ -93,7 +94,7 @@ def test_secure_bound_repository_save_load_iter_delete_roundtrip(
             assert repo.load("alpha") is None
             assert tuple(repo.iter_ids()) == ("beta",)
         finally:
-            engine.dispose()  # type: ignore[attr-defined]
+            engine.dispose()
 
 
 def test_secure_bound_repository_missing_returns_none(tmp_path: Path) -> None:
@@ -105,7 +106,7 @@ def test_secure_bound_repository_missing_returns_none(tmp_path: Path) -> None:
         try:
             assert repo.load("nonexistent") is None
         finally:
-            engine.dispose()  # type: ignore[attr-defined]
+            engine.dispose()
 
 
 def test_secure_bound_repository_rejects_future_schema_version(
@@ -149,4 +150,4 @@ def test_secure_bound_repository_rejects_future_schema_version(
             with pytest.raises(EnvelopeVersionError):
                 repo.load("future")
         finally:
-            engine.dispose()  # type: ignore[attr-defined]
+            engine.dispose()

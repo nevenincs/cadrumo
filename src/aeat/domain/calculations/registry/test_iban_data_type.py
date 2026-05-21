@@ -13,7 +13,6 @@ from pydantic import TypeAdapter, ValidationError
 from ._errors import RegistryValidationError
 from ._schema import CasillaDefinition, IbanString, _validate_iban_string
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
@@ -21,15 +20,15 @@ _IBAN_ADAPTER: TypeAdapter[str] = TypeAdapter(IbanString)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
-    return CasillaDefinition(
-        id="iban_test_casilla",
-        number="01",
-        label="IBAN cuenta de cargo",
-        section=("declarante", "pago"),
-        data_type=data_type,  # type: ignore[arg-type]
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-modelo-303-instructions",),
-    )
+    return CasillaDefinition.model_validate({
+        "id": "iban_test_casilla",
+        "number": "01",
+        "label": "IBAN cuenta de cargo",
+        "section": ("declarante", "pago"),
+        "data_type": data_type,
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-modelo-303-instructions",),
+    })
 
 
 class TestIbanStringAccepts:

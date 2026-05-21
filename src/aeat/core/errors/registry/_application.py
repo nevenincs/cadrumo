@@ -504,7 +504,12 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_wizard_unsupported_console",
-            default_suggestion="aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY",
+            # The operator-facing message body spells out both recovery
+            # paths (interactive terminal vs. the one-step flag form) in
+            # plain language. A trailing `-> Run` suggestion would only
+            # repeat one of those two commands verbatim, so the message
+            # is the single source of recovery guidance here.
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
@@ -538,6 +543,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_100_borrador_binding",
             default_suggestion="aeat app live borrador 100 fetch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._profile_binding.ProfileBindingResolutionError",
+        ErrorCode(
+            code="REFUSED_PROFILE_BINDING_RESOLUTION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_binding_resolution",
+            default_suggestion="aeat config profile show",
             retryable=False,
             runbook_id=None,
         ),

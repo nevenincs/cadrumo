@@ -309,13 +309,18 @@ def test_config_repair_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch
 def test_startup_import_failure_points_to_config_repair_without_traceback() -> None:
     error = ModuleNotFoundError("No module named 'xlrd'", name="xlrd")
 
-    assert _startup_import_error_text(error) == (
-        "Cannot start AEAT command surface: missing dependency 'xlrd'.\nRun: aeat config repair\n"
-    )
+    # The startup-failure text is locale-rendered; assert the contract
+    # (names the missing dependency, points to `aeat config repair`, no
+    # traceback) rather than pinning an exact, translatable phrasing.
+    text = _startup_import_error_text(error)
+    assert "xlrd" in text, text
+    assert "aeat config repair" in text, text
+    assert "Traceback" not in text, text
+
     result = _RUNNER.invoke(_import_failure_surface("app", error), [])
 
     assert result.exit_code == 1, result.output
-    assert "missing dependency 'xlrd'" in result.output
+    assert "xlrd" in result.output
     assert "aeat config repair" in result.output
     assert "Traceback" not in result.output
 

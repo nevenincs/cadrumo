@@ -102,8 +102,21 @@ def record_movement(
 class InventoryLedgerRepository:
     """Governed repository for the encrypted inventory ledger."""
 
-    def __init__(self) -> None:
-        self._objects = SecureObjectRepository()
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Construct the repository.
+
+        Args:
+            objects: Optional injected secure-object repository. When
+                supplied, every encrypted-store read and write is routed
+                through it instead of a :class:`SecureObjectRepository`
+                resolved from the pydantic-settings :class:`Settings`
+                object. This is the dependency-injection seam
+                real-adapter tests use to bind a single explicit SQLite
+                engine; production callers leave it ``None`` and the
+                repository self-resolves from settings.
+        """
+
+        self._objects = objects if objects is not None else SecureObjectRepository()
 
     @property
     def envelope_path(self) -> Path:

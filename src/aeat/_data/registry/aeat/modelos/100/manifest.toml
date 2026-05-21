@@ -1,7 +1,7 @@
 [modelo]
 id = "100"
-title = "IRPF declaracion anual"
-official_name = "Modelo 100. Declaracion del Impuesto sobre la Renta de las Personas Fisicas."
+title = "IRPF declaración anual"
+official_name = "Modelo 100. Declaración del Impuesto sobre la Renta de las Personas Físicas."
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

@@ -70,6 +70,7 @@ from aeat.application.modelo import (
 from aeat.application.workflow import (
     DeadlineEngineAdapter,
     WorkflowEngine,
+    WorkflowStage,
 )
 from aeat.core.config import Settings
 from aeat.core.resources import resources
@@ -688,7 +689,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
     )
 
     unavailable_provider = _AuthProvider(available=False)
-    with pytest.raises(ModeloWorkflowGateError, match="workflow gate aborted"):
+    with pytest.raises(ModeloWorkflowGateError) as gate_error:
         _file_revision(
             revision.calculation_revision_id,
             revision=revision,
@@ -701,6 +702,9 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
             clock=_T3,
             auth_provider=unavailable_provider,
         )
+    assert gate_error.value.result.final_stage is WorkflowStage.ABORTED
+    assert gate_error.value.context is not None
+    assert gate_error.value.context["stage"] == WorkflowStage.ABORTED.value
 
     assert unavailable_provider.describe_calls == 1
     refreshed_revision = get_calculation_revision(
@@ -736,7 +740,7 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
     )
 
     unavailable_provider = _AuthProvider(available=False)
-    with pytest.raises(ModeloWorkflowGateError, match="workflow gate aborted"):
+    with pytest.raises(ModeloWorkflowGateError) as gate_error:
         _verify_revision(
             revision.calculation_revision_id,
             revision=revision,
@@ -749,6 +753,9 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
             clock=_T2,
             auth_provider=unavailable_provider,
         )
+    assert gate_error.value.result.final_stage is WorkflowStage.ABORTED
+    assert gate_error.value.context is not None
+    assert gate_error.value.context["stage"] == WorkflowStage.ABORTED.value
 
     assert unavailable_provider.describe_calls == 1
     refreshed_revision = get_calculation_revision(

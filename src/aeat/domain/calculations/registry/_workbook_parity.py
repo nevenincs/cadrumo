@@ -17,7 +17,7 @@ from tempfile import TemporaryDirectory
 from typing import Any, Literal
 
 from openpyxl import load_workbook
-from openpyxl.cell.cell import Cell
+from openpyxl.cell.cell import Cell, MergedCell
 from openpyxl.formula import Tokenizer
 from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -1224,7 +1224,7 @@ def _collect_sheet_formulas(
 
 
 def _record_cell_if_formula(
-    cell: Cell,
+    cell: Cell | MergedCell,
     *,
     sheet_title: str,
     formulas: list[WorkbookCellRef],

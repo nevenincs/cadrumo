@@ -262,9 +262,9 @@ class ProfileLifecycleService:
         report = self._validator.validate_facts(profile_id, facts)
         blocking = [issue for issue in report.issues if issue.severity is BaseSeverity.ERROR]
         if blocking:
-            codes = ", ".join(sorted({issue.code for issue in blocking}))
+            detail = "; ".join(issue.message for issue in blocking)
             raise ProfileSchemaValidationError(
-                f"profile {profile_id!r} rejected by schema validation: {codes}",
+                f"profile {profile_id!r} rejected by schema validation: {detail}",
             )
 
     def _save_updated(

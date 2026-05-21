@@ -16,8 +16,10 @@ failure.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -106,9 +108,13 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
             assert isinstance(loaded.storage_state["cookies"], list)
             cookies = loaded.storage_state["cookies"]
             assert isinstance(cookies, list)
-            assert cookies[0]["name"] == "PRESTACIONES_SESSION"
-            assert cookies[0]["httpOnly"] is True
-            assert cookies[0]["expires"] == 1893456000
+            assert isinstance(cookies[0], Mapping)
+            # Playwright storage_state cookies are documented string-keyed
+            # dicts; the persisted payload exposes them only as ``object``.
+            first_cookie = cast("Mapping[str, object]", cookies[0])
+            assert first_cookie["name"] == "PRESTACIONES_SESSION"
+            assert first_cookie["httpOnly"] is True
+            assert first_cookie["expires"] == 1893456000
             # The SHA computed on the loaded payload must match the
             # SHA computed at save time. If column-encryption mangled
             # any byte, this assertion fails before any field check.

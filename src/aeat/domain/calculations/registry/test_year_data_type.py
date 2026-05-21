@@ -17,7 +17,6 @@ from pydantic import TypeAdapter, ValidationError
 from ._errors import RegistryValidationError
 from ._schema import CasillaDefinition, ModeloYear, _coerce_modelo_year
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
@@ -25,15 +24,15 @@ _YEAR_ADAPTER: TypeAdapter[int] = TypeAdapter(ModeloYear)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
-    return CasillaDefinition(
-        id="year_test_casilla",
-        number="01",
-        label="Ejercicio",
-        section=("declarante",),
-        data_type=data_type,  # type: ignore[arg-type]
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-manual-modelo",),
-    )
+    return CasillaDefinition.model_validate({
+        "id": "year_test_casilla",
+        "number": "01",
+        "label": "Ejercicio",
+        "section": ("declarante",),
+        "data_type": data_type,
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual-modelo",),
+    })
 
 
 class TestModeloYearAccepts:

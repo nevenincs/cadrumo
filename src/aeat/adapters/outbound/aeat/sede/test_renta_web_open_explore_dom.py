@@ -22,16 +22,32 @@ from typing import TYPE_CHECKING, Final
 
 import pytest
 
+from aeat.tests.live_gate import requires_live_enabled
+
 from .....core.config import Settings
 from .....core.paths import PROJECT_ROOT
 from .....domain.calculations.registry import RentaWebOpenLivePayload
-from aeat.tests.live_gate import requires_live_enabled
 from ..browser import default_browser_session_factory
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 if TYPE_CHECKING:
-    from playwright.async_api import Page
+    from collections.abc import Awaitable
+    from typing import Protocol
+
+    from playwright.async_api import Locator, Page
+
+    class _ClickSafetyAssertion(Protocol):
+        """Structural type of `assert_click_target_safe` from the safety module."""
+
+        def __call__(
+            self,
+            locator: Locator,
+            *,
+            stage: str,
+            description: str,
+            timeout_ms: int = ...,
+        ) -> Awaitable[None]: ...
 
 _DOM_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-dom.html"
 _BUTTONS_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-buttons.txt"
@@ -133,7 +149,9 @@ def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None
     return lines
 
 
-async def _try_expand_secondary_toolbar(page: Page, assert_click_target_safe: object) -> None:
+async def _try_expand_secondary_toolbar(
+    page: Page, assert_click_target_safe: _ClickSafetyAssertion
+) -> None:
     """Click "Mostrar opciones" to reveal the secondary toolbar row.
 
     The button is the secondary-toolbar expander; failing to find or
@@ -144,7 +162,7 @@ async def _try_expand_secondary_toolbar(page: Page, assert_click_target_safe: ob
     try:
         mostrar_btn = page.locator("button[title='Mostrar opciones']").first
         await mostrar_btn.wait_for(state="visible", timeout=10_000)
-        await assert_click_target_safe(  # type: ignore[misc]
+        await assert_click_target_safe(
             mostrar_btn,
             stage="explore:mostrar-opciones-safety",
             description="Mostrar opciones (toolbar expander)",
@@ -160,12 +178,12 @@ async def _try_expand_secondary_toolbar(page: Page, assert_click_target_safe: ob
 async def _try_open_and_snapshot_dialog(
     page: Page,
     *,
-    locator: object,
+    locator: Locator,
     stage: str,
     description: str,
     timeout_ms: int,
     wait_after_click_ms: int,
-    assert_click_target_safe: object,
+    assert_click_target_safe: _ClickSafetyAssertion,
 ) -> str:
     """Wait, safety-gate, click ``locator`` and snapshot the resulting ZK layer.
 
@@ -175,14 +193,14 @@ async def _try_open_and_snapshot_dialog(
     """
 
     try:
-        await locator.wait_for(state="visible", timeout=timeout_ms)  # type: ignore[attr-defined]
-        await assert_click_target_safe(  # type: ignore[misc]
+        await locator.wait_for(state="visible", timeout=timeout_ms)
+        await assert_click_target_safe(
             locator,
             stage=f"explore:{stage}-safety",
             description=description,
             timeout_ms=timeout_ms,
         )
-        await locator.click(timeout=timeout_ms)  # type: ignore[attr-defined]
+        await locator.click(timeout=timeout_ms)
         await page.wait_for_timeout(wait_after_click_ms)
         return await _snapshot_zk_layer(page, stage)
     except Exception as exc:
@@ -301,28 +319,28 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
         await browser_session.close()
 
 
-async def _safe_inner_text(locator: object, *, stage: str) -> str:
+async def _safe_inner_text(locator: Locator, *, stage: str) -> str:
     """Read ``locator.inner_text`` with a fallback string on any failure."""
     try:
-        return (await locator.inner_text(timeout=1_000)).strip()  # type: ignore[attr-defined]
+        return (await locator.inner_text(timeout=1_000)).strip()
     except Exception:
         _log.debug("explore DOM inner_text unreadable: %s", stage, exc_info=True)
         return "(unreadable)"
 
 
-async def _safe_get_attribute(locator: object, attr: str, *, stage: str) -> str | None:
+async def _safe_get_attribute(locator: Locator, attr: str, *, stage: str) -> str | None:
     """Read ``locator.get_attribute(attr)`` with a fallback on any failure."""
     try:
-        return await locator.get_attribute(attr)  # type: ignore[attr-defined]
+        return await locator.get_attribute(attr)
     except Exception:
         _log.debug("explore DOM attribute %r unreadable: %s", attr, stage, exc_info=True)
         return None
 
 
-async def _capture_button_inventory(page: object) -> list[str]:
+async def _capture_button_inventory(page: Page) -> list[str]:
     """Inventory native ``<button>`` elements with their text + disabled attribute."""
     lines: list[str] = ["=== <button> elements ==="]
-    buttons = await page.locator("button").all()  # type: ignore[attr-defined]
+    buttons = await page.locator("button").all()
     for idx, btn in enumerate(buttons[:120]):
         stage = f"button[{idx}]"
         text = await _safe_inner_text(btn, stage=stage)
@@ -331,10 +349,10 @@ async def _capture_button_inventory(page: object) -> list[str]:
     return lines
 
 
-async def _capture_anchor_inventory(page: object) -> list[str]:
+async def _capture_anchor_inventory(page: Page) -> list[str]:
     """Inventory ``<a>`` link elements with their text + href."""
     lines: list[str] = ["=== <a> link elements ==="]
-    anchors = await page.locator("a").all()  # type: ignore[attr-defined]
+    anchors = await page.locator("a").all()
     for idx, anchor in enumerate(anchors[:120]):
         stage = f"anchor[{idx}]"
         text = await _safe_inner_text(anchor, stage=stage)
@@ -343,11 +361,11 @@ async def _capture_anchor_inventory(page: object) -> list[str]:
     return lines
 
 
-async def _capture_zk_inventory(page: object) -> list[str]:
+async def _capture_zk_inventory(page: Page) -> list[str]:
     """Inventory ZK-class clickable elements (.z-button / .z-toolbarbutton / etc.)."""
     lines: list[str] = ["=== ZK-shape elements with click handlers ==="]
     for cls in (".z-button", ".z-toolbarbutton", ".z-menuitem", ".z-listitem"):
-        els = await page.locator(cls).all()  # type: ignore[attr-defined]
+        els = await page.locator(cls).all()
         lines.append(f"\n  -- {cls} ({len(els)} found) --")
         for idx, el in enumerate(els[:60]):
             text = await _safe_inner_text(el, stage=f"{cls}[{idx}]")
@@ -355,17 +373,17 @@ async def _capture_zk_inventory(page: object) -> list[str]:
     return lines
 
 
-async def _capture_input_inventory(page: object) -> list[str]:
+async def _capture_input_inventory(page: Page) -> list[str]:
     """Inventory ``<input>`` elements (dialog textboxes etc.)."""
     lines: list[str] = ["\n=== input elements (dialog textboxes etc.) ==="]
-    inputs = await page.locator("input").all()  # type: ignore[attr-defined]
+    inputs = await page.locator("input").all()
     for idx, inp in enumerate(inputs[:60]):
         try:
-            title = await inp.get_attribute("title")  # type: ignore[attr-defined]
-            placeholder = await inp.get_attribute("placeholder")  # type: ignore[attr-defined]
-            input_type = await inp.get_attribute("type")  # type: ignore[attr-defined]
-            name = await inp.get_attribute("name")  # type: ignore[attr-defined]
-            value = await inp.input_value(timeout=500)  # type: ignore[attr-defined]
+            title = await inp.get_attribute("title")
+            placeholder = await inp.get_attribute("placeholder")
+            input_type = await inp.get_attribute("type")
+            name = await inp.get_attribute("name")
+            value = await inp.input_value(timeout=500)
         except Exception:
             _log.debug("explore DOM input inventory metadata unreadable index=%d", idx, exc_info=True)
             title = placeholder = input_type = name = value = "?"
@@ -376,15 +394,15 @@ async def _capture_input_inventory(page: object) -> list[str]:
     return lines
 
 
-async def _capture_dialog_inventory(page: object) -> list[str]:
+async def _capture_dialog_inventory(page: Page) -> list[str]:
     """Inventory visible dialog / modal containers."""
     lines: list[str] = ["\n=== visible dialogs / modals ==="]
     for cls in (".z-window", ".z-window-modal", "[role='dialog']"):
-        els = await page.locator(cls).all()  # type: ignore[attr-defined]
+        els = await page.locator(cls).all()
         for idx, el in enumerate(els[:10]):
             try:
-                visible = await el.is_visible()  # type: ignore[attr-defined]
-                text = (await el.inner_text(timeout=1_000))[:200]  # type: ignore[attr-defined]
+                visible = await el.is_visible()
+                text = (await el.inner_text(timeout=1_000))[:200]
             except Exception:
                 _log.debug(
                     "explore DOM visible dialog metadata unreadable selector=%s index=%d",
@@ -399,7 +417,7 @@ async def _capture_dialog_inventory(page: object) -> list[str]:
     return lines
 
 
-async def _capture_dom_inventory(page: object) -> str:
+async def _capture_dom_inventory(page: Page) -> str:
     """Concatenate the five DOM-inventory views into one newline-joined string."""
     sections = (
         await _capture_button_inventory(page),
@@ -452,10 +470,10 @@ _A11Y_WALK_JS: Final[str] = """
 """
 
 
-async def _capture_a11y_tree(page: object) -> str:
+async def _capture_a11y_tree(page: Page) -> str:
     """Walk the accessibility tree across shadow roots; return one line per visible entry."""
     try:
-        elements = await page.evaluate(_A11Y_WALK_JS)  # type: ignore[attr-defined]
+        elements = await page.evaluate(_A11Y_WALK_JS)
     except Exception as exc:
         _log.debug("explore DOM page.evaluate walk failed", exc_info=True)
         return f"(page.evaluate walk failed: {type(exc).__name__}: {exc})"

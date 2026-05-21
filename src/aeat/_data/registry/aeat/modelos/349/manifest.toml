@@ -1,7 +1,7 @@
 [modelo]
 id = "349"
-title = "Declaracion recapitulativa de operaciones intracomunitarias"
-official_name = "Modelo 349. Declaracion Informativa. Declaracion recapitulativa de operaciones intracomunitarias."
+title = "Declaración recapitulativa de operaciones intracomunitarias"
+official_name = "Modelo 349. Declaración Informativa. Declaración recapitulativa de operaciones intracomunitarias."
 tax_domain = "iva"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

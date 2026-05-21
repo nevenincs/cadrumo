@@ -68,6 +68,7 @@ class BucketEventType(StrEnum):
     MODELO_RECONCILED = "modelo.reconciled"
     MODELO_EXPORTED = "modelo.exported"
     # Work-unit lifecycle
+    MODELO_WORK_UNIT_CREATED = "modelo.work_unit.created"
     MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"
     MODELO_WORK_UNIT_RENAMED = "modelo.work_unit.renamed"
 

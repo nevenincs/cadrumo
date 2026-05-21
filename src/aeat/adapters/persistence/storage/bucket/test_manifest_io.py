@@ -9,12 +9,17 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from aeat.adapters.persistence.storage.bucket._manifest import (
+    BucketLifecycleStatus,
+    BucketManifest,
+    ManifestKdfParams,
+)
 from aeat.adapters.persistence.storage.bucket._manifest_io import (
     manifest_path,
     read_manifest,
     write_manifest,
 )
+from aeat.adapters.persistence.storage.errors import StorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -37,6 +42,7 @@ def _fixture_manifest(*, last_unlocked: bool = True) -> BucketManifest:
         kdf_params=kdf,
         recovery_enrolled=True,
         schema_version=1,
+        status=BucketLifecycleStatus.ACTIVE,
     )
 
 
@@ -94,6 +100,21 @@ def test_read_rejects_unknown_key(tmp_path: Path) -> None:
     target.write_text(text + 'stowaway = "x"\n', encoding="utf-8")
 
     with pytest.raises(ValidationError):
+        read_manifest(paths)
+
+
+def test_read_rejects_missing_status_key(tmp_path: Path) -> None:
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    write_manifest(paths, _fixture_manifest())
+
+    target = manifest_path(paths)
+    text = target.read_text(encoding="utf-8")
+    target.write_text(
+        "\n".join(line for line in text.splitlines() if not line.startswith("status = ")) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(StorageValidationError, match="lifecycle status"):
         read_manifest(paths)
 
 

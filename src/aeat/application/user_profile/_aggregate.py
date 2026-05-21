@@ -82,17 +82,30 @@ class ProfileAggregate(BaseModel):
 
         The aggregate is the single object a repository assembles from
         several physical stores; if those stores disagree on the
-        profile UUID or the lifecycle status the aggregate is already
-        inconsistent and must never be constructed. This validator is
-        the last line — :func:`verify_profile_integrity` surfaces the
-        same drift with operator-facing diagnostics before the
-        aggregate is built.
+        profile UUID, the operator-facing label, or the lifecycle
+        status the aggregate is already inconsistent and must never be
+        constructed. This validator is the last line —
+        :func:`verify_profile_integrity` surfaces the same drift with
+        operator-facing diagnostics before the aggregate is built.
+
+        ``label`` is carried in two physical stores — the plaintext
+        manifest-derived projection and the encrypted record's
+        ``display_name``. A rename writes both sequentially; a crash
+        between the two writes leaves a torn rename that is otherwise
+        undetectable at load. The label agreement check below is the
+        structural defence against that torn-rename state.
         """
 
         if self.record.profile_id != self.profile_id:
             raise UserProfileValidationError(
                 f"aggregate profile_id {self.profile_id!r} disagrees with "
                 f"record.profile_id {self.record.profile_id!r}"
+            )
+        if self.label != self.record.display_name:
+            raise UserProfileValidationError(
+                f"aggregate label {self.label!r} disagrees with "
+                f"record.display_name {self.record.display_name!r}; "
+                "a torn rename left the manifest and secure record out of sync"
             )
         if self.record.status is not self.status:
             raise UserProfileValidationError(

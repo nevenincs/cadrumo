@@ -11,7 +11,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.resources import resources
-from ...domain.categories import SpendingCategory
+from ...domain.categories import CategoryProfile, SpendingCategory
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
@@ -242,7 +242,7 @@ def _classify_renta_transaction(
     bucket_id: str,
     resolved_period: Period,
     resolved_profile_year: int,
-    profiles: Mapping[SpendingCategory, CategoryProfile],  # noqa: F821 - forward-ref doc-only
+    profiles: Mapping[SpendingCategory, CategoryProfile],
     context: RentaDeductibilityContext,
     activity_key: str,
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
@@ -520,17 +520,17 @@ def _casilla_aggregation(
 ) -> CasillaAggregation:
     totals: dict[str, Decimal] = {}
     provenance_rows: list[CasillaProvenance] = []
-    grouped: dict[tuple[str, str], list[RentaDeductibleExpenseObservation]] = {}
+    grouped: dict[tuple[str, SpendingCategory], list[RentaDeductibleExpenseObservation]] = {}
     for observation in observations:
         totals[observation.target_casilla] = (
             totals.get(observation.target_casilla, Decimal("0")) + observation.deductible_amount
         )
-        grouped.setdefault((observation.target_casilla, observation.category.value), []).append(observation)
-    for (casilla, category_id), rows in sorted(grouped.items()):
+        grouped.setdefault((observation.target_casilla, observation.category), []).append(observation)
+    for (casilla, category), rows in sorted(grouped.items()):
         provenance_rows.append(
             CasillaProvenance(
                 casilla=casilla,
-                category_id=category_id,
+                category_id=category,
                 transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
                 subtotal=sum((row.deductible_amount for row in rows), start=Decimal("0")),
             )

@@ -88,12 +88,11 @@ from ....application.storage.calc_sheets import (
 from ....core.config import load_settings
 from ....core.i18n import tr
 from ....core.resources import bundled_path
+from ....domain.calculations.registry import ValidatedRegistryAuthority
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from ....domain.calculations.registry._loader import load_registry_tree
-from ....domain.calculations.registry._snapshot import build_snapshot
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 
@@ -102,6 +101,64 @@ google_app = typer.Typer(
     help=tr("cli.config.google.help"),
     no_args_is_help=True,
 )
+
+# `aeat config google …` commands catch the broad GoogleAuthError base
+# (and OutboundStorageError on Drive paths). `str(exc)` of either is the
+# adapter's English message, so wrapping it straight into a refusal
+# leaks English into every locale. Map the concrete exception type to a
+# `cli.config.google.errors.*` key so the operator-facing refusal frame
+# renders in the active output language.
+_GOOGLE_ERROR_KEY_SUFFIX: dict[str, str] = {
+    "GoogleAuthValidationError": "validation",
+    "GoogleAuthClientNotRegisteredError": "client_not_registered",
+    "GoogleAuthClientRevokedError": "client_revoked",
+    "GoogleAuthRevokedError": "token_revoked",
+    "GoogleAuthExpiredError": "token_expired",
+    "GoogleAuthScopeInsufficientError": "scope_insufficient",
+    "GoogleAuthNetworkError": "network",
+    "GoogleAuthLoopbackBindError": "loopback_bind",
+    "GoogleAuthBrowserOpenError": "browser_open",
+    "GoogleAuthUnsecuredModeRefusedError": "unsecured_mode",
+    "GoogleAuthKeychainLockedError": "keychain_locked",
+    "GoogleAuthProfileUnboundError": "profile_unbound",
+    "OutboundStorageError": "storage",
+}
+
+
+def _refusal_detail(exc: GoogleAuthError | OutboundStorageError) -> str:
+    """Return the locale-rendered ``{detail}`` text for a wrapped failure.
+
+    Errors raised inside the `aeat config google` wrappers themselves
+    carry a `translated_message` key (a `cli.config.google.detail.*`
+    namespace) plus interpolation `context`; those render through
+    `tr()` so the adapter-specific detail is localised. Errors that
+    bubble up from the Google adapter with only a positional English
+    `message` keep `str(exc)` — the adapter boundary owns that text.
+    """
+
+    translated_message = getattr(exc, "translated_message", None)
+    if translated_message is not None:
+        context = getattr(exc, "context", None) or {}
+        return tr(translated_message, **context)
+    return str(exc)
+
+
+def _google_refusal(exc: GoogleAuthError | OutboundStorageError) -> CliRefusedBoundaryError:
+    """Wrap a Google adapter failure in a locale-rendered CLI refusal.
+
+    Dispatches on the concrete exception type to a
+    `cli.config.google.errors.*` translation key — the f-string key
+    registers that namespace with the locale scanner. The failure's
+    detail rides along as ``{detail}`` for the keys that interpolate
+    it, localised via `translated_message` when the wrapper raised it;
+    an unrecognised type falls back to the generic ``auth_failed``
+    frame.
+    """
+
+    suffix = _GOOGLE_ERROR_KEY_SUFFIX.get(type(exc).__name__, "auth_failed")
+    return CliRefusedBoundaryError(
+        tr(f"cli.config.google.errors.{suffix}", detail=_refusal_detail(exc))
+    )
 
 
 def _coerce_client_json(path: Path) -> OAuthClient:
@@ -117,25 +174,25 @@ def _coerce_client_json(path: Path) -> OAuthClient:
         raw = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         raise GoogleAuthValidationError(
-            f"failed to read client JSON from {path}: {exc}",
-            context={"path": str(path)},
+            translated_message="cli.config.google.detail.client_json_unreadable",
+            context={"path": str(path), "reason": str(exc)},
         ) from exc
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise GoogleAuthValidationError(
-            f"client JSON at {path} is not valid JSON: {exc.msg}",
-            context={"path": str(path), "line": exc.lineno, "column": exc.colno},
+            translated_message="cli.config.google.detail.client_json_invalid",
+            context={"path": str(path), "reason": exc.msg},
         ) from exc
     if not isinstance(payload, dict) or "installed" not in payload:
         raise GoogleAuthValidationError(
-            f'client JSON at {path} is not a Cloud Console Desktop client; expected an "installed" wrapper key',
-            context={"path": str(path), "keys": sorted(payload.keys()) if isinstance(payload, dict) else []},
+            translated_message="cli.config.google.detail.client_json_not_desktop",
+            context={"path": str(path)},
         )
     inner = payload["installed"]
     if not isinstance(inner, dict):
         raise GoogleAuthValidationError(
-            f"client JSON at {path} has a non-object 'installed' wrapper",
+            translated_message="cli.config.google.detail.client_json_bad_wrapper",
             context={"path": str(path)},
         )
     # Cloud Console writes redirect_uris as a JSON array; strict pydantic
@@ -147,8 +204,8 @@ def _coerce_client_json(path: Path) -> OAuthClient:
         return OAuthClient.model_validate(coerced)
     except ValidationError as exc:
         raise GoogleAuthValidationError(
-            f"client JSON at {path} failed schema validation: {exc.errors(include_url=False)}",
-            context={"path": str(path)},
+            translated_message="cli.config.google.detail.client_json_schema_invalid",
+            context={"path": str(path), "reason": str(exc.errors(include_url=False))},
         ) from exc
 
 
@@ -172,7 +229,7 @@ def google_register(
         client = _coerce_client_json(client_json)
         save_client(active, client)
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     payload = {
         "operation": "config.google.register",
@@ -208,7 +265,7 @@ def google_login(
         client = load_client(active)
         if client is None:
             raise GoogleAuthClientNotRegisteredError(
-                f"no OAuth client registered for profile {active!r}",
+                translated_message="cli.config.google.detail.client_unregistered",
                 context={"profile": active},
                 suggestion="aeat config google register --client-json <path>",
             )
@@ -216,7 +273,7 @@ def google_login(
             metadata = load_metadata(active)
             if metadata is None:
                 raise GoogleAuthExpiredError(
-                    f"no OAuth metadata for profile {active!r}; cannot refresh without a prior login",
+                    translated_message="cli.config.google.detail.no_metadata_for_refresh",
                     context={"profile": active},
                     suggestion="aeat config google login",
                 )
@@ -241,7 +298,7 @@ def google_login(
         save_token(active, token)
         save_metadata(active, metadata)
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     payload = {
         "operation": "config.google.login",
@@ -272,7 +329,7 @@ def google_status(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     client = load_client(active)
     metadata = load_metadata(active)
@@ -323,7 +380,7 @@ def google_logout(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     token_removed, metadata_removed = delete_session(active)
     payload = {
@@ -363,7 +420,7 @@ def google_folder_set(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     config = DriveConfig(root_folder_id=folder_id.strip())
     save_drive_config(active, config)
@@ -392,7 +449,7 @@ def google_folder_get(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     config = load_drive_config(active)
     payload = {
@@ -443,7 +500,7 @@ def google_sync_probe(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     settings = load_settings()
     # The factory uses Settings.aeat_storage_provider_kind to pick the
@@ -458,7 +515,7 @@ def google_sync_probe(
         provider = get_storage_provider(settings=drive_settings)
         report = provider.probe(read_only=read_only)
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     # Pull the actual root folder id from the provider — the env var
     # OR the persisted DriveConfig may have supplied it; the provider
@@ -553,7 +610,7 @@ def google_sync_push(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     settings = load_settings()
     drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
@@ -561,7 +618,7 @@ def google_sync_push(
     try:
         provider = get_storage_provider(settings=drive_settings)
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     resolved_root_folder_id = getattr(provider, "root_folder_id", "")
 
@@ -651,10 +708,9 @@ def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
 
 
 def _load_snapshot(modelo: str, period: str, year: int):
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    chosen = next((candidate for candidate in modelos if candidate.id == modelo), None)
-    if chosen is None:
-        available = ", ".join(sorted(candidate.id for candidate in modelos))
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    if modelo not in {candidate.id for candidate in authority.modelos}:
+        available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
         raise CliRefusedBoundaryError(
             tr(
                 "cli.config.google.sync.calc.export.unknown_modelo",
@@ -663,13 +719,7 @@ def _load_snapshot(modelo: str, period: str, year: int):
             ),
         )
     try:
-        return build_snapshot(
-            chosen,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=year,
-            period=period,
-        )
+        return authority.snapshot(modelo, filing_year=year, period=period)
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         raise CliRefusedBoundaryError(
             tr(
@@ -723,12 +773,12 @@ def google_sync_calc_export(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     try:
         credentials, root_folder_id = _resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     snapshot = _load_snapshot(modelo, period, year)
     if prefill_relations:
@@ -751,7 +801,7 @@ def google_sync_calc_export(
             root_folder_id=root_folder_id,
         )
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     payload = {
         "operation": "config.google.sync.calc.export",
@@ -831,12 +881,12 @@ def google_sync_calc_verify(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     try:
         credentials, root_folder_id = _resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     snapshot = _load_snapshot(modelo, period, year)
 
@@ -945,12 +995,12 @@ def google_sync_calc_pull(
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     try:
         credentials, _ = _resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     snapshot = _load_snapshot(modelo, period, year)
 
@@ -961,7 +1011,7 @@ def google_sync_calc_pull(
             credentials=credentials,
         )
     except (GoogleAuthError, OutboundStorageError) as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
 
     populated_operator = [e for e in result.operator_edits if e.value is not None]
     populated_bindings = [e for e in result.binding_edits if e.value is not None]
@@ -1106,7 +1156,7 @@ def _assemble_pull_observations(
                 filing_year=snapshot.filing_year,
             )
         except OutboundStorageError as exc:
-            raise CliRefusedBoundaryError(str(exc)) from exc
+            raise _google_refusal(exc) from exc
         total += len(observations)
         groupings.append(
             {
@@ -1146,7 +1196,7 @@ def _compute_pull_casillas(
     try:
         calc = compute_from_pull(snapshot, result)
     except OutboundStorageError as exc:
-        raise CliRefusedBoundaryError(str(exc)) from exc
+        raise _google_refusal(exc) from exc
     return [
         {
             "casilla_id": entry.target,

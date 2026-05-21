@@ -85,6 +85,8 @@ aggregation:
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért aggregációs buckettel.
+      candidate_outside_period: aggregation.iva_ledger.errors.candidate_outside_period
+      unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
   modelo_bindings:
     errors:
       unsupported_period: Nem támogatott modelo időszak a főkönyvi aggregációhoz.
@@ -130,6 +132,12 @@ application:
         operator_completion_required: Kész; kezelői Cl@ve befejezést igényel.
     operator:
       errors:
+        certificate_file_required: A tanúsítvány-szolgáltatóhoz tanúsítványfájl szükséges.
+          Futtasd az `aeat config auth configure --provider certificate --file ÚTVONAL`
+          parancsot a PKCS#12 (.p12/.pfx) csomag útvonalával.
+        certificate_file_unresolved: A tanúsítvány útvonala ('%{certificate_path}')
+          nem mutat létező fájlra. Futtasd az `aeat config auth configure --provider
+          certificate --file ÚTVONAL` parancsot a PKCS#12 (.p12/.pfx) csomag útvonalával.
         dangling_active_profile: Az aktív profil mutatója ('%{active_profile}') nem
           regisztrált profil bucketre mutat. Futtasd az `aeat config profile list`
           parancsot a regisztrált profilok megtekintéséhez, majd az `aeat config profile
@@ -209,7 +217,9 @@ application:
     errors:
       profile_flag_required: A varázsló --profile NAME kapcsolót igényel (nincs implicit
         'default' visszaesés).
-      quiet_missing_flags: Hiányoznak a --quiet varázsló futtatáshoz szükséges kapcsolók.
+      quiet_missing_flags: 'Ebből a --quiet futtatásból hiányoznak kötelező adatok.
+        Add hozzá ezeket a kapcsolókat, és futtasd újra a parancsot: %{missing_flags}.
+        Vagy futtasd --quiet nélkül egy interaktív terminálban a vezetett beállításhoz.'
     status:
       errors:
         missing_tax_id: Az aktív profilból hiányzik a tax.id.
@@ -321,6 +331,8 @@ cli:
       borrador:
         app_help: Modelo 100 borrador snapshotok
         filing_year_help: Adóév (pl. 2024)
+        invalid_state: 'Az --state értékének a következők egyikének kell lennie: active,
+          superseded, discarded, all.'
         latest_help: A legutóbbi aktív snapshot megjelenítése egy adóévre
         list_help: Rögzített Modelo 100 borrador snapshotok listázása
         modelo_100_help: Modelo 100 borrador snapshot parancsok
@@ -362,9 +374,12 @@ cli:
       portals:
         app_help: Csak olvasható helyi AEAT portálkatalógus
         category_help: Szűrés portálkategória szerint
+        category_modelo_exclusive: A --category és a --modelo kölcsönösen kizárják
+          egymást.
         list_help: Listázd a portálkatalógus bejegyzéseit
         modelo_help: Szűrés egy modelohoz kapcsolt portálokra
         portal_id_help: Portálazonosító
+        unknown_category: 'Ismeretlen portálkategória: {category}.'
         view_help: Mutass egy portálkatalógus-bejegyzést
       registry_root_help: Regiszter gyökérkönyvtára
       source_root_help: Projekt gyökérkönyvtára
@@ -372,6 +387,8 @@ cli:
       verify:
         app_help: Csak olvasható NIF-ellenőrzési auditnapló
         expected_help: Opcionális várt eredmény (valid, invalid vagy unknown)
+        expected_values_error: 'Az --expected értékének a következők egyikének kell
+          lennie: valid, invalid, unknown.'
         latest_help: Mutasd a legfrissebb megfigyelést felület és NIF szerint
         latest_nif_help: Lekérdezendő NIF
         latest_surface_help: 'Ellenőrzési felület: nif_iva vagy tgvi'
@@ -380,10 +397,13 @@ cli:
         nif_iva_arg_help: NIF-IVA érték (pl. ESB12345678)
         nif_iva_help: Ellenőrizz egy közösségi NIF-IVA értéket AEAT IXVI-ben és mentsd
           a megfigyelést
+        no_observation_for_nif: Nem érkezett megfigyelés a(z) {nif} NIF-hez.
         observation_id_help: Megfigyelésazonosító (vagy egyértelmű előtag)
         surface_help: 'Szűrés felület szerint: nif_iva vagy tgvi'
         tgvi_arg_help: Ellenőrizendő spanyol NIF/NIE
         tgvi_help: Ellenőrizd egy NIF ROI/VIES bejegyzését GROI-ban és mentsd a megfigyelést
+        unknown_surface: 'Ismeretlen ellenőrzési felület: {surface} (a várt érték
+          nif_iva vagy tgvi).'
         view_help: Mutass egy mentett ellenőrzési megfigyelést
       year_help: Benyújtási év
     modelo:
@@ -392,6 +412,9 @@ cli:
           ismételd az opciót
         foreign_asset_observation_help: JSON ForeignAssetObservation objektum; több
           megfigyeléshez ismételd az opciót
+        json_not_object: A(z) {flag} JSON-objektum kell legyen.
+        json_parse_error: A(z) {flag} JSON-objektum kell legyen; érvénytelen JSON
+          a(z) {pos}. bájtnál.
         modelo_help: Támogatott modelo kód (111, 115, 123, 180, 190, 193, 347, 349
           vagy 720)
         period_help: Az összesítési szolgáltatásnak átadott időszak
@@ -426,6 +449,8 @@ cli:
           periodikus peldak: 2026Q1 es 2026-01'
         preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció
           nélkül
+        unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések ehhez:
+          {code}@{revision} ({period}): {suggestion}.'
         year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
@@ -468,8 +493,11 @@ cli:
           legalább egy kötelező)
         import_help: Külsőleg leadott bevallás rögzítése alap filing recordként, importált
           AEAT-hitelesített evidenciával
+        import_set_required: Az --set legalább egyszer kötelező egy importáláshoz.
         include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
           kihagyva)
+        invalid_evidence_kind: 'Az --evidence-kind értékének a következők egyikének
+          kell lennie: {canonical}; a kapott érték {kind}.'
         list_help: Regisztrált filing recordok listázása
         view_help: Egy filing record megjelenítése azonosító alapján
       formulas:
@@ -527,6 +555,7 @@ cli:
           record szükséges
         amend_missing_options: 'A módosításhoz az alábbi összes kapcsoló szükséges:
           %{missing}.'
+        amend_set_required: Az --set legalább egyszer kötelező egy módosításhoz.
         amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
         amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése
@@ -535,11 +564,26 @@ cli:
           használhatók; a kezelő --binding felülírásai mindig elsőbbséget élveznek.
         bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
         calculate_help: Új draft kalkulációs revízió rögzítése a munkaegységhez
+        calculate_saved: 'Mentve %{revision_id} draft kalkulációs revízióként (állapot:
+          %{state}). Tartósan eltárolva, később folytatható; a revíziók listázása
+          az `aeat app modelo work revisions %{work_unit_id}` paranccsal, ennek újbóli
+          megtekintése az `aeat app modelo work revision %{revision_id}` paranccsal.'
         calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256
           azonosítója
         casilla_help: Cella értéke CASILLA=DECIMAL szintaxissal (ismételhető)
+        casilla_not_decimal: 'A(z) {key} --casilla értéke nem decimális szám: {value}.'
+        create_created: Új munkaegység létrehozva.
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
           revízió) kulcsra
+        create_reused: A meglévő munkaegység lett visszaadva (idempotens a modell/év/időszak/revízió
+          kulcsra); semmi új nem jött létre. Nevezd át az `aeat app modelo work rename`
+          paranccsal.
+        create_reused_name_match: A meglévő munkaegység lett visszaadva (idempotens
+          a modell/év/időszak/revízió kulcsra); semmi új nem jött létre. A megadott
+          --name megegyezik a tárolt névvel.
+        create_reused_renamed: 'A meglévő munkaegység lett visszaadva (idempotens
+          a modell/év/időszak/revízió kulcsra); semmi új nem jött létre. A megadott
+          --name átnevezésként lett alkalmazva erre: %{name}.'
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
         discard_requires_yes: Az elvetés auditálható állapotátmenet. A megerősítéshez
           futtassa újra az 'aeat app modelo work discard %{work_unit_id} --yes' parancsot.
@@ -552,18 +596,30 @@ cli:
         history_work_unit_id_help: A megjelenítendő életciklusú munkaegység azonosítója
         include_discarded_help: A megszakított munkaegységeket is mutassa a listában
           (alapértelmezetten kihagyva)
+        invalid_amendment_kind: 'A --kind értékének a következők egyikének kell lennie:
+          {choices}; a kapott érték {kind}.'
         invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
           plusz . _ : - elválasztók, max. 128 karakter)'
+        invalid_calculation_revision_id: a calculation_revision_id 64-karakteres kisbetűs
+          hexadecimális karakterlánc kell legyen (SHA-256 kivonat)
         invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
           plusz . _ : - elválasztók, max. 64 karakter)'
         invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
           kell legyen (SHA-256 kivonat)
+        kv_empty_key_error: A(z) {flag} kulcsa nem lehet üres; a kapott érték {spec}.
+        kv_format_error: A(z) {flag} formátuma {key_label}={value_label} kell legyen;
+          a kapott érték {spec}.
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
           szűrve
+        missing_binding_guidance: '%{base} Add meg az értéket a --binding KEY=VALUE
+          opcióval ezen a parancson, vagy futtasd a `%{discover}` parancsot a kalkulációhoz
+          még hiányzó összes binding listázásához.'
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         name_help: A munkaegység opcionális megjelenítési neve
         notes_help: A filing recordhoz fűzött opcionális megjegyzések
-        override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
+        override_help: Binding érték KEY=VALUE szintaxissal (ismételhető); futtasd
+          az `aeat app modelo bindings list --missing` parancsot a kalkulációhoz szükséges
+          bindingok listájához.
         period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
           vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
         period_token_invalid: 'A(z) ''%{token}'' --period nem érvényes időszak-token
@@ -578,13 +634,19 @@ cli:
           500 karakter)
         relation_help: Előző időszak relációs érték KEY=VALUE szintaxissal. A KEY
           egy registry relációazonosító; a VALUE decimális. Ismételhető.
+        relation_not_decimal: 'A(z) {key} --relation értéke nem decimális szám: {value}.'
         rename_help: Munkaegység megjelenítési nevének módosítása
         resume_help: Ellenőrizd, hogy újrapróbálhatsz-e megszakadt folyamatfutást
           AEAT-kapcsolat nélkül
         resume_workflow_run_id_help: 16 karakteres folyamatfutás-azonosító
-        revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
+        revision_help: A célzott regisztrációs modellrevízió stabil azonosítója; futtasd
+          az `aeat app modelo describe MODELL` parancsot az elérhető revízióazonosítókért.
+        revision_show_help: Egy tárolt kalkulációs revízió eltárolt cellaértékeinek
+          megjelenítése (újraszámítás nélkül)
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
+        set_not_decimal: A(z) --set értéke decimális szám kell legyen; a kapott érték
+          {value}.
         set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy kötelező)
         status_help: Egy munkaegység metaadatainak megjelenítése
@@ -668,6 +730,11 @@ cli:
       bucket_id_help: A bucket azonosítója, amelynek eseménytörténetét megjelenítjük
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
+      history:
+        invalid_timestamp: A(z) {flag} ISO-8601 időbélyeg kell legyen (pl. 2026-04-01T00:00:00+00:00);
+          a kapott érték {raw}.
+        since_after_until: A --since értékének a --until értékénél korábbinak vagy
+          azzal egyenlőnek kell lennie.
       history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
       object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos
         egyezés)
@@ -686,6 +753,45 @@ cli:
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
     google:
       client_json_help: A Cloud Console Desktop OAuth kliens JSON fájl útvonala
+      detail:
+        client_json_bad_wrapper: 'a kliens JSON itt: {path} – az "installed" burkoló
+          nem objektum'
+        client_json_invalid: 'a kliens JSON itt: {path} – nem érvényes JSON: {reason}'
+        client_json_not_desktop: 'a kliens JSON itt: {path} – nem Cloud Console asztali
+          kliens; "installed" burkoló kulcs szükséges'
+        client_json_schema_invalid: 'a kliens JSON itt: {path} – nem ment át a sémaellenőrzésen:
+          {reason}'
+        client_json_unreadable: 'nem sikerült beolvasni a kliens JSON-t innen: {path}:
+          {reason}'
+        client_unregistered: a(z) {profile} profilhoz nincs regisztrált OAuth-kliens
+        no_metadata_for_refresh: a(z) {profile} profilhoz nincs OAuth-munkamenet;
+          korábbi bejelentkezés nélkül nem frissíthető
+      errors:
+        auth_failed: 'A Google-hitelesítés sikertelen: {detail}'
+        browser_open: 'Nem sikerült böngészőt megnyitni a Google-hozzáférés engedélyezéséhez:
+          {detail}'
+        client_not_registered: 'Nincs Google OAuth-kliens regisztrálva ehhez a profilhoz.
+          Először futtasd: `aeat config google register --client-json <útvonal>`.'
+        client_revoked: 'A regisztrált Google OAuth-klienst visszavonták. Regisztráld
+          újra: `aeat config google register`.'
+        keychain_locked: A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolva
+          van vagy nem érhető el.
+        loopback_bind: 'Nem sikerült helyi portot nyitni a Google-bejelentkezés befejezéséhez:
+          {detail}'
+        network: 'Nem sikerült elérni a Google-t: {detail}'
+        profile_unbound: Nincs aktív profil. Futtasd az `aeat config profile switch
+          <név>` parancsot, vagy add meg a `--profile` kapcsolót.
+        scope_insufficient: A Google-höz megadott hozzáférésből hiányoznak a szükséges
+          engedélyek. Futtasd az `aeat config google login` parancsot, és fogadj el
+          minden engedélyt.
+        storage: 'Nem sikerült elérni a Google Drive tárhelyet: {detail}'
+        token_expired: 'A Google-hozzáférés lejárt (a tesztprojektek tokenjei 7 nap
+          után lejárnak). Futtasd: `aeat config google login`.'
+        token_revoked: A Google-hozzáférést visszavonták. Futtasd az `aeat config
+          google login` parancsot az újbóli engedélyezéshez.
+        unsecured_mode: A Google-hozzáférés le van tiltva, amíg a titoktár nem biztonságos
+          módban fut egy valós NIF-fel rendelkező profilnál.
+        validation: 'A Google-höz megadott adatok nem mentek át az ellenőrzésen: {detail}'
       folder:
         folder_id_help: Google Drive mappaazonosító
         get_help: Mutasd a beállított Google Drive gyökérmappát
@@ -781,6 +887,9 @@ cli:
         show_help: Mutasd az AEAT által ehhez a profilhoz közölt legutóbbi nyilvántartást
         snapshot_id_help: Konkrét snapshot azonosító (előtagok elfogadottak)
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
+      delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutatója
+        törlődött. Futtasd az 'aeat config profile switch NÉV' vagy az 'aeat config
+        profile create NÉV' parancsot a munka folytatásához.
       delete_help: Törölj egy profilt és a helyi állapotát; a --yes megerősíti
       delete_name_help: Törlendő profil neve
       delete_requires_yes: 'A törlés destruktív. Megerősítéshez futtasd újra: ''aeat
@@ -919,12 +1028,18 @@ cli:
       target_label: Cél
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_integrity_internal: Belső alkalmazáshiba; nem a profilod hibája, és
+        nem olyasmi, amit te ki tudnál javítani.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
+      audience_internal: belső alkalmazáshiba
       auth_label: Hitelesítés
       checks_heading: Ellenőrzések
       detail_label: Részlet
+      finding_label: '-'
+      finding_optional: opcionális
+      finding_required: kötelező
       logs_label: Naplók
       next_label: Következő
       note_label: Megjegyzés
@@ -1007,6 +1122,10 @@ cli:
       id_help: Főkönyvi tranzakcióazonosító, amelyhez bizonyítékot kell csatolni
       purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
         azonosítója
+    categories:
+      header: ELISMERT FŐKÖNYVI KÖLTSÉGKATEGÓRIÁK
+      help: A --category-id által elfogadott kategóriaazonosítók listája, családonként
+        csoportosítva
     check:
       bucket_id_help: A vizsgálandó bucket azonosítója (alapértelmezésben az aktív
         profil bucketje).
@@ -1024,6 +1143,8 @@ cli:
       iva_rate_help: IVA kulcs tizedesként, például 0.21
       taxable_base_help: Adóalap összege
     errors:
+      command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
+      command_input_invalid_fallback: egy vagy több mező nem ment át az ellenőrzésen
       confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez,
         vagy használd előbb a --dry-run kapcsolót
       filter_parse_error: A naplószűrő elemzése sikertelen
@@ -1038,6 +1159,10 @@ cli:
       id_prefix_too_long: A %{prefix!r} tranzakció-azonosító előtag hosszabb 64 karakternél
         (egy teljes SHA-256 digest).
       invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
+      unknown_category: Ismeretlen --category-id {category!r}. Futtasd az `aeat app
+        ledger categories` parancsot az elismert kategóriaazonosítók listájához.
+      unknown_provider: 'Ismeretlen importáló --provider {provider!r}. Elismert szolgáltatók:
+        {providers}.'
     export:
       actor_help: A bucket eseményen rögzített kezelő neve
       format_help: Exportálási szerializációs formátum
@@ -1049,11 +1174,16 @@ cli:
       id_help: Tranzakcióazonosító (vagy egyértelmű előtag)
       include_split_siblings_help: Vond be ugyanazon felosztási csoport testvértranzakcióit
     import:
+      all_rows_skipped: 'Nem importáltunk új bejegyzést: mind a(z) {skipped} elemzett
+        sor már létezik a főkönyvben (ismétlődő tranzakcióazonosítók).'
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
+      no_rows_imported: 'Nem importáltunk bejegyzést: a fájl elemezhető volt, de nem
+        tartalmazott adatsorokat. Egy bank CSV-jének tartalmaznia kell egy fejlécsort
+        dátum-, összeg- és leírásoszloppal, majd legalább egy adatsort.'
       path_help: A bankkivonat fájl vagy könyvtár útvonala
       period_help: Az importálás adózási időszaka
-      provider_help: Kivonatformátum-szolgáltató (pl. N26, Revolut)
+      provider_help: 'Kivonatformátum-szolgáltató. Elismert értékek: {providers}'
       source_help: Az importált sorok ellenőrzéséhez használt eredeti fájl
       verbose_help: Részletes információk megjelenítése az importálás során
       verify_help: Bejegyzések ellenőrzése az importálás után
@@ -1062,21 +1192,32 @@ cli:
       amount: Összeg
       archived: Archivált
       bucket: Bucket
+      business_classification: Besorolás
+      business_pct: Üzleti százalék
+      category_id: Kategória
       checked: Ellenőrzött tranzakciók
       children: gyermekek
+      counterparty: Partner
       created_event_id: Létrehozási bucket esemény
+      currency: Pénznem
       date: Dátum
       description: Leírás
       dialect: Felismert formátum
+      direction: Irány
       dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
       event_count: események
       event_id: esemeny_id
       export_id: Exportazonosító
       id: Azonosító
       imported: Bejegyzések importálva
+      irpf_category: IRPF kategória
+      iva_amount: ÁFA összeg
+      iva_rate: ÁFA kulcs
       lifecycle_state: Életciklus állapot
       merged_id: osszevont_id
       'no': Nem
+      notes: Megjegyzések
+      notice: Megjegyzés
       output: Kimenet
       parent_id: szulo_id
       pending: Felülvizsgálatra vár
@@ -1093,7 +1234,9 @@ cli:
       source: Forrás
       split_group_id: felosztasi_csoport_id
       stashed: Félretéve
+      taxable_base: Adóalap
       valid: Érvényes
+      value_date: Értéknap
       warnings: Figyelmeztetések
       'yes': Igen
     link:
@@ -1363,6 +1506,8 @@ cli:
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
     status:
       drafts_empty: Nem talalhato mentett bevallastervezet.
+      drafts_empty_with_work_units: Nincs mentett regi bevallastervezet; ez normalis,
+        es nem erinti az alabb lathato modello munkaegysegeidet.
       drafts_present: '%{count} mentett bevallastervezet van ebben a helyi taroloban.
         Egy friss, ures munkaterulet normal esetben 0-t mutat, tehat ez a profil/adatbazis
         mar tartalmaz helyi tervezetallapotot.'
@@ -1375,7 +1520,13 @@ cli:
       next_import_command: '  aeat app ledger import <banki-kivonat.csv> --provider
         csv - banki tranzakciok importalasa.'
       next_landing_command: '  aeat --help - vissza a parancsutmutatohoz.'
+      next_modelo_work_command: '  aeat app modelo work create - modello bevallas
+        inditasa a naplo adataibol.'
       next_review_command: '  aeat app ledger review - importalt sorok ellenorzese.'
+      next_work_calculate_command: '  aeat app modelo work list - folyamatban levo
+        modello munkaegyseg folytatasa.'
+      next_work_create_command: '  aeat app modelo work create - munkaegyseg inditasa
+        egy masik modellohoz.'
       profile_active: A(z) `%{profile}` profilon dolgozol.
       profile_missing: Nincs aktiv profil beallitva. Adatok importalasa elott futtasd
         az `aeat config profile create NAME` parancsot.
@@ -1387,7 +1538,12 @@ cli:
       transactions_empty: Meg nincs importalt banki tranzakcio.
       transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
       work_units_empty: Meg nincs elinditott modello munkaegyseg.
-      work_units_present: '%{count} modello munkaegyseg letezik ebben a helyi tarolasban.'
+      work_units_present: '%{count} modello munkaegyseg van folyamatban ebben a helyi
+        tarolasban; a modello munkad mentve van, folytasd az `aeat app modelo work
+        list` paranccsal.'
+      work_units_present_with_discarded: '%{count} aktiv modello munkaegyseg (%{discarded}
+        megszakitott) ebben a helyi tarolasban; az aktiv modello munkad mentve van,
+        folytasd az `aeat app modelo work list` paranccsal.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
@@ -1554,6 +1710,8 @@ cli:
       welcome_profile: Udvozlet ujra. Az aktiv profil `%{profile}`.
     language_help: A parancs kimeneti nyelve (felülírja az aktív profilt)
     quiet_help: Csak hibák megjelenítése stderr-en
+    startup_import_error: 'Az AEAT parancsfelület nem indítható: hiányzó függőség:
+      {dependency}. Futtasd az `aeat config repair` parancsot.'
     unavailable_app_help: Az app parancsok nem érhetők el, mert hiányzik egy opcionális
       függőség
     verbose_help: Belső információs naplók megjelenítése stderr-en
@@ -1707,6 +1865,68 @@ entries:
     label: AEAT elektronikus ügyintézési portál
     purpose: Az AEAT elektronikus ügyintézési portáljának kezdőlapja.
 errors:
+  auth:
+    auth_aeat_login_assertion: Az AEAT bejelentkezés utáni ellenőrzését nem sikerült
+      létrehozni.
+    auth_aeat_session_expired: Az AEAT hitelesített munkamenete lejárt. A folytatáshoz
+      hitelesítsd magad újra.
+    auth_auth: AEAT-hitelesítési hiba történt.
+    auth_auth_authenticator_persisted_session_invalid: A mentett AEAT böngészőmunkamenet
+      nem megbízható. Hitelesítsd magad újra.
+    auth_auth_certificate: Tanúsítvány alapú hitelesítési hiba történt.
+    auth_auth_certificate_expired: A digitális tanúsítvány lejárt. A hitelesítéshez
+      újítsd meg a tanúsítványt.
+    auth_auth_certificate_handshake: A TLS-kézfogás bemenete érvénytelen. Ellenőrizd
+      a megadott URL-t.
+    auth_auth_certificate_load: A PKCS#12 tanúsítvány adatait nem sikerült beolvasni.
+      Ellenőrizd, hogy a fájl nem sérült-e.
+    auth_auth_certificate_nif_parse: A tanúsítvány alanyából nem sikerült NIF vagy
+      NIE azonosítót kinyerni. Ellenőrizd, hogy a tanúsítvány magánszemélyhez tartozik-e.
+    auth_auth_certificate_password: A tanúsítvány jelszava hiányzik vagy helytelen.
+      Állítsd be a környezeti változót a helyes jelszóra.
+    auth_auth_certificate_pre_expiry: A digitális tanúsítvány hamarosan lejár. Újítsd
+      meg a lejárat előtt a fennakadások elkerülése érdekében.
+    auth_auth_clave_movil_clave_movil_approval_timeout: A Cl@ve hitelesítés nem fejeződött
+      be időben. Hagyd jóvá a kérést az eszközödön, és próbáld újra.
+    auth_auth_clave_movil_clave_movil_configuration: A kötelező Cl@ve Móvil beállítások
+      hiányoznak vagy hibásak. Ellenőrizd a Cl@ve konfigurációt.
+    auth_auth_configuration: A kötelező hitelesítési beállítások hiányoznak vagy hibásak.
+      Ellenőrizd a hitelesítési konfigurációt.
+    auth_auth_validation: A hitelesítési paraméterek nem feleltek meg az ellenőrzésnek.
+      Javítsd a megjelölt értékeket, és próbáld újra.
+    auth_google: Google-hitelesítési hiba történt.
+    auth_google_client_not_registered: Az aktív profilhoz nincs regisztrálva Google
+      asztali OAuth-kliens. Regisztrálj egy klienst a Google-funkciók használatához.
+    auth_google_client_revoked: A regisztrált Google asztali OAuth-klienst visszavonták.
+      Regisztrálj új klienst.
+    auth_google_expired: A Google frissítési tokenje lejárt a tesztprojektek 7 napos
+      korlátja miatt. Engedélyezd újra a Google-hozzáférést.
+    auth_google_revoked: A Google frissítési tokenjét visszavonták. Engedélyezd újra
+      a Google-hozzáférést.
+    auth_google_scope_insufficient: A megadott Google-jogosultságok nem tartalmazzák
+      a művelethez szükséges összes hatókört. Engedélyezd újra az összes kért jogosultság
+      megadásával.
+    auth_outbound_storage_permission: Az aktív hitelesítő adatok nem rendelkeznek
+      a tárolóművelethez szükséges jogosultsággal.
+    auth_session_corrupt: A mentett munkamenet metaadatait nem sikerült beolvasni.
+      Hitelesítsd magad újra egy friss munkamenet létrehozásához.
+    auth_session_unavailable: Nincs elérhető ellenőrzött aktív AEAT-munkamenet. A
+      folytatás előtt hitelesítsd magad.
+    auth_storage_bucket_recovery_verification: A megadott helyreállítási kód érvénytelen.
+      Írd be újra a 24 szót pontosan úgy, ahogyan a biztonsági mentésben szerepelnek.
+    auth_storage_keyring_unavailable: Az operációs rendszer kulcstartója nem érhető
+      el. Ellenőrizd, hogy van-e telepített és aktív hitelesítőadat-tároló.
+    auth_storage_master_key_kdf_version: A főkulcsfájl olyan kulcslevezetési verziót
+      használ, amelyet ez a kiadás nem támogat. Frissítsd az alkalmazást.
+    auth_storage_master_key_keychain_locked: Az operációs rendszer kulcstartója zárolva
+      van. Oldd fel (Touch ID, Windows Hello vagy a hitelesítőadat-kezelő feloldása),
+      és próbáld újra.
+    auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
+      még nincs előkészítve.
+    auth_storage_master_key_passphrase_mismatch: A jelmondat nem nyitja meg a főkulcsot.
+      Add meg újra; ha elfelejtetted, állítsd helyre a helyreállítási kulcsoddal.
+    auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
+      megszerezni. Ellenőrizd a kulcstartót vagy a tartalék jelmondatot.
   calc:
     binding_value_missing: A {binding_id} kötés nem rendelkezik értékkel.
     bracket_negative_base: A(z) {parameter_id} sávos paraméter nem fogad el negatív
@@ -1734,13 +1954,591 @@ errors:
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} reláció nem rendelkezik értékkel.
     unknown_input_casillas: 'Ismeretlen cellaazonosítók a bemenetben: {casilla_ids}.'
+  censo:
+    no_snapshot_captured: Nem készült census-pillanatkép a(z) {profile_id} profilhoz.
+    profile_not_found: A(z) {profile_id} profil nem létezik; hozd létre a census alkalmazása
+      előtt.
+    sede_g313_no_census: Az AEAT G313 portálja nem adott vissza beolvasható censót
+      a(z) {profile_id} profilhoz; ellenőrizd, hogy a tanúsítványod vagy Cl@ve-d ehhez
+      a NIF-hez van regisztrálva.
+    sede_no_census: Az AEAT portálja nem adott vissza beolvasható censót a(z) {profile_id}
+      profilhoz.
+  error:
+    error_access_gate_submission: A hozzáférés-szabályozási irányelv elutasított egy
+      beküldési műveletet.
+    error_access_gate_submission_preflight: A hozzáférés-szabályozási előellenőrzés
+      elutasított egy írási műveletet.
+    error_aeat_core: Belső alkalmazáshiba történt.
+    error_aeat_observability: Hiba történt az alkalmazás telemetriájában.
+    error_application_live: Az élő AEAT olvasás vezérlése sikertelen volt.
+    error_application_registry: A modellnyilvántartás vezérlése sikertelen volt vagy
+      elutasításra került.
+    error_borrador_artefact_not_recognised: A PDF nem felel meg egyetlen ismert 100-as
+      modell piszkozatformának sem.
+    error_calculations_registry: Hiba történt a számítási nyilvántartás betöltése,
+      feloldása vagy ellenőrzése közben.
+    error_calculations_registry_load: A számítási nyilvántartás fájljait nem sikerült
+      értelmezni.
+    error_calculations_registry_snapshot: Nem sikerült bevallás minőségű nyilvántartás-pillanatképet
+      kiválasztani.
+    error_calculations_registry_validation: A számítási nyilvántartás definíciói hiányosak
+      vagy ellentmondóak.
+    error_categories: Hiba történt a költségkategóriákban.
+    error_categories_validation: Egy kategóriarekord nem felelt meg az ellenőrzésnek.
+    error_deadlines_deadline: Hiba történt a határidők kiszámításában.
+    error_deadlines_profile: Az egyéni vállalkozói profilt nem sikerült betölteni
+      vagy ellenőrizni a határidők kiszámításához.
+    error_deadlines_schedule_computation: A motor nem tudott érvényes határidő-ütemtervet
+      készíteni. Ellenőrizd a kért évet és a profiladatokat.
+    error_deadlines_validation: Egy határidőrekord nem felelt meg az ellenőrzésnek.
+    error_declaracion_template_not_detected: A bevallás PDF-jének sablonverzióját
+      nem sikerült automatikusan felismerni.
+    error_domain: Tartományi logikai hiba történt.
+    error_domain_submission: Beküldési tartományi hiba történt.
+    error_domain_submission_preflight: A piszkozat nem ment át a helyi beküldési előellenőrzésen.
+    error_domain_validation: Egy tartományi azonosító vagy modell érvénytelen.
+    error_filing_amendment: Módosító bevallással kapcsolatos hiba történt.
+    error_filing_application: Hiba történt a bevallási alkalmazásrétegben.
+    error_filing_builder: A bevalláskészítő kiválasztása vagy futtatása sikertelen
+      volt.
+    error_filing_computation: A készítő nem tudott kiértékelni egy képletrovatot.
+    error_filing_draft: Hiba történt a bevallás piszkozatában.
+    error_filing_export: A piszkozat exportálása az AEAT formátumába sikertelen volt.
+    error_filing_export_validation: Egy export mezőérték vagy elrendezés érvénytelen.
+    error_financial_aggregation: Hiba történt a pénzügyi tranzakciók összesítése közben.
+    error_financial_aggregation_period: A kért bevallási időszakot nem sikerült egyértelműen
+      értelmezni.
+    error_financial_aggregation_validation: Az összesítés tartalma vagy állapota érvénytelen.
+    error_financial_attachments_attachment: Mellékletkezelő-szolgáltatási hiba történt.
+    error_financial_attachments_attachment_not_found: A kért melléklet nem található.
+    error_financial_invoices_invoice: Számlakatalógus-hiba történt.
+    error_financial_invoices_invoice_catalogue: A számlakatalógus érvénytelen vagy
+      inkonzisztens.
+    error_financial_invoices_invoice_link: A számlát és a tranzakciót nem sikerült
+      összekapcsolni.
+    error_financial_invoices_invoice_not_found: A kért számla nem található.
+    error_financial_provider: Hiba történt a pénzügyi dokumentum importálása közben.
+    error_financial_transactions_transaction: Tranzakciókatalógus-hiba történt.
+    error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
+    error_financial_vat: Áfaszámítási hiba történt.
+    error_financial_vat_catalogue: Az áfakatalógust nem sikerült betölteni, feloldani
+      vagy ellenőrizni.
+    error_financial_vat_category_not_found: A kért áfakategória nem található a katalógusban.
+    error_financial_vat_classification: Az áfát nem sikerült determinisztikusan besorolni.
+    error_financial_vat_rate_not_found: Nem található áfakulcs a kért tagállamhoz
+      és típushoz.
+    error_financial_vat_rate_overlap: Két áfakulcs ugyanazon érvényességi időablakot
+      osztja meg.
+    error_fixture_provisioning: A tesztadatokat nem sikerült előkészíteni.
+    error_invoice_link_inconsistency: A kapcsolat szinkronizálatlanul hagyta a számla-
+      és a tranzakciókatalógust. Egyeztesd kézzel mindkét katalógust.
+    error_invoice_validation: Egy számlarekord nem felelt meg az ellenőrzésnek.
+    error_justificante: Igazolással kapcsolatos hiba történt.
+    error_justificante_csv_not_found: A PDF nem tartalmaz Código Seguro de Verificación
+      azonosítót.
+    error_llm: Nyelvi modell hiba történt.
+    error_manuals_manual: Kézikönyvekkel kapcsolatos hiba történt.
+    error_manuals_manual_not_found: A kért kézikönyv, év vagy rész nem található.
+    error_manuals_manual_review_required: Egy kézikönyvrekordból hiányoznak a felülvizsgálati
+      metaadatok.
+    error_manuals_rule_extraction: A kézikönyv szabálykinyerése nem érhető el.
+    error_manuals_validation: Egy kézikönyvrekord nem felelt meg az ellenőrzésnek.
+    error_modelo_aggregation_binding: A tárolóegységből származó összesítési kötések
+      ütköznek a megadott bemenettel.
+    error_modelo_amendment_evidence_missing: Egy bevallás nem módosítható importált
+      hivatalos bizonyíték nélkül. Előbb importáld az eredeti bevallás igazolását.
+    error_modelo_amendment_target_state: Egy nem aktuális állapotú bevallás nem módosítható;
+      már felváltotta egy későbbi.
+    error_modelo_calculation_registry_unavailable: A munkaegység modelljéhez, évéhez
+      és időszakához tartozó nyilvántartás-pillanatképet nem sikerült feloldani.
+    error_modelo_calculation_revision_not_found: A kért számítási revízió nem található.
+    error_modelo_calculation_revision_state: A kért állapotátmenet nem kompatibilis
+      a számítási revízió jelenlegi állapotával.
+    error_modelo_casilla_provenance_missing: A motor eredményének egy rovata nem rendelkezik
+      definícióval a nyilvántartásban.
+    error_modelo_external_filing_import: Az importált külső bevallást nem sikerült
+      menteni. Ellenőrizd a rovatértékeket és a bizonyítékhivatkozást.
+    error_modelo_filing_record_not_found: A kért bevallási rekord nem található.
+    error_modelo_iva_wallet_reconciliation_blocked: A 303-as modell számítását az
+      áfatárca egyeztetése blokkolja. Oldd fel a függőben lévő egyeztetést a folytatás
+      előtt.
+    error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
+    error_modelo_work_unit_already_discarded: A munkaegység már el van vetve.
+    error_modelo_work_unit_mutation_refused: Egy elvetett munkaegység nem módosítható.
+    error_modelo_work_unit_not_found: A kért munkaegység nem található.
+    error_modelos: Adómodellhiba történt.
+    error_modelos_validation: Egy modellkód megsérti az alakzati feltételeit.
+    error_normatives_normative: Szabályozással kapcsolatos hiba történt.
+    error_normatives_normative_not_found: A kért szabályozás vagy cikk nem található.
+    error_normatives_validation: Egy szabályozási mezőérték érvénytelen.
+    error_outbound_storage_not_found: A kért tárolóobjektum vagy névtér nem létezik.
+    error_pdf_import_pdf_modelo_import: A bevallás importálása a PDF-ből sikertelen
+      volt.
+    error_pdf_import_scrub: A PDF biztonságos változatát nem sikerült létrehozni.
+    error_period: Időszakkal kapcsolatos hiba történt.
+    error_period_validation: A megadott időszak-token hibás formátumú.
+    error_portals_portal_registry: Hiba történt az AEAT portálnyilvántartásában.
+    error_portals_unknown_portal: A megadott AEAT-portál nem létezik.
+    error_portals_validation: Egy portál metaadatai nem feleltek meg az ellenőrzésnek.
+    error_profile_amortization_ledger: A profil értékcsökkenési könyvének egy művelete
+      érvénytelen.
+    error_profile_asset_record: A profil egy eszközrekordja szerkezetileg érvénytelen.
+    error_profile_cross_store_drift: Egy profil fizikai tárolói nem egyeznek az azonosságában.
+      A profil nem használható.
+    error_profile_inventory_ledger: A profil leltárkönyvének egy művelete érvénytelen.
+    error_profile_tax_residence: Adóügyi illetőségi profil hiba történt.
+    error_profile_validation: Egy profilrekord nem felelt meg az ellenőrzésnek.
+    error_renta: Hiba történt a RENTA-bevallás számításában.
+    error_renta_validation: Egy RENTA mezőérték érvénytelen.
+    error_rental_amortization_cap_exceeded: A halmozott értékcsökkenés meghaladná
+      a bérelt eszköz törvényi felső korlátját.
+    error_rental_contract_not_found: A megadott bérleti szerződés nem található.
+    error_rental_finca_not_found: A megadott ingatlan nem található.
+    error_rental_register: Hiba történt a bérleti nyilvántartásban.
+    error_rental_tier_resolution: A bérleti szerződés adatai inkonzisztensek, és az
+      alkalmazandó kedvezményi szint nem volt meghatározható.
+    error_rental_validation: Egy bérleti rekord nem felelt meg az ellenőrzésnek.
+    error_resources_backend: Hiba történt az alkalmazásba csomagolt adatok beolvasása
+      közben.
+    error_resources_load: Egy beépített alkalmazás-erőforrást nem sikerült betölteni.
+    error_resources_not_found: A kért beépített erőforrás nem található.
+    error_resources_validation: Egy beépített alkalmazásfájl nem felelt meg a szigorú
+      ellenőrzésnek.
+    error_review: Felülvizsgálati hiba történt.
+    error_sanitization: Hiba történt a dokumentum tisztítása közben.
+    error_sede: Hiba történt az AEAT elektronikus Sede oldalán.
+    error_sede_expediente_not_found: Egyetlen ügyirat sem felelt meg a kért szűrőnek.
+    error_sede_navigation: Egy navigációs lépés az AEAT Sede oldalán sikertelen volt.
+    error_storage_bucket: Hiba történt a tárolóegység életciklusában.
+    error_submission_validation: Egy beküldési modell nem felelt meg az ellenőrzésnek.
+    error_transaction_catalogue: A tranzakciókatalógus érvénytelen vagy inkonzisztens.
+    error_transaction_llm_classifier: A tranzakció besorolása a nyelvi modellel sikertelen
+      volt.
+    error_transaction_not_found: A kért tranzakció nem található.
+    error_transaction_persistence: A tranzakciókatalógust nem sikerült menteni.
+    error_transaction_validation: Egy tranzakció mezőértéke érvénytelen.
+    error_usage_ratios_validation: Egy használati arány profil megsérti a tartományi
+      feltételeit.
+    error_user_profile: Felhasználói profil hiba történt.
+    error_vat_prorrata: Hiba történt az áfa arányosításának számításában.
+    error_vat_prorrata_input: Az áfa arányosítás bemenetei megsértik a feltételeiket.
+    error_vat_prorrata_sector: Az áfa arányosítás ágazati elkülönítési bemenetei inkonzisztensek.
+    error_vat_validation: Egy áfamezőérték érvénytelen.
+    error_wizard: Varázslóhiba történt.
+    error_wizard_compile: A varázsló katalógusa hibás, és nem volt lefordítható.
+    error_workflow: Munkafolyamat-hiba történt.
+    error_workflow_component: Egy munkafolyamat-összetevő váratlan kivételt dobott.
+  fail:
+    census_sync: A 036-os modell nyilvántartásának szinkronizálása sikertelen volt.
+    currency_error: A pénznem normalizálása sikertelen volt.
+    declaration_parse: A benyújtott bevallás exportját nem sikerült értelmezni az
+      egyeztetéshez.
+    exchange_rate_provider: Az árfolyam-szolgáltató nem válaszolt.
+    fail_borrador_parse: A 100-as modell piszkozat PDF-jét nem sikerült bevallássá
+      értelmezni.
+    fail_browser_evasion: A böngésző elkerülési beállítása nem volt alkalmazható.
+    fail_browser_session_browser: Böngészőmunkamenet-hiba történt.
+    fail_browser_validation: A böngésző paraméterei nem feleltek meg az ellenőrzésnek.
+    fail_declaracion_parse: A PDF-et nem sikerült bevallássá értelmezni.
+    fail_export: Hiba történt az AEAT felé történő exportálás közben.
+    fail_export_format: A bevallás piszkozatát nem sikerült a kért BOE formátumba
+      sorosítani.
+    fail_filing_import: A bevallást nem sikerült importálni az igazolás PDF-jéből.
+    fail_financial_attachments_attachment_persistence: A melléklettároló nem tudta
+      beolvasni vagy kiírni az adatokat.
+    fail_financial_invoices_invoice_persistence: A számlakatalógust nem sikerült menteni
+      vagy betölteni.
+    fail_financial_ledger_storage: A tárolóegységhez kötött könyvelési tárolót nem
+      sikerült feloldani vagy használni.
+    fail_financial_usage_ratios_usage_ratio_persistence: A használati arány profilt
+      nem sikerült beolvasni vagy kiírni.
+    fail_google_browser_open: A böngészőt nem sikerült megnyitni a Google hozzájárulási
+      oldalának megjelenítéséhez. Nyisd meg a hivatkozást kézzel.
+    fail_google_loopback_bind: A helyi HTTP-fogadó nem tudott portot lefoglalni. Zárd
+      be az azt esetleg használó alkalmazásokat, és próbáld újra.
+    fail_google_network: A Google szerverét nem sikerült elérni. Ellenőrizd az internetkapcsolatot,
+      és próbáld újra.
+    fail_justificante_parse: A PDF-et nem sikerült igazolássá értelmezni.
+    fail_llm_cache: Egy nyelvi modell gyorsítótár-bejegyzését nem sikerült beolvasni,
+      kiírni vagy értelmezni.
+    fail_llm_provider: A nyelvi modell szolgáltatója helyrehozhatatlan hibát adott
+      vissza.
+    fail_llm_rate_limit: A nyelvi modell szolgáltatója használati korlát miatt elutasította
+      a kérést. Várj néhány percet, és próbáld újra.
+    fail_locale_manager: Hiba történt a nyelvi fájlok kezelése vagy beolvasása közben.
+    fail_manuals_manual_parse: Egy kézikönyvrekord nem felelt meg a sémaellenőrzésnek.
+    fail_mcp_launch: Az MCP-kiszolgálót nem sikerült elindítani.
+    fail_modelo_calculation_revision_persistence: A számítási revíziók katalógusát
+      nem sikerült menteni vagy betölteni.
+    fail_modelo_filing_record_persistence: A bevallási rekordok katalógusát nem sikerült
+      menteni vagy betölteni.
+    fail_modelo_verification_report_persistence: Az ellenőrzési jelentések katalógusát
+      nem sikerült menteni vagy betölteni.
+    fail_modelo_work_unit_persistence: A munkaegységek katalógusát nem sikerült menteni
+      vagy betölteni.
+    fail_normatives_normative_parse: Egy szabályozási rekord nem felelt meg a sémaellenőrzésnek.
+    fail_outbound_storage: Tárolószolgáltatói hiba történt.
+    fail_outbound_storage_network: A tárolószolgáltatást nem sikerült elérni. Ellenőrizd
+      az internetkapcsolatot, és próbáld újra.
+    fail_outbound_storage_unavailable: A tárolószolgáltatás átmenetileg nem érhető
+      el. Várj néhány percet, és próbáld újra.
+    fail_review_source_load: A forrásfájl létezik, de nem sikerült értelmezni.
+    fail_sanitization_source_parse: A forrás PDF-et nem sikerült megnyitni a tisztításhoz.
+    fail_sede_census_parse: Az AEAT Sede nyilvántartási oldalának egy értékét nem
+      sikerült értelmezni.
+    fail_sede_justificante_fetch: Az igazolás PDF letöltése az AEAT Sede oldaláról
+      sikertelen volt, vagy a fájl hibás.
+    fail_sede_parse: Az AEAT Sede rögzített oldalát nem sikerült értelmezni.
+    fail_sede_validation: Az AEAT Sede oldaláról rögzített adatok nem a várt formájúak.
+    fail_site_health: A webhely állapotellenőrzése sikertelen volt.
+    fail_storage: Tárolási hiba történt.
+    fail_storage_blob_not_found: A kért objektum nem található a titkosított tárolóban.
+    fail_storage_bucket_recovery_unavailable: Az aktív tárolóegység helyreállítási
+      csomagját nem sikerült betölteni. Lehetséges, hogy a helyreállítás soha nem
+      lett beállítva.
+    fail_storage_persistence: Megőrzési hiba történt a biztonságos tárolóban.
+    fail_storage_repository: Egy tárházművelet sikertelen volt.
+    fail_storage_secret_not_found: Nem található titok a kért kulcshoz.
+    fail_storage_secret_store: Be-/kimeneti hiba történt a titoktárolóban.
+    fail_user_profile_not_found: A felhasználói profil kért szakasza vagy mezője nem
+      található.
+    fail_user_profile_schema_load: A felhasználói profil sémáját nem sikerült betölteni.
+    ledger_check: Egy könyvelési konzisztenciaellenőrzés a folytatást gátló problémát
+      talált.
+    ledger_link: Egy könyvelési tranzakciót nem sikerült modellkötéshez kapcsolni.
+    missing_exchange_rate: Hiányzik az árfolyam a megadott dátumhoz és pénznemhez.
+    modelo_036_lifecycle: Hiba történt a 036-os modell életciklusában (regisztráció,
+      módosítás vagy törlés).
+    modelo_export: Hiba történt a modellrevízió exportálása közben.
+    modelo_export_manifest: A modellexport jegyzékét nem sikerült létrehozni vagy
+      ellenőrizni.
+    overview: Hiba történt az áttekintés összeállítása közben.
+    overview_agenda: Az áttekintés nem tudta felsorolni a következő esedékes teendőket.
+    overview_backlog: Az áttekintés nem tudta besorolni a lejárt kötelezettségeket.
+    overview_calendar: Az áttekintési naptárt nem sikerült összeállítani a kért időszakra.
+    overview_explain: Az áttekintés magyarázatát nem sikerült lebontani a kért kötelezettségre.
+    profile_export: Hiba történt a profilarchívum exportálása közben.
+    profile_import: Hiba történt a profilarchívum importálása közben.
+    reconciliation: Hiba történt az időszaki bevallások és az éves összesítő egyeztetése
+      közben.
+    stale_exchange_rate: Az egyetlen elérhető árfolyam az elfogadható frissességi
+      időablakon kívül esik.
   financial:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
+  identity:
+    cif_check_char_mismatch_mixed: 'A CIF ellenőrző karaktere helytelen ({kind} típus):
+      várt érték {expected} vagy {alt}, kapott érték {got}.'
+    cif_check_digit_mismatch: 'A CIF ellenőrző számjegye helytelen ({kind} típus):
+      várt érték {expected}, kapott érték {got}.'
+    cif_check_letter_mismatch_kind: 'A CIF ellenőrző betűje helytelen ({kind} típus):
+      várt érték {expected}, kapott érték {got}.'
+    cif_invalid_shape: 'A(z) {candidate} nem CIF alakú: a CIF egy kezdőbetűből (A-H,
+      J, N, P-S, U, V vagy W), majd 7 számjegyből és egy ellenőrző karakterből áll.'
+    document_empty: Az azonosító okmány üres.
+    nie_check_letter_mismatch: 'A NIE ellenőrző betűje helytelen: a(z) {body} esetén
+      az ellenőrző betűnek {expected} értékűnek kell lennie, nem {got}. Javítsd a
+      NIE-t erre: {body}{expected}.'
+    nie_invalid_shape: 'A(z) {candidate} nem NIE alakú: a NIE X, Y vagy Z betűvel
+      kezdődik, majd 7 számjegy és egy ellenőrző betű következik.'
+    nif_check_letter_mismatch: 'A NIF ellenőrző betűje helytelen: a(z) {digits} esetén
+      az ellenőrző betűnek {expected} értékűnek kell lennie, nem {got}. Javítsd a
+      NIF-et erre: {digits}{expected}.'
+    nif_invalid_shape: 'A(z) {candidate} nem NIF alakú: a NIF 8 számjegyből, majd
+      egy ellenőrző betűből áll.'
+    validate_expects_str: Az azonosító ellenőrzése szöveges értéket vár; a kapott
+      típus {got_type}.
+  integrity:
+    integrity_aeat_core_validation: Egy belső adatintegritási ellenőrzés sikertelen
+      volt.
+    integrity_cli_output_schema: A CLI kimeneti sémanyilvántartása rosszul van konfigurálva.
+    integrity_filing_amendment_validation: A módosító bevallás megsért egy jogi vagy
+      szerkezeti feltételt.
+    integrity_filing_fixture: A bevallás tesztadatai érvénytelenek.
+    integrity_filing_validation: A bevallás ellenőrzése a folytatást gátló problémát
+      talált.
+    integrity_financial_attachments_attachment_validation: A melléklet nem felelt
+      meg az ellenőrzésnek. Ellenőrizd a fájlt, és csatold újra.
+    integrity_identity_document: A megadott személyazonosító okmány nem érvényes spanyol
+      NIF, NIE vagy CIF.
+    integrity_justificante_verification: Az igazolás AEAT-nál történő ellenőrzését
+      nem sikerült elvégezni.
+    integrity_manuals_manifest: A kézikönyv-jegyzék nem felelt meg a séma- vagy hash-ellenőrzésnek.
+    integrity_observability_aeat_corpus_drift: A visszajátszás azt észlelte, hogy
+      az AEAT referenciakorpusza eltér a rögzített állapottól.
+    integrity_observability_run_trace_validation: A mentett futási nyomvonal nem felelt
+      meg a szigorú ellenőrzésnek.
+    integrity_outbound_storage: A letöltött tartalom nem felelt meg az integritási
+      ellenőrzéseknek (hash, méret vagy etag).
+    integrity_portals_portal_integrity: Az AEAT portálnyilvántartása megsért egy szerkezeti
+      feltételt.
+    integrity_profile_snapshot_hash_mismatch: A profil pillanatképének hash-e nem
+      egyezik az aktuális vetülettel.
+    integrity_profile_snapshot_not_found: Nem létezik a megadott azonosítójú profil-pillanatkép.
+    integrity_storage_blob: Egy tárolt objektum SHA-256 hash-e nem egyezik a jegyzékében
+      szereplővel.
+    integrity_storage_classification: Egy rekord megadott érzékenységi besorolása
+      nem kompatibilis a tárolójával.
+    integrity_storage_corpus_manifest: A korpuszjegyzéket nem sikerült beolvasni vagy
+      ellenőrizni.
+    integrity_storage_corpus_manifest_drift: 'A lemezen lévő korpusz eltér a jegyzékétől:
+      fájlokat adtak hozzá, töröltek vagy módosítottak.'
+    integrity_storage_corpus_manifest_tamper: A korpuszjegyzék önhitelesítő kivonata
+      nem egyezik a tartalmával. A jegyzék sérült vagy meghamisított lehet.
+    integrity_storage_decryption: Egy tárolt objektum visszafejtése sikertelen. Az
+      adatok sérültek lehetnek, vagy a kulcs helytelen.
+    integrity_storage_encryption: Titkosítási vagy visszafejtési hiba történt a biztonságos
+      tárolóban.
+    integrity_storage_envelope_version: Egy lemezen lévő objektum verziója nem egyezik
+      az alkalmazás által elvárttal.
+    integrity_storage_key_derivation: Egy kulcslevezetési lépés sikertelen volt a
+      biztonságos tárolóban.
+    integrity_storage_nonce_collision: Nonce-ütközést észleltünk a biztonságos tárolóban.
+    integrity_storage_path_containment: Egy kiszámított elérési út kilép a beállított
+      gyökérkönyvtárból.
+    integrity_storage_retention_policy: Egy rekord megőrzési metaadatai megsértik
+      a besorolási irányelvét.
+    integrity_storage_secure_object_unreadable: Egy tárolt biztonságos objektumot
+      nem sikerült visszafejteni az aktuális főkulccsal.
+    integrity_storage_validation: Egy tárolási paraméter nem felelt meg az ellenőrzésnek.
+    integrity_verification: Az ellenőrzés helyrehozhatatlanul meghiúsult. A referenciaadatok
+      vagy a számítási motor sérültek lehetnek.
+    profile_import_signature: A profilarchívum nem felelt meg az aláírás- vagy integritásellenőrzésnek.
+      Ne importálj nem megbízható forrásból származó archívumokat.
+  internal:
+    internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
+    internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
+      próbáltunk rögzíteni aktív futási kontextuson kívül.'
+    internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
+      megjeleníteni.'
+    internal_wizard_script_overflow: 'Belső hiba: a varázsló fel nem használt, előre
+      megírt válaszokkal zárult le.'
+    internal_wizard_script_underflow: 'Belső hiba: a varázsló több választ kért, mint
+      amennyi előre meg volt írva.'
+    internal_workflow_abort_signal: 'Belső hiba: egy munkafolyamat-szakasz megszakítási
+      jelzést adott.'
+  locked:
+    locked_access_gate_live_submit_forbidden: Az AEAT felé történő élő beküldés véglegesen
+      tiltott. Ez az alkalmazás bevallásokat állít össze, ellenőriz és exportál; a
+      benyújtást az alkalmazáson kívül kell elvégezni.
+    locked_auth_acquisition: Egy másik folyamat éppen most végzi az AEAT-hitelesítést.
+      Várd meg, amíg befejeződik, és próbáld újra.
+    locked_google_keychain: A Google-hitelesítő adatokat tároló operációs rendszeri
+      kulcstartó zárolva van vagy nem érhető el. Oldd fel a kulcstartót, és próbáld
+      újra.
+    locked_storage_bucket_busy: A tárolóegységet egy másik folyamat használja. Várd
+      meg, amíg az a folyamat befejeződik, és próbáld újra.
+    locked_storage_bucket_session: Ehhez a művelethez feloldott tárolóegység szükséges.
+      Futtasd az `aeat config unlock` parancsot, és próbáld újra.
+    locked_storage_lock_acquisition: A kizárólagos fájlzárolást nem sikerült megszerezni
+      az időkorláton belül. Egy másik folyamat tartja; várj, és próbáld újra.
+  refused:
+    auth_configure_no_active_bucket: A hitelesítés nem konfigurálható aktív profil
+      nélkül. Hozz létre profilt az `aeat config profile create NÉV` paranccsal, és
+      próbáld újra.
+    auth_profile_identity_mismatch: Az aktív profil azonosítója nem lehet a kért hitelesítési
+      munkamenet tulajdonosa.
+    bootstrap_already_complete: Már létezik profil; az első indítási beállítás csak
+      egyszer fut le. Használd az `aeat config profile switch NÉV` parancsot a profilváltáshoz.
+    census_apply_conflict: A nyilvántartás nem alkalmazható, mert egy függő egységen
+      folyamatban lévő munka van. Először oldd fel a függőben lévő állapotot.
+    census_field_validation: Az AEAT nyilvántartása olyan értéket adott vissza, amelyet
+      a séma nem fogad el. Egyeztesd a megjelölt mezőt a tanácsadóddal.
+    census_not_available: Az AEAT nem adott vissza olvasható nyilvántartást. Lehet,
+      hogy nem vagy regisztrálva az IAE-ben, vagy a tanúsítványod nincs a NIF-edhez
+      rendelve.
+    ledger_preflight: A könyvelési előellenőrzés elutasította a modell futtatását,
+      mert még nem benyújtható.
+    modelo_036_prior_alta_required: A 036-os modell módosítása vagy törlése nem kérhető
+      előzetes regisztráció nélkül.
+    modelo_036_terminal_state: A 036-os modell rekordja már törölt állapotban van,
+      és nem fogad el további műveleteket.
+    modelo_census_stale: 'A művelet elutasítva, mert új nyilvántartást alkalmaztál
+      a munka létrehozása után. Az AEAT a kötelező érvényű jogi forrás: hozd létre
+      újra az aktuális nyilvántartással.'
+    modelo_export_cross_bucket: A megcímzett revízió az aktív profilétól eltérő tárolóegységhez
+      tartozik. Az exportálás csak az aktív profil tárolóegységén belül működik.
+    modelo_export_no_active_bucket: Az exportáláshoz aktív profil szükséges. Hozz
+      létre vagy válassz profilt, és próbáld újra.
+    profile_already_registered: Már létezik ilyen nevű profil. Használd az `aeat config
+      profile switch NÉV` parancsot a rá váltáshoz.
+    profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.
+    profile_locked: Ehhez a művelethez feloldott profil szükséges. Futtasd az `aeat
+      config unlock` parancsot, és próbáld újra.
+    profile_name_collision: A megadott profilnév már használatban van. Válassz másik
+      nevet.
+    reconciliation_cross_bucket: A megcímzett munkaegység az aktív profilétól eltérő
+      tárolóegységhez tartozik. Az egyeztetés csak az aktív profil tárolóegységén
+      belül működik.
+    reconciliation_declaration_source_unsupported: A bevallásból történő egyeztetés
+      még nem érhető el.
+    reconciliation_drift: Az egyeztetés számtani vagy azonossági eltérést észlelt
+      a bevallások között. Ellenőrizd az összegeket a folytatás előtt.
+    reconciliation_evidence_invalid: A megadott külső bizonyítékot nem sikerült értelmezni.
+      Ellenőrizd az igazolásfájlt.
+    refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférése le
+      van tiltva. Ez a művelet a jelenlegi konfigurációval nem tud kapcsolatba lépni
+      az AEAT-tal.
+    refused_apoderado_live_check_unavailable: A meghatalmazottak élő ellenőrzése nem
+      érhető el, vagy az AEAT-tal való kapcsolatfelvétel sikertelen volt.
+    refused_apoderado_not_configured: Nincs beállítva meghatalmazott. Állítsd be a
+      meghatalmazottat az állapotának ellenőrzése előtt.
+    refused_apoderado_unknown_scope: A megadott meghatalmazási hatókör nincs az elérhető
+      katalógusban.
+    refused_application_live_input: Az élő AEAT olvasási kérés a megadott bemenettel
+      nem hajtható végre.
+    refused_application_registry_input: A modellnyilvántartási kérés a megadott bemenettel
+      nem hajtható végre.
+    refused_calculations_casilla_constraint: Egy kiszámított rovatérték a rovathoz
+      megadott határokon kívül esik. Ellenőrizd a számítás bemeneteit.
+    refused_cli_boundary: A parancs elutasította a kérést.
+    refused_cli_log_level_resolution: A megadott naplózási szint beállításai ellentmondóak.
+      Csak egyet használj a --quiet, --verbose vagy --debug közül.
+    refused_cli_non_tty: Ehhez a parancshoz interaktív bemenet kell, de a szabványos
+      bemenet át van irányítva. Futtasd interaktív terminálban.
+    refused_cli_validation_boundary: A parancs bemenete nem ment át az ellenőrzésen.
+      Futtasd az `aeat config repair` parancsot, vagy állítsd vissza a profil állapotát.
+    refused_config_reset_unconfirmed: A konfiguráció visszaállítása nem lett megerősítve.
+      Futtasd újra a parancsot a művelet megerősítésével.
+    refused_evidence_bundle_not_found: Nem létezik a megadott azonosítójú bizonyítékcsomag.
+    refused_evidence_bundle_verification: A bizonyítékcsomag ellenőrzése sikertelen
+      volt, és a műveletet nem kényszerítettük ki.
+    refused_filing_calculate: A bevallás számítása vagy összegzése nem teljesítette
+      a feltételeit.
+    refused_financial_aggregation_category_coverage: Egy tranzakció nem rendelkezik
+      kategória- vagy profillefedettséggel. Sorold be a tranzakciót az összesítés
+      előtt.
+    refused_financial_aggregation_missing_classification: Az időszak néhány tranzakciója
+      még besorolásra vár. Sorold be mindet az összesítés előtt.
+    refused_financial_aggregation_unsupported_modelo: A kért modellhez nem áll rendelkezésre
+      összesítési szerződés.
+    refused_financial_ledger_no_active_bucket: A könyvelési művelethez aktív profil
+      szükséges. Hozz létre vagy válassz profilt, és próbáld újra.
+    refused_financial_ledger_transaction_id_prefix: A tranzakcióazonosító-előtag nulla
+      vagy több tranzakcióra illeszkedik. Adj meg hosszabb előtagot.
+    refused_financial_provider_invalid_source: A forrásdokumentum nem olvasható, vagy
+      a szerkezete érvénytelen.
+    refused_financial_provider_unsupported_source: Egyetlen szolgáltató sem tudja
+      értelmezni ezt a forrásdokumentumot.
+    refused_financial_provider_validation: A pénzügyi dokumentum egy mezője (dátum
+      vagy összeg) nem felelt meg az ellenőrzésnek.
+    refused_financial_usage_ratios_census_mismatch: Egy mentett otthoni iroda használati
+      arány eltér a nyilvántartástól, amely a kötelező érvényű jogi forrás. Igazítsd
+      a nyilvántartás értékéhez.
+    refused_google_profile_unbound: Nincs aktív profil hozzárendelve. Válassz profilt,
+      vagy használd a --profile kapcsolót.
+    refused_google_unsecured_mode: A Google nem engedélyezhető titkosítatlan tárolási
+      módban olyan profillal, amely valódi NIF-et tartalmaz.
+    refused_google_validation: A megadott Google-paraméterek nem feleltek meg az ellenőrzésnek.
+    refused_inventory_actividad_conflict: Már létezik leltár ehhez a tevékenységhez
+      és évhez.
+    refused_inventory_actividad_not_found: Nem létezik leltár a megadott tevékenységhez
+      és évhez.
+    refused_inventory_service_input: Egy megadott bemenet megsérti a leltárszerződést.
+      Javítsd a bemenetet, és próbáld újra.
+    refused_ledger_business_operation_invoice_input: Egy megadott bemenet megsérti
+      az üzleti művelet számlaszerződését. Javítsd a bemenetet, és próbáld újra.
+    refused_ledger_business_operation_invoice_not_found: Nem létezik a megadott azonosítójú
+      üzleti művelet számla.
+    refused_ledger_evidence_input: Egy megadott bizonyítékbemenet megsérti a beszerzési
+      számlaszerződést. Javítsd a bemenetet, és próbáld újra.
+    refused_ledger_evidence_not_found: Nem létezik a megadott azonosítójú beszerzési
+      számla bizonyíték.
+    refused_live_borrador_snapshot_not_found: Nem létezik a megadott azonosítójú 100-as
+      modell piszkozat-pillanatkép.
+    refused_live_censo_snapshot_not_found: Nem létezik a megadott azonosítójú 036-os
+      modell nyilvántartás-pillanatkép.
+    refused_live_expedientes_snapshot_not_found: Nem létezik a megadott azonosítójú
+      ügyiratok-pillanatkép.
+    refused_live_notifications_snapshot_not_found: Nem létezik a megadott azonosítójú
+      értesítés-pillanatkép.
+    refused_live_portal_not_found: Nem létezik a megadott azonosítójú AEAT-portál.
+    refused_live_verify_observation_not_found: Nem létezik a megadott azonosítójú
+      ellenőrzési észrevétel.
+    refused_llm_config: A nyelvi modell ügyfél-konfigurációja érvénytelen vagy hiányos.
+    refused_llm_validation: Egy nyelvi modell objektum nem felelt meg az ellenőrzésnek.
+    refused_modelo_100_borrador_binding: A 100-as modell piszkozat értékei nem használhatók
+      fel a számításhoz.
+    refused_modelo_amendment_override_casilla: Egy módosító felülírás olyan rovatra
+      mutat, amelyet a nyilvántartás nem deklarál az adott modellhez, évhez és időszakhoz.
+    refused_modelo_amendment_verification: A módosító bevallás javított rovattérképe
+      nem felelt meg az ellenőrzésnek. Kötelező rovatok hiányoznak.
+    refused_modelo_workflow_gate: A munkafolyamat-ellenőrzés elutasította a bevallás
+      átmenetét. A bevallás nem tekinthető jogszerűen benyújtottnak.
+    refused_no_active_profile: Ehhez a művelethez aktív profil szükséges. Hozz létre
+      vagy válassz profilt, és próbáld újra.
+    refused_operator_surface_contract: A kért felület az elfogadott szerződésen kívül
+      esik.
+    refused_outbound_storage_conflict: A tárolóművelet ütközik egy már létező objektummal.
+    refused_outbound_storage_quota: A tároló elutasította a műveletet, mert a kvóta
+      kimerült.
+    refused_outbound_storage_validation: A tárolóművelet paraméterei nem feleltek
+      meg az ellenőrzésnek.
+    refused_output_format: A kért kimeneti formátum nem támogatott.
+    refused_profile_already_exists: Már létezik profil ezekkel az adatokkal.
+    refused_profile_asset_validation: Egy profil eszközrekordja nem felelt meg az
+      ellenőrzésnek.
+    refused_profile_basis_cap_exceeded: A halmozott értékcsökkenés meghaladná az eszköz
+      bekerülési alapját.
+    refused_profile_binding_resolution: A számításhoz szükséges profiladat nem volt
+      feloldható a megfelelő kötési csatornában.
+    refused_profile_foral_regime: A kiválasztott foral adórendszert ez a profil nem
+      modellezi. Válassz támogatott adórendszert.
+    refused_profile_inventory_validation: Egy profil leltárkönyve nem felelt meg az
+      ellenőrzésnek.
+    refused_profile_lifo_forbidden: A LIFO készletértékelés adózási célból nem megengedett.
+      Használj FIFO-t, súlyozott átlagárat vagy átlagköltséget.
+    refused_profile_not_configured: A RENTA-bevallás ellenőrzéséhez adóügyi illetőségi
+      profil szükséges. Töltsd ki a profilt a folytatás előtt.
+    refused_profile_not_found: Nem létezik a megadott azonosítójú profil.
+    refused_profile_preflight_missing: A modell-előellenőrzés nem talált egy kötelező
+      profilválasztót. Töltsd ki a profilt a folytatás előtt.
+    refused_profile_schema_validation: A profiladatok megsértik a sémaszerződést.
+      Javítsd a megjelölt értékeket.
+    refused_review_edit_parse: A `--set KULCS=ÉRTÉK` nem volt értelmezhető. Ellenőrizd
+      a megadott érték szintaxisát.
+    refused_review_filter_parse: A `--filter KULCS=ÉRTÉK` nem volt értelmezhető. Ellenőrizd
+      a megadott szűrő szintaxisát.
+    refused_review_kind_reserved: A megadott `--kind` érték fenntartott, és nem használható.
+    refused_sanitization_already_sanitized: A forrásdokumentum már korábban tisztítva
+      lett.
+    refused_sanitization_signature_present: A forrás PDF digitális aláírást tartalmaz.
+      A módosítása érvénytelenítené az aláírást; emberi felülvizsgálat szükséges.
+    refused_sanitization_unknown_surface: Olyan személyesadat-felületet észleltünk,
+      amelyet a tisztító nem tud kezelni. Emberi felülvizsgálat szükséges.
+    refused_sanitization_validation: A tisztító paraméterei nem feleltek meg az ellenőrzésnek.
+    refused_storage_bucket_already_present: Az importálás ütközik egy már létező tárolóegységgel.
+    refused_storage_bucket_no_active: Nem sikerült aktív tárolóegységet meghatározni.
+      Válassz profilt, és próbáld újra.
+    refused_storage_master_key_no_active_session: A titkosításhoz aktív munkamenet
+      szükséges. Futtasd az `aeat config unlock` parancsot, és próbáld újra.
+    refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakter
+      hosszúnak kell lennie.
+    refused_storage_secret_already_exists: Már létezik titok ezzel a kulccsal. A felülíráshoz
+      használd a felülírás beállítást.
+    refused_storage_session_expired: Az aktív munkamenet inaktivitás miatt lejárt.
+      Aktiváld újra az `aeat config profile switch NÉV` paranccsal.
+    refused_storage_unsecured_mode: A titkosítatlan tárolót a szükséges engedélyezés
+      nélkül kérted. Valódi adatokhoz nem biztonságos.
+    refused_topic_not_found: A kért téma nem található.
+    refused_user_profile_validation: Egy felhasználói profil érték érvénytelen. Javítsd
+      a megjelölt mezőt.
+    refused_wizard_missing_flag: A --quiet futtatás kihagyott egy kötelező kérdést.
+      Add meg a hiányzó értéket, vagy futtasd a varázslót interaktívan.
+    refused_wizard_status: A varázsló nem tudta feloldani az aktív profilt.
+    refused_wizard_unsupported_console: A jelenlegi terminál nem tudja futtatni az
+      interaktív varázslót. Futtasd támogatott terminálban.
+    refused_wizard_validation: A varázsló egy válasza nem felelt meg az ellenőrzésnek.
+      Javítsd a megjelölt értéket.
+    refused_workflow_aborted: A munkafolyamat megszakadt.
+    refused_workflow_resume: A korábbi munkafolyamat-futtatás nem folytatható.
+    unsupported_currency: A megadott pénznemkód nem támogatott.
   transaction:
     import_source_invalid: a forrás nem érvényes könyvelési dokumentum
     ledger_import_failed: 'A könyvelési fájl nem importálható: {reason}'
     ledger_import_requires_bucket: A könyvelési forrás importálásához aktív profil
       szükséges, kivéve próbafuttatási módban.
+    unknown_ledger_provider: 'Ismeretlen főkönyvi szolgáltató: {provider!r}. Elismert
+      szolgáltatók: {providers}.'
 filing:
   validation:
     deadline_missed: A benyújtási határidő lejárt
@@ -1749,6 +2547,9 @@ filing:
     required_missing: Hiányzó kötelező mező
     schema_mismatch: Eltérés a várt sémától
 profile:
+  errors:
+    foral_regime: A(z) {tax_region} foral adórendszer kívül esik e profil hatókörén.
+    not_configured: Nincs adóügyi illetőségi profil beállítva a RENTA-hoz.
   keys:
     description: Profile configuration keys and their descriptions
     tax:
@@ -1897,15 +2698,16 @@ wizard:
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_postcode: 'Érvénytelen irányítószám ehhez: %{prompt_key}: %{raw}. A spanyol
       irányítószám 5 számjegy (01-52 tartományi kód, majd három számjegy).'
-    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
+    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "A vezetett beállítás nem tudott interaktív kérdést megnyitni\
-      \ ebben a futásban.\nMég semmi nincs mentve.\n\nPróbáld újra interaktív terminálból:\n\
-      \  aeat config profile create NAME\n\nHa a profilállapot elavult vagy sérült\
-      \ lehet, először vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot\
-      \ eldobásához és újrakezdéshez:\n  aeat config reset --scope profile --yes"
+    unsupported_console: "A vezetett beállításhoz interaktív terminál kell, és ennek\
+      \ a futásnak nincs ilyen.\nMég semmi nincs mentve.\n\nKét módon fejezheted be\
+      \ ennek a profilnak a létrehozását:\n\n1. Futtasd újra a parancsot interaktív\
+      \ terminálból a vezetett beállításhoz:\n     aeat config profile create NAME\n\
+      \n2. Vagy hozd létre egy lépésben a kötelező adatokat kapcsolóként megadva:\n\
+      \     aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
     unsupported_console_edit: "A vezetett beállítás nem tudott interaktív kérdést\
       \ megnyitni ebben a futásban.\nMég semmi nincs mentve.\n\nSzerkeszd ezt a profilt\
       \ nem interaktívan a módosítandó mező megnevezésével:\n  aeat config profile\
@@ -2211,6 +3013,23 @@ wizard:
         prompt: Az első adózó neme
       title: Az első adózó
     title: Beállítás varázsló
+    verifier:
+      activity_present: 'Gazdasági tevékenység: ellenőrzés, hogy a profil megad-e
+        tevékenységet.'
+      eu_eea_country_missing: 'Házastárs lakóhelye: EU- vagy EGT-tartózkodást jelöltél
+        meg, de hiányzik az ország. Add meg a tartózkodási országot.'
+      eu_eea_country_ok: 'Házastárs lakóhelye: az EU- vagy EGT-tartózkodási ország
+        konzisztens.'
+      obligations_consistency_ok: 'Levonási kötelezettségek: a levonással kapcsolatos
+        válaszok konzisztensek.'
+      obligations_inconsistent: 'Levonási kötelezettségek: szakmai levonást jelöltél
+        meg, de azt nem, hogy szakembereknek levonással fizetsz. Ellenőrizd ezeket
+        a válaszokat.'
+      spouse_consistency_missing: 'Közös adózás: hiányzik a házastárs adóazonosítója.
+        Add meg a közös benyújtáshoz.'
+      spouse_consistency_ok: 'Közös adózás: a házastárs adatai konzisztensek.'
+      tax_id_present: 'Adóazonosító: ellenőrzés, hogy a profil tartalmaz-e NIF vagy
+        NIE azonosítót.'
   test:
     description: Test your configuration and connectivity
     example:

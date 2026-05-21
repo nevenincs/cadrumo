@@ -12,23 +12,33 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+from typing import Literal, TypedDict, Unpack
+
 import pytest
 from pydantic import ValidationError
 
-from ._errors import RegistryValidationError
 from ._schema import CasillaConstraints
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _make(**fields: object) -> CasillaConstraints:
-    base: dict[str, object] = {
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual",),
-    }
-    base.update(fields)
-    return CasillaConstraints(**base)  # type: ignore[arg-type]
+class _ConstraintFields(TypedDict, total=False):
+    sign: Literal["any", "non_negative", "non_positive"]
+    min_value: Decimal | None
+    max_value: Decimal | None
+    pattern: str | None
+    min_length: int | None
+    max_length: int | None
+    enum: tuple[str, ...] | None
+
+
+def _make(**fields: Unpack[_ConstraintFields]) -> CasillaConstraints:
+    return CasillaConstraints(
+        legal_refs=("ley-58-2003:art-29",),
+        source_refs=("aeat-manual",),
+        **fields,
+    )
 
 
 class TestConstraintsShapeAccepts:
@@ -76,6 +86,19 @@ class TestConstraintsShapeRejects:
             _make(pattern=r"[")
 
 
+def _reason(constraints: CasillaConstraints, value: str) -> str:
+    """Return the violation reason for `value`, asserting it is non-None.
+
+    `violates_text` returns ``str | None``; the rejection-path tests need a
+    plain ``str`` to run an ``in`` substring check against. This helper
+    narrows the union once at the assertion site.
+    """
+
+    reason = constraints.violates_text(value)
+    assert reason is not None, f"expected a violation reason for {value!r}"
+    return reason
+
+
 class TestViolatesText:
     def test_value_within_bounds_passes(self) -> None:
         c = _make(min_length=2, max_length=5)
@@ -83,31 +106,30 @@ class TestViolatesText:
 
     def test_value_below_min_length_rejected(self) -> None:
         c = _make(min_length=3)
-        assert c.violates_text("ab") is not None
-        assert "min_length" in c.violates_text("ab")  # type: ignore[operator]
+        assert "min_length" in _reason(c, "ab")
 
     def test_value_above_max_length_rejected(self) -> None:
         c = _make(max_length=3)
-        assert "max_length" in c.violates_text("abcde")  # type: ignore[operator]
+        assert "max_length" in _reason(c, "abcde")
 
     def test_value_not_matching_pattern_rejected(self) -> None:
         c = _make(pattern=r"^[A-Z]{2}$")
-        assert "pattern" in c.violates_text("xy")  # type: ignore[operator]
+        assert "pattern" in _reason(c, "xy")
         assert c.violates_text("ES") is None
 
     def test_value_outside_enum_rejected(self) -> None:
         c = _make(enum=("01", "02"))
-        assert "enum" in c.violates_text("99")  # type: ignore[operator]
+        assert "enum" in _reason(c, "99")
         assert c.violates_text("01") is None
 
     def test_constraints_compose_in_order(self) -> None:
         c = _make(min_length=2, max_length=5, pattern=r"^[A-Z]+$", enum=("ES", "FR"))
         # min/max length applied first
-        assert "min_length" in c.violates_text("A")  # type: ignore[operator]
+        assert "min_length" in _reason(c, "A")
         # Then pattern
-        assert "pattern" in c.violates_text("xy")  # type: ignore[operator]
+        assert "pattern" in _reason(c, "xy")
         # Then enum
-        assert "enum" in c.violates_text("DE")  # type: ignore[operator]
+        assert "enum" in _reason(c, "DE")
         # All pass
         assert c.violates_text("ES") is None
         assert c.violates_text("FR") is None

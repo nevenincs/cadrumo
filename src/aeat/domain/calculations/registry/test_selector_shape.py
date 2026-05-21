@@ -41,13 +41,13 @@ def _binding(
 ) -> DataBindingDefinition:
     """Build a minimal DataBindingDefinition for the gate to validate."""
 
-    return DataBindingDefinition(
-        id=binding_id,
-        source=source,  # type: ignore[arg-type]  # narrowed at runtime by the Literal
-        selector=selector,  # type: ignore[arg-type]  # the gate validates per-source
-        legal_refs=("lirpf.art-99",),
-        source_refs=("aeat.test",),
-    )
+    return DataBindingDefinition.model_validate({
+        "id": binding_id,
+        "source": source,
+        "selector": selector,
+        "legal_refs": ("lirpf.art-99",),
+        "source_refs": ("aeat.test",),
+    })
 
 
 def test_binding_selector_registry_covers_typed_sources() -> None:

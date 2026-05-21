@@ -20,15 +20,19 @@ proved here:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ..adapters.persistence.storage import EphemeralMasterKeyProvider
 from ..adapters.persistence.storage.sql.engine import dispose_engine
+from ..domain.transactions import BusinessClassification, TransactionDirection
 from .auth._operator import inspect_operator_auth
 from .auth._operator import test_operator_auth as probe_operator_auth
-from .modelo._actions import create_work_unit
+from .ledger import ManualLedgerTransactionCommand, create_manual_transaction
+from .modelo._actions import create_work_unit, discard_work_unit
 from .overview import build_overview_status_report
 from .state_projection import ModeloReadinessRequest, build_operator_state_projection
 from .user_profile._testing import register_minimal_profile
@@ -110,6 +114,39 @@ def test_overview_status_distinguishes_drafts_from_work_units() -> None:
     assert projection.workspace.invoices == 0
 
 
+def test_work_units_counter_excludes_discarded_units() -> None:
+    """A discarded work unit must not inflate the active ``work_units``
+    counter; it is carried separately in ``discarded_work_units`` so the
+    operator is never shown a misleading total."""
+
+    bucket_id = _register_active_profile()
+    for period in ("Q1", "Q2", "Q3"):
+        create_work_unit(
+            bucket_id=bucket_id,
+            modelo="303",
+            filing_year=2026,
+            period=period,
+            revision_id="aeat-303-2026",
+        )
+    discarded = create_work_unit(
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=2026,
+        period="Q4",
+        revision_id="aeat-303-2026",
+    )
+    discard_work_unit(discarded.work_unit_id, actor="operator", reason="superseded")
+
+    projection = build_operator_state_projection()
+
+    assert projection.workspace.work_units == 3, "discarded units must not inflate the active counter"
+    assert projection.workspace.discarded_work_units == 1
+
+    report = build_overview_status_report()
+    assert report.work_units == 3
+    assert report.discarded_work_units == 1
+
+
 def test_surfaces_agree_on_one_projection() -> None:
     """Every operator-facing surface draws from one projection, so they
     cannot disagree.
@@ -171,6 +208,44 @@ def test_surfaces_agree_on_one_projection() -> None:
     assert readiness.profile_id == bucket_id
 
 
+def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
+    bucket_id = _register_active_profile()
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=bucket_id,
+            booked_date=date(2026, 2, 10),
+            amount=Decimal("121.00"),
+            direction=TransactionDirection.INCOMING,
+            description="business sale without category",
+            business_classification=BusinessClassification.BUSINESS,
+            taxable_base=Decimal("100.00"),
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("21.00"),
+            actor="operator",
+        )
+    )
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="303",
+                revision_id="2009-y-siguientes",
+                filing_year=2026,
+                period="1T",
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.profile_ready is True
+    assert readiness.ledger_preflight_required is True
+    assert readiness.ledger_ready is False
+    assert readiness.ready is False
+    assert readiness.ledger_period == "2026Q1"
+    assert readiness.ledger_checked_transaction_count == 1
+    assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
+
+
 def test_projection_is_pure_read() -> None:
     """Building the projection mutates no store: two consecutive builds
     over an unchanged workspace return equal projections."""
@@ -201,3 +276,54 @@ def test_projection_without_active_profile_is_empty() -> None:
     assert projection.workspace.drafts == 0
     assert projection.auth.configured is False
     assert projection.pending_obligations == ()
+
+
+def test_auth_readiness_no_provider_matches_with_and_without_probe() -> None:
+    """The auth readiness sub-record reports the same "no provider
+    configured" state whether or not the live backend is probed.
+
+    ``auth test`` probes; ``auth status`` does not. When no provider is
+    configured and none requested, the projection must not invent a
+    default provider for the probing caller — both report the empty
+    provider, ``available: False``, and an empty health summary.
+    """
+
+    _register_active_profile()
+
+    unprobed = build_operator_state_projection(probe_live_backend=False)
+    probed = build_operator_state_projection(probe_live_backend=True)
+
+    assert unprobed.auth.provider == ""
+    assert probed.auth.provider == unprobed.auth.provider
+    assert probed.auth.available == unprobed.auth.available is False
+    assert probed.auth.configured == unprobed.auth.configured is False
+    assert probed.auth.health_summary == unprobed.auth.health_summary == ""
+
+
+def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
+    """``configured`` must never be ``True`` while ``health_summary``
+    reports the certificate path is not configured.
+
+    A certificate path recorded only in workflow state — with the live
+    backend probe sourcing its path from ``Settings`` and seeing none —
+    is not operationally ready. The probed projection reconciles
+    ``configured`` with the same ``describe()`` evaluation that
+    produces ``health_summary``, so the two cannot contradict.
+    """
+
+    from .auth._operator import configure_operator_auth
+
+    _register_active_profile()
+    configure_operator_auth("certificate")
+
+    projection = build_operator_state_projection(probe_live_backend=True)
+
+    auth = projection.auth
+    assert auth.health_summary == "certificate path not configured", (
+        "fixture must reach the not-configured health state for this test to "
+        f"be meaningful — got health_summary={auth.health_summary!r}"
+    )
+    assert auth.configured is False, (
+        "configured must not contradict the health summary — "
+        f"got configured={auth.configured!r}, health_summary={auth.health_summary!r}"
+    )

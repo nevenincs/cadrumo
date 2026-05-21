@@ -72,19 +72,19 @@ def _observation(
     period: str | None = None,
     year: int | None = None,
 ) -> CounterpartAggregationObservation:
-    return CounterpartAggregationObservation(
-        source_kind=source_kind,
-        source_id=f"inv-{party}-{base}",
-        party_tax_id=party,
-        country_code=country,
-        transaction_date=date(2026, 3, 15),
-        base_amount=Decimal(base),
-        intracommunity_clave=clave,
-        is_rectification=is_rectification,
-        rectified_base_previous=Decimal(previous) if previous is not None else None,
-        rectified_period=period,
-        rectified_year=year,
-    )
+    return CounterpartAggregationObservation.model_validate({
+        "source_kind": source_kind,
+        "source_id": f"inv-{party}-{base}",
+        "party_tax_id": party,
+        "country_code": country,
+        "transaction_date": date(2026, 3, 15),
+        "base_amount": Decimal(base),
+        "intracommunity_clave": clave,
+        "is_rectification": is_rectification,
+        "rectified_base_previous": Decimal(previous) if previous is not None else None,
+        "rectified_period": period,
+        "rectified_year": year,
+    })
 
 
 def test_counterpart_observation_validates_country_and_clave_enums() -> None:

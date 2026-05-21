@@ -24,7 +24,7 @@ def _verify_expected(value: str | None) -> _VerifyVerdict | None:
         return "invalid"
     if value == "unknown":
         return "unknown"
-    raise typer.BadParameter("expected must be one of: valid, invalid, unknown")
+    raise typer.BadParameter(tr("cli.app.live.verify.expected_values_error"))
 
 
 app = typer.Typer(
@@ -570,12 +570,14 @@ def portals_list(
     from ...domain.portals import PORTAL_REGISTRY, PortalCategory, portals_by_category, portals_for_modelo
 
     if category and modelo:
-        raise typer.BadParameter("--category and --modelo are mutually exclusive")
+        raise typer.BadParameter(tr("cli.app.live.portals.category_modelo_exclusive"))
     if category:
         try:
             cat = PortalCategory(category)
         except ValueError as exc:
-            raise typer.BadParameter(f"Unknown portal category: {category!r}") from exc
+            raise typer.BadParameter(
+                tr("cli.app.live.portals.unknown_category", category=category)
+            ) from exc
         entries = portals_by_category(cat)
     elif modelo:
         entries = portals_for_modelo(modelo)
@@ -828,7 +830,7 @@ def verify_list(
             resolved_surface = VerifySurface(surface)
         except ValueError as exc:
             raise typer.BadParameter(
-                f"Unknown verify surface: {surface!r} (expected nif_iva or tgvi)",
+                tr("cli.app.live.verify.unknown_surface", surface=surface),
             ) from exc
     rows = VerifyService().list_observations(
         bucket_id=bucket_id,
@@ -902,7 +904,7 @@ def verify_latest(
         resolved_surface = VerifySurface(surface)
     except ValueError as exc:
         raise typer.BadParameter(
-            f"Unknown verify surface: {surface!r} (expected nif_iva or tgvi)",
+            tr("cli.app.live.verify.unknown_surface", surface=surface),
         ) from exc
     record = VerifyService().latest_for_nif(
         bucket_id=bucket_id,
@@ -962,7 +964,7 @@ def verify_nif_iva(
     driver = NifIvaCheckSedeDriver(settings=settings)
     result = driver.collect(b"", expected={nif_key: (expected_verdict or "unknown")})
     if not result.observations:
-        raise typer.BadParameter(f"no observation returned for NIF {nif!r}")
+        raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
     observation = result.observations[0]
     bucket_id = _active_bucket_id()
     record = VerifyService(settings=settings).record(
@@ -1013,7 +1015,7 @@ def verify_tgvi(
     driver = GroiSedeDriver(settings=settings)
     result = driver.collect(b"", expected={nif_key: (expected_verdict or "unknown")})
     if not result.observations:
-        raise typer.BadParameter(f"no observation returned for NIF {nif!r}")
+        raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
     observation = result.observations[0]
     bucket_id = _active_bucket_id()
     record = VerifyService(settings=settings).record(
@@ -1092,7 +1094,7 @@ def borrador_100_list(
     try:
         state_filter = None if state == "all" else SnapshotLifecycleState(state)
     except ValueError as exc:
-        raise typer.BadParameter("state must be one of: active, superseded, discarded, all") from exc
+        raise typer.BadParameter(tr("cli.app.live.borrador.invalid_state")) from exc
     rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(
         state=state_filter,
     )

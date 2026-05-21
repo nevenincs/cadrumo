@@ -19,6 +19,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
@@ -31,8 +32,15 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry import (
+    CasillaDefinition,
+    ModeloRevision,
+    RegistryCalculationEntry,
+    RegistryCalculationResult,
+    RegistrySnapshot,
+)
 from ...domain.calculations.registry._bindings import CasillaObservation
+from ...domain.calculations.registry._runtime_graph import enum_consumed_binding_ids
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -104,6 +112,10 @@ from ._borrador_binding import (
     Modelo100BorradorBindingResult,
     resolve_modelo_100_borrador_bindings,
 )
+from ._profile_binding import ProfileSourcedBindingResult
+
+if TYPE_CHECKING:
+    from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by this module.
@@ -249,12 +261,35 @@ class ModeloWorkflowGateError(ModeloError):
     """
 
     def __init__(self, result: WorkflowResult) -> None:
-        self.result = result
+        # The live WorkflowResult is retained on a private attribute so it
+        # never reaches the CLI error boundary. `render_error_text` merges
+        # every *public* instance attribute into the operator-facing
+        # context via `vars(error)`; a public `result` attribute would
+        # leak a raw Python object repr (datetime constructors, enum
+        # reprs, nested WorkflowStep tuples) straight at a non-technical
+        # taxpayer. The context below carries only already-stringified
+        # primitives — the clean summary the operator needs.
+        self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
+        summary = result.summary.strip() or "the workflow gate aborted this transition"
         super().__init__(
-            f"workflow gate aborted run_id={result.run_id!r} final_stage={result.final_stage.value!r} "
-            f"reason={reason!r}: {result.summary}"
+            summary,
+            context={
+                "abort_code": reason,
+                "stage": result.final_stage.value,
+            },
         )
+
+    @property
+    def result(self) -> WorkflowResult:
+        """Return the live :class:`WorkflowResult` that triggered the abort.
+
+        Exposed as a property (not a plain instance attribute) so the
+        CLI error boundary's ``vars(error)`` context merge never picks
+        it up and renders its raw Python repr to the operator.
+        """
+
+        return self._result
 
 
 class AmendmentOverrideCasillaError(ModeloError):
@@ -453,7 +488,9 @@ def create_work_unit(
     period: str,
     revision_id: str,
     name: str | None = None,
+    actor: str = "system",
     repository: WorkUnitCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Create or load a work unit for the four-axis key.
@@ -464,6 +501,13 @@ def create_work_unit(
     persisted name; ``rename_work_unit`` is the dedicated mutation
     surface for that.
 
+    On a genuine creation (not an idempotent re-load) a
+    ``modelo.work_unit.created`` bucket event is emitted so the
+    work-unit history is complete from its first moment — the audit
+    trail records when and by whom the unit was provisioned. An
+    idempotent re-load emits nothing: the unit already exists and the
+    original creation event already stands.
+
     Args:
         bucket_id: Stable bucket the work unit belongs to.
         modelo: AEAT modelo code (e.g. ``"303"``).
@@ -472,8 +516,11 @@ def create_work_unit(
         revision_id: Stable id of the targeted modelo revision.
         name: Optional display name; defaults to
             ``<modelo>-<year>-<period>``.
+        actor: Actor label recorded on the creation bucket event.
         repository: Repository override for testing; defaults to
             the canonical ``WorkUnitCatalogueRepository``.
+        bucket_event_repository: Bucket-event repository override for
+            testing; defaults to ``BucketEventHistoryRepository``.
         clock: ``datetime`` override for testing the created /
             updated timestamps. Defaults to ``datetime.now(UTC)``.
 
@@ -482,6 +529,7 @@ def create_work_unit(
     """
 
     repo = repository or WorkUnitCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repo.load()
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -507,6 +555,22 @@ def create_work_unit(
     )
     updated = upsert_work_unit(catalogue, unit)
     repo.save(updated)
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=unit.bucket_id,
+        event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.WORK_UNIT,
+        object_id=unit.work_unit_id,
+        payload={
+            "modelo": str(unit.modelo),
+            "filing_year": str(unit.filing_year),
+            "period": unit.period,
+            "revision_id": unit.revision_id,
+            "name": unit.name,
+        },
+    )
     return unit
 
 
@@ -720,6 +784,20 @@ class ModeloIvaWalletReconciliationBlocked(ModeloError):  # noqa: N818
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
 
 
+class CasillaProvenanceMissingError(ModeloError):
+    """Raised when an engine-result casilla has no registry definition.
+
+    Every casilla in :attr:`RegistryCalculationResult.values` must be
+    a casilla declared on the registry snapshot's revision. A casilla
+    present in the engine result but absent from
+    ``snapshot.revision.casillas`` is a referential-integrity
+    violation: building a :class:`CasillaObservation` for it would
+    silently emit empty ``legal_refs`` / ``source_refs`` and erase the
+    legal provenance the audit surface depends on. The observation
+    build hard-fails instead of persisting a provenance-stripped row.
+    """
+
+
 def calculate_modelo_revision(
     work_unit_id: str,
     *,
@@ -730,6 +808,7 @@ def calculate_modelo_revision(
     backend_binding_values: Mapping[str, Decimal] | None = None,
     backend_casilla_inputs: Mapping[str, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     source_transaction_ids: tuple[str, ...] = (),
@@ -782,7 +861,16 @@ def calculate_modelo_revision(
     work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
     if iva_compensation_decision is None:
-        iva_compensation_decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit)
+        iva_compensation_decision = _load_persisted_iva_compensation_decision_for_work_unit(
+            work_unit,
+            repository=iva_compensation_decision_repository,
+        )
+    else:
+        iva_compensation_decision = _require_persisted_iva_compensation_decision_for_work_unit(
+            work_unit,
+            supplied_decision=iva_compensation_decision,
+            repository=iva_compensation_decision_repository,
+        )
 
     period_date = filing_period_date or period_end_date(
         filing_year=work_unit.filing_year,
@@ -795,6 +883,9 @@ def calculate_modelo_revision(
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
+        taxpayer_nif=_taxpayer_nif_for_bucket(work_unit.bucket_id),
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
         caller_binding_values=caller_binding_values,
         backend_binding_values=lower_precedence_binding_values,
         decision=iva_compensation_decision,
@@ -810,10 +901,34 @@ def calculate_modelo_revision(
         registry_snapshot=snapshot,
         snapshot_repository=borrador_snapshot_repository,
     )
-    resolved_bindings = dict(
-        sorted({**lower_precedence_binding_values, **borrador_result.binding_values, **caller_binding_values}.items())
+    profile_result = _resolve_profile_bindings_for_calculation(
+        bucket_id=work_unit.bucket_id,
+        snapshot=snapshot,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        borrador_result=borrador_result,
+        backend_binding_values=lower_precedence_binding_values,
     )
-    resolved_enum_bindings = dict(sorted({**borrador_result.enum_binding_values, **caller_enum_binding_values}.items()))
+    resolved_bindings = dict(
+        sorted(
+            {
+                **profile_result.binding_values,
+                **lower_precedence_binding_values,
+                **borrador_result.binding_values,
+                **caller_binding_values,
+            }.items()
+        )
+    )
+    resolved_enum_bindings = dict(
+        sorted(
+            {
+                **profile_result.enum_binding_values,
+                **borrador_result.enum_binding_values,
+                **caller_enum_binding_values,
+            }.items()
+        )
+    )
+    _reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
     resolved_relations = dict(relation_values or {})
     relation_binding_values = materialize_relation_binding_values(
         snapshot.revision,
@@ -821,9 +936,15 @@ def calculate_modelo_revision(
         period=work_unit.period,
     )
     resolved_bindings = dict(sorted({**relation_binding_values, **resolved_bindings}.items()))
+    declaration_period_inputs = _resolve_declaration_period_inputs(
+        snapshot.revision,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
     resolved_inputs = dict(
         sorted(
             {
+                **declaration_period_inputs,
                 **dict(backend_casilla_inputs or {}),
                 **_resolve_bound_casilla_inputs_for_available_bindings(
                     snapshot.revision,
@@ -938,22 +1059,50 @@ def _apply_iva_compensation_decision_binding(
     filing_year: int,
     period: str,
     *,
+    taxpayer_nif: str | None = None,
+    casilla_inputs: Mapping[str, Decimal] | None = None,
+    backend_casilla_inputs: Mapping[str, Decimal] | None = None,
     caller_binding_values: dict[str, Decimal],
     backend_binding_values: dict[str, Decimal],
     decision: object | None,
 ) -> None:
     """Apply a non-blocking IVA wallet decision to Modelo 303 binding values."""
 
-    if decision is None or modelo != "303":
+    if modelo != "303":
         return
+    binding_id = "modelo-303-compensacion-pendiente-anteriores"
+    bound_casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+    caller_casilla_value = dict(casilla_inputs or {}).get(bound_casilla_id)
+    backend_casilla_value = dict(backend_casilla_inputs or {}).get(bound_casilla_id)
+    if decision is None:
+        caller_value = caller_binding_values.get(binding_id)
+        backend_value = backend_binding_values.get(binding_id)
+        if (
+            caller_value is not None
+            or backend_value is not None
+            or caller_casilla_value is not None
+            or backend_casilla_value is not None
+        ):
+            raise ModeloIvaWalletReconciliationBlocked(
+                "Modelo 303 prior compensation requires a persisted IVA wallet reconciliation decision"
+            )
+        return
+
     from ..calculations._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 
     if not isinstance(decision, IvaCompensationReconciliationDecision):
         raise ModeloIvaWalletReconciliationBlocked("iva_compensation_decision has an unsupported type")
-    binding_id = "modelo-303-compensacion-pendiente-anteriores"
     if decision.target_year != filing_year or decision.target_period != period:
         raise ModeloIvaWalletReconciliationBlocked(
             "IVA wallet reconciliation decision target does not match the Modelo 303 work unit"
+        )
+    if taxpayer_nif is None:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "IVA wallet reconciliation decision cannot be applied without a work-unit taxpayer identity"
+        )
+    if decision.taxpayer_nif.strip().upper() != taxpayer_nif.strip().upper():
+        raise ModeloIvaWalletReconciliationBlocked(
+            "IVA wallet reconciliation decision taxpayer does not match the Modelo 303 work unit"
         )
     if decision.blocked:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -968,22 +1117,84 @@ def _apply_iva_compensation_decision_binding(
         raise ModeloIvaWalletReconciliationBlocked(
             "caller binding for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
         )
+    if caller_casilla_value is not None and Decimal(caller_casilla_value) != selected:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "caller casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
+        )
+    if backend_casilla_value is not None and Decimal(backend_casilla_value) != selected:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "backend casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
+        )
     backend_binding_values[binding_id] = selected
 
 
-def _load_persisted_iva_compensation_decision_for_work_unit(work_unit: WorkUnit) -> object | None:
+def _require_persisted_iva_compensation_decision_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    supplied_decision: object,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> object:
+    if work_unit.modelo != "303":
+        return supplied_decision
+    persisted = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
+    if persisted is None:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "Modelo 303 IVA wallet reconciliation decisions must be persisted before calculation"
+        )
+    if persisted != supplied_decision:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "supplied IVA wallet reconciliation decision does not match the persisted decision"
+        )
+    return persisted
+
+
+def _load_persisted_iva_compensation_decision_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> object | None:
     if work_unit.modelo != "303":
         return None
     taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
         return None
-    from ..calculations._observations_repository import IvaWalletDecisionRepository
+    if repository is None:
+        from ..calculations._observations_repository import IvaWalletDecisionRepository
 
-    return IvaWalletDecisionRepository().load_decision(
+        repository = IvaWalletDecisionRepository()
+
+    return repository.load_decision(
         taxpayer_nif,
         work_unit.filing_year,
         work_unit.period,
     )
+
+
+def _persisted_blocked_iva_compensation_decision_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> object | None:
+    decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
+    if decision is not None and bool(decision.blocked):
+        return decision
+    return None
+
+
+def _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
+    work_unit: WorkUnit,
+    *,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> None:
+    decision = _persisted_blocked_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
+    if decision is not None:
+        raise ModeloIvaWalletReconciliationBlocked(_iva_wallet_blocked_message(decision))
+
+
+def _iva_wallet_blocked_message(decision: Any) -> str:
+    divergence = str(decision.divergence)
+    reason = str(decision.reason)
+    return f"IVA wallet reconciliation is blocked for Modelo 303 ({divergence}): {reason}"
 
 
 def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
@@ -1009,6 +1220,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     binding_values: Mapping[str, Decimal] | None = None,
     enum_binding_values: Mapping[str, str] | None = None,
     iva_compensation_decision: object | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     filing_period_date: date | None = None,
@@ -1081,6 +1293,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         backend_binding_values=ledger_bindings.binding_values,
         backend_casilla_inputs=backend_inputs,
         iva_compensation_decision=iva_compensation_decision,
+        iva_compensation_decision_repository=iva_compensation_decision_repository,
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=relation_values,
@@ -1091,6 +1304,94 @@ def calculate_modelo_revision_from_bucket_aggregation(
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
         clock=clock,
+    )
+
+
+def _resolve_profile_bindings_for_calculation(
+    *,
+    bucket_id: str,
+    snapshot: RegistrySnapshot,
+    caller_binding_values: Mapping[str, Decimal],
+    caller_enum_binding_values: Mapping[str, str],
+    borrador_result: Modelo100BorradorBindingResult,
+    backend_binding_values: Mapping[str, Decimal],
+) -> ProfileSourcedBindingResult:
+    """Resolve ``source = "profile"`` bindings from the bucket's user profile.
+
+    Bindings already satisfied by a higher-precedence layer (caller
+    ``--binding`` / ``--enum-binding``, a consumed borrador snapshot, or
+    backend bucket aggregation) are excluded so the profile only fills
+    bindings nothing else provided. The profile is the substrate of
+    record for taxpayer facts such as the Modelo 100 tax-residence
+    CCAA; without this step the operator would have to re-type a fact
+    the profile already holds.
+    """
+
+    from ._profile_binding import resolve_profile_sourced_bindings
+
+    caller_owned = (
+        set(caller_binding_values)
+        | set(caller_enum_binding_values)
+        | set(borrador_result.binding_values)
+        | set(borrador_result.enum_binding_values)
+        | set(backend_binding_values)
+    )
+    return resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id=bucket_id,
+        caller_binding_ids=frozenset(caller_owned),
+    )
+
+
+def _reject_binding_channel_mismatch(
+    revision: ModeloRevision,
+    binding_values: Mapping[str, Decimal],
+    enum_binding_values: Mapping[str, str],
+) -> None:
+    """Refuse bindings supplied through the wrong engine channel.
+
+    The registry runtime resolves a binding leaf from the Decimal
+    ``binding_values`` channel unless a dispatch op consumes it as a
+    string enum key, in which case it is read from
+    ``enum_binding_values``. A caller that supplies an enum-dispatch
+    binding through the Decimal channel (or vice versa) would otherwise
+    get the opaque engine error ``binding ... has no supplied value``
+    even though a value was provided. The Modelo 100 estimacion-directa
+    modality binding is the canonical trap: it carries a ``typed_enum``
+    annotation yet is consumed as a Decimal operand, so a value routed
+    by ``typed_enum`` alone lands in the wrong channel. This guard
+    rejects the mismatch at the binding boundary with a clear message.
+    """
+
+    enum_consumed = enum_consumed_binding_ids(revision)
+    misrouted_to_decimal = sorted(set(binding_values) & enum_consumed)
+    if misrouted_to_decimal:
+        raise ModeloError(
+            f"bindings {misrouted_to_decimal!r} are consumed by the registry as enum "
+            f"dispatch keys and must be supplied through the enum-binding channel, "
+            f"not as Decimal binding values"
+        )
+    misrouted_to_enum = sorted(set(enum_binding_values) & {b.id for b in revision.bindings} - enum_consumed)
+    misrouted_to_enum = [
+        binding_id
+        for binding_id in misrouted_to_enum
+        if _binding_is_formula_consumed(revision, binding_id)
+    ]
+    if misrouted_to_enum:
+        raise ModeloError(
+            f"bindings {misrouted_to_enum!r} are consumed by the registry as Decimal "
+            f"operands and must be supplied as Decimal binding values, not through the "
+            f"enum-binding channel"
+        )
+
+
+def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: str) -> bool:
+    """Return whether any formula expression references ``binding_id``."""
+
+    from ...domain.calculations.registry._runtime_graph import expression_binding_refs
+
+    return any(
+        binding_id in expression_binding_refs(formula.expression) for formula in revision.formulas
     )
 
 
@@ -1132,6 +1433,76 @@ def _resolve_bound_casilla_inputs_for_available_bindings(
         value = binding_values.get(casilla.binding)
         if value is not None:
             resolved[casilla.id] = value
+    return resolved
+
+
+_FILING_PERIOD_ORDINALS: Mapping[str, int] = {
+    "1T": 1,
+    "2T": 2,
+    "3T": 3,
+    "4T": 4,
+    "0A": 0,
+    "01": 1,
+    "02": 2,
+    "03": 3,
+    "04": 4,
+    "05": 5,
+    "06": 6,
+    "07": 7,
+    "08": 8,
+    "09": 9,
+    "10": 10,
+    "11": 11,
+    "12": 12,
+}
+"""Numeric ordinal for every registry-native period token.
+
+The registry formula runtime's value map is Decimal-only; a
+``period_code`` casilla cannot carry the literal ``"1T"`` token.
+Each work unit carries exactly one period family (a Modelo 303
+work unit is quarterly or monthly, never both), so the ordinal
+alone is an unambiguous numeric projection of that work unit's
+period for the ``decl.periodo`` informational casilla.
+"""
+
+
+def _resolve_declaration_period_inputs(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+) -> dict[str, Decimal]:
+    """Return informational-casilla inputs sourced from work-unit metadata.
+
+    ``decl.ejercicio`` / ``decl.periodo`` (and any other casilla
+    tagged ``semantic_role`` ``filing_year`` / ``filing_period``)
+    are ``informational`` casillas: AEAT requires them on the
+    filed declaration, but they are neither operator-entered
+    figures nor formula outputs. Their values are determined
+    entirely by the work unit's ``(filing_year, period)`` axes.
+
+    Without this resolution the engine's ``_initial_values``
+    defaults every informational casilla to ``0`` — a Modelo 303
+    filed with ``ejercicio``/``periodo`` of ``0`` is structurally
+    invalid. The work unit is the authority for these axes, so the
+    calculate path projects them onto the matching semantic-role
+    casillas here, before the engine runs.
+    """
+
+    resolved: dict[str, Decimal] = {}
+    for casilla in revision.casillas:
+        if casilla.input_kind != "informational":
+            continue
+        if casilla.semantic_role == "filing_year":
+            resolved[casilla.id] = Decimal(filing_year)
+        elif casilla.semantic_role == "filing_period":
+            ordinal = _FILING_PERIOD_ORDINALS.get(period.strip().upper())
+            if ordinal is None:
+                raise ModeloError(
+                    f"work-unit period {period!r} has no registry period ordinal; "
+                    f"cannot resolve informational casilla {casilla.id!r}"
+                )
+            resolved[casilla.id] = Decimal(ordinal)
     return resolved
 
 
@@ -1533,6 +1904,9 @@ def verify_modelo_revision(
         work_unit=work_unit,
         target=target,
     )
+    blocked_iva_wallet_decision = _persisted_blocked_iva_compensation_decision_for_work_unit(work_unit)
+    if blocked_iva_wallet_decision is not None:
+        findings.append(_iva_wallet_blocking_verification_finding(blocked_iva_wallet_decision))
     completeness, granted = _classify_verification_outcome(
         findings=findings,
         missing_required=missing_required,
@@ -1682,6 +2056,15 @@ def _missing_required_casilla_finding(casilla_id: str, work_unit_id: str) -> Mod
     )
 
 
+def _iva_wallet_blocking_verification_finding(decision: object) -> ModeloVerificationFinding:
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message=_iva_wallet_blocked_message(decision),
+        next_action="Review the IVA wallet reconciliation decision before verifying or exporting this Modelo 303.",
+    )
+
+
 def _classify_verification_outcome(
     *,
     findings: list[ModeloVerificationFinding],
@@ -1751,7 +2134,9 @@ def _resolve_registry_snapshot_for_work_unit(work_unit):  # type: ignore[no-unty
         ) from exc
 
 
-def _build_typed_observations(*, engine_result, snapshot) -> tuple[CasillaObservation, ...]:  # type: ignore[no-untyped-def]
+def _build_typed_observations(
+    *, engine_result: RegistryCalculationResult, snapshot: RegistrySnapshot
+) -> tuple[CasillaObservation, ...]:
     """Build a typed CasillaObservation tuple for every casilla in the engine result.
 
     Computed casillas carry their full formula provenance from the
@@ -1760,6 +2145,12 @@ def _build_typed_observations(*, engine_result, snapshot) -> tuple[CasillaObserv
     Building observations purely from ``engine_result.entries``
     would drop grounding for every input and bound casilla — the
     audit surface depends on the full chain.
+
+    Every casilla in ``engine_result.values`` must be declared on the
+    snapshot revision. A casilla absent from
+    ``snapshot.revision.casillas`` raises
+    :exc:`CasillaProvenanceMissingError` rather than yielding an
+    observation with empty legal provenance.
     """
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     entries_by_target = {entry.target: entry for entry in engine_result.entries}
@@ -1774,7 +2165,13 @@ def _build_typed_observations(*, engine_result, snapshot) -> tuple[CasillaObserv
     )
 
 
-def _casilla_observation_for(*, casilla_id: str, value: Decimal, entry, registry_casilla) -> CasillaObservation:  # type: ignore[no-untyped-def]
+def _casilla_observation_for(
+    *,
+    casilla_id: str,
+    value: Decimal,
+    entry: RegistryCalculationEntry | None,
+    registry_casilla: CasillaDefinition | None,
+) -> CasillaObservation:
     """Project one casilla into a :class:`CasillaObservation` with full provenance."""
     if entry is not None:
         return CasillaObservation(
@@ -1786,15 +2183,77 @@ def _casilla_observation_for(*, casilla_id: str, value: Decimal, entry, registry
             legal_refs=entry.legal_refs,
             source_refs=entry.source_refs,
         )
+    if registry_casilla is None:
+        raise CasillaProvenanceMissingError(
+            f"casilla {casilla_id!r} is present in the engine result but absent "
+            f"from the registry snapshot revision; it has no legal_refs / "
+            f"source_refs definition and cannot be projected to a "
+            f"CasillaObservation without erasing legal provenance"
+        )
     return CasillaObservation(
         casilla_id=casilla_id,
         value=value,
         formula_id=None,
         operand_refs=(),
         operand_values=(),
-        legal_refs=registry_casilla.legal_refs if registry_casilla is not None else (),
-        source_refs=registry_casilla.source_refs if registry_casilla is not None else (),
+        legal_refs=registry_casilla.legal_refs,
+        source_refs=registry_casilla.source_refs,
     )
+
+
+def _amendment_observations(
+    *,
+    corrected_values: Mapping[str, Decimal],
+    overrides: Mapping[str, Decimal],
+    baseline_revision: CalculationRevision,
+    snapshot: RegistrySnapshot,
+) -> tuple[CasillaObservation, ...]:
+    """Build typed observations for an amendment revision.
+
+    An amendment is an operator-corrected value set, not an engine
+    recomputation: a casilla the operator did not override keeps the
+    baseline revision's observation verbatim (value and full formula
+    provenance); an overridden casilla gets a fresh observation
+    carrying the corrected value and the registry casilla's
+    ``legal_refs`` / ``source_refs`` (an operator override means the
+    casilla is no longer a formula output, so formula provenance is
+    dropped). Building the amendment without observations would discard
+    all regulatory grounding from the persisted revision and the CLI
+    emit — the audit surface depends on the full chain.
+
+    Every casilla in ``corrected_values`` must be declared on the
+    snapshot revision, mirroring :func:`_build_typed_observations`.
+    """
+
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}
+    observations: list[CasillaObservation] = []
+    for casilla_id, value in corrected_values.items():
+        if casilla_id not in overrides:
+            carried = baseline_by_id.get(casilla_id)
+            if carried is not None:
+                observations.append(carried)
+                continue
+        registry_casilla = casillas_by_id.get(casilla_id)
+        if registry_casilla is None:
+            raise CasillaProvenanceMissingError(
+                f"casilla {casilla_id!r} is present in the amendment's corrected "
+                f"values but absent from the registry snapshot revision; it has "
+                f"no legal_refs / source_refs definition and cannot be projected "
+                f"to a CasillaObservation without erasing legal provenance"
+            )
+        observations.append(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=value,
+                formula_id=None,
+                operand_refs=(),
+                operand_values=(),
+                legal_refs=registry_casilla.legal_refs,
+                source_refs=registry_casilla.source_refs,
+            )
+        )
+    return tuple(observations)
 
 
 def file_modelo_revision(
@@ -2199,6 +2658,18 @@ def amend_modelo_revision(
             f"that already exists in the catalogue; no-op overrides cannot be filed as amendments"
         )
 
+    # Carry regulatory grounding onto the amendment: build typed
+    # CasillaObservation rows for the corrected casilla map so the
+    # persisted amendment revision and its CLI emit preserve
+    # legal_refs / source_refs (and baseline formula provenance for
+    # non-overridden casillas) instead of an empty observations tuple.
+    amendment_observations = _amendment_observations(
+        corrected_values=corrected_values,
+        overrides=overrides,
+        baseline_revision=baseline_revision,
+        snapshot=_resolve_registry_snapshot_for_work_unit(work_unit),
+    )
+
     amendment_draft = CalculationRevision(
         calculation_revision_id=new_revision_id,
         work_unit_id=baseline.work_unit_id,
@@ -2209,6 +2680,7 @@ def amend_modelo_revision(
         borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
         casilla_values=corrected_values,
+        observations=amendment_observations,
         created_at=now,
         updated_at=now,
         amendment_kind=amendment_kind,
@@ -2534,6 +3006,7 @@ __all__ = [
     "CalculationRegistryUnavailableError",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
+    "CasillaProvenanceMissingError",
     "ExternalModeloImportError",
     "ModeloAggregationBindingError",
     "ModeloIvaWalletReconciliationBlocked",

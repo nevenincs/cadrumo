@@ -27,6 +27,7 @@ so neither is silently zero.
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -37,14 +38,17 @@ from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
     Schedule,
+    compute_obligation_schedule,
 )
 from ..domain.filing import ModeloDraftRepository
 from ..domain.invoices import InvoiceCatalogueRepository
 from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ..domain.modelos._repository import WorkUnitCatalogueRepository
+from ..domain.modelos._work_unit import WorkUnitState
 from ..domain.transactions import TransactionCatalogueRepository
 from .auth import AuthProviderKind, select_provider
-from .user_profile import ProfilePreflightReport
+from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
+from .user_profile import ProfilePreflightRequirement
 from .workflow._models import WorkflowState, resolve_active_bucket_id
 from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
@@ -131,8 +135,13 @@ class ProjectionWorkspaceSummary(BaseModel):
         transactions: Count of imported transactions.
         invoices: Count of imported invoices.
         drafts: Count of legacy ``ModeloDraft`` entries.
-        work_units: Count of ``WorkUnitCatalogue`` entries written by
-            ``modelo work create``.
+        work_units: Count of *active* (``BORRADOR``) ``WorkUnitCatalogue``
+            entries written by ``modelo work create``. Discarded units
+            are excluded so the counter is never inflated by units the
+            operator has abandoned.
+        discarded_work_units: Count of ``DESCARTADO`` ``WorkUnitCatalogue``
+            entries — carried distinctly so a surface can state the
+            active / discarded split rather than a misleading total.
         calculation_revisions: Count of ``CalculationRevisionCatalogue``
             entries written by ``modelo work calculate``.
         unreadable_rows: Count of secure-object rows that failed to
@@ -145,6 +154,7 @@ class ProjectionWorkspaceSummary(BaseModel):
     invoices: int = Field(default=0, ge=0)
     drafts: int = Field(default=0, ge=0)
     work_units: int = Field(default=0, ge=0)
+    discarded_work_units: int = Field(default=0, ge=0)
     calculation_revisions: int = Field(default=0, ge=0)
     unreadable_rows: int = Field(default=0, ge=0)
 
@@ -185,11 +195,15 @@ class OperatorStateProjection(BaseModel):
         modelo_readiness: Per-modelo preflight readiness reports, keyed
             by the ``(modelo, revision, year, period)`` request the
             caller asked for. Empty when no modelo target was supplied.
-        pending_obligations: The deadline obligations for the active
-            profile's current year. Carried here for a future rewire
-            of the ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate;
-            that gate is not yet wired to this field and still
-            computes its own schedule independently.
+        pending_obligations: The full, unfiltered deadline obligations
+            for the active profile's current year, as
+            :class:`ProjectionObligation` records. Computed through
+            :func:`compute_obligation_schedule`, the single producer
+            shared with the ``WorkflowEngine``
+            ``NO_PENDING_OBLIGATION`` gate. The gate filters the same
+            schedule down to its narrow ``next_deadline`` /
+            ``(modelo, period)`` target; this field carries every
+            obligation so a surface can render the whole upcoming set.
     """
 
     model_config = _STRICT_FROZEN
@@ -197,7 +211,7 @@ class OperatorStateProjection(BaseModel):
     active_profile: ProjectionActiveProfile
     auth: ProjectionAuthReadiness
     workspace: ProjectionWorkspaceSummary
-    modelo_readiness: tuple[ProfilePreflightReport, ...] = ()
+    modelo_readiness: tuple[ProjectionModeloReadiness, ...] = ()
     pending_obligations: tuple[ProjectionObligation, ...] = ()
 
 
@@ -233,13 +247,33 @@ def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfil
     )
 
 
-def _certificate_configured(state: WorkflowState) -> bool:
+def _certificate_path_resolves(certificate_path: str) -> bool:
+    """Return whether a recorded certificate path resolves to an existing file.
+
+    ``configured`` for the certificate provider means genuine
+    operational readiness, not merely that a path string was recorded.
+    A path that is blank, or that does not resolve to an existing
+    file, is not usable — and the backend health probe agrees,
+    reporting ``certificate path not configured``. Resolving the path
+    here keeps ``configured`` coherent with that health summary.
+    """
+
+    if not certificate_path:
+        return False
+    try:
+        return Path(certificate_path).is_file()
+    except OSError:
+        return False
+
+
+def _provider_configured(state: WorkflowState) -> bool:
     """Return the one canonical ``configured`` flag for the workflow state.
 
     A provider must be selected in workflow state. For the certificate
     provider, ``configured`` additionally requires a certificate path
-    on disk: selecting the provider without supplying a file leaves the
-    slot empty, and the field must stay consistent with
+    that resolves to an existing file: selecting the provider without
+    a usable file leaves the slot operationally incomplete, and the
+    flag must stay consistent with
     ``health_summary: certificate path not configured``.
     """
 
@@ -247,7 +281,7 @@ def _certificate_configured(state: WorkflowState) -> bool:
     if not auth.provider:
         return False
     if auth.provider == AuthProviderKind.CERTIFICATE.value:
-        return bool(auth.certificate_path)
+        return _certificate_path_resolves(auth.certificate_path or "")
     return True
 
 
@@ -259,20 +293,24 @@ def _build_auth_readiness(
 ) -> ProjectionAuthReadiness:
     """Compute the auth-readiness sub-record once.
 
-    ``configured`` is computed exactly here. When ``probe_live_backend``
-    is set, the live backend is queried for the ``available`` /
-    ``health_*`` fields — but ``configured`` is never sourced from the
-    backend probe, so ``auth status`` and ``auth test`` agree.
+    ``configured`` is computed exactly here, so ``auth status`` and
+    ``auth test`` read one value and cannot disagree. When
+    ``probe_live_backend`` is set, the live backend is queried for the
+    ``available`` / ``health_*`` fields — and the backend's own
+    ``configured`` reading is folded into the canonical ``configured``
+    too. The backend's ``configured`` and ``health_summary`` come from
+    one ``describe()`` evaluation; folding them together keeps the
+    canonical ``configured`` coherent with the health summary, so
+    ``configured: True`` can never co-exist with
+    ``health_summary: certificate path not configured``.
     """
 
     auth = state.auth
     normalized_request = requested_provider.strip().lower() if requested_provider is not None else None
     provider = normalized_request or auth.provider or ""
-    configured = bool(auth.provider) and (
+    configured = _provider_configured(state) and (
         normalized_request is None or auth.provider == normalized_request
     )
-    if configured and auth.provider == AuthProviderKind.CERTIFICATE.value:
-        configured = bool(auth.certificate_path)
 
     available = configured and bool(auth.authenticated_at)
     health_summary = ""
@@ -284,6 +322,7 @@ def _build_auth_readiness(
             available = description.available
             health_summary = description.health_summary or ""
             health_severity = description.health_severity or ""
+            configured = configured and description.configured
         except Exception:
             _log.warning(
                 "auth backend probe failed for provider %s; reporting unavailable",
@@ -320,11 +359,14 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
     drafts = tuple(ModeloDraftRepository().iter_drafts())
     work_units = WorkUnitCatalogueRepository().load()
     revisions = CalculationRevisionCatalogueRepository().load()
+    active_work_units = sum(1 for unit in work_units.values() if unit.state is WorkUnitState.BORRADOR)
+    discarded_work_units = sum(1 for unit in work_units.values() if unit.state is WorkUnitState.DESCARTADO)
     return ProjectionWorkspaceSummary(
         transactions=len(transactions.transactions),
         invoices=len(invoices),
         drafts=len(drafts),
-        work_units=len(work_units),
+        work_units=active_work_units,
+        discarded_work_units=discarded_work_units,
         calculation_revisions=len(revisions),
         unreadable_rows=secure_object_unreadable_total(),
     )
@@ -352,15 +394,18 @@ def _build_pending_obligations(
 ) -> tuple[ProjectionObligation, ...]:
     """Compute the deadline obligations for the active profile.
 
-    Carried in the projection for a future rewire of the
-    ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate, which today
-    still computes its own schedule independently. A failure to
+    Routes through :func:`compute_obligation_schedule`, the single
+    producer of the pending-obligation datum shared with the
+    ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate, so the gate and
+    the projection cannot draw a divergent obligation set. A failure to
     compute the schedule is logged and degrades to an empty tuple
     rather than failing the whole projection.
     """
 
     try:
-        schedule: Schedule = DeadlineEngine().compute(profile, today.year, today=today)
+        schedule: Schedule = compute_obligation_schedule(
+            DeadlineEngine(), profile, today=today
+        )
     except Exception:
         _log.warning(
             "deadline schedule computation failed; reporting no pending obligations",
@@ -395,11 +440,31 @@ class ModeloReadinessRequest(BaseModel):
     period: str = ""
 
 
+class ProjectionModeloReadiness(BaseModel):
+    """Readiness for one modelo target across profile and ledger facts."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    modelo: str = Field(min_length=1, max_length=16)
+    revision_id: str = Field(min_length=1, max_length=64)
+    filing_year: int = Field(ge=2000, le=2100)
+    period: str = Field(min_length=1, max_length=16)
+    missing: tuple[ProfilePreflightRequirement, ...] = ()
+    profile_ready: bool
+    ledger_preflight_required: bool = False
+    ledger_ready: bool | None = None
+    ledger_period: str | None = None
+    ledger_checked_transaction_count: int = 0
+    ledger_issues: tuple[LedgerPreflightIssue, ...] = ()
+    ready: bool
+
+
 def _build_modelo_readiness(
     requests: tuple[ModeloReadinessRequest, ...],
     *,
     active_profile_id: str | None,
-) -> tuple[ProfilePreflightReport, ...]:
+) -> tuple[ProjectionModeloReadiness, ...]:
     """Compute one preflight report per readiness request.
 
     Returns an empty tuple when no request is supplied or no profile is
@@ -419,16 +484,78 @@ def _build_modelo_readiness(
         return ()
     record = build_lifecycle_service(bucket_id=pointer.bucket_id).read(active_profile_id)
     service = ProfilePreflightService(schema=_shared_schema())
-    return tuple(
-        service.report(
+    reports: list[ProjectionModeloReadiness] = []
+    for request in requests:
+        profile_report = service.report(
             record=record,
             modelo=request.modelo,
             revision_id=request.revision_id,
             filing_year=request.filing_year,
             period=request.period,
         )
-        for request in requests
-    )
+        ledger_report = None
+        if _modelo_requires_ledger_preflight(request):
+            ledger_report = preflight_ledger_tax_readiness(
+                bucket_id=pointer.bucket_id,
+                period=_ledger_period_for_modelo_readiness(request),
+            )
+        reports.append(
+            ProjectionModeloReadiness(
+                profile_id=profile_report.profile_id,
+                modelo=profile_report.modelo,
+                revision_id=profile_report.revision_id,
+                filing_year=profile_report.filing_year,
+                period=profile_report.period,
+                missing=profile_report.missing,
+                profile_ready=profile_report.ready,
+                ledger_preflight_required=ledger_report is not None,
+                ledger_ready=ledger_report.ready if ledger_report is not None else None,
+                ledger_period=ledger_report.period.raw if ledger_report is not None else None,
+                ledger_checked_transaction_count=(
+                    ledger_report.checked_transaction_count if ledger_report is not None else 0
+                ),
+                ledger_issues=tuple(ledger_report.issues) if ledger_report is not None else (),
+                ready=profile_report.ready and (ledger_report is None or ledger_report.ready),
+            )
+        )
+    return tuple(reports)
+
+
+_LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
+    {
+        "ledger_iva_aggregation",
+        "ledger_renta_expense_aggregation",
+    }
+)
+_ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
+
+
+def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
+    from ..core.resources import resources
+    from ..domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        snapshot = resources().modelos.authority.snapshot(
+            request.modelo,
+            filing_year=request.filing_year,
+            period=request.period,
+        )
+    except (FileNotFoundError, RegistrySnapshotError):
+        return False
+    return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
+
+
+def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> str:
+    token = request.period.strip().upper()
+    if token in {"1T", "2T", "3T", "4T"}:
+        return f"{request.filing_year}Q{token[0]}"
+    if token in {"Q1", "Q2", "Q3", "Q4"}:
+        return f"{request.filing_year}{token}"
+    if token in _ANNUAL_REGISTRY_PERIODS:
+        return str(request.filing_year)
+    if len(token) == 2 and token.isdigit():
+        return f"{request.filing_year}-{token}"
+    return token
 
 
 def build_operator_state_projection(
@@ -515,6 +642,7 @@ __all__ = [
     "OperatorStateProjection",
     "ProjectionActiveProfile",
     "ProjectionAuthReadiness",
+    "ProjectionModeloReadiness",
     "ProjectionObligation",
     "ProjectionWorkspaceSummary",
     "build_operator_state_projection",
