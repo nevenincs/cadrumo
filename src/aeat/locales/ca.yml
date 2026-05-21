@@ -2493,7 +2493,8 @@ errors:
       la validació.
     refused_profile_basis_cap_exceeded: L'amortització acumulada superaria la base
       de cost de l'actiu.
-    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
+    refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul
+      no s'ha pogut resoldre al canal de vincle correcte.
     refused_profile_foral_regime: El règim foral seleccionat no està modelat per aquest
       perfil. Selecciona un règim admès.
     refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat

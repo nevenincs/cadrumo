@@ -543,6 +543,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._profile_binding.ProfileBindingResolutionError",
+        ErrorCode(
+            code="REFUSED_PROFILE_BINDING_RESOLUTION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_binding_resolution",
+            default_suggestion="aeat config profile show",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._reconcile.ReconciliationEvidenceInvalidError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_EVIDENCE_INVALID",

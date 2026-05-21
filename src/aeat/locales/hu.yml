@@ -2425,7 +2425,8 @@ errors:
       ellenőrzésnek.
     refused_profile_basis_cap_exceeded: A halmozott értékcsökkenés meghaladná az eszköz
       bekerülési alapját.
-    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
+    refused_profile_binding_resolution: A számításhoz szükséges profiladat nem volt
+      feloldható a megfelelő kötési csatornában.
     refused_profile_foral_regime: A kiválasztott foral adórendszert ez a profil nem
       modellezi. Válassz támogatott adórendszert.
     refused_profile_inventory_validation: Egy profil leltárkönyve nem felelt meg az
