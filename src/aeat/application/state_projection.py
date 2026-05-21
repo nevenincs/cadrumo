@@ -37,6 +37,7 @@ from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
     Schedule,
+    compute_obligation_schedule,
 )
 from ..domain.filing import ModeloDraftRepository
 from ..domain.invoices import InvoiceCatalogueRepository
@@ -185,11 +186,15 @@ class OperatorStateProjection(BaseModel):
         modelo_readiness: Per-modelo preflight readiness reports, keyed
             by the ``(modelo, revision, year, period)`` request the
             caller asked for. Empty when no modelo target was supplied.
-        pending_obligations: The deadline obligations for the active
-            profile's current year. Carried here for a future rewire
-            of the ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate;
-            that gate is not yet wired to this field and still
-            computes its own schedule independently.
+        pending_obligations: The full, unfiltered deadline obligations
+            for the active profile's current year, as
+            :class:`ProjectionObligation` records. Computed through
+            :func:`compute_obligation_schedule`, the single producer
+            shared with the ``WorkflowEngine``
+            ``NO_PENDING_OBLIGATION`` gate. The gate filters the same
+            schedule down to its narrow ``next_deadline`` /
+            ``(modelo, period)`` target; this field carries every
+            obligation so a surface can render the whole upcoming set.
     """
 
     model_config = _STRICT_FROZEN
@@ -352,15 +357,18 @@ def _build_pending_obligations(
 ) -> tuple[ProjectionObligation, ...]:
     """Compute the deadline obligations for the active profile.
 
-    Carried in the projection for a future rewire of the
-    ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate, which today
-    still computes its own schedule independently. A failure to
+    Routes through :func:`compute_obligation_schedule`, the single
+    producer of the pending-obligation datum shared with the
+    ``WorkflowEngine`` ``NO_PENDING_OBLIGATION`` gate, so the gate and
+    the projection cannot draw a divergent obligation set. A failure to
     compute the schedule is logged and degrades to an empty tuple
     rather than failing the whole projection.
     """
 
     try:
-        schedule: Schedule = DeadlineEngine().compute(profile, today.year, today=today)
+        schedule: Schedule = compute_obligation_schedule(
+            DeadlineEngine(), profile, today=today
+        )
     except Exception:
         _log.warning(
             "deadline schedule computation failed; reporting no pending obligations",
