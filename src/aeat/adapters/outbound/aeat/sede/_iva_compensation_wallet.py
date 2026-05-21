@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import quote, urlsplit
 
 from bs4 import BeautifulSoup
-from pydantic import AnyUrl
+from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
 from .....core.config import Settings
 from .....core.logging import get_logger
@@ -25,17 +25,20 @@ from .....domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError
-from ..browser import default_browser_session_factory
+from ..browser import DefaultBrowserSession, default_browser_session_factory
 from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
 if TYPE_CHECKING:
+    from .._playwright import Page
     from ..auth._authenticator import AeatSession
 
 
 log = get_logger(__name__)
+
+_ANY_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 
 _EXTERNAL = Settings.external_constants()
 _WALLET_URL = f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
@@ -183,6 +186,7 @@ def parse_iva_compensation_wallet_html(
 ) -> IvaCompensationWalletObservation:
     """Parse wallet rows from a captured AEAT wallet HTML page."""
 
+    validated_source_url = _ANY_HTTP_URL_ADAPTER.validate_python(source_url)
     soup = BeautifulSoup(html, "html.parser")
     rows: list[IvaCompensationWalletRow] = []
     matched_wallet_table = False
@@ -210,7 +214,7 @@ def parse_iva_compensation_wallet_html(
             target_period=target_period,
             rows=(),
             total_pending=Decimal("0"),
-            source_url=source_url,
+            source_url=validated_source_url,
             captured_at=captured_at,
             raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
         )
@@ -225,7 +229,7 @@ def parse_iva_compensation_wallet_html(
         target_period=target_period,
         rows=tuple(rows),
         total_pending=total_pending,
-        source_url=source_url,
+        source_url=validated_source_url,
         captured_at=captured_at,
         raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
     )
@@ -246,9 +250,9 @@ def is_aeat_wallet_auth_gate_redirect(current_url: str) -> bool:
 
 
 async def _open_authenticated_surface(
-    page: object,
+    page: Page,
     *,
-    browser_session: object,
+    browser_session: DefaultBrowserSession,
     settings: Settings,
     selector_url: str,
     target_path: str,
@@ -321,7 +325,7 @@ def _is_representation_gate_url(current_url: str) -> bool:
 
 
 async def _continue_own_name_representation(
-    page: object,
+    page: Page,
     *,
     settings: Settings,
     expected_url: str,
@@ -359,7 +363,7 @@ async def _continue_own_name_representation(
 
 
 async def _submit_wallet_execute_gate_if_present(
-    page: object,
+    page: Page,
     *,
     settings: Settings,
     expected_url: str,
