@@ -522,7 +522,9 @@ cli:
       export:
         actor_help: A MODELO_EXPORTED eseménybe rögzített operátor címke.
         errors:
-          no_exportable_revision_work_verify: cli.app.modelo.export.errors.no_exportable_revision_work_verify
+          no_exportable_revision_work_verify: A munkaegységnek nincs verifikált vagy
+            benyújtott számítási revíziója, amelyet exportálni lehetne. Előbb futtasd
+            az `aeat app modelo work verify` parancsot.
         help: Egy verifikált vagy benyújtott modelo revízió exportálása helyi AEAT-kompatibilis
           fichero-BOE fájlba. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
         output_help: A fichero-BOE artefakt írási útvonala.
@@ -1666,6 +1668,10 @@ cli:
       view_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
     inspect_help: A nyilvántartás állapotának és hivatkozásainak ellenőrzése
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának útvonala
+    legal:
+      legal_ref_help: Jogszabályi hivatkozás azonosítója, pl. ley-37-1992:art-99
+      view_help: Egy jogszabályi hivatkozás megjelenítése azonosító alapján
+    legal_app_help: A számítási nyilvántartás jogszabályi hivatkozásainak vizsgálata
     manuals:
       app_help: AEAT Manual práctico bejegyzések vizsgálata (Renta, IVA, Sociedades)
       kind_help: Szűrés kézikönyvi szabálytípus szerint

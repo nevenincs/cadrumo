@@ -490,7 +490,8 @@ cli:
       export:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
-          no_exportable_revision_work_verify: cli.app.modelo.export.errors.no_exportable_revision_work_verify
+          no_exportable_revision_work_verify: Work unit has no verified-complete or
+            filed calculation revision to export. Run `aeat app modelo work verify` first.
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -1614,6 +1615,10 @@ cli:
       view_help: Show one normative and, optionally, one of its articles
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
+    legal:
+      legal_ref_help: Legal reference id, e.g. ley-37-1992:art-99
+      view_help: Show one legal reference by id
+    legal_app_help: Inspect calculation-registry legal references
     manuals:
       app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
       kind_help: Filter by manual rule kind

@@ -526,7 +526,9 @@ cli:
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
-          no_exportable_revision_work_verify: cli.app.modelo.export.errors.no_exportable_revision_work_verify
+          no_exportable_revision_work_verify: La unitat de treball no té cap revisió
+            de càlcul verificada ni presentada per exportar. Executa abans
+            `aeat app modelo work verify`.
         help: Exporta una revisió de modelo verificada o presentada a un fitxer local
           compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
@@ -1679,6 +1681,10 @@ cli:
       view_help: Mostrar una normativa i, opcionalment, un dels seus articles
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
+    legal:
+      legal_ref_help: Identificador de referència legal, p. ex. ley-37-1992:art-99
+      view_help: Mostrar una referència legal pel seu identificador
+    legal_app_help: Inspeccionar les referències legals del registre de càlcul
     manuals:
       app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
       kind_help: Filtrar per tipus de regla del manual
