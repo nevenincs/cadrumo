@@ -20,6 +20,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...core.identity import IdentityError, validate_identity
 from ._errors import WizardValidationError
@@ -72,8 +73,11 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
     NIF / NIE / CIF checksum validator from
     :mod:`aeat.core.identity`. Malformed values raise
     :class:`WizardValidationError` carrying
-    ``wizard.errors.invalid_tax_id`` so renderers surface the
-    translated message rather than the raw checksum complaint.
+    ``wizard.errors.invalid_tax_id``. The validator's resolved,
+    localised diagnostic — which names the correct check letter or
+    the expected document shape — is interpolated as ``detail`` so
+    the operator sees an actionable one-step fix rather than an
+    opaque refusal.
 
     The ``address-postcode`` question additionally enforces the
     Spanish 5-digit postcode format (province code 01-52 followed by
@@ -92,7 +96,12 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
         try:
             validate_identity(value)
         except IdentityError as exc:
-            raise _fail(question, "invalid_tax_id", raw=raw, detail=str(exc)) from exc
+            raise _fail(
+                question,
+                "invalid_tax_id",
+                raw=raw,
+                detail=resolve_error_message(exc),
+            ) from exc
     if value and question.id in _POSTCODE_QUESTION_IDS and not _SPANISH_POSTCODE_RE.match(value):
         raise _fail(question, "invalid_postcode", raw=raw)
     return value

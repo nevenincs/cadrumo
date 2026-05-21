@@ -217,6 +217,50 @@ def test_invalid_tax_id_error_does_not_leak_internal_key_path() -> None:
     assert error.context["prompt_key"] != "wizard.setup.profile.tax-id.prompt"
 
 
+def test_invalid_tax_id_refusal_names_correct_check_letter() -> None:
+    """The wizard refusal must surface the actionable checksum detail.
+
+    A wrong NIF check letter is still refused, but the operator-facing
+    message must name the correct check letter so the fix is a single
+    keystroke. Previously the validator's diagnostic was dropped on the
+    way to the message, leaving an opaque "no válido" refusal.
+    """
+
+    question = WizardQuestion(
+        id="tax-id",
+        profile_key=None,
+        widget=WizardWidget.TEXT,
+        prompt="wizard.setup.profile.tax-id.prompt",
+        choices=(),
+        required=True,
+        visible_when=None,
+        answer_type=str,
+    )
+    with pytest.raises(WizardValidationError) as excinfo:
+        validate_widget_answer(question, "12345678A")
+    message = excinfo.value.translated_message
+    assert message is not None
+    # The correct check letter for 12345678 is Z; the message must say so.
+    assert "12345678" in message
+    assert "Z" in message
+
+
+def test_valid_tax_id_still_accepted() -> None:
+    """A correct NIF is accepted unchanged — validation is not relaxed."""
+
+    question = WizardQuestion(
+        id="tax-id",
+        profile_key=None,
+        widget=WizardWidget.TEXT,
+        prompt="wizard.setup.profile.tax-id.prompt",
+        choices=(),
+        required=True,
+        visible_when=None,
+        answer_type=str,
+    )
+    assert validate_widget_answer(question, "12345678Z") == "12345678Z"
+
+
 def _postcode_question() -> WizardQuestion:
     return WizardQuestion(
         id="address-postcode",

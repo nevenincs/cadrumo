@@ -47,6 +47,23 @@ class TestNif:
             validate_identity("12345678A")
         assert excinfo.value.translated_message == "errors.identity.nif_check_letter_mismatch"
 
+    def test_wrong_check_letter_error_names_correct_letter(self) -> None:
+        """The rejection carries the numeric body and the correct check letter.
+
+        An operator who typed ``12345678A`` must be told that the check
+        letter for ``12345678`` is ``Z`` — a one-step fix — rather than
+        an opaque "not valid" refusal. The context feeds the localised
+        ``nif_check_letter_mismatch`` message that interpolates them.
+        """
+
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity("12345678A")
+        context = excinfo.value.context
+        assert context is not None
+        assert context["digits"] == "12345678"
+        assert context["expected"] == "Z"
+        assert context["got"] == "A"
+
     def test_too_short_rejected(self) -> None:
         with pytest.raises(IdentityError) as excinfo:
             validate_identity("1234567Z")
@@ -83,6 +100,22 @@ class TestNie:
         with pytest.raises(IdentityError) as excinfo:
             validate_identity("X1234567Z")
         assert excinfo.value.translated_message == "errors.identity.nie_check_letter_mismatch"
+
+    def test_wrong_check_letter_error_names_correct_letter(self) -> None:
+        """The rejection carries the NIE body and the correct check letter.
+
+        ``X1234567`` has check letter ``L``; an operator who typed
+        ``X1234567Z`` must be told the correct letter so the fix is a
+        single character, not a guess.
+        """
+
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity("X1234567Z")
+        context = excinfo.value.context
+        assert context is not None
+        assert context["body"] == "X1234567"
+        assert context["expected"] == "L"
+        assert context["got"] == "Z"
 
     def test_invalid_prefix_rejected(self) -> None:
         # W is a CIF kind-letter (letter-only family), not a NIE prefix.
@@ -158,6 +191,55 @@ class TestRejection:
         with pytest.raises(IdentityError) as excinfo:
             validate_identity("not-an-identity-doc")
         assert excinfo.value.translated_message == "errors.identity.cif_invalid_shape"
+
+
+class TestActionableMessages:
+    """The resolved operator-facing message must be actionable.
+
+    A taxpayer does not know the modulo-23 checksum algorithm. A
+    rejection that only says "not valid" forces trial-and-error; the
+    resolved message must instead name the correct check letter (for a
+    checksum failure) or describe the expected document shape (for a
+    malformed input).
+    """
+
+    def test_nif_checksum_message_names_correct_letter(self) -> None:
+        from ..errors import resolve_error_message
+
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity("12345678A")
+        message = resolve_error_message(excinfo.value)
+        assert "12345678" in message
+        assert "Z" in message
+
+    def test_nie_checksum_message_names_correct_letter(self) -> None:
+        from ..errors import resolve_error_message
+
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity("X1234567Z")
+        message = resolve_error_message(excinfo.value)
+        assert "X1234567" in message
+        assert "L" in message
+
+    def test_malformed_nif_message_states_expected_shape(self) -> None:
+        from ..errors import resolve_error_message
+
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity("1234567Z")
+        message = resolve_error_message(excinfo.value)
+        # The shape rule must be stated: 8 digits + a check letter.
+        assert "8" in message
+
+    def test_malformed_nie_message_states_expected_shape(self) -> None:
+        from ..errors import resolve_error_message
+
+        # Leading X routes to NIE; six digits is the wrong NIE shape.
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity("X123456Z")
+        message = resolve_error_message(excinfo.value)
+        assert excinfo.value.translated_message == "errors.identity.nie_invalid_shape"
+        # The shape rule names the X/Y/Z prefix.
+        assert "X" in message
 
 
 class TestErrorCodeBinding:
