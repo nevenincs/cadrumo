@@ -18,10 +18,18 @@ from .._keys import TypedResourceKey
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Iterator
 
     from ....core.config import Settings
-    from ....domain.manuals import ManualId, ManualPart
+    from ....domain.manuals import (
+        Manual,
+        ManualCatalogue,
+        ManualId,
+        ManualPart,
+        Rule,
+        RuleKind,
+        Section,
+    )
 
 _FROZEN_STRICT = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -36,7 +44,7 @@ class ManualKey(TypedResourceKey):
     part: str = "single"
 
 
-class ManualRepository(ResourceCacheRepository[object, ManualKey]):
+class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
     """Composite-key repository for the bundled Manual catalogue.
 
     Wraps :func:`aeat.domain.manuals.load_manual` and stays in
@@ -55,7 +63,7 @@ class ManualRepository(ResourceCacheRepository[object, ManualKey]):
 
         return _Settings(aeat_manuals_root=self._root)
 
-    def _load(self, key: ManualKey) -> object:
+    def _load(self, key: ManualKey) -> Manual:
         from ....domain.manuals import ManualId, ManualPart, load_manual
 
         manual_id = ManualId(key.manual_id)
@@ -70,20 +78,35 @@ class ManualRepository(ResourceCacheRepository[object, ManualKey]):
             settings=self._settings(),
         )
 
-    def catalogue(self, specs: Iterable[tuple[ManualId, int, ManualPart]]) -> object:
+    def catalogue(
+        self, specs: Iterable[tuple[ManualId, int, ManualPart]]
+    ) -> ManualCatalogue:
         """Return a :class:`ManualCatalogue` aggregate for ``specs``."""
         from ....domain.manuals import load_catalogue
 
         return load_catalogue(specs, settings=self._settings())
 
-    def find_rules(self, *args: object, **kwargs: object) -> object:
+    def find_rules(
+        self,
+        catalogue: ManualCatalogue,
+        *,
+        casilla_id: str | None = None,
+        kind: RuleKind | None = None,
+        lang: str | None = None,
+    ) -> Iterator[Rule]:
         """Delegate to :func:`aeat.domain.manuals.find_rules` for rule queries."""
         from ....domain.manuals import find_rules
 
-        return find_rules(*args, settings=self._settings(), **kwargs)
+        return find_rules(
+            catalogue,
+            casilla_id=casilla_id,
+            kind=kind,
+            lang=lang,
+            settings=self._settings(),
+        )
 
-    def iter_sections(self, *args: object, **kwargs: object) -> object:
+    def iter_sections(self, manual: Manual) -> Iterator[Section]:
         """Delegate to :func:`aeat.domain.manuals.iter_sections` for section iteration."""
         from ....domain.manuals import iter_sections
 
-        return iter_sections(*args, settings=self._settings(), **kwargs)
+        return iter_sections(manual, settings=self._settings())

@@ -2,22 +2,30 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
+
 from .._repository import ResourceCacheRepository
 
+if TYPE_CHECKING:
+    from ....domain.calculations.registry import LegalParameter
 
-class LegalParameterRepository(ResourceCacheRepository[object, None]):
+
+class LegalParameterRepository(
+    ResourceCacheRepository[Mapping[str, "LegalParameter"], None]
+):
     """Singleton-keyed repository for the registry-wide legal parameters.
 
     Wraps :func:`aeat.domain.calculations.registry.load_legal_parameters_only`
     rooted at the bundled registry tree.
     """
 
-    def _load(self, key: None) -> object:
+    def _load(self, key: None) -> Mapping[str, LegalParameter]:
         from ....domain.calculations.registry import load_legal_parameters_only
         from .._boundary import bundled_path
 
         return load_legal_parameters_only(bundled_path("registry", "aeat"))
 
     @property
-    def singleton(self) -> object:
+    def singleton(self) -> Mapping[str, LegalParameter]:
         return self.get(None)
