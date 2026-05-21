@@ -1249,3 +1249,20 @@ binding definitions referenced by casillas?
 Should pending or unverified legal references be allowed anywhere outside the
 authoritative registry as quarantined research evidence, or should they be
 rejected from the repository entirely?
+
+## Amendment (2026-05-21): _ingest.py and DR-spec fixture deletion
+
+The Migration Disposition in this ADR authorised deleting or
+quarantining the DR-spec to Python-module generator
+(`export/_formats/_generate.py`). The companion `_ingest.py` (JSON
+DR-spec ingestion) and the DR-spec JSON fixtures (`tests/fixtures/
+dr_specs/*.json`) were deleted in the same registry-truth migration
+(commit `97dac2be7`) but were not named in the original disposition.
+This amendment records that deletion as sanctioned: `_ingest.py` and
+the DR-spec JSON fixtures belonged to the same generate/ingest
+toolchain that this ADR's registry-TOML-first authoring direction
+supersedes. Export layouts are now reviewed registry data authored
+directly from the official AEAT Diseño de Registros, not generated
+from intermediate DR-spec JSON. The deleted toolchain remains
+recoverable from branch history if a future ADR reinstates a
+generation pipeline.
