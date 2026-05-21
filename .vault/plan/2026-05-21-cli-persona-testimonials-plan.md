@@ -207,11 +207,11 @@ Wave delivered: 8 commits, ~55 operator-facing naked strings eliminated,
 ## P02 — bucket isolation & workflow correctness
 
 - [x] S01 modelo work create binds to active profile bucket (d870a936c) — task #513
-- [~] S02 work verify NO_PENDING_OBLIGATION raw-repr leak — task #516 — DELEGATED to the concurrent `cli-workflow-redesign` campaign (their bug-inventory B2 + plan Wave W04). Tracking only.
+- [x] S02 work verify NO_PENDING_OBLIGATION raw-repr leak — task #516 — DELEGATED to `cli-workflow-redesign`; RESOLVED by their commit 0775cfb63 (bug-inventory B2).
 
 ## P03 — profile-lifecycle & session
 
-- [~] S01 delete/logout active profile → switch lockout — task #515 — DELEGATED to `cli-workflow-redesign` (their BLOCKER B1, remediation cluster A, Waves W03/W06). Tracking only.
+- [x] S01 delete/logout active profile → switch lockout — task #515 — DELEGATED to `cli-workflow-redesign`; RESOLVED by their commit 623795a8d (BLOCKER B1, cluster A).
 
 ## P04 — calculation-engine binding gaps
 
@@ -226,10 +226,10 @@ Wave delivered: 8 commits, ~55 operator-facing naked strings eliminated,
 ## P06 — tooling & follow-ups
 
 - [x] S01 aeat.locales ErrorCode message_key scope decision — task #522 — investigated; decision persisted in [[2026-05-21-cli-persona-testimonials-audit]]. Remediation split to S05.
-- [ ] S02 i18n aeat config google error wrappers — task #523 — BLOCKED: _config/_google.py carries concurrent WIP (registry-API refactor). Resume when git-clean.
+- [x] S02 i18n aeat config google error wrappers — task #523 (6491aeceb + 8e0f15b7b) — _google_refusal helper + 14 cli.config.google.errors.* keys × 4 locales.
 - [x] S03 audit help-text vocabulary drift (aede996da) — task #524
 - [ ] S04 registry drift: modelo-200 casilla 00592 — task #514 (concurrent #476 campaign)
-- [ ] S05 errors.* registry-fallback translation wave (+ land held scanner extension) — task #525 — ~367 untranslated ErrorCode message_keys + ~8 wizard.setup.verifier.* keys; namespace-by-namespace, parity-green per increment.
+- [x] S05 errors.* registry-fallback translation wave (+ scanner extension) — task #525 — RESOLVED: scanner generalisation landed in _ast_scanner.py; ~375 errors.* + wizard.setup.verifier.* keys translated across all 4 locales by a concurrent campaign; parity + locale-honesty gates green.
 
 ## Maintenance
 
