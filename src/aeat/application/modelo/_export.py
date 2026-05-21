@@ -397,7 +397,7 @@ def export_modelo_revision(
         period=registry_period,
         modelos=(work_unit.modelo,),
     )
-    inputs: dict[str, object] = {
+    inputs: filing_domain.ModeloInputs = {
         **dict(revision.inputs_snapshot),
         **dict(revision.binding_overrides),
     }

@@ -7,7 +7,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloScalar
+from ...domain.filing._protocols import ModeloInputs
+from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus
 from ...domain.period import PeriodValidationError, parse_canonical_period
 from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
@@ -26,7 +27,7 @@ def build_registry_filing_draft(
     modelo: str,
     period: str,
     profile_tax_id: str = "Y0000001S",
-    casilla_values: Mapping[str, ModeloScalar],
+    casilla_values: ModeloInputs,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
     filing_year: int = 2026,
 ) -> ModeloDraft:
@@ -79,7 +80,7 @@ def build_registry_filing_draft_from_decimals(
 ) -> ModeloDraft:
     """Coerce decimal strings before building through the registry runtime."""
 
-    coerced: dict[str, ModeloScalar] = {}
+    coerced: dict[str, Decimal] = {}
     for casilla_id, raw in casilla_decimals.items():
         coerced[casilla_id] = raw if isinstance(raw, Decimal) else Decimal(raw)
     return build_registry_filing_draft(

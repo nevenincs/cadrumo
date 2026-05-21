@@ -396,7 +396,7 @@ class _RevisionDraftBuilder:
         modelo: str,
         period: str,
         profile: TaxpayerProfile,
-        inputs: Mapping[str, object],
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         draft = build_draft(
