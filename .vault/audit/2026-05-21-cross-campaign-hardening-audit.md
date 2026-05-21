@@ -97,6 +97,8 @@ report.
 
 ### PERS-4 — HIGH — `object_key` type asymmetry: `SecureObjectRecord.object_key: bytes` vs `SecureObjectWrite.object_key: str`. **Remediation:** unify on one type + a key-identity roundtrip test.
 
+**Resolution (2026-05-21, P05.S19) — no code change required; finding premise incorrect.** Verified against `src/aeat/adapters/persistence/storage/sql/secure_objects.py`: `SecureObjectRecord.object_key` (line 45), `SecureObjectWrite.object_key` (line 77), and `SecureObjectUnreadable.object_key` (line 98) are all `str = Field(min_length=1)` — already unified. The only `bytes` variant is `SecureObjectRawRow.object_key` (line 122), a deliberate, documented asymmetry: the no-decrypt mirror path surfaces the raw 32-byte HMAC column digest because the plaintext key is unrecoverable from a `HashedLookup()` column. Key identity is already proven by `test_secure_object_record_roundtrip_preserves_full_record_fields` — a natural `str` key saved → HMAC-digested 32-byte column → loaded back as a `str` key strictly equal to the input via full `SecureObjectRecord(...)` equality. Closed as already-satisfied.
+
 ### PERS-5 — HIGH — `RecoveryRecord` has no envelope-file roundtrip test (only `model_dump_json`). **Remediation:** populated-record envelope file roundtrip + base64-field anti-tautology.
 
 ### PERS-6 — HIGH — `SecureObjectMetadata` (`peek_metadata`) untested. **Remediation:** metadata-vs-loaded-record consistency test + anti-tautology on `schema_version`.
