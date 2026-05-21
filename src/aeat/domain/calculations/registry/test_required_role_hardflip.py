@@ -32,16 +32,16 @@ def _casilla(
     data_type: str = "money",
     semantic_role: str | None = None,
 ) -> CasillaDefinition:
-    return CasillaDefinition(
-        id=cid,
-        number="01",
-        label=label,
-        section=("test",),
-        data_type=data_type,  # type: ignore[arg-type]
-        semantic_role=semantic_role,
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-manual",),
-    )
+    return CasillaDefinition.model_validate({
+        "id": cid,
+        "number": "01",
+        "label": label,
+        "section": ("test",),
+        "data_type": data_type,
+        "semantic_role": semantic_role,
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual",),
+    })
 
 
 def _modelo(modelo_id: str, revision_id: str, casillas: list[CasillaDefinition]) -> Any:
