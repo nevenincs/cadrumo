@@ -19,4 +19,4 @@ def storage_state_for_session(session: AeatSession) -> dict[str, object]:
     persisted = _session_store.load(session.storage_state_path)
     if persisted is None:
         raise SedeNavigationError("AEAT auth session is not persisted; run `aeat config auth status` first")
-    return persisted.storage_state
+    return dict(persisted.storage_state)
