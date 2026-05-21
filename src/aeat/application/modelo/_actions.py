@@ -19,6 +19,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
@@ -112,6 +113,9 @@ from ._borrador_binding import (
     resolve_modelo_100_borrador_bindings,
 )
 from ._profile_binding import ProfileSourcedBindingResult
+
+if TYPE_CHECKING:
+    from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by this module.
@@ -484,7 +488,9 @@ def create_work_unit(
     period: str,
     revision_id: str,
     name: str | None = None,
+    actor: str = "system",
     repository: WorkUnitCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Create or load a work unit for the four-axis key.
@@ -495,6 +501,13 @@ def create_work_unit(
     persisted name; ``rename_work_unit`` is the dedicated mutation
     surface for that.
 
+    On a genuine creation (not an idempotent re-load) a
+    ``modelo.work_unit.created`` bucket event is emitted so the
+    work-unit history is complete from its first moment — the audit
+    trail records when and by whom the unit was provisioned. An
+    idempotent re-load emits nothing: the unit already exists and the
+    original creation event already stands.
+
     Args:
         bucket_id: Stable bucket the work unit belongs to.
         modelo: AEAT modelo code (e.g. ``"303"``).
@@ -503,8 +516,11 @@ def create_work_unit(
         revision_id: Stable id of the targeted modelo revision.
         name: Optional display name; defaults to
             ``<modelo>-<year>-<period>``.
+        actor: Actor label recorded on the creation bucket event.
         repository: Repository override for testing; defaults to
             the canonical ``WorkUnitCatalogueRepository``.
+        bucket_event_repository: Bucket-event repository override for
+            testing; defaults to ``BucketEventHistoryRepository``.
         clock: ``datetime`` override for testing the created /
             updated timestamps. Defaults to ``datetime.now(UTC)``.
 
@@ -513,6 +529,7 @@ def create_work_unit(
     """
 
     repo = repository or WorkUnitCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repo.load()
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -538,6 +555,22 @@ def create_work_unit(
     )
     updated = upsert_work_unit(catalogue, unit)
     repo.save(updated)
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=unit.bucket_id,
+        event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.WORK_UNIT,
+        object_id=unit.work_unit_id,
+        payload={
+            "modelo": str(unit.modelo),
+            "filing_year": str(unit.filing_year),
+            "period": unit.period,
+            "revision_id": unit.revision_id,
+            "name": unit.name,
+        },
+    )
     return unit
 
 
@@ -775,6 +808,7 @@ def calculate_modelo_revision(
     backend_binding_values: Mapping[str, Decimal] | None = None,
     backend_casilla_inputs: Mapping[str, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     source_transaction_ids: tuple[str, ...] = (),
@@ -827,7 +861,16 @@ def calculate_modelo_revision(
     work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
     if iva_compensation_decision is None:
-        iva_compensation_decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit)
+        iva_compensation_decision = _load_persisted_iva_compensation_decision_for_work_unit(
+            work_unit,
+            repository=iva_compensation_decision_repository,
+        )
+    else:
+        iva_compensation_decision = _require_persisted_iva_compensation_decision_for_work_unit(
+            work_unit,
+            supplied_decision=iva_compensation_decision,
+            repository=iva_compensation_decision_repository,
+        )
 
     period_date = filing_period_date or period_end_date(
         filing_year=work_unit.filing_year,
@@ -840,6 +883,9 @@ def calculate_modelo_revision(
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
+        taxpayer_nif=_taxpayer_nif_for_bucket(work_unit.bucket_id),
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
         caller_binding_values=caller_binding_values,
         backend_binding_values=lower_precedence_binding_values,
         decision=iva_compensation_decision,
@@ -1013,22 +1059,50 @@ def _apply_iva_compensation_decision_binding(
     filing_year: int,
     period: str,
     *,
+    taxpayer_nif: str | None = None,
+    casilla_inputs: Mapping[str, Decimal] | None = None,
+    backend_casilla_inputs: Mapping[str, Decimal] | None = None,
     caller_binding_values: dict[str, Decimal],
     backend_binding_values: dict[str, Decimal],
     decision: object | None,
 ) -> None:
     """Apply a non-blocking IVA wallet decision to Modelo 303 binding values."""
 
-    if decision is None or modelo != "303":
+    if modelo != "303":
         return
+    binding_id = "modelo-303-compensacion-pendiente-anteriores"
+    bound_casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+    caller_casilla_value = dict(casilla_inputs or {}).get(bound_casilla_id)
+    backend_casilla_value = dict(backend_casilla_inputs or {}).get(bound_casilla_id)
+    if decision is None:
+        caller_value = caller_binding_values.get(binding_id)
+        backend_value = backend_binding_values.get(binding_id)
+        if (
+            caller_value is not None
+            or backend_value is not None
+            or caller_casilla_value is not None
+            or backend_casilla_value is not None
+        ):
+            raise ModeloIvaWalletReconciliationBlocked(
+                "Modelo 303 prior compensation requires a persisted IVA wallet reconciliation decision"
+            )
+        return
+
     from ..calculations._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 
     if not isinstance(decision, IvaCompensationReconciliationDecision):
         raise ModeloIvaWalletReconciliationBlocked("iva_compensation_decision has an unsupported type")
-    binding_id = "modelo-303-compensacion-pendiente-anteriores"
     if decision.target_year != filing_year or decision.target_period != period:
         raise ModeloIvaWalletReconciliationBlocked(
             "IVA wallet reconciliation decision target does not match the Modelo 303 work unit"
+        )
+    if taxpayer_nif is None:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "IVA wallet reconciliation decision cannot be applied without a work-unit taxpayer identity"
+        )
+    if decision.taxpayer_nif.strip().upper() != taxpayer_nif.strip().upper():
+        raise ModeloIvaWalletReconciliationBlocked(
+            "IVA wallet reconciliation decision taxpayer does not match the Modelo 303 work unit"
         )
     if decision.blocked:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -1043,22 +1117,84 @@ def _apply_iva_compensation_decision_binding(
         raise ModeloIvaWalletReconciliationBlocked(
             "caller binding for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
         )
+    if caller_casilla_value is not None and Decimal(caller_casilla_value) != selected:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "caller casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
+        )
+    if backend_casilla_value is not None and Decimal(backend_casilla_value) != selected:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "backend casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
+        )
     backend_binding_values[binding_id] = selected
 
 
-def _load_persisted_iva_compensation_decision_for_work_unit(work_unit: WorkUnit) -> object | None:
+def _require_persisted_iva_compensation_decision_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    supplied_decision: object,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> object:
+    if work_unit.modelo != "303":
+        return supplied_decision
+    persisted = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
+    if persisted is None:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "Modelo 303 IVA wallet reconciliation decisions must be persisted before calculation"
+        )
+    if persisted != supplied_decision:
+        raise ModeloIvaWalletReconciliationBlocked(
+            "supplied IVA wallet reconciliation decision does not match the persisted decision"
+        )
+    return persisted
+
+
+def _load_persisted_iva_compensation_decision_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> object | None:
     if work_unit.modelo != "303":
         return None
     taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
         return None
-    from ..calculations._observations_repository import IvaWalletDecisionRepository
+    if repository is None:
+        from ..calculations._observations_repository import IvaWalletDecisionRepository
 
-    return IvaWalletDecisionRepository().load_decision(
+        repository = IvaWalletDecisionRepository()
+
+    return repository.load_decision(
         taxpayer_nif,
         work_unit.filing_year,
         work_unit.period,
     )
+
+
+def _persisted_blocked_iva_compensation_decision_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> object | None:
+    decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
+    if decision is not None and bool(decision.blocked):
+        return decision
+    return None
+
+
+def _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
+    work_unit: WorkUnit,
+    *,
+    repository: IvaWalletDecisionRepository | None = None,
+) -> None:
+    decision = _persisted_blocked_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
+    if decision is not None:
+        raise ModeloIvaWalletReconciliationBlocked(_iva_wallet_blocked_message(decision))
+
+
+def _iva_wallet_blocked_message(decision: Any) -> str:
+    divergence = str(decision.divergence)
+    reason = str(decision.reason)
+    return f"IVA wallet reconciliation is blocked for Modelo 303 ({divergence}): {reason}"
 
 
 def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
@@ -1084,6 +1220,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     binding_values: Mapping[str, Decimal] | None = None,
     enum_binding_values: Mapping[str, str] | None = None,
     iva_compensation_decision: object | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     filing_period_date: date | None = None,
@@ -1156,6 +1293,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         backend_binding_values=ledger_bindings.binding_values,
         backend_casilla_inputs=backend_inputs,
         iva_compensation_decision=iva_compensation_decision,
+        iva_compensation_decision_repository=iva_compensation_decision_repository,
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=relation_values,
@@ -1766,6 +1904,9 @@ def verify_modelo_revision(
         work_unit=work_unit,
         target=target,
     )
+    blocked_iva_wallet_decision = _persisted_blocked_iva_compensation_decision_for_work_unit(work_unit)
+    if blocked_iva_wallet_decision is not None:
+        findings.append(_iva_wallet_blocking_verification_finding(blocked_iva_wallet_decision))
     completeness, granted = _classify_verification_outcome(
         findings=findings,
         missing_required=missing_required,
@@ -1912,6 +2053,15 @@ def _missing_required_casilla_finding(casilla_id: str, work_unit_id: str) -> Mod
             f"the calculation revision's inputs_snapshot"
         ),
         next_action=(f"aeat app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
+    )
+
+
+def _iva_wallet_blocking_verification_finding(decision: object) -> ModeloVerificationFinding:
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message=_iva_wallet_blocked_message(decision),
+        next_action="Review the IVA wallet reconciliation decision before verifying or exporting this Modelo 303.",
     )
 
 

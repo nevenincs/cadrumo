@@ -40,6 +40,98 @@ def test_unknown_modelo_surfaces_as_bad_parameter() -> None:
 
 
 # ---------------------------------------------------------------------------
+# describe surfaces the revision id(s) so `work create --revision` is
+# discoverable without first guessing wrong (cluster E / M16).
+# ---------------------------------------------------------------------------
+
+
+def test_describe_surfaces_revision_ids_for_work_create() -> None:
+    """`modelo describe` lists the revision id(s) an operator must pass
+    to `work create --revision`, so the value is discoverable up front."""
+
+    result = invoke_cached_cli(["app", "modelo", "describe", "303"])
+    assert result.exit_code == 0, result.output
+    assert "Revision ids" in result.output
+    # 303's filing-grade revision is the value `work create` requires.
+    assert "2009-y-siguientes" in result.output
+
+
+def test_describe_revision_ids_present_in_json_payload() -> None:
+    """The typed describe payload carries `revision_ids` as a list so a
+    machine consumer can enumerate the valid `--revision` values."""
+
+    import json
+
+    result = invoke_cached_cli(["--format", "json", "app", "modelo", "describe", "130"])
+    assert result.exit_code == 0, result.output
+
+    payload = json.loads(result.output)
+    assert isinstance(payload["revision_ids"], list)
+    assert payload["revision_ids"]
+    assert payload["revision"] in payload["revision_ids"]
+
+
+# ---------------------------------------------------------------------------
+# Missing-binding guidance on `work calculate` (cluster E / M18).
+# ---------------------------------------------------------------------------
+
+
+def test_work_create_revision_help_points_at_describe() -> None:
+    """The `--revision` option help tells the operator how to discover
+    the valid revision id (via `modelo describe`)."""
+
+    result = invoke_cached_cli(["app", "modelo", "work", "create", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "modelo describe" in result.output
+
+
+def test_work_calculate_binding_help_points_at_bindings_list() -> None:
+    """The `--binding` option help points the operator at
+    `bindings list --missing` to discover required bindings."""
+
+    result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "bindings list --missing" in result.output
+
+
+def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
+    """A missing-binding RegistryValidationError is enriched with the
+    --binding KEY=VALUE syntax and a bindings-list discovery command so
+    the first `work calculate` failure is self-correcting."""
+
+    from aeat.domain.calculations.registry import RegistryValidationError
+    from aeat.entrypoints.cli._modelo import _missing_binding_guidance
+
+    error = RegistryValidationError(
+        "binding 'irpf.previous_year_economic_activity_net_income' has no supplied value",
+        translated_message="errors.calc.binding_value_missing",
+        context={"binding_id": "irpf.previous_year_economic_activity_net_income"},
+    )
+    # An unknown work unit forces the generic discovery command path.
+    guidance = _missing_binding_guidance(error, "no-such-work-unit")
+    assert "--binding KEY=VALUE" in guidance
+    assert "bindings list --missing" in guidance
+    assert "irpf.previous_year_economic_activity_net_income" in guidance
+
+
+def test_missing_binding_guidance_passes_non_input_errors_through() -> None:
+    """A registry-validation error that is NOT a missing-input class is
+    returned unchanged - the guidance is scoped to inputs the operator
+    can actually supply."""
+
+    from aeat.domain.calculations.registry import RegistryValidationError
+    from aeat.entrypoints.cli._modelo import _missing_binding_guidance
+
+    error = RegistryValidationError(
+        "casilla referenced before evaluation",
+        translated_message="errors.calc.casilla_referenced_before_evaluation",
+        context={"casilla_id": "iva.casilla-99"},
+    )
+    guidance = _missing_binding_guidance(error, "no-such-work-unit")
+    assert "--binding KEY=VALUE" not in guidance
+
+
+# ---------------------------------------------------------------------------
 # casillas --form-number filter
 # ---------------------------------------------------------------------------
 

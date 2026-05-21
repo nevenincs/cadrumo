@@ -284,6 +284,7 @@ def describe_modelo(
             f"Tax domain\t{report.tax_domain}",
             f"Cadence\t{report.cadence}",
             f"Revision\t{report.revision}",
+            f"Revision ids\t{', '.join(report.revision_ids)}",
             f"Periods\t{', '.join(report.periods)}",
             f"Casillas\t{report.casilla_count}",
             f"Bindings\t{report.binding_count}",
@@ -1058,6 +1059,65 @@ def _validate_registry_target(modelo: str, revision_id: str) -> None:
         )
 
 
+#: Registry-validation translated-message keys that signal an
+#: unsatisfied calculation input the operator can supply with
+#: ``--binding`` / ``--relation``. The first ``work calculate`` of a
+#: modelo that consumes a binding fails with one of these; the guidance
+#: helper turns the bare refusal into a self-correcting message.
+_MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
+    {
+        "errors.calc.binding_value_missing",
+        "errors.calc.enum_binding_value_missing",
+        "errors.calc.relation_value_missing",
+    }
+)
+
+
+def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str) -> str:
+    """Return the missing-binding refusal enriched with operator guidance.
+
+    The registry engine names the unsatisfied binding / relation but
+    leaves the operator with no path forward. When the failure is a
+    missing-input class, append the ``--binding KEY=VALUE`` syntax and a
+    concrete ``bindings list --missing`` command scoped to the work
+    unit's modelo / year / period so the next attempt can succeed.
+    Non-input registry-validation errors fall through unchanged.
+    """
+
+    base = (
+        tr(error.translated_message, **(error.context or {}))
+        if error.translated_message is not None
+        else str(error)
+    )
+    if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
+        return base
+
+    discover_command = "aeat app modelo bindings list --missing"
+    # Loading the work unit only refines the discovery command with the
+    # concrete modelo / year / period. It is best-effort enrichment: any
+    # failure (missing unit, no active session) degrades to the generic
+    # bindings-list command rather than masking the original refusal.
+    try:
+        unit: WorkUnit | None = get_work_unit(work_unit_id)
+    except Exception:
+        unit = None
+    if unit is not None:
+        discover_command = (
+            f"aeat app modelo bindings list --modelo {unit.modelo} "
+            f"--year {unit.filing_year} --period {unit.period} --missing"
+        )
+    return tr(
+        "cli.app.modelo.work.missing_binding_guidance",
+        default=(
+            "{base} Supply the value with --binding KEY=VALUE on this "
+            "command, or run `{discover}` to list every binding the "
+            "calculation still needs."
+        ),
+        base=base,
+        discover=discover_command,
+    )
+
+
 @work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
 def work_create(
     ctx: typer.Context,
@@ -1085,6 +1145,10 @@ def work_create(
         str | None,
         typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
     ] = None,
+    actor: Annotated[
+        str | None,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ] = None,
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
@@ -1107,6 +1171,7 @@ def work_create(
         period=resolved_period,
         revision_id=revision,
         name=name,
+        actor=actor or _resolve_default_actor(),
     )
     payload = {
         "operation": "modelo.work.create",
@@ -1534,6 +1599,13 @@ def work_calculate(
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
             relation_values=relation_values or None,
         )
+    except RegistryValidationError as exc:
+        # A formula that consumes an unsatisfied binding / enum-binding /
+        # relation raises RegistryValidationError. The bare message names
+        # the missing key but gives the operator no path forward; append
+        # the --binding KEY=VALUE syntax and the bindings-list discovery
+        # command so the first calculate failure is self-correcting.
+        raise typer.BadParameter(_missing_binding_guidance(exc, work_unit_id)) from exc
     except (
         WorkUnitNotFoundError,
         WorkUnitMutationRefusedError,
@@ -2746,6 +2818,7 @@ def modelo_export_verb(
 ) -> None:
     """Export a verified-complete or filed modelo revision to disk."""
 
+    from ...application.modelo import ModeloIvaWalletReconciliationBlocked
     from ...application.modelo._export import (
         ModeloExportCommand,
         ModeloExportCrossBucketRefusedError,
@@ -2798,6 +2871,7 @@ def modelo_export_verb(
         WorkUnitNotFoundError,
         ModeloExportCrossBucketRefusedError,
         ModeloExportNoActiveBucketError,
+        ModeloIvaWalletReconciliationBlocked,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
