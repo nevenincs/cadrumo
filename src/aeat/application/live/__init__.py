@@ -27,8 +27,11 @@ from ...adapters.outbound.aeat.sede import (
 from ...application.auth import ensure_authenticated_aeat_session
 from ...application.calculations import (
     CalculationObservationRepository,
+    IvaCompensationAuthoritySource,
+    IvaCompensationCarryForwardLot,
     IvaCompensationHistoryRepository,
     IvaCompensationPeriodState,
+    IvaCompensationReconciliationDecision,
     IvaWalletDecisionRepository,
     build_iva_compensation_carry_forward_report,
     iva_compensation_state_from_filed_observation,
@@ -589,7 +592,7 @@ def _history_row(state: IvaCompensationPeriodState) -> IvaCompensationHistoryRow
     )
 
 
-def _carry_forward_lot_row(lot: object) -> IvaCompensationCarryForwardLotRow:
+def _carry_forward_lot_row(lot: IvaCompensationCarryForwardLot) -> IvaCompensationCarryForwardLotRow:
     return IvaCompensationCarryForwardLotRow(
         taxpayer_ref=_taxpayer_ref(lot.taxpayer_nif),
         source_filing_year=lot.source_filing_year,
@@ -603,7 +606,7 @@ def _carry_forward_lot_row(lot: object) -> IvaCompensationCarryForwardLotRow:
     )
 
 
-def _authority_decision_row(decision: object) -> IvaWalletAuthorityDecisionRow:
+def _authority_decision_row(decision: IvaCompensationReconciliationDecision) -> IvaWalletAuthorityDecisionRow:
     return IvaWalletAuthorityDecisionRow(
         taxpayer_ref=_taxpayer_ref(decision.taxpayer_nif),
         target_year=decision.target_year,
@@ -623,7 +626,7 @@ def _authority_decision_row(decision: object) -> IvaWalletAuthorityDecisionRow:
     )
 
 
-def _authority_source_text(source: object) -> str:
+def _authority_source_text(source: IvaCompensationAuthoritySource) -> str:
     parts = [str(source.source_kind)]
     if source.source_modelo is not None:
         parts.append(f"modelo={source.source_modelo}")
