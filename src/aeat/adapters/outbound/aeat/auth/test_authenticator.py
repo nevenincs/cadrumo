@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -506,7 +507,13 @@ async def test_capture_storage_state_writes_storage_and_metadata(
     assert not storage_state_path.with_suffix(".meta.json").exists()
     persisted = _session_store.load(storage_state_path)
     assert persisted is not None
-    assert persisted.storage_state["cookies"][0]["name"] == "AEATSESSID"
+    cookies = persisted.storage_state["cookies"]
+    assert isinstance(cookies, list)
+    assert isinstance(cookies[0], Mapping)
+    # Playwright storage_state cookies are documented string-keyed dicts;
+    # the persisted payload exposes them only as ``object``.
+    first_cookie = cast("Mapping[str, object]", cookies[0])
+    assert first_cookie["name"] == "AEATSESSID"
     metadata = persisted.metadata
     assert metadata["certificate_thumbprint"] == cert.sha256_thumbprint
     assert metadata["storage_state_sha256"] == persisted.storage_state_sha256

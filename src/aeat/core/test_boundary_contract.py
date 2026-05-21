@@ -31,6 +31,7 @@ storage-foundation cleanup.
 from __future__ import annotations
 
 import ast
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -103,13 +104,15 @@ def _iter_import_time_imports(path: Path) -> list[str]:
         else:
             imports.append(_absolute_import_name(node.module, node.names))
 
-    def _visit(body: list[ast.stmt]) -> None:
+    def _visit(body: Sequence[ast.stmt | ast.ExceptHandler]) -> None:
         for node in body:
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 _record(node)
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 # Function/method body imports are deferred — skip them.
                 continue
+            elif isinstance(node, ast.ExceptHandler):
+                _visit(node.body)
             elif _is_type_checking_guard(node):
                 # TYPE_CHECKING-only imports never run at import time.
                 continue
@@ -118,11 +121,9 @@ def _iter_import_time_imports(path: Path) -> list[str]:
                 _visit(node.orelse)
             elif isinstance(node, ast.Try):
                 _visit(node.body)
-                _visit(node.handlers)  # type: ignore[arg-type]
+                _visit(node.handlers)
                 _visit(node.orelse)
                 _visit(node.finalbody)
-            elif isinstance(node, ast.ExceptHandler):
-                _visit(node.body)
             elif isinstance(node, (ast.With, ast.AsyncWith)):
                 _visit(node.body)
             elif isinstance(node, ast.ClassDef):
