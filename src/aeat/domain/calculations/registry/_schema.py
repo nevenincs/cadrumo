@@ -701,6 +701,44 @@ class SourceCitation(RegistryModel):
         return value
 
 
+class ExtractionTargetDefinition(RegistryModel):
+    """Per-target descriptor for a registry extraction profile.
+
+    Each entry in :attr:`ExtractionProfileDefinition.target_casillas` is one
+    of these records, pairing a stable ``casilla_id`` with the matching
+    strategy and value kind the parser uses for that target.
+
+    Attributes:
+        casilla_id: Stable casilla identifier the parser resolves to.
+        match_strategy: How the parser anchors on this target.
+            ``"numeric_casilla"`` anchors on the casilla id printed literally
+            at line start (numeric forms, e.g. ``"01"``).
+            ``"named_label"`` anchors on the human-readable printed label
+            (for text-field modelos where a slug id is never printed).
+        value_kind: The type of value the capture group returns.
+            ``"amount"`` expects a Spanish-formatted decimal amount;
+            ``"text"`` expects the last whitespace-delimited token on the line;
+            ``"enum"`` is a text token from a bounded enumeration.
+        label_pattern: Required regex string anchoring the ``named_label``
+            strategy.  The parser inserts this pattern where the casilla-id
+            literal would appear in the numeric path.  Must be ``None`` for
+            the ``"numeric_casilla"`` strategy.
+    """
+
+    casilla_id: CasillaId
+    match_strategy: Literal["numeric_casilla", "named_label"]
+    value_kind: Literal["amount", "text", "enum"]
+    label_pattern: str | None = None
+
+    @model_validator(mode="after")
+    def _label_pattern_matches_strategy(self) -> ExtractionTargetDefinition:
+        if self.match_strategy == "named_label" and not self.label_pattern:
+            raise RegistryValidationError("named_label extraction targets require label_pattern")
+        if self.match_strategy == "numeric_casilla" and self.label_pattern is not None:
+            raise RegistryValidationError("numeric_casilla extraction targets must not define label_pattern")
+        return self
+
+
 class ExtractionProfileDefinition(RegistryModel):
     id: ExtractionProfileId
     surface: Literal["borrador_pdf", "declaracion_pdf", "justificante_pdf", "export_record", "official_workbook"]
@@ -710,18 +748,28 @@ class ExtractionProfileDefinition(RegistryModel):
         ...,
     ] = Field(min_length=1)
     parser: str
-    target_casillas: tuple[CasillaId, ...] = Field(min_length=1)
+    target_casillas: tuple[ExtractionTargetDefinition, ...] = Field(min_length=1)
     confidence: Literal["strict", "review_required"]
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
     failure_semantics: Literal["fail_hard"]
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
-    @field_validator("accepted_artefact_kinds", "target_casillas")
+    @field_validator("accepted_artefact_kinds")
     @classmethod
-    def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _accepted_artefact_kinds_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise RegistryValidationError("extraction profile tuple entries must be unique")
+            raise RegistryValidationError("extraction profile accepted_artefact_kinds entries must be unique")
+        return value
+
+    @field_validator("target_casillas")
+    @classmethod
+    def _target_casillas_unique(
+        cls, value: tuple[ExtractionTargetDefinition, ...]
+    ) -> tuple[ExtractionTargetDefinition, ...]:
+        casilla_ids = [t.casilla_id for t in value]
+        if len(set(casilla_ids)) != len(casilla_ids):
+            raise RegistryValidationError("extraction profile target_casillas casilla_id entries must be unique")
         return value
 
 

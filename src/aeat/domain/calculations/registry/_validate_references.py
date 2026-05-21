@@ -21,6 +21,7 @@ class _IdReferenceChecker:
     __slots__ = (
         "application_link_ids",
         "binding_ids",
+        "casilla_data_types",
         "casilla_ids",
         "construct_ids",
         "cross_reference_ids",
@@ -46,6 +47,7 @@ class _IdReferenceChecker:
         self.prefix = f"snapshot modelo {snapshot.modelo.id} revision {revision.id}"
         self.failures: list[str] = []
         self.casilla_ids = {c.id for c in revision.casillas}
+        self.casilla_data_types: dict[str, str] = {c.id: c.data_type for c in revision.casillas}
         self.formula_ids = {f.id for f in revision.formulas}
         self.parameter_ids = {p.id for p in revision.parameters}
         self.binding_ids = {b.id for b in revision.bindings}
@@ -133,13 +135,25 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
     for casilla in revision.casillas:
         cp = f"casilla {casilla.id}"
         checker.chk_opt(f"{cp}.formula", casilla.formula, checker.formula_ids)
-        checker.chk_opt(f"{cp}.binding", casilla.binding, checker.binding_ids)
+        if casilla.input_kind == "bound":
+            _check_bound_casilla_binding_coverage(checker, cp, casilla.binding)
+        else:
+            checker.chk_opt(f"{cp}.binding", casilla.binding, checker.binding_ids)
         checker.chk_tuple(f"{cp}.export_refs", casilla.export_refs, checker.export_field_ids)
         checker.chk_legal_source_refs(cp, casilla.legal_refs, casilla.source_refs)
         if casilla.constraints is not None:
             checker.chk_legal_source_refs(
                 f"{cp}.constraints", casilla.constraints.legal_refs, casilla.constraints.source_refs
             )
+
+
+def _check_bound_casilla_binding_coverage(checker: _IdReferenceChecker, field_path: str, binding: str | None) -> None:
+    if binding is None:
+        checker.failures.append(
+            f"{checker.prefix}: {field_path}.binding has no binding definition for input_kind='bound'"
+        )
+        return
+    checker.chk(f"{field_path}.binding", binding, checker.binding_ids)
 
 
 def _check_formula_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
@@ -179,8 +193,36 @@ def _check_relation_refs(checker: _IdReferenceChecker, revision: ModeloRevision)
 def _check_extraction_profile_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
     for profile in revision.extraction_profiles:
         ep = f"extraction_profile {profile.id}"
-        checker.chk_tuple(f"{ep}.target_casillas", profile.target_casillas, checker.casilla_ids)
+        target_ids = tuple(t.casilla_id for t in profile.target_casillas)
+        checker.chk_tuple(f"{ep}.target_casillas", target_ids, checker.casilla_ids)
         checker.chk_legal_source_refs(ep, profile.legal_refs, profile.source_refs)
+        if profile.surface == "declaracion_pdf":
+            _check_text_casilla_strategy(checker, ep, profile)
+
+
+def _check_text_casilla_strategy(
+    checker: _IdReferenceChecker,
+    ep: str,
+    profile: object,
+) -> None:
+    """Enforce that a declaracion_pdf profile targeting a text-typed casilla uses named_label.
+
+    A ``data_type = "text"`` casilla is never printed as a numeric identifier on the
+    PDF — the generic numeric regex cannot match it.  Any profile targeting such a
+    casilla without the ``named_label`` strategy is a silent-extraction stub and must
+    fail the snapshot-build gate.
+    """
+    from ._schema import ExtractionProfileDefinition
+
+    assert isinstance(profile, ExtractionProfileDefinition)
+    for target in profile.target_casillas:
+        data_type = checker.casilla_data_types.get(target.casilla_id)
+        if data_type == "text" and target.match_strategy != "named_label":
+            checker.failures.append(
+                f"{checker.prefix}: {ep} targets casilla {target.casilla_id!r} "
+                f"(data_type='text') but uses match_strategy={target.match_strategy!r}; "
+                f"text-typed casilla targets must use match_strategy='named_label'"
+            )
 
 
 def _check_cross_reference_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
