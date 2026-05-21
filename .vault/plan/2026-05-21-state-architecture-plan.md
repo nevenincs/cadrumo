@@ -108,12 +108,12 @@ Source: read-projection ADR.
 - [x] `W04.S19` - tests proving the surfaces agree: one fixture
   state, every surface reports the same readiness and counts.
 
-Follow-up (tracked): rewire `WorkflowEngine._stage_computing_deadlines`
-(the `NO_PENDING_OBLIGATION` gate) to consume the projection's
-`pending_obligations` rather than computing its own schedule. Deferred
-from W04 because `_engine.py` carries another campaign's uncommitted
-WIP; the projection already carries the field, so the rewire is a
-clean later change.
+Follow-up - DONE (`21c994fb3`): the `WorkflowEngine`
+`NO_PENDING_OBLIGATION` gate and the projection's `pending_obligations`
+now draw from one shared producer, `compute_obligation_schedule`, so
+the two can no longer diverge. The gate keeps its own `next_deadline`
+/ `(modelo, period)` filtering; only the schedule source is unified.
+A gate/projection agreement test in `test_engine.py` proves it.
 
 ## Wave `W05` - one state root and full verification
 
@@ -154,7 +154,7 @@ listed, switchable, reported ready, and its name stayed reserved
 | W01 | UUID identity model | identity | complete |
 | W02 | aggregate + repository + unit-of-work | aggregate | complete |
 | W03 | rename collapse + name-as-id sweep | identity + aggregate | complete (S15 testimonial regression pending) |
-| W04 | canonical read-projection | read-projection | complete (engine obligation-gate rewire tracked as follow-up) |
+| W04 | canonical read-projection | read-projection | complete |
 | W05 | one state root + full verification | identity + aggregate | complete |
 | W06 | tombstone lifecycle correctness | testimonial | complete |
 
