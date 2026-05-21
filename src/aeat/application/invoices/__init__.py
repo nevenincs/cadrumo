@@ -66,8 +66,10 @@ from ._reconciliation import (
     reconcile_invoice_catalogues,
     reconcile_invoice_repositories,
 )
+from ._source_resolver import InvoiceCatalogueSourceResolver
 
 __all__ = [
+    "InvoiceCatalogueSourceResolver",
     "InvoiceImportResult",
     "InvoiceListRow",
     "InvoiceMatchProjection",
