@@ -2958,6 +2958,10 @@ wizard:
     flags:
       activity:
         help: Actividad económica en texto normal, o epígrafe IAE si lo conoces
+      activity-start-date:
+        help: Fecha de alta en el censo / inicio de la actividad económica (AAAA-MM-DD).
+          Opcional; si se indica, no se muestran obligaciones de periodos anteriores
+          a esa fecha.
       address-postcode:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
@@ -3119,6 +3123,11 @@ wizard:
     profile:
       activity:
         prompt: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)
+      activity-start-date:
+        help: Si la indicas, no se muestran como vencidas las declaraciones de periodos
+          anteriores a esa fecha. Déjala en blanco si no la conoces.
+        prompt: ¿Desde qué fecha tienes obligaciones de declaración / cuándo te diste
+          de alta? (AAAA-MM-DD, opcional)
       address-postcode:
         prompt: Código postal del domicilio fiscal
       iva-regime:

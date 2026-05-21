@@ -2942,6 +2942,9 @@ wizard:
     flags:
       activity:
         help: Activitat econòmica en text normal, o epígraf IAE si el coneixes
+      activity-start-date:
+        help: Data d'alta al cens / inici de l'activitat econòmica (AAAA-MM-DD). Opcional;
+          si s'indica, no es mostren obligacions de períodes anteriors a aquesta data.
       address-postcode:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
@@ -3102,6 +3105,11 @@ wizard:
     profile:
       activity:
         prompt: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)
+      activity-start-date:
+        help: Si la indiques, no es mostren com a vençudes les declaracions de períodes
+          anteriors a aquesta data. Deixa-la en blanc si no la coneixes.
+        prompt: Des de quina data tens obligacions de declaració / quan et vas donar
+          d'alta? (AAAA-MM-DD, opcional)
       address-postcode:
         prompt: Codi postal del domicili fiscal
       iva-regime:

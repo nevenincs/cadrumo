@@ -39,6 +39,15 @@ class SetupAnswers(BaseModel):
     pure landlord, a salaried-only taxpayer, and a pensioner have no
     actividad económica and leave it blank."""
     address_postcode: str = ""
+    activity_start_date: str = ""
+    """Optional ISO-8601 census alta date for the economic activity.
+
+    When set, the deadline engine suppresses any filing obligation
+    whose AEAT window closes before this date — a taxpayer owes no
+    return for a period that precedes their registration. Blank for
+    every profile that has not declared an alta date; the deadline
+    behaviour is then unchanged. The typed ``date`` projection lives
+    on :class:`~aeat.domain.deadlines.TaxpayerProfile`."""
     taxation_type: RentaDeclaracionType | str = ""
     output_language: str = "es"
 
@@ -213,6 +222,28 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return CCAA(value)
         raise TypeError("tax_residence_ccaa must be a CCAA member or string token")
+
+    @field_validator("activity_start_date")
+    @classmethod
+    def _validate_activity_start_date(cls, value: str) -> str:
+        """Reject a non-ISO census alta date at the typed boundary.
+
+        The field is optional: a blank string is accepted unchanged. A
+        non-blank value must be a valid ISO-8601 date so the deadline
+        engine's pre-registration gate receives a parseable date.
+        """
+
+        from datetime import date
+
+        if value == "":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
+            ) from exc
+        return value
 
     @field_validator("output_language")
     @classmethod

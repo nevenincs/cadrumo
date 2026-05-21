@@ -49,6 +49,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "Doe",  # surnames
             "Software development",  # activity (visible: has actividad_economica)
             "28001",  # address-postcode
+            "",  # activity-start-date (optional, left blank)
             "1",  # taxation-type (individual, visible: natural person)
             "en",  # output-language
             # ── taxpayer biographic (visible: natural person) ──
@@ -169,6 +170,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "Doe",  # surnames
             "Software development",  # activity (visible: has actividad_economica)
             "28001",  # address-postcode
+            "",  # activity-start-date (optional, left blank)
             "2",  # taxation-type (joint, visible: natural person)
             "en",  # output-language
             # ── taxpayer biographic (visible: natural person) ──

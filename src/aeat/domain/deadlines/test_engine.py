@@ -220,6 +220,62 @@ class TestCompute:
         assert closes == sorted(closes)
 
 
+class TestPreRegistrationObligationGate:
+    """The deadline engine must not invent pre-registration obligations.
+
+    Round-4 testimonial finding D1: a 2026 registrant ran the backlog
+    and was shown overdue 2025 IVA quarters — obligations from before
+    they had any economic activity. With ``activity_start_date`` set,
+    the engine suppresses every window that closes before the alta;
+    with it unset, behaviour is unchanged.
+    """
+
+    def test_2026_registrant_has_no_2025_iva_obligations(self) -> None:
+        """A profile registered in 2026 owes no 2025 quarterly return.
+
+        Computing the 2025 schedule for a taxpayer whose census alta
+        is 2026-03-01 must drop every Modelo 303 window — all four
+        2025 quarters close before the alta date."""
+
+        profile = _profile(activity_start_date=date(2026, 3, 1))
+        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+
+        assert all(o.modelo != "303" for o in schedule.obligations), (
+            "2026 registrant was shown a 2025 IVA quarter that closed "
+            "before their census alta"
+        )
+        assert all(o.closes_on >= date(2026, 3, 1) for o in schedule.obligations), (
+            "an obligation window closing before the alta survived the gate"
+        )
+
+    def test_unset_activity_start_date_keeps_full_2025_schedule(self) -> None:
+        """A profile with no alta date behaves exactly as before.
+
+        The gate is opt-in: when ``activity_start_date`` is ``None`` no
+        window is suppressed, so the 2025 schedule still carries the
+        four quarterly Modelo 303 obligations."""
+
+        profile = _profile()
+        assert profile.activity_start_date is None
+        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+
+        iva_quarters = sorted(o.period for o in schedule.obligations if o.modelo == "303")
+        assert iva_quarters == ["2025-1T", "2025-2T", "2025-3T", "2025-4T"]
+
+    def test_alta_inside_2025_keeps_only_post_alta_quarters(self) -> None:
+        """A mid-2025 alta keeps only the windows closing on or after it.
+
+        A taxpayer who registered 2025-09-01 owes the Q3 return (window
+        closes 2025-10-20, after the alta) and Q4, but not Q1 / Q2 —
+        those windows closed before they had any activity."""
+
+        profile = _profile(activity_start_date=date(2025, 9, 1))
+        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+
+        iva_quarters = sorted(o.period for o in schedule.obligations if o.modelo == "303")
+        assert iva_quarters == ["2025-3T", "2025-4T"]
+
+
 class TestStatusTransitions:
     def _find_q1(self, schedule: Schedule) -> ModeloDeadline:
         return next(o for o in schedule.obligations if o.period == "2026Q1")
