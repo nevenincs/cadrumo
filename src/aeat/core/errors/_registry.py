@@ -18,7 +18,10 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Mapping
-from enum import StrEnum
+from datetime import date, datetime
+from decimal import Decimal
+from enum import Enum, StrEnum
+from pathlib import PurePath
 from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict
@@ -355,13 +358,47 @@ def _merge_error_context(
 
 
 def _stringify_context_value(value: object) -> str:
+    """Render one error-context value as an operator-safe string.
+
+    This is the single defensive funnel for the CLI error boundary. An
+    :class:`aeat.core.errors.AeatError` subclass can — accidentally or
+    by design — carry a non-primitive object in its ``context`` mapping
+    or as a public instance attribute (which
+    :func:`_merge_error_context` folds into the context via
+    ``vars(error)``). A bare ``str(value)`` on such an object emits a
+    raw Python repr — ``datetime.datetime(...)`` constructor calls,
+    ``<Enum.X: 'X'>`` reprs, nested pydantic/tuple structures — straight
+    at a non-technical operator. That is an error-boundary
+    serialization leak.
+
+    Only primitives, the time types (rendered ISO-8601),
+    :class:`enum.Enum` (rendered as ``.value``), and flat collections of
+    those are stringified verbatim. Any other object is replaced with a
+    stable ``<type-name>`` placeholder so the operator never sees a raw
+    object dump regardless of which error class produced the context.
+    """
+
     if value is None:
         return "null"
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, (int, float, str)):
         return str(value)
-    return str(value)
+    if isinstance(value, Enum):
+        return str(value.value)
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, PurePath):
+        return str(value)
+    if isinstance(value, (list, tuple, frozenset, set)):
+        return ", ".join(_stringify_context_value(item) for item in value)
+    if isinstance(value, Mapping):
+        return ", ".join(
+            f"{_stringify_context_value(key)}={_stringify_context_value(item)}" for key, item in value.items()
+        )
+    return f"<{type(value).__name__}>"
 
 
 __all__ = [
