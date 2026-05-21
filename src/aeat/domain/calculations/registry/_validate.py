@@ -35,6 +35,7 @@ from ._schema import (
 from ._sources import verify_source_catalogue
 from ._text import normalise_corpus_text
 from ._validate_application_links import validate_application_link_closure
+from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
 from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
 from ._validate_extraction_profiles import validate_dotted_callable, validate_extraction_profile_artefacts
 from ._validate_formulas import validate_formula_dag, validate_formula_expression
@@ -298,7 +299,7 @@ class RegistryValidator:
         _emit_combined_primary_id_failures(failures, prefix, ids_by_kind)
         _emit_casilla_identity_failures(failures, prefix, revision)
         _emit_completeness_gate_failures(failures, prefix, revision)
-        # The ``_validate_support_removal_decisions`` call below still
+        # The support-removal closure check below still
         # consumes the per-kind lists as kwargs; expose them as local
         # aliases so the existing signature shape stays unchanged.
         export_layout_ids = ids_by_kind["export layout"]
@@ -427,7 +428,7 @@ class RegistryValidator:
         self._validate_deadline_window_section(failures, prefix=prefix, revision=revision)
 
         failures.extend(
-            self._validate_support_removal_decisions(
+            validate_support_removal_decisions(
                 prefix,
                 revision,
                 export_layout_ids=export_layout_ids,
@@ -438,12 +439,14 @@ class RegistryValidator:
                 application_link_ids=application_link_ids,
                 deadline_window_ids=deadline_window_ids,
                 filing_schedule_ids=filing_schedule_ids,
+                legal_refs=self._legal,
+                source_refs=self._sources,
             )
         )
         failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo.id))
         failures.extend(self._validate_reconciliation_total_closure(prefix, revision))
         failures.extend(
-            self._validate_construct_closure(
+            validate_construct_closure(
                 prefix,
                 revision,
                 member_objects={
@@ -465,6 +468,8 @@ class RegistryValidator:
                     "support removal decision": support_removal_decision_by_id,
                     "dependency classification": dependency_classification_by_id,
                 },
+                legal_refs=self._legal,
+                source_refs=self._sources,
             )
         )
         failures.extend(validate_formula_dag(prefix, revision))
@@ -1232,116 +1237,6 @@ class RegistryValidator:
                         f"{previous!r} and {casilla_id!r}"
                     )
                 declared[total_kind] = casilla_id
-        return failures
-
-    def _validate_construct_closure(
-        self,
-        scope: str,
-        revision: ModeloRevision,
-        *,
-        member_objects: Mapping[str, Mapping[str, object]],
-    ) -> list[str]:
-        failures: list[str] = []
-        member_attrs = {
-            "casilla": "casillas",
-            "formula": "formulas",
-            "parameter": "parameters",
-            "binding": "bindings",
-            "algorithm provider": "algorithm_providers",
-            "algorithm binding": "algorithm_bindings",
-            "relation": "relations",
-            "export layout": "export_layouts",
-            "extraction profile": "extraction_profiles",
-            "cross-reference": "live_cross_references",
-            "workbook parity reference": "workbook_parity_refs",
-            "verification expectation": "verification_expectations",
-            "application link": "application_links",
-            "deadline window": "deadline_windows",
-            "filing schedule": "filing_schedules",
-            "support removal decision": "support_removal_decisions",
-            "dependency classification": "dependency_classifications",
-        }
-
-        for construct in revision.constructs:
-            owner = f"construct {construct.id}"
-            failures.extend(self._missing_refs(scope, owner, construct.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(scope, owner, construct.source_refs, self._sources, "source"))
-            construct_legal_refs = set(construct.legal_refs)
-            construct_source_refs = set(construct.source_refs)
-            for kind, attr in member_attrs.items():
-                known = member_objects[kind]
-                for member_id in getattr(construct, attr):
-                    member = known.get(member_id)
-                    if member is None:
-                        failures.append(f"{scope}: construct {construct.id!r} references unknown {kind} {member_id!r}")
-                        continue
-                    member_legal_refs = set(getattr(member, "legal_refs", ()))
-                    missing_legal = sorted(member_legal_refs.difference(construct_legal_refs))
-                    if missing_legal:
-                        failures.append(
-                            f"{scope}: construct {construct.id!r} does not include legal refs "
-                            f"{missing_legal!r} required by {kind} {member_id!r}"
-                        )
-                    member_source_refs = set(getattr(member, "source_refs", ()))
-                    missing_sources = sorted(member_source_refs.difference(construct_source_refs))
-                    if missing_sources:
-                        failures.append(
-                            f"{scope}: construct {construct.id!r} does not include source refs "
-                            f"{missing_sources!r} required by {kind} {member_id!r}"
-                        )
-
-        return failures
-
-    def _validate_support_removal_decisions(
-        self,
-        scope: str,
-        revision: ModeloRevision,
-        *,
-        export_layout_ids: Iterable[str],
-        extraction_profile_ids: Iterable[str],
-        cross_reference_ids: Iterable[str],
-        workbook_parity_ids: Iterable[str],
-        verification_expectation_ids: Iterable[str],
-        application_link_ids: Iterable[str],
-        deadline_window_ids: Iterable[str],
-        filing_schedule_ids: Iterable[str] = (),
-    ) -> list[str]:
-        failures: list[str] = []
-        active_subjects = {
-            "export_layout": set(export_layout_ids),
-            "extraction_profile": set(extraction_profile_ids),
-            "live_cross_reference": set(cross_reference_ids),
-            "workbook_parity_ref": set(workbook_parity_ids),
-            "verification_expectation": set(verification_expectation_ids),
-            "application_link": set(application_link_ids),
-            "deadline_window": set(deadline_window_ids),
-            "filing_schedule": set(filing_schedule_ids),
-        }
-        for decision in revision.support_removal_decisions:
-            failures.extend(
-                self._missing_refs(
-                    scope,
-                    f"support removal decision {decision.id}",
-                    decision.legal_refs,
-                    self._legal,
-                    "legal",
-                )
-            )
-            failures.extend(
-                self._missing_refs(
-                    scope,
-                    f"support removal decision {decision.id}",
-                    decision.source_refs,
-                    self._sources,
-                    "source",
-                )
-            )
-            active_ids = active_subjects.get(decision.subject_type)
-            if active_ids is not None and decision.subject_id in active_ids:
-                failures.append(
-                    f"{scope}: support removal decision {decision.id!r} removes "
-                    f"{decision.subject_type} {decision.subject_id!r} but it is still present"
-                )
         return failures
 
     def _require_legal_authority_refs(self, scope: str, owner: str, refs: Iterable[str]) -> list[str]:
