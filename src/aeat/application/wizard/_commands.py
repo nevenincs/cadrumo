@@ -66,6 +66,40 @@ def _ccaa_choice_values() -> list[str]:
 _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 
+def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], list[str]]:
+    """Return choice tokens for the taxpayer-type and IRPF-regime enums.
+
+    Derived from the canonical domain enums (``EntityType``,
+    ``LegalEntityForm``, ``IrpfIncomeCategory``, ``IrpfEstimationRegime``)
+    so the ``--entity-type``, ``--legal-entity-form``,
+    ``--irpf-income-categories``, and ``--irpf-estimation-regime``
+    flag choices never drift from the values the wizard catalogue and
+    the profile schema validate against.
+    """
+
+    from ...domain.deadlines._models import (
+        EntityType,
+        IrpfEstimationRegime,
+        IrpfIncomeCategory,
+        LegalEntityForm,
+    )
+
+    return (
+        [member.value for member in EntityType],
+        [member.value for member in LegalEntityForm],
+        [member.value for member in IrpfIncomeCategory],
+        [member.value for member in IrpfEstimationRegime],
+    )
+
+
+(
+    _ENTITY_TYPE_CHOICE_VALUES,
+    _LEGAL_ENTITY_FORM_CHOICE_VALUES,
+    _IRPF_INCOME_CATEGORY_CHOICE_VALUES,
+    _IRPF_ESTIMATION_REGIME_CHOICE_VALUES,
+) = _taxpayer_type_choice_values()
+
+
 def _flag_name(question: WizardQuestion) -> str:
     """Map a question id to its primary Typer flag name."""
 
@@ -237,6 +271,34 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         ),
     ),
     "notes": typer.Option("--notes", help=tr("wizard.setup.flags.notes.help")),
+    "entity-type": typer.Option(
+        "--entity-type",
+        click_type=click.Choice(_ENTITY_TYPE_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.entity-type.help"),
+    ),
+    "legal-entity-form": typer.Option(
+        "--legal-entity-form",
+        click_type=click.Choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.legal-entity-form.help"),
+    ),
+    "irpf-income-categories": typer.Option(
+        "--irpf-income-categories",
+        click_type=click.Choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.irpf-income-categories.help"),
+    ),
+    "irpf-estimation-regime": typer.Option(
+        "--irpf-estimation-regime",
+        click_type=click.Choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
+    ),
+    "iva-sii-enrolled": typer.Option(
+        "--iva-sii-enrolled/--no-iva-sii-enrolled",
+        help=tr("wizard.setup.flags.iva-sii-enrolled.help"),
+    ),
+    "iva-redeme-enrolled": typer.Option(
+        "--iva-redeme-enrolled/--no-iva-redeme-enrolled",
+        help=tr("wizard.setup.flags.iva-redeme-enrolled.help"),
+    ),
 }
 
 
