@@ -662,8 +662,9 @@ cli:
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
       history:
-        invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00); got {raw}.'
-        since_after_until: '--since must be before or equal to --until.'
+        invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00);
+          got {raw}.'
+        since_after_until: --since must be before or equal to --until.
       history_help: Show the append-only event history for one bucket
       object_id_help: Filter the history to events targeting a specific object_id
         (exact match)
@@ -775,6 +776,9 @@ cli:
         show_help: Show the latest census AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
       create_help: Initialize a new active profile and config bucket.
+      delete_active_cleared: The deleted profile was the active one; the active-profile
+        pointer has been cleared. Run 'aeat config profile switch NAME' or 'aeat config
+        profile create NAME' to resume work.
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
@@ -1554,7 +1558,8 @@ cli:
       welcome_profile: Welcome back. Active profile is `%{profile}`.
     language_help: Output language for this command (overrides the active profile)
     quiet_help: Show only errors on stderr
-    startup_import_error: 'Cannot start the AEAT command surface: missing dependency {dependency}. Run `aeat config repair`.'
+    startup_import_error: 'Cannot start the AEAT command surface: missing dependency
+      {dependency}. Run `aeat config repair`.'
     unavailable_app_help: App commands are unavailable because an optional dependency
       is missing
     verbose_help: Show internal informational logs on stderr

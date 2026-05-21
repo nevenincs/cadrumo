@@ -641,6 +641,7 @@ def config_profile_switch(
 ) -> None:
     """Select an existing profile as the active profile."""
 
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ....application.user_profile._orchestration import select_profile
     from ....core.config import override_settings
     from ....domain.user_profile import ProfileNotFoundError
@@ -652,15 +653,34 @@ def config_profile_switch(
         ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
     )
     try:
-        with override_settings(aeat_active_profile=pointer.bucket_id):
+        # ``switch`` is the verb that *establishes* a bucket session; it
+        # must not depend on one already being open. The root callback
+        # only opens a session when an active profile already resolves,
+        # so a switch from a no-active-profile state (the first switch,
+        # or a switch after the active profile was deleted) reaches the
+        # decrypting selection write with no session. Open a session
+        # scoped to the target bucket here, mirroring the bootstrap-
+        # create path, so both the workflow-state selection write and
+        # the PROFILE_ACTIVATED event append can decrypt their buckets.
+        with (
+            override_settings(aeat_active_profile=pointer.bucket_id),
+            activate_master_key_provider(
+                get_master_key_provider(), fallback_bucket_id=pointer.bucket_id
+            ),
+        ):
             repository = _profile_state()
-            repository.update(lambda current: select_profile(current, profile_id=pointer.bucket_id))
+            repository.update(
+                lambda current: select_profile(current, profile_id=pointer.bucket_id)
+            )
+            _emit_profile_activated_event(
+                profile_id=pointer.bucket_id,
+                active_profile=resolve_active_bucket_id(),
+            )
     except ProfileNotFoundError as exc:
         _emit_profile_record_missing(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
         )
         raise typer.Exit(code=2) from exc
-    _emit_profile_activated_event(profile_id=pointer.bucket_id, active_profile=resolve_active_bucket_id())
     _emit(
         ctx,
         {"active_profile": pointer.label},
@@ -913,34 +933,55 @@ def config_profile_delete(
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
 
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ....application.user_profile._profile_repository import ProfileRepository
+    from ....core.config import override_settings
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
         raise CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
-    workflow_state = _profile_state()
-    workflow_state.load()
+    # Resolve the operator-supplied label to a bucket pointer FIRST. This
+    # is a plaintext manifest scan that needs no bucket session, so an
+    # unknown name surfaces a clear "unknown profile" refusal distinct
+    # from any session-state diagnostic — the operator can always tell
+    # whether the name exists. ``delete`` does not require a pre-existing
+    # session: like ``switch``, it opens its own scoped to the target.
     pointer = _resolve_profile_by_label(name)
+    deleting_active_profile = pointer.bucket_id == resolve_active_bucket_id()
     # The cross-store tombstone (encrypted-record tombstone +
     # active-profile pointer clear) lives solely in ProfileRepository.
+    # Its load + remove decrypt the target bucket, so a session scoped
+    # to that bucket must be open even when the profile is not active.
     try:
-        aggregate = ProfileRepository().delete(pointer.bucket_id)
+        with (
+            override_settings(aeat_active_profile=pointer.bucket_id),
+            activate_master_key_provider(
+                get_master_key_provider(), fallback_bucket_id=pointer.bucket_id
+            ),
+        ):
+            aggregate = ProfileRepository().delete(pointer.bucket_id)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
     record = aggregate.record
-    _emit(
-        ctx,
-        {
-            "profile_id": record.profile_id,
-            "display_name": record.display_name,
-            "status": record.status.value,
-        },
-        (
-            f"profile_id\t{record.profile_id}",
-            f"display_name\t{record.display_name}",
-            f"status\t{record.status.value}",
-        ),
-    )
+    payload = {
+        "profile_id": record.profile_id,
+        "display_name": record.display_name,
+        "status": record.status.value,
+        "active_profile_cleared": deleting_active_profile,
+    }
+    lines = [
+        f"profile_id\t{record.profile_id}",
+        f"display_name\t{record.display_name}",
+        f"status\t{record.status.value}",
+    ]
+    if deleting_active_profile:
+        # The deleted profile was the active one; ProfileRepository.delete
+        # cleared the active-profile pointer as part of the tombstone.
+        # Make that consequence explicit so the operator is not left in a
+        # silent no-active-profile state.
+        lines.append("active_profile\t<none>")
+        lines.append(f"notice\t{tr('cli.config.profile.delete_active_cleared')}")
+    _emit(ctx, payload, lines)
 
 
 @profile_app.command("duplicate", help=tr("cli.config.profile.duplicate_help"))
@@ -1578,6 +1619,8 @@ def auth_diagnostics_list(ctx: typer.Context) -> None:
                     row.reason,
                     f"mode={row.auth_mode or '-'}",
                     f"identity_kind={row.identity_kind or '-'}",
+                    f"profile={row.active_profile_label or row.active_profile_id or '-'}",
+                    f"alignment={row.identity_alignment or '-'}",
                     f"headless={row.headless if row.headless is not None else '-'}",
                     f"phone_state={row.phone_state or '-'}",
                     f"html={row.html_captured}",
@@ -1606,6 +1649,7 @@ def auth_diagnostics_show(
             tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id)
         )
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
+    bool_value = _optional_bool_text
     _emit(
         ctx,
         detail.model_dump(mode="json"),
@@ -1617,6 +1661,24 @@ def auth_diagnostics_show(
             f"auth_mode\t{detail.auth_mode}",
             f"identity_kind\t{detail.identity_kind}",
             f"headless\t{detail.headless if detail.headless is not None else ''}",
+            f"active_profile_id\t{detail.active_profile_id}",
+            f"active_profile_label\t{detail.active_profile_label}",
+            f"active_profile_registered\t{bool_value(detail.active_profile_registered)}",
+            f"profile_record_present\t{bool_value(detail.profile_record_present)}",
+            f"profile_tax_id_present\t{bool_value(detail.profile_tax_id_present)}",
+            f"profile_tax_id_fingerprint\t{detail.profile_tax_id_fingerprint}",
+            f"clave_identity_configured\t{bool_value(detail.clave_identity_configured)}",
+            f"clave_identity_fingerprint\t{detail.clave_identity_fingerprint}",
+            f"identity_alignment\t{detail.identity_alignment}",
+            f"dni_fecha_configured\t{bool_value(detail.dni_fecha_configured)}",
+            f"dni_fecha_fingerprint\t{detail.dni_fecha_fingerprint}",
+            f"nie_soporte_configured\t{bool_value(detail.nie_soporte_configured)}",
+            f"nie_soporte_fingerprint\t{detail.nie_soporte_fingerprint}",
+            f"certificate_path_configured\t{bool_value(detail.certificate_path_configured)}",
+            f"certificate_password_configured\t{bool_value(detail.certificate_password_configured)}",
+            f"certificate_file_present\t{bool_value(detail.certificate_file_present)}",
+            f"certificate_backend\t{detail.certificate_backend}",
+            f"certificate_path_fingerprint\t{detail.certificate_path_fingerprint}",
             f"phone_state\t{detail.phone_state}",
             f"phone_state_reported_at\t{reported_at}",
             f"html_captured\t{detail.html_captured}",
@@ -1624,6 +1686,10 @@ def auth_diagnostics_show(
             f"html_excerpt\t{detail.html_excerpt or ''}",
         ),
     )
+
+
+def _optional_bool_text(value: bool | None) -> str:
+    return "" if value is None else str(value)
 
 
 @auth_diagnostics_app.command(
