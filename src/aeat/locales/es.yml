@@ -817,7 +817,8 @@ cli:
       event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
       help: Inspeccionar el almacenamiento por bucket y su historial de eventos
       history:
-        invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento válidos: {valid}.'
+        invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
+          válidos: {valid}.'
         invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
           se recibió {raw}.'
         since_after_until: --since debe ser anterior o igual a --until.
@@ -2956,20 +2957,32 @@ wizard:
         help: Empresa de gran volumen
       enrollment-public-administration-budget-gt-6000000:
         help: Presupuesto administración pública superior a 6.000.000
+      entity-type:
+        help: Persona física, persona jurídica o entidad en atribución de rentas
       family-descendants-eu-eea-deduction:
         help: Descendientes UE/EEE en deducción de unidad familiar
       family-minor-children-in-unit:
         help: Hijos menores en unidad familiar
       has-employees:
         help: Tiene empleados y paga salarios con retención
+      irpf-estimation-regime:
+        help: Régimen de estimación IRPF para la renta de actividad económica
+      irpf-income-categories:
+        help: Categorías de renta IRPF separadas por comas
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
         help: Alta en OSS
+      iva-redeme-enrolled:
+        help: Si el contribuyente está inscrito en REDEME
       iva-regime:
         help: Régimen IVA
       iva-roi-enrolled:
         help: Alta en ROI
+      iva-sii-enrolled:
+        help: Si el contribuyente está inscrito en el SII
+      legal-entity-form:
+        help: Forma jurídica reconocida cuando el tipo de entidad es persona jurídica
       name:
         help: Nombre visible mostrado en revisiones locales
       notes:
@@ -3047,10 +3060,14 @@ wizard:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
         prompt: Alta en OSS
+      iva-redeme-enrolled:
+        prompt: Inscrito en REDEME (Registro de Devolución Mensual del IVA)
       iva-regime:
         prompt: Régimen IVA
       iva-roi-enrolled:
         prompt: Alta en ROI
+      iva-sii-enrolled:
+        prompt: Inscrito en el SII (Suministro Inmediato de Información)
       title: IVA
     notes:
       notes:
@@ -3063,6 +3080,17 @@ wizard:
         prompt: Realiza operaciones intracomunitarias
       has-employees:
         prompt: Tiene empleados y paga salarios con retención
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            label: Estimación directa normal
+          directa-simplificada:
+            label: Estimación directa simplificada
+          objetiva:
+            label: Estimación objetiva (módulos)
+        help: Cómo se determina el rendimiento neto de la actividad económica; selecciona
+          Modelo 130 o 131
+        prompt: Régimen de estimación IRPF
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
       pays-professionals-with-retencion:
@@ -3087,6 +3115,8 @@ wizard:
             label: Exento
           general:
             label: Régimen general
+          reagp:
+            label: Régimen especial de la agricultura, ganadería y pesca (REAGP)
           recargo-equivalencia:
             label: Recargo de equivalencia
           simplificado:
@@ -3197,6 +3227,51 @@ wizard:
       taxpayer-sex:
         prompt: Sexo del primer declarante
       title: Primer declarante
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            label: Entidad en atribución de rentas
+          legal-entity:
+            label: Persona jurídica (sociedad)
+          natural-person:
+            label: Persona física
+        help: Persona física (IRPF), persona jurídica (Impuesto sobre Sociedades)
+          o entidad en atribución de rentas
+        prompt: Tipo de entidad
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            label: Actividad económica
+          capital-inmobiliario:
+            label: Rendimientos del capital inmobiliario
+          capital-mobiliario:
+            label: Rendimientos del capital mobiliario
+          ganancias-patrimoniales:
+            label: Ganancias patrimoniales
+          pension:
+            label: Pensión
+          trabajo:
+            label: Rendimientos del trabajo
+        help: Selecciona cada categoría de renta IRPF que tengas; solo la actividad
+          económica obliga al Modelo 130/131
+        prompt: Categorías de renta IRPF
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Sociedad cooperativa
+          other:
+            label: Otra forma jurídica
+          sa:
+            label: Sociedad anónima (S.A.)
+          sin-fines-lucrativos:
+            label: Entidad sin fines lucrativos
+          sl:
+            label: Sociedad de responsabilidad limitada (S.L.)
+          sociedad-civil-mercantil:
+            label: Sociedad civil con objeto mercantil
+        prompt: Forma jurídica
+      title: Tipo de contribuyente
     title: Asistente de configuración
     verifier:
       activity_present: 'Actividad económica: comprobación de que el perfil declara

@@ -793,7 +793,8 @@ cli:
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
       history:
-        invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok: {valid}.'
+        invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok:
+          {valid}.'
         invalid_timestamp: A(z) {flag} ISO-8601 időbélyeg kell legyen (pl. 2026-04-01T00:00:00+00:00);
           a kapott érték {raw}.
         since_after_until: A --since értékének a --until értékénél korábbinak vagy
@@ -2871,20 +2872,32 @@ wizard:
         help: Nagyvállalat besorolás
       enrollment-public-administration-budget-gt-6000000:
         help: Közigazgatási költségvetés 6 000 000 felett
+      entity-type:
+        help: Természetes személy, jogi személy vagy jövedelem-hozzárendelési entitás
       family-descendants-eu-eea-deduction:
         help: EU/EGT leszármazottak családi egység kedvezményében
       family-minor-children-in-unit:
         help: Kiskorú gyermekek a családi egységben
       has-employees:
         help: Van alkalmazottja és bérleti adóelőleget von
+      irpf-estimation-regime:
+        help: IRPF becslési rendszer a gazdasági tevékenység jövedelmére
+      irpf-income-categories:
+        help: Vesszővel elválasztott IRPF jövedelemkategóriák
       iva-intracommunity-operations-exceed-50000-eur:
         help: Közösségi műveletek meghaladják az 50 000 EUR küszöböt
       iva-oss-enrolled:
         help: OSS bejegyzés
+      iva-redeme-enrolled:
+        help: Az adózó regisztrálva van-e a REDEME-ben
       iva-regime:
         help: ÁFA-rezsim
       iva-roi-enrolled:
         help: ROI bejegyzés
+      iva-sii-enrolled:
+        help: Az adózó regisztrálva van-e a SII-ben
+      legal-entity-form:
+        help: Elismert jogi forma, ha az entitás típusa jogi személy
       name:
         help: A helyi áttekintésben megjelenő név
       notes:
@@ -2962,10 +2975,14 @@ wizard:
         prompt: Közösségi műveletek meghaladják az 50 000 EUR küszöböt
       iva-oss-enrolled:
         prompt: OSS bejegyzés
+      iva-redeme-enrolled:
+        prompt: REDEME-be regisztrálva (havi áfa-visszatérítési nyilvántartás)
       iva-regime:
         prompt: ÁFA-rezsim
       iva-roi-enrolled:
         prompt: ROI bejegyzés
+      iva-sii-enrolled:
+        prompt: SII-be regisztrálva (azonnali információszolgáltatás)
       title: ÁFA
     notes:
       notes:
@@ -2978,6 +2995,17 @@ wizard:
         prompt: Közösségi műveleteket végez
       has-employees:
         prompt: Van alkalmazottja és bérleti adóelőleget von
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            label: Közvetlen becslés, normál
+          directa-simplificada:
+            label: Közvetlen becslés, egyszerűsített
+          objetiva:
+            label: Objektív becslés (modulok)
+        help: Hogyan határozzák meg a gazdasági tevékenység nettó jövedelmét; Modelo
+          130 vagy 131
+        prompt: IRPF becslési rendszer
       pays-capital-income-with-retencion:
         prompt: Tőkejövedelmeket adóelőleggel fizet
       pays-professionals-with-retencion:
@@ -3003,6 +3031,9 @@ wizard:
             label: Mentes
           general:
             label: Általános rendszer
+          reagp:
+            label: Mezőgazdasági, állattenyésztési és halászati különleges rendszer
+              (REAGP)
           recargo-equivalencia:
             label: Egyenértékűségi pótdíj
           simplificado:
@@ -3113,6 +3144,51 @@ wizard:
       taxpayer-sex:
         prompt: Az első adózó neme
       title: Az első adózó
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            label: Jövedelem-hozzárendelési entitás
+          legal-entity:
+            label: Jogi személy (társaság)
+          natural-person:
+            label: Természetes személy
+        help: Természetes személy (IRPF), jogi személy (társasági adó) vagy jövedelem-hozzárendelési
+          entitás
+        prompt: Entitás típusa
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            label: Gazdasági tevékenység
+          capital-inmobiliario:
+            label: Ingatlantőke-jövedelem (bérbeadás)
+          capital-mobiliario:
+            label: Ingótőke-jövedelem
+          ganancias-patrimoniales:
+            label: Tőkenyereség
+          pension:
+            label: Nyugdíj
+          trabajo:
+            label: Munkajövedelem
+        help: Jelölje meg minden IRPF jövedelemkategóriáját; csak a gazdasági tevékenység
+          jár Modelo 130/131 kötelezettséggel
+        prompt: IRPF jövedelemkategóriák
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Szövetkezet
+          other:
+            label: Egyéb jogi forma
+          sa:
+            label: Részvénytársaság (S.A.)
+          sin-fines-lucrativos:
+            label: Nonprofit szervezet
+          sl:
+            label: Korlátolt felelősségű társaság (S.L.)
+          sociedad-civil-mercantil:
+            label: Kereskedelmi célú polgári jogi társaság
+        prompt: Jogi forma
+      title: Adózó típusa
     title: Beállítás varázsló
     verifier:
       activity_present: 'Gazdasági tevékenység: ellenőrzés, hogy a profil megad-e

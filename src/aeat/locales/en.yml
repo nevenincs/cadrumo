@@ -2803,20 +2803,32 @@ wizard:
         help: Large-company enrollment
       enrollment-public-administration-budget-gt-6000000:
         help: Public administration budget over 6,000,000
+      entity-type:
+        help: Natural person, legal entity, or attribution entity
       family-descendants-eu-eea-deduction:
         help: EU/EEA descendants in family-unit deduction
       family-minor-children-in-unit:
         help: Minor children in family unit
       has-employees:
         help: Has employees and pays salaries with retención
+      irpf-estimation-regime:
+        help: IRPF estimation regime for economic-activity income
+      irpf-income-categories:
+        help: Comma-separated IRPF income categories
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         help: Enrolled in OSS
+      iva-redeme-enrolled:
+        help: Whether the taxpayer is registered in REDEME
       iva-regime:
         help: IVA regime
       iva-roi-enrolled:
         help: Enrolled in ROI
+      iva-sii-enrolled:
+        help: Whether the taxpayer is enrolled in the SII
+      legal-entity-form:
+        help: Recognised legal form when the entity type is a legal entity
       name:
         help: Display name shown in local reviews
       notes:
@@ -2891,10 +2903,14 @@ wizard:
         prompt: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         prompt: Enrolled in OSS
+      iva-redeme-enrolled:
+        prompt: Registered in REDEME (monthly VAT refund register)
       iva-regime:
         prompt: IVA regime
       iva-roi-enrolled:
         prompt: Enrolled in ROI
+      iva-sii-enrolled:
+        prompt: Enrolled in the SII (immediate information supply)
       title: IVA
     notes:
       notes:
@@ -2907,6 +2923,17 @@ wizard:
         prompt: Conducts intracomunitario operations
       has-employees:
         prompt: Has employees and pays salaries with retención
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            label: Direct estimation, normal
+          directa-simplificada:
+            label: Direct estimation, simplified
+          objetiva:
+            label: Objective estimation (módulos)
+        help: How economic-activity net income is determined; selects Modelo 130 vs
+          131
+        prompt: IRPF estimation regime
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -2932,6 +2959,8 @@ wizard:
             label: Exempt
           general:
             label: General regime
+          reagp:
+            label: Agriculture, livestock and fishing special regime (REAGP)
           recargo-equivalencia:
             label: Equivalence surcharge
           simplificado:
@@ -3042,6 +3071,51 @@ wizard:
       taxpayer-sex:
         prompt: First taxpayer sex code
       title: First taxpayer
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            label: Attribution entity
+          legal-entity:
+            label: Legal entity (company)
+          natural-person:
+            label: Natural person
+        help: Natural person (IRPF), legal entity (Impuesto sobre Sociedades), or
+          attribution entity
+        prompt: Entity type
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            label: Economic activity
+          capital-inmobiliario:
+            label: Immovable capital income (rental)
+          capital-mobiliario:
+            label: Movable capital income
+          ganancias-patrimoniales:
+            label: Capital gains
+          pension:
+            label: Pension
+          trabajo:
+            label: Employment income
+        help: Select every IRPF income category you have; only economic activity triggers
+          Modelo 130/131
+        prompt: IRPF income categories
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Cooperative
+          other:
+            label: Other legal form
+          sa:
+            label: Public limited company (S.A.)
+          sin-fines-lucrativos:
+            label: Non-profit entity
+          sl:
+            label: Limited liability company (S.L.)
+          sociedad-civil-mercantil:
+            label: Civil partnership with commercial object
+        prompt: Legal form
+      title: Taxpayer type
     title: Setup wizard
     verifier:
       activity_present: 'Economic activity: check that the profile declares an activity.'

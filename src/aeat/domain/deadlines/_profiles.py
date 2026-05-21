@@ -15,7 +15,13 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from ._errors import ProfileError
-from ._models import IVARegime, ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
+from ._models import (
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 
 
 def taxpayer_profile_from_mapping(
@@ -81,21 +87,41 @@ def taxpayer_profile_from_mapping(
     tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
     iva_regime = _resolve_iva_regime(canonical.get("iva.regime"), iva_regime_default)
 
+    entity_type = typed.entity_type or None
+    legal_entity_form = typed.legal_entity_form or None
+    income_categories = _resolve_income_categories(typed.irpf_income_categories)
+    estimation_regime = typed.irpf_estimation_regime or None
+
+    # The structured estimation_regime is authoritative over the legacy
+    # uses_objective_estimation_irpf boolean. When a regime is declared,
+    # let TaxpayerProfile's mode="before" validator derive the boolean
+    # from it so the projection never raises a regime/boolean conflict;
+    # when no regime is declared the boolean is forwarded as before.
+    objective_fields: dict[str, object] = {}
+    if estimation_regime is None:
+        objective_fields["uses_objective_estimation_irpf"] = typed.uses_objective_estimation_irpf
+
     return TaxpayerProfile(
         tax_id=tax_id,
+        entity_type=entity_type,
+        legal_entity_form=legal_entity_form,
+        irpf_income_categories=income_categories,
+        irpf_estimation_regime=estimation_regime,
         iva_regime=iva_regime,
         has_employees=typed.has_employees,
         pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
         professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,
         pays_rent_with_retencion=typed.pays_rent_with_retencion,
         pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
-        uses_objective_estimation_irpf=typed.uses_objective_estimation_irpf,
+        **objective_fields,
         does_intracomunitario=typed.does_intracomunitario,
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
         iva=ModeloIVAProfile(
             roi_enrolled=typed.iva_roi_enrolled,
             oss_enrolled=typed.iva_oss_enrolled,
+            sii_enrolled=typed.iva_sii_enrolled,
+            redeme_enrolled=typed.iva_redeme_enrolled,
             intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
         ),
         enrollment=ModeloEnrollment(
@@ -145,6 +171,18 @@ def _stringify(raw: object) -> str:
     if isinstance(raw, bool):
         return "true" if raw else "false"
     return str(raw).strip()
+
+
+def _resolve_income_categories(raw: str) -> frozenset[IrpfIncomeCategory]:
+    """Parse the comma-separated income-category token into a typed set.
+
+    ``SetupAnswers.irpf_income_categories`` carries the canonical
+    comma-separated string the CHECKBOX widget produces; this projects
+    it into the typed ``frozenset`` ``TaxpayerProfile`` declares.
+    """
+
+    tokens = [token.strip() for token in raw.split(",") if token.strip()]
+    return frozenset(IrpfIncomeCategory(token) for token in tokens)
 
 
 def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
