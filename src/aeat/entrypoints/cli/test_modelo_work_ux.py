@@ -1,16 +1,23 @@
 """End-to-end CLI verification for the modelo-work UX cluster.
 
 Drives the real ``aeat`` CLI against an isolated encrypted backend to
-pin three cluster-E findings reported by the persona fleet:
+pin the modelo-work findings reported by the persona fleet:
 
-* M17 - ``work history`` records the work-unit creation event, so the
-  audit trail is complete from the moment the unit is provisioned.
-* M18 - the first ``work calculate`` binding failure guides the
-  operator toward ``--binding KEY=VALUE`` and ``bindings list
-  --missing`` instead of leaving them with a bare refusal.
-* M19 - ``overview status`` next-step guidance reflects real workspace
+* ``work history`` records the work-unit creation event, so the audit
+  trail is complete from the moment the unit is provisioned.
+* the first ``work calculate`` binding failure guides the operator
+  toward ``--binding KEY=VALUE`` and ``bindings list --missing``
+  instead of leaving them with a bare refusal.
+* ``overview status`` next-step guidance reflects real workspace
   state: once ledger transactions exist it no longer tells the
   operator to import a bank statement.
+* ``work revisions`` accepts the work-unit id positionally, matching
+  its sibling ``work status``.
+* ``work calculate`` confirms the draft was persisted.
+* ``work revision`` shows a stored revision's persisted casilla values
+  without recomputing.
+* an idempotent ``work create`` reports the reuse plainly and applies
+  a supplied ``--name`` as a rename rather than silently dropping it.
 """
 
 from __future__ import annotations
@@ -74,6 +81,22 @@ def _create_work_unit() -> str:
     return json.loads(result.output)["work_unit_id"]
 
 
+def _create_calculable_work_unit() -> str:
+    """Create a modelo 303 work unit whose `work calculate` succeeds with
+    no operator-supplied inputs - 303 has no unsatisfied binding gate."""
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "303", "--year", "2025", "--period", "1T",
+            "--revision", "2009-y-siguientes",
+        ]
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    return json.loads(result.output)["work_unit_id"]
+
+
 def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> None:
     """M17: a freshly-created work unit's history starts with a
     ``modelo.work_unit.created`` event - not an empty stream."""
@@ -114,6 +137,146 @@ def test_first_work_calculate_binding_error_guides_the_operator(_isolated_cli_ba
     # ...now followed by actionable guidance.
     assert "--binding" in result.output
     assert "bindings list" in result.output and "--missing" in result.output
+
+
+def test_work_revisions_accepts_a_positional_work_unit_id(_isolated_cli_backend: Path) -> None:
+    """`work revisions <id>` must accept the work-unit id positionally,
+    matching its sibling `work status <id>` - the inconsistency where
+    `revisions` demanded `--work-unit-id` is gone."""
+
+    _create_profile()
+    work_unit_id = _create_work_unit()
+
+    result = _invoke(["--format", "json", "app", "modelo", "work", "revisions", work_unit_id])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["work_unit_id_filter"] == work_unit_id
+
+
+def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path) -> None:
+    """After `work calculate` the operator is told the result was
+    persisted as a draft revision and how to resume / re-inspect it -
+    the bare casilla table left no save signal."""
+
+    _create_profile()
+    work_unit_id = _create_calculable_work_unit()
+
+    result = _invoke(
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["saved"] is True
+    confirmation = payload["saved_confirmation"]
+    assert payload["calculation_revision_id"] in confirmation
+    assert "work revision" in confirmation
+
+
+def test_work_revision_shows_persisted_casilla_values(_isolated_cli_backend: Path) -> None:
+    """`work revision <id>` shows a stored revision's persisted casilla
+    values without recomputing - the operator can re-inspect a saved
+    calculation instead of re-running it."""
+
+    _create_profile()
+    work_unit_id = _create_calculable_work_unit()
+
+    calculated = _invoke(
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+    )
+    assert calculated.exit_code == 0, calculated.output
+    revision_id = json.loads(calculated.output)["calculation_revision_id"]
+    saved_values = json.loads(calculated.output)["casilla_values"]
+
+    shown = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
+    assert shown.exit_code == 0, shown.output
+    payload = json.loads(shown.output)
+    assert payload["operation"] == "modelo.work.revision"
+    assert payload["calculation_revision_id"] == revision_id
+    # The shown casilla values are exactly the persisted ones.
+    assert payload["casilla_values"] == saved_values
+
+
+def test_work_revision_rejects_an_unknown_revision_id(_isolated_cli_backend: Path) -> None:
+    """An absent revision id is refused cleanly, not surfaced as an
+    opaque internal error."""
+
+    _create_profile()
+    unknown = "0" * 64
+    result = _invoke(["app", "modelo", "work", "revision", unknown])
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert unknown in result.output
+
+
+def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> None:
+    """Re-creating an existing (modelo, year, period, revision) work unit
+    must report the reuse plainly - status `reused`, not a silent
+    `modelo.work.create` that reads as a fresh creation."""
+
+    _create_profile()
+    first = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--revision", "2019-y-siguientes", "--name", "First",
+        ]
+    )  # fmt: skip
+    assert first.exit_code == 0, first.output
+    first_payload = json.loads(first.output)
+    assert first_payload["status"] == "created"
+    assert first_payload["operation"] == "modelo.work.create"
+
+    second = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--revision", "2019-y-siguientes", "--name", "First",
+        ]
+    )  # fmt: skip
+    assert second.exit_code == 0, second.output
+    second_payload = json.loads(second.output)
+    assert second_payload["status"] == "reused"
+    assert second_payload["operation"] == "modelo.work.reuse"
+    assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
+
+
+def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_backend: Path) -> None:
+    """A different --name supplied on an idempotent re-create is not
+    silently dropped: it is applied as a rename and the result says so."""
+
+    _create_profile()
+    first = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--revision", "2019-y-siguientes", "--name", "Original",
+        ]
+    )  # fmt: skip
+    assert first.exit_code == 0, first.output
+
+    renamed = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--revision", "2019-y-siguientes", "--name", "Renamed Unit",
+        ]
+    )  # fmt: skip
+    assert renamed.exit_code == 0, renamed.output
+    payload = json.loads(renamed.output)
+    assert payload["status"] == "reused"
+    assert payload["name_applied"] == "Renamed Unit"
+    assert payload["name"] == "Renamed Unit"
+
+    # The rename is durable: a fresh status read sees the new name.
+    status = _invoke(
+        ["--format", "json", "app", "modelo", "work", "status", payload["work_unit_id"]]
+    )
+    assert status.exit_code == 0, status.output
+    assert json.loads(status.output)["name"] == "Renamed Unit"
 
 
 def test_overview_next_step_not_import_after_manual_ledger_entry(_isolated_cli_backend: Path) -> None:

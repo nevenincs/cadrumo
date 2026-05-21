@@ -584,12 +584,27 @@ cli:
           prioridad.
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
+        calculate_saved: >-
+          Guardado como revisión de cálculo en borrador %{revision_id}
+          (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
+          revisiones con `aeat app modelo work revisions %{work_unit_id}` y vuelve
+          a consultar esta con `aeat app modelo work revision %{revision_id}`.
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible)
         casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
+        create_created: Nueva unidad de trabajo creada.
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
+        create_reused: Se devolvió la unidad de trabajo existente (idempotente sobre
+          modelo/ejercicio/periodo/revisión); no se creó nada nuevo. Renómbrala con
+          `aeat app modelo work rename`.
+        create_reused_name_match: Se devolvió la unidad de trabajo existente (idempotente
+          sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
+          indicado coincide con el nombre guardado.
+        create_reused_renamed: Se devolvió la unidad de trabajo existente (idempotente
+          sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
+          indicado se aplicó como renombrado a %{name}.
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
@@ -609,6 +624,8 @@ cli:
         invalid_amendment_kind: --kind debe ser uno de {choices}; se recibió {kind}.
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
           en minúsculas más separadores . _ : -, máx. 128 caracteres)'
+        invalid_calculation_revision_id: calculation_revision_id debe ser una cadena
+          hex en minúsculas de 64 caracteres (resumen SHA-256)
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
@@ -648,6 +665,8 @@ cli:
         resume_workflow_run_id_help: Id de ejecución de flujo de 16 caracteres
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
+        revision_show_help: Mostrar los valores de casilla guardados de una revisión
+          de cálculo concreta (sin recalcular)
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
@@ -757,13 +776,18 @@ cli:
     google:
       client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
       detail:
-        client_json_bad_wrapper: 'el JSON de cliente en {path} tiene un envoltorio "installed" que no es un objeto'
+        client_json_bad_wrapper: el JSON de cliente en {path} tiene un envoltorio
+          "installed" que no es un objeto
         client_json_invalid: 'el JSON de cliente en {path} no es JSON válido: {reason}'
-        client_json_not_desktop: 'el JSON de cliente en {path} no es un cliente de escritorio de Cloud Console; se esperaba una clave envoltorio "installed"'
-        client_json_schema_invalid: 'el JSON de cliente en {path} no superó la validación de esquema: {reason}'
+        client_json_not_desktop: el JSON de cliente en {path} no es un cliente de
+          escritorio de Cloud Console; se esperaba una clave envoltorio "installed"
+        client_json_schema_invalid: 'el JSON de cliente en {path} no superó la validación
+          de esquema: {reason}'
         client_json_unreadable: 'no se pudo leer el JSON de cliente en {path}: {reason}'
-        client_unregistered: no hay ningún cliente OAuth registrado para el perfil {profile}
-        no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no se puede renovar sin un inicio de sesión previo
+        client_unregistered: no hay ningún cliente OAuth registrado para el perfil
+          {profile}
+        no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no
+          se puede renovar sin un inicio de sesión previo
       errors:
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
@@ -1199,21 +1223,31 @@ cli:
       amount: Importe
       archived: Archivadas
       bucket: Bucket
+      business_classification: Clasificación
+      business_pct: Porcentaje de negocio
+      category_id: Categoría
       checked: Movimientos comprobados
       children: hijas
+      counterparty: Contraparte
       created_event_id: Evento bucket de creación
+      currency: Moneda
       date: Fecha
       description: Descripción
       dialect: Formato detectado
+      direction: Sentido
       dry_run: MODO DE PRUEBA (DRY RUN)
       event_count: eventos
       event_id: id_evento
       export_id: ID de exportación
       id: ID
       imported: Entradas importadas
+      irpf_category: Categoría IRPF
+      iva_amount: Importe de IVA
+      iva_rate: Tipo de IVA
       lifecycle_state: Estado de ciclo de vida
       merged_id: id_fusionado
       'no': 'No'
+      notes: Notas
       notice: Aviso
       output: Salida
       parent_id: id_padre
@@ -1231,7 +1265,9 @@ cli:
       source: Origen
       split_group_id: id_grupo_division
       stashed: Apartadas
+      taxable_base: Base imponible
       valid: Válido
+      value_date: Fecha valor
       warnings: Avisos
       'yes': Sí
     link:
@@ -1542,6 +1578,9 @@ cli:
       work_units_present: '%{count} unidad(es) de trabajo de modelos en curso en este
         almacenamiento local; tu trabajo de modelos esta guardado, retomalo con `aeat
         app modelo work list`.'
+      work_units_present_with_discarded: '%{count} unidad(es) de trabajo de modelos
+        activas (%{discarded} descartada(s)) en este almacenamiento local; tu trabajo
+        de modelos activo esta guardado, retomalo con `aeat app modelo work list`.'
     status_help: Mostrar el estado del perfil, libro y modelos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:

@@ -292,3 +292,74 @@ def test_review_by_full_id_still_resolves_the_transaction(
     )
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["id"] == txn
+
+
+# --- ledger view shows the full stored field set ----------------------------
+
+
+def test_ledger_view_shows_iva_counterparty_and_notes_detail(
+    tmp_path: Path,
+) -> None:
+    """`ledger view` must confirm every stored field, not just id / date /
+    amount / description / review-state.
+
+    An operator who entered IVA fields, a counterparty, and notes had no
+    way to verify those persisted: the old view rendered five fields and
+    dropped the rest. The full stored field set is now shown.
+    """
+    _create_profile()
+    added = _RUNNER.invoke(
+        app,
+        [
+            "--format", "json", "app", "ledger", "add",
+            "--date", "2026-04-15", "--amount", "-121.00",
+            "--direction", "OUTGOING", "--description", "Office chair",
+            "--counterparty", "Muebles SL",
+            "--classification", "BUSINESS",
+            "--taxable-base", "100.00", "--iva-rate", "0.21",
+            "--iva-amount", "21.00", "--notes", "Q2 furniture",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    txn = json.loads(added.output)["transaction_id"]
+
+    viewed = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    assert viewed.exit_code == 0, viewed.output
+    output = viewed.output
+    # The IVA triple the operator entered is visible for confirmation.
+    # Decimal values are rendered in their normalized form.
+    assert "Taxable base\t100" in output
+    assert "IVA rate\t0.21" in output
+    assert "IVA amount\t21" in output
+    # Counterparty, classification, and notes are visible too.
+    assert "Muebles SL" in output
+    assert "BUSINESS" in output
+    assert "Q2 furniture" in output
+
+
+def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
+    """The JSON payload exposes the typed transaction with every field,
+    so the text view and the JSON contract agree."""
+    _create_profile()
+    added = _RUNNER.invoke(
+        app,
+        [
+            "--format", "json", "app", "ledger", "add",
+            "--date", "2026-04-15", "--amount", "-242.00",
+            "--direction", "OUTGOING", "--description", "Laptop",
+            "--counterparty", "PC Shop SL",
+            "--taxable-base", "200.00", "--iva-rate", "0.21",
+            "--iva-amount", "42.00",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    txn = json.loads(added.output)["transaction_id"]
+
+    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", txn])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["transaction"]
+    assert transaction["counterparty"] == "PC Shop SL"
+    # Decimal fields are carried in their normalized display form.
+    assert transaction["taxable_base"] == "200"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["iva_amount"] == "42"

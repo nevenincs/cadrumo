@@ -564,12 +564,26 @@ cli:
           használhatók; a kezelő --binding felülírásai mindig elsőbbséget élveznek.
         bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
         calculate_help: Új draft kalkulációs revízió rögzítése a munkaegységhez
+        calculate_saved: 'Mentve %{revision_id} draft kalkulációs revízióként (állapot:
+          %{state}). Tartósan eltárolva, később folytatható; a revíziók listázása
+          az `aeat app modelo work revisions %{work_unit_id}` paranccsal, ennek újbóli
+          megtekintése az `aeat app modelo work revision %{revision_id}` paranccsal.'
         calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256
           azonosítója
         casilla_help: Cella értéke CASILLA=DECIMAL szintaxissal (ismételhető)
         casilla_not_decimal: 'A(z) {key} --casilla értéke nem decimális szám: {value}.'
+        create_created: Új munkaegység létrehozva.
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
           revízió) kulcsra
+        create_reused: A meglévő munkaegység lett visszaadva (idempotens a modell/év/időszak/revízió
+          kulcsra); semmi új nem jött létre. Nevezd át az `aeat app modelo work rename`
+          paranccsal.
+        create_reused_name_match: A meglévő munkaegység lett visszaadva (idempotens
+          a modell/év/időszak/revízió kulcsra); semmi új nem jött létre. A megadott
+          --name megegyezik a tárolt névvel.
+        create_reused_renamed: 'A meglévő munkaegység lett visszaadva (idempotens
+          a modell/év/időszak/revízió kulcsra); semmi új nem jött létre. A megadott
+          --name átnevezésként lett alkalmazva erre: %{name}.'
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
         discard_requires_yes: Az elvetés auditálható állapotátmenet. A megerősítéshez
           futtassa újra az 'aeat app modelo work discard %{work_unit_id} --yes' parancsot.
@@ -586,6 +600,8 @@ cli:
           {choices}; a kapott érték {kind}.'
         invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
           plusz . _ : - elválasztók, max. 128 karakter)'
+        invalid_calculation_revision_id: a calculation_revision_id 64-karakteres kisbetűs
+          hexadecimális karakterlánc kell legyen (SHA-256 kivonat)
         invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
           plusz . _ : - elválasztók, max. 64 karakter)'
         invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
@@ -625,6 +641,8 @@ cli:
         resume_workflow_run_id_help: 16 karakteres folyamatfutás-azonosító
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója; futtasd
           az `aeat app modelo describe MODELL` parancsot az elérhető revízióazonosítókért.
+        revision_show_help: Egy tárolt kalkulációs revízió eltárolt cellaértékeinek
+          megjelenítése (újraszámítás nélkül)
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
         set_not_decimal: A(z) --set értéke decimális szám kell legyen; a kapott érték
@@ -736,13 +754,18 @@ cli:
     google:
       client_json_help: A Cloud Console Desktop OAuth kliens JSON fájl útvonala
       detail:
-        client_json_bad_wrapper: 'a kliens JSON itt: {path} – az "installed" burkoló nem objektum'
+        client_json_bad_wrapper: 'a kliens JSON itt: {path} – az "installed" burkoló
+          nem objektum'
         client_json_invalid: 'a kliens JSON itt: {path} – nem érvényes JSON: {reason}'
-        client_json_not_desktop: 'a kliens JSON itt: {path} – nem Cloud Console asztali kliens; "installed" burkoló kulcs szükséges'
-        client_json_schema_invalid: 'a kliens JSON itt: {path} – nem ment át a sémaellenőrzésen: {reason}'
-        client_json_unreadable: 'nem sikerült beolvasni a kliens JSON-t innen: {path}: {reason}'
+        client_json_not_desktop: 'a kliens JSON itt: {path} – nem Cloud Console asztali
+          kliens; "installed" burkoló kulcs szükséges'
+        client_json_schema_invalid: 'a kliens JSON itt: {path} – nem ment át a sémaellenőrzésen:
+          {reason}'
+        client_json_unreadable: 'nem sikerült beolvasni a kliens JSON-t innen: {path}:
+          {reason}'
         client_unregistered: a(z) {profile} profilhoz nincs regisztrált OAuth-kliens
-        no_metadata_for_refresh: a(z) {profile} profilhoz nincs OAuth-munkamenet; korábbi bejelentkezés nélkül nem frissíthető
+        no_metadata_for_refresh: a(z) {profile} profilhoz nincs OAuth-munkamenet;
+          korábbi bejelentkezés nélkül nem frissíthető
       errors:
         auth_failed: 'A Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült böngészőt megnyitni a Google-hozzáférés engedélyezéséhez:
@@ -1169,21 +1192,31 @@ cli:
       amount: Összeg
       archived: Archivált
       bucket: Bucket
+      business_classification: Besorolás
+      business_pct: Üzleti százalék
+      category_id: Kategória
       checked: Ellenőrzött tranzakciók
       children: gyermekek
+      counterparty: Partner
       created_event_id: Létrehozási bucket esemény
+      currency: Pénznem
       date: Dátum
       description: Leírás
       dialect: Felismert formátum
+      direction: Irány
       dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
       event_count: események
       event_id: esemeny_id
       export_id: Exportazonosító
       id: Azonosító
       imported: Bejegyzések importálva
+      irpf_category: IRPF kategória
+      iva_amount: ÁFA összeg
+      iva_rate: ÁFA kulcs
       lifecycle_state: Életciklus állapot
       merged_id: osszevont_id
       'no': Nem
+      notes: Megjegyzések
       notice: Megjegyzés
       output: Kimenet
       parent_id: szulo_id
@@ -1201,7 +1234,9 @@ cli:
       source: Forrás
       split_group_id: felosztasi_csoport_id
       stashed: Félretéve
+      taxable_base: Adóalap
       valid: Érvényes
+      value_date: Értéknap
       warnings: Figyelmeztetések
       'yes': Igen
     link:
@@ -1506,6 +1541,9 @@ cli:
       work_units_present: '%{count} modello munkaegyseg van folyamatban ebben a helyi
         tarolasban; a modello munkad mentve van, folytasd az `aeat app modelo work
         list` paranccsal.'
+      work_units_present_with_discarded: '%{count} aktiv modello munkaegyseg (%{discarded}
+        megszakitott) ebben a helyi tarolasban; az aktiv modello munkad mentve van,
+        folytasd az `aeat app modelo work list` paranccsal.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:

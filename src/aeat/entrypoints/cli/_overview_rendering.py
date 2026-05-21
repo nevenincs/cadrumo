@@ -64,10 +64,24 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
 
 
 def _work_units_line(report: OverviewStatusReport) -> str:
-    if report.work_units == 0:
+    if report.work_units == 0 and report.discarded_work_units == 0:
         return tr(
             "cli.overview.status.work_units_empty",
             default="No modelo work units have been started yet.",
+        )
+    if report.discarded_work_units > 0:
+        # The bare total misleads when some units are discarded: the
+        # operator reads "5 work units" and counts abandoned ones as
+        # live work. The line states the active / discarded split.
+        return tr(
+            "cli.overview.status.work_units_present_with_discarded",
+            default=(
+                "%{count} active modelo work unit(s) (%{discarded} discarded) "
+                "in this local storage - your active modelo work is saved; "
+                "resume it with `aeat app modelo work list`."
+            ),
+            count=report.work_units,
+            discarded=report.discarded_work_units,
         )
     return tr(
         "cli.overview.status.work_units_present",

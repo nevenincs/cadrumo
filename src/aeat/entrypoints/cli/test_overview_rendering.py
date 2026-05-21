@@ -23,6 +23,7 @@ def _report(
     invoices: int = 0,
     drafts: int = 0,
     work_units: int = 0,
+    discarded_work_units: int = 0,
 ) -> OverviewStatusReport:
     return OverviewStatusReport(
         active_profile="bucket-uuid",
@@ -31,6 +32,7 @@ def _report(
         invoices=invoices,
         drafts=drafts,
         work_units=work_units,
+        discarded_work_units=discarded_work_units,
         calculation_revisions=0,
         unreadable_rows=0,
     )
@@ -89,3 +91,41 @@ def test_drafts_empty_line_unchanged_without_work_units() -> None:
     lines = render_cli_overview_status_lines(_report())
     joined = "\n".join(lines)
     assert "No saved declaration drafts" in joined
+
+
+def test_work_units_line_separates_discarded_from_active() -> None:
+    """When some work units are discarded the line must state the
+    active / discarded split rather than a single inflated total - an
+    operator reading '5 work units' must not count abandoned ones as
+    live work."""
+
+    lines = render_cli_overview_status_lines(_report(work_units=4, discarded_work_units=1))
+    work_unit_line = next(line for line in lines if "discarded" in line.lower())
+    # The active count is named distinctly from the discarded count.
+    assert "4" in work_unit_line
+    assert "1" in work_unit_line
+    assert "discarded" in work_unit_line.lower()
+    assert "active" in work_unit_line.lower()
+
+
+def test_work_units_line_plain_when_none_discarded() -> None:
+    """With no discarded units the line stays the plain present-count
+    wording - the active/discarded split is scoped to the case that
+    needs it."""
+
+    lines = render_cli_overview_status_lines(_report(work_units=3))
+    joined = "\n".join(lines)
+    assert "discarded" not in joined.lower()
+    work_unit_line = next(line for line in lines if line.lstrip().startswith("3 modelo"))
+    assert "in progress" in work_unit_line.lower()
+
+
+def test_work_units_line_shown_when_only_discarded_exist() -> None:
+    """A workspace whose only work units are discarded is not reported
+    as empty: the discarded count is surfaced so the operator sees the
+    units still exist."""
+
+    lines = render_cli_overview_status_lines(_report(work_units=0, discarded_work_units=2))
+    work_unit_line = next(line for line in lines if "discarded" in line.lower())
+    assert "0" in work_unit_line
+    assert "2" in work_unit_line

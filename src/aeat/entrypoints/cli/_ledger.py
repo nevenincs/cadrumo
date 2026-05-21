@@ -1307,17 +1307,38 @@ def ledger_view(
     payload = ledger_transaction_result_payload(result)
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
-    _emit(
-        ctx,
-        payload,
-        [
-            f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload['date']}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload['amount']}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload['description']}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-        ],
-    )
+
+    # `ledger view` is the operator's confirmation that the data they
+    # entered was stored. Rendering only id/date/amount/description left
+    # the IVA triple, counterparty, classification, category and notes
+    # invisible - the operator could not verify those fields persisted.
+    # Every stored field is now shown; `-` marks a field left unset.
+    def _field(key: str) -> str:
+        value = transaction_payload.get(key)
+        return "-" if value is None or value == "" else str(value)
+
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
+        f"{tr('cli.ledger.labels.date')}\t{transaction_payload['date']}",
+        f"{tr('cli.ledger.labels.value_date', default='Value date')}\t{_field('value_date')}",
+        f"{tr('cli.ledger.labels.amount')}\t{transaction_payload['amount']}",
+        f"{tr('cli.ledger.labels.currency', default='Currency')}\t{_field('currency')}",
+        f"{tr('cli.ledger.labels.direction', default='Direction')}\t{_field('direction')}",
+        f"{tr('cli.ledger.labels.description')}\t{transaction_payload['description']}",
+        f"{tr('cli.ledger.labels.counterparty', default='Counterparty')}\t{_field('counterparty')}",
+        f"{tr('cli.ledger.labels.business_classification', default='Classification')}"
+        f"\t{_field('business_classification')}",
+        f"{tr('cli.ledger.labels.business_pct', default='Business %')}\t{_field('business_pct')}",
+        f"{tr('cli.ledger.labels.category_id', default='Category')}\t{_field('category_id')}",
+        f"{tr('cli.ledger.labels.taxable_base', default='Taxable base')}\t{_field('taxable_base')}",
+        f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field('iva_rate')}",
+        f"{tr('cli.ledger.labels.iva_amount', default='IVA amount')}\t{_field('iva_amount')}",
+        f"{tr('cli.ledger.labels.irpf_category', default='IRPF category')}\t{_field('irpf_category')}",
+        f"{tr('cli.ledger.labels.notes', default='Notes')}\t{_field('notes')}",
+        f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field('lifecycle_state')}",
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    _emit(ctx, payload, lines)
 
 
 @app.command("status", help=tr("cli.ledger.status.help"))
