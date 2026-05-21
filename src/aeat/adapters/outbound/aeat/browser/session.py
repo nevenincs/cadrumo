@@ -66,7 +66,7 @@ class BrowserSession:
         *,
         provisioner: BrowserContextProvisioner | None = None,
         storage_state_path: Path | None = None,
-        storage_state: dict[str, Any] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
@@ -179,7 +179,7 @@ class BrowserSession:
         self,
         *,
         storage_state_path: Path | None,
-        storage_state: dict[str, Any] | None,
+        storage_state: Mapping[str, object] | None,
         provisioner: BrowserContextProvisioner | None,
     ) -> dict[str, Any]:
         """Compose the ``browser.new_context(**kwargs)`` dict from profile + storage + provisioner.

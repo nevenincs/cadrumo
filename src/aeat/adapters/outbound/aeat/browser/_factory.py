@@ -25,7 +25,7 @@ injecting their own in-process implementations.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -73,7 +73,7 @@ class DefaultBrowserSession:
         *,
         provisioner: Any | None = None,
         storage_state_path: Path | None = None,
-        storage_state: dict[str, Any] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContext:
         return await self._session.create_context(
             provisioner=provisioner,
