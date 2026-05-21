@@ -11,13 +11,13 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner, Result
 
-from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
+from aeat.adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from aeat.adapters.persistence.storage.bucket._manifest import (
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
 )
-from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
+from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import load_settings
@@ -175,6 +175,23 @@ def test_repair_profile_named_active_clear_active_clears_pointer(cli_runner: Cli
     assert read_pointer(tmp_path) is None
 
 
+def test_repair_profile_manifest_status_backfills_legacy_active_manifest(cli_runner: CliRunner) -> None:
+    _seed("operator")
+    root = load_settings().aeat_local_storage_root
+    target = manifest_path(bucket_paths(root, "operator"))
+    legacy_text = "\n".join(
+        line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("status = ")
+    )
+    target.write_text(f"{legacy_text}\n", encoding="utf-8")
+
+    result = cli_runner.invoke(repair_app, ["profile", "--repair-manifest-status", "--yes"])
+
+    assert result.exit_code == 0, result.output
+    assert "repaired\tTrue" in result.output
+    assert "manifest_status\tactive" in result.output
+    assert read_manifest(bucket_paths(root, "operator")).status is BucketLifecycleStatus.ACTIVE
+
+
 def test_config_profile_create_refuses_existing_profile(cli_runner: CliRunner) -> None:
     _seed("operator")
 
@@ -220,7 +237,7 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths(
     output = result.output
     # Both concrete recovery paths are named in the message body.
     assert "aeat config profile create NAME" in output
-    assert "--quiet --tax-id NIF --activity ACTIVITY" in output
+    assert "--quiet --tax-id NIF" in output
     # No internal tokens leak into the operator-facing refusal.
     assert "flow_id" not in output
     assert "('tax-id'" not in output
@@ -230,9 +247,13 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths(
 def test_config_profile_create_quiet_without_flags_names_the_missing_flags(
     cli_runner: CliRunner,
 ) -> None:
-    """`profile create NAME --quiet` with the required values omitted
-    must name the actual flags to add (`--tax-id`, `--activity`), not a
-    raw Python identifier tuple, and must not leak `flow_id`.
+    """`profile create NAME --quiet` with the required value omitted
+    must name the actual flag to add (`--tax-id`), not a raw Python
+    identifier tuple, and must not leak `flow_id`.
+
+    Only `--tax-id` is unconditionally required: `--activity` is gated
+    behind the taxpayer's economic-activity declaration and a
+    non-activity taxpayer (landlord, pensioner) is never asked for it.
     """
 
     result = cli_runner.invoke(root_app, ["config", "profile", "create", "Cafe Luna", "--quiet"])
@@ -240,7 +261,9 @@ def test_config_profile_create_quiet_without_flags_names_the_missing_flags(
     assert result.exit_code != 0
     output = result.output
     assert "--tax-id" in output
-    assert "--activity" in output
+    # `--activity` is conditional, not unconditionally required, so it
+    # must not appear in the missing-required-flags refusal.
+    assert "--activity" not in output
     # The internal flow id and the raw missing-id tuple never surface.
     assert "flow_id" not in output
     assert "('tax-id'" not in output

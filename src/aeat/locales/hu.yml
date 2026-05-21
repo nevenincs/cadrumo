@@ -120,6 +120,7 @@ aggregation:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
       duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
+      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
 application:
   auth:
     acquisition_lock:
@@ -243,8 +244,6 @@ application:
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.
-      no_deadline_windows: A(z) %{modelo} modellhez nincs határidőablak-adat regisztrálva
-        a(z) %{year}. évre; a benyújtási naptár nem határozható meg.
   user_profile:
     errors:
       duplicate_tax_id: A(z) '%{tax_id}' adóazonosítót már használja a(z) '%{profile}'
@@ -403,6 +402,8 @@ cli:
         capture_history_help: Élőben rögzíti a benyújtott Modelo 303 előzményeket,
           és biztonságosan eltárolja az áfa-kompenzációs állapotot. Nem küld AEAT
           benyújtási vagy tárcaűrlap-választást.
+        history_details_help: Részletes privát sorokat és összegeket ír ki; az összegző
+          mód csak darabszámokat jelenít meg.
         history_help: Listázza a helyben biztonságosan tárolt áfa-kompenzációs előzményeket,
           továbbvitt tételeket és eltárolt tárca-hatósági döntéseket.
         pull_help: Élőben letölti és eltárolja az AEAT áfa-kompenzációs tárcáját.
@@ -521,9 +522,7 @@ cli:
       export:
         actor_help: A MODELO_EXPORTED eseménybe rögzített operátor címke.
         errors:
-          no_exportable_revision: A munkaegységnek nincs verifikált vagy benyújtott
-            kalkulációs revíziója az exportáláshoz. Először futtasd az `aeat app modelo
-            verify` parancsot.
+          no_exportable_revision_work_verify: cli.app.modelo.export.errors.no_exportable_revision_work_verify
         help: Egy verifikált vagy benyújtott modelo revízió exportálása helyi AEAT-kompatibilis
           fichero-BOE fájlba. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
         output_help: A fichero-BOE artefakt írási útvonala.
@@ -1647,6 +1646,8 @@ cli:
         megszakitott) ebben a helyi tarolasban; az aktiv modello munkad mentve van,
         folytasd az `aeat app modelo work list` paranccsal.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
+    taxpayer_model_undeclared: Az aktív profil nem deklarálja ezt az adózói modellt;
+      frissítsd a profilt, vagy futtasd újra a hiányos profil felülbírálásával.
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
     app_help: Adózási modellek nyilvántartásának kezelése
@@ -1775,7 +1776,7 @@ cli:
     app_help: 'Spanyol adóbevallási segéd
 
 
-      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVITY'
+      Quickstart: aeat config profile create NAME --tax-id NIF'
     app_help_help: Show app workflow help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
@@ -2088,6 +2089,7 @@ errors:
     error_categories: Hiba történt a költségkategóriákban.
     error_categories_validation: Egy kategóriarekord nem felelt meg az ellenőrzésnek.
     error_deadlines_deadline: Hiba történt a határidők kiszámításában.
+    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: Az egyéni vállalkozói profilt nem sikerült betölteni
       vagy ellenőrizni a határidők kiszámításához.
     error_deadlines_schedule_computation: A motor nem tudott érvényes határidő-ütemtervet
@@ -2809,7 +2811,7 @@ wizard:
       \ ennek a profilnak a létrehozását:\n\n1. Futtasd újra a parancsot interaktív\
       \ terminálból a vezetett beállításhoz:\n     aeat config profile create NAME\n\
       \n2. Vagy hozd létre egy lépésben a kötelező adatokat kapcsolóként megadva:\n\
-      \     aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
+      \     aeat config profile create NAME --quiet --tax-id NIF"
     unsupported_console_edit: "A vezetett beállítás nem tudott interaktív kérdést\
       \ megnyitni ebben a futásban.\nMég semmi nincs mentve.\n\nSzerkeszd ezt a profilt\
       \ nem interaktívan a módosítandó mező megnevezésével:\n  aeat config profile\
@@ -2883,7 +2885,8 @@ wizard:
       irpf-estimation-regime:
         help: IRPF becslési rendszer a gazdasági tevékenység jövedelmére
       irpf-income-categories:
-        help: Vesszővel elválasztott IRPF jövedelemkategóriák
+        help: IRPF jövedelemkategória; adja meg a --irpf-income-categories kapcsolót
+          kategóriánként egyszer
       iva-intracommunity-operations-exceed-50000-eur:
         help: Közösségi műveletek meghaladják az 50 000 EUR küszöböt
       iva-oss-enrolled:

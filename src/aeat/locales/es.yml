@@ -125,6 +125,7 @@ aggregation:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
       duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
+      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
 application:
   auth:
     acquisition_lock:
@@ -249,9 +250,6 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
-      no_deadline_windows: No hay datos de ventanas de plazo registrados para el modelo
-        %{modelo} en el ejercicio %{year}; no se puede determinar el calendario de
-        presentación.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -409,6 +407,8 @@ cli:
         capture_history_help: Captura en directo el historial de Modelo 303 presentados
           y persiste el estado seguro de compensación de IVA. No se envian opciones
           de presentación AEAT ni formularios de cartera.
+        history_details_help: Imprime filas e importes privados detallados; el modo
+          resumen solo imprime recuentos.
         history_help: Lista el historial local seguro de compensación de IVA, saldos
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
@@ -538,9 +538,7 @@ cli:
       export:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
-          no_exportable_revision: La unidad de trabajo no tiene ninguna revisión de
-            cálculo verificada o presentada para exportar. Ejecuta `aeat app modelo
-            verify` primero.
+          no_exportable_revision_work_verify: cli.app.modelo.export.errors.no_exportable_revision_work_verify
         help: Exporta una revisión de modelo verificada o presentada a un fichero
           local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
@@ -1681,6 +1679,8 @@ cli:
         activas (%{discarded} descartada(s)) en este almacenamiento local; tu trabajo
         de modelos activo esta guardado, retomalo con `aeat app modelo work list`.'
     status_help: Mostrar el estado del perfil, libro y modelos
+    taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
+      el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
     app_help: Gestión del registro de modelos fiscales
@@ -1812,7 +1812,7 @@ cli:
     app_help: 'Asistente de flujo fiscal español
 
 
-      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVIDAD'
+      Quickstart: aeat config profile create NAME --tax-id NIF'
     app_help_help: Mostrar ayuda del flujo de app
     debug_help: Mostrar logs internos de depuración en stderr
     detail_help: Mostrar también el resumen detallado del registro
@@ -2134,6 +2134,7 @@ errors:
     error_categories: Se produjo un error en las categorías de gasto.
     error_categories_validation: Un registro de categoría no superó la validación.
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
+    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
       el cálculo de plazos.
     error_deadlines_schedule_computation: El motor no pudo generar un calendario de
@@ -2893,8 +2894,7 @@ wizard:
       \ de crear este perfil de dos maneras:\n\n1. Ejecuta el comando otra vez desde\
       \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
       \ profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios\
-      \ como flags:\n     aeat config profile create NAME --quiet --tax-id NIF --activity\
-      \ ACTIVITY"
+      \ como flags:\n     aeat config profile create NAME --quiet --tax-id NIF"
     unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
       Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
       \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
@@ -2968,7 +2968,8 @@ wizard:
       irpf-estimation-regime:
         help: Régimen de estimación IRPF para la renta de actividad económica
       irpf-income-categories:
-        help: Categorías de renta IRPF separadas por comas
+        help: Categoría de renta IRPF; indique --irpf-income-categories una vez por
+          categoría
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:

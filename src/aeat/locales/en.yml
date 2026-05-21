@@ -115,6 +115,7 @@ aggregation:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
       duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
+      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
 application:
   auth:
     acquisition_lock:
@@ -222,8 +223,6 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
-      no_deadline_windows: No deadline window data is registered for modelo %{modelo}
-        in year %{year}; the filing calendar cannot be determined.
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -374,6 +373,8 @@ cli:
         as_of_year_help: Year used to age IVA compensation carry-forward lots.
         capture_history_help: Live-capture filed Modelo 303 history and persist secure
           IVA compensation state. No AEAT filing or wallet form choices are submitted.
+        history_details_help: Print detailed private rows and amounts; summary mode
+          prints counts only.
         history_help: List secure local IVA compensation history, carry-forward lots,
           and persisted wallet authority decisions derived from Modelo 303 captures.
         pull_help: Live-fetch and persist AEAT's IVA compensation wallet. The only
@@ -489,8 +490,7 @@ cli:
       export:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
-          no_exportable_revision: Work unit has no verified-complete or filed calculation
-            revision to export. Run `aeat app modelo verify` first.
+          no_exportable_revision_work_verify: cli.app.modelo.export.errors.no_exportable_revision_work_verify
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -1595,6 +1595,8 @@ cli:
         discarded) in this local storage - your active modelo work is saved; resume
         it with `aeat app modelo work list`.'
     status_help: Show profile, ledger, and modelo readiness
+    taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
+      update the profile or rerun with the incomplete-profile override.
     verbose_help: Show details and next action when available
   registry:
     app_help: Tax models registry management
@@ -1721,7 +1723,7 @@ cli:
     app_help: 'Spanish tax workflow assistant
 
 
-      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVITY'
+      Quickstart: aeat config profile create NAME --tax-id NIF'
     app_help_help: Show app workflow help
     debug_help: Show internal debug logs on stderr
     detail_help: Also show the detailed registry summary
@@ -2030,6 +2032,7 @@ errors:
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
     error_deadlines_deadline: An error occurred in the deadline calculation.
+    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: The self-employed profile could not be loaded or validated
       for the deadline calculation.
     error_deadlines_schedule_computation: The engine could not produce a valid deadline
@@ -2740,7 +2743,7 @@ wizard:
       \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
       \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
       2. Or create it in one step by supplying the required details as flags:\n  \
-      \   aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
+      \   aeat config profile create NAME --quiet --tax-id NIF"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
@@ -2814,7 +2817,7 @@ wizard:
       irpf-estimation-regime:
         help: IRPF estimation regime for economic-activity income
       irpf-income-categories:
-        help: Comma-separated IRPF income categories
+        help: IRPF income category; pass --irpf-income-categories once per category
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:

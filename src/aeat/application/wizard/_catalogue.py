@@ -25,12 +25,20 @@ from ._models import (
     WizardFlow,
     WizardQuestion,
     WizardSection,
+    WizardVisibility,
     WizardWidget,
 )
 from ._setup_answers import SetupAnswers
 
 
-def _confirm(qid: str, profile_key: str, *, suffix: str, default: str = "false") -> WizardQuestion:
+def _confirm(
+    qid: str,
+    profile_key: str,
+    *,
+    suffix: str,
+    default: str = "false",
+    visible_when: WizardCondition | WizardVisibility | None = None,
+) -> WizardQuestion:
     """Build a CONFIRM question that persists into ``profile_key``."""
 
     return WizardQuestion(
@@ -40,9 +48,19 @@ def _confirm(qid: str, profile_key: str, *, suffix: str, default: str = "false")
         prompt=tr(f"wizard.setup.{suffix}.{qid}.prompt"),
         default=default,
         required=False,
+        visible_when=visible_when,
         answer_type=bool,
     )
 
+
+# The entity-type axis decides whether the IRPF-personal surface — the
+# spouse, family, and personal-biographic questions, plus the
+# individual-vs-joint taxation choice — is collected at all. A legal
+# entity (sociedad limitada, etc.) and an attribution entity have no
+# spouse and no personal IRPF facts: those questions are gated to the
+# natural-person path so the non-interactive `--quiet` flow never asks
+# (or, before this gate, wrongly demands) them for a company.
+_NATURAL_PERSON = WizardCondition(question_id="entity-type", equals=EntityType.NATURAL_PERSON.value)
 
 _JOINT_DECLARATION = WizardCondition(question_id="taxation-type", equals="2")
 _NON_RESIDENT_IRPF = WizardCondition(question_id="spouse-non-resident-irpf", equals="true")
@@ -185,74 +203,20 @@ _DISABILITY_GRADE_CHOICES: tuple[WizardChoice, ...] = (
 )
 
 
-_PROFILE_SECTION = WizardSection(
-    id="profile",
-    title=tr("wizard.setup.profile.title"),
-    questions=(
-        WizardQuestion(
-            id="tax-id",
-            profile_key="identity.tax_id",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.tax-id.prompt"),
-            required=True,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="name",
-            profile_key="identity.name",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.name.prompt"),
-            required=False,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="surnames",
-            profile_key="identity.surnames",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.surnames.prompt"),
-            required=False,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="activity",
-            profile_key="activities.description",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.activity.prompt"),
-            required=True,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="address-postcode",
-            profile_key="contact.postcode",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.address-postcode.prompt"),
-            required=False,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="taxation-type",
-            profile_key="filing_export.declaration_type",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.taxation-type.prompt"),
-            choices=_DECLARATION_TYPE_CHOICES,
-            required=False,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="output-language",
-            profile_key="preferences.output_language",
-            widget=WizardWidget.SELECT,
-            prompt=tr("wizard.setup.profile.output-language.prompt"),
-            choices=_OUTPUT_LANGUAGE_CHOICES,
-            default="es",
-            required=False,
-            answer_type=str,
-        ),
-    ),
-)
-
-
 _ENTITY_LEGAL = WizardCondition(question_id="entity-type", equals=EntityType.LEGAL_ENTITY.value)
+
+# `activity` (the actividad económica / epígrafe IAE free-text field)
+# is collected only for a taxpayer that actually carries on an
+# activity: a legal entity, or a natural person who declared the
+# `actividad_economica` IRPF income category. A pure landlord,
+# a salaried-only taxpayer, and a pensioner have no actividad
+# económica and must not be forced to invent one.
+_HAS_ACTIVITY = WizardVisibility(
+    any_of=(
+        _ENTITY_LEGAL,
+        WizardCondition(question_id="irpf-income-categories", contains=IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value),
+    )
+)
 
 
 _TAXPAYER_TYPE_SECTION = WizardSection(
@@ -287,6 +251,76 @@ _TAXPAYER_TYPE_SECTION = WizardSection(
             help=tr("wizard.setup.taxpayer-type.irpf-income-categories.help"),
             choices=_IRPF_INCOME_CATEGORY_CHOICES,
             required=False,
+            visible_when=_NATURAL_PERSON,
+            answer_type=str,
+        ),
+    ),
+)
+
+
+_PROFILE_SECTION = WizardSection(
+    id="profile",
+    title=tr("wizard.setup.profile.title"),
+    questions=(
+        WizardQuestion(
+            id="tax-id",
+            profile_key="identity.tax_id",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.tax-id.prompt"),
+            required=True,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="name",
+            profile_key="identity.name",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.name.prompt"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="surnames",
+            profile_key="identity.surnames",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.surnames.prompt"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="activity",
+            profile_key="activities.description",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.activity.prompt"),
+            required=False,
+            visible_when=_HAS_ACTIVITY,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="address-postcode",
+            profile_key="contact.postcode",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.address-postcode.prompt"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="taxation-type",
+            profile_key="filing_export.declaration_type",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.taxation-type.prompt"),
+            choices=_DECLARATION_TYPE_CHOICES,
+            required=False,
+            visible_when=_NATURAL_PERSON,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="output-language",
+            profile_key="preferences.output_language",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.profile.output-language.prompt"),
+            choices=_OUTPUT_LANGUAGE_CHOICES,
+            default="es",
+            required=False,
             answer_type=str,
         ),
     ),
@@ -304,6 +338,7 @@ _TAXPAYER_SECTION = WizardSection(
             prompt=tr("wizard.setup.taxpayer.taxpayer-sex.prompt"),
             choices=_SEX_CHOICES,
             required=False,
+            visible_when=_NATURAL_PERSON,
             answer_type=str,
         ),
         WizardQuestion(
@@ -313,6 +348,7 @@ _TAXPAYER_SECTION = WizardSection(
             prompt=tr("wizard.setup.taxpayer.taxpayer-marital-status.prompt"),
             choices=_MARITAL_STATUS_CHOICES,
             required=False,
+            visible_when=_NATURAL_PERSON,
             answer_type=str,
         ),
         WizardQuestion(
@@ -321,6 +357,7 @@ _TAXPAYER_SECTION = WizardSection(
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.taxpayer.taxpayer-birth-date.prompt"),
             required=False,
+            visible_when=_NATURAL_PERSON,
             answer_type=str,
         ),
         WizardQuestion(
@@ -330,6 +367,7 @@ _TAXPAYER_SECTION = WizardSection(
             prompt=tr("wizard.setup.taxpayer.taxpayer-disability-grade.prompt"),
             choices=_DISABILITY_GRADE_CHOICES,
             required=False,
+            visible_when=_NATURAL_PERSON,
             answer_type=str,
         ),
         WizardQuestion(
@@ -338,6 +376,7 @@ _TAXPAYER_SECTION = WizardSection(
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.taxpayer.taxpayer-death-date.prompt"),
             required=False,
+            visible_when=_NATURAL_PERSON,
             answer_type=str,
         ),
     ),
@@ -349,11 +388,17 @@ _SPOUSE_SECTION = WizardSection(
     title=tr("wizard.setup.spouse.title"),
     questions=(
         WizardQuestion(
+            # Required *when visible*: a joint declaration is invalid
+            # without the spouse NIF (SetupAnswers enforces the same
+            # invariant). The widget validator still accepts a blank
+            # answer for a gated question; the conditional requirement
+            # is enforced at `validate_profile_values` via the compiled
+            # `required_when_*` pair.
             id="spouse-tax-id",
             profile_key="renta_spouse.tax_id",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-tax-id.prompt"),
-            required=False,
+            required=True,
             visible_when=_JOINT_DECLARATION,
             answer_type=str,
         ),
@@ -401,6 +446,7 @@ _SPOUSE_SECTION = WizardSection(
             prompt=tr("wizard.setup.spouse.spouse-disability-grade.prompt"),
             choices=_DISABILITY_GRADE_CHOICES,
             required=False,
+            visible_when=_JOINT_DECLARATION,
             answer_type=str,
         ),
         WizardQuestion(
@@ -410,6 +456,7 @@ _SPOUSE_SECTION = WizardSection(
             prompt=tr("wizard.setup.spouse.spouse-non-resident-irpf.prompt"),
             required=False,
             default="false",
+            visible_when=_JOINT_DECLARATION,
             answer_type=bool,
         ),
         WizardQuestion(
@@ -423,11 +470,15 @@ _SPOUSE_SECTION = WizardSection(
             answer_type=bool,
         ),
         WizardQuestion(
+            # Required *when visible*: an EU/EEA-resident spouse must
+            # name the residence country (SetupAnswers enforces the
+            # same invariant). The conditional requirement is compiled
+            # into the `required_when_*` pair.
             id="spouse-eu-eea-country",
             profile_key="renta_spouse.eu_eea_country",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-eu-eea-country.prompt"),
-            required=False,
+            required=True,
             visible_when=_EU_EEA_RESIDENT,
             answer_type=str,
         ),
@@ -439,8 +490,18 @@ _FAMILY_SECTION = WizardSection(
     id="family",
     title=tr("wizard.setup.family.title"),
     questions=(
-        _confirm("family-descendants-eu-eea-deduction", "renta_family.descendants_eu_eea_deduction", suffix="family"),
-        _confirm("family-minor-children-in-unit", "renta_family.minor_children_in_unit", suffix="family"),
+        _confirm(
+            "family-descendants-eu-eea-deduction",
+            "renta_family.descendants_eu_eea_deduction",
+            suffix="family",
+            visible_when=_NATURAL_PERSON,
+        ),
+        _confirm(
+            "family-minor-children-in-unit",
+            "renta_family.minor_children_in_unit",
+            suffix="family",
+            visible_when=_NATURAL_PERSON,
+        ),
     ),
 )
 
@@ -576,8 +637,8 @@ SETUP_FLOW = WizardFlow(
     title=tr("wizard.setup.title"),
     description=tr("wizard.setup.description"),
     sections=(
-        _PROFILE_SECTION,
         _TAXPAYER_TYPE_SECTION,
+        _PROFILE_SECTION,
         _TAXPAYER_SECTION,
         _SPOUSE_SECTION,
         _FAMILY_SECTION,

@@ -125,6 +125,7 @@ aggregation:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
       duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
+      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
 application:
   auth:
     acquisition_lock:
@@ -249,9 +250,6 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
-      no_deadline_windows: No hi ha dades de finestres de termini registrades per
-        al model %{modelo} en l'exercici %{year}; no es pot determinar el calendari
-        de presentació.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
@@ -409,6 +407,8 @@ cli:
         capture_history_help: Captura en directe l'historial de Modelo 303 presentats
           i persisteix l'estat segur de compensació d'IVA. No s'envien opcions de
           presentació AEAT ni formularis de cartera.
+        history_details_help: Imprimeix files i imports privats detallats; el mode
+          resum només imprimeix recomptes.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
           arrossegats i decisions d'autoritat de cartera persistides derivades de
           les captures de Modelo 303 presentats.
@@ -526,9 +526,7 @@ cli:
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
-          no_exportable_revision: La unitat de treball no té cap revisió de càlcul
-            verificada o presentada per exportar. Executa `aeat app modelo verify`
-            primer.
+          no_exportable_revision_work_verify: cli.app.modelo.export.errors.no_exportable_revision_work_verify
         help: Exporta una revisió de modelo verificada o presentada a un fitxer local
           compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
@@ -1661,6 +1659,8 @@ cli:
         actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
         feina de models activa esta desada, repren-la amb `aeat app modelo work list`.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
+    taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
+      el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
     app_help: Gestió del registre de models fiscals
@@ -1788,7 +1788,7 @@ cli:
     app_help: 'Assistent per preparar declaracions tributàries espanyoles
 
 
-      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVITAT'
+      Quickstart: aeat config profile create NAME --tax-id NIF'
     app_help_help: Mostrar ajuda del flux d'app
     debug_help: Mostrar logs interns de depuració a stderr
     detail_help: Also show the detailed registry summary
@@ -2109,6 +2109,7 @@ errors:
     error_categories: S'ha produït un error en les categories de despesa.
     error_categories_validation: Un registre de categoria no ha superat la validació.
     error_deadlines_deadline: S'ha produït un error en el càlcul de terminis.
+    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: El perfil d'autònom no s'ha pogut carregar o validar
       per al càlcul de terminis.
     error_deadlines_schedule_computation: El motor no ha pogut generar un calendari
@@ -2876,7 +2877,7 @@ wizard:
       \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
       \ per fer servir l'assistent guiat:\n     aeat config profile create NAME\n\n\
       2. O crea'l en un sol pas indicant les dades obligatòries com a flags:\n   \
-      \  aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
+      \  aeat config profile create NAME --quiet --tax-id NIF"
     unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
       \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
       \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\
@@ -2951,7 +2952,8 @@ wizard:
       irpf-estimation-regime:
         help: Règim d'estimació IRPF per a la renda d'activitat econòmica
       irpf-income-categories:
-        help: Categories de renda IRPF separades per comes
+        help: Categoria de renda IRPF; indiqueu --irpf-income-categories una vegada
+          per categoria
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:

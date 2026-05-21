@@ -20,6 +20,7 @@ from aeat.application.wizard._persistence import project_answers, serialise_answ
 from aeat.application.wizard._prompter import ScriptedPrompter
 from aeat.application.wizard._runner import run_flow
 from aeat.application.wizard._setup_answers import SetupAnswers
+from aeat.domain.deadlines._models import LegalEntityForm
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -27,39 +28,38 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def _scripted_answers_for_individual_declaration() -> deque[str]:
     """Build a scripted answer set for an individual taxation profile.
 
-    The order matches the declared question order in ``SETUP_FLOW``.
-    Conditional spouse questions tied to ``taxation_type == "2"``
-    are skipped by the runtime, so they should NOT appear in the
-    deque.
+    The order matches the declared question order in ``SETUP_FLOW``:
+    the taxpayer-type section is walked first, so ``entity-type``
+    fixes the natural-person path before the IRPF-personal sections.
+    Conditional spouse questions tied to ``taxation_type == "2"`` are
+    skipped by the runtime, so they do NOT appear in the deque. The
+    ``activity`` question is visible here because the declared IRPF
+    income categories include ``actividad_economica``.
     """
 
     return deque(
         [
+            # ── taxpayer type ──────────────────────
+            "natural_person",  # entity-type
+            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
+            "actividad_economica,capital_inmobiliario",  # irpf-income-categories
             # ── profile ────────────────────────────
             "12345678Z",  # tax-id
             "Operator",  # name
             "Doe",  # surnames
-            "Software development",  # activity
+            "Software development",  # activity (visible: has actividad_economica)
             "28001",  # address-postcode
-            "1",  # taxation-type (individual)
+            "1",  # taxation-type (individual, visible: natural person)
             "en",  # output-language
-            # ── taxpayer type ──────────────────────
-            "natural_person",  # entity-type
-            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
-            "trabajo,capital_inmobiliario",  # irpf-income-categories
-            # ── taxpayer biographic ────────────────
+            # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
             "",  # taxpayer-death-date
             # ── spouse (joint taxation condition NOT satisfied) ──
-            # spouse-tax-id … spouse-sex SKIPPED by runtime
-            "",  # spouse-disability-grade (unconditional)
-            "false",  # spouse-non-resident-irpf (unconditional)
-            # spouse-eu-eea-resident SKIPPED (conditional on non-resident)
-            # spouse-eu-eea-country SKIPPED (conditional on eu-eea-resident)
-            # ── family ──────────────────────────────
+            # every spouse question is joint-gated; none is asked here
+            # ── family (visible: natural person) ────
             "false",  # family-descendants-eu-eea-deduction
             "false",  # family-minor-children-in-unit
             # ── IVA ────────────────────────────────
@@ -103,12 +103,13 @@ def test_run_flow_collects_visible_questions_in_order() -> None:
 def test_run_flow_skips_spouse_questions_when_declaration_is_individual() -> None:
     prompter = ScriptedPrompter(_scripted_answers_for_individual_declaration())
     run_flow(SETUP_FLOW, prompter)
-    # Spouse joint-conditional questions must not be asked when taxation_type != "2"
+    # Every spouse question is joint-gated; none is asked for an
+    # individual declaration (taxation_type != "2").
     assert "spouse-tax-id" not in prompter.asked
     assert "spouse-name" not in prompter.asked
     assert "spouse-eu-eea-resident" not in prompter.asked
-    # But the unconditional spouse-non-resident-irpf must be asked
-    assert "spouse-non-resident-irpf" in prompter.asked
+    assert "spouse-non-resident-irpf" not in prompter.asked
+    assert "spouse-disability-grade" not in prompter.asked
 
 
 def test_runner_close_overflow_is_caught() -> None:
@@ -158,16 +159,19 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
 
     answers_deque: deque[str] = deque(
         [
+            # ── taxpayer type ──────────────────────
+            "natural_person",  # entity-type
+            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
+            "actividad_economica,trabajo",  # irpf-income-categories
+            # ── profile ────────────────────────────
             "12345678Z",  # tax-id
             "Operator",  # name
             "Doe",  # surnames
-            "Software development",  # activity
+            "Software development",  # activity (visible: has actividad_economica)
             "28001",  # address-postcode
-            "2",  # taxation-type (joint)
+            "2",  # taxation-type (joint, visible: natural person)
             "en",  # output-language
-            "natural_person",  # entity-type
-            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
-            "trabajo",  # irpf-income-categories
+            # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
             "",  # taxpayer-birth-date
@@ -222,3 +226,117 @@ def test_select_widget_default_is_set_during_runtime() -> None:
     iva_question = next(q for section in SETUP_FLOW.sections for q in section.questions if q.id == "iva-regime")
     assert iva_question.widget is WizardWidget.SELECT
     assert iva_question.default == "GENERAL"
+
+
+def _non_interactive_canonical(explicit: dict[str, str]) -> dict[str, str]:
+    """Seed descriptor defaults, then layer the operator's explicit flags.
+
+    Mirrors the ``--accept-defaults`` create path: the canonical dict is
+    every descriptor default plus the operator's explicit flag values.
+    """
+
+    seeded = {
+        question.id: question.default or ""
+        for section in SETUP_FLOW.sections
+        for question in section.questions
+        if question.default is not None
+    }
+    seeded.update(explicit)
+    return seeded
+
+
+_LEGAL_ENTITY_FLAGS: dict[str, str] = {
+    "entity-type": "legal_entity",
+    "legal-entity-form": "sl",
+    "tax-id": "B66012345",
+    "activity": "consultoria",
+}
+
+
+def test_legal_entity_intra_section_gate_walks_legal_entity_form() -> None:
+    """A legal entity reveals ``legal-entity-form`` even though its gate
+    names ``entity-type`` in the *same* section.
+
+    The runner evaluates ``visible_when`` incrementally, so an
+    intra-section gate sees the answer to an earlier question in the
+    same section. A section-wide upfront evaluation hid this question.
+    """
+
+    from aeat.application.wizard._commands import _scripted_from_canonical
+
+    canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
+    explicit = frozenset(_LEGAL_ENTITY_FLAGS)
+    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
+    assert isinstance(answers, SetupAnswers)
+    assert prompter.asked.count("legal-entity-form") == 1
+    assert answers.legal_entity_form is LegalEntityForm.SL
+
+
+def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:
+    """A legal entity is never asked the spouse / personal-IRPF or the
+    IRPF income-category questions — they are gated to natural persons."""
+
+    from aeat.application.wizard._commands import _scripted_from_canonical
+
+    canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
+    explicit = frozenset(_LEGAL_ENTITY_FLAGS)
+    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    run_flow(SETUP_FLOW, prompter, force_visible=explicit)
+    for hidden in (
+        "irpf-income-categories",
+        "taxation-type",
+        "taxpayer-sex",
+        "taxpayer-marital-status",
+        "spouse-tax-id",
+        "spouse-non-resident-irpf",
+        "family-minor-children-in-unit",
+    ):
+        assert hidden not in prompter.asked, hidden
+
+
+def test_explicit_flag_forces_a_gated_question_visible() -> None:
+    """An explicitly-supplied flag is honoured even when its
+    ``visible_when`` gate would hide the question.
+
+    ``activity`` is gated behind the economic-activity declaration; a
+    legal entity reaches it via the ``entity_type == legal_entity``
+    clause, but a natural person with no actividad_economica only gets
+    it asked because the operator named ``--activity`` on the command
+    line (``force_visible``)."""
+
+    from aeat.application.wizard._commands import _scripted_from_canonical
+
+    flags = {
+        "entity-type": "natural_person",
+        "irpf-income-categories": "capital_inmobiliario",
+        "tax-id": "12345678Z",
+        "activity": "explicitly supplied",
+    }
+    canonical = _non_interactive_canonical(flags)
+    explicit = frozenset(flags)
+    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
+    assert isinstance(answers, SetupAnswers)
+    assert "activity" in prompter.asked
+    assert answers.activity == "explicitly supplied"
+
+
+def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
+    """A pure landlord (only capital_inmobiliario, no --activity flag)
+    is never asked for an economic activity — the gate stays closed."""
+
+    from aeat.application.wizard._commands import _scripted_from_canonical
+
+    flags = {
+        "entity-type": "natural_person",
+        "irpf-income-categories": "capital_inmobiliario",
+        "tax-id": "12345678Z",
+    }
+    canonical = _non_interactive_canonical(flags)
+    explicit = frozenset(flags)
+    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
+    assert isinstance(answers, SetupAnswers)
+    assert "activity" not in prompter.asked
+    assert answers.activity == ""
