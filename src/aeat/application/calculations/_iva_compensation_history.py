@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
@@ -92,6 +93,19 @@ def iva_compensation_period_key(filing_year: int, period: str) -> str:
     return f"303:{filing_year}:{period}"
 
 
+@dataclass(slots=True)
+class _WorkingCarryForwardLot:
+    """Mutable accumulator for one generated lot during FIFO allocation."""
+
+    taxpayer_nif: str
+    source_filing_year: int
+    source_period: str
+    generated_amount: Decimal
+    applied_amount: Decimal
+    remaining_amount: Decimal
+    source_observation_key: str
+
+
 def build_iva_compensation_carry_forward_report(
     states: tuple[IvaCompensationPeriodState, ...],
     *,
@@ -108,7 +122,7 @@ def build_iva_compensation_carry_forward_report(
     if not 2000 <= as_of_year <= 2099:
         raise ValueError(f"IVA compensation as_of_year {as_of_year} out of supported range [2000, 2099]")
     ordered = tuple(sorted(states, key=lambda item: (item.filing_year, _period_sort_key(item.period))))
-    working: list[dict[str, object]] = []
+    working: list[_WorkingCarryForwardLot] = []
     unallocated_applied = _ZERO
     for state in ordered:
         applied = state.applied_amount or _ZERO
@@ -116,40 +130,38 @@ def build_iva_compensation_carry_forward_report(
         for lot in working:
             if remaining_to_allocate <= _ZERO:
                 break
-            available = lot["remaining_amount"]
-            assert isinstance(available, Decimal)
-            consumed = min(available, remaining_to_allocate)
-            lot["applied_amount"] = lot["applied_amount"] + consumed  # type: ignore[operator]
-            lot["remaining_amount"] = available - consumed
+            consumed = min(lot.remaining_amount, remaining_to_allocate)
+            lot.applied_amount = lot.applied_amount + consumed
+            lot.remaining_amount = lot.remaining_amount - consumed
             remaining_to_allocate -= consumed
         if remaining_to_allocate > _ZERO:
             unallocated_applied += remaining_to_allocate
         if state.generated_amount > _ZERO:
             working.append(
-                {
-                    "taxpayer_nif": state.taxpayer_nif,
-                    "source_filing_year": state.filing_year,
-                    "source_period": state.period,
-                    "generated_amount": state.generated_amount,
-                    "applied_amount": _ZERO,
-                    "remaining_amount": state.generated_amount,
-                    "source_observation_key": state.source_observation_key,
-                }
+                _WorkingCarryForwardLot(
+                    taxpayer_nif=state.taxpayer_nif,
+                    source_filing_year=state.filing_year,
+                    source_period=state.period,
+                    generated_amount=state.generated_amount,
+                    applied_amount=_ZERO,
+                    remaining_amount=state.generated_amount,
+                    source_observation_key=state.source_observation_key,
+                )
             )
     lots = tuple(
         IvaCompensationCarryForwardLot(
-            taxpayer_nif=str(item["taxpayer_nif"]),
-            source_filing_year=int(item["source_filing_year"]),
-            source_period=str(item["source_period"]),
-            generated_amount=item["generated_amount"],
-            applied_amount=item["applied_amount"],
-            remaining_amount=item["remaining_amount"],
-            age_years=max(0, as_of_year - int(item["source_filing_year"])),
+            taxpayer_nif=item.taxpayer_nif,
+            source_filing_year=item.source_filing_year,
+            source_period=item.source_period,
+            generated_amount=item.generated_amount,
+            applied_amount=item.applied_amount,
+            remaining_amount=item.remaining_amount,
+            age_years=max(0, as_of_year - item.source_filing_year),
             expiry_review_state=_expiry_review_state(
-                source_filing_year=int(item["source_filing_year"]),
+                source_filing_year=item.source_filing_year,
                 as_of_year=as_of_year,
             ),
-            source_observation_key=str(item["source_observation_key"]),
+            source_observation_key=item.source_observation_key,
         )
         for item in working
     )
