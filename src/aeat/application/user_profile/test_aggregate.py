@@ -91,6 +91,32 @@ def test_aggregate_rejects_record_profile_id_mismatch() -> None:
         )
 
 
+def test_aggregate_rejects_torn_rename_label_mismatch() -> None:
+    """A torn rename — label disagreeing with record.display_name — is caught.
+
+    A rename writes the new name into the plaintext manifest and the
+    encrypted record's ``display_name`` as two sequential store
+    writes. A crash between them leaves the manifest carrying the new
+    label while the record still holds the old ``display_name`` (or
+    vice versa). The aggregate's cross-store agreement validator must
+    refuse to construct an aggregate over that torn state rather than
+    silently serve a profile whose two stores disagree on its name.
+    """
+
+    record = _record()  # record.display_name == "Aggregate Operator"
+    with pytest.raises(ValidationError, match="torn rename"):
+        ProfileAggregate(
+            profile_id=_PROFILE_UUID,
+            label="Renamed Operator",
+            created_at=datetime(2026, 1, 4, 9, 0, 0, tzinfo=UTC),
+            kdf_params=_kdf_params(),
+            recovery_enrolled=False,
+            manifest_schema_version=1,
+            record=record,
+            status=UserProfileStatus.ACTIVE,
+        )
+
+
 def test_aggregate_rejects_status_mismatch() -> None:
     """An aggregate whose status disagrees with the record is rejected."""
 
