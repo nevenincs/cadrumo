@@ -216,7 +216,7 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
             regression_caught = False
             try:
                 mutated = repo.load()
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:  # boundary may raise different exception types
                 regression_caught = True
             else:
                 if mutated != original:
