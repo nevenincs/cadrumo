@@ -119,6 +119,10 @@ from ._borrador_binding import (
 from ._profile_binding import ProfileSourcedBindingResult
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry import ValidatedRegistryAuthority
+    from ..calculations._iva_wallet_reconciliation import (
+        IvaCompensationReconciliationDecision,
+    )
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
@@ -1178,7 +1182,7 @@ def _load_persisted_iva_compensation_decision_for_work_unit(
     work_unit: WorkUnit,
     *,
     repository: IvaWalletDecisionRepository | None = None,
-) -> object | None:
+) -> IvaCompensationReconciliationDecision | None:
     if work_unit.modelo != "303":
         return None
     taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
@@ -1200,7 +1204,7 @@ def _persisted_blocked_iva_compensation_decision_for_work_unit(
     work_unit: WorkUnit,
     *,
     repository: IvaWalletDecisionRepository | None = None,
-) -> object | None:
+) -> IvaCompensationReconciliationDecision | None:
     decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if decision is not None and bool(decision.blocked):
         return decision
@@ -1769,7 +1773,7 @@ def _registry_root() -> Path:
     return bundled_path("registry", "aeat")
 
 
-def _authority_via_resources() -> object:
+def _authority_via_resources() -> ValidatedRegistryAuthority:
     """Return the registry authority via the central resource registry."""
     from ...core.resources import resources
     return resources().modelos.authority
