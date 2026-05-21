@@ -183,6 +183,8 @@ Re-exported onward to `application.review` — the private import spreads across
 
 ### XDOM-9 — MED — `application/calculations/_iva_wallet_reconciliation.py:17` imports `IvaCompensationWalletObservation` from private `sede._schema`. **Remediation:** ensure the public `sede.__init__` export, re-point.
 
+**Resolution (2026-05-21, P07.S30) — all three verified already-satisfied; no code change.** XDOM-7: `LedgerTransactionPayload` is a defined pydantic model (`application/ledger/_models.py:419`) and `LedgerReviewRow.transaction` is typed `LedgerTransactionPayload | None`, not `dict[str, object]`. XDOM-8: `application/diagnostics.py` imports the public `validate_site_health_url` helper from the `browser` package surface — the private `_URL_ADAPTER` import is gone. XDOM-9: `_iva_wallet_reconciliation.py` imports `IvaCompensationWalletObservation` from `...adapters.outbound.aeat.sede` (the public surface; `sede/__init__.py` exports it in `__all__`), not `sede._schema`. The audit findings were stale relative to current code.
+
 ### XDOM-10 — MED — `_config/__init__.py:1873` `str(exc)` on `ApoderadoLiveCheckUnavailableError` loses the i18n key. (Same as WCLI-2 — dedupe at execution.)
 
 ### XDOM-11 — LOW — widespread application imports of registry types via private `_schema`/`_bindings`/`_runtime_graph` sub-modules; `RegistrySnapshotRef` (used by `application/filing/__init__.py:19`) is unexported. **Remediation:** re-point to the public `domain.calculations.registry`; export `RegistrySnapshotRef`.
