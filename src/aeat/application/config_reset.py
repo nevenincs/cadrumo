@@ -113,7 +113,9 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         # persisted WorkflowState field. Each profile is identified by
         # its immutable UUID, which is also its bucket id and bucket
         # directory name.
-        removed_profile_ids = tuple(sorted(list_profile_buckets()))
+        # A reset physically removes every bucket directory, tombstoned
+        # ones included, so the scan must enumerate the full set.
+        removed_profile_ids = tuple(sorted(list_profile_buckets(include_tombstoned=True)))
         for profile_id in removed_profile_ids:
             UserProfileLifecycleRepository(bucket_id=profile_id).delete(profile_id)
             # Dispose the cached per-bucket engine so its SQLite file

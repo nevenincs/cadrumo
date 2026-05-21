@@ -1357,8 +1357,8 @@ cli:
       title: Workspace status
       transactions_empty: No bank transactions have been imported yet.
       transactions_present: '%{count} bank transaction(s) are available in the ledger.'
-      work_units_empty: cli.overview.status.work_units_empty
-      work_units_present: cli.overview.status.work_units_present
+      work_units_empty: No modelo work units have been started yet.
+      work_units_present: '%{count} modelo work unit(s) exist in this local storage.'
     status_help: Show profile, ledger, and modelo readiness
     verbose_help: Show details and next action when available
   registry:

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import base64
 from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -79,6 +80,25 @@ class ManifestKdfParams(BaseModel):
         raise TypeError("salt must be bytes or base64 string")
 
 
+class BucketLifecycleStatus(StrEnum):
+    """Plaintext lifecycle marker carried on the bucket manifest.
+
+    The encrypted :class:`~aeat.domain.user_profile.UserProfileStatus`
+    record is the lifecycle authority, but reading it costs a bucket
+    decryption. The manifest mirrors that status as a plaintext marker
+    so the manifest scan can exclude a tombstoned profile from every
+    live operator surface (``list`` / ``switch`` / name-uniqueness)
+    without unlocking the bucket. The :class:`ProfileRepository` is the
+    sole writer of both stores and keeps the two in lockstep.
+
+    Values match :class:`UserProfileStatus` so the application-layer
+    repository maps the two enums one-to-one.
+    """
+
+    ACTIVE = "active"
+    TOMBSTONED = "tombstoned"
+
+
 class BucketManifest(BaseModel):
     """Plaintext manifest for one per-bucket directory.
 
@@ -95,6 +115,32 @@ class BucketManifest(BaseModel):
     kdf_params: ManifestKdfParams
     recovery_enrolled: bool
     schema_version: int = Field(ge=1)
+    status: BucketLifecycleStatus = BucketLifecycleStatus.ACTIVE
+    """Plaintext mirror of the encrypted record's lifecycle status.
+
+    Defaults to :attr:`BucketLifecycleStatus.ACTIVE` so a manifest
+    written before this field existed hydrates as a live profile; the
+    :class:`ProfileRepository` flips it to ``TOMBSTONED`` in the same
+    write that tombstones the encrypted record.
+    """
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _coerce_status(cls, value: object) -> BucketLifecycleStatus:
+        """Accept the TOML-native string form of the lifecycle marker.
+
+        The strict model rejects a bare ``str`` for the enum field, but
+        the on-disk TOML manifest stores ``status`` as a plain string.
+        This pre-validator parses that string back into the enum so the
+        manifest round-trips while the public constructor still
+        type-checks an explicit :class:`BucketLifecycleStatus`.
+        """
+
+        if isinstance(value, BucketLifecycleStatus):
+            return value
+        if isinstance(value, str):
+            return BucketLifecycleStatus(value)
+        raise TypeError("status must be a BucketLifecycleStatus or its string value")
 
     @field_validator("created_at")
     @classmethod
@@ -109,4 +155,4 @@ class BucketManifest(BaseModel):
         return _ensure_utc(value)
 
 
-__all__ = ["BucketManifest", "ManifestKdfParams"]
+__all__ = ["BucketLifecycleStatus", "BucketManifest", "ManifestKdfParams"]

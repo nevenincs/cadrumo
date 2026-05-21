@@ -34,7 +34,11 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
-from ...adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from ...adapters.persistence.storage.bucket._manifest import (
+    BucketLifecycleStatus,
+    BucketManifest,
+    ManifestKdfParams,
+)
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
@@ -78,6 +82,17 @@ def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
             if text:
                 return text
     return None
+
+
+def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
+    """Map the encrypted-record lifecycle status to its manifest mirror.
+
+    The two enums carry identical string values; the mapping is by
+    value so a new lifecycle state in either enum surfaces here as a
+    :class:`KeyError` rather than silently mismatching.
+    """
+
+    return BucketLifecycleStatus(status.value)
 
 
 def _default_kdf_params() -> ManifestKdfParams:
@@ -249,6 +264,7 @@ class ProfileRepository:
                     kdf_params=kdf_params,
                     recovery_enrolled=False,
                     schema_version=manifest_schema_version,
+                    status=BucketLifecycleStatus.ACTIVE,
                 ),
             )
 
@@ -360,6 +376,7 @@ class ProfileRepository:
                 kdf_params=aggregate.kdf_params,
                 recovery_enrolled=aggregate.recovery_enrolled,
                 schema_version=aggregate.manifest_schema_version,
+                status=_manifest_status_for(aggregate.status),
             ),
         )
         self._lifecycle_repository(aggregate.profile_id).save(aggregate.record)
@@ -455,6 +472,19 @@ class ProfileRepository:
             self._clear_pointer()
         result = self._lifecycle_service(profile_id).remove(RemoveProfileCommand(profile_id=profile_id))
         tombstoned_record = result.profile
+        # Mirror the tombstone onto the plaintext manifest so the
+        # manifest scan excludes this profile from every live operator
+        # surface (list / switch / name-uniqueness) without unlocking
+        # the encrypted bucket. The repository is the sole writer of
+        # both stores, so the two never drift.
+        paths = bucket_paths(self._root, profile_id)
+        manifest = read_manifest(paths)
+        write_manifest(
+            paths,
+            manifest.model_copy(
+                update={"status": _manifest_status_for(tombstoned_record.status)}
+            ),
+        )
         return aggregate.model_copy(
             update={"record": tombstoned_record, "status": tombstoned_record.status}
         )
@@ -469,12 +499,24 @@ class ProfileRepository:
         active-profile pointer. The pointer is the only store this
         mutates; identity and lifecycle metadata are untouched.
 
+        A tombstoned profile is not a selectable profile: ``delete`` is
+        a soft removal that retains the bucket for audit, but the
+        profile has left the live surface. Selecting it is refused with
+        the same :class:`ProfileNotFoundError` class as an unknown
+        profile so the operator cannot unknowingly work inside a
+        deleted profile.
+
         Raises:
-            ProfileNotFoundError: If the profile is not registered.
+            ProfileNotFoundError: If the profile is not registered, or
+                is registered but tombstoned.
             ProfileIntegrityError: If the stores disagree on the UUID.
         """
 
         aggregate = self.load(profile_id)
+        if aggregate.status is UserProfileStatus.TOMBSTONED:
+            raise ProfileNotFoundError(
+                f"profile {profile_id!r} is tombstoned and cannot be selected"
+            )
         write_pointer(self._root, BucketPointer(bucket_id=profile_id, schema_version=1))
         return aggregate
 
@@ -485,8 +527,10 @@ class ProfileRepository:
 
         Scans ``<root>/buckets/*/manifest.toml`` — never unlocks an
         encrypted bucket. The lifecycle status reported is the manifest
-        projection's: an ``ACTIVE`` manifest with a tombstoned record
-        is exactly the cross-store drift :meth:`load` surfaces.
+        ``status`` mirror, kept in lockstep with the encrypted record
+        by every :class:`ProfileRepository` write. Tombstoned profiles
+        are included so callers that need the full inventory (repair,
+        audit) see them; live-surface callers filter on ``status``.
         """
 
         buckets_root = self._root / _BUCKETS_DIRNAME
@@ -503,16 +547,11 @@ class ProfileRepository:
             if not manifest_path(paths).is_file():
                 continue
             manifest = read_manifest(paths)
-            try:
-                record = self._lifecycle_repository(manifest.bucket_id).load(manifest.bucket_id)
-                status = record.status
-            except ProfileNotFoundError:
-                status = UserProfileStatus.ACTIVE
             summaries.append(
                 ProfileSummary(
                     profile_id=manifest.bucket_id,
                     label=manifest.label,
-                    status=status,
+                    status=UserProfileStatus(manifest.status.value),
                 )
             )
         summaries.sort(key=lambda row: row.profile_id)
@@ -563,6 +602,10 @@ class ProfileRepository:
         from ._orchestration import ProfileAlreadyRegisteredError
 
         for summary in self.list():
+            # A tombstoned profile has left the live surface; its tax id
+            # is free to reuse, exactly as its display name is.
+            if summary.status is UserProfileStatus.TOMBSTONED:
+                continue
             try:
                 aggregate = self.load(summary.profile_id)
             except Exception:  # noqa: BLE001 — a torn / unreadable bucket cannot claim an id

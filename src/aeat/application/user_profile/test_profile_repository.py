@@ -32,11 +32,16 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import read_pointer, write_pointer
 from ...core.config import override_settings
 from ...domain.user_profile import (
+    ProfileNotFoundError,
     ProfileSchemaValidationError,
     UserProfileFact,
     UserProfileStatus,
 )
-from ..workflow._profile_bucket_scan import read_profile_bucket
+from ..workflow._profile_bucket_scan import (
+    list_profile_buckets,
+    read_profile_bucket,
+    read_profile_bucket_by_id,
+)
 from ._integrity import ProfileIntegrityError
 from ._orchestration import ProfileAlreadyRegisteredError
 from ._profile_repository import ProfileRepository
@@ -309,3 +314,104 @@ def test_list_summarises_every_registered_profile(_backend: Path) -> None:
     assert by_id[first.profile_id].label == "First"
     assert by_id[second.profile_id].label == "Second"
     assert all(summary.status is UserProfileStatus.ACTIVE for summary in summaries)
+
+
+def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
+    """``delete`` flips the plaintext manifest ``status`` to tombstoned.
+
+    The manifest is the plaintext mirror the live-surface scan reads;
+    after a soft delete it must carry ``TOMBSTONED`` so the scan can
+    exclude the profile without unlocking the encrypted bucket.
+    """
+
+    from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+    from ...adapters.persistence.storage.bucket._manifest_io import read_manifest
+
+    repository = ProfileRepository()
+    created = repository.create(label="Soft Delete", facts=_VALID_FACTS)
+
+    repository.delete(created.profile_id)
+
+    manifest = read_manifest(bucket_paths(_backend, created.profile_id))
+    assert manifest.status is BucketLifecycleStatus.TOMBSTONED
+
+
+def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> None:
+    """A tombstoned profile leaves ``list_profile_buckets`` / ``read_profile_bucket``.
+
+    Closes the ``profile list`` and ``profile switch`` leak: after a
+    delete the manifest scan no longer surfaces the profile, so neither
+    the listing nor the label-resolver can serve it. The by-id
+    resolver still finds it — ``show`` and diagnostics inspect a
+    tombstoned profile by UUID.
+    """
+
+    from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+
+    repository = ProfileRepository()
+    created = repository.create(label="Vanishing", facts=_VALID_FACTS)
+    assert read_profile_bucket("Vanishing", root=_backend) is not None
+
+    repository.delete(created.profile_id)
+
+    # Live scan: gone.
+    assert read_profile_bucket("Vanishing", root=_backend) is None
+    assert created.profile_id not in list_profile_buckets(root=_backend)
+    # Full inventory: still present, marked tombstoned.
+    full = list_profile_buckets(root=_backend, include_tombstoned=True)
+    assert created.profile_id in full
+    assert full[created.profile_id].status is BucketLifecycleStatus.TOMBSTONED
+    # By-id resolver: still resolves, carries the tombstoned status.
+    by_id = read_profile_bucket_by_id(created.profile_id, root=_backend)
+    assert by_id is not None
+    assert by_id.status is BucketLifecycleStatus.TOMBSTONED
+
+
+def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
+    """``select`` refuses a tombstoned profile with ``ProfileNotFoundError``.
+
+    Closes the ``profile switch`` leak at the repository layer: a
+    deleted profile can never become the active one, refused with the
+    same error class as an unknown profile.
+    """
+
+    repository = ProfileRepository()
+    created = repository.create(label="Not Selectable", facts=_VALID_FACTS)
+    repository.delete(created.profile_id)
+
+    with pytest.raises(ProfileNotFoundError, match="tombstoned"):
+        repository.select(created.profile_id)
+
+
+def test_deleted_profile_name_is_reusable(_backend: Path) -> None:
+    """After ``delete`` the freed display name is reusable by ``create``.
+
+    Per the profile-UUID-identity ADR, display names are unique among
+    *live* profiles only; a tombstoned profile's name is free to reuse.
+    """
+
+    repository = ProfileRepository()
+    first = repository.create(label="Recyclable", facts=_VALID_FACTS)
+    repository.delete(first.profile_id)
+
+    # The freed name is accepted by a fresh create with a distinct id.
+    recreated = repository.create(label="Recyclable", facts=_SECOND_FACTS)
+    assert recreated.profile_id != first.profile_id
+    assert recreated.label == "Recyclable"
+    assert recreated.status is UserProfileStatus.ACTIVE
+
+
+def test_deleted_profile_name_is_reusable_by_rename(_backend: Path) -> None:
+    """After ``delete`` the freed display name is reusable by ``rename``.
+
+    The duplicate-label refusal must consider only live profiles, so a
+    rename onto a tombstoned profile's former name succeeds.
+    """
+
+    repository = ProfileRepository()
+    retired = repository.create(label="Old Label", facts=_VALID_FACTS)
+    repository.delete(retired.profile_id)
+    live = repository.create(label="Live Label", facts=_SECOND_FACTS)
+
+    renamed = repository.rename(live.profile_id, new_label="Old Label")
+    assert renamed.label == "Old Label"
