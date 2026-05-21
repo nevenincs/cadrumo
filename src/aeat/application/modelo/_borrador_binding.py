@@ -13,6 +13,7 @@ TOML edit — no code change.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 
@@ -211,6 +212,11 @@ class Modelo100BorradorSourceResolver:
             registry_snapshot=snapshot,
             snapshot_repository=self._snapshot_repository,
         )
+        fingerprint = (
+            f"sha256:{hashlib.sha256(result.borrador_snapshot_id.encode('utf-8')).hexdigest()}"
+            if result.borrador_snapshot_id is not None
+            else None
+        )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -220,7 +226,7 @@ class Modelo100BorradorSourceResolver:
                 CalculationSourceProvenance(
                     source_kind="borrador",
                     source_ref=f"borrador:{result.borrador_snapshot_id}:binding:{binding_id}",
-                    fingerprint=f"sha256:{result.borrador_snapshot_id}",
+                    fingerprint=fingerprint,
                 )
                 for binding_id in result.bindings_sourced_from_borrador
                 if result.borrador_snapshot_id is not None

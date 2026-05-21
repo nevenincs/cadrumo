@@ -256,6 +256,8 @@ def test_borrador_source_resolver_matches_application_binding_resolution(snapsho
         f"borrador:{snapshot_id}:binding:{_DECIMAL_BINDING}",
         f"borrador:{snapshot_id}:binding:{_ENUM_BINDING}",
     }
+    expected_fingerprint = f"sha256:{hashlib.sha256(snapshot_id.encode('utf-8')).hexdigest()}"
+    assert {item.fingerprint for item in resolution.provenance} == {expected_fingerprint}
 
 
 def test_calculate_modelo_revision_consumes_borrador_snapshot_through_application_service(
