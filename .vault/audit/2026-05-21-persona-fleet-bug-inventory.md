@@ -31,6 +31,7 @@ storage, no live rights. Method: the testimonial playbook.
 | Arnau Bosch | Checkpoint WIP calculations | majors (1 downgraded) |
 | Laia Margall | Complete profile + ledger | ledger UX majors |
 | Rosario Giménez | Manage work state | **1 blocker** + majors |
+| Pilar Castro | Cross-session persistence | persistence **confirmed sound**; transient-WIP crash (resolved) |
 
 ## Confirmed positives (verified from an operator's seat)
 
@@ -86,7 +87,7 @@ operator. An error-boundary serialization leak. Remediation cluster:
 | M10 | `ledger review --id <ID>` always fails with the same opaque validation error | Laia | reported | B/D |
 | M11 | `ledger import --provider` has no discoverable value list | Montserrat | reported | D |
 | M12 | `csv` ledger provider silently imports 0 rows, no required-column guidance | Montserrat | reported | D |
-| M13 | `config repair` reports `registry.integrity fail` - Modelo 100 `renta-cuota-chain` missing `ley-35-2006:art-76`, 18 violations | Jordi, Montserrat | reported | F |
+| M13 | `config repair` reported `registry.integrity fail` - Modelo 100 `renta-cuota-chain` missing `ley-35-2006:art-76` | Jordi, Montserrat | **resolved meanwhile** - `registry.integrity` now `ok` (sibling registry-hardening campaign) | F |
 | M14 | `config repair` reports "31/40 keys" / `fail` without naming what is missing or wrong | Jordi, Laia, Montserrat | reported | F |
 | M15 | `census show` returns opaque "Refused. Refused cli boundary" | Jordi | reported | B |
 | M16 | `work create` revision id is not discoverable without failing first | Rosario | reported | E |
@@ -110,13 +111,41 @@ operator. An error-boundary serialization leak. Remediation cluster:
 - 64-char work-unit ids with no short alias / name lookup - Arnau.
 - `ledger view <id>` omits IVA / counterparty / notes detail - Laia.
 
+## Resolved during inventory verification (transient concurrent-worktree state)
+
+This worktree carries many concurrent campaigns; two persona findings
+were snapshots of in-flight sibling work and no longer reproduce:
+
+- **Pilar's BLOCKER** - `work verify` / `config repair` / `config auth`
+  crashing with `ValueError: AuthProfileIdentityMismatchError is
+  missing a declared ErrorCode registry entry`. The error class
+  existed for a window without its registry entry while a sibling
+  campaign was mid-flight. Verified resolved: the entry is committed
+  (`core/errors/registry/_application.py:348`,
+  `REFUSED_AUTH_PROFILE_IDENTITY_MISMATCH`) and `config repair` now
+  exits 0.
+- **M13** - the `registry.integrity fail` Jordi and Montserrat saw is
+  resolved; `config repair` now reports `registry.integrity ok`.
+
+Note `work verify`'s **B2 raw-repr leak is a separate, still-real
+defect** (the `NO_PENDING_OBLIGATION` exit-2 path, reproduced
+independently) - not the transient crash above.
+
 ## Downgraded / not a defect
 
-- Arnau's "`overview status` hides my work" - **not a bug**. Reproduced:
-  `overview` correctly reports "1 unidad de trabajo de modelos
-  existen". The persona read the separate, correct "no declaration
-  drafts" line and missed the work-units line. Downgraded to a
-  wording-clarity nit (the two adjacent lines can confuse).
+- "`overview status` hides my work" (Arnau AND Pilar) - **not a data
+  bug**. Reproduced: `overview` correctly reports "1 unidad de trabajo
+  de modelos existen". Both personas read the separate, correct "no
+  declaration drafts" line and missed the work-units line. That two
+  independent operators misread it the same way makes the wording a
+  genuine **POLISH** finding (cluster E): the "no declaration drafts"
+  line shown next to a non-zero work-units line reads as "your work is
+  lost"; the `overview status` wording must make the distinction
+  unmistakable.
+- Pilar's "no manual ledger entry, only CSV import" - **not a defect**:
+  `aeat app ledger add` accepts a fully manual transaction (Laia used
+  it). A discoverability gap - the persona checked only
+  `ledger import --help` - not a missing feature.
 - Roger's "11 unrelated profiles in `profile list`" - not a product
   defect; the persona did not keep `AEAT_LOCAL_STORAGE_ROOT` set
   across separate shell invocations and operated against the shared
