@@ -88,12 +88,11 @@ from ....application.storage.calc_sheets import (
 from ....core.config import load_settings
 from ....core.i18n import tr
 from ....core.resources import bundled_path
+from ....domain.calculations.registry import ValidatedRegistryAuthority
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from ....domain.calculations.registry._loader import load_registry_tree
-from ....domain.calculations.registry._snapshot import build_snapshot
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 
@@ -651,10 +650,9 @@ def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
 
 
 def _load_snapshot(modelo: str, period: str, year: int):
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    chosen = next((candidate for candidate in modelos if candidate.id == modelo), None)
-    if chosen is None:
-        available = ", ".join(sorted(candidate.id for candidate in modelos))
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    if modelo not in {candidate.id for candidate in authority.modelos}:
+        available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
         raise CliRefusedBoundaryError(
             tr(
                 "cli.config.google.sync.calc.export.unknown_modelo",
@@ -663,13 +661,7 @@ def _load_snapshot(modelo: str, period: str, year: int):
             ),
         )
     try:
-        return build_snapshot(
-            chosen,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=year,
-            period=period,
-        )
+        return authority.snapshot(modelo, filing_year=year, period=period)
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         raise CliRefusedBoundaryError(
             tr(
