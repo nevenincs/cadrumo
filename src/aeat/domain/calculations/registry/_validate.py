@@ -15,12 +15,9 @@ from ._bindings import (
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._schema import (
-    CasillaDefinition,
     ConstructDefinition,
     DataBindingDefinition,
     DependencyClassificationDefinition,
-    ExportFieldDefinition,
-    ExportRecordDefinition,
     FormulaDefinition,
     LegalReference,
     ModeloDefinition,
@@ -34,6 +31,7 @@ from ._validate_application_links import validate_application_link_closure
 from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
 from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
 from ._validate_evidence import EvidenceValidator
+from ._validate_exports import validate_export_layout_section
 from ._validate_extraction_profiles import validate_dotted_callable, validate_extraction_profile_artefacts
 from ._validate_formulas import validate_formula_dag, validate_formula_expression
 from ._validate_relation_sources import (
@@ -369,13 +367,16 @@ class RegistryValidator:
             parameters=parameters,
         )
 
-        self._validate_export_layout_section(
+        validate_export_layout_section(
             failures,
             prefix=prefix,
             revision=revision,
             casillas=casillas,
             bindings=bindings,
             casilla_by_id=casilla_by_id,
+            legal_refs=self._legal,
+            source_refs=self._sources,
+            evidence=self._evidence,
         )
         self._validate_extraction_profile_section(
             failures,
@@ -847,140 +848,6 @@ class RegistryValidator:
             for constant in alg_binding.constants:
                 if constant not in parameters:
                     failures.append(f"{prefix}: {owner} references unknown constant {constant!r}")
-
-    def _validate_export_layout_section(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-        casillas: set[str],
-        bindings: set[str],
-        casilla_by_id: Mapping[str, CasillaDefinition],
-    ) -> None:
-        for layout in revision.export_layouts:
-            owner = f"export {layout.id}"
-            failures.extend(self._missing_refs(prefix, owner, layout.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(prefix, owner, layout.source_refs, self._sources, "source"))
-            failures.extend(self._evidence.require_source_tier(prefix, owner, layout.source_refs, "layout_authority"))
-            for record in layout.records:
-                self._validate_export_record(
-                    failures,
-                    prefix=prefix,
-                    revision=revision,
-                    record=record,
-                    casillas=casillas,
-                    bindings=bindings,
-                    casilla_by_id=casilla_by_id,
-                )
-
-    def _validate_export_record(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-        record: ExportRecordDefinition,
-        casillas: set[str],
-        bindings: set[str],
-        casilla_by_id: Mapping[str, CasillaDefinition],
-    ) -> None:
-        if record.binding_record is not None:
-            self._validate_export_record_binding_link(
-                failures, prefix=prefix, revision=revision, record=record
-            )
-        if (
-            record.repeat == "binding_rows"
-            and not any(field.kind == "binding" for field in record.fields)
-            and record.binding_record is None
-        ):
-            failures.append(
-                f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"
-            )
-        if record.requires_positive_casilla is not None and record.requires_positive_casilla not in casillas:
-            failures.append(
-                f"{prefix}: export record {record.id!r} requires unknown positive casilla "
-                f"{record.requires_positive_casilla!r}"
-            )
-        for field in record.fields:
-            self._validate_export_field(
-                failures,
-                prefix=prefix,
-                record=record,
-                field=field,
-                casillas=casillas,
-                bindings=bindings,
-                casilla_by_id=casilla_by_id,
-            )
-
-    def _validate_export_record_binding_link(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-        record: ExportRecordDefinition,
-    ) -> None:
-        """Verify a binding-derived export record resolves to bindings with selector closure.
-
-        ``record.binding_record`` must match at least one revision
-        binding's ``selector["record"]``. Each matching binding must
-        then either be a row-producer (aggregation.op == "rows", in
-        which case byte coordinates come from explicit export field
-        offsets) or declare ``offset`` / ``length`` / ``data_type``
-        selectors directly.
-        """
-        matching_bindings = [
-            binding for binding in revision.bindings if binding.selector.get("record") == record.binding_record
-        ]
-        if not matching_bindings:
-            failures.append(
-                f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
-                f"{record.binding_record!r}"
-            )
-        for binding in matching_bindings:
-            if binding.aggregation is not None and binding.aggregation.get("op") == "rows":
-                continue
-            missing_selector_keys = sorted(
-                key for key in ("offset", "length", "data_type") if key not in binding.selector
-            )
-            if missing_selector_keys:
-                failures.append(
-                    f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
-                    f"{missing_selector_keys!r}"
-                )
-
-    def _validate_export_field(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        record: ExportRecordDefinition,
-        field: ExportFieldDefinition,
-        casillas: set[str],
-        bindings: set[str],
-        casilla_by_id: Mapping[str, CasillaDefinition],
-    ) -> None:
-        owner = f"export field {field.id}"
-        failures.extend(self._missing_refs(prefix, owner, field.legal_refs, self._legal, "legal"))
-        failures.extend(self._missing_refs(prefix, owner, field.source_refs, self._sources, "source"))
-        if field.casilla is not None and field.casilla not in casillas:
-            failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}")
-        if (
-            field.casilla is not None
-            and field.casilla in casilla_by_id
-            and field.id not in casilla_by_id[field.casilla].export_refs
-        ):
-            failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}")
-        if field.binding is not None and field.binding not in bindings:
-            failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
-        if field.kind == "literal" and field.literal is not None and field.length is not None:
-            literal_length = len(field.literal.encode(record.encoding))
-            if literal_length > field.length:
-                failures.append(
-                    f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
-                    f"declared length {field.length}"
-                )
 
     def _validate_extraction_profile_section(
         self,
