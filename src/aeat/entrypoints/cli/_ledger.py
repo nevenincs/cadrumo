@@ -5,12 +5,14 @@ from pathlib import Path
 from typing import Protocol
 
 import typer
+from pydantic import ValidationError
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
     LedgerReviewQuery,
     LedgerSourceImportCommand,
+    LedgerSourceImportResult,
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
     ManualLedgerTransactionCommand,
@@ -53,6 +55,11 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.categories import (
+    CATEGORY_FAMILY_MEMBERS,
+    SpendingCategory,
+    SpendingCategoryFamily,
+)
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -90,6 +97,122 @@ def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
     parsed = _parse_decimal(raw, label=label)
     assert parsed is not None
     return parsed
+
+
+# Canonical financial-import provider ids accepted by `aeat app ledger
+# import --provider`. Each entry resolves through
+# `aeat.application.ledger._actions._resolve_financial_provider`; the
+# tuple is the single source of truth shared by the `--provider` help
+# text and the unknown-provider refusal so an operator can always
+# discover the recognised set.
+_KNOWN_IMPORT_PROVIDERS: tuple[str, ...] = (
+    "auto",
+    "csv",
+    "ofx",
+    "qfx",
+    "xlsx",
+    "excel",
+    "n26",
+    "pdf",
+    "pdf-n26",
+)
+
+
+def _provider_catalogue_text() -> str:
+    """Return the comma-joined recognised provider ids for messages."""
+    return ", ".join(_KNOWN_IMPORT_PROVIDERS)
+
+
+def _validate_import_provider(provider: str) -> str:
+    """Reject an unrecognised import provider with a discoverable message.
+
+    Resolution is case-insensitive and whitespace-tolerant to match
+    `_resolve_financial_provider`. An unknown value is refused with a
+    `typer.BadParameter` that enumerates every accepted provider id so
+    the operator does not have to discover the set by trial and error
+    (cluster D / persona testimonials, ledger import surface).
+    """
+
+    normalised = provider.strip().lower()
+    if normalised not in _KNOWN_IMPORT_PROVIDERS:
+        raise _bad(
+            tr(
+                "cli.ledger.errors.unknown_provider",
+                provider=provider,
+                providers=_provider_catalogue_text(),
+            )
+        )
+    return normalised
+
+
+def _category_catalogue_text() -> str:
+    """Return the comma-joined recognised spending-category ids."""
+    return ", ".join(category.value for category in SpendingCategory)
+
+
+def _validate_category_id(category_id: str | None) -> str | None:
+    """Reject a `--category-id` value outside the closed spending taxonomy.
+
+    The canonical category set is :class:`SpendingCategory` — the
+    closed enum of deductible autónomo expense classes whose members
+    map one-to-one onto the modelo registry bindings. Free text such
+    as ``ventas_actividad`` is silently accepted by the bare string
+    field, so an operator can miscategorise rows all year and only
+    discover the drift when modelo calculations are wrong. Validating
+    here refuses an unknown id immediately and points at
+    ``aeat app ledger categories`` for the recognised catalogue.
+    """
+
+    if category_id is None:
+        return None
+    trimmed = category_id.strip()
+    if not trimmed:
+        return None
+    try:
+        return SpendingCategory(trimmed).value
+    except ValueError as exc:
+        raise _bad(
+            tr(
+                "cli.ledger.errors.unknown_category",
+                category=category_id,
+            )
+        ) from exc
+
+
+def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
+    """Convert a leaked pydantic `ValidationError` into a specific refusal.
+
+    The generic CLI error boundary wraps every leaked
+    :exc:`pydantic.ValidationError` into the opaque "command input
+    failed validation. Run ``aeat config repair``" message, discarding
+    the real cause. The ledger command models raise precise validator
+    messages (for example "business_pct must be None unless
+    classification is MIXED"); this helper extracts those messages so
+    the operator sees the actual illegal field combination rather than
+    a misleading repair hint.
+    """
+
+    details = "; ".join(
+        _format_validation_error(item) for item in error.errors()
+    )
+    return _bad(
+        tr(
+            "cli.ledger.errors.command_input_invalid",
+            details=details or tr("cli.ledger.errors.command_input_invalid_fallback"),
+        )
+    )
+
+
+def _format_validation_error(item: object) -> str:
+    """Render one pydantic error entry as ``field: message`` text."""
+    if not isinstance(item, dict):
+        return str(item)
+    location = item.get("loc", ())
+    message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
+    field_path = ".".join(str(part) for part in location if part != "__root__")
+    if field_path:
+        return f"{field_path}: {message}"
+    return message
 
 
 class _TransactionRepo(Protocol):
@@ -228,37 +351,41 @@ def ledger_add(
     """Create one manual ledger transaction through the bucket-scoped backend."""
     current_state = _state()
     transaction_repository = _tx_repo(current_state)
+    validated_category_id = _validate_category_id(category_id)
     resolved_business_pct = _resolve_business_pct_with_census(
         bucket_id=transaction_repository.bucket_id,
         active_profile=resolve_active_bucket_id(),
-        category_id=category_id,
+        category_id=validated_category_id,
         operator_supplied=_parse_decimal(business_pct, label="business-pct"),
     )
-    command = ManualLedgerTransactionCommand(
-        bucket_id=transaction_repository.bucket_id,
-        booked_date=_parse_iso_date(booked_date, label="date"),
-        value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
-        amount=_parse_required_decimal(amount, label="amount"),
-        currency=currency,
-        direction=direction,
-        counterparty=counterparty,
-        description=description,
-        business_classification=business_classification,
-        business_pct=resolved_business_pct,
-        category_id=category_id,
-        taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-        iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-        iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
-        irpf_category=irpf_category,
-        usage_ratio_id=usage_ratio_id,
-        prorrata_reference=prorrata_reference,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        attachment_ids=tuple(attachment_ids),
-        notes=notes,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger add",
-        idempotency_key=idempotency_key,
-    )
+    try:
+        command = ManualLedgerTransactionCommand(
+            bucket_id=transaction_repository.bucket_id,
+            booked_date=_parse_iso_date(booked_date, label="date"),
+            value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
+            amount=_parse_required_decimal(amount, label="amount"),
+            currency=currency,
+            direction=direction,
+            counterparty=counterparty,
+            description=description,
+            business_classification=business_classification,
+            business_pct=resolved_business_pct,
+            category_id=validated_category_id,
+            taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
+            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+            iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            irpf_category=irpf_category,
+            usage_ratio_id=usage_ratio_id,
+            prorrata_reference=prorrata_reference,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            attachment_ids=tuple(attachment_ids),
+            notes=notes,
+            actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger add",
+            idempotency_key=idempotency_key,
+        )
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
     result = create_manual_transaction(
         command,
         transaction_repository=transaction_repository,
@@ -355,13 +482,14 @@ def ledger_classify(
     """Classify one ledger transaction through the bucket-scoped backend."""
     state = _state()
     transaction_repository = _tx_repo(state)
+    validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
     result = update_manual_transaction_fields(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_id,
         patch=_patch_from_options(
             business_classification=classification,
-            category_id=category_id,
+            category_id=validated_category_id,
             taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
@@ -372,6 +500,37 @@ def ledger_classify(
         transaction_repository=transaction_repository,
     )
     _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+
+
+@app.command("categories", help=tr("cli.ledger.categories.help"))
+def ledger_categories(ctx: typer.Context) -> None:
+    """List the recognised `--category-id` spending-category catalogue.
+
+    The catalogue is the closed :class:`SpendingCategory` taxonomy of
+    deductible autónomo expense classes, grouped by coarse
+    :class:`SpendingCategoryFamily`. Every id printed here is a legal
+    value for the ``--category-id`` flag on ``ledger add``,
+    ``ledger classify``, and ``ledger allocate``; any other value is
+    refused. The grouped view lets an operator discover the correct id
+    before classifying a transaction rather than after modelo
+    calculations surface the drift.
+    """
+
+    families: list[dict[str, object]] = []
+    lines: list[str] = [tr("cli.ledger.categories.header")]
+    for family in SpendingCategoryFamily:
+        members = CATEGORY_FAMILY_MEMBERS.get(family, ())
+        if not members:
+            continue
+        category_ids = tuple(member.value for member in members)
+        families.append({"family": family.value, "category_ids": list(category_ids)})
+        for category_id in category_ids:
+            lines.append(f"{family.value}\t{category_id}")
+    payload = {
+        "families": families,
+        "category_ids": [category.value for category in SpendingCategory],
+    }
+    _emit(ctx, payload, lines)
 
 
 @app.command("allocate", help=tr("cli.ledger.allocate.help"))
@@ -395,6 +554,7 @@ def ledger_allocate(
     """Record business/private proportionality through the ledger backend."""
     state = _state()
     transaction_repository = _tx_repo(state)
+    validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
     parsed_business_pct = _parse_required_decimal(business_pct, label="business-pct")
     # The classification follows the proportion: a 100% allocation is
@@ -413,7 +573,7 @@ def ledger_allocate(
         patch=_patch_from_options(
             business_classification=allocation_classification,
             business_pct=parsed_business_pct,
-            category_id=category_id,
+            category_id=validated_category_id,
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,
         ),
@@ -1230,7 +1390,11 @@ def ledger_track(
 def ledger_import(
     ctx: typer.Context,
     path: Path = typer.Argument(..., help=tr("cli.ledger.import.path_help")),
-    provider: str = typer.Option(..., "--provider", help=tr("cli.ledger.import.provider_help")),
+    provider: str = typer.Option(
+        ...,
+        "--provider",
+        help=tr("cli.ledger.import.provider_help", providers=_provider_catalogue_text()),
+    ),
     dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.import.dry_run_help")),
     verify: bool = typer.Option(False, "--verify", help=tr("cli.ledger.import.verify_help")),
     source: Path | None = typer.Option(None, "--source", help=tr("cli.ledger.import.source_help")),
@@ -1238,6 +1402,7 @@ def ledger_import(
     period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.import.period_help")),
 ) -> None:
     """Import a financial-statement file via the existing provider registry."""
+    normalised_provider = _validate_import_provider(provider)
     bucket_id: str | None = None
     actor = "operator"
     transaction_repository = None
@@ -1250,7 +1415,7 @@ def ledger_import(
         LedgerSourceImportCommand(
             bucket_id=bucket_id,
             path=path,
-            provider=provider,
+            provider=normalised_provider,
             dry_run=dry_run,
             verify=verify,
             source=source,
@@ -1268,6 +1433,10 @@ def ledger_import(
     ]
     if result.dry_run:
         lines.append(f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}")
+    empty_import_notice = _empty_import_notice(result)
+    if empty_import_notice is not None:
+        lines.append(empty_import_notice)
+        payload["empty_import_notice"] = empty_import_notice
     if verbose or verify:
         lines.extend(_validation_lines(result.validation, result.source))
     _emit(
@@ -1275,6 +1444,26 @@ def ledger_import(
         payload,
         lines,
     )
+
+
+def _empty_import_notice(result: LedgerSourceImportResult) -> str | None:
+    """Return an explanatory line when a parsed import yields zero rows.
+
+    A known provider can parse a file successfully and still import
+    nothing — the source had a recognised header but no data rows, or
+    every row was skipped as a duplicate. Reporting only
+    ``Imported  0`` reads as success, so an operator assumes the data
+    landed when it did not. This helper produces a clear notice that
+    distinguishes the two zero-import paths and points at the
+    documented column format. A dry run is excluded because zero
+    imports is the expected outcome of a dry run.
+    """
+
+    if result.dry_run or result.imported > 0:
+        return None
+    if result.skipped > 0:
+        return f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.all_rows_skipped', skipped=result.skipped)}"
+    return f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.no_rows_imported')}"
 
 
 def _validation_lines(
@@ -1308,10 +1497,20 @@ def ledger_review(
     except FilterParseError as exc:
         raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     transaction_repository = _tx_repo(_state())
+    # `LedgerReviewQuery.transaction_id` requires the full 64-char
+    # SHA-256 id. An operator naturally passes the short display id
+    # surfaced by `ledger list` / `ledger review`, so the raw `--id`
+    # value must be resolved through the same prefix-resolution path
+    # every other ledger `--id` verb uses; otherwise the query model
+    # rejects the short prefix and the generic boundary masks it as
+    # "command input failed validation. Run aeat config repair".
+    resolved_record_id = (
+        _resolve_id(transaction_repository, record_id) if record_id is not None else None
+    )
     result = query_ledger_review_rows(
         LedgerReviewQuery(
             bucket_id=transaction_repository.bucket_id,
-            transaction_id=record_id,
+            transaction_id=resolved_record_id,
             period=_canonical_period(spec.period) if spec.period else None,
             status=spec.status.value if spec.status is not None else None,
             issue=spec.issue.value if spec.issue is not None else None,
