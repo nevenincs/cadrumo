@@ -160,7 +160,7 @@ def validate_checkbox(raw: str, question: WizardQuestion) -> str:
     for token in tokens:
         if token not in allowed:
             raise _fail(question, "checkbox_unknown", raw=token, choices=sorted(allowed))
-    return ",".join(tokens)
+    return ",".join(sorted(tokens))
 
 
 def validate_path(raw: str, question: WizardQuestion) -> str:

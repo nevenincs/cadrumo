@@ -164,12 +164,23 @@ def test_select_rejects_blank_for_required_unconditional_question() -> None:
 
 
 def test_checkbox_accepts_multi_token_membership() -> None:
+    """The checkbox canonical form is the sorted token set.
+
+    The validated string feeds an order-independent ``frozenset`` set
+    on ``TaxpayerProfile``; the validator sorts the tokens so the same
+    selected set declared in any operator input order persists as one
+    canonical string and never produces a spurious profile-changed
+    diff or snapshot-hash mismatch.
+    """
+
     choices = (
         WizardChoice(value="iva", label=tr("wizard.choices.iva")),
         WizardChoice(value="irpf", label=tr("wizard.choices.irpf")),
     )
     question = _question(WizardWidget.CHECKBOX, choices=choices, prompt=_CHECKBOX_PROMPT)
-    assert validate_widget_answer(question, "iva, irpf") == "iva,irpf"
+    assert validate_widget_answer(question, "iva, irpf") == "irpf,iva"
+    # The same set in the reverse input order canonicalises identically.
+    assert validate_widget_answer(question, "irpf, iva") == "irpf,iva"
 
 
 def test_checkbox_rejects_unknown_token() -> None:
