@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterable
+from typing import Any
 
 from ...domain.calculations.registry import RegistrySnapshot
 from ._source_mesh import (
@@ -48,6 +50,7 @@ class ProfileSourceResolver:
             profile_record=self._profile_record,
             caller_binding_ids=self._caller_binding_ids,
         )
+        fingerprint = _profile_fingerprint(self._profile_record)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -57,10 +60,18 @@ class ProfileSourceResolver:
                 CalculationSourceProvenance(
                     source_kind="profile",
                     source_ref=f"profile:{context.bucket_id}:binding:{binding_id}",
+                    fingerprint=fingerprint,
                 )
                 for binding_id in result.bindings_sourced_from_profile
             ),
         )
+
+
+def _profile_fingerprint(profile_record: Any) -> str | None:
+    if profile_record is None:
+        return None
+    payload = profile_record.model_dump_json() if hasattr(profile_record, "model_dump_json") else repr(profile_record)
+    return f"sha256:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}"
 
 
 __all__ = ["ProfileSourceResolver"]

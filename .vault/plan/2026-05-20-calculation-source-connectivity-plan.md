@@ -72,7 +72,7 @@ Enroll profile, previous filing, relation, borrador, and IVA wallet sources as e
 - [x] `W02.P04.S21` - Enroll relation prefill values through a source mesh resolver; `src/aeat/application/calculations/_relation_prefill.py`.
 - [x] `W02.P04.S22` - Enroll borrador Modelo 100 values through a source mesh resolver; `src/aeat/application/modelo/_borrador_binding.py`.
 - [x] `W02.P04.S23` - Enroll IVA wallet decision values through a source mesh resolver; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
-- [ ] `W02.P04.S24` - Test profile and live source fingerprints appear in source resolution; `src/aeat/application/aggregation/test_source_mesh_profile_live.py`.
+- [x] `W02.P04.S24` - Test profile and live source fingerprints appear in source resolution; `src/aeat/application/aggregation/test_source_mesh_profile_live.py`.
 
 ### Phase `W02.P05` - invoice evidence and retenciones
 

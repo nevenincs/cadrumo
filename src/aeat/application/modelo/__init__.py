@@ -57,6 +57,7 @@ from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorBindingResult,
+    Modelo100BorradorSourceResolver,
     resolve_modelo_100_borrador_bindings,
 )
 from ._history import (
@@ -84,6 +85,7 @@ __all__ = [
     "Modelo100BorradorBindingCommand",
     "Modelo100BorradorBindingError",
     "Modelo100BorradorBindingResult",
+    "Modelo100BorradorSourceResolver",
     "ModeloAggregationBindingError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloRecordNotFoundError",
