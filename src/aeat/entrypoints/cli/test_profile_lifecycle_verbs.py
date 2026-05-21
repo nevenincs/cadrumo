@@ -717,7 +717,9 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
 
     runner = CliRunner()
     _create_via_cli(runner, "alice")
-    uuid_before = read_profile_bucket("alice").bucket_id
+    alice_pointer = read_profile_bucket("alice")
+    assert alice_pointer is not None
+    uuid_before = alice_pointer.bucket_id
 
     dispose_engine()
     rename_result = runner.invoke(root_app, ["config", "profile", "rename", "alice", "bob"])
