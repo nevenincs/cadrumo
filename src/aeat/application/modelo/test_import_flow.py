@@ -53,6 +53,7 @@ from aeat.domain.modelos._calculation_revision import (
 )
 from aeat.domain.modelos._filing_record import (
     ExternalEvidenceKind,
+    ModeloRecord,
     ModeloRecordStatus,
 )
 from aeat.domain.modelos._filing_repository import (
@@ -62,6 +63,7 @@ from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
+from aeat.domain.modelos._work_unit import WorkUnit
 
 from .test_file_flow import _file_revision
 
@@ -127,8 +129,8 @@ class _ImportOutcome:
     ``import_external_filing_evidence``.
     """
 
-    work_unit: object
-    filing: object
+    work_unit: WorkUnit
+    filing: ModeloRecord
 
 
 def _drive_import_persists_filing(repos) -> _ImportOutcome:  # type: ignore[no-untyped-def]

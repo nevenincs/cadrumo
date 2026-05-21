@@ -24,7 +24,12 @@ from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.export import ExportSerializationFormat
 from ...core.config import Settings
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.categories import SpendingCategory
 from ...domain.invoices import (
     Invoice,
@@ -50,6 +55,8 @@ from ...domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
+    Transaction,
+    TransactionCatalogue,
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
@@ -63,6 +70,7 @@ from . import (
     LedgerSourceImportCommand,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
     archive_manual_transaction,
     attach_manual_transaction_evidence,
     create_manual_transaction,
@@ -214,9 +222,9 @@ class _CreateManualOutcome:
     threaded through the command.
     """
 
-    result: object
-    persisted: object
-    events: tuple[object, ...]
+    result: ManualLedgerTransactionResult
+    persisted: Transaction
+    events: tuple[BucketEvent, ...]
     purchase_invoice_evidence_id: str
 
 
@@ -1084,10 +1092,10 @@ class _UpdateManualOutcome:
     share without duplicating the two-command scenario.
     """
 
-    created: object
-    updated: object
-    reloaded: object
-    events: tuple[object, ...]
+    created: ManualLedgerTransactionResult
+    updated: ManualLedgerTransactionResult
+    reloaded: TransactionCatalogue
+    events: tuple[BucketEvent, ...]
 
 
 def _drive_update_manual_transaction(secure_engine: Engine) -> _UpdateManualOutcome:
