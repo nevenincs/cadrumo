@@ -499,7 +499,9 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
 
     payload = output.read_bytes()
     parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+    exported_values = {
+        entry.casilla_id: entry.value for entry in parsed.casillas if entry.casilla_id is not None
+    }
     draft_values = {entry.casilla_id: entry.value for entry in draft.values}
 
     assert receipt.byte_size == len(payload)

@@ -27,6 +27,16 @@ def _registry_toml_payload() -> dict[str, object]:
     return tomllib.loads(toml_path.read_text(encoding="utf-8"))
 
 
+def _aeat_section(payload: dict[str, object]) -> dict[str, object]:
+    """Return the mutable ``[aeat]`` table from a parsed registry payload."""
+
+    section = payload["aeat"]
+    assert isinstance(section, dict), "registry payload is missing a [aeat] table"
+    typed_section: dict[str, object] = {str(key): value for key, value in section.items()}
+    payload["aeat"] = typed_section
+    return typed_section
+
+
 def _is_docstring_node(node: ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef) -> bool:
     return (
         bool(node.body)
@@ -173,7 +183,7 @@ def test_missing_pre303_block_does_not_poison_registry_parsing() -> None:
     """
 
     payload = _registry_toml_payload()
-    payload["aeat"].pop("pre303", None)  # type: ignore[union-attr]
+    _aeat_section(payload).pop("pre303", None)
 
     constants = ExternalConstants.model_validate(payload)
 
@@ -191,8 +201,9 @@ def test_missing_pre303_block_keeps_settings_construction_alive() -> None:
     """
 
     payload = _registry_toml_payload()
-    payload["aeat"].pop("pre303", None)  # type: ignore[union-attr]
-    section = AeatSection.model_validate(payload["aeat"])
+    aeat_section = _aeat_section(payload)
+    aeat_section.pop("pre303", None)
+    section = AeatSection.model_validate(aeat_section)
 
     # The AEAT-URL default factories Settings() depends on only read
     # domains / sede_paths / clave_movil — all present without pre303.
@@ -216,7 +227,7 @@ def test_malformed_pre303_block_surfaces_clean_translated_error() -> None:
     """
 
     payload = _registry_toml_payload()
-    payload["aeat"]["pre303"] = {"presentation_service_path": ""}  # type: ignore[index]
+    _aeat_section(payload)["pre303"] = {"presentation_service_path": ""}
 
     constants = ExternalConstants.model_validate(payload)
     assert isinstance(constants, ExternalConstants)  # parsing must not raise

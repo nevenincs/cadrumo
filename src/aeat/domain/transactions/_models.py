@@ -296,8 +296,9 @@ def _coerce_transaction_decimal_fields(payload: dict[str, object]) -> None:
 
 def _coerce_transaction_temporal_fields(payload: dict[str, object]) -> None:
     """Parse the single str-typed datetime field via the shared helper."""
-    if isinstance(payload.get("classified_at"), str):
-        payload["classified_at"] = _parse_datetime(payload["classified_at"])
+    classified_at = payload.get("classified_at")
+    if isinstance(classified_at, str):
+        payload["classified_at"] = _parse_datetime(classified_at)
 
 
 def _normalize_transaction_optional_strings(payload: dict[str, object]) -> None:

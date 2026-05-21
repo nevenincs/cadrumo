@@ -13,7 +13,12 @@ from pathlib import Path
 import pytest
 
 import aeat.adapters.outbound.aeat.verify as verify_module
-from aeat.adapters.outbound.aeat.verify import verify_csv
+from aeat.adapters.outbound.aeat.verify import (
+    VerifyBrowserContextLike,
+    VerifyBrowserKeyboardLike,
+    VerifyBrowserPageLike,
+    verify_csv,
+)
 from aeat.domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
@@ -41,7 +46,7 @@ class _RecordingPage:
         self.goto_calls: list[str] = []
         self.fill_calls: list[tuple[str, str]] = []
         self.press_calls: list[tuple[str, str]] = []
-        self.keyboard = _RecordingKeyboard()
+        self.keyboard: VerifyBrowserKeyboardLike = _RecordingKeyboard()
 
     async def goto(self, url: str) -> None:
         self.goto_calls.append(url)
