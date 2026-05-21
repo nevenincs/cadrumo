@@ -43,6 +43,14 @@ The 2026 ruleset is implemented as a structural clone of the 2024 / 2025 scoped 
 
 The extractor registry adds `Modelo303V2026Extractor` as a thin subclass of `Modelo303V2025Extractor`. The synthetic layout and 33-casilla regex map are unchanged; only `TemplateRevision(modelo="303", año=2026, revision="2026.01")` differs.
 
+> **Correction — 2026-05-21.** The per-modelo `DeclaracionExtractor` ABC,
+> `GenericDeclaracionExtractor`, the `_extractors/` class registry, and all
+> per-modelo extractor subclasses described in this section were subsequently
+> deleted. Declaración extraction is now driven entirely by registry
+> `declaracion_pdf` extraction profiles. The `Modelo303V2026Extractor` class
+> described here no longer exists. See ADR
+> `2026-05-21-declaracion-extraction-architecture-adr`.
+
 The round-trip strategy is L3 synthetic PDF generation followed by `parse_declaracion` and `aeat filing import --from-declaracion`. The integration class keeps the existing English, Spanish-default, partial-extraction, and discrepancy-classifier cases, and adds a 2026 happy-path case.
 
 The L1 decision is an explicit waiver: no public real declaration PDF is pinned because a real Modelo 303 declaration contains taxpayer-specific data. Public legal anchors remain in BOE citations, while executable extraction evidence comes from the L3 generator.

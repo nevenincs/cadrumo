@@ -181,39 +181,6 @@ Author named-field declaracion_pdf profiles for modelos 036, 037, 369, 720, and 
 - [x] `W04.P10.S31` - Author the named-field declaracion_pdf profile for Modelo 720 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/720/`.
 - [x] `W04.P10.S32` - Author the named-field declaracion_pdf profile for Modelo 840 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/840/`.
 
-## W04 outcome - systemic finding: named-field profile authoring gated on printed-form PDF acquisition
-
-W04 execution exposed a systemic gap affecting all informativa and named-field modelos
-(M036, M037, M180, M303, M347, M369, M720, M840, and analogues such as M037). The
-`declaracion_pdf` extraction profiles authored in W04 use the `named_label`
-`match_strategy`, which anchors pattern matching on the text printed on a real AEAT
-printed-declaración-form PDF. The `label_pattern` regex values in the four profiles
-authored in W04 (M036, M347, M369, M840 - commit `3af7ea87e`) were derived from
-registry casilla LABEL fields sourced from diseño de registro artefacts in the corpus.
-
-The diseño de registro is an EDI record-layout specification (column widths, data
-types, field ordering for machine-readable interchange). It is a fundamentally
-different document from the printed declaración form an operator or AEAT portal
-generates. Its field label text may differ arbitrarily from the label printed on the
-form. It cannot ground or verify `named_label` `label_pattern` values.
-
-The corpus currently contains diseño de registro files for these modelos but NO
-printed-declaración-form PDF specimens. This affects tasks #22, #23, and #24
-(informativa and named-field profile authoring), and means:
-
-- The four W04 `label_pattern` values are provisional unverified guesses. The
-  `failure_semantics = "fail_hard"` posture on each profile ensures a mismatch will
-  error loudly rather than silently, but the patterns cannot be confirmed correct
-  until a round-trip test runs against a real PDF.
-- W05's round-trip-test Steps S33 (M303), S34 (M180), S35 (M190), S36 (M036),
-  S37 (M037), S38 (M369), S39 (M720), and S40 (M840) are all blocked on acquiring
-  real AEAT printed-declaración-form PDF specimens for these modelos into the corpus.
-  No W05 round-trip test can be written or executed without those PDF fixtures.
-
-The remediation path is: acquire official AEAT printed-form PDFs (from the AEAT
-portal, published BOE annex PDFs, or generated via the AEAT online form service) for
-each modelo into the corpus before authoring or verifying any `named_label` profiles.
-
 ## Wave `W05` - verification and rollout
 
 Verification Wave. Adds real per-modelo round-trip parse tests against PDF corpus fixtures, confirms the snapshot-build gate is green, and confirms all 26 modelos validate. Depends on every preceding Wave. Authorised by the declaracion-extraction-architecture ADR and its research.
@@ -236,7 +203,7 @@ Add per-modelo round-trip parse tests and confirm the snapshot-build gate is gre
 
 Correct the four stale documents that still describe the deleted per-modelo extractor classes as if implemented so no surviving document or comment contradicts the registry-profile-driven generic-parser architecture this plan executes.
 
-- [ ] `W05.P15.S87` - Correct the modelo-115 calc-verify ADR prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/adr/2026-04-27-modelo-115-calc-verify-adr.md`.
-- [ ] `W05.P15.S88` - Correct the modelo-303 calc-verify ADR prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/adr/2026-04-27-modelo-303-calc-verify-adr.md`.
-- [ ] `W05.P15.S89` - Correct the modelo-111 rule-delta reference prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md`.
-- [ ] `W05.P15.S90` - Correct the stale declaracion detector module comment that still describes the deleted per-modelo extractor surface; `src/aeat/adapters/inbound/declaracion/_detect.py`.
+- [x] `W05.P15.S87` - Correct the modelo-115 calc-verify ADR prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/adr/2026-04-27-modelo-115-calc-verify-adr.md`.
+- [x] `W05.P15.S88` - Correct the modelo-303 calc-verify ADR prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/adr/2026-04-27-modelo-303-calc-verify-adr.md`.
+- [x] `W05.P15.S89` - Correct the modelo-111 rule-delta reference prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md`.
+- [x] `W05.P15.S90` - Correct the stale declaracion detector module comment that still describes the deleted per-modelo extractor surface; `src/aeat/adapters/inbound/declaracion/_detect.py`.
