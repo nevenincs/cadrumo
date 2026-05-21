@@ -18,17 +18,19 @@ engine actually reads.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
-from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
 from ...adapters.outbound.aeat.export import ModeloDraftLike
 from ...application.auth import AuthProviderDescription
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
-type ModeloInputValue = str | Decimal
-type ModeloInputs = Mapping[str, ModeloInputValue]
+# ``ModeloInputs`` and its element aliases have a single canonical
+# definition in :mod:`aeat.domain.filing._protocols`. The workflow
+# engine re-exports them here so adapters can import the contract from
+# the workflow package without taking a second divergent definition.
+from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
 
 
 @runtime_checkable
@@ -63,7 +65,7 @@ class ModeloDraftBuilderProtocol(Protocol):
         modelo: str,
         period: str,
         profile: TaxpayerProfile,
-        inputs: Mapping[str, object],
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         """Build and return a registry-backed filing draft."""
@@ -163,6 +165,7 @@ __all__ = [
     "DeadlineEngineProtocol",
     "ExpedientesSource",
     "ModeloDraftBuilderProtocol",
+    "ModeloInputScalar",
     "ModeloInputValue",
     "ModeloInputs",
     "ModeloInputsProviderProtocol",

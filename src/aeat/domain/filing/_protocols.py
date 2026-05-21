@@ -187,7 +187,37 @@ class ModeloProfile(Protocol):
         ...
 
 
-# A typed alias for the raw input mapping passed into builders.
-# Mapping not dict so callers may pass any read-only mapping.
-ModeloInputs = Mapping[str, object]
-"""Read-only input mapping for casilla values handed to a filing builder."""
+# The canonical input contract for casilla and binding values handed
+# to a filing builder. Mapping not dict so callers may pass any
+# read-only mapping. This is the single definition of ``ModeloInputs``
+# in the codebase; the application/workflow layer re-exports it.
+type ModeloInputScalar = str | int | Decimal | bool | date
+"""A single casilla or binding-row value accepted by the filing builder.
+
+Casilla inputs are canonical strings or decimals; year casillas (for
+example modelo 390 casilla ``01``) are plain integers, and registry
+bindings additionally accept booleans (``boolean`` data type) and
+dates (``text`` data type). ``build_draft`` parses and range-checks
+every scalar against the registry casilla / binding schema.
+"""
+
+type ModeloInputValue = (
+    ModeloInputScalar | Sequence[ModeloInputScalar] | Mapping[str, ModeloInputScalar]
+)
+"""A filing-input value.
+
+Most casilla and binding inputs are a single :data:`ModeloInputScalar`.
+Repeating-row registry bindings (for example the modelo 131 repeating
+activity rows) accept a ``Sequence`` of row scalars, or a ``Mapping``
+of explicit row key to scalar.
+"""
+
+type ModeloInputs = Mapping[str, ModeloInputValue]
+"""Read-only input mapping for casilla and binding values handed to a
+filing builder.
+
+Keys are casilla or binding IDs; values are :data:`ModeloInputValue`.
+A workflow inputs-provider that only ever yields flat scalars still
+satisfies this contract, so the workflow layer re-exports this symbol
+rather than defining a narrower divergent alias.
+"""

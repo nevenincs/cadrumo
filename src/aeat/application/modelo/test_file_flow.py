@@ -29,7 +29,6 @@ Coverage:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -269,7 +268,7 @@ class _RevisionDraftBuilder:
         modelo: str,
         period: str,
         profile: TaxpayerProfile,
-        inputs: Mapping[str, object],
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ):
         draft = build_draft(

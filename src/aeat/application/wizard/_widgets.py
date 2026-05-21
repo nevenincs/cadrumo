@@ -129,10 +129,16 @@ def validate_confirm(raw: str, question: WizardQuestion) -> str:
 def validate_select(raw: str, question: WizardQuestion) -> str:
     """Reject any answer that is not declared in the question's choices.
 
-    A blank answer is accepted for an optional, unconditional question
-    that declares no default — it represents an undeclared closed-set
-    fact. A required (or conditionally-required) question with no
-    answer still fails, and any non-blank answer must match a choice.
+    Blank-answer policy is keyed on the *static* descriptor, because
+    the validator is handed only the question and the raw answer — the
+    runner's evaluated ``visible_when`` verdict is not threaded into
+    this call. A blank answer fails only for an *unconditionally*
+    required question (``required`` and no ``visible_when``). A blank
+    answer is accepted for an optional question, and for a
+    conditionally-gated question (one that declares a ``visible_when``)
+    regardless of its ``required`` flag — a gated question represents
+    an undeclared closed-set fact when left blank. Any non-blank answer
+    must match a declared choice.
     """
 
     if not question.choices:
@@ -149,7 +155,17 @@ def validate_select(raw: str, question: WizardQuestion) -> str:
 
 
 def validate_checkbox(raw: str, question: WizardQuestion) -> str:
-    """Validate a comma-separated list of choice tokens against the choices."""
+    """Validate a comma-separated list of choice tokens against the choices.
+
+    Blank-answer policy matches :func:`validate_select`: an empty token
+    set fails only for an *unconditionally* required question
+    (``required`` and no ``visible_when``). An empty set is accepted
+    for an optional question, and for a conditionally-gated question
+    (one that declares a ``visible_when``) regardless of its
+    ``required`` flag, because the runner's evaluated visibility is not
+    threaded into this validator. Every supplied token must match a
+    declared choice; the canonical form is the sorted token set.
+    """
 
     if not question.choices:
         raise _fail(question, "checkbox_without_choices")

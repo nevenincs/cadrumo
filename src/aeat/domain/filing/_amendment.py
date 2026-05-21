@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -32,10 +31,16 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ._protocols import ModeloInputs
 from ._schema import ModeloDraft
 
 type ModeloCode = str
-type CasillaInputs = Mapping[str, object]
+type CasillaInputs = ModeloInputs
+"""Updated casilla inputs supplied to an amendment build.
+
+An amendment restates casilla values, so its input contract is the
+same canonical :data:`aeat.domain.filing.ModeloInputs` mapping the
+filing builder consumes."""
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

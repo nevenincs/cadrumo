@@ -16,7 +16,6 @@ than failing.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING, cast
 
@@ -44,6 +43,7 @@ from ._protocols import (
     DeadlineEngineProtocol,
     ExpedientesSource,
     ModeloDraftBuilderProtocol,
+    ModeloInputs,
     ModeloInputsProviderProtocol,
     NotificationsSource,
     RegistryModeloDraftProtocol,
@@ -89,7 +89,7 @@ class ModeloDraftBuilderAdapter:
         modelo: str,
         period: str,
         profile: TaxpayerProfile,
-        inputs: Mapping[str, object],
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         """Delegate to :func:`build_draft`.
