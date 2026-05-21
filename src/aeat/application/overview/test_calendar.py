@@ -448,13 +448,13 @@ def test_calendar_undeclared_profile_yields_incomplete_empty_calendar() -> None:
 
 
 def _fully_enrolled_autonomo() -> TaxpayerProfile:
-    """An autónomo whose enrolment flags trigger un-ruled modelos.
+    """An autónomo whose enrolment flags trigger the full modelo set.
 
-    The deadline engine produces Modelos 111 / 115 / 349 for this
-    profile, none of which carries a seed applicability rule (the seed
-    table covers only 100 / 130 / 303 / 200 / 202). Those modelos are
-    therefore the ``INCOMPLETE``-verdict leak candidates the calendar
-    must exclude.
+    Every withholding-payer and trade fact is positively declared, so
+    the deadline engine schedules Modelos 111 / 115 / 130 / 303 / 349
+    — all seed-ruled and ``APPLICABLE`` for this profile. Used by the
+    graceful-degradation tests, which only need a profile that produces
+    obligations across year boundaries.
     """
 
     return TaxpayerProfile(
@@ -472,47 +472,68 @@ def _fully_enrolled_autonomo() -> TaxpayerProfile:
     )
 
 
-def test_calendar_excludes_un_ruled_incomplete_modelos() -> None:
-    """A modelo with no seed applicability rule must never appear as a
-    confident calendar row.
+def _objetiva_autonomo() -> TaxpayerProfile:
+    """An autónomo en estimación objetiva (módulos).
 
-    The deadline engine yields Modelos 111 / 115 / 349 for a fully
-    enrolled autónomo; ``derive_modelo_applicability`` returns
-    ``INCOMPLETE`` for each because the seed rule table does not cover
-    them. The calendar must drop INCOMPLETE verdicts exactly the way it
-    drops NOT_APPLICABLE — an un-ruled modelo absent is correct, an
-    un-ruled modelo shown as confidently due is the W02 defect. The
-    only modelos that survive are the seed-ruled APPLICABLE ones
-    (130 / 303 for this persona).
+    The deadline engine schedules both Modelo 130 and Modelo 131 for an
+    autónomo, but the estimation-regime axis makes them mutually
+    exclusive: an objetiva autónomo owes Modelo 131 (pago fraccionado
+    por módulos) and NOT Modelo 130. The calendar must therefore drop
+    the ``NOT_APPLICABLE`` Modelo 130 row — a non-``APPLICABLE`` verdict
+    must never appear as a confident due row.
+    """
+
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
+        iva_regime=IVARegime.SIMPLIFICADO,
+    )
+
+
+def test_calendar_excludes_non_applicable_modelos() -> None:
+    """A modelo the taxpayer model does not positively trigger must
+    never appear as a confident calendar row.
+
+    The deadline engine schedules both Modelo 130 and Modelo 131 for an
+    autónomo. For an estimación-objetiva autónomo the regime axis makes
+    Modelo 130 ``NOT_APPLICABLE`` and Modelo 131 ``APPLICABLE``. The
+    calendar must surface only the ``APPLICABLE`` verdicts — a
+    ``NOT_APPLICABLE`` row shown as confidently due is the W02 defect.
     """
 
     from ._applicability import ApplicabilityVerdict, derive_modelo_applicability
 
-    profile = _fully_enrolled_autonomo()
+    profile = _objetiva_autonomo()
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
     cal = build_overview_calendar(profile, rng, today=date(2026, 4, 1))
 
     calendar_modelos = {entry.modelo for entry in cal.entries}
-    # The un-ruled modelos the engine schedules are INCOMPLETE...
-    for un_ruled in ("111", "115", "349"):
-        assert derive_modelo_applicability(profile, un_ruled).verdict is ApplicabilityVerdict.INCOMPLETE
-        # ...and therefore absent from the calendar.
-        assert un_ruled not in calendar_modelos, un_ruled
-    # Only positively APPLICABLE seed-ruled modelos survive.
-    assert calendar_modelos == {"130", "303"}
+    # Modelo 130 is NOT_APPLICABLE for an objetiva autónomo...
+    assert derive_modelo_applicability(profile, "130").verdict is (
+        ApplicabilityVerdict.NOT_APPLICABLE
+    )
+    # ...and therefore absent from the calendar.
+    assert "130" not in calendar_modelos
+    # Modelo 131 is the objetiva pago fraccionado — it must be present.
+    assert "131" in calendar_modelos
+    # Every surfaced row is a positively APPLICABLE seed-ruled modelo.
     for entry in cal.entries:
-        assert derive_modelo_applicability(profile, entry.modelo).verdict is ApplicabilityVerdict.APPLICABLE
+        assert derive_modelo_applicability(profile, entry.modelo).verdict is (
+            ApplicabilityVerdict.APPLICABLE
+        ), entry.modelo
 
 
-def test_agenda_and_backlog_inherit_the_incomplete_exclusion() -> None:
-    """Agenda and backlog compose the calendar, so the INCOMPLETE
-    exclusion must reach them too — neither may leak an un-ruled modelo
-    as a confident due / late row."""
+def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
+    """Agenda and backlog compose the calendar, so the non-applicable
+    exclusion must reach them too — neither may leak the NOT_APPLICABLE
+    Modelo 130 as a confident due / late row for an objetiva autónomo."""
 
     from ._agenda import build_overview_agenda
     from ._backlog import build_overview_backlog
 
-    profile = _fully_enrolled_autonomo()
+    profile = _objetiva_autonomo()
 
     # A horizon that keeps the agenda window inside 2026 (the agenda
     # adds a 90-day overdue lookback, so the horizon must leave room).
@@ -520,9 +541,8 @@ def test_agenda_and_backlog_inherit_the_incomplete_exclusion() -> None:
     agenda_modelos = {
         entry.modelo for bucket in (agenda.due_today, agenda.due_soon, agenda.overdue) for entry in bucket
     }
-    assert agenda_modelos, "expected the enrolled autónomo to have agenda obligations"
-    for un_ruled in ("111", "115", "349"):
-        assert un_ruled not in agenda_modelos, un_ruled
+    assert agenda_modelos, "expected the objetiva autónomo to have agenda obligations"
+    assert "130" not in agenda_modelos
 
     backlog = build_overview_backlog(
         profile,
@@ -531,8 +551,7 @@ def test_agenda_and_backlog_inherit_the_incomplete_exclusion() -> None:
         as_of=date(2026, 12, 31),
     )
     backlog_modelos = {item.modelo for item in backlog.items}
-    for un_ruled in ("111", "115", "349"):
-        assert un_ruled not in backlog_modelos, un_ruled
+    assert "130" not in backlog_modelos
 
 
 # ---------------------------------------------------------------------
