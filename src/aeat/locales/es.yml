@@ -755,6 +755,33 @@ cli:
       key_help: Clave a leer (ej. tax.id, iva.regime)
     google:
       client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
+      errors:
+        auth_failed: 'La autenticación con Google falló: {detail}'
+        browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
+          {detail}'
+        client_not_registered: No hay ningún cliente OAuth de Google registrado para
+          este perfil. Ejecuta primero `aeat config google register --client-json
+          <ruta>`.
+        client_revoked: El cliente OAuth de Google registrado ha sido revocado. Vuelve
+          a registrarlo con `aeat config google register`.
+        keychain_locked: El llavero del sistema que guarda las credenciales de Google
+          está bloqueado o no disponible.
+        loopback_bind: 'No se pudo abrir un puerto local para completar el inicio
+          de sesión en Google: {detail}'
+        network: 'No se pudo contactar con Google: {detail}'
+        profile_unbound: No hay ningún perfil activo. Ejecuta `aeat config profile
+          switch <nombre>` o indica `--profile`.
+        scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
+          Ejecuta `aeat config google login` y acepta todos los permisos.
+        storage: 'No se pudo acceder al almacenamiento de Google Drive: {detail}'
+        token_expired: El acceso a Google ha caducado (los tokens de los proyectos
+          en pruebas caducan a los 7 días). Ejecuta `aeat config google login`.
+        token_revoked: El acceso a Google ha sido revocado. Ejecuta `aeat config google
+          login` para autorizarlo de nuevo.
+        unsecured_mode: El acceso a Google está bloqueado mientras el almacén de secretos
+          funciona en modo no seguro para un perfil con un NIF real.
+        validation: 'Los datos proporcionados para Google no superaron la validación:
+          {detail}'
       folder:
         folder_id_help: Id de la carpeta de Google Drive
         get_help: Muestra la carpeta raíz de Google Drive configurada
@@ -1828,37 +1855,71 @@ entries:
     purpose: Página de inicio de la Sede Electrónica de la AEAT.
 errors:
   auth:
-    auth_aeat_login_assertion: errors.auth.auth_aeat_login_assertion
-    auth_aeat_session_expired: errors.auth.auth_aeat_session_expired
-    auth_auth: errors.auth.auth_auth
-    auth_auth_authenticator_persisted_session_invalid: errors.auth.auth_auth_authenticator_persisted_session_invalid
-    auth_auth_certificate: errors.auth.auth_auth_certificate
-    auth_auth_certificate_expired: errors.auth.auth_auth_certificate_expired
-    auth_auth_certificate_handshake: errors.auth.auth_auth_certificate_handshake
-    auth_auth_certificate_load: errors.auth.auth_auth_certificate_load
-    auth_auth_certificate_nif_parse: errors.auth.auth_auth_certificate_nif_parse
-    auth_auth_certificate_password: errors.auth.auth_auth_certificate_password
-    auth_auth_certificate_pre_expiry: errors.auth.auth_auth_certificate_pre_expiry
-    auth_auth_clave_movil_clave_movil_approval_timeout: errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout
-    auth_auth_clave_movil_clave_movil_configuration: errors.auth.auth_auth_clave_movil_clave_movil_configuration
-    auth_auth_configuration: errors.auth.auth_auth_configuration
-    auth_auth_validation: errors.auth.auth_auth_validation
-    auth_google: errors.auth.auth_google
-    auth_google_client_not_registered: errors.auth.auth_google_client_not_registered
-    auth_google_client_revoked: errors.auth.auth_google_client_revoked
-    auth_google_expired: errors.auth.auth_google_expired
-    auth_google_revoked: errors.auth.auth_google_revoked
-    auth_google_scope_insufficient: errors.auth.auth_google_scope_insufficient
-    auth_outbound_storage_permission: errors.auth.auth_outbound_storage_permission
-    auth_session_corrupt: errors.auth.auth_session_corrupt
-    auth_session_unavailable: errors.auth.auth_session_unavailable
-    auth_storage_bucket_recovery_verification: errors.auth.auth_storage_bucket_recovery_verification
-    auth_storage_keyring_unavailable: errors.auth.auth_storage_keyring_unavailable
-    auth_storage_master_key_kdf_version: errors.auth.auth_storage_master_key_kdf_version
-    auth_storage_master_key_keychain_locked: errors.auth.auth_storage_master_key_keychain_locked
-    auth_storage_master_key_material_missing: errors.auth.auth_storage_master_key_material_missing
-    auth_storage_master_key_passphrase_mismatch: errors.auth.auth_storage_master_key_passphrase_mismatch
-    auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
+    auth_aeat_login_assertion: No se pudo generar la verificación posterior al inicio
+      de sesión con la AEAT.
+    auth_aeat_session_expired: La sesión autenticada con la AEAT ha caducado. Vuelve
+      a autenticarte para continuar.
+    auth_auth: Se produjo un error de autenticación con la AEAT.
+    auth_auth_authenticator_persisted_session_invalid: La sesión de navegador guardada
+      con la AEAT no es fiable. Vuelve a autenticarte.
+    auth_auth_certificate: Se produjo un error en la autenticación con certificado.
+    auth_auth_certificate_expired: El certificado digital ha caducado. Renueva el
+      certificado para poder autenticarte.
+    auth_auth_certificate_handshake: La entrada del handshake TLS no es válida. Revisa
+      la URL indicada.
+    auth_auth_certificate_load: No se pudieron leer los datos del certificado PKCS#12.
+      Comprueba que el archivo no esté dañado.
+    auth_auth_certificate_nif_parse: No se pudo extraer ningún NIF ni NIE del titular
+      del certificado. Comprueba que el certificado sea de persona física.
+    auth_auth_certificate_password: La contraseña del certificado falta o es incorrecta.
+      Define la variable de entorno con la contraseña correcta.
+    auth_auth_certificate_pre_expiry: El certificado digital está a punto de caducar.
+      Renuévalo antes de que expire para evitar interrupciones.
+    auth_auth_clave_movil_clave_movil_approval_timeout: La autenticación Cl@ve no
+      se completó a tiempo. Aprueba la solicitud en tu dispositivo y vuelve a intentarlo.
+    auth_auth_clave_movil_clave_movil_configuration: Faltan ajustes obligatorios de
+      Cl@ve Móvil o son incorrectos. Revisa la configuración de Cl@ve.
+    auth_auth_configuration: Faltan ajustes de autenticación obligatorios o son incorrectos.
+      Revisa la configuración de autenticación.
+    auth_auth_validation: Los parámetros de autenticación no superaron la validación.
+      Corrige los valores indicados y vuelve a intentarlo.
+    auth_google: Se produjo un error en la autenticación con Google.
+    auth_google_client_not_registered: No hay ningún cliente OAuth de escritorio de
+      Google registrado para el perfil activo. Registra un cliente para usar funciones
+      de Google.
+    auth_google_client_revoked: El cliente OAuth de escritorio de Google registrado
+      ha sido revocado. Registra un cliente nuevo.
+    auth_google_expired: El token de actualización de Google ha caducado por el límite
+      de 7 días de los proyectos en pruebas. Vuelve a autorizar el acceso a Google.
+    auth_google_revoked: El token de actualización de Google ha sido revocado. Vuelve
+      a autorizar el acceso a Google.
+    auth_google_scope_insufficient: Los permisos concedidos a Google no incluyen todos
+      los necesarios para esta operación. Vuelve a autorizar concediendo todos los
+      permisos solicitados.
+    auth_outbound_storage_permission: Las credenciales activas no tienen el permiso
+      necesario para esta operación de almacenamiento.
+    auth_session_corrupt: Los metadatos de la sesión guardada no se pueden leer. Vuelve
+      a autenticarte para crear una sesión nueva.
+    auth_session_unavailable: No hay ninguna sesión activa verificada con la AEAT
+      disponible. Autentícate antes de continuar.
+    auth_storage_bucket_recovery_verification: El código de recuperación introducido
+      no es válido. Vuelve a escribir las 24 palabras exactamente como aparecen en
+      la copia de seguridad.
+    auth_storage_keyring_unavailable: El llavero del sistema operativo no está disponible.
+      Comprueba que haya un almacén de credenciales instalado y activo.
+    auth_storage_master_key_kdf_version: El archivo de clave maestra usa una versión
+      de derivación de clave que esta versión de la aplicación no admite. Actualiza
+      la aplicación.
+    auth_storage_master_key_keychain_locked: El llavero del sistema operativo está
+      bloqueado. Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor
+      de credenciales) y vuelve a intentarlo.
+    auth_storage_master_key_material_missing: No existe material de clave maestra.
+      El almacenamiento seguro aún no está aprovisionado.
+    auth_storage_master_key_passphrase_mismatch: La frase de contraseña no abre la
+      clave maestra. Vuelve a introducirla; si la has olvidado, recupérala con tu
+      clave de recuperación.
+    auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
+      proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
@@ -2112,37 +2173,67 @@ errors:
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:
-    integrity_aeat_core_validation: errors.integrity.integrity_aeat_core_validation
-    integrity_cli_output_schema: errors.integrity.integrity_cli_output_schema
-    integrity_filing_amendment_validation: errors.integrity.integrity_filing_amendment_validation
-    integrity_filing_fixture: errors.integrity.integrity_filing_fixture
-    integrity_filing_validation: errors.integrity.integrity_filing_validation
-    integrity_financial_attachments_attachment_validation: errors.integrity.integrity_financial_attachments_attachment_validation
-    integrity_identity_document: errors.integrity.integrity_identity_document
-    integrity_justificante_verification: errors.integrity.integrity_justificante_verification
-    integrity_manuals_manifest: errors.integrity.integrity_manuals_manifest
-    integrity_observability_aeat_corpus_drift: errors.integrity.integrity_observability_aeat_corpus_drift
-    integrity_observability_run_trace_validation: errors.integrity.integrity_observability_run_trace_validation
-    integrity_outbound_storage: errors.integrity.integrity_outbound_storage
-    integrity_portals_portal_integrity: errors.integrity.integrity_portals_portal_integrity
-    integrity_profile_snapshot_hash_mismatch: errors.integrity.integrity_profile_snapshot_hash_mismatch
-    integrity_profile_snapshot_not_found: errors.integrity.integrity_profile_snapshot_not_found
-    integrity_storage_blob: errors.integrity.integrity_storage_blob
-    integrity_storage_classification: errors.integrity.integrity_storage_classification
-    integrity_storage_corpus_manifest: errors.integrity.integrity_storage_corpus_manifest
-    integrity_storage_corpus_manifest_drift: errors.integrity.integrity_storage_corpus_manifest_drift
-    integrity_storage_corpus_manifest_tamper: errors.integrity.integrity_storage_corpus_manifest_tamper
-    integrity_storage_decryption: errors.integrity.integrity_storage_decryption
-    integrity_storage_encryption: errors.integrity.integrity_storage_encryption
-    integrity_storage_envelope_version: errors.integrity.integrity_storage_envelope_version
-    integrity_storage_key_derivation: errors.integrity.integrity_storage_key_derivation
-    integrity_storage_nonce_collision: errors.integrity.integrity_storage_nonce_collision
-    integrity_storage_path_containment: errors.integrity.integrity_storage_path_containment
-    integrity_storage_retention_policy: errors.integrity.integrity_storage_retention_policy
-    integrity_storage_secure_object_unreadable: errors.integrity.integrity_storage_secure_object_unreadable
-    integrity_storage_validation: errors.integrity.integrity_storage_validation
-    integrity_verification: errors.integrity.integrity_verification
-    profile_import_signature: errors.integrity.profile_import_signature
+    integrity_aeat_core_validation: Una comprobación interna de integridad de datos
+      no se superó.
+    integrity_cli_output_schema: El registro de esquemas de salida de la CLI está
+      mal configurado.
+    integrity_filing_amendment_validation: La declaración complementaria infringe
+      una invariante legal o de estructura.
+    integrity_filing_fixture: Los datos de prueba de la declaración no son válidos.
+    integrity_filing_validation: La validación de la declaración detectó un problema
+      que impide continuar.
+    integrity_financial_attachments_attachment_validation: El justificante adjunto
+      no superó la validación. Comprueba el archivo y vuelve a adjuntarlo.
+    integrity_identity_document: El documento de identidad indicado no es un NIF,
+      NIE ni CIF español válido.
+    integrity_justificante_verification: La verificación del justificante con la AEAT
+      no se pudo completar.
+    integrity_manuals_manifest: El manifiesto del manual no superó las comprobaciones
+      de esquema o de hash.
+    integrity_observability_aeat_corpus_drift: La reproducción detectó que el corpus
+      de referencia de la AEAT ha cambiado respecto al registrado.
+    integrity_observability_run_trace_validation: La traza de ejecución guardada no
+      superó la validación estricta.
+    integrity_outbound_storage: El contenido descargado no superó las comprobaciones
+      de integridad (hash, tamaño o etiqueta).
+    integrity_portals_portal_integrity: El registro de portales de la AEAT infringe
+      una invariante estructural.
+    integrity_profile_snapshot_hash_mismatch: El hash del snapshot del perfil no coincide
+      con la proyección actual.
+    integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
+      el identificador indicado.
+    integrity_storage_blob: El hash SHA-256 de un objeto almacenado no coincide con
+      el de su manifiesto.
+    integrity_storage_classification: La clase de sensibilidad declarada de un registro
+      es incompatible con su repositorio.
+    integrity_storage_corpus_manifest: El manifiesto del corpus no se pudo leer o
+      validar.
+    integrity_storage_corpus_manifest_drift: 'El corpus en disco difiere de lo que
+      describe su manifiesto: se han añadido, eliminado o modificado archivos.'
+    integrity_storage_corpus_manifest_tamper: El resumen autoverificable del manifiesto
+      del corpus no coincide con su contenido. El manifiesto puede estar dañado o
+      manipulado.
+    integrity_storage_decryption: El descifrado de un objeto almacenado falló. Los
+      datos pueden estar dañados o la clave no es correcta.
+    integrity_storage_encryption: Se produjo un error de cifrado o descifrado en el
+      almacenamiento seguro.
+    integrity_storage_envelope_version: La versión de un objeto en disco no coincide
+      con la que espera la aplicación.
+    integrity_storage_key_derivation: Falló un paso de derivación de clave en el almacenamiento
+      seguro.
+    integrity_storage_nonce_collision: Se detectó una colisión de nonce en el almacenamiento
+      seguro.
+    integrity_storage_path_containment: Una ruta calculada se sale del directorio
+      raíz configurado.
+    integrity_storage_retention_policy: Los metadatos de retención de un registro
+      infringen la política de su clasificación.
+    integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
+      pudo descifrar con la clave maestra actual.
+    integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
+    integrity_verification: La verificación falló de forma irrecuperable. Los datos
+      de referencia o el motor de cálculo pueden estar dañados.
+    profile_import_signature: El archivo de perfil no superó la comprobación de firma
+      o integridad. No importes archivos de origen no fiable.
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
     internal_observability_run_context_missing: 'Error interno: se intentó registrar

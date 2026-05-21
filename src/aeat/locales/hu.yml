@@ -733,6 +733,21 @@ cli:
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
     google:
       client_json_help: A Cloud Console Desktop OAuth kliens JSON fájl útvonala
+      errors:
+        auth_failed: 'A Google-hitelesítés sikertelen: {detail}'
+        browser_open: 'Nem sikerült böngészőt megnyitni a Google-hozzáférés engedélyezéséhez: {detail}'
+        client_not_registered: 'Nincs Google OAuth-kliens regisztrálva ehhez a profilhoz. Először futtasd: `aeat config google register --client-json <útvonal>`.'
+        client_revoked: 'A regisztrált Google OAuth-klienst visszavonták. Regisztráld újra: `aeat config google register`.'
+        keychain_locked: 'A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolva van vagy nem érhető el.'
+        loopback_bind: 'Nem sikerült helyi portot nyitni a Google-bejelentkezés befejezéséhez: {detail}'
+        network: 'Nem sikerült elérni a Google-t: {detail}'
+        profile_unbound: 'Nincs aktív profil. Futtasd az `aeat config profile switch <név>` parancsot, vagy add meg a `--profile` kapcsolót.'
+        scope_insufficient: 'A Google-höz megadott hozzáférésből hiányoznak a szükséges engedélyek. Futtasd az `aeat config google login` parancsot, és fogadj el minden engedélyt.'
+        storage: 'Nem sikerült elérni a Google Drive tárhelyet: {detail}'
+        token_expired: 'A Google-hozzáférés lejárt (a tesztprojektek tokenjei 7 nap után lejárnak). Futtasd: `aeat config google login`.'
+        token_revoked: 'A Google-hozzáférést visszavonták. Futtasd az `aeat config google login` parancsot az újbóli engedélyezéshez.'
+        unsecured_mode: 'A Google-hozzáférés le van tiltva, amíg a titoktár nem biztonságos módban fut egy valós NIF-fel rendelkező profilnál.'
+        validation: 'A Google-höz megadott adatok nem mentek át az ellenőrzésen: {detail}'
       folder:
         folder_id_help: Google Drive mappaazonosító
         get_help: Mutasd a beállított Google Drive gyökérmappát
@@ -1786,37 +1801,67 @@ entries:
     purpose: Az AEAT elektronikus ügyintézési portáljának kezdőlapja.
 errors:
   auth:
-    auth_aeat_login_assertion: errors.auth.auth_aeat_login_assertion
-    auth_aeat_session_expired: errors.auth.auth_aeat_session_expired
-    auth_auth: errors.auth.auth_auth
-    auth_auth_authenticator_persisted_session_invalid: errors.auth.auth_auth_authenticator_persisted_session_invalid
-    auth_auth_certificate: errors.auth.auth_auth_certificate
-    auth_auth_certificate_expired: errors.auth.auth_auth_certificate_expired
-    auth_auth_certificate_handshake: errors.auth.auth_auth_certificate_handshake
-    auth_auth_certificate_load: errors.auth.auth_auth_certificate_load
-    auth_auth_certificate_nif_parse: errors.auth.auth_auth_certificate_nif_parse
-    auth_auth_certificate_password: errors.auth.auth_auth_certificate_password
-    auth_auth_certificate_pre_expiry: errors.auth.auth_auth_certificate_pre_expiry
-    auth_auth_clave_movil_clave_movil_approval_timeout: errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout
-    auth_auth_clave_movil_clave_movil_configuration: errors.auth.auth_auth_clave_movil_clave_movil_configuration
-    auth_auth_configuration: errors.auth.auth_auth_configuration
-    auth_auth_validation: errors.auth.auth_auth_validation
-    auth_google: errors.auth.auth_google
-    auth_google_client_not_registered: errors.auth.auth_google_client_not_registered
-    auth_google_client_revoked: errors.auth.auth_google_client_revoked
-    auth_google_expired: errors.auth.auth_google_expired
-    auth_google_revoked: errors.auth.auth_google_revoked
-    auth_google_scope_insufficient: errors.auth.auth_google_scope_insufficient
-    auth_outbound_storage_permission: errors.auth.auth_outbound_storage_permission
-    auth_session_corrupt: errors.auth.auth_session_corrupt
-    auth_session_unavailable: errors.auth.auth_session_unavailable
-    auth_storage_bucket_recovery_verification: errors.auth.auth_storage_bucket_recovery_verification
-    auth_storage_keyring_unavailable: errors.auth.auth_storage_keyring_unavailable
-    auth_storage_master_key_kdf_version: errors.auth.auth_storage_master_key_kdf_version
-    auth_storage_master_key_keychain_locked: errors.auth.auth_storage_master_key_keychain_locked
-    auth_storage_master_key_material_missing: errors.auth.auth_storage_master_key_material_missing
-    auth_storage_master_key_passphrase_mismatch: errors.auth.auth_storage_master_key_passphrase_mismatch
-    auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
+    auth_aeat_login_assertion: Az AEAT bejelentkezés utáni ellenőrzését nem sikerült
+      létrehozni.
+    auth_aeat_session_expired: Az AEAT hitelesített munkamenete lejárt. A folytatáshoz
+      hitelesítsd magad újra.
+    auth_auth: AEAT-hitelesítési hiba történt.
+    auth_auth_authenticator_persisted_session_invalid: A mentett AEAT böngészőmunkamenet
+      nem megbízható. Hitelesítsd magad újra.
+    auth_auth_certificate: Tanúsítvány alapú hitelesítési hiba történt.
+    auth_auth_certificate_expired: A digitális tanúsítvány lejárt. A hitelesítéshez
+      újítsd meg a tanúsítványt.
+    auth_auth_certificate_handshake: A TLS-kézfogás bemenete érvénytelen. Ellenőrizd
+      a megadott URL-t.
+    auth_auth_certificate_load: A PKCS#12 tanúsítvány adatait nem sikerült beolvasni.
+      Ellenőrizd, hogy a fájl nem sérült-e.
+    auth_auth_certificate_nif_parse: A tanúsítvány alanyából nem sikerült NIF vagy
+      NIE azonosítót kinyerni. Ellenőrizd, hogy a tanúsítvány magánszemélyhez tartozik-e.
+    auth_auth_certificate_password: A tanúsítvány jelszava hiányzik vagy helytelen.
+      Állítsd be a környezeti változót a helyes jelszóra.
+    auth_auth_certificate_pre_expiry: A digitális tanúsítvány hamarosan lejár. Újítsd
+      meg a lejárat előtt a fennakadások elkerülése érdekében.
+    auth_auth_clave_movil_clave_movil_approval_timeout: A Cl@ve hitelesítés nem fejeződött
+      be időben. Hagyd jóvá a kérést az eszközödön, és próbáld újra.
+    auth_auth_clave_movil_clave_movil_configuration: A kötelező Cl@ve Móvil beállítások
+      hiányoznak vagy hibásak. Ellenőrizd a Cl@ve konfigurációt.
+    auth_auth_configuration: A kötelező hitelesítési beállítások hiányoznak vagy hibásak.
+      Ellenőrizd a hitelesítési konfigurációt.
+    auth_auth_validation: A hitelesítési paraméterek nem feleltek meg az ellenőrzésnek.
+      Javítsd a megjelölt értékeket, és próbáld újra.
+    auth_google: Google-hitelesítési hiba történt.
+    auth_google_client_not_registered: Az aktív profilhoz nincs regisztrálva Google
+      asztali OAuth-kliens. Regisztrálj egy klienst a Google-funkciók használatához.
+    auth_google_client_revoked: A regisztrált Google asztali OAuth-klienst visszavonták.
+      Regisztrálj új klienst.
+    auth_google_expired: A Google frissítési tokenje lejárt a tesztprojektek 7 napos
+      korlátja miatt. Engedélyezd újra a Google-hozzáférést.
+    auth_google_revoked: A Google frissítési tokenjét visszavonták. Engedélyezd újra
+      a Google-hozzáférést.
+    auth_google_scope_insufficient: A megadott Google-jogosultságok nem tartalmazzák
+      a művelethez szükséges összes hatókört. Engedélyezd újra az összes kért jogosultság
+      megadásával.
+    auth_outbound_storage_permission: Az aktív hitelesítő adatok nem rendelkeznek
+      a tárolóművelethez szükséges jogosultsággal.
+    auth_session_corrupt: A mentett munkamenet metaadatait nem sikerült beolvasni.
+      Hitelesítsd magad újra egy friss munkamenet létrehozásához.
+    auth_session_unavailable: Nincs elérhető ellenőrzött aktív AEAT-munkamenet. A
+      folytatás előtt hitelesítsd magad.
+    auth_storage_bucket_recovery_verification: A megadott helyreállítási kód érvénytelen.
+      Írd be újra a 24 szót pontosan úgy, ahogyan a biztonsági mentésben szerepelnek.
+    auth_storage_keyring_unavailable: Az operációs rendszer kulcstartója nem érhető
+      el. Ellenőrizd, hogy van-e telepített és aktív hitelesítőadat-tároló.
+    auth_storage_master_key_kdf_version: A főkulcsfájl olyan kulcslevezetési verziót
+      használ, amelyet ez a kiadás nem támogat. Frissítsd az alkalmazást.
+    auth_storage_master_key_keychain_locked: Az operációs rendszer kulcstartója zárolva
+      van. Oldd fel (Touch ID, Windows Hello vagy a hitelesítőadat-kezelő feloldása),
+      és próbáld újra.
+    auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
+      még nincs előkészítve.
+    auth_storage_master_key_passphrase_mismatch: A jelmondat nem nyitja meg a főkulcsot.
+      Add meg újra; ha elfelejtetted, állítsd helyre a helyreállítási kulcsoddal.
+    auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
+      megszerezni. Ellenőrizd a kulcstartót vagy a tartalék jelmondatot.
   calc:
     binding_value_missing: A {binding_id} kötés nem rendelkezik értékkel.
     bracket_negative_base: A(z) {parameter_id} sávos paraméter nem fogad el negatív
@@ -2070,37 +2115,62 @@ errors:
     validate_expects_str: Az azonosító ellenőrzése szöveges értéket vár; a kapott
       típus {got_type}.
   integrity:
-    integrity_aeat_core_validation: errors.integrity.integrity_aeat_core_validation
-    integrity_cli_output_schema: errors.integrity.integrity_cli_output_schema
-    integrity_filing_amendment_validation: errors.integrity.integrity_filing_amendment_validation
-    integrity_filing_fixture: errors.integrity.integrity_filing_fixture
-    integrity_filing_validation: errors.integrity.integrity_filing_validation
-    integrity_financial_attachments_attachment_validation: errors.integrity.integrity_financial_attachments_attachment_validation
-    integrity_identity_document: errors.integrity.integrity_identity_document
-    integrity_justificante_verification: errors.integrity.integrity_justificante_verification
-    integrity_manuals_manifest: errors.integrity.integrity_manuals_manifest
-    integrity_observability_aeat_corpus_drift: errors.integrity.integrity_observability_aeat_corpus_drift
-    integrity_observability_run_trace_validation: errors.integrity.integrity_observability_run_trace_validation
-    integrity_outbound_storage: errors.integrity.integrity_outbound_storage
-    integrity_portals_portal_integrity: errors.integrity.integrity_portals_portal_integrity
-    integrity_profile_snapshot_hash_mismatch: errors.integrity.integrity_profile_snapshot_hash_mismatch
-    integrity_profile_snapshot_not_found: errors.integrity.integrity_profile_snapshot_not_found
-    integrity_storage_blob: errors.integrity.integrity_storage_blob
-    integrity_storage_classification: errors.integrity.integrity_storage_classification
-    integrity_storage_corpus_manifest: errors.integrity.integrity_storage_corpus_manifest
-    integrity_storage_corpus_manifest_drift: errors.integrity.integrity_storage_corpus_manifest_drift
-    integrity_storage_corpus_manifest_tamper: errors.integrity.integrity_storage_corpus_manifest_tamper
-    integrity_storage_decryption: errors.integrity.integrity_storage_decryption
-    integrity_storage_encryption: errors.integrity.integrity_storage_encryption
-    integrity_storage_envelope_version: errors.integrity.integrity_storage_envelope_version
-    integrity_storage_key_derivation: errors.integrity.integrity_storage_key_derivation
-    integrity_storage_nonce_collision: errors.integrity.integrity_storage_nonce_collision
-    integrity_storage_path_containment: errors.integrity.integrity_storage_path_containment
-    integrity_storage_retention_policy: errors.integrity.integrity_storage_retention_policy
-    integrity_storage_secure_object_unreadable: errors.integrity.integrity_storage_secure_object_unreadable
-    integrity_storage_validation: errors.integrity.integrity_storage_validation
-    integrity_verification: errors.integrity.integrity_verification
-    profile_import_signature: errors.integrity.profile_import_signature
+    integrity_aeat_core_validation: Egy belső adatintegritási ellenőrzés sikertelen
+      volt.
+    integrity_cli_output_schema: A CLI kimeneti sémanyilvántartása rosszul van konfigurálva.
+    integrity_filing_amendment_validation: A módosító bevallás megsért egy jogi vagy
+      szerkezeti feltételt.
+    integrity_filing_fixture: A bevallás tesztadatai érvénytelenek.
+    integrity_filing_validation: A bevallás ellenőrzése a folytatást gátló problémát
+      talált.
+    integrity_financial_attachments_attachment_validation: A melléklet nem felelt
+      meg az ellenőrzésnek. Ellenőrizd a fájlt, és csatold újra.
+    integrity_identity_document: A megadott személyazonosító okmány nem érvényes spanyol
+      NIF, NIE vagy CIF.
+    integrity_justificante_verification: Az igazolás AEAT-nál történő ellenőrzését
+      nem sikerült elvégezni.
+    integrity_manuals_manifest: A kézikönyv-jegyzék nem felelt meg a séma- vagy hash-ellenőrzésnek.
+    integrity_observability_aeat_corpus_drift: A visszajátszás azt észlelte, hogy
+      az AEAT referenciakorpusza eltér a rögzített állapottól.
+    integrity_observability_run_trace_validation: A mentett futási nyomvonal nem felelt
+      meg a szigorú ellenőrzésnek.
+    integrity_outbound_storage: A letöltött tartalom nem felelt meg az integritási
+      ellenőrzéseknek (hash, méret vagy etag).
+    integrity_portals_portal_integrity: Az AEAT portálnyilvántartása megsért egy szerkezeti
+      feltételt.
+    integrity_profile_snapshot_hash_mismatch: A profil pillanatképének hash-e nem
+      egyezik az aktuális vetülettel.
+    integrity_profile_snapshot_not_found: Nem létezik a megadott azonosítójú profil-pillanatkép.
+    integrity_storage_blob: Egy tárolt objektum SHA-256 hash-e nem egyezik a jegyzékében
+      szereplővel.
+    integrity_storage_classification: Egy rekord megadott érzékenységi besorolása
+      nem kompatibilis a tárolójával.
+    integrity_storage_corpus_manifest: A korpuszjegyzéket nem sikerült beolvasni vagy
+      ellenőrizni.
+    integrity_storage_corpus_manifest_drift: 'A lemezen lévő korpusz eltér a jegyzékétől:
+      fájlokat adtak hozzá, töröltek vagy módosítottak.'
+    integrity_storage_corpus_manifest_tamper: A korpuszjegyzék önhitelesítő kivonata
+      nem egyezik a tartalmával. A jegyzék sérült vagy meghamisított lehet.
+    integrity_storage_decryption: Egy tárolt objektum visszafejtése sikertelen. Az
+      adatok sérültek lehetnek, vagy a kulcs helytelen.
+    integrity_storage_encryption: Titkosítási vagy visszafejtési hiba történt a biztonságos
+      tárolóban.
+    integrity_storage_envelope_version: Egy lemezen lévő objektum verziója nem egyezik
+      az alkalmazás által elvárttal.
+    integrity_storage_key_derivation: Egy kulcslevezetési lépés sikertelen volt a
+      biztonságos tárolóban.
+    integrity_storage_nonce_collision: Nonce-ütközést észleltünk a biztonságos tárolóban.
+    integrity_storage_path_containment: Egy kiszámított elérési út kilép a beállított
+      gyökérkönyvtárból.
+    integrity_storage_retention_policy: Egy rekord megőrzési metaadatai megsértik
+      a besorolási irányelvét.
+    integrity_storage_secure_object_unreadable: Egy tárolt biztonságos objektumot
+      nem sikerült visszafejteni az aktuális főkulccsal.
+    integrity_storage_validation: Egy tárolási paraméter nem felelt meg az ellenőrzésnek.
+    integrity_verification: Az ellenőrzés helyrehozhatatlanul meghiúsult. A referenciaadatok
+      vagy a számítási motor sérültek lehetnek.
+    profile_import_signature: A profilarchívum nem felelt meg az aláírás- vagy integritásellenőrzésnek.
+      Ne importálj nem megbízható forrásból származó archívumokat.
   internal:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
     internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt

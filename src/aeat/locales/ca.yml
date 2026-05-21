@@ -744,6 +744,21 @@ cli:
       key_help: Clau a llegir (ex. tax.id, iva.regime)
     google:
       client_json_help: Ruta al fitxer JSON del client OAuth Desktop de Cloud Console
+      errors:
+        auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
+        browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a Google: {detail}'
+        client_not_registered: 'No hi ha cap client OAuth de Google registrat per a aquest perfil. Executa primer `aeat config google register --client-json <ruta>`.'
+        client_revoked: 'El client OAuth de Google registrat ha estat revocat. Torna a registrar-lo amb `aeat config google register`.'
+        keychain_locked: 'El clauer del sistema que desa les credencials de Google està blocat o no disponible.'
+        loopback_bind: 'No s''ha pogut obrir un port local per completar l''inici de sessió a Google: {detail}'
+        network: 'No s''ha pogut contactar amb Google: {detail}'
+        profile_unbound: 'No hi ha cap perfil actiu. Executa `aeat config profile switch <nom>` o indica `--profile`.'
+        scope_insufficient: 'L''accés concedit a Google no inclou els permisos necessaris. Executa `aeat config google login` i accepta tots els permisos.'
+        storage: 'No s''ha pogut accedir a l''emmagatzematge de Google Drive: {detail}'
+        token_expired: 'L''accés a Google ha caducat (els tokens dels projectes en proves caduquen al cap de 7 dies). Executa `aeat config google login`.'
+        token_revoked: 'L''accés a Google ha estat revocat. Executa `aeat config google login` per autoritzar-lo de nou.'
+        unsecured_mode: 'L''accés a Google està blocat mentre el magatzem de secrets funciona en mode no segur per a un perfil amb un NIF real.'
+        validation: 'Les dades proporcionades per a Google no han superat la validació: {detail}'
       folder:
         folder_id_help: Id de la carpeta de Google Drive
         get_help: Mostra la carpeta arrel de Google Drive configurada
@@ -1801,37 +1816,72 @@ entries:
     purpose: Pàgina d'inici de la Seu Electrònica de l'AEAT.
 errors:
   auth:
-    auth_aeat_login_assertion: errors.auth.auth_aeat_login_assertion
-    auth_aeat_session_expired: errors.auth.auth_aeat_session_expired
-    auth_auth: errors.auth.auth_auth
-    auth_auth_authenticator_persisted_session_invalid: errors.auth.auth_auth_authenticator_persisted_session_invalid
-    auth_auth_certificate: errors.auth.auth_auth_certificate
-    auth_auth_certificate_expired: errors.auth.auth_auth_certificate_expired
-    auth_auth_certificate_handshake: errors.auth.auth_auth_certificate_handshake
-    auth_auth_certificate_load: errors.auth.auth_auth_certificate_load
-    auth_auth_certificate_nif_parse: errors.auth.auth_auth_certificate_nif_parse
-    auth_auth_certificate_password: errors.auth.auth_auth_certificate_password
-    auth_auth_certificate_pre_expiry: errors.auth.auth_auth_certificate_pre_expiry
-    auth_auth_clave_movil_clave_movil_approval_timeout: errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout
-    auth_auth_clave_movil_clave_movil_configuration: errors.auth.auth_auth_clave_movil_clave_movil_configuration
-    auth_auth_configuration: errors.auth.auth_auth_configuration
-    auth_auth_validation: errors.auth.auth_auth_validation
-    auth_google: errors.auth.auth_google
-    auth_google_client_not_registered: errors.auth.auth_google_client_not_registered
-    auth_google_client_revoked: errors.auth.auth_google_client_revoked
-    auth_google_expired: errors.auth.auth_google_expired
-    auth_google_revoked: errors.auth.auth_google_revoked
-    auth_google_scope_insufficient: errors.auth.auth_google_scope_insufficient
-    auth_outbound_storage_permission: errors.auth.auth_outbound_storage_permission
-    auth_session_corrupt: errors.auth.auth_session_corrupt
-    auth_session_unavailable: errors.auth.auth_session_unavailable
-    auth_storage_bucket_recovery_verification: errors.auth.auth_storage_bucket_recovery_verification
-    auth_storage_keyring_unavailable: errors.auth.auth_storage_keyring_unavailable
-    auth_storage_master_key_kdf_version: errors.auth.auth_storage_master_key_kdf_version
-    auth_storage_master_key_keychain_locked: errors.auth.auth_storage_master_key_keychain_locked
-    auth_storage_master_key_material_missing: errors.auth.auth_storage_master_key_material_missing
-    auth_storage_master_key_passphrase_mismatch: errors.auth.auth_storage_master_key_passphrase_mismatch
-    auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
+    auth_aeat_login_assertion: No s'ha pogut generar la verificació posterior a l'inici
+      de sessió amb l'AEAT.
+    auth_aeat_session_expired: La sessió autenticada amb l'AEAT ha caducat. Torna
+      a autenticar-te per continuar.
+    auth_auth: S'ha produït un error d'autenticació amb l'AEAT.
+    auth_auth_authenticator_persisted_session_invalid: La sessió de navegador desada
+      amb l'AEAT no és fiable. Torna a autenticar-te.
+    auth_auth_certificate: S'ha produït un error en l'autenticació amb certificat.
+    auth_auth_certificate_expired: El certificat digital ha caducat. Renova el certificat
+      per poder autenticar-te.
+    auth_auth_certificate_handshake: L'entrada de la negociació TLS no és vàlida.
+      Revisa l'URL indicat.
+    auth_auth_certificate_load: No s'han pogut llegir les dades del certificat PKCS#12.
+      Comprova que el fitxer no estigui malmès.
+    auth_auth_certificate_nif_parse: No s'ha pogut extreure cap NIF ni NIE del titular
+      del certificat. Comprova que el certificat sigui de persona física.
+    auth_auth_certificate_password: La contrasenya del certificat falta o és incorrecta.
+      Defineix la variable d'entorn amb la contrasenya correcta.
+    auth_auth_certificate_pre_expiry: El certificat digital està a punt de caducar.
+      Renova'l abans que expiri per evitar interrupcions.
+    auth_auth_clave_movil_clave_movil_approval_timeout: L'autenticació Cl@ve no s'ha
+      completat a temps. Aprova la sol·licitud al teu dispositiu i torna-ho a provar.
+    auth_auth_clave_movil_clave_movil_configuration: Falten ajustos obligatoris de
+      Cl@ve Móvil o són incorrectes. Revisa la configuració de Cl@ve.
+    auth_auth_configuration: Falten ajustos d'autenticació obligatoris o són incorrectes.
+      Revisa la configuració d'autenticació.
+    auth_auth_validation: Els paràmetres d'autenticació no han superat la validació.
+      Corregeix els valors indicats i torna-ho a provar.
+    auth_google: S'ha produït un error en l'autenticació amb Google.
+    auth_google_client_not_registered: No hi ha cap client OAuth d'escriptori de Google
+      registrat per al perfil actiu. Registra un client per fer servir les funcions
+      de Google.
+    auth_google_client_revoked: El client OAuth d'escriptori de Google registrat ha
+      estat revocat. Registra un client nou.
+    auth_google_expired: El testimoni d'actualització de Google ha caducat pel límit
+      de 7 dies dels projectes en proves. Torna a autoritzar l'accés a Google.
+    auth_google_revoked: El testimoni d'actualització de Google ha estat revocat.
+      Torna a autoritzar l'accés a Google.
+    auth_google_scope_insufficient: Els permisos concedits a Google no inclouen tots
+      els necessaris per a aquesta operació. Torna a autoritzar concedint tots els
+      permisos sol·licitats.
+    auth_outbound_storage_permission: Les credencials actives no tenen el permís necessari
+      per a aquesta operació d'emmagatzematge.
+    auth_session_corrupt: Les metadades de la sessió desada no es poden llegir. Torna
+      a autenticar-te per crear una sessió nova.
+    auth_session_unavailable: No hi ha cap sessió activa verificada amb l'AEAT disponible.
+      Autentica't abans de continuar.
+    auth_storage_bucket_recovery_verification: El codi de recuperació introduït no
+      és vàlid. Torna a escriure les 24 paraules exactament com apareixen a la còpia
+      de seguretat.
+    auth_storage_keyring_unavailable: L'anell de claus del sistema operatiu no està
+      disponible. Comprova que hi hagi un magatzem de credencials instal·lat i actiu.
+    auth_storage_master_key_kdf_version: El fitxer de clau mestra fa servir una versió
+      de derivació de clau que aquesta versió de l'aplicació no admet. Actualitza
+      l'aplicació.
+    auth_storage_master_key_keychain_locked: L'anell de claus del sistema operatiu
+      està bloquejat. Desbloqueja'l (Touch ID, Windows Hello o el desbloqueig del
+      gestor de credencials) i torna-ho a provar.
+    auth_storage_master_key_material_missing: No existeix material de clau mestra.
+      L'emmagatzematge segur encara no està aprovisionat.
+    auth_storage_master_key_passphrase_mismatch: La frase de contrasenya no obre la
+      clau mestra. Torna-la a introduir; si l'has oblidat, recupera-la amb la teva
+      clau de recuperació.
+    auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
+      proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
+      seguretat.
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
@@ -2087,37 +2137,67 @@ errors:
     validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
       {got_type}.
   integrity:
-    integrity_aeat_core_validation: errors.integrity.integrity_aeat_core_validation
-    integrity_cli_output_schema: errors.integrity.integrity_cli_output_schema
-    integrity_filing_amendment_validation: errors.integrity.integrity_filing_amendment_validation
-    integrity_filing_fixture: errors.integrity.integrity_filing_fixture
-    integrity_filing_validation: errors.integrity.integrity_filing_validation
-    integrity_financial_attachments_attachment_validation: errors.integrity.integrity_financial_attachments_attachment_validation
-    integrity_identity_document: errors.integrity.integrity_identity_document
-    integrity_justificante_verification: errors.integrity.integrity_justificante_verification
-    integrity_manuals_manifest: errors.integrity.integrity_manuals_manifest
-    integrity_observability_aeat_corpus_drift: errors.integrity.integrity_observability_aeat_corpus_drift
-    integrity_observability_run_trace_validation: errors.integrity.integrity_observability_run_trace_validation
-    integrity_outbound_storage: errors.integrity.integrity_outbound_storage
-    integrity_portals_portal_integrity: errors.integrity.integrity_portals_portal_integrity
-    integrity_profile_snapshot_hash_mismatch: errors.integrity.integrity_profile_snapshot_hash_mismatch
-    integrity_profile_snapshot_not_found: errors.integrity.integrity_profile_snapshot_not_found
-    integrity_storage_blob: errors.integrity.integrity_storage_blob
-    integrity_storage_classification: errors.integrity.integrity_storage_classification
-    integrity_storage_corpus_manifest: errors.integrity.integrity_storage_corpus_manifest
-    integrity_storage_corpus_manifest_drift: errors.integrity.integrity_storage_corpus_manifest_drift
-    integrity_storage_corpus_manifest_tamper: errors.integrity.integrity_storage_corpus_manifest_tamper
-    integrity_storage_decryption: errors.integrity.integrity_storage_decryption
-    integrity_storage_encryption: errors.integrity.integrity_storage_encryption
-    integrity_storage_envelope_version: errors.integrity.integrity_storage_envelope_version
-    integrity_storage_key_derivation: errors.integrity.integrity_storage_key_derivation
-    integrity_storage_nonce_collision: errors.integrity.integrity_storage_nonce_collision
-    integrity_storage_path_containment: errors.integrity.integrity_storage_path_containment
-    integrity_storage_retention_policy: errors.integrity.integrity_storage_retention_policy
-    integrity_storage_secure_object_unreadable: errors.integrity.integrity_storage_secure_object_unreadable
-    integrity_storage_validation: errors.integrity.integrity_storage_validation
-    integrity_verification: errors.integrity.integrity_verification
-    profile_import_signature: errors.integrity.profile_import_signature
+    integrity_aeat_core_validation: Una comprovació interna d'integritat de dades
+      no s'ha superat.
+    integrity_cli_output_schema: El registre d'esquemes de sortida de la CLI està
+      mal configurat.
+    integrity_filing_amendment_validation: La declaració complementària infringeix
+      una invariant legal o d'estructura.
+    integrity_filing_fixture: Les dades de prova de la declaració no són vàlides.
+    integrity_filing_validation: La validació de la declaració ha detectat un problema
+      que impedeix continuar.
+    integrity_financial_attachments_attachment_validation: El justificant adjunt no
+      ha superat la validació. Comprova el fitxer i torna a adjuntar-lo.
+    integrity_identity_document: El document d'identitat indicat no és un NIF, NIE
+      ni CIF espanyol vàlid.
+    integrity_justificante_verification: La verificació del justificant amb l'AEAT
+      no s'ha pogut completar.
+    integrity_manuals_manifest: El manifest del manual no ha superat les comprovacions
+      d'esquema o de resum.
+    integrity_observability_aeat_corpus_drift: La reproducció ha detectat que el corpus
+      de referència de l'AEAT ha canviat respecte al registrat.
+    integrity_observability_run_trace_validation: La traça d'execució desada no ha
+      superat la validació estricta.
+    integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
+      d'integritat (resum, mida o etiqueta).
+    integrity_portals_portal_integrity: El registre de portals de l'AEAT infringeix
+      una invariant estructural.
+    integrity_profile_snapshot_hash_mismatch: El resum de la instantània del perfil
+      no coincideix amb la projecció actual.
+    integrity_profile_snapshot_not_found: No existeix cap instantània de perfil amb
+      l'identificador indicat.
+    integrity_storage_blob: El resum SHA-256 d'un objecte emmagatzemat no coincideix
+      amb el del seu manifest.
+    integrity_storage_classification: La classe de sensibilitat declarada d'un registre
+      és incompatible amb el seu repositori.
+    integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
+      o validar.
+    integrity_storage_corpus_manifest_drift: 'El corpus en disc difereix del que descriu
+      el seu manifest: s''han afegit, eliminat o modificat fitxers.'
+    integrity_storage_corpus_manifest_tamper: El resum autoverificable del manifest
+      del corpus no coincideix amb el seu contingut. El manifest pot estar malmès
+      o manipulat.
+    integrity_storage_decryption: El desxifratge d'un objecte emmagatzemat ha fallat.
+      Les dades poden estar malmeses o la clau no és correcta.
+    integrity_storage_encryption: S'ha produït un error de xifratge o desxifratge
+      en l'emmagatzematge segur.
+    integrity_storage_envelope_version: La versió d'un objecte en disc no coincideix
+      amb la que espera l'aplicació.
+    integrity_storage_key_derivation: Ha fallat un pas de derivació de clau en l'emmagatzematge
+      segur.
+    integrity_storage_nonce_collision: S'ha detectat una col·lisió de nonce en l'emmagatzematge
+      segur.
+    integrity_storage_path_containment: Una ruta calculada se surt del directori arrel
+      configurat.
+    integrity_storage_retention_policy: Les metadades de retenció d'un registre infringeixen
+      la política de la seva classificació.
+    integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
+      pogut desxifrar amb la clau mestra actual.
+    integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
+    integrity_verification: La verificació ha fallat de manera irrecuperable. Les
+      dades de referència o el motor de càlcul poden estar malmesos.
+    profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
+      o integritat. No importis arxius d'origen no fiable.
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar

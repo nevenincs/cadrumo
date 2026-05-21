@@ -697,6 +697,29 @@ cli:
       key_help: Key to read (e.g. tax.id, iva.regime)
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
+      errors:
+        auth_failed: 'Google authentication failed: {detail}'
+        browser_open: 'Could not open a browser to authorise Google access: {detail}'
+        client_not_registered: No Google OAuth client is registered for this profile.
+          Run `aeat config google register --client-json <path>` first.
+        client_revoked: The registered Google OAuth client has been revoked. Re-register
+          it with `aeat config google register`.
+        keychain_locked: The system keychain that stores the Google credentials is
+          locked or unavailable.
+        loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
+        network: 'Could not reach Google: {detail}'
+        profile_unbound: No active profile. Run `aeat config profile switch <name>`
+          or pass `--profile`.
+        scope_insufficient: The access granted for Google is missing required permissions.
+          Run `aeat config google login` and accept every permission.
+        storage: 'Could not reach Google Drive storage: {detail}'
+        token_expired: Google access has expired (testing-project tokens lapse after
+          7 days). Run `aeat config google login`.
+        token_revoked: Google access has been revoked. Run `aeat config google login`
+          to authorise again.
+        unsecured_mode: Google access is blocked while the secret store runs in unsecured
+          mode for a profile with a real NIF.
+        validation: 'The data supplied for Google did not pass validation: {detail}'
       folder:
         folder_id_help: Google Drive folder id
         get_help: Show the configured Google Drive root folder
@@ -1753,37 +1776,67 @@ entries:
     purpose: Landing page of the AEAT Electronic Office.
 errors:
   auth:
-    auth_aeat_login_assertion: errors.auth.auth_aeat_login_assertion
-    auth_aeat_session_expired: errors.auth.auth_aeat_session_expired
-    auth_auth: errors.auth.auth_auth
-    auth_auth_authenticator_persisted_session_invalid: errors.auth.auth_auth_authenticator_persisted_session_invalid
-    auth_auth_certificate: errors.auth.auth_auth_certificate
-    auth_auth_certificate_expired: errors.auth.auth_auth_certificate_expired
-    auth_auth_certificate_handshake: errors.auth.auth_auth_certificate_handshake
-    auth_auth_certificate_load: errors.auth.auth_auth_certificate_load
-    auth_auth_certificate_nif_parse: errors.auth.auth_auth_certificate_nif_parse
-    auth_auth_certificate_password: errors.auth.auth_auth_certificate_password
-    auth_auth_certificate_pre_expiry: errors.auth.auth_auth_certificate_pre_expiry
-    auth_auth_clave_movil_clave_movil_approval_timeout: errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout
-    auth_auth_clave_movil_clave_movil_configuration: errors.auth.auth_auth_clave_movil_clave_movil_configuration
-    auth_auth_configuration: errors.auth.auth_auth_configuration
-    auth_auth_validation: errors.auth.auth_auth_validation
-    auth_google: errors.auth.auth_google
-    auth_google_client_not_registered: errors.auth.auth_google_client_not_registered
-    auth_google_client_revoked: errors.auth.auth_google_client_revoked
-    auth_google_expired: errors.auth.auth_google_expired
-    auth_google_revoked: errors.auth.auth_google_revoked
-    auth_google_scope_insufficient: errors.auth.auth_google_scope_insufficient
-    auth_outbound_storage_permission: errors.auth.auth_outbound_storage_permission
-    auth_session_corrupt: errors.auth.auth_session_corrupt
-    auth_session_unavailable: errors.auth.auth_session_unavailable
-    auth_storage_bucket_recovery_verification: errors.auth.auth_storage_bucket_recovery_verification
-    auth_storage_keyring_unavailable: errors.auth.auth_storage_keyring_unavailable
-    auth_storage_master_key_kdf_version: errors.auth.auth_storage_master_key_kdf_version
-    auth_storage_master_key_keychain_locked: errors.auth.auth_storage_master_key_keychain_locked
-    auth_storage_master_key_material_missing: errors.auth.auth_storage_master_key_material_missing
-    auth_storage_master_key_passphrase_mismatch: errors.auth.auth_storage_master_key_passphrase_mismatch
-    auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
+    auth_aeat_login_assertion: The post-login verification with the AEAT could not
+      be produced.
+    auth_aeat_session_expired: The authenticated AEAT session has expired. Authenticate
+      again to continue.
+    auth_auth: An AEAT authentication error occurred.
+    auth_auth_authenticator_persisted_session_invalid: The persisted AEAT browser
+      session cannot be trusted. Authenticate again.
+    auth_auth_certificate: A certificate-authentication error occurred.
+    auth_auth_certificate_expired: The digital certificate has expired. Renew the
+      certificate before authenticating.
+    auth_auth_certificate_handshake: The TLS handshake input is not valid. Check the
+      URL provided.
+    auth_auth_certificate_load: The PKCS#12 certificate data could not be parsed.
+      Check that the file is not corrupted.
+    auth_auth_certificate_nif_parse: No NIF or NIE could be extracted from the certificate
+      subject. Check that the certificate belongs to an individual.
+    auth_auth_certificate_password: The certificate password is missing or wrong.
+      Set the environment variable to the correct password.
+    auth_auth_certificate_pre_expiry: The digital certificate is about to expire.
+      Renew it before it expires to avoid interruptions.
+    auth_auth_clave_movil_clave_movil_approval_timeout: Cl@ve authentication did not
+      complete in time. Approve the request on your device and try again.
+    auth_auth_clave_movil_clave_movil_configuration: Required Cl@ve Móvil settings
+      are missing or malformed. Review the Cl@ve configuration.
+    auth_auth_configuration: Required authentication settings are missing or malformed.
+      Review the authentication configuration.
+    auth_auth_validation: The authentication parameters failed validation. Correct
+      the values shown and try again.
+    auth_google: A Google authentication error occurred.
+    auth_google_client_not_registered: No Google Desktop OAuth client is registered
+      for the active profile. Register a client to use Google features.
+    auth_google_client_revoked: The registered Google Desktop OAuth client has been
+      revoked. Register a new client.
+    auth_google_expired: The Google refresh token has expired under the 7-day Testing-project
+      cap. Re-authorize Google access.
+    auth_google_revoked: The Google refresh token has been revoked. Re-authorize Google
+      access.
+    auth_google_scope_insufficient: The granted Google scopes do not include every
+      scope this operation requires. Re-authorize, granting all requested scopes.
+    auth_outbound_storage_permission: The active credentials lack the permission required
+      for this storage operation.
+    auth_session_corrupt: The persisted session metadata cannot be parsed. Authenticate
+      again to create a fresh session.
+    auth_session_unavailable: No verified active AEAT session is available. Authenticate
+      before continuing.
+    auth_storage_bucket_recovery_verification: The recovery code entered is not valid.
+      Re-type the 24 words exactly as they appear in the backup.
+    auth_storage_keyring_unavailable: The operating-system keychain is unavailable.
+      Check that a credential store is installed and active.
+    auth_storage_master_key_kdf_version: The master-key file uses a key-derivation
+      version this build does not support. Update the application.
+    auth_storage_master_key_keychain_locked: The operating-system keychain is locked.
+      Unlock it (Touch ID, Windows Hello or your credential-manager unlock) and try
+      again.
+    auth_storage_master_key_material_missing: No master-key material exists. The secure
+      store has not been provisioned yet.
+    auth_storage_master_key_passphrase_mismatch: The passphrase does not unwrap the
+      master key. Re-enter it; if you have forgotten it, recover with your recovery
+      key.
+    auth_storage_master_key_unavailable: The master key could not be acquired from
+      any provider. Check the keychain or the file-fallback passphrase.
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
@@ -2031,37 +2084,60 @@ errors:
       by a check letter.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
-    integrity_aeat_core_validation: errors.integrity.integrity_aeat_core_validation
-    integrity_cli_output_schema: errors.integrity.integrity_cli_output_schema
-    integrity_filing_amendment_validation: errors.integrity.integrity_filing_amendment_validation
-    integrity_filing_fixture: errors.integrity.integrity_filing_fixture
-    integrity_filing_validation: errors.integrity.integrity_filing_validation
-    integrity_financial_attachments_attachment_validation: errors.integrity.integrity_financial_attachments_attachment_validation
-    integrity_identity_document: errors.integrity.integrity_identity_document
-    integrity_justificante_verification: errors.integrity.integrity_justificante_verification
-    integrity_manuals_manifest: errors.integrity.integrity_manuals_manifest
-    integrity_observability_aeat_corpus_drift: errors.integrity.integrity_observability_aeat_corpus_drift
-    integrity_observability_run_trace_validation: errors.integrity.integrity_observability_run_trace_validation
-    integrity_outbound_storage: errors.integrity.integrity_outbound_storage
-    integrity_portals_portal_integrity: errors.integrity.integrity_portals_portal_integrity
-    integrity_profile_snapshot_hash_mismatch: errors.integrity.integrity_profile_snapshot_hash_mismatch
-    integrity_profile_snapshot_not_found: errors.integrity.integrity_profile_snapshot_not_found
-    integrity_storage_blob: errors.integrity.integrity_storage_blob
-    integrity_storage_classification: errors.integrity.integrity_storage_classification
-    integrity_storage_corpus_manifest: errors.integrity.integrity_storage_corpus_manifest
-    integrity_storage_corpus_manifest_drift: errors.integrity.integrity_storage_corpus_manifest_drift
-    integrity_storage_corpus_manifest_tamper: errors.integrity.integrity_storage_corpus_manifest_tamper
-    integrity_storage_decryption: errors.integrity.integrity_storage_decryption
-    integrity_storage_encryption: errors.integrity.integrity_storage_encryption
-    integrity_storage_envelope_version: errors.integrity.integrity_storage_envelope_version
-    integrity_storage_key_derivation: errors.integrity.integrity_storage_key_derivation
-    integrity_storage_nonce_collision: errors.integrity.integrity_storage_nonce_collision
-    integrity_storage_path_containment: errors.integrity.integrity_storage_path_containment
-    integrity_storage_retention_policy: errors.integrity.integrity_storage_retention_policy
-    integrity_storage_secure_object_unreadable: errors.integrity.integrity_storage_secure_object_unreadable
-    integrity_storage_validation: errors.integrity.integrity_storage_validation
-    integrity_verification: errors.integrity.integrity_verification
-    profile_import_signature: errors.integrity.profile_import_signature
+    integrity_aeat_core_validation: An internal data-integrity check failed.
+    integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
+    integrity_filing_amendment_validation: The amendment violates a legal or structural
+      invariant.
+    integrity_filing_fixture: The filing fixture data is not valid.
+    integrity_filing_validation: Filing validation surfaced a blocking finding.
+    integrity_financial_attachments_attachment_validation: The attachment failed validation.
+      Check the file and attach it again.
+    integrity_identity_document: The identity document provided is not a valid Spanish
+      NIF, NIE or CIF.
+    integrity_justificante_verification: The receipt verification with the AEAT could
+      not be completed.
+    integrity_manuals_manifest: The manual manifest failed its schema or hash checks.
+    integrity_observability_aeat_corpus_drift: Replay detected that the AEAT reference
+      corpus has drifted from the recorded state.
+    integrity_observability_run_trace_validation: The persisted run trace failed strict
+      validation.
+    integrity_outbound_storage: The fetched payload failed integrity checks (hash,
+      size or etag).
+    integrity_portals_portal_integrity: The AEAT portal registry violates a structural
+      invariant.
+    integrity_profile_snapshot_hash_mismatch: The profile snapshot hash does not match
+      the current projection.
+    integrity_profile_snapshot_not_found: No profile snapshot exists with the identifier
+      provided.
+    integrity_storage_blob: A stored object's SHA-256 hash disagrees with its manifest.
+    integrity_storage_classification: A record's declared sensitivity class is incompatible
+      with its repository.
+    integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
+      validated.
+    integrity_storage_corpus_manifest_drift: 'The on-disk corpus diverges from its
+      manifest: files have been added, removed or modified.'
+    integrity_storage_corpus_manifest_tamper: The corpus manifest's self-attesting
+      digest does not match its body. The manifest may be corrupted or tampered with.
+    integrity_storage_decryption: Decryption of a stored object failed. The data may
+      be corrupted or the key is wrong.
+    integrity_storage_encryption: An encryption or decryption error occurred in the
+      secure store.
+    integrity_storage_envelope_version: An on-disk object's version does not match
+      what the application expects.
+    integrity_storage_key_derivation: A key-derivation step failed in the secure store.
+    integrity_storage_nonce_collision: A nonce collision was detected in the secure
+      store.
+    integrity_storage_path_containment: A computed path escapes the configured root
+      directory.
+    integrity_storage_retention_policy: A record's retention metadata violates its
+      classification policy.
+    integrity_storage_secure_object_unreadable: A stored secure object could not be
+      decrypted under the current master key.
+    integrity_storage_validation: A storage parameter failed validation.
+    integrity_verification: Verification failed unrecoverably. The reference data
+      or the calculation engine may be corrupted.
+    profile_import_signature: The profile archive failed its signature or integrity
+      check. Do not import archives from an untrusted source.
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.
