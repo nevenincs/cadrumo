@@ -44,23 +44,23 @@ Author and validate the Modelo 130 single fixed-width fichero-BOE export layout 
 
 Author the Modelo 303 eight-segment multi-page fichero-BOE export layout, re-resolve the casilla-disambiguation issues, and prove it with a golden-SHA round-trip test.
 
-- [ ] `P03.S09` - Re-derive the Modelo 303 DR-spec data - segment offsets, casilla field map, encoding - from the corpus xlsx workbook into registry-TOML form, not into an intermediate DR-spec JSON fixture; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S10` - Re-resolve the documented Modelo 303 segment-scoped casilla-number reuse so each fichero-BOE field disambiguates to a distinct registry casilla with no silently dropped field; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S11` - Wire export_refs onto the 37 Modelo 303 casillas so each casilla binds to its fichero-BOE record field; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S12` - Author the Modelo 303 DP30300 envelope-header segment record - opening literals, modelo / page / year / period framing, presenter fields - establishing the envelope the page records sit inside; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S13` - Author the Modelo 303 DP30301 page-01 segment record - IVA devengado regimen general casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S14` - Author the Modelo 303 DP30302 page-02 segment record - IVA deducible casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S15` - Author the Modelo 303 DP30303 page-03 segment record - regimen especial and informativo casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S16` - Author the Modelo 303 DP30304 page-04 segment record - resultado liquidacion casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S17` - Author the Modelo 303 DP30305 page-05 segment record - compensacion and resultado final casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S18` - Author the Modelo 303 DP303DID identification segment record - declarant identity and additional-data fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S19` - Author the Modelo 303 page-closing trailer segment record completing the eight-segment ~7994-byte envelope; `src/aeat/_data/registry/aeat/modelos/303.toml`.
-- [ ] `P03.S20` - Add a golden-SHA fichero-BOE fixture for Modelo 303 derived from the corpus Diseno and a serialise-then-deserialise byte-identity round-trip test for the full eight-segment envelope; `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
+- [x] `P03.S09` - Re-derive the Modelo 303 DR-spec data - segment offsets, casilla field map, encoding - from the corpus xlsx workbook into registry-TOML form, not into an intermediate DR-spec JSON fixture; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S10` - Re-resolve the documented Modelo 303 segment-scoped casilla-number reuse so each fichero-BOE field disambiguates to a distinct registry casilla with no silently dropped field; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S11` - Wire export_refs onto the 37 Modelo 303 casillas so each casilla binds to its fichero-BOE record field; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S12` - Author the Modelo 303 DP30300 envelope-header segment record - opening literals, modelo / page / year / period framing, presenter fields - establishing the envelope the page records sit inside; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S13` - Author the Modelo 303 DP30301 page-01 segment record - IVA devengado regimen general casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S14` - Author the Modelo 303 DP30302 page-02 segment record - IVA deducible casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S15` - Author the Modelo 303 DP30303 page-03 segment record - regimen especial and informativo casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S16` - Author the Modelo 303 DP30304 page-04 segment record - resultado liquidacion casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S17` - Author the Modelo 303 DP30305 page-05 segment record - compensacion and resultado final casilla fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S18` - Author the Modelo 303 DP303DID identification segment record - declarant identity and additional-data fields - grounded in the corpus Diseno; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S19` - Author the Modelo 303 page-closing trailer segment record completing the eight-segment ~7994-byte envelope; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `P03.S20` - Add a golden-SHA fichero-BOE fixture for Modelo 303 derived from the corpus Diseno and a serialise-then-deserialise byte-identity round-trip test for the full eight-segment envelope; `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
 
 ### Phase `P04` - Verification
 
 Confirm byte-identity round-trips for both modelos, a green 26-modelo registry snapshot, and a byte-accurate export verb.
 
-- [ ] `P04.S21` - Run the serialise-then-deserialise byte-identity round-trip suite for both Modelo 130 and Modelo 303 and confirm both golden-SHA fixtures match; `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
-- [ ] `P04.S22` - Load the full registry snapshot and confirm all 26 modelos remain valid with the new and amended Modelo 130 / Modelo 303 export layouts present, no validation regression at snapshot build; `src/aeat/_data/registry/aeat/modelos/`.
-- [ ] `P04.S23` - Run the aeat app modelo export verb against a populated Modelo 130 and Modelo 303 draft and confirm each produces a byte-accurate fichero-BOE; `src/aeat/entrypoints/cli/`.
+- [x] `P04.S21` - Run the serialise-then-deserialise byte-identity round-trip suite for both Modelo 130 and Modelo 303 and confirm both golden-SHA fixtures match; `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
+- [x] `P04.S22` - Load the full registry snapshot and confirm all 26 modelos remain valid with the new and amended Modelo 130 / Modelo 303 export layouts present, no validation regression at snapshot build; `src/aeat/_data/registry/aeat/modelos/`.
+- [x] `P04.S23` - Run the aeat app modelo export verb against a populated Modelo 130 and Modelo 303 draft and confirm each produces a byte-accurate fichero-BOE; `src/aeat/entrypoints/cli/`.
