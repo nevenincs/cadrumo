@@ -70,8 +70,19 @@ class ModeloDraftBuilderProtocol(Protocol):
 class SubmissionEngineProtocol(Protocol):
     """Read-only preflight surface over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
 
-    def preflight(self, draft: RegistryModeloDraftProtocol, *, today: date) -> None:
-        """Run preflight gates against ``draft``; raise on failure."""
+    def preflight(
+        self,
+        draft: RegistryModeloDraftProtocol,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
+        """Run preflight gates against ``draft``; raise on failure.
+
+        ``skip_deadline_window`` skips the AEAT filing-window gate so a
+        calculation can be verified independently of the filing
+        calendar; filing always runs the window gate.
+        """
         ...
 
 

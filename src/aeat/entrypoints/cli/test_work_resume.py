@@ -99,7 +99,7 @@ def _done_run(run_id: str) -> WorkflowResult:
 def test_resume_help_advertises_the_command(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(work_app, ["resume", "--help"])
     assert result.exit_code == 0
-    assert "WORKFLOW_RUN_ID" in result.output
+    assert "TARGET" in result.output
     assert "AEAT" in result.output  # the docstring mentions the non-contact guarantee
 
 
@@ -133,6 +133,41 @@ def test_resume_refuses_non_resumable_reason(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(work_app, ["resume", run_id])
     assert result.exit_code != 0
     assert "terminal by design" in result.output
+
+
+def test_runs_lists_persisted_run_ids(cli_runner: CliRunner) -> None:
+    """`work runs` lists persisted runs with their run ids so an
+    operator can discover the 16-character id `work resume` needs."""
+
+    save_run(_aborted_run("a" * 16, reason=WorkflowAbortReason.SITE_UNAVAILABLE))
+    save_run(_done_run("b" * 16))
+
+    result = cli_runner.invoke(work_app, ["runs"])
+    assert result.exit_code == 0, result.output
+    assert "run_count\t2" in result.output
+    assert "a" * 16 in result.output
+    assert "b" * 16 in result.output
+    assert "130\t2026Q1" in result.output
+
+
+def test_resume_rejects_a_malformed_target(cli_runner: CliRunner) -> None:
+    """A target that is neither a 16-character run id nor a
+    64-character work-unit id is refused with operator guidance."""
+
+    result = cli_runner.invoke(work_app, ["resume", "not-an-id"])
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "work runs" in result.output
+
+
+def test_resume_accepts_run_id_directly(cli_runner: CliRunner) -> None:
+    """A 16-character run id passed directly resolves to that run."""
+
+    run_id = "e" * 16
+    save_run(_aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE))
+    result = cli_runner.invoke(work_app, ["resume", run_id])
+    assert result.exit_code == 0, result.output
+    assert f"prior_workflow_run_id\t{run_id}" in result.output
 
 
 def test_resume_emits_no_bucket_event(cli_runner: CliRunner) -> None:

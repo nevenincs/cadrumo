@@ -17,8 +17,8 @@ from ._protocols import (
     AuthProviderDescriptionLike,
     AuthProviderProbe,
     DeadlineWindowChecker,
-    ModeloDraftStatus,
     ModeloDraftLike,
+    ModeloDraftStatus,
 )
 
 _logger = get_logger(__name__)
@@ -100,12 +100,25 @@ class Preflight:
         self.deadline_checker = deadline_checker
         self.auth_provider = auth_provider
 
-    def check(self, draft: ModeloDraftLike, *, today: date) -> None:
+    def check(
+        self,
+        draft: ModeloDraftLike,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
         """Run the four preflight gates against ``draft``.
 
         Args:
             draft: The :class:`ModeloDraftLike` to validate.
             today: Reference date for the deadline-window gate.
+            skip_deadline_window: When ``True``, gate 3 (the AEAT
+                filing-window check) is skipped. Verification of a
+                calculation is independent of the filing calendar (see
+                the work-verify deadline-independence ADR): the verify
+                path runs gates 1, 2, and 4 to confirm the draft is
+                sound but must not refuse because the filing window is
+                closed or absent. Filing always runs gate 3.
 
         Raises:
             SubmissionPreflightError: If any gate fails. The exception
@@ -137,7 +150,11 @@ class Preflight:
             )
         _logger.debug("preflight gate-2 ok: no error findings")
 
-        if not self.deadline_checker.is_window_open(draft.modelo, draft.period, today):
+        if skip_deadline_window:
+            _logger.debug(
+                "preflight gate-3 skipped: verification is independent of the filing window"
+            )
+        elif not self.deadline_checker.is_window_open(draft.modelo, draft.period, today):
             _logger.debug(
                 "preflight gate-3 fail: deadline window closed for %s %s on %s",
                 draft.modelo,
@@ -147,7 +164,8 @@ class Preflight:
             raise SubmissionPreflightError(
                 f"deadline window for modelo {draft.modelo} period {draft.period} is not open on {today.isoformat()}"
             )
-        _logger.debug("preflight gate-3 ok: deadline window is open")
+        else:
+            _logger.debug("preflight gate-3 ok: deadline window is open")
 
         try:
             description = self.auth_provider.describe()

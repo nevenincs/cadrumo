@@ -327,10 +327,15 @@ def test_app_modelo_preflight_verb_is_unknown() -> None:
 
 
 def test_app_modelo_work_resume_help_exposes_documented_argument() -> None:
-    """The resume verb advertises WORKFLOW_RUN_ID as its sole positional."""
+    """The resume verb advertises TARGET as its sole positional.
+
+    ``TARGET`` accepts either a 16-character workflow run id or the
+    64-character work-unit id, so an operator can resume without
+    holding the run-id hash by hand.
+    """
     result = invoke_cached_cli(["app", "modelo", "work", "resume", "--help"])
     assert result.exit_code == 0
-    assert "WORKFLOW_RUN_ID" in result.output
+    assert "TARGET" in result.output
 
 
 def test_profile_backend_schema_duplicate_branch_stays_removed() -> None:

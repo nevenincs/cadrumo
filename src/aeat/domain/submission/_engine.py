@@ -17,7 +17,7 @@ from ...adapters.persistence.storage.errors import StorageError
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ._errors import SubmissionError
-from ._models import SubmissionStatus, ModeloPresentado
+from ._models import ModeloPresentado, SubmissionStatus
 from ._preflight import Preflight
 from ._protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike
 from ._repository import SubmissionRepository
@@ -60,14 +60,24 @@ class SubmissionEngine:
             auth_provider=auth_provider,
         )
 
-    def preflight(self, draft: ModeloDraftLike, *, today: date) -> None:
+    def preflight(
+        self,
+        draft: ModeloDraftLike,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
         """Run preflight gates without browser work or AEAT writes.
 
         Args:
             draft: Draft conforming to :class:`ModeloDraftLike`.
             today: Calendar date used to evaluate the AEAT filing window.
+            skip_deadline_window: When ``True``, the AEAT filing-window
+                gate is skipped so a calculation can be verified
+                independently of the filing calendar. Filing always
+                runs the window gate.
         """
-        self._preflight.check(draft, today=today)
+        self._preflight.check(draft, today=today, skip_deadline_window=skip_deadline_window)
 
     def load_submission(self, submission_id: str) -> ModeloPresentado:
         """Load a historical :class:`ModeloPresentado` by id.

@@ -704,13 +704,12 @@ cli:
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Accepta un id d'execució de flux o un id d'unitat de
           treball.
-        resume_invalid_target: 'El destí de resume ha de ser un id d''execució de
-          flux de 16 caràcters o un id d''unitat de treball de 64 caràcters; s''ha
-          rebut {target}. Executa `aeat app modelo work runs` per llistar els ids
-          d''execució.'
-        resume_target_help: 'Id d''execució de flux de 16 caràcters, o l''id d''unitat
+        resume_invalid_target: El destí de resume ha de ser un id d'execució de flux
+          de 16 caràcters o un id d'unitat de treball de 64 caràcters; s'ha rebut
+          {target}. Executa `aeat app modelo work runs` per llistar els ids d'execució.
+        resume_target_help: Id d'execució de flux de 16 caràcters, o l'id d'unitat
           de treball de 64 caràcters (es resol automàticament la seva darrera execució).
-          Executa `aeat app modelo work runs` per llistar els ids d''execució.'
+          Executa `aeat app modelo work runs` per llistar els ids d'execució.
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
@@ -1042,7 +1041,11 @@ cli:
         perfil actiu; '%{profile}' no està actiu.
       profile_help: Inspeccionar i reparar el punter de perfil actiu.
       profile_name_help: Inspeccionar un bucket de perfil registrat concret.
-      profile_requires_yes: Passa --yes per netejar el punter de perfil actiu.
+      profile_one_action: Tria --clear-active o --repair-manifest-status, no tots
+        dos.
+      profile_repair_manifest_status_help: Reomplir l'estat d'un manifest legacy
+        del bucket actiu des del registre xifrat del perfil.
+      profile_requires_yes: Passa --yes per aplicar la reparació del perfil actiu.
       quarantine_dry_run_help: Previsualitza les files que es posarien en quarantena
         sense moure res
       quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu;

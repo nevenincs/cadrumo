@@ -647,9 +647,9 @@ cli:
         result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT. Accepts a workflow run id or a work-unit id.
-        resume_invalid_target: 'resume target must be a 16-character workflow run
-          id or a 64-character work-unit id; got {target}. Run `aeat app modelo work
-          runs` to list run ids.'
+        resume_invalid_target: resume target must be a 16-character workflow run id
+          or a 64-character work-unit id; got {target}. Run `aeat app modelo work
+          runs` to list run ids.
         resume_target_help: 16-character workflow run id, or the 64-character work-unit
           id (its latest run is resolved automatically). Run `aeat app modelo work
           runs` to list run ids.
@@ -974,7 +974,11 @@ cli:
         pointer; '%{profile}' is not active.
       profile_help: Inspect and repair the active-profile pointer.
       profile_name_help: Inspect a specific registered profile bucket.
-      profile_requires_yes: Pass --yes to clear the active-profile pointer.
+      profile_one_action: Choose either --clear-active or --repair-manifest-status,
+        not both.
+      profile_repair_manifest_status_help: Backfill a legacy active bucket manifest
+        status from the encrypted profile record.
+      profile_requires_yes: Pass --yes to apply the active-profile repair.
       quarantine_dry_run_help: Preview the rows that would be quarantined without
         moving anything
       quarantine_help: Move undecryptable rows into a quarantine table (destructive;

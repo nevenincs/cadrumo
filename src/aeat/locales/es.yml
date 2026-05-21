@@ -716,14 +716,13 @@ cli:
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT. Acepta un id de ejecución de flujo o un id de unidad
           de trabajo.
-        resume_invalid_target: 'El destino de resume debe ser un id de ejecución
-          de flujo de 16 caracteres o un id de unidad de trabajo de 64 caracteres;
-          se recibió {target}. Ejecuta `aeat app modelo work runs` para listar los
-          ids de ejecución.'
-        resume_target_help: 'Id de ejecución de flujo de 16 caracteres, o el id de
+        resume_invalid_target: El destino de resume debe ser un id de ejecución de
+          flujo de 16 caracteres o un id de unidad de trabajo de 64 caracteres; se
+          recibió {target}. Ejecuta `aeat app modelo work runs` para listar los ids
+          de ejecución.
+        resume_target_help: Id de ejecución de flujo de 16 caracteres, o el id de
           unidad de trabajo de 64 caracteres (se resuelve automáticamente su última
-          ejecución). Ejecuta `aeat app modelo work runs` para listar los ids de
-          ejecución.'
+          ejecución). Ejecuta `aeat app modelo work runs` para listar los ids de ejecución.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
@@ -1057,7 +1056,10 @@ cli:
         perfil activo; '%{profile}' no está activo.
       profile_help: Inspeccionar y reparar el puntero de perfil activo.
       profile_name_help: Inspeccionar un bucket de perfil registrado concreto.
-      profile_requires_yes: Pasa --yes para limpiar el puntero de perfil activo.
+      profile_one_action: Elige --clear-active o --repair-manifest-status, no ambos.
+      profile_repair_manifest_status_help: Rellenar el estado de un manifiesto legacy
+        del bucket activo desde el registro cifrado del perfil.
+      profile_requires_yes: Pasa --yes para aplicar la reparación del perfil activo.
       quarantine_dry_run_help: Previsualizar las filas que se pondrían en cuarentena
         sin mover nada
       quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
