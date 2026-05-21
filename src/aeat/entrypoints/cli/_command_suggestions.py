@@ -1,4 +1,4 @@
-"""Command-resolution suggestions for the AEAT CLI.
+"""Command-resolution suggestions and lazy subcommand loading.
 
 Typer's built-in :class:`~typer.core.TyperGroup` suggests a near-miss
 command via :func:`difflib.get_close_matches`. That covers typos
@@ -13,12 +13,31 @@ command via :func:`difflib.get_close_matches`. That covers typos
 :class:`AeatTyperGroup` keeps Typer's typo suggestions and layers a
 per-group synonym table on top so both cases produce a translated
 "did you mean" hint instead of a bare "No such command".
+
+The same group class also owns **lazy subcommand loading**. The AEAT
+command tree is wide: every leaf command module pulls the application
+layer and, transitively, the ~0.6 s registry parse. Importing the
+whole tree just to construct the ``aeat`` app object made
+``aeat --version`` and ``aeat --help`` pay that cost even though they
+never dispatch into a subcommand.
+
+Heavy subcommand groups therefore register a :class:`LazySubcommand`
+loader instead of an eagerly-imported Typer instance. The loader's
+module is imported only when :meth:`AeatTyperGroup.get_command`
+resolves that subcommand — i.e. only when an operator actually invokes
+something in that subtree. ``--version`` / ``--help`` / the bare
+landing surface short-circuit in their callbacks before any subcommand
+is resolved, so they never trigger a loader.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import click
+import typer
 from typer.core import TyperGroup
+from typer.main import get_command as _typer_get_command
 
 from ...core.i18n import tr
 
@@ -39,13 +58,126 @@ _COMMAND_SYNONYMS: dict[str, dict[str, str]] = {
 }
 
 
-class AeatTyperGroup(TyperGroup):
-    """:class:`TyperGroup` with semantic-synonym command suggestions.
+class LazySubcommand:
+    """A deferred subcommand: a Typer factory imported on first use.
 
-    Typo-distance suggestions from the base class are preserved; the
-    synonym table only adds a hint when the base class produced none
-    (or when the synonym is a stronger match than a fuzzy typo guess).
+    ``factory`` is a zero-argument callable that imports the owning
+    command module and returns its :class:`typer.Typer` instance. The
+    import — and therefore the application-layer / registry cost — is
+    paid only when :meth:`load` runs, which :class:`AeatTyperGroup`
+    triggers on the first ``get_command`` / ``list_commands`` access.
+
+    ``decorate`` is applied to the Typer instance before it is
+    converted to a Click command. The CLI error boundary
+    (``decorate_typer_app``) is wired this way: an eagerly-registered
+    subtree would be decorated at app-construction time, but a lazily
+    loaded one must be decorated at load time instead.
     """
+
+    __slots__ = ("_command", "_decorate", "_factory", "name")
+
+    def __init__(
+        self,
+        name: str,
+        factory: Callable[[], typer.Typer],
+        *,
+        decorate: Callable[[typer.Typer], None] | None = None,
+    ) -> None:
+        self.name = name
+        self._factory = factory
+        self._decorate = decorate
+        self._command: click.Command | None = None
+
+    def load(self) -> click.Command:
+        """Import the module, decorate the Typer, return the Click command.
+
+        The materialized Click command is cached so repeated resolution
+        within a single process (help rendering then dispatch, or
+        ``resolve_command`` then ``get_command``) imports the module
+        exactly once.
+        """
+
+        if self._command is None:
+            typer_instance = self._factory()
+            if self._decorate is not None:
+                self._decorate(typer_instance)
+            command = _typer_get_command(typer_instance)
+            command.name = self.name
+            self._command = command
+        return self._command
+
+
+#: Lazy-subcommand registry keyed by the owning group's command
+#: ``name``. Typer materializes the Click :class:`AeatTyperGroup`
+#: instance lazily, inside ``get_command(app)``; the instance therefore
+#: cannot carry its lazy table at app-construction time. Keying by
+#: group name lets :func:`register_lazy_subcommand` populate the table
+#: at module-import time and lets every materialized group instance of
+#: that name read it back. AEAT group names (``aeat``, ``app``,
+#: ``config``) are unique, so the keying is unambiguous.
+_LAZY_REGISTRY: dict[str, dict[str, LazySubcommand]] = {}
+
+
+def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
+    """Register ``lazy`` under ``group_name`` for deferred resolution.
+
+    The owning :class:`AeatTyperGroup` imports the command module only
+    when the subcommand is first resolved through ``get_command``.
+    """
+
+    _LAZY_REGISTRY.setdefault(group_name, {})[lazy.name] = lazy
+
+
+class AeatTyperGroup(TyperGroup):
+    """:class:`TyperGroup` with synonym hints and lazy subcommand loading.
+
+    Two behaviours layer on top of the base Typer group:
+
+    * **Synonym suggestions.** Typo-distance suggestions from the base
+      class are preserved; the synonym table only adds a hint when the
+      base class produced none.
+    * **Lazy subcommands.** Subcommands registered through
+      :func:`register_lazy_subcommand` import their command module only
+      when first resolved, keeping the construction of the ``aeat`` app
+      object free of the registry parse.
+    """
+
+    def _lazy_table(self) -> dict[str, LazySubcommand]:
+        """Return the lazy-subcommand table for this group, if any."""
+
+        return _LAZY_REGISTRY.get(self.name or "", {})
+
+    def list_commands(self, ctx: click.Context) -> list[str]:
+        """Return eager and lazy subcommand names without importing modules.
+
+        Help rendering and shell completion enumerate command names
+        through this method; returning the lazy names from the registry
+        keeps the listing complete without paying any import cost. The
+        per-command import happens later, in :meth:`get_command`, and
+        only for the command actually selected.
+        """
+
+        eager = super().list_commands(ctx)
+        lazy = self._lazy_table()
+        merged = [*eager, *(name for name in lazy if name not in eager)]
+        return sorted(merged)
+
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+        """Resolve ``cmd_name``, importing a lazy module only if selected.
+
+        Eagerly-registered commands resolve through the base class. A
+        lazy subcommand triggers its loader — importing the command
+        module and the application layer it pulls — exactly once, the
+        first time that subtree is dispatched into.
+        """
+
+        eager = super().get_command(ctx, cmd_name)
+        if eager is not None:
+            return eager
+        lazy = self._lazy_table().get(cmd_name)
+        if lazy is not None:
+            return lazy.load()
+        return None
 
     def resolve_command(
         self,
@@ -81,4 +213,4 @@ def _synonym_hint(group_name: str | None, token: str) -> str | None:
     return tr("cli.root.errors.did_you_mean_command", command=canonical)
 
 
-__all__ = ["AeatTyperGroup"]
+__all__ = ["AeatTyperGroup", "LazySubcommand", "register_lazy_subcommand"]
