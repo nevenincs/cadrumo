@@ -423,6 +423,7 @@ def _profile_resolved_binding_ids(report: object) -> frozenset[str]:
     if filing_year is None:
         return frozenset()
     from ...application.modelo._binding_readiness import profile_resolvable_binding_ids
+    from ...domain.user_profile import ProfileNotFoundError
 
     try:
         bucket_id = _active_bucket_id()
@@ -435,7 +436,7 @@ def _profile_resolved_binding_ids(report: object) -> frozenset[str]:
             filing_year=int(filing_year),
             period=getattr(report, "period", None),
         )
-    except Exception:
+    except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset()
 
 

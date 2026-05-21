@@ -5,21 +5,13 @@ transaction catalogue. It stores the catalogue as an encrypted byte
 object in the primary SQL backend at FINANCIAL sensitivity; no
 plaintext transaction row, JSON catalogue, or envelope file lands on
 disk.
-
-Idempotency is inherited from the existing
-:func:`derive_transaction_id` SHA-256 hash on the
-:class:`RawTransaction` shape: re-importing the same parser output
-emits the same transaction IDs, so the merge helper skips IDs
-already in the catalogue.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage.envelope._envelope import Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -27,11 +19,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureOb
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
 from ._errors import LedgerStorageError
-from ._models import BucketTransactionRef, Transaction, TransactionCatalogue, derive_transaction_id
-
-if TYPE_CHECKING:
-    from ._enums import TransactionDirection
-    from ._raw_transaction import RawTransaction
+from ._models import BucketTransactionRef, TransactionCatalogue
 
 _log = get_logger(__name__)
 
@@ -88,13 +76,6 @@ class ImportSummary(BaseModel):
     skipped_refs: tuple[BucketTransactionRef, ...] = ()
     likely_duplicate_refs: tuple[BucketTransactionRef, ...] = ()
     catalogue_path: str
-
-
-# Direction-resolver shape — the consumer supplies the per-row mapping
-# from ``RawTransaction`` to a stable ``TransactionDirection``. Lives
-# in this module's signature only; the existing financial code already
-# provides resolvers via ``_models.from_raw`` etc.
-DirectionResolver = Callable[["RawTransaction"], "TransactionDirection"]
 
 
 class TransactionCatalogueRepository:
@@ -215,84 +196,6 @@ class TransactionCatalogueRepository:
             self._object_key,
             len(catalogue.transactions),
             len(extra_writes),
-        )
-
-    def merge_raw_transactions(
-        self,
-        raw_transactions: Iterable[RawTransaction],
-        *,
-        direction_resolver: DirectionResolver,
-    ) -> ImportSummary:
-        """Merge ``raw_transactions`` into the catalogue and persist atomically.
-
-        Re-imports are idempotent: rows whose
-        :func:`derive_transaction_id` is already present in the
-        catalogue are skipped (counted under ``ImportSummary.skipped``).
-        Concurrent imports against the same database object are governed
-        by the SQL transaction boundary.
-
-        Args:
-            raw_transactions: Iterable of parser-produced
-                :class:`RawTransaction` records.
-            direction_resolver: Callable that maps each
-                :class:`RawTransaction` to the
-                :class:`TransactionDirection` the operator's bookkeeping
-                expects (typically just inspecting the amount sign).
-
-        Returns:
-            A frozen :class:`ImportSummary`.
-        """
-        current = self.load()
-        existing_ids = set(current.transactions.keys())
-        imported = 0
-        skipped = 0
-        imported_refs: list[BucketTransactionRef] = []
-        skipped_refs: list[BucketTransactionRef] = []
-        new_transactions: dict[str, Transaction] = dict(current.transactions)
-        for raw in raw_transactions:
-            tx_id = derive_transaction_id(raw)
-            ref = BucketTransactionRef(bucket_id=self._bucket_id, transaction_id=tx_id)
-            if tx_id in existing_ids:
-                skipped += 1
-                skipped_refs.append(ref)
-                continue
-            try:
-                direction = direction_resolver(raw)
-                transaction = Transaction.model_validate(
-                    {
-                        "raw": raw,
-                        "direction": direction,
-                    }
-                )
-            except (ValueError, ValidationError):
-                _log.error(
-                    "merge_raw_transactions: failed to process tx_id=%s from %s row=%d",
-                    tx_id,
-                    raw.provenance.source_path,
-                    raw.provenance.source_row_index,
-                    exc_info=True,
-                )
-                raise
-            new_transactions[tx_id] = transaction
-            existing_ids.add(tx_id)
-            imported += 1
-            imported_refs.append(ref)
-        merged = TransactionCatalogue.model_validate({"transactions": new_transactions})
-        self.save(merged)
-        _log.info(
-            "merged raw transactions: bucket_id=%s imported=%d skipped=%d catalogue=%s",
-            self._bucket_id,
-            imported,
-            skipped,
-            self._object_key,
-        )
-        return ImportSummary(
-            imported=imported,
-            skipped=skipped,
-            bucket_id=self._bucket_id,
-            imported_refs=tuple(imported_refs),
-            skipped_refs=tuple(skipped_refs),
-            catalogue_path=f"db://secure_objects/{TX_BUCKET_NAMESPACE}/{self._object_key}",
         )
 
 
