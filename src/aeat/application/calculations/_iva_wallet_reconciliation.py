@@ -8,14 +8,20 @@ the effective binding decision consumed by Modelo 303 calculation.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...adapters.outbound.aeat.sede._schema import IvaCompensationWalletObservation
+from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
 from ...domain.calculations.registry._schema import RegistrySnapshot
+from ..aggregation._source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
 
 if TYPE_CHECKING:
     from ._binding_prefill import LocalIvaCompensationRecurrence
@@ -115,6 +121,51 @@ class IvaCompensationReconciliationReport(BaseModel):
 
 class IvaCompensationReconciliationInputError(ValueError):
     """Raised when wallet evidence does not match the target Modelo 303 snapshot."""
+
+
+class IvaWalletDecisionSourceResolver:
+    """Source mesh adapter for persisted Modelo 303 IVA wallet decisions."""
+
+    resolver_id = "iva_wallet_decision"
+    owned_sources = ("iva_wallet_decision",)
+    binding_id = "modelo-303-compensacion-pendiente-anteriores"
+
+    def __init__(self, decision: IvaCompensationReconciliationDecision | None) -> None:
+        self._decision = decision
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if context.modelo != "303" or self._decision is None:
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+            )
+        decision = self._decision
+        if decision.target_year != context.filing_year or decision.target_period != context.period:
+            raise IvaCompensationReconciliationInputError(
+                "IVA wallet reconciliation decision target does not match the Modelo 303 work unit"
+            )
+        if decision.blocked:
+            raise IvaCompensationReconciliationInputError(
+                f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}"
+            )
+        if decision.selected_amount is None:
+            raise IvaCompensationReconciliationInputError(
+                "IVA wallet reconciliation decision has no selected amount"
+            )
+        fingerprint = f"sha256:{hashlib.sha256(decision.model_dump_json().encode('utf-8')).hexdigest()}"
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values={self.binding_id: Decimal(decision.selected_amount)},
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind=source.source_kind,
+                    source_ref=source.source_locator,
+                    fingerprint=fingerprint,
+                )
+                for source in decision.authority_sources
+            ),
+        )
 
 
 def reconcile_modelo_303_iva_compensation(
@@ -482,6 +533,7 @@ __all__ = [
     "IvaCompensationReconciliationDecision",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
+    "IvaWalletDecisionSourceResolver",
     "reconcile_iva_compensation_wallet",
     "reconcile_modelo_303_iva_compensation",
 ]
