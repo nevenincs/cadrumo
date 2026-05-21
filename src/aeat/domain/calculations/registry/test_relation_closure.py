@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -29,6 +30,7 @@ _MODELO_180_FIRST_RELATION_FRAGMENT = (
 )
 
 
+@cache
 def _committed_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     return load_registry_tree(_REGISTRY_ROOT)
 

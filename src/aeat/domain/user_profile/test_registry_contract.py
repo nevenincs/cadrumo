@@ -13,6 +13,7 @@ from . import (
     UserProfileRegistryContractSeverity,
     build_user_profile_selector_index,
     load_user_profile_schema,
+    profile_binding_selectors,
     validate_user_profile_registry_contract,
 )
 
@@ -31,6 +32,25 @@ def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
     assert "enrollment.large_company" in index.schedule_predicates
     assert "tax.id" not in index.schedule_predicates
     assert "profile_tax_id" in index.export_headers
+
+
+def test_profile_binding_selectors_is_public_and_deduplicates_supported_selector_forms() -> None:
+    selectors = profile_binding_selectors(
+        {
+            "profile_key": "tax.id",
+            "profile_keys": ("tax.id", "tax.residence.ccaa"),
+            "required_when_profile_key": "enrollment.large_company",
+            "profile_model": "TaxResidenceProfile",
+            "field": "ccaa",
+        }
+    )
+
+    assert selectors == (
+        "tax.id",
+        "tax.residence.ccaa",
+        "enrollment.large_company",
+        "TaxResidenceProfile.ccaa",
+    )
 
 
 def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema() -> None:

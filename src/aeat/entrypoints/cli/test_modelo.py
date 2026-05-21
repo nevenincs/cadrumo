@@ -8,10 +8,21 @@ error (malformed period, unknown modelo) must surface as a
 from __future__ import annotations
 
 import pytest
+import typer
 
+from aeat.application.modelo import WorkUnitNotFoundError
+from aeat.entrypoints.cli._modelo import _bad_parameter_from_error
 from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def test_modelo_bad_parameter_helper_renders_registered_errors() -> None:
+    error = _bad_parameter_from_error(WorkUnitNotFoundError())
+
+    assert isinstance(error, typer.BadParameter)
+    assert str(error)
+    assert str(error) != "''"
 
 
 @pytest.mark.parametrize(
@@ -94,6 +105,23 @@ def test_work_calculate_binding_help_points_at_bindings_list() -> None:
     assert "bindings list --missing" in result.output
 
 
+def test_work_calculate_enters_bucket_source_mesh_calculation_boundary() -> None:
+    """The CLI calculate verb must use the bucket-backed calculation boundary.
+
+    This keeps default operator calculations on the same source mesh path as
+    repository-backed application calculations, instead of reaching around it
+    to the low-level registry engine action.
+    """
+
+    import inspect
+
+    from aeat.entrypoints.cli._modelo import work_calculate
+
+    source = inspect.getsource(work_calculate)
+    assert "calculate_modelo_revision_from_bucket_aggregation(" in source
+    assert "calculate_modelo_revision(" not in source
+
+
 def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
     """A missing-binding RegistryValidationError is enriched with the
     --binding KEY=VALUE syntax and a bindings-list discovery command so
@@ -172,7 +200,7 @@ def test_bindings_list_emits_readiness_category_for_every_row() -> None:
     )
     assert result.exit_code == 0, result.output
     assert "operation\tregistry.modelo.bindings.list" in result.output
-    assert "binding_id\tsource\treadiness\ttyped_enum\tborrador_capable" in result.output
+    assert "binding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable" in result.output
     # Every modelo-303 binding currently sources from
     # ``ledger_iva_aggregation`` so every row's readiness column is
     # "ledger source".

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import warnings
 from datetime import date
+from functools import lru_cache
 
 import pytest
 
@@ -37,6 +38,7 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 )
 
 
+@lru_cache(maxsize=1)
 def _load_modelo_369() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(m for m in modelos if m.id == "369")

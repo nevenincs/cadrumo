@@ -1,0 +1,243 @@
+"""Canonical application-layer source resolution contracts."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+from datetime import datetime
+from decimal import Decimal
+from types import MappingProxyType
+from typing import Literal, Protocol, runtime_checkable
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
+from ...domain.calculations.registry import ModeloRevision
+from ._errors import AggregationValidationError, t
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+CalculationSourceDiagnosticReason = Literal[
+    "duplicate_binding_owner",
+    "duplicate_bound_casilla_owner",
+    "source_issue",
+    "unhandled_binding_source",
+]
+
+
+class CalculationSourceContext(BaseModel):
+    """Context supplied to a calculation source resolver."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1, max_length=128)
+    modelo: str = Field(min_length=1, max_length=16)
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=32)
+    revision: ModeloRevision
+    calculated_at: datetime | None = None
+
+
+class CalculationSourceDiagnostic(BaseModel):
+    """Diagnostic emitted while resolving source-backed calculation values."""
+
+    model_config = _STRICT_FROZEN
+
+    reason: CalculationSourceDiagnosticReason
+    source_kind: str = Field(min_length=1, max_length=64)
+    message: str = Field(min_length=1, max_length=512)
+    resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
+    binding_id: str | None = Field(default=None, min_length=1, max_length=256)
+    casilla_id: str | None = Field(default=None, min_length=1, max_length=256)
+
+
+class CalculationSourceProvenance(BaseModel):
+    """Stable source object provenance produced by a resolver."""
+
+    model_config = _STRICT_FROZEN
+
+    source_kind: str = Field(min_length=1, max_length=64)
+    source_ref: str = Field(min_length=1, max_length=256)
+    fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+
+
+class CalculationSourceResolution(BaseModel):
+    """Resolved values and provenance returned by one source resolver."""
+
+    model_config = _STRICT_FROZEN
+
+    resolver_id: str = Field(min_length=1, max_length=128)
+    owned_sources: tuple[str, ...] = Field(default_factory=tuple)
+    binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
+    enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
+    bound_casilla_inputs: Mapping[str, Decimal] = Field(default_factory=dict)
+    source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
+    provenance: tuple[CalculationSourceProvenance, ...] = Field(default_factory=tuple)
+
+    @field_validator("owned_sources")
+    @classmethod
+    def _owned_sources_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        normalized = tuple(source.strip() for source in value)
+        if any(not source for source in normalized):
+            raise ValueError("owned_sources must not contain blank source kinds")
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("owned_sources must be unique")
+        return tuple(sorted(normalized))
+
+    @field_validator("binding_values")
+    @classmethod
+    def _freeze_binding_values(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_validator("enum_binding_values")
+    @classmethod
+    def _freeze_enum_binding_values(cls, value: Mapping[str, str]) -> Mapping[str, str]:
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_validator("bound_casilla_inputs")
+    @classmethod
+    def _freeze_bound_casilla_inputs(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_validator("source_transaction_ids")
+    @classmethod
+    def _freeze_source_transaction_ids(cls, value: Sequence[str]) -> tuple[str, ...]:
+        normalized = tuple(item.strip() for item in value)
+        if any(not item for item in normalized):
+            raise ValueError("source_transaction_ids must not contain blanks")
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("source_transaction_ids must be unique")
+        return tuple(sorted(normalized))
+
+    @field_serializer("binding_values")
+    def _serialize_binding_values(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+        return dict(value)
+
+    @field_serializer("enum_binding_values")
+    def _serialize_enum_binding_values(self, value: Mapping[str, str]) -> dict[str, str]:
+        return dict(value)
+
+    @field_serializer("bound_casilla_inputs")
+    def _serialize_bound_casilla_inputs(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+        return dict(value)
+
+    @field_serializer("source_transaction_ids")
+    def _serialize_source_transaction_ids(self, value: Sequence[str]) -> tuple[str, ...]:
+        return tuple(value)
+
+
+@runtime_checkable
+class ModeloSourceResolver(Protocol):
+    """Application port implemented by one calculation source adapter."""
+
+    @property
+    def resolver_id(self) -> str:
+        """Stable resolver identifier for diagnostics and provenance."""
+
+    @property
+    def owned_sources(self) -> tuple[str, ...]:
+        """Registry binding source kinds this resolver owns."""
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve source-backed calculation values for ``context``."""
+
+
+def merge_source_resolutions(
+    resolutions: Sequence[CalculationSourceResolution],
+    *,
+    resolver_id: str = "source_mesh",
+) -> CalculationSourceResolution:
+    """Merge resolver outputs and reject ambiguous ownership."""
+
+    binding_values: dict[str, Decimal] = {}
+    enum_binding_values: dict[str, str] = {}
+    bound_casilla_inputs: dict[str, Decimal] = {}
+    source_transaction_ids: set[str] = set()
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    provenance: list[CalculationSourceProvenance] = []
+    owned_sources: set[str] = set()
+    binding_owners: dict[str, str] = {}
+    casilla_owners: dict[str, str] = {}
+
+    for resolution in resolutions:
+        owned_sources.update(resolution.owned_sources)
+        diagnostics.extend(resolution.diagnostics)
+        provenance.extend(resolution.provenance)
+        source_transaction_ids.update(resolution.source_transaction_ids)
+        for binding_id, value in resolution.binding_values.items():
+            _claim_binding(binding_owners, binding_id, resolution.resolver_id)
+            binding_values[binding_id] = value
+        for binding_id, value in resolution.enum_binding_values.items():
+            _claim_binding(binding_owners, binding_id, resolution.resolver_id)
+            enum_binding_values[binding_id] = value
+        for casilla_id, value in resolution.bound_casilla_inputs.items():
+            _claim_bound_casilla(casilla_owners, casilla_id, resolution.resolver_id)
+            bound_casilla_inputs[casilla_id] = value
+
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=tuple(sorted(owned_sources)),
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        bound_casilla_inputs=bound_casilla_inputs,
+        source_transaction_ids=tuple(sorted(source_transaction_ids)),
+        diagnostics=tuple(diagnostics),
+        provenance=tuple(provenance),
+    )
+
+
+def collect_unhandled_source_diagnostics(
+    revision: ModeloRevision,
+    *,
+    handled_sources: frozenset[str],
+    manual_sources: frozenset[str] = frozenset({"manual_input"}),
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return diagnostics for revision bindings with no enrolled resolver."""
+
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for binding in revision.bindings:
+        source = str(binding.source)
+        if source in handled_sources or source in manual_sources:
+            continue
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="unhandled_binding_source",
+                source_kind=source,
+                binding_id=binding.id,
+                message=f"binding {binding.id!r} declares source {source!r} with no enrolled resolver",
+            )
+        )
+    return tuple(diagnostics)
+
+
+def _claim_binding(owners: dict[str, str], binding_id: str, resolver_id: str) -> None:
+    existing = owners.get(binding_id)
+    if existing is None:
+        owners[binding_id] = resolver_id
+        return
+    raise AggregationValidationError(
+        t("aggregation.source_mesh.errors.duplicate_binding_owner"),
+        context={"binding_id": binding_id, "first_resolver": existing, "second_resolver": resolver_id},
+    )
+
+
+def _claim_bound_casilla(owners: dict[str, str], casilla_id: str, resolver_id: str) -> None:
+    existing = owners.get(casilla_id)
+    if existing is None:
+        owners[casilla_id] = resolver_id
+        return
+    raise AggregationValidationError(
+        t("aggregation.source_mesh.errors.duplicate_bound_casilla_owner"),
+        context={"casilla_id": casilla_id, "first_resolver": existing, "second_resolver": resolver_id},
+    )
+
+
+__all__ = [
+    "CalculationSourceContext",
+    "CalculationSourceDiagnostic",
+    "CalculationSourceDiagnosticReason",
+    "CalculationSourceProvenance",
+    "CalculationSourceResolution",
+    "ModeloSourceResolver",
+    "collect_unhandled_source_diagnostics",
+    "merge_source_resolutions",
+]

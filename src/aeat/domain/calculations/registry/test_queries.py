@@ -105,3 +105,93 @@ def test_describe_rejects_bare_period_not_declared_by_modelo() -> None:
 
     with pytest.raises(RegistryValidationError, match="not declared by any revision"):
         service.describe_modelo("303", period="0A")
+
+
+def test_describe_accepts_census_event_period_token() -> None:
+    """``describe`` resolves a non-date census period token to a revision.
+
+    Modelo 036 declares ``alta`` / ``modificacion`` / ``baja`` as its
+    period tokens. None match the registry time-code pattern, so the
+    query must match them verbatim against the revision's declared
+    periods rather than refuse them.
+    """
+
+    service = _service()
+
+    described = service.describe_modelo("036", period="alta")
+
+    assert described.code == "036"
+    assert described.period == "alta"
+    assert "alta" in described.periods
+
+
+def test_casillas_accepts_census_event_period_token() -> None:
+    """``casillas`` resolves the same census period tokens as ``describe``."""
+
+    service = _service()
+
+    report = service.casillas("036", period="modificacion")
+
+    assert report.code == "036"
+    assert report.period == "modificacion"
+    assert report.rows
+
+
+def test_bindings_for_year_resolves_the_year_covering_revision() -> None:
+    """``bindings_for_year`` selects the revision covering the filing year.
+
+    Modelo 100 carries one revision per renta year. Resolving by year
+    must return the 2024 revision's binding ids, not the latest
+    revision's.
+    """
+
+    service = _service()
+
+    report = service.bindings_for_year("100", filing_year=2024)
+
+    assert report.code == "100"
+    assert report.filing_year == 2024
+    assert report.rows
+    assert all(row.binding_id.startswith("renta-2024-") for row in report.rows)
+
+
+def test_binding_rows_report_decimal_input_channel_for_typed_enum_binding() -> None:
+    """A ``typed_enum`` binding consumed as a Decimal operand reports
+    ``input_channel = "decimal"``.
+
+    The Modelo 100 estimación-directa modality binding carries a
+    ``typed_enum`` annotation yet its formulas compare it against a
+    numeric literal, so the operator-facing input channel is decimal.
+    """
+
+    service = _service()
+
+    report = service.bindings_for_year("100", filing_year=2024)
+    row = next(r for r in report.rows if "estimacion-directa-es-normal" in r.binding_id)
+
+    assert row.typed_enum == "EstimacionDirectaModalidad"
+    assert row.input_channel == "decimal"
+
+
+def test_input_casilla_alias_map_resolves_registry_number_to_canonical_id() -> None:
+    """``input_casilla_alias_map`` maps an unambiguous registry number
+    and BOE form number to the canonical casilla id.
+
+    Modelo 303 casilla ``iva.compensacion-pendiente-periodos-anteriores``
+    carries the registry number ``110``. The alias map must resolve
+    ``110`` to the canonical id while leaving the id mapped to itself.
+    """
+
+    from ._runtime_graph import input_casilla_alias_map
+
+    service = _service()
+    described = service.describe_modelo("303", period="1T")
+    authority = service._authority
+    definition = authority.validate_modelo("303")
+    revision = definition.revisions[described.revision]
+
+    alias_map = input_casilla_alias_map(revision)
+
+    canonical = "iva.compensacion-pendiente-periodos-anteriores"
+    assert alias_map[canonical] == canonical
+    assert alias_map["110"] == canonical

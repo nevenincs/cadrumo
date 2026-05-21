@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...domain.filing import (
     ModeloDraft,

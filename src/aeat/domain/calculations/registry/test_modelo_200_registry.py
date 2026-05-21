@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 from html import unescape
 
 import pytest
@@ -18,6 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
+@lru_cache(maxsize=1)
 def _load_modelo_200():
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(item for item in modelos if item.id == "200")

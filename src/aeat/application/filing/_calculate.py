@@ -18,12 +18,12 @@ summary consumed by renderers::
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 from datetime import datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...core.errors import BaseSeverity
 from ...domain.filing import (
     ModeloDraft,
     ModeloDraftStatus,

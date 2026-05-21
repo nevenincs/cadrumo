@@ -1342,6 +1342,37 @@ def resolve_ledger_iva_aggregation_binding_values(
     return resolved
 
 
+def unsupported_ledger_iva_observations(
+    revision: ModeloRevision,
+    observations: Iterable[IvaLedgerObservation],
+) -> tuple[IvaLedgerObservation, ...]:
+    """Return IVA observations no binding on ``revision`` can consume.
+
+    This is the fail-closed counterpart to
+    :func:`resolve_ledger_iva_aggregation_binding_values`. Empty match
+    sets on supported bindings still resolve to zero, but a concrete
+    observation whose category/rate/flow triple is not selected by any
+    ``ledger_iva_aggregation`` binding is a modelling gap and must not
+    be silently inferred into an annual or periodic form.
+    """
+
+    selectors = tuple(
+        _iva_ledger_selector(binding)
+        for binding in revision.bindings
+        if binding.source == "ledger_iva_aggregation"
+    )
+    unsupported: list[IvaLedgerObservation] = []
+    for observation in observations:
+        if not any(
+            observation.category in selector.categories
+            and observation.rate_kind in selector.rate_kinds
+            and observation.flow_direction is selector.flow_direction
+            for selector in selectors
+        ):
+            unsupported.append(observation)
+    return tuple(unsupported)
+
+
 # ---------------------------------------------------------------------------
 # Ledger Renta deductible-expense aggregation source bindings.
 #
@@ -1703,7 +1734,7 @@ def resolve_counterpart_binding_row_values(
         matched = tuple(
             _counterpart_to_invoice(observation)
             for observation in available
-            if source_kind == "invoice" or observation.source_kind == source_kind
+            if observation.source_kind == source_kind
         )
         scope_filtered = tuple(_filter_invoice_observations(matched, sample_selector))
         rows = _build_invoice_rows(grouping, scope_filtered)
@@ -2736,6 +2767,11 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     those bindings short-circuit with an empty failure list.
     """
 
+    if binding.source == "invoice":
+        return [
+            f"binding {binding.id!r} source 'invoice' is retired; use "
+            "collectible_invoice / payable_invoice / purchase_invoice_evidence"
+        ]
     selector_model = _BINDING_SELECTOR_REGISTRY.get(binding.source)
     if selector_model is None:
         return []

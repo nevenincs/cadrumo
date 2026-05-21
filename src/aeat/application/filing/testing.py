@@ -53,10 +53,10 @@ class ModeloTestDeadlineChecker(BaseModel):
 
 
 __all__ = [
+    "FixtureProvisioningError",
     "ModeloTestDeadlineChecker",
     "ModeloTestDeadlineStatus",
     "ModeloTestProfile",
-    "FixtureProvisioningError",
     "build_registry_filing_draft",
     "build_registry_filing_draft_from_decimals",
 ]

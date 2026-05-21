@@ -23,6 +23,7 @@ from ._registry_contract import (
     UserProfileRegistryContractSeverity,
     UserProfileSelectorIndex,
     build_user_profile_selector_index,
+    profile_binding_selectors,
     validate_user_profile_registry_contract,
 )
 from ._schema import (
@@ -72,5 +73,6 @@ __all__ = [
     "load_user_profile_schema",
     "new_profile_id",
     "new_profile_snapshot_id",
+    "profile_binding_selectors",
     "validate_user_profile_registry_contract",
 ]

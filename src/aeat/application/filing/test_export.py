@@ -84,6 +84,23 @@ def _approved_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def test_build_draft_populates_registry_casilla_provenance() -> None:
+    draft = _approved_registry_draft()
+    collection = _schema_provider().get_collection(draft.modelo)
+    registry_provenance = {
+        casilla.id: (tuple(casilla.legal_refs), tuple(casilla.source_refs))
+        for casilla in collection.all()
+        if casilla.legal_refs and casilla.source_refs
+    }
+    draft_provenance = {entry.casilla_id: entry for entry in draft.casilla_provenance}
+
+    assert registry_provenance
+    assert set(registry_provenance).issubset(draft_provenance)
+    for casilla_id, (legal_refs, source_refs) in registry_provenance.items():
+        assert draft_provenance[casilla_id].legal_refs == legal_refs
+        assert draft_provenance[casilla_id].source_refs == source_refs
+
+
 def _modelo_130_export_headers() -> dict[str, str]:
     return {
         "declaration_type": "I",
@@ -487,6 +504,7 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
 
     assert receipt.byte_size == len(payload)
     assert receipt.file_sha256
+    assert receipt.casilla_provenance
     comparable = {
         casilla_id: Decimal(str(expected))
         for casilla_id, expected in draft_values.items()
@@ -494,6 +512,13 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
     }
     assert comparable
     assert all(exported_values[casilla_id] == expected for casilla_id, expected in comparable.items())
+    exported_provenance = {entry.casilla_id: entry for entry in receipt.casilla_provenance}
+    draft_provenance = {entry.casilla_id: entry for entry in draft.casilla_provenance}
+    assert set(exported_values).issubset(exported_provenance)
+    assert all(
+        exported_provenance[casilla_id] == draft_provenance[casilla_id]
+        for casilla_id in exported_values
+    )
 
 
 def test_export_and_verify_build_model_scoped_provider_when_omitted(tmp_path: Path) -> None:
@@ -917,6 +942,10 @@ def test_verify_reports_casilla_drift_for_modelo_130_layout(tmp_path: Path) -> N
 
     assert verdict.verdict is DeclaracionVerifyVerdict.DRIFT
     assert verdict.mismatched_casillas == (field.casilla,)
+    draft_provenance = {entry.casilla_id: entry for entry in draft.casilla_provenance}
+    assert verdict.mismatched_casilla_provenance == (draft_provenance[field.casilla],)
+    assert verdict.mismatched_casilla_provenance[0].legal_refs
+    assert verdict.mismatched_casilla_provenance[0].source_refs
 
 
 def test_export_payload_parser_rejects_layout_literal_drift(tmp_path: Path) -> None:

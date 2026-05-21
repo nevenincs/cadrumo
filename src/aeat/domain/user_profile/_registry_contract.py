@@ -143,7 +143,7 @@ def _binding_issues(
     for binding in revision.bindings:
         if binding.source != "profile":
             continue
-        selectors = tuple(_profile_binding_selectors(binding.selector))
+        selectors = tuple(profile_binding_selectors(binding.selector))
         if not selectors:
             issues.append(
                 _issue(
@@ -282,7 +282,7 @@ def _export_issues(
     return tuple(issues)
 
 
-def _profile_binding_selectors(selector: Mapping[str, object]) -> tuple[str, ...]:
+def profile_binding_selectors(selector: Mapping[str, object]) -> tuple[str, ...]:
     selectors: list[str] = []
     profile_key = selector.get("profile_key")
     if isinstance(profile_key, str):
@@ -302,6 +302,9 @@ def _profile_binding_selectors(selector: Mapping[str, object]) -> tuple[str, ...
         else:
             selectors.append(f"{profile_model}.{profile_field}")
     return tuple(dict.fromkeys(selectors))
+
+
+_profile_binding_selectors = profile_binding_selectors
 
 
 def _issue(

@@ -14,6 +14,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_expense_aggregation_binding_values,
 )
 from ...domain.invoices import InvoiceCatalogueRepository
+from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepository
 from ._errors import AggregationValidationError, t
 from ._iva_ledger import (
@@ -23,6 +24,12 @@ from ._iva_ledger import (
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     aggregate_renta_ledger_expenses_from_repositories,
+)
+from ._source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -88,6 +95,116 @@ class ModeloLedgerBindingAggregation(BaseModel):
         value: Sequence[RentaLedgerAggregationIssue],
     ) -> tuple[RentaLedgerAggregationIssue, ...]:
         return tuple(value)
+
+
+class LedgerIvaAggregationSourceResolver:
+    """Source mesh resolver for repository-backed IVA ledger bindings."""
+
+    resolver_id = "ledger_iva_aggregation"
+    owned_sources = ("ledger_iva_aggregation",)
+
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepository | None = None) -> None:
+        self._transaction_repository = transaction_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if not _revision_has_binding_source(context.revision, "ledger_iva_aggregation"):
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+
+        aggregation = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=context.bucket_id,
+            period=aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period),
+            transaction_repository=self._transaction_repository,
+        )
+        transaction_ids = {observation.ledger_id for observation in aggregation.observations}
+        transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=resolve_ledger_iva_aggregation_binding_values(
+                context.revision,
+                aggregation.observations,
+            ),
+            source_transaction_ids=tuple(sorted(transaction_ids)),
+            diagnostics=tuple(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="ledger_iva_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=issue.detail,
+                )
+                for issue in aggregation.issues
+            ),
+            provenance=(
+                tuple(
+                    CalculationSourceProvenance(
+                        source_kind="ledger_iva_aggregation",
+                        source_ref=f"transaction:{observation.ledger_id}",
+                    )
+                    for observation in aggregation.observations
+                )
+                + tuple(
+                    CalculationSourceProvenance(
+                        source_kind="ledger_iva_aggregation",
+                        source_ref=f"prorrata:{reference.transaction_id}",
+                    )
+                    for reference in aggregation.prorrata_references
+                )
+            ),
+        )
+
+
+class LedgerRentaExpenseAggregationSourceResolver:
+    """Source mesh resolver for repository-backed Renta expense bindings."""
+
+    resolver_id = "ledger_renta_expense_aggregation"
+    owned_sources = ("ledger_renta_expense_aggregation",)
+
+    def __init__(
+        self,
+        *,
+        transaction_repository: TransactionCatalogueRepository | None = None,
+        invoice_repository: InvoiceCatalogueRepository | None = None,
+    ) -> None:
+        self._transaction_repository = transaction_repository
+        self._invoice_repository = invoice_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if not _revision_has_binding_source(context.revision, "ledger_renta_expense_aggregation"):
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+
+        aggregation = aggregate_renta_ledger_expenses_from_repositories(
+            bucket_id=context.bucket_id,
+            period=aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period),
+            transaction_repository=self._transaction_repository,
+            invoice_repository=self._invoice_repository,
+            profile_year=context.filing_year,
+            modelo=context.modelo,
+        )
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=resolve_ledger_renta_expense_aggregation_binding_values(
+                context.revision,
+                aggregation.observations,
+            ),
+            source_transaction_ids=tuple(
+                sorted(observation.transaction_id for observation in aggregation.observations)
+            ),
+            diagnostics=tuple(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="ledger_renta_expense_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=issue.detail,
+                )
+                for issue in aggregation.issues
+            ),
+            provenance=tuple(
+                provenance
+                for observation in aggregation.observations
+                for provenance in _renta_observation_provenance(observation)
+            ),
+        )
 
 
 def resolve_modelo_ledger_binding_values_from_repositories(
@@ -172,7 +289,32 @@ def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
     return any(binding.source == source for binding in revision.bindings)
 
 
+def _empty_source_resolution(resolver_id: str, owned_sources: tuple[str, ...]) -> CalculationSourceResolution:
+    return CalculationSourceResolution(resolver_id=resolver_id, owned_sources=owned_sources)
+
+
+def _renta_observation_provenance(
+    observation: RentaDeductibleExpenseObservation,
+) -> tuple[CalculationSourceProvenance, ...]:
+    provenance = [
+        CalculationSourceProvenance(
+            source_kind="ledger_renta_expense_aggregation",
+            source_ref=f"transaction:{observation.transaction_id}",
+        )
+    ]
+    if observation.invoice_id is not None:
+        provenance.append(
+            CalculationSourceProvenance(
+                source_kind="ledger_renta_expense_aggregation",
+                source_ref=f"purchase-invoice-evidence:{observation.invoice_id}",
+            )
+        )
+    return tuple(provenance)
+
+
 __all__ = [
+    "LedgerIvaAggregationSourceResolver",
+    "LedgerRentaExpenseAggregationSourceResolver",
     "ModeloLedgerBindingAggregation",
     "aggregation_period_for_modelo",
     "resolve_modelo_ledger_binding_values_from_repositories",

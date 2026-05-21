@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ._errors import RegistryValidationError
-from ._schema import ModeloScheduleDefinition, ModeloRevision, ProfilePredicateDefinition
+from ._schema import ModeloRevision, ModeloScheduleDefinition, ProfilePredicateDefinition
 
 __all__ = [
     "applicable_filing_schedules",

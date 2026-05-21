@@ -2,24 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_serializer, field_validator
 
-from ...domain.calculations.registry import IvaLedgerObservation
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepository,
-    TransactionLifecycleState,
-)
-from ...domain.transactions import (
-    TransactionDirection as LedgerTransactionDirection,
+from ...domain.calculations.registry import (
+    IvaLedgerObservation,
+    ModeloRevision,
+    resolve_ledger_iva_aggregation_binding_values,
+    unsupported_ledger_iva_observations,
 )
 from ...domain.iva import (
     EUMemberState,
@@ -32,11 +28,26 @@ from ...domain.iva import (
     lookup_rate,
     validate_prorrata_reference,
 )
+from ...domain.transactions import (
+    BusinessClassification,
+    Transaction,
+    TransactionCatalogue,
+    TransactionCatalogueRepository,
+    TransactionLifecycleState,
+)
+from ...domain.transactions import (
+    TransactionDirection as LedgerTransactionDirection,
+)
 from . import _shared_issue_reasons
 from ._errors import AggregationValidationError, t
 from ._models import Period
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_LedgerId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
+]
+
 _RATE_KIND_TO_DOMESTIC_CATEGORY: dict[IvaRateKind, IvaCategory] = {
     IvaRateKind.ZERO: IvaCategory.DOMESTIC_ZERO,
     IvaRateKind.SUPER_REDUCED: IvaCategory.DOMESTIC_SUPER_REDUCED_4,
@@ -65,6 +76,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_IVA_RATE = "missing_iva_rate"
     UNSUPPORTED_IVA_RATE = "unsupported_iva_rate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
+    UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
 
 
 class IvaLedgerAggregationIssue(BaseModel):
@@ -87,6 +99,45 @@ class ProrrataLedgerReference(BaseModel):
     reference: ProrrataReference
     base_amount: Decimal = Field(..., ge=Decimal("0"))
     input_vat_amount: Decimal = Field(..., ge=Decimal("0"))
+
+
+class IvaLedgerInputKind(StrEnum):
+    """Business role of a pre-classified IVA ledger candidate.
+
+    ``ADJUSTMENT`` rows may carry negative bases or cuotas because
+    rectification and regularisation entries reverse or correct prior
+    operations. The registry consumes the resulting signed observation;
+    the model keeps the adjustment axis visible at the application
+    boundary where source provenance still exists.
+    """
+
+    ORDINARY_OPERATION = "ordinary_operation"
+    ADJUSTMENT = "adjustment"
+
+
+class IvaLedgerCandidate(BaseModel):
+    """One pre-classified ledger line for generic IVA aggregation.
+
+    This is the application hand-off shape for IVA facts that cannot be
+    inferred safely from a bank transaction direction plus a rate:
+    exenciones, no-sujetas, recargo de equivalencia, intra-community
+    reverse-charge operations, imports/exports, and explicit
+    adjustments. Upstream classifiers must supply the authoritative IVA
+    category, rate kind, and flow direction before this layer creates a
+    registry-ready :class:`IvaLedgerObservation`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    ledger_id: _LedgerId
+    transaction_date: date
+    category: IvaCategory
+    rate_kind: IvaRateKind
+    flow_direction: IvaFlowDirection
+    base_amount: Decimal
+    iva_amount: Decimal
+    input_kind: IvaLedgerInputKind = IvaLedgerInputKind.ORDINARY_OPERATION
+    prorrata_reference_id: _LedgerId | None = None
 
 
 class IvaLedgerAggregation(BaseModel):
@@ -154,6 +205,114 @@ def aggregate_iva_ledger_observations_from_repositories(
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     return aggregate_iva_ledger_observations(repository.load(), period=period)
+
+
+def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerObservation:
+    """Validate a pre-classified IVA candidate and return an observation.
+
+    The validator does not re-classify the operation and does not derive
+    IVA from the base. It only blocks sentinel categories that are not
+    declarable ledger facts; the category, rate, and flow axes must have
+    been resolved upstream from invoice/operation evidence.
+    """
+
+    if candidate.category in {IvaCategory.UNKNOWN, IvaCategory.ERRONEOUS_INVOICE}:
+        raise AggregationValidationError(
+            t("aggregation.iva_ledger.errors.unsupported_iva_category"),
+            context={
+                "ledger_id": candidate.ledger_id,
+                "category": candidate.category.value,
+            },
+        )
+    return IvaLedgerObservation(
+        ledger_id=candidate.ledger_id,
+        transaction_date=candidate.transaction_date,
+        category=candidate.category,
+        rate_kind=candidate.rate_kind,
+        flow_direction=candidate.flow_direction,
+        base_amount=candidate.base_amount,
+        iva_amount=candidate.iva_amount,
+        prorrata_reference_id=candidate.prorrata_reference_id,
+    )
+
+
+def validate_iva_ledger_observations(candidates: Iterable[IvaLedgerCandidate]) -> tuple[IvaLedgerObservation, ...]:
+    """Validate every pre-classified IVA candidate in input order."""
+
+    return tuple(validate_iva_ledger_observation(candidate) for candidate in candidates)
+
+
+def aggregate_iva_ledger_candidates(
+    candidates: Iterable[IvaLedgerCandidate],
+    *,
+    period: Period | str,
+) -> IvaLedgerAggregation:
+    """Project pre-classified IVA candidates into period-scoped observations.
+
+    This path complements :func:`aggregate_iva_ledger_observations`,
+    which remains the legacy domestic-rate projection from bank
+    transactions. Pre-classified candidates are required for non-domestic
+    IVA and adjustments because those axes cannot be recovered from a
+    transaction amount or direction without guessing.
+    """
+
+    resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
+    observations: list[IvaLedgerObservation] = []
+    issues: list[IvaLedgerAggregationIssue] = []
+    for candidate in candidates:
+        if not resolved_period.contains(candidate.transaction_date):
+            issues.append(
+                IvaLedgerAggregationIssue(
+                    transaction_id=candidate.ledger_id,
+                    reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+                    detail=(
+                        f"transaction date {candidate.transaction_date.isoformat()} "
+                        f"is outside {resolved_period.raw}"
+                    ),
+                )
+            )
+            continue
+        observations.append(validate_iva_ledger_observation(candidate))
+    return IvaLedgerAggregation(
+        period=resolved_period,
+        observations=tuple(observations),
+        issues=tuple(issues),
+    )
+
+
+def aggregate_iva_ledger_candidate_bindings(
+    revision: ModeloRevision,
+    candidates: Iterable[IvaLedgerCandidate],
+    *,
+    period: Period | str,
+) -> dict[str, Decimal]:
+    """Validate pre-classified candidates and resolve registry bindings."""
+
+    aggregation = aggregate_iva_ledger_candidates(candidates, period=period)
+    if aggregation.issues:
+        first = aggregation.issues[0]
+        raise AggregationValidationError(
+            t("aggregation.iva_ledger.errors.candidate_outside_period"),
+            context={
+                "ledger_id": first.transaction_id,
+                "reason": first.reason.value,
+                "detail": first.detail,
+            },
+        )
+    unsupported = unsupported_ledger_iva_observations(revision, aggregation.observations)
+    if unsupported:
+        first = unsupported[0]
+        raise AggregationValidationError(
+            t("aggregation.iva_ledger.errors.unsupported_iva_category"),
+            context={
+                "ledger_id": first.ledger_id,
+                "category": first.category.value,
+                "rate_kind": first.rate_kind.value,
+                "flow_direction": first.flow_direction.value,
+                "revision_id": revision.id,
+            },
+        )
+    return resolve_ledger_iva_aggregation_binding_values(revision, aggregation.observations)
 
 
 def aggregate_iva_ledger_observations(
@@ -431,8 +590,14 @@ __all__ = [
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
     "IvaLedgerAggregationIssueReason",
+    "IvaLedgerCandidate",
+    "IvaLedgerInputKind",
     "ProrrataLedgerReference",
+    "aggregate_iva_ledger_candidate_bindings",
+    "aggregate_iva_ledger_candidates",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
     "iva_ledger_missing_fact_reasons",
+    "validate_iva_ledger_observation",
+    "validate_iva_ledger_observations",
 ]

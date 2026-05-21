@@ -24,10 +24,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.i18n import Translatable as tr
 from ...domain.invoices import Invoice
+from ...domain.profile import normalise_key
 from ...domain.transactions import Transaction
 from ..filing import ModeloValidationFinding
 from ..workflow._models import WorkflowEvent
-from ..workflow._utils import _normalise_key, utc_now
+from ..workflow._utils import utc_now
 from ._enums import ReviewItemKind, ReviewSeverity
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -161,4 +162,4 @@ class InvoiceReviewRecord(BaseModel):
     @field_validator("fields")
     @classmethod
     def _normalise_fields(cls, value: dict[str, str]) -> dict[str, str]:
-        return {_normalise_key(str(key)): str(raw).strip() for key, raw in value.items()}
+        return {normalise_key(str(key)): str(raw).strip() for key, raw in value.items()}

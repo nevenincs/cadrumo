@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...domain.transactions import TransactionCatalogue
 from . import (

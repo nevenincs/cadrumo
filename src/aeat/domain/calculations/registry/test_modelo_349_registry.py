@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 from typing import cast
 
 import pytest
@@ -46,6 +47,7 @@ _OFFICIAL_FIELD_POSITIONS: dict[str, tuple[int, int]] = {
 }
 
 
+@lru_cache(maxsize=1)
 def _load_modelo_349():
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "349")

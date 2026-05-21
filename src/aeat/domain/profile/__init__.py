@@ -23,6 +23,7 @@ from ._keys import (
     optional_profile_keys,
     required_profile_keys,
 )
+from ._normalise import normalise_key
 from ._renta_codes import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
 from .family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
@@ -163,6 +164,7 @@ __all__ = [
     "TaxResidenceProfile",
     "TaxResidenceProfileError",
     "get_profile_key",
+    "normalise_key",
     "optional_profile_keys",
     "parse_tax_region",
     "required_profile_keys",

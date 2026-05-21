@@ -2,10 +2,14 @@
 
 The autouse `_isolated_aeat_root` fixture redirects
 `Settings.aeat_local_storage_root` to a function-scoped `tmp_path` for
-every test under this package, so the active-profile pointer file that
+unit tests under this package, so the active-profile pointer file that
 `register_active_profile` / `select_profile` write via
 `_write_active_profile_pointer` lands inside the test sandbox and
 never bleeds into the project's real `var/storage/` directory.
+
+Opt-in live tests are intentionally excluded. They need the operator's
+real active-profile pointer and encrypted bucket so Cl@ve-backed reads
+exercise the same state the CLI uses.
 
 Isolation uses `monkeypatch.setenv` (not `override_settings`) on
 purpose: `BaseSettings` re-reads environment variables on every
@@ -24,7 +28,9 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def _isolated_aeat_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def _isolated_aeat_root(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Point `Settings.aeat_local_storage_root` at the test's `tmp_path`."""
 
+    if request.node.get_closest_marker("live_read") or request.node.get_closest_marker("live_write"):
+        return
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))

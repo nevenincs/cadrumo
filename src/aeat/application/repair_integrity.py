@@ -19,6 +19,8 @@ renderer; both functions are read-only and emit no bucket events.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -111,7 +113,18 @@ def build_repair_integrity_report(
     repository: _SecureObjectRepositoryProtocol | None = None,
 ) -> RepairIntegrityReport:
     """Probe namespace integrity. When ``namespace`` is set, restrict scope."""
-    repo = repository or SecureObjectRepository()
+    if repository is not None:
+        return _build_repair_integrity_report(namespace=namespace, repository=repository)
+    with _best_effort_active_bucket_session():
+        return _build_repair_integrity_report(namespace=namespace, repository=SecureObjectRepository())
+
+
+def _build_repair_integrity_report(
+    *,
+    namespace: str | None,
+    repository: _SecureObjectRepositoryProtocol,
+) -> RepairIntegrityReport:
+    repo = repository
     if namespace is None:
         try:
             namespaces = repo.list_namespaces()
@@ -128,6 +141,28 @@ def build_repair_integrity_report(
         unreadable_total=unreadable_total,
         check=_aggregate_integrity(integrity),
     )
+
+
+@contextmanager
+def _best_effort_active_bucket_session() -> Iterator[None]:
+    """Open the active bucket session so integrity probes test decryptability, not bootstrap state."""
+
+    provider: object | None = None
+    try:
+        from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+
+        if has_active_bucket_session():
+            yield
+            return
+        provider = get_master_key_provider()
+        provider.__enter__()  # type: ignore[attr-defined]
+    except Exception:
+        yield
+        return
+    try:
+        yield
+    finally:
+        provider.__exit__(None, None, None)  # type: ignore[attr-defined]
 
 
 def build_repair_list_report(

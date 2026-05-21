@@ -41,6 +41,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
@@ -57,6 +58,7 @@ _YEARS_WITH_200K_BRACKET = (2021, 2022, 2023, 2024, 2025)
 _YEARS_WITH_300K_BRACKET = (2023, 2024, 2025)
 
 
+@cache
 def _ahorro_table(year: int):
     modelos, _ = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(m for m in modelos if m.id == "100")
@@ -64,6 +66,7 @@ def _ahorro_table(year: int):
     return next(p for p in revision.parameters if p.id == f"renta-{year}-escala-autonomica-base-ahorro")
 
 
+@cache
 def _revision(year: int):
     modelos, _ = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(m for m in modelos if m.id == "100")

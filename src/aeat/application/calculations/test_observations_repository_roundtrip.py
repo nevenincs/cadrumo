@@ -23,14 +23,19 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from ...core.config import override_settings
 from ...domain.calculations.registry._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
 )
 from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
-from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+from ._observations_repository import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+    iva_wallet_decision_event_key,
+    iva_wallet_decision_key,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -65,17 +70,13 @@ def _populated_observation() -> RegistryModeloObservation:
 
 def test_calculation_observation_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A RegistryModeloObservation roundtrips through the encrypted observation repo."""
 
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "observations-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    db_path = tmp_path / "observations-roundtrip.db"
+    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
@@ -110,12 +111,11 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             )
             assert loaded_computed.legal_refs == ("liva.art-94",)
         finally:
-            engine.dispose()
+            dispose_engine(settings)
 
 
 def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: deleting ``legal_refs`` on a casilla must surface.
 
@@ -142,15 +142,12 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     from ...adapters.persistence.storage.sql.session import session_scope
     from ._observations_repository import observation_key
 
-    _OBSERVATION_NAMESPACE = CalculationObservationRepository.namespace
+    observation_namespace = CalculationObservationRepository.namespace
 
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "observations-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    db_path = tmp_path / "observations-anti-tautology.db"
+    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
@@ -167,7 +164,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             object_key = observation_key("303", 2025, "1T")
             with session_scope(engine) as session:
                 stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _OBSERVATION_NAMESPACE,
+                    SecureObjectRow.namespace == observation_namespace,
                     SecureObjectRow.object_key == object_key,
                 )
                 row = session.execute(stmt).scalar_one()
@@ -197,22 +194,18 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
                 "suite is suspect."
             )
         finally:
-            engine.dispose()
+            dispose_engine(settings)
 
 
 def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """An IVA wallet reconciliation decision round-trips as AUDIT state."""
 
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "iva-wallet-decision-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    db_path = tmp_path / "iva-wallet-decision-roundtrip.db"
+    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine)
@@ -243,5 +236,66 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
             assert loaded.selected_authority == "aeat_wallet"
             assert loaded.selected_amount == Decimal("1200")
             assert loaded.blocked is False
+            assert repo.load_decision_history("12345678Z", 2026, "2T") == (decision,)
+            assert iva_wallet_decision_key("12345678Z", 2026, "2T").startswith("iva-wallet-decision:")
+            assert iva_wallet_decision_event_key(decision).startswith("iva-wallet-decision-event:")
+            database_bytes = db_path.read_bytes()
+            assert b"12345678Z" not in database_bytes
+            assert b"12345678Z:2026:2T" not in database_bytes
         finally:
-            engine.dispose()
+            dispose_engine(settings)
+
+
+def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
+    tmp_path: Path,
+) -> None:
+    """Later decisions update latest lookup without deleting prior audit events."""
+
+    provider = EphemeralMasterKeyProvider()
+    db_path = tmp_path / "iva-wallet-decision-history.db"
+    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        engine = get_engine(settings)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            repo = IvaWalletDecisionRepository()
+            first_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+            second_at = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
+            first = IvaCompensationReconciliationDecision(
+                taxpayer_nif="12345678Z",
+                target_year=2026,
+                target_period="2T",
+                selected_authority="aeat_wallet",
+                selected_amount=Decimal("1200"),
+                wallet_amount=Decimal("1200"),
+                local_recurrence_amount=Decimal("1200"),
+                override_amount=None,
+                divergence="match",
+                blocked=False,
+                stale_wallet=False,
+                reason="Using first valid AEAT wallet observation for Modelo 303 prior compensation.",
+                wallet_captured_at=first_at,
+                decided_at=first_at,
+            )
+            second = first.model_copy(
+                update={
+                    "selected_amount": Decimal("1300"),
+                    "wallet_amount": Decimal("1300"),
+                    "local_recurrence_amount": None,
+                    "divergence": "wallet_only",
+                    "reason": "Using later valid AEAT wallet observation without local recurrence.",
+                    "wallet_captured_at": second_at,
+                    "decided_at": second_at,
+                }
+            )
+
+            repo.save_decision(first)
+            repo.save_decision(second)
+
+            assert repo.load_decision("12345678Z", 2026, "2T") == second
+            assert repo.load_decision_history("12345678Z", 2026, "2T") == (first, second)
+            database_bytes = db_path.read_bytes()
+            assert b"12345678Z" not in database_bytes
+            assert b"12345678Z:2026:2T" not in database_bytes
+        finally:
+            dispose_engine(settings)

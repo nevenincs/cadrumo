@@ -66,6 +66,7 @@ def _selector_periods(value: object) -> tuple[str, ...]:
 
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
+_MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -91,6 +92,23 @@ class BindingPrefillReport(BaseModel):
 
     prefilled: tuple[PrefilledBinding, ...]
     binding_values: Mapping[str, Decimal]
+
+
+class LocalIvaCompensationRecurrence(BaseModel):
+    """Local Modelo 303 recurrence extracted for wallet reconciliation only.
+
+    This is comparison evidence. It does not choose the effective casilla `110`
+    value; the wallet reconciliation decision remains the only selector.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    binding_id: str
+    amount: Decimal
+    source_modelo: str
+    source_filing_year: int
+    source_periods: tuple[str, ...]
+    resolved_at: datetime
 
 
 def _gather_observations(
@@ -262,8 +280,66 @@ def resolve_bindings_from_local_store(
     )
 
 
+def extract_modelo_303_local_iva_compensation_recurrence(
+    snapshot: RegistrySnapshot,
+    *,
+    repository: CalculationObservationRepository | None = None,
+    iva_history_repository: IvaCompensationHistoryRepository | None = None,
+    captured_at: datetime | None = None,
+) -> tuple[LocalIvaCompensationRecurrence | None, BindingPrefillReport]:
+    """Extract the local Modelo 303 compensation recurrence for comparison.
+
+    The returned amount is the locally reconstructed prior compensation balance
+    for the target Modelo 303 period. Callers must feed it into
+    reconciliation; they must not use it directly as the effective value while
+    fresh AEAT wallet evidence exists.
+    """
+
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
+        raise ValueError("local IVA compensation recurrence extraction only applies to Modelo 303")
+    report = resolve_bindings_from_local_store(
+        snapshot,
+        repository=repository,
+        iva_history_repository=iva_history_repository,
+        captured_at=captured_at,
+    )
+    amount = report.binding_values.get(_MODELO_303_IVA_COMPENSATION_BINDING_ID)
+    if amount is None:
+        return None, report
+    prefilled = next(
+        (item for item in report.prefilled if item.binding_id == _MODELO_303_IVA_COMPENSATION_BINDING_ID),
+        None,
+    )
+    if prefilled is None:
+        source_modelo, source_year, source_periods = _requirements_by_binding(snapshot)[
+            _MODELO_303_IVA_COMPENSATION_BINDING_ID
+        ]
+        resolved_at = captured_at if captured_at is not None else datetime.now(UTC)
+        prefilled = PrefilledBinding(
+            binding_id=_MODELO_303_IVA_COMPENSATION_BINDING_ID,
+            value=Decimal(amount),
+            source_modelo=source_modelo,
+            source_filing_year=source_year,
+            source_periods=source_periods,
+            resolved_at=resolved_at,
+        )
+    return (
+        LocalIvaCompensationRecurrence(
+            binding_id=prefilled.binding_id,
+            amount=Decimal(amount),
+            source_modelo=prefilled.source_modelo,
+            source_filing_year=prefilled.source_filing_year,
+            source_periods=prefilled.source_periods,
+            resolved_at=prefilled.resolved_at,
+        ),
+        report,
+    )
+
+
 __all__ = [
     "BindingPrefillReport",
+    "LocalIvaCompensationRecurrence",
     "PrefilledBinding",
+    "extract_modelo_303_local_iva_compensation_recurrence",
     "resolve_bindings_from_local_store",
 ]

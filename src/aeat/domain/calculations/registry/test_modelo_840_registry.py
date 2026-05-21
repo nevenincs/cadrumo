@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 import pytest
 
 from aeat.core.resources import bundled_path
@@ -15,6 +17,7 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
+@lru_cache(maxsize=1)
 def _load_modelo_840():
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "840")

@@ -13,21 +13,13 @@ Safety invariants enforced by this module:
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
-from typing import TYPE_CHECKING, NoReturn
+from typing import Literal, NoReturn
 
-from ...adapters.outbound.aeat import sede as _sede
-from ...adapters.outbound.aeat.auth import CertificateHealthSeverity
-from ...adapters.outbound.aeat.export import ModeloDraftStatus
-from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot
 from ...application.auth import describe_provider_operator_impact
-from ...core.errors import BaseSeverity
-
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import AeatSession
 from ...core.config import Settings
-from ...core.errors import SiteHealthError
+from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
 from ...domain.deadlines import (
     AutonomoProfile,
@@ -37,7 +29,7 @@ from ...domain.deadlines import (
     next_deadline,
 )
 from ...domain.filing import ModeloBuilderError
-from ...domain.submission import SubmissionPreflightError
+from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ._errors import WorkflowAbortSignalError, WorkflowComponentError, WorkflowError
 from ._models import (
@@ -53,31 +45,15 @@ from ._models import (
 from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
+    ExpedientesSource,
     ModeloDraftBuilderProtocol,
     ModeloInputsProviderProtocol,
+    NotificationsSource,
     RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
 )
 
-ExpedientesSource = Callable[["AeatSession", str | None], Awaitable[tuple[Expediente, ...]]]
-"""Async callable that returns expedientes for a session, optionally filtered by ``modelo``."""
-
-NotificationsSource = Callable[["AeatSession"], Awaitable[NotificationsSnapshot]]
-"""Async callable that returns the full notifications snapshot for a session."""
-
-
-async def _default_expedientes_source(
-    session: AeatSession,
-    modelo: str | None,
-) -> tuple[Expediente, ...]:
-    """Default seam: forward to the live :func:`aeat.adapters.outbound.aeat.sede.walk_expedientes_tree`."""
-    return await _sede.walk_expedientes_tree(session, modelo=modelo)
-
-
-async def _default_notifications_source(session: AeatSession) -> NotificationsSnapshot:
-    """Default seam: forward to the live :func:`aeat.adapters.outbound.aeat.sede.fetch_notifications_query`."""
-    return await _sede.fetch_notifications_query(session)
-
+_CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
 
 def _period_to_year(period: str) -> int | None:
     """Extract the leading 4-digit calendar year from a period string.
@@ -125,7 +101,7 @@ def _classify_cert_expiry(
     today: date,
     warn_days: int,
     critical_days: int,
-) -> tuple[CertificateHealthSeverity, int]:
+) -> tuple[_CertificateSeverityValue, int]:
     """Classify a certificate's expiry window against operator thresholds.
 
     Operates on the provider description's expiry date rather than the
@@ -147,12 +123,12 @@ def _classify_cert_expiry(
     """
     days_until_expiry = (not_after - today).days
     if days_until_expiry <= 0:
-        return (CertificateHealthSeverity.EXPIRED, days_until_expiry)
+        return ("EXPIRED", days_until_expiry)
     if days_until_expiry <= critical_days:
-        return (CertificateHealthSeverity.CRITICAL, days_until_expiry)
+        return ("CRITICAL", days_until_expiry)
     if days_until_expiry <= warn_days:
-        return (CertificateHealthSeverity.WARN, days_until_expiry)
-    return (CertificateHealthSeverity.OK, days_until_expiry)
+        return ("WARN", days_until_expiry)
+    return ("OK", days_until_expiry)
 
 
 def _summary_text(en: str) -> str:
@@ -183,7 +159,7 @@ class WorkflowEngine:
         deadline_engine: DeadlineEngineProtocol,
         filing_draft_builder: ModeloDraftBuilderProtocol,
         submission_engine: SubmissionEngineProtocol,
-        session: AeatSession | None,
+        session: object | None,
         certificate_bundle: CertificateBundleProtocol | None,
         inputs_provider: ModeloInputsProviderProtocol,
         settings: Settings,
@@ -218,8 +194,8 @@ class WorkflowEngine:
         self._certificate_bundle = certificate_bundle
         self._inputs_provider = inputs_provider
         self._settings = settings
-        self._expedientes_source: ExpedientesSource = expedientes_source or _default_expedientes_source
-        self._notifications_source: NotificationsSource = notifications_source or _default_notifications_source
+        self._expedientes_source = expedientes_source
+        self._notifications_source = notifications_source
         # Lazy run-id recomputation state. These are set at the start
         # of every ``_drive`` call and consumed by
         # ``_record_site_unavailable`` so an alert raised *after* the
@@ -586,7 +562,7 @@ class WorkflowEngine:
         """
         del profile  # session identity is implicit; tax_id no longer crosses the boundary.
         started = _utcnow()
-        if self._session is None:
+        if self._session is None or self._notifications_source is None:
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.CHECKING_INBOX,
@@ -665,7 +641,7 @@ class WorkflowEngine:
         """
         started = _utcnow()
 
-        if self._session is not None:
+        if self._session is not None and self._expedientes_source is not None:
             try:
                 expedientes = await self._expedientes_source(self._session, obligation.modelo)
             except SiteHealthError as exc:
@@ -955,7 +931,7 @@ class WorkflowEngine:
                     critical_days=self._settings.aeat_cert_critical_days,
                 )
                 cert_details["cert_not_after"] = certificate.expires_on.isoformat()
-                cert_details["cert_severity"] = cert_severity.value
+                cert_details["cert_severity"] = cert_severity
                 cert_details["cert_days_until_expiry"] = str(days_until_expiry)
             else:
                 cert_severity = None
@@ -963,13 +939,13 @@ class WorkflowEngine:
             if (
                 cert_severity
                 in (
-                    CertificateHealthSeverity.EXPIRED,
-                    CertificateHealthSeverity.CRITICAL,
+                    "EXPIRED",
+                    "CRITICAL",
                 )
                 and cert_severity is not None
             ):
                 expiry_summary = _summary_text(
-                    f"Certificate pre-expiry gate: severity={cert_severity.value} "
+                    f"Certificate pre-expiry gate: severity={cert_severity} "
                     f"days_until_expiry={days_until_expiry} "
                     f"kind={certificate.kind.value}"
                 )
@@ -987,7 +963,7 @@ class WorkflowEngine:
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=expiry_summary,
                 )
-            if cert_severity is CertificateHealthSeverity.WARN:
+            if cert_severity == "WARN":
                 _logger.warning(
                     "workflow: certificate nearing expiry kind=%s days=%d",
                     certificate.kind.value,
@@ -1112,13 +1088,7 @@ class WorkflowEngine:
     ) -> NoReturn:
         """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
 
-        from ...adapters.outbound.aeat.browser import SiteHealthStatus
-
         status = exc.status
-        if not isinstance(status, SiteHealthStatus):
-            raise TypeError(
-                "SiteHealthError carried a non-SiteHealthStatus payload"
-            ) from exc
         alert_run_id = self._compute_current_run_id() or "-"
         summary = _summary_text(f"AEAT site unavailable at stage={stage.value}: {status.state.value}")
         steps.append(

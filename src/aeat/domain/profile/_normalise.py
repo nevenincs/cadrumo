@@ -17,10 +17,13 @@ here) and never re-implement the rule.
 from __future__ import annotations
 
 
-def _normalise_key(value: str) -> str:
+def normalise_key(value: str) -> str:
     """Return the canonical form of a profile key for registry lookup."""
 
     return value.strip().lower().replace("-", ".")
 
 
-__all__ = ["_normalise_key"]
+_normalise_key = normalise_key
+
+
+__all__ = ["normalise_key"]

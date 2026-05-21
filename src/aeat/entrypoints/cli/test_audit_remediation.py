@@ -60,12 +60,33 @@ def _assert_no_internal_leak(text: str) -> None:
 
 
 def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
-    result = _invoke(["app", "modelo", "bindings", "list", "--help"])
+    """``bindings list`` help advertises the bare period tokens it
+    accepts, consistent with ``work create`` and ``describe``.
 
-    assert result.exit_code == 0
-    assert "2026Q1" in result.output
-    assert "2026-01" in result.output
-    assert "Q1, 2026-01" not in result.output
+    ``bindings list`` composes ``--year`` and ``--period`` separately,
+    so its ``--period`` argument is a bare registry token (``0A``,
+    ``1T``-``4T``, ``01``-``12``) — never a composed ``YYYY``-prefixed
+    string. The help text must show those bare tokens and the census
+    tokens, the same guidance every modelo period surface gives.
+    """
+
+    bindings_help = _invoke(["app", "modelo", "bindings", "list", "--help"]).output
+    work_help = _invoke(["app", "modelo", "work", "create", "--help"]).output
+    describe_help = _invoke(["app", "modelo", "describe", "--help"]).output
+
+    for surface in (bindings_help, work_help, describe_help):
+        # Collapse Rich's line wrapping so a token split across two
+        # help-panel rows is still matched.
+        flat = " ".join(surface.split())
+        assert "0A" in flat, surface
+        assert "1T-4T" in flat, surface
+        assert "01-12" in flat, surface
+        # The census tokens are named (the connector word is locale-
+        # dependent, so each token is checked on its own).
+        assert "alta" in flat and "modificacion" in flat and "baja" in flat, surface
+        # The composed YYYY-prefixed forms are no longer advertised on
+        # surfaces that compose --year and --period separately.
+        assert "2026Q1" not in flat, surface
 
 
 def test_overview_calendar_for_general_iva_includes_modelo_303() -> None:

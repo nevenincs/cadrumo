@@ -187,6 +187,22 @@ def test_import_persists_filed_calculation_revision(repos) -> None:  # type: ign
     assert revision.amendment_kind is None  # import is not an amendment
 
 
+def test_import_persists_registry_grounded_casilla_observations(repos) -> None:  # type: ignore[no-untyped-def]
+    outcome = _drive_import_persists_filing(repos)
+    _, cr_repo, _, _, _ = repos
+    revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
+    observations = {obs.casilla_id: obs for obs in revision.observations}
+
+    assert set(observations) == {"01", "02"}
+    assert observations["01"].value == Decimal("1500")
+    assert observations["01"].formula_id is None
+    assert observations["01"].operand_refs == ()
+    assert observations["01"].legal_refs
+    assert observations["01"].source_refs
+    assert observations["02"].legal_refs
+    assert observations["02"].source_refs
+
+
 @pytest.mark.parametrize(("casilla_id", "expected"), _IMPORTED_REVISION_CASILLAS)
 def test_import_persists_casilla_value(repos, casilla_id: str, expected: Decimal) -> None:  # type: ignore[no-untyped-def]
     outcome = _drive_import_persists_filing(repos)

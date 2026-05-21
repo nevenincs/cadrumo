@@ -37,6 +37,12 @@ from urllib.parse import parse_qs, urlsplit
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check with the registry validator. build_snapshot
+# of a Modelo 100 revision fails loudly if that check is unregistered, so
+# the M100 routing referential-integrity gate runs on this declarations path.
+import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
+
 from .....core.config import Settings
 from .....core.logging import get_logger
 from .....core.resources import bundled_path
@@ -46,12 +52,11 @@ from .....domain.calculations.registry import (
     ParsedExportFieldValue,
     RegistryModeloObservation,
     RegistrySnapshot,
+    RegistrySnapshotError,
     RegistryValidationError,
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
-    build_snapshot,
-    load_registry_tree,
     parse_export_payload,
     previous_filing_observation_requirements,
     relation_source_requirements,
@@ -62,12 +67,6 @@ from .....domain.calculations.registry import (
 )
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
-
-# Importing the renta package registers the first-slice routing
-# cross-domain snapshot check with the registry validator. build_snapshot
-# of a Modelo 100 revision fails loudly if that check is unregistered, so
-# the M100 routing referential-integrity gate runs on this declarations path.
-import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
@@ -86,7 +85,7 @@ from ._schema import (
 )
 
 if TYPE_CHECKING:
-    from .....domain.calculations.registry import ModeloRevision
+    from .....domain.calculations.registry import ModeloRevision, ValidatedRegistryAuthority
     from ..auth._authenticator import AeatSession
 
 
@@ -96,10 +95,12 @@ log = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
 _DEFAULTS = Settings()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
+_SEDE_HOST = urlsplit(_SEDE_BASE).netloc
 _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
 _COTEJO_VIEW = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_query}"
 _COTEJO_DOC = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_document}"
 _COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
+_DECLARATIONS_LISTING_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.declarations_listing.removesuffix("/index.zul")
 _NAVIGATION_TIMEOUT_MS = _DEFAULTS.aeat_browser_navigation_timeout_ms
 _FORM_INTERACTION_TIMEOUT_MS = _DEFAULTS.aeat_browser_form_interaction_timeout_ms
 _BUSCAR_SETTLE_MS = _DEFAULTS.aeat_browser_buscar_settle_ms
@@ -108,7 +109,8 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
-    allowed_hosts=("www6.agenciatributaria.gob.es",),
+    allowed_hosts=(_SEDE_HOST,),
+    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.declarations_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=True,
@@ -448,7 +450,7 @@ async def _drive_search(
     await _continue_alert_modal(page, read_policy=read_policy)
 
     final_url = page.url
-    if "/wlpl/SCEJ-MANT/CONSUL" not in final_url:
+    if _DECLARATIONS_LISTING_PATH_PREFIX not in final_url:
         log.warning(
             "declaraciones register did not load; session may have expired (final_url=%r)",
             final_url,
@@ -489,7 +491,7 @@ async def _drive_search(
         return False
 
     try:
-        _assert_read_browser_action("Buscar", policy=read_policy)
+        _assert_read_browser_action("buscar-declaraciones-presentadas", policy=read_policy)
         await (
             page.locator("button.z-button")
             .filter(has_text="Buscar")
@@ -514,7 +516,7 @@ async def _select_combobox_value(
     label = page.get_by_text(label_text, exact=True).first
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
     try:
-        _assert_read_browser_action(label_text, policy=read_policy)
+        _assert_read_browser_action(f"select-{label_text.split()[0].lower()}", policy=read_policy)
         await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
     except PlaywrightError as exc:
         raise SedeNavigationError(f"opening combobox after label {label_text!r} failed: {exc}") from exc
@@ -532,7 +534,7 @@ async def _select_combobox_value(
 
     target = matching_options.first
     try:
-        _assert_read_browser_action(option_match, policy=read_policy)
+        _assert_read_browser_action(f"select-option-{option_match}", policy=read_policy)
         await target.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
     except PlaywrightError as exc:
         raise SedeNavigationError(f"selecting option {option_match!r} for {label_text!r} failed: {exc}") from exc
@@ -547,7 +549,7 @@ async def _continue_alert_modal(
 ) -> None:
     """Dismiss AEAT's informational alert modal without opening alert actions."""
     try:
-        _assert_read_browser_action("Continuar", policy=read_policy)
+        _assert_read_browser_action("alert-modal-continuar", policy=read_policy)
         result = await page.evaluate(
             """
             () => {
@@ -811,7 +813,7 @@ async def capture_declaration(
             async with context.expect_page(
                 timeout=_VER_CLICK_TIMEOUT_MS,
             ) as new_page_info:
-                _assert_read_browser_action("Ver", policy=read_policy)
+                _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
                 await ver_button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
             cotejo_page = await new_page_info.value
         except PlaywrightError as exc:
@@ -1222,17 +1224,21 @@ def _store_artefact(
 
 
 def _registry_snapshot_for_declaration(declaration: Declaracion) -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next((candidate for candidate in modelos if candidate.id == declaration.modelo), None)
-    if modelo is None:
-        raise SedeParseError(f"registry has no modelo definition for AEAT declaration {declaration.modelo!r}")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=declaration.ejercicio,
-        period=declaration.period,
-    )
+    authority = _registry_authority()
+    try:
+        return authority.snapshot(
+            declaration.modelo,
+            filing_year=declaration.ejercicio,
+            period=declaration.period,
+        )
+    except RegistrySnapshotError as exc:
+        raise SedeParseError(f"registry has no snapshot for AEAT declaration {declaration.modelo!r}") from exc
+
+
+def _registry_authority() -> ValidatedRegistryAuthority:
+    from .....domain.calculations.registry import ValidatedRegistryAuthority
+
+    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
 
 
 def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
@@ -1251,7 +1257,9 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
             f"expected exactly one authenticated declarations read surface for modelo "
             f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}"
         )
-    return remote_state_policy_from_cross_reference(matching_decisions[0])
+    return remote_state_policy_from_cross_reference(matching_decisions[0]).model_copy(
+        update={"allowed_browser_action_patterns": _EXTERNAL.aeat.live_safety.declarations_browser_action_patterns}
+    )
 
 
 def _observed_casillas_from_submitted_file(
@@ -1302,6 +1310,15 @@ _MODELO_303_PAGE_03_MONEY_FIELDS: Final[Mapping[str, tuple[int, int]]] = {
     "69": (323, 17),
     "71": (374, 17),
 }
+_MODELO_303_PAGE_03_MONEY_FIELDS_BY_YEAR: Final[Mapping[int, Mapping[str, tuple[int, int]]]] = {
+    2022: {
+        "110": (255, 17),
+        "78": (272, 17),
+        "87": (289, 17),
+        "69": (323, 17),
+        "71": (357, 17),
+    },
+}
 
 
 def _observed_modelo_303_casillas_from_submitted_file(
@@ -1325,7 +1342,11 @@ def _observed_modelo_303_casillas_from_submitted_file(
     if page[1005:1017] != _MODELO_303_PAGE_03_END_TAG:
         raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has invalid page-03 footer")
     observations: list[ObservedCasillaValue] = []
-    for casilla_id, (position, width) in _MODELO_303_PAGE_03_MONEY_FIELDS.items():
+    money_fields = _MODELO_303_PAGE_03_MONEY_FIELDS_BY_YEAR.get(
+        declaration.ejercicio,
+        _MODELO_303_PAGE_03_MONEY_FIELDS,
+    )
+    for casilla_id, (position, width) in money_fields.items():
         raw = page[position - 1 : position - 1 + width]
         if len(raw) != width:
             raise SedeParseError(
@@ -1535,7 +1556,7 @@ async def _capture_row_pdf_artefact(
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with context.expect_page(timeout=_VER_CLICK_TIMEOUT_MS) as new_page_info:
-            _assert_read_browser_action("Ver", policy=read_policy)
+            _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
             await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
         cotejo_page = await new_page_info.value
     except PlaywrightError as exc:
@@ -1592,7 +1613,7 @@ async def _capture_submitted_file_artefact(
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with page.expect_download(timeout=_VER_CLICK_TIMEOUT_MS) as download_info:
-            _assert_read_browser_action("Descarga fichero presentado", policy=read_policy)
+            _assert_read_browser_action("download-filed-data-file", policy=read_policy)
             await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
         download = await download_info.value
         path = await download.path()

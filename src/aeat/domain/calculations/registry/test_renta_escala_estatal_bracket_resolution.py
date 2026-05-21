@@ -33,6 +33,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
@@ -48,6 +49,7 @@ _BACKPORTED_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _POST_AMENDMENT_YEARS = (2021, 2022, 2023, 2024, 2025)
 
 
+@cache
 def _bracket_table(year: int):
     modelos, _ = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(m for m in modelos if m.id == "100")

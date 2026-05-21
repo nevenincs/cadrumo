@@ -8,6 +8,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SkipValidation, ValidationError
 
@@ -41,6 +42,29 @@ if TYPE_CHECKING:
 _logger = get_logger(__name__)
 
 
+def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:
+    """Return a non-secret diagnostic suffix for a failed live assertion."""
+
+    parts = [
+        f"status={getattr(assertion, 'status_code', None)}",
+        f"error={getattr(assertion, 'error_message', None)!r}",
+    ]
+    detail = getattr(assertion, "assertion_detail", None)
+    landing_url = getattr(detail, "landing_url", None)
+    if isinstance(landing_url, str) and landing_url:
+        try:
+            parsed = urlsplit(landing_url)
+        except ValueError:
+            parts.append("landing_url_parse=invalid")
+        else:
+            parts.append(f"landing_host={parsed.netloc!r}")
+            parts.append(f"landing_path={parsed.path!r}")
+    session_cookie_present = getattr(detail, "session_cookie_present", None)
+    if session_cookie_present is not None:
+        parts.append(f"session_cookie_present={bool(session_cookie_present)}")
+    return " ".join(parts)
+
+
 class StorageStatePaths(BaseModel):
     """Logical storage-state identifier for one provider's persisted AEAT session."""
 
@@ -55,6 +79,10 @@ class CorruptAuthSessionError(AeatError):
 
 class AuthSessionUnavailableError(AeatError):
     """Raised when no verified active AEAT session can be supplied."""
+
+
+class AuthProfileIdentityMismatchError(AeatError):
+    """Raised when the active profile identity cannot own the requested auth session."""
 
 
 class AuthenticatedAeatSessionResult(BaseModel):
@@ -151,6 +179,8 @@ async def require_verified_aeat_session(
 ) -> AeatSession:
     """Return a verified active AEAT session without exposing provider mechanics."""
 
+    provider_kind = _resolve_provider_kind(settings, kind)
+    expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
     persisted = load_persisted_session(settings, kind)
     if persisted is None:
         raise AuthSessionUnavailableError(
@@ -188,6 +218,7 @@ async def require_verified_aeat_session(
         raise AuthSessionUnavailableError(
             tr("application.auth.sessions.errors.sede_rejected")
         )
+    _assert_session_identity_matches_expected(refreshed_session, expected_identity)
     return refreshed_session
 
 
@@ -217,6 +248,7 @@ async def ensure_authenticated_aeat_session(
     """
 
     provider_kind = _resolve_provider_kind(settings, kind)
+    expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
     reset_status = (
         clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-before-ensure")
         if reset_lock
@@ -232,6 +264,7 @@ async def ensure_authenticated_aeat_session(
         )
         if reused is not None:
             session, assertion = reused
+            _assert_session_identity_matches_expected(session, expected_identity)
             return AuthenticatedAeatSessionResult(
                 provider_kind=provider_kind,
                 session=session,
@@ -257,6 +290,7 @@ async def ensure_authenticated_aeat_session(
             )
             if reused is not None:
                 session, assertion = reused
+                _assert_session_identity_matches_expected(session, expected_identity)
                 return AuthenticatedAeatSessionResult(
                     provider_kind=provider_kind,
                     session=session,
@@ -284,9 +318,9 @@ async def ensure_authenticated_aeat_session(
 
             raise AeatLoginAssertionError(
                 "AEAT authentication completed but live verification failed: "
-                f"status={getattr(assertion, 'status_code', None)} "
-                f"error={getattr(assertion, 'error_message', None)!r}"
+                f"{_invalid_assertion_diagnostic(assertion)}"
             )
+        _assert_session_identity_matches_expected(session, expected_identity)
         return AuthenticatedAeatSessionResult(
             provider_kind=provider_kind,
             session=session,
@@ -346,6 +380,83 @@ def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) ->
     if settings.aeat_auth_provider is not None:
         return AuthProviderKind(settings.aeat_auth_provider.value)
     return AuthProviderKind.CERTIFICATE
+
+
+def _normalise_tax_identity(value: object) -> str:
+    return str(value or "").strip().upper()
+
+
+def _assert_active_profile_identity_matches_provider(
+    settings: Settings,
+    provider_kind: AuthProviderKind,
+) -> str | None:
+    """Fail closed before live auth can bind one taxpayer's session to another profile."""
+
+    if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        return None
+    provider_identity = _normalise_tax_identity(settings.aeat_clave_movil_dni_nie)
+    if not provider_identity:
+        raise AuthProfileIdentityMismatchError(
+            "Cl@ve Móvil live auth requires a configured DNI/NIE before any AEAT session can be used."
+        )
+
+    profile_identity = _active_profile_tax_identity()
+    if not profile_identity:
+        raise AuthProfileIdentityMismatchError(
+            "Cl@ve Móvil live auth requires the active profile to carry identity.tax_id."
+        )
+    if profile_identity != provider_identity:
+        raise AuthProfileIdentityMismatchError(
+            "Cl@ve Móvil identity does not match the active profile tax identity; "
+            "switch to the matching profile or update the profile before live AEAT auth."
+        )
+    return provider_identity
+
+
+def _active_profile_tax_identity() -> str:
+    from ...adapters.persistence.storage import (
+        activate_master_key_provider,
+        get_master_key_provider,
+        has_active_bucket_session,
+    )
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile._orchestration import build_lifecycle_service
+    from ..user_profile._projections import record_to_path_values, record_to_values
+    from ..workflow._models import resolve_active_bucket_id
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        return ""
+    try:
+        if has_active_bucket_session():
+            record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
+        else:
+            from ...core.config import override_settings
+
+            with override_settings(aeat_active_profile=bucket_id):
+                service = build_lifecycle_service(bucket_id=bucket_id)
+                with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=bucket_id):
+                    record = service.read(bucket_id)
+    except ProfileNotFoundError:
+        return ""
+
+    path_values = record_to_path_values(record)
+    profile_identity = _normalise_tax_identity(path_values.get("identity.tax_id"))
+    if profile_identity:
+        return profile_identity
+    selector_values = record_to_values(record)
+    return _normalise_tax_identity(selector_values.get("tax.id"))
+
+
+def _assert_session_identity_matches_expected(session: object, expected_identity: str | None) -> None:
+    if not expected_identity:
+        return
+    session_identity = _normalise_tax_identity(getattr(session, "identity_nif", ""))
+    if session_identity and session_identity != expected_identity:
+        raise AuthProfileIdentityMismatchError(
+            "AEAT session identity does not match the active profile tax identity; "
+            "clear auth sessions and authenticate the matching profile before live AEAT reads."
+        )
 
 
 async def _try_probe_verified_session(

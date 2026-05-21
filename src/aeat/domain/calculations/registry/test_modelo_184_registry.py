@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from functools import lru_cache
 
 import pytest
 
@@ -13,6 +14,7 @@ from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_sna
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
+@lru_cache(maxsize=1)
 def _load_modelo_184() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(m for m in modelos if m.id == "184")
@@ -33,7 +35,7 @@ def test_modelo_184_registry_validator_accepts_committed_definition() -> None:
 def test_modelo_184_modelo_metadata_matches_hap_2250_2015() -> None:
     modelo, _ = _load_modelo_184()
 
-    assert modelo.title == "Entidades en regimen de atribucion de rentas (informativa anual)"
+    assert modelo.title == "Entidades en régimen de atribución de rentas (informativa anual)"
     assert modelo.tax_domain == "informative"
     assert modelo.cadence == "annual"
     assert modelo.jurisdiction == "ES-AEAT"

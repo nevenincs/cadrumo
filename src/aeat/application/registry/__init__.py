@@ -8,6 +8,10 @@ from typing import NamedTuple, get_args
 
 from pydantic import BaseModel, ConfigDict
 
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check required by Modelo 100 snapshots.
+import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
+
 from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     registry_observation_from_filed_declaration,
@@ -15,6 +19,7 @@ from ...adapters.outbound.aeat.sede import (
 from ...adapters.persistence.storage import MasterKeyProvider
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
+    ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     generate_parity_tape_path,
     load_parity_scenario,
@@ -27,7 +32,6 @@ from ...domain.calculations.registry import (
     verify_workbook_backend,
 )
 from ...domain.calculations.registry._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
-from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry._filed_state import (
     RegistryFiledStateComparison,
     compare_calculation_to_filed_observation,
@@ -41,7 +45,6 @@ from ...domain.calculations.registry._live_parity import (
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
 )
-from ...domain.calculations.registry import load_registry_tree
 from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
 from ...domain.period import period_end_date
 from ._corpus import (
@@ -271,17 +274,17 @@ def audit_registry_oracles(registry_root: Path, *, environment: str) -> Registry
     """Audit registered live-parity oracles against every registry cross-reference."""
 
     typed_environment = _typed_oracle_environment(environment)
-    modelos, _catalogues = load_registry_tree(registry_root)
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
     oracle_catalogue = LiveParityCatalogue()
     oracle_catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
     oracle_catalogue.register(GroiOracle(), environment="production")
     failures = audit_registry_oracle_bindings(
-        modelos,
+        authority.modelos,
         oracle_catalogue,
         environment=typed_environment,
     )
-    applicability_declarations = collect_applicability_declarations(modelos)
-    orphan_oracle_ids = collect_orphan_oracle_ids(modelos, oracle_catalogue)
+    applicability_declarations = collect_applicability_declarations(authority.modelos)
+    orphan_oracle_ids = collect_orphan_oracle_ids(authority.modelos, oracle_catalogue)
     return RegistryOracleAuditReport(
         environment=environment,
         registered_oracle_ids=tuple(sorted(oracle_catalogue.ids())),

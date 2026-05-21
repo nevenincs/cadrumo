@@ -14,6 +14,7 @@ sede = "https://sede.agenciatributaria.gob.es"
 www1 = "https://www1.agenciatributaria.gob.es"
 www2 = "https://www2.agenciatributaria.gob.es"
 www6 = "https://www6.agenciatributaria.gob.es"
+www12 = "https://www12.agenciatributaria.gob.es"
 clave = "https://clave.gob.es"
 boe = "https://www.boe.es"
 
@@ -28,6 +29,8 @@ notifications_query = "/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
 certificate_selector = "/wlpl/BUCV-JDIT/SelectorCertificado"
 census_g313_launcher = "/Sede/procedimientoini/G313.shtml"
 expediente_detail_template = "/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}"
+irpf_expediente_detail_year_prefix = "/wlpl/DASR-CORE/AccesoDR"
+irpf_expediente_detail_year_suffix = "RVlt"
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
 iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
 
@@ -35,9 +38,14 @@ iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
 selector_access_url_template = "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
 selector_access_path_marker = "SelectorAccesos"
 dialogo_representacion_path_marker = "DialogoRepresentacion"
+dialogo_representacion_path = "/wlpl/OVCT-CXEW/DialogoRepresentacion"
 obtener_clave_movil_path_marker = "ObtenerClaveMovil"
 obtener_clave_movil_qr_path_marker = "ObtenerClaveMovilQR"
 cancelar_clave_movil_path_marker = "CancelarClaveMovil"
+obtener_clave_movil_qr_path = "/wlpl/MOVI-P24H/ObtenerClaveMovilQR"
+obtener_clave_movil_non_qr_path = "/wlpl/MOVI-P24H/ObtenerClaveMovil?qAA=2"
+autentica_dni_nie_contraste_path = "/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
+cancelar_clave_movil_path = "/wlpl/MOVI-P24H/CancelarClaveMovil"
 authorize_button_selector = "button[name=\"autoriza-P\"]"
 non_qr_link_selector = "a[href*=\"ObtenerClaveMovil?qAA=2\"]"
 nif_input_selector = "#NIF"
@@ -87,9 +95,10 @@ official_access_auth_methods = [
   "Certificado o DNI electrónico",
   "clave PIN",
 ]
-representation_own_name_selector = "input[name=\"representacion\"][id=\"propio\"]"
+representation_own_name_selector = "#propio"
+representation_own_name_label_selector = "label[for=\"propio\"]"
 representation_representative_selector = "input[name=\"representacion\"][id=\"representante\"]"
-representation_submit_selector = "button[type=\"submit\"]"
+representation_submit_selector = "form#repForm button[type=\"submit\"]"
 alert_modal_selector = "#alertsModal"
 alert_continue_button_text = "continuar"
 wallet_form_selector = "form#Form"
@@ -104,6 +113,52 @@ nif_iva_landing = "/Sede/iva/iva-operaciones-comercio-exterior/identificacion-re
 nif_iva_verification = "https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios"
 groi_check = "https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet"
 renta_web_open_app_template = "https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER={year}&TACCESO=COLAB"
+
+[aeat.live_safety]
+auth_browser_action_patterns = [
+  "clave-movil-authorize",
+  "clave-movil-open-non-qr",
+  "clave-movil-fill-nif",
+  "clave-movil-fill-dni-fecha",
+  "clave-movil-fill-nie-soporte",
+  "clave-movil-continue",
+  "clave-movil-cancel-pending-request",
+  "representation-gate-own-name-continue",
+]
+  wallet_browser_action_patterns = [
+    "clave-movil-authorize",
+    "representation-gate-own-name-continue",
+    "wallet-execute-read-query",
+  ]
+declarations_browser_action_patterns = [
+  "alert-modal-continuar",
+  "select-modelo",
+  "select-ejercicio",
+  "select-option-*",
+  "buscar-declaraciones-presentadas",
+  "open-cotejo-pdf",
+  "download-filed-data-file",
+]
+csv_verify_browser_action_patterns = [
+  "csv-verifier-query",
+]
+consult_oracle_browser_action_patterns = [
+  "open-groi-form",
+  "open-nif-iva-form",
+  "check-nif-*",
+  "discard-session",
+]
+renta_web_open_browser_action_patterns = [
+  "requires-renta-web-open-driver",
+  "start-open-simulator",
+  "fill-synthetic-profile",
+  "accept-identification",
+  "navigate-to-casilla:*",
+  "navigate-to-resumen",
+  "apply-casilla-override:*",
+  "scrape-summary-field:*",
+  "close-browser-context",
+]
 
 [online_services.google.oauth_scopes]
 openid = "openid"

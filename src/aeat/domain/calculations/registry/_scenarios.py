@@ -10,10 +10,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ._errors import RegistryValidationError
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check required by Modelo 100 snapshots.
+import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
+
+from ._authority import ValidatedRegistryAuthority
+from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
-from ._loader import load_registry_tree
-from ._snapshot import build_snapshot
 
 ScenarioStatus = Literal["match", "mismatch"]
 
@@ -96,14 +99,13 @@ def run_registry_calculation_scenario(
 ) -> RegistryScenarioRunReport:
     """Execute ``scenario`` against the registry calculator and compare outputs."""
 
-    modelos, catalogues = load_registry_tree(registry_root)
-    modelo = next((item for item in modelos if item.id == scenario.modelo), None)
-    if modelo is None:
-        raise RegistryValidationError(f"unknown modelo for registry scenario: {scenario.modelo!r}")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=source_root,
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    try:
+        authority.modelo(scenario.modelo)
+    except RegistrySnapshotError as exc:
+        raise RegistryValidationError(f"unknown modelo for registry scenario: {scenario.modelo!r}") from exc
+    snapshot = authority.snapshot(
+        scenario.modelo,
         filing_year=scenario.filing_year,
         period=scenario.period,
         revision_id=scenario.revision,

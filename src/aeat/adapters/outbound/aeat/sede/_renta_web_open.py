@@ -69,8 +69,17 @@ class RentaWebOpenSedeDriver:
             RemoteOperation(kind="browser_action", action="fill-synthetic-profile"),
             RemoteOperation(kind="browser_action", action="accept-identification"),
         ]
+        for casilla_number in sorted(live_payload.casilla_overrides):
+            operations.append(RemoteOperation(kind="browser_action", action=f"navigate-to-casilla:{casilla_number}"))
+            operations.append(
+                RemoteOperation(kind="browser_action", action=f"apply-casilla-override:{casilla_number}")
+            )
+        if live_payload.casilla_overrides:
+            operations.append(RemoteOperation(kind="browser_action", action="navigate-to-resumen"))
         for label in sorted(expected):
             operations.append(RemoteOperation(kind="browser_action", action=f"scrape-summary-field:{label}"))
+        for casilla_number in sorted(live_payload.scrape_casillas):
+            operations.append(RemoteOperation(kind="browser_action", action=f"navigate-to-casilla:{casilla_number}"))
         operations.append(RemoteOperation(kind="browser_action", action="close-browser-context"))
         return tuple(operations)
 

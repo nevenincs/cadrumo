@@ -7,7 +7,7 @@ from collections.abc import Callable
 import pytest
 
 from aeat.core.resources import bundled_path
-from aeat.domain.deadlines import AutonomoProfile, ModeloEnrollment, IVARegime
+from aeat.domain.deadlines import AutonomoProfile, IVARegime, ModeloEnrollment
 
 from . import (
     RegistryValidationError,

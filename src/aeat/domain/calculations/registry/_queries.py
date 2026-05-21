@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
 from ._runtime_graph import (
+    enum_consumed_binding_ids,
     expression_binding_refs,
     expression_casilla_refs,
     expression_parameter_refs,
@@ -115,6 +116,19 @@ class ModeloBindingRow(BaseModel):
     binding_id: str
     source: str
     typed_enum: str | None
+    input_channel: Literal["decimal", "enum"]
+    """Engine channel a ``--binding KEY=VALUE`` override for this binding feeds.
+
+    ``decimal`` means the registry's formulas consume the binding as a
+    numeric operand: a ``--binding`` override must be a Decimal, even
+    when ``typed_enum`` is set. ``enum`` means a dispatch op consumes
+    the binding as a string enum key, so the override is a string. The
+    channel is a property of *how the formula consumes the binding*,
+    not of the ``typed_enum`` annotation — a binding may carry
+    ``typed_enum`` yet still be a ``decimal`` channel binding (the
+    Modelo 100 estimación-directa modality binding is compared against
+    a numeric literal).
+    """
     selector: Mapping[str, object]
     aggregation: Mapping[str, object] | None
     legal_refs: tuple[str, ...]
@@ -275,25 +289,57 @@ class RegistryQueryService:
             period=period,
             on=as_of,
         )
-        rows = tuple(
-            ModeloBindingRow(
-                binding_id=str(binding.id),
-                source=binding.source,
-                typed_enum=binding.typed_enum,
-                selector=_public_mapping(binding.selector),
-                aggregation=_public_mapping(binding.aggregation) if binding.aggregation is not None else None,
-                legal_refs=tuple(str(ref) for ref in binding.legal_refs),
-                source_refs=tuple(str(ref) for ref in binding.source_refs),
-                borrador_capable=binding.aeat_prefilled is True,
-            )
-            for binding in snapshot.revision.bindings
-        )
         return ModeloBindingsReport(
             code=str(definition.id),
             revision=str(snapshot.revision.id),
             filing_year=filing_year,
             period=period,
-            rows=rows,
+            rows=_binding_rows(snapshot.revision),
+        )
+
+    def bindings_for_year(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        as_of: date | None = None,
+    ) -> ModeloBindingsReport:
+        """Return bindings for the revision that covers ``filing_year``.
+
+        ``bindings`` with no period resolves the *latest* revision,
+        which for a multi-revision modelo (e.g. Modelo 100, one
+        revision per renta year) reports binding ids for the wrong
+        year. This method instead selects the revision whose
+        ``period_selector`` covers ``filing_year`` — the same revision
+        a work unit created for the same ``(modelo, filing_year)``
+        resolves — so the reported binding ids are the ones the
+        calculation will accept.
+        """
+
+        definition = self._authority.validate_modelo(modelo.strip())
+        covering = [
+            revision
+            for revision in definition.revisions.values()
+            if revision.period_selector.includes_year(filing_year)
+            and (
+                as_of is None
+                or (
+                    revision.valid_from <= as_of
+                    and (revision.valid_to is None or revision.valid_to >= as_of)
+                )
+            )
+        ]
+        if not covering:
+            raise RegistryValidationError(
+                f"modelo {definition.id} has no revision covering filing year {filing_year}"
+            )
+        revision = max(covering, key=lambda item: (item.valid_from, str(item.id)))
+        return ModeloBindingsReport(
+            code=str(definition.id),
+            revision=str(revision.id),
+            filing_year=filing_year,
+            period=None,
+            rows=_binding_rows(revision),
         )
 
     def bindings(
@@ -304,25 +350,12 @@ class RegistryQueryService:
         as_of: date | None = None,
     ) -> ModeloBindingsReport:
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
-        rows = tuple(
-            ModeloBindingRow(
-                binding_id=str(binding.id),
-                source=binding.source,
-                typed_enum=binding.typed_enum,
-                selector=_public_mapping(binding.selector),
-                aggregation=_public_mapping(binding.aggregation) if binding.aggregation is not None else None,
-                legal_refs=tuple(str(ref) for ref in binding.legal_refs),
-                source_refs=tuple(str(ref) for ref in binding.source_refs),
-                borrador_capable=binding.aeat_prefilled is True,
-            )
-            for binding in revision.bindings
-        )
         return ModeloBindingsReport(
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
             period=registry_period,
-            rows=rows,
+            rows=_binding_rows(revision),
         )
 
     def formulas(
@@ -366,27 +399,40 @@ class RegistryQueryService:
         if period is None:
             revision = max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
             return definition, revision, None, None
-        bare = period.strip().upper()
-        if _BARE_PERIOD_RE.fullmatch(bare):
+        bare = period.strip()
+        bare_upper = bare.upper()
+        # A bare period token is one of: a registry time-code
+        # (``0A``, ``1T``-``4T``, ``01``-``12``, ...) matched by
+        # ``_BARE_PERIOD_RE``, or a non-date census / event token
+        # (``alta``, ``modificacion``, ``baja``, ``AD-HOC``) declared
+        # verbatim by a census modelo's ``period_selector``. Both are
+        # resolved by matching the token against each revision's
+        # declared periods, so a census token is accepted on the same
+        # path as a quarterly time-code.
+        declared_by_revision = {
+            token
+            for revision in definition.revisions.values()
+            for token in revision.period_selector.periods
+        }
+        token_is_declared = any(token.upper() == bare_upper for token in declared_by_revision)
+        if _BARE_PERIOD_RE.fullmatch(bare_upper) or token_is_declared:
             candidates = [
                 revision
                 for revision in definition.revisions.values()
-                if bare in {token.upper() for token in revision.period_selector.periods}
+                if bare_upper in {token.upper() for token in revision.period_selector.periods}
             ]
             if not candidates:
-                declared = sorted(
-                    {
-                        token
-                        for revision in definition.revisions.values()
-                        for token in revision.period_selector.periods
-                    }
-                )
+                declared = sorted(declared_by_revision)
                 raise RegistryValidationError(
                     f"period {period!r} is not declared by any revision of modelo "
                     f"{definition.id}; declared periods: {', '.join(declared)}"
                 )
             revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
-            return definition, revision, None, bare
+            # Return the registry's own casing for the period token.
+            registry_token = next(
+                token for token in revision.period_selector.periods if token.upper() == bare_upper
+            )
+            return definition, revision, None, registry_token
         filing_year, registry_period = parse_modelo_period(period)
         snapshot = self._authority.snapshot(
             str(definition.id),
@@ -412,6 +458,32 @@ def parse_modelo_period(raw: str) -> tuple[int, str]:
     if month is not None:
         return year, month
     return year, "0A"
+
+
+def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
+    """Build the typed binding rows for one revision.
+
+    Shared by every ``bindings*`` query so the operator-facing
+    ``input_channel`` discriminator is computed once, consistently:
+    the channel is ``enum`` only for bindings a dispatch op consumes
+    as a string enum key, ``decimal`` for every other binding.
+    """
+
+    enum_consumed = enum_consumed_binding_ids(revision)
+    return tuple(
+        ModeloBindingRow(
+            binding_id=str(binding.id),
+            source=binding.source,
+            typed_enum=binding.typed_enum,
+            input_channel="enum" if str(binding.id) in enum_consumed else "decimal",
+            selector=_public_mapping(binding.selector),
+            aggregation=_public_mapping(binding.aggregation) if binding.aggregation is not None else None,
+            legal_refs=tuple(str(ref) for ref in binding.legal_refs),
+            source_refs=tuple(str(ref) for ref in binding.source_refs),
+            borrador_capable=binding.aeat_prefilled is True,
+        )
+        for binding in revision.bindings
+    )
 
 
 def _modelo_covers_year(modelo: ModeloDefinition, year: int) -> bool:

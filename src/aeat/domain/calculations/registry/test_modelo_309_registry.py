@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from functools import lru_cache
 
 import pytest
 
@@ -13,6 +14,7 @@ from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_sna
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
+@lru_cache(maxsize=1)
 def _load_modelo_309() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(m for m in modelos if m.id == "309")
@@ -97,7 +99,7 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.iva import IvaFlowDirection, IvaCategory, IvaRateKind
+    from aeat.domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2004-y-siguientes"]

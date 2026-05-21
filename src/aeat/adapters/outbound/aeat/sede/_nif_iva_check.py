@@ -25,6 +25,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal
+from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page, ViewportSize
@@ -38,6 +39,8 @@ from .....core.logging import get_logger
 from .....domain.calculations.registry import (
     RegistryValidationError,
     RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
 )
 from .....domain.calculations.registry._aeat_nif_iva_oracle import (
     AEAT_NIF_IVA_ENTRY_URL,
@@ -55,6 +58,31 @@ from ._browser_stage import build_playwright_stage_runner
 from ._errors import SedeError, SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)
+_EXTERNAL = Settings.external_constants()
+_AEAT_AUTH_GATE_4033_PATH = _EXTERNAL.aeat.sede_paths.auth_gate_4033
+_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
+_NIF_IVA_ENTRY_HOST = urlsplit(str(AEAT_NIF_IVA_ENTRY_URL)).netloc
+_NIF_IVA_VERIFICATION_HOST = urlsplit(str(AEAT_NIF_IVA_VERIFICATION_URL)).netloc
+
+_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+    id="aeat-nif-iva-direct-driver-read",
+    evidence_tier="executable_parity_evidence",
+    classification="open_simulator",
+    allowed_hosts=(_NIF_IVA_ENTRY_HOST, _NIF_IVA_VERIFICATION_HOST),
+    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
+    synthetic_data_allowed=True,
+    requires_authentication=False,
+    requires_aeat_authorization=False,
+)
+
+
+def _assert_query_browser_action(action: str) -> None:
+    assert_remote_operation_allowed(
+        _READ_GUARD_POLICY,
+        RemoteOperation(kind="browser_action", action=action),
+    )
+
+
 def _nif_iva_shape_suggestion() -> str:
     return tr("adapters.aeat.sede.nif_iva.suggestions.shape_change")
 
@@ -294,7 +322,7 @@ async def collect_nif_iva_check_observations(
             timeout_ms=timeout_ms,
         )
 
-        # AEAT redirects unauthenticated requests to /Sede/errores/erro4033.html.
+        # AEAT redirects unauthenticated requests to the centralized 4033 auth-gate path.
         # The standard country/VAT selectors won't be present on that page; if
         # we proceed they'll time out and surface as a misleading shape-change
         # error. Detect the redirect explicitly and surface auth-gate context.
@@ -354,6 +382,7 @@ async def collect_nif_iva_check_observations(
 async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:
     """Wait for the country and VAT-number controls to become interactive."""
 
+    _assert_query_browser_action("open-nif-iva-form")
     await _locate(
         page,
         _COUNTRY_SELECTORS,
@@ -378,6 +407,7 @@ async def _check_single_nif(
 ) -> Literal["valid", "invalid", "unknown"]:
     """Submit one NIF query and scrape the rendered verdict."""
 
+    _assert_query_browser_action(f"check-nif-{nif}")
     country_code, vat_number = _split_vies_nif(nif)
     await _select_country_code(page, country_code, timeout_ms=timeout_ms)
     await _fill_vat_number(page, vat_number, timeout_ms=timeout_ms)
@@ -400,19 +430,21 @@ async def _check_single_nif(
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:
     """Return True when the live page URL points at AEAT's 4033 / 403 error page.
 
-    AEAT redirects unauthenticated requests to the form servlet to
-    ``/Sede/errores/erro4033.html`` (HTTP 200 OK landing on a 403-titled
-    page). The detector keys off the ``erro4033`` path segment and the
-    sede host suffix so it stays specific to that exact failure mode.
-    Other AEAT errors (4032, 4001, etc.) are intentionally not matched.
+    AEAT redirects unauthenticated requests to the form servlet to its
+    centralized 4033 auth-gate path (HTTP 200 OK landing on a 403-titled
+    page). The detector keys off the configured path and host suffix so
+    it stays specific to that exact failure mode. Other AEAT errors are
+    intentionally not matched.
     """
 
     if not current_url:
         return False
-    lowered = current_url.lower()
-    if "agenciatributaria.gob.es" not in lowered:
+    parsed = urlsplit(current_url)
+    host = parsed.netloc.casefold()
+    host_suffix = _AEAT_HOST_SUFFIX.casefold()
+    if host != host_suffix and not host.endswith(f".{host_suffix}"):
         return False
-    return "erro4033" in lowered
+    return _AEAT_AUTH_GATE_4033_PATH.casefold() in parsed.path.casefold()
 
 
 def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "invalid", "unknown"]:

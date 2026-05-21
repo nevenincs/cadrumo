@@ -8,7 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ._errors import RegistrySnapshotError, RegistryValidationError
-from ._loader import load_registry_tree
+from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import _build_validated_snapshot
 from ._validate import RegistryValidator
@@ -35,7 +35,12 @@ class ValidatedRegistryAuthority:
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable authority instance."""
 
-        return _load_authority(root.expanduser().resolve(), source_root.expanduser().resolve())
+        resolved_root = root.expanduser().resolve()
+        return _load_authority(
+            resolved_root,
+            source_root.expanduser().resolve(),
+            _collect_registry_tree_fingerprints(resolved_root),
+        )
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
         """Return a modelo definition by id."""
@@ -124,7 +129,12 @@ class ValidatedRegistryAuthority:
 
 
 @lru_cache(maxsize=16)
-def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority:
+def _load_authority(
+    root: Path,
+    source_root: Path,
+    _fingerprint: tuple[tuple[str, int, int], ...],
+) -> ValidatedRegistryAuthority:
+    del _fingerprint
     modelos, catalogues = load_registry_tree(root)
     return ValidatedRegistryAuthority(
         root=root,
@@ -137,4 +147,3 @@ def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority
         _validated_modelos=set(),
         _snapshots={},
     )
-

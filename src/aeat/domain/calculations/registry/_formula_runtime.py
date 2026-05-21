@@ -10,8 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from ._errors import CasillaConstraintViolationError, RegistryValidationError
-from ._loader import load_registry_tree
+from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._runtime_graph import formula_evaluation_order
 from ._schema import DatedValue, FormulaExpression, ModeloRevision, ParameterDefinition, RegistrySnapshot
 
@@ -676,20 +675,22 @@ def read_parameter(
     Public delegate over the same ``_resolve_parameter`` logic the formula runtime
     uses. Non-formula consumers (the rental tier resolver, IVA category resolver,
     etc.) call this surface to read parameter values without going through a
-    formula expression. The registry tree loads via ``load_registry_tree`` when
-    ``registry_root`` is provided; otherwise the default
-    ``<PROJECT_ROOT>/registry/aeat`` is used.
+    formula expression. Registry access goes through ``ValidatedRegistryAuthority``
+    whether ``registry_root`` is provided or the bundled registry is used.
 
     Raises :class:`RegistryValidationError` if the modelo / revision / parameter
     is not registered, or if the date context selects 0 or >1 dated values.
     """
     from aeat.core.resources import bundled_path
 
+    from ._authority import ValidatedRegistryAuthority
+
     root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
-    modelos, _catalogues = load_registry_tree(root)
-    modelo_match = next((m for m in modelos if m.id == modelo_id), None)
-    if modelo_match is None:
-        raise RegistryValidationError(f"modelo {modelo_id!r} not registered in {root}")
+    authority = ValidatedRegistryAuthority.load(root, source_root=bundled_path())
+    try:
+        modelo_match = authority.modelo(modelo_id)
+    except RegistrySnapshotError as exc:
+        raise RegistryValidationError(f"modelo {modelo_id!r} not registered in {root}") from exc
     revision = modelo_match.revisions.get(revision_id)
     if revision is None:
         raise RegistryValidationError(f"modelo {modelo_id!r} has no revision {revision_id!r}")

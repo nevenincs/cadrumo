@@ -39,11 +39,13 @@ _logger = get_logger(__name__)
 
 _VERIFY_EXTERNAL = Settings.external_constants()
 _VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.sede}{_VERIFY_EXTERNAL.aeat.help_pages.csv_verification}"
+_VERIFY_HOST = _VERIFY_EXTERNAL.aeat.domains.sede.removeprefix("https://")
 _VERIFY_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-csv-verifier-read",
     evidence_tier="official_source_guidance",
     classification="public_read_surface",
-    allowed_hosts=("sede.agenciatributaria.gob.es",),
+    allowed_hosts=(_VERIFY_HOST,),
+    allowed_browser_action_patterns=_VERIFY_EXTERNAL.aeat.live_safety.csv_verify_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=False,
     requires_aeat_authorization=False,
@@ -167,11 +169,11 @@ async def verify_csv(
             # for a text field labelled CSV and fall back to the first
             # input on the page.
             try:
-                _assert_verify_action("CSV verifier query")
+                _assert_verify_action("csv-verifier-query")
                 await page.fill("input[name*='csv' i]", csv)
                 await page.press("input[name*='csv' i]", "Enter")
             except PlaywrightError:
-                _assert_verify_action("CSV verifier query")
+                _assert_verify_action("csv-verifier-query")
                 await page.keyboard.type(csv)
                 await page.keyboard.press("Enter")
             body = (await page.content()).lower()

@@ -48,6 +48,7 @@ from ...domain.period import (
     period_end_date,
     period_start_date,
 )
+from ..calculations import IvaWalletDecisionRepository
 from ..filing import (
     approve_draft,
     build_draft,
@@ -60,6 +61,7 @@ from ._actions import (
     CalculationRevisionStateError,
     WorkUnitNotFoundError,
     _emit_bucket_event,
+    _raise_if_persisted_iva_compensation_decision_blocks_work_unit,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -146,8 +148,10 @@ class ModeloExportResult(BaseModel):
         format: Wire format string (currently always ``"fichero-boe"``).
         exported_at: UTC timestamp of the write.
         actor: Operator identifier captured into the event.
-        bucket_event_id: Id of the ``MODELO_EXPORTED`` event appended
+    bucket_event_id: Id of the ``MODELO_EXPORTED`` event appended
             to the catalogue.
+        casilla_provenance: Regulatory grounding for casillas covered
+            by the exported fichero-BOE layout.
     """
 
     model_config = _STRICT_FROZEN
@@ -165,6 +169,7 @@ class ModeloExportResult(BaseModel):
     exported_at: datetime
     actor: str = Field(min_length=1, max_length=128)
     bucket_event_id: str = Field(min_length=1, max_length=128)
+    casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
 
 
 def _load_revision_for_export(
@@ -340,6 +345,7 @@ def export_modelo_revision(
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     clock: datetime | None = None,
 ) -> ModeloExportResult:
     """Export a verified-complete or filed calculation revision to disk.
@@ -379,6 +385,10 @@ def export_modelo_revision(
             f"{work_unit.bucket_id!r} but the active profile bucket is "
             f"{active_bucket_id!r}; switch profile before exporting",
         )
+    _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
+        work_unit,
+        repository=iva_compensation_decision_repository,
+    )
 
     now = clock or datetime.now(UTC)
     filing_year, registry_period, canonical_period = _resolve_export_period(work_unit)
@@ -488,6 +498,7 @@ def export_modelo_revision(
         exported_at=now,
         actor=command.actor,
         bucket_event_id=event.event_id,
+        casilla_provenance=receipt.casilla_provenance,
     )
 
 

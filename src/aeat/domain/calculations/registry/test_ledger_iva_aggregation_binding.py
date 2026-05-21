@@ -28,6 +28,7 @@ from aeat.domain.calculations.registry import (
     resolve_bound_casilla_inputs,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_previous_filing_binding_values,
+    unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
 )
 from aeat.domain.iva import (
@@ -288,6 +289,19 @@ def test_resolve_returns_zero_when_no_observation_matches() -> None:
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("0")}
 
 
+def test_unsupported_ledger_iva_observations_identifies_unbound_regimes() -> None:
+    revision = _revision_with_bindings(_binding())
+    supported = _observation(ledger_id="ordinary-output")
+    unsupported = _observation(
+        ledger_id="recargo-row",
+        category=IvaCategory.RECARGO_EQUIVALENCIA,
+        flow=IvaFlowDirection.SOPORTADO,
+        iva=Decimal("5.20"),
+    )
+
+    assert unsupported_ledger_iva_observations(revision, (supported, unsupported)) == (unsupported,)
+
+
 def test_resolve_handles_multiple_bindings_independently() -> None:
     revision = _revision_with_bindings(
         _binding("modelo-303-iva-repercutido-general-cuota"),
@@ -308,18 +322,15 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
     """The 390 annual snapshot resolves its 303-sourced bindings and produces the expected casillas.
 
     This test asserts binding-resolution wiring: the annual 390 engine must
-    produce the six reconciliation casillas, each carrying a non-None value,
-    and the reconciliation and annual-total casillas must be consistent with
-    each other (both sourced from the same binding, so must be equal).
-
-    The specific numeric values are NOT asserted here because both the
-    quarterly 303 engine and the annual 390 reconciliation are computed by
-    the same registry engine — asserting annual == sum(quarterly) using the
-    same engine would be tautological.
+    produce the annual ledger-derived totals, the four-period 303
+    reconciliation totals, and the annual compensation casillas 97/662.
+    Expected compensation values are read from the generated quarterly 303
+    observations, so the test does not mirror the 390 binding aggregation
+    formulas.
     """
     quarterly_observations = {
         "1T": (
-            _observation(ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("210.00")),
+            _observation(ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
             _observation(
                 ledger_id="q1-input",
                 txn_date=date(2025, 3, 1),
@@ -328,12 +339,12 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
             ),
         ),
         "2T": (
-            _observation(ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("105.00")),
+            _observation(ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("10.00")),
             _observation(
                 ledger_id="q2-input",
                 txn_date=date(2025, 6, 20),
                 flow=IvaFlowDirection.SOPORTADO,
-                iva=Decimal("21.00"),
+                iva=Decimal("30.00"),
             ),
         ),
         "3T": (
@@ -347,11 +358,15 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
         ),
         "4T": (
             _observation(
-                ledger_id="q4-output-reverse-charge",
+                ledger_id="q4-output",
                 txn_date=date(2025, 11, 4),
-                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-                iva=Decimal("84.00"),
+                iva=Decimal("15.00"),
+            ),
+            _observation(
+                ledger_id="q4-input",
+                txn_date=date(2025, 12, 12),
+                flow=IvaFlowDirection.SOPORTADO,
+                iva=Decimal("45.00"),
             ),
         ),
     }
@@ -369,9 +384,6 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
         quarterly_results=quarterly_results,
     )
 
-    # Assert wiring: the three reconciliation chain pairs must all be present in the
-    # annual result and each annual-total casilla must equal its reconciliation casilla
-    # (they are sourced from the same binding, so structural equality is the correct contract).
     chain_pairs = (
         ("iva.anual.cuota-devengada-total", "iva.anual.reconciliacion.devengada-303"),
         ("iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"),
@@ -382,8 +394,22 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
         assert reconciliation_casilla in annual_result.values, f"{reconciliation_casilla!r} missing from 390 result"
         assert annual_result.values[annual_casilla] == annual_result.values[reconciliation_casilla], (
             f"{annual_casilla!r} and {reconciliation_casilla!r} must be equal "
-            "(both sourced from the same 303 binding)"
+            "between annual ledger totals and 303 reconciliation totals"
         )
+
+    q4_result = quarterly_results["4T"].values
+    non_q4_results = tuple(result.values for period, result in quarterly_results.items() if period != "4T")
+    non_q4_generated = sum(
+        (values["iva.compensacion-generada-periodo"] for values in non_q4_results),
+        Decimal("0"),
+    )
+
+    assert annual_result.values["iva.anual.compensacion-ultimo-periodo-97"] == q4_result[
+        "iva.compensacion-disponible-fin-periodo"
+    ]
+    assert annual_result.values["iva.anual.compensacion-generada-ejercicio-no-97"] == non_q4_generated
+    assert annual_result.values["iva.anual.compensacion-ultimo-periodo-97"] > Decimal("0")
+    assert annual_result.values["iva.anual.compensacion-generada-ejercicio-no-97"] > Decimal("0")
 
 
 def test_iva_ledger_observation_is_strict_and_frozen() -> None:

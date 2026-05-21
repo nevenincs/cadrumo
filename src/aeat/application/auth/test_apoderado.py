@@ -2,23 +2,50 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository
+from aeat.adapters.persistence.storage.sql._orm import Base
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from aeat.application.auth._apoderado import (
     ApoderadoService,
     ApoderadoStatus,
 )
-from aeat.core.config import Settings
+from aeat.core.config import Settings, override_settings
 from aeat.domain.auth.apoderamientos import UnknownScopeError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def isolated_settings(tmp_path: Path) -> Settings:
-    return Settings(aeat_secret_store_dir=tmp_path / "secret-store")
+def isolated_settings(tmp_path: Path) -> Iterator[Settings]:
+    """Run apoderado tests against a per-test encrypted secure-object database.
+
+    Opens a real :class:`EphemeralMasterKeyProvider` so the
+    column-level encrypt path resolves an active bucket session,
+    mirroring the canonical roundtrip-test fixture pattern.
+    """
+
+    dispose_engine()
+    db_path = tmp_path / "apoderado.db"
+    with (
+        EphemeralMasterKeyProvider(),
+        override_settings(
+            aeat_secret_store_dir=tmp_path / "secret-store",
+            aeat_database_url=f"sqlite:///{db_path.as_posix()}",
+        ) as settings,
+    ):
+        engine = get_engine(settings)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            yield settings
+        finally:
+            dispose_engine()
 
 
 class TestStatus:

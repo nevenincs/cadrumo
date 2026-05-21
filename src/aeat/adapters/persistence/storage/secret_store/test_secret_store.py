@@ -7,6 +7,7 @@ of overwrites.
 
 from __future__ import annotations
 
+import json
 import secrets
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
@@ -18,6 +19,7 @@ from .....core.classification import SensitivityClass
 from ..blob_store import EncryptedBlobStore
 from ..crypto import KEY_SIZE
 from ..errors import (
+    BlobNotFoundError,
     RetentionPolicyError,
     SecretAlreadyExistsError,
     SecretNotFoundError,
@@ -76,6 +78,39 @@ class TestPutAndGet:
         assert loaded.value == record.value
         assert loaded.metadata == record.metadata
         assert loaded.classification is SensitivityClass.SECRET
+
+    def test_strict_record_round_trip_preserves_all_fields(self, store: SecretStore) -> None:
+        record = SecretRecord(
+            key="aeat:test:strict-record",
+            value=b"sensitive-payload-strict",
+            classification=SensitivityClass.SECRET,
+            metadata={"issued_by": "test-suite", "scope": "full-record"},
+            created_at=datetime(2026, 5, 21, 11, 0, 0, tzinfo=UTC),
+            expires_at=datetime(2026, 5, 21, 12, 0, 0, tzinfo=UTC),
+        )
+
+        store.put(record)
+
+        assert store.get(record.key) == record
+
+    def test_json_index_blob_reference_mutation_breaks_roundtrip(
+        self,
+        tmp_path: Path,
+        store: SecretStore,
+    ) -> None:
+        record = _make_record(key="aeat:test:index-mutation", value=b"indexed-secret")
+        store.put(record)
+        assert store.get(record.key) == record
+        index_path = tmp_path / "secrets" / "index.json"
+        index_payload = json.loads(index_path.read_text(encoding="utf-8"))
+        digest, entry = next(iter(index_payload["entries"].items()))
+        assert len(digest) == 64
+        assert entry["blob_sha256_plaintext_hex"] != "0" * 64
+        entry["blob_sha256_plaintext_hex"] = "0" * 64
+        index_path.write_text(json.dumps(index_payload, sort_keys=True), encoding="utf-8")
+
+        with pytest.raises(BlobNotFoundError):
+            store.get(record.key)
 
     def test_session_class_round_trip(self, store: SecretStore) -> None:
         record = _make_record(

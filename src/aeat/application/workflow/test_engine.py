@@ -19,6 +19,7 @@ Playwright walkers without falsifying their record shape.
 
 from __future__ import annotations
 
+import ast
 import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -60,6 +61,18 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 # ── Test doubles ────────────────────────────────────────────────────────
+
+
+def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
+    tree = ast.parse(Path(__file__).with_name("_engine.py").read_text(encoding="utf-8"))
+    forbidden: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            if node.module.startswith(("aeat.adapters.outbound.aeat", "adapters.outbound.aeat")):
+                forbidden.append(node.module)
+        elif isinstance(node, ast.Import):
+            forbidden.extend(alias.name for alias in node.names if alias.name.startswith("aeat.adapters.outbound.aeat"))
+    assert forbidden == []
 
 
 def _registry_schema_version(*, modelo: str = "130", period: str = "2026Q1") -> str:

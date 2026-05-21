@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from functools import lru_cache
 from itertools import pairwise
 
 import pytest
@@ -18,6 +19,7 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
+@lru_cache(maxsize=1)
 def _load_modelo_232():
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "232")
