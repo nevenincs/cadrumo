@@ -1933,197 +1933,295 @@ errors:
     sede_no_census: La seu electrònica de l'AEAT no ha retornat cap cens llegible
       per al perfil {profile_id}.
   error:
-    error_access_gate_submission: errors.error.error_access_gate_submission
-    error_access_gate_submission_preflight: errors.error.error_access_gate_submission_preflight
-    error_aeat_core: errors.error.error_aeat_core
-    error_aeat_observability: errors.error.error_aeat_observability
-    error_application_live: errors.error.error_application_live
-    error_application_registry: errors.error.error_application_registry
-    error_borrador_artefact_not_recognised: errors.error.error_borrador_artefact_not_recognised
-    error_calculations_registry: errors.error.error_calculations_registry
-    error_calculations_registry_load: errors.error.error_calculations_registry_load
-    error_calculations_registry_snapshot: errors.error.error_calculations_registry_snapshot
-    error_calculations_registry_validation: errors.error.error_calculations_registry_validation
-    error_categories: errors.error.error_categories
-    error_categories_validation: errors.error.error_categories_validation
-    error_deadlines_deadline: errors.error.error_deadlines_deadline
-    error_deadlines_profile: errors.error.error_deadlines_profile
-    error_deadlines_schedule_computation: errors.error.error_deadlines_schedule_computation
-    error_deadlines_validation: errors.error.error_deadlines_validation
-    error_declaracion_template_not_detected: errors.error.error_declaracion_template_not_detected
-    error_domain: errors.error.error_domain
-    error_domain_submission: errors.error.error_domain_submission
-    error_domain_submission_preflight: errors.error.error_domain_submission_preflight
-    error_domain_validation: errors.error.error_domain_validation
-    error_filing_amendment: errors.error.error_filing_amendment
-    error_filing_application: errors.error.error_filing_application
-    error_filing_builder: errors.error.error_filing_builder
-    error_filing_computation: errors.error.error_filing_computation
-    error_filing_draft: errors.error.error_filing_draft
-    error_filing_export: errors.error.error_filing_export
-    error_filing_export_validation: errors.error.error_filing_export_validation
-    error_financial_aggregation: errors.error.error_financial_aggregation
-    error_financial_aggregation_period: errors.error.error_financial_aggregation_period
-    error_financial_aggregation_validation: errors.error.error_financial_aggregation_validation
-    error_financial_attachments_attachment: errors.error.error_financial_attachments_attachment
-    error_financial_attachments_attachment_not_found: errors.error.error_financial_attachments_attachment_not_found
-    error_financial_invoices_invoice: errors.error.error_financial_invoices_invoice
-    error_financial_invoices_invoice_catalogue: errors.error.error_financial_invoices_invoice_catalogue
-    error_financial_invoices_invoice_link: errors.error.error_financial_invoices_invoice_link
-    error_financial_invoices_invoice_not_found: errors.error.error_financial_invoices_invoice_not_found
-    error_financial_provider: errors.error.error_financial_provider
-    error_financial_transactions_transaction: errors.error.error_financial_transactions_transaction
-    error_financial_usage_ratios_usage_ratio: errors.error.error_financial_usage_ratios_usage_ratio
-    error_financial_vat: errors.error.error_financial_vat
-    error_financial_vat_catalogue: errors.error.error_financial_vat_catalogue
-    error_financial_vat_category_not_found: errors.error.error_financial_vat_category_not_found
-    error_financial_vat_classification: errors.error.error_financial_vat_classification
-    error_financial_vat_rate_not_found: errors.error.error_financial_vat_rate_not_found
-    error_financial_vat_rate_overlap: errors.error.error_financial_vat_rate_overlap
-    error_fixture_provisioning: errors.error.error_fixture_provisioning
-    error_invoice_link_inconsistency: errors.error.error_invoice_link_inconsistency
-    error_invoice_validation: errors.error.error_invoice_validation
-    error_justificante: errors.error.error_justificante
-    error_justificante_csv_not_found: errors.error.error_justificante_csv_not_found
-    error_llm: errors.error.error_llm
-    error_manuals_manual: errors.error.error_manuals_manual
-    error_manuals_manual_not_found: errors.error.error_manuals_manual_not_found
-    error_manuals_manual_review_required: errors.error.error_manuals_manual_review_required
-    error_manuals_rule_extraction: errors.error.error_manuals_rule_extraction
-    error_manuals_validation: errors.error.error_manuals_validation
-    error_modelo_aggregation_binding: errors.error.error_modelo_aggregation_binding
-    error_modelo_amendment_evidence_missing: errors.error.error_modelo_amendment_evidence_missing
-    error_modelo_amendment_target_state: errors.error.error_modelo_amendment_target_state
-    error_modelo_calculation_registry_unavailable: errors.error.error_modelo_calculation_registry_unavailable
-    error_modelo_calculation_revision_not_found: errors.error.error_modelo_calculation_revision_not_found
-    error_modelo_calculation_revision_state: errors.error.error_modelo_calculation_revision_state
-    error_modelo_casilla_provenance_missing: errors.error.error_modelo_casilla_provenance_missing
-    error_modelo_external_filing_import: errors.error.error_modelo_external_filing_import
-    error_modelo_filing_record_not_found: errors.error.error_modelo_filing_record_not_found
-    error_modelo_iva_wallet_reconciliation_blocked: errors.error.error_modelo_iva_wallet_reconciliation_blocked
-    error_modelo_verification_report_not_found: errors.error.error_modelo_verification_report_not_found
-    error_modelo_work_unit_already_discarded: errors.error.error_modelo_work_unit_already_discarded
-    error_modelo_work_unit_mutation_refused: errors.error.error_modelo_work_unit_mutation_refused
-    error_modelo_work_unit_not_found: errors.error.error_modelo_work_unit_not_found
-    error_modelos: errors.error.error_modelos
-    error_modelos_validation: errors.error.error_modelos_validation
-    error_normatives_normative: errors.error.error_normatives_normative
-    error_normatives_normative_not_found: errors.error.error_normatives_normative_not_found
-    error_normatives_validation: errors.error.error_normatives_validation
-    error_outbound_storage_not_found: errors.error.error_outbound_storage_not_found
-    error_pdf_import_pdf_modelo_import: errors.error.error_pdf_import_pdf_modelo_import
-    error_pdf_import_scrub: errors.error.error_pdf_import_scrub
-    error_period: errors.error.error_period
-    error_period_validation: errors.error.error_period_validation
-    error_portals_portal_registry: errors.error.error_portals_portal_registry
-    error_portals_unknown_portal: errors.error.error_portals_unknown_portal
-    error_portals_validation: errors.error.error_portals_validation
-    error_profile_amortization_ledger: errors.error.error_profile_amortization_ledger
-    error_profile_asset_record: errors.error.error_profile_asset_record
-    error_profile_cross_store_drift: errors.error.error_profile_cross_store_drift
-    error_profile_inventory_ledger: errors.error.error_profile_inventory_ledger
-    error_profile_tax_residence: errors.error.error_profile_tax_residence
-    error_profile_validation: errors.error.error_profile_validation
-    error_renta: errors.error.error_renta
-    error_renta_validation: errors.error.error_renta_validation
-    error_rental_amortization_cap_exceeded: errors.error.error_rental_amortization_cap_exceeded
-    error_rental_contract_not_found: errors.error.error_rental_contract_not_found
-    error_rental_finca_not_found: errors.error.error_rental_finca_not_found
-    error_rental_register: errors.error.error_rental_register
-    error_rental_tier_resolution: errors.error.error_rental_tier_resolution
-    error_rental_validation: errors.error.error_rental_validation
-    error_resources_backend: errors.error.error_resources_backend
-    error_resources_load: errors.error.error_resources_load
-    error_resources_not_found: errors.error.error_resources_not_found
-    error_resources_validation: errors.error.error_resources_validation
-    error_review: errors.error.error_review
-    error_sanitization: errors.error.error_sanitization
-    error_sede: errors.error.error_sede
-    error_sede_expediente_not_found: errors.error.error_sede_expediente_not_found
-    error_sede_navigation: errors.error.error_sede_navigation
-    error_storage_bucket: errors.error.error_storage_bucket
-    error_submission_validation: errors.error.error_submission_validation
-    error_transaction_catalogue: errors.error.error_transaction_catalogue
-    error_transaction_llm_classifier: errors.error.error_transaction_llm_classifier
-    error_transaction_not_found: errors.error.error_transaction_not_found
-    error_transaction_persistence: errors.error.error_transaction_persistence
-    error_transaction_validation: errors.error.error_transaction_validation
-    error_usage_ratios_validation: errors.error.error_usage_ratios_validation
-    error_user_profile: errors.error.error_user_profile
-    error_vat_prorrata: errors.error.error_vat_prorrata
-    error_vat_prorrata_input: errors.error.error_vat_prorrata_input
-    error_vat_prorrata_sector: errors.error.error_vat_prorrata_sector
-    error_vat_validation: errors.error.error_vat_validation
-    error_wizard: errors.error.error_wizard
-    error_wizard_compile: errors.error.error_wizard_compile
-    error_workflow: errors.error.error_workflow
-    error_workflow_component: errors.error.error_workflow_component
+    error_access_gate_submission: La política de control d'accés ha rebutjat una operació
+      d'enviament.
+    error_access_gate_submission_preflight: La comprovació prèvia del control d'accés
+      ha rebutjat una operació d'escriptura.
+    error_aeat_core: S'ha produït un error intern en l'aplicació.
+    error_aeat_observability: S'ha produït un error en la telemetria de l'aplicació.
+    error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
+    error_application_registry: L'orquestració del registre de models ha fallat o
+      ha estat rebutjada.
+    error_borrador_artefact_not_recognised: El PDF no coincideix amb cap format d'esborrany
+      del Model 100 conegut.
+    error_calculations_registry: S'ha produït un error en carregar, resoldre o validar
+      el registre de càlcul.
+    error_calculations_registry_load: Els fitxers del registre de càlcul no s'han
+      pogut interpretar.
+    error_calculations_registry_snapshot: No s'ha pogut seleccionar una instantània
+      del registre vàlida per a la declaració.
+    error_calculations_registry_validation: Les definicions del registre de càlcul
+      són incompletes o contradictòries.
+    error_categories: S'ha produït un error en les categories de despesa.
+    error_categories_validation: Un registre de categoria no ha superat la validació.
+    error_deadlines_deadline: S'ha produït un error en el càlcul de terminis.
+    error_deadlines_profile: El perfil d'autònom no s'ha pogut carregar o validar
+      per al càlcul de terminis.
+    error_deadlines_schedule_computation: El motor no ha pogut generar un calendari
+      de terminis vàlid. Comprova l'any sol·licitat i les dades del perfil.
+    error_deadlines_validation: Un registre de termini no ha superat la validació.
+    error_declaracion_template_not_detected: No s'ha pogut detectar automàticament
+      la versió de plantilla del PDF de la declaració.
+    error_domain: S'ha produït un error en la lògica de negoci.
+    error_domain_submission: S'ha produït un error en el domini d'enviament.
+    error_domain_submission_preflight: L'esborrany no ha superat la comprovació prèvia
+      d'enviament local.
+    error_domain_validation: Un identificador o model de domini no és vàlid.
+    error_filing_amendment: S'ha produït un error relacionat amb la declaració complementària.
+    error_filing_application: S'ha produït un error en la capa d'aplicació de declaracions.
+    error_filing_builder: Ha fallat la selecció o execució del generador de la declaració.
+    error_filing_computation: El generador no ha pogut avaluar una casella amb fórmula.
+    error_filing_draft: S'ha produït un error en l'esborrany de la declaració.
+    error_filing_export: Ha fallat l'exportació de l'esborrany al format de l'AEAT.
+    error_filing_export_validation: Un valor o disposició de l'exportació no és vàlid.
+    error_financial_aggregation: S'ha produït un error en agregar les transaccions
+      financeres.
+    error_financial_aggregation_period: El període de declaració sol·licitat no s'ha
+      pogut interpretar sense ambigüitat.
+    error_financial_aggregation_validation: Les dades o l'estat de l'agregació no
+      són vàlids.
+    error_financial_attachments_attachment: S'ha produït un error en el servei de
+      justificants.
+    error_financial_attachments_attachment_not_found: No s'ha trobat el justificant
+      sol·licitat.
+    error_financial_invoices_invoice: S'ha produït un error en el catàleg de factures.
+    error_financial_invoices_invoice_catalogue: El catàleg de factures no és vàlid
+      o és inconsistent.
+    error_financial_invoices_invoice_link: No s'ha pogut enllaçar la factura amb la
+      transacció.
+    error_financial_invoices_invoice_not_found: No s'ha trobat la factura sol·licitada.
+    error_financial_provider: S'ha produït un error en importar el document financer.
+    error_financial_transactions_transaction: S'ha produït un error en el catàleg
+      de transaccions.
+    error_financial_usage_ratios_usage_ratio: S'ha produït un error en els percentatges
+      d'ús.
+    error_financial_vat: S'ha produït un error en el càlcul de l'IVA.
+    error_financial_vat_catalogue: El catàleg d'IVA no s'ha pogut carregar, resoldre
+      o validar.
+    error_financial_vat_category_not_found: No s'ha trobat la categoria d'IVA sol·licitada
+      al catàleg.
+    error_financial_vat_classification: No s'ha pogut classificar l'IVA de manera
+      determinista.
+    error_financial_vat_rate_not_found: No s'ha trobat cap tipus d'IVA per a l'estat
+      membre i el tipus sol·licitats.
+    error_financial_vat_rate_overlap: Dos tipus d'IVA comparteixen una finestra de
+      vigència.
+    error_fixture_provisioning: No s'han pogut preparar les dades de prova.
+    error_invoice_link_inconsistency: L'enllaç ha deixat la factura i la transacció
+      dessincronitzades. Revisa tots dos catàlegs manualment.
+    error_invoice_validation: Un registre de factura no ha superat la validació.
+    error_justificante: S'ha produït un error relacionat amb el justificant.
+    error_justificante_csv_not_found: El PDF no conté un Codi Segur de Verificació.
+    error_llm: S'ha produït un error en el model de llenguatge.
+    error_manuals_manual: S'ha produït un error relacionat amb els manuals.
+    error_manuals_manual_not_found: No s'ha trobat el manual, any o part sol·licitats.
+    error_manuals_manual_review_required: Un registre de manual no té metadades de
+      revisió.
+    error_manuals_rule_extraction: L'extracció de regles del manual no està disponible.
+    error_manuals_validation: Un registre de manual no ha superat la validació.
+    error_modelo_aggregation_binding: Els bindings d'agregació derivats del bucket
+      entren en conflicte amb les dades indicades.
+    error_modelo_amendment_evidence_missing: No es pot complementar una declaració
+      que no té evidència oficial importada. Importa primer el justificant de la declaració
+      original.
+    error_modelo_amendment_target_state: No es pot complementar una declaració que
+      no està en estat vigent; ja ha estat substituïda per una de posterior.
+    error_modelo_calculation_registry_unavailable: No s'ha pogut resoldre la instantània
+      del registre per al model, any i període de la unitat de treball.
+    error_modelo_calculation_revision_not_found: No s'ha trobat la revisió de càlcul
+      sol·licitada.
+    error_modelo_calculation_revision_state: La transició d'estat sol·licitada no
+      és compatible amb l'estat actual de la revisió de càlcul.
+    error_modelo_casilla_provenance_missing: Una casella del resultat del motor no
+      té definició al registre.
+    error_modelo_external_filing_import: No s'ha pogut desar la declaració externa
+      importada. Comprova els valors de les caselles i la referència d'evidència.
+    error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
+      sol·licitada.
+    error_modelo_iva_wallet_reconciliation_blocked: El càlcul del Model 303 està bloquejat
+      per la conciliació del moneder d'IVA. Resol la conciliació pendent abans de
+      continuar.
+    error_modelo_verification_report_not_found: No s'ha trobat l'informe de verificació
+      sol·licitat.
+    error_modelo_work_unit_already_discarded: La unitat de treball ja està descartada.
+    error_modelo_work_unit_mutation_refused: No es pot modificar una unitat de treball
+      descartada.
+    error_modelo_work_unit_not_found: No s'ha trobat la unitat de treball sol·licitada.
+    error_modelos: S'ha produït un error en els models tributaris.
+    error_modelos_validation: Un codi de model infringeix les seves invariants de
+      forma.
+    error_normatives_normative: S'ha produït un error relacionat amb la normativa.
+    error_normatives_normative_not_found: No s'ha trobat la norma o l'article sol·licitats.
+    error_normatives_validation: Un valor de la normativa no és vàlid.
+    error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
+      sol·licitat.
+    error_pdf_import_pdf_modelo_import: Ha fallat la importació de la declaració des
+      del PDF.
+    error_pdf_import_scrub: No s'ha pogut produir una versió segura del PDF.
+    error_period: S'ha produït un error relacionat amb el període.
+    error_period_validation: El token de període indicat no té un format vàlid.
+    error_portals_portal_registry: S'ha produït un error en el registre de portals
+      de l'AEAT.
+    error_portals_unknown_portal: El portal de l'AEAT indicat no existeix.
+    error_portals_validation: Les metadades d'un portal no han superat la validació.
+    error_profile_amortization_ledger: Una operació del llibre d'amortitzacions del
+      perfil no és vàlida.
+    error_profile_asset_record: Un registre d'actiu del perfil té una estructura no
+      vàlida.
+    error_profile_cross_store_drift: Els magatzems físics d'un perfil no coincideixen
+      en la seva identitat. El perfil no és utilitzable.
+    error_profile_inventory_ledger: Una operació del llibre d'inventari del perfil
+      no és vàlida.
+    error_profile_tax_residence: S'ha produït un error en el perfil de residència
+      fiscal.
+    error_profile_validation: Un registre de perfil no ha superat la validació.
+    error_renta: S'ha produït un error en el càlcul de la declaració de la Renda.
+    error_renta_validation: Un valor de la declaració de la Renda no és vàlid.
+    error_rental_amortization_cap_exceeded: L'amortització acumulada superaria el
+      límit legal de l'actiu arrendat.
+    error_rental_contract_not_found: No s'ha trobat el contracte de lloguer indicat.
+    error_rental_finca_not_found: No s'ha trobat la finca indicada.
+    error_rental_register: S'ha produït un error en el registre de lloguers.
+    error_rental_tier_resolution: Les dades del contracte de lloguer són inconsistents
+      i no s'ha pogut determinar el tram de reducció aplicable.
+    error_rental_validation: Un registre de lloguer no ha superat la validació.
+    error_resources_backend: S'ha produït un error en llegir les dades incloses en
+      l'aplicació.
+    error_resources_load: No s'ha pogut carregar un recurs inclòs en l'aplicació.
+    error_resources_not_found: No s'ha trobat el recurs inclòs sol·licitat.
+    error_resources_validation: Un fitxer inclòs en l'aplicació no ha superat la validació
+      estricta.
+    error_review: S'ha produït un error en la revisió.
+    error_sanitization: S'ha produït un error en sanejar el document.
+    error_sede: S'ha produït un error en la Seu electrònica de l'AEAT.
+    error_sede_expediente_not_found: No s'ha trobat cap expedient que coincideixi
+      amb el filtre sol·licitat.
+    error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
+    error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
+    error_submission_validation: Un model d'enviament no ha superat la validació.
+    error_transaction_catalogue: El catàleg de transaccions no és vàlid o és inconsistent.
+    error_transaction_llm_classifier: Ha fallat la classificació de la transacció
+      amb el model de llenguatge.
+    error_transaction_not_found: No s'ha trobat la transacció sol·licitada.
+    error_transaction_persistence: No s'ha pogut desar el catàleg de transaccions.
+    error_transaction_validation: Un valor d'una transacció no és vàlid.
+    error_usage_ratios_validation: Un perfil de percentatges d'ús infringeix les seves
+      invariants de domini.
+    error_user_profile: S'ha produït un error en el perfil d'usuari.
+    error_vat_prorrata: S'ha produït un error en el càlcul de la prorrata de l'IVA.
+    error_vat_prorrata_input: Les dades d'entrada de la prorrata de l'IVA infringeixen
+      les seves invariants.
+    error_vat_prorrata_sector: Les dades de separació sectorial de la prorrata de
+      l'IVA són inconsistents.
+    error_vat_validation: Un valor de l'IVA no és vàlid.
+    error_wizard: S'ha produït un error en l'assistent.
+    error_wizard_compile: El catàleg de l'assistent està mal format i no s'ha pogut
+      compilar.
+    error_workflow: S'ha produït un error en el flux de treball.
+    error_workflow_component: Un component del flux de treball ha llançat una excepció
+      inesperada.
   fail:
-    census_sync: errors.fail.census_sync
-    currency_error: errors.fail.currency_error
-    declaration_parse: errors.fail.declaration_parse
-    exchange_rate_provider: errors.fail.exchange_rate_provider
-    fail_borrador_parse: errors.fail.fail_borrador_parse
-    fail_browser_evasion: errors.fail.fail_browser_evasion
-    fail_browser_session_browser: errors.fail.fail_browser_session_browser
-    fail_browser_validation: errors.fail.fail_browser_validation
-    fail_declaracion_parse: errors.fail.fail_declaracion_parse
-    fail_export: errors.fail.fail_export
-    fail_export_format: errors.fail.fail_export_format
-    fail_filing_import: errors.fail.fail_filing_import
-    fail_financial_attachments_attachment_persistence: errors.fail.fail_financial_attachments_attachment_persistence
-    fail_financial_invoices_invoice_persistence: errors.fail.fail_financial_invoices_invoice_persistence
-    fail_financial_ledger_storage: errors.fail.fail_financial_ledger_storage
-    fail_financial_usage_ratios_usage_ratio_persistence: errors.fail.fail_financial_usage_ratios_usage_ratio_persistence
-    fail_google_browser_open: errors.fail.fail_google_browser_open
-    fail_google_loopback_bind: errors.fail.fail_google_loopback_bind
-    fail_google_network: errors.fail.fail_google_network
-    fail_justificante_parse: errors.fail.fail_justificante_parse
-    fail_llm_cache: errors.fail.fail_llm_cache
-    fail_llm_provider: errors.fail.fail_llm_provider
-    fail_llm_rate_limit: errors.fail.fail_llm_rate_limit
-    fail_locale_manager: errors.fail.fail_locale_manager
-    fail_manuals_manual_parse: errors.fail.fail_manuals_manual_parse
-    fail_mcp_launch: errors.fail.fail_mcp_launch
-    fail_modelo_calculation_revision_persistence: errors.fail.fail_modelo_calculation_revision_persistence
-    fail_modelo_filing_record_persistence: errors.fail.fail_modelo_filing_record_persistence
-    fail_modelo_verification_report_persistence: errors.fail.fail_modelo_verification_report_persistence
-    fail_modelo_work_unit_persistence: errors.fail.fail_modelo_work_unit_persistence
-    fail_normatives_normative_parse: errors.fail.fail_normatives_normative_parse
-    fail_outbound_storage: errors.fail.fail_outbound_storage
-    fail_outbound_storage_network: errors.fail.fail_outbound_storage_network
-    fail_outbound_storage_unavailable: errors.fail.fail_outbound_storage_unavailable
-    fail_review_source_load: errors.fail.fail_review_source_load
-    fail_sanitization_source_parse: errors.fail.fail_sanitization_source_parse
-    fail_sede_census_parse: errors.fail.fail_sede_census_parse
-    fail_sede_justificante_fetch: errors.fail.fail_sede_justificante_fetch
-    fail_sede_parse: errors.fail.fail_sede_parse
-    fail_sede_validation: errors.fail.fail_sede_validation
-    fail_site_health: errors.fail.fail_site_health
-    fail_storage: errors.fail.fail_storage
-    fail_storage_blob_not_found: errors.fail.fail_storage_blob_not_found
-    fail_storage_bucket_recovery_unavailable: errors.fail.fail_storage_bucket_recovery_unavailable
-    fail_storage_persistence: errors.fail.fail_storage_persistence
-    fail_storage_repository: errors.fail.fail_storage_repository
-    fail_storage_secret_not_found: errors.fail.fail_storage_secret_not_found
-    fail_storage_secret_store: errors.fail.fail_storage_secret_store
-    fail_user_profile_not_found: errors.fail.fail_user_profile_not_found
-    fail_user_profile_schema_load: errors.fail.fail_user_profile_schema_load
-    ledger_check: errors.fail.ledger_check
-    ledger_link: errors.fail.ledger_link
-    missing_exchange_rate: errors.fail.missing_exchange_rate
-    modelo_036_lifecycle: errors.fail.modelo_036_lifecycle
-    modelo_export: errors.fail.modelo_export
-    modelo_export_manifest: errors.fail.modelo_export_manifest
-    overview: errors.fail.overview
-    overview_agenda: errors.fail.overview_agenda
-    overview_backlog: errors.fail.overview_backlog
-    overview_calendar: errors.fail.overview_calendar
-    overview_explain: errors.fail.overview_explain
-    profile_export: errors.fail.profile_export
-    profile_import: errors.fail.profile_import
-    reconciliation: errors.fail.reconciliation
-    stale_exchange_rate: errors.fail.stale_exchange_rate
+    census_sync: La sincronització del cens del Model 036 ha fallat.
+    currency_error: Ha fallat la normalització de la moneda.
+    declaration_parse: No s'ha pogut interpretar l'exportació de la declaració presentada
+      per a la conciliació.
+    exchange_rate_provider: El proveïdor de tipus de canvi no ha respost.
+    fail_borrador_parse: No s'ha pogut interpretar el PDF de l'esborrany del Model
+      100 com una declaració.
+    fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
+    fail_browser_session_browser: S'ha produït un error en la sessió del navegador.
+    fail_browser_validation: Els paràmetres del navegador no han superat la validació.
+    fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
+    fail_export: S'ha produït un error en exportar cap a l'AEAT.
+    fail_export_format: L'esborrany de la declaració no s'ha pogut serialitzar al
+      format BOE indicat.
+    fail_filing_import: No s'ha pogut importar la declaració des del PDF del justificant.
+    fail_financial_attachments_attachment_persistence: El magatzem de justificants
+      no ha pogut llegir o escriure les dades.
+    fail_financial_invoices_invoice_persistence: No s'ha pogut desar o llegir el catàleg
+      de factures.
+    fail_financial_ledger_storage: No s'ha pogut resoldre o fer servir l'emmagatzematge
+      del llibre del bucket.
+    fail_financial_usage_ratios_usage_ratio_persistence: No s'ha pogut llegir o escriure
+      el perfil de percentatges d'ús.
+    fail_google_browser_open: No s'ha pogut obrir el navegador per mostrar la pàgina
+      de consentiment de Google. Obre l'enllaç manualment.
+    fail_google_loopback_bind: El receptor HTTP local no ha pogut obrir un port. Tanca
+      altres aplicacions que el puguin estar fent servir i torna-ho a provar.
+    fail_google_network: No s'ha pogut contactar amb el servidor de Google. Comprova
+      la connexió a internet i torna-ho a provar.
+    fail_justificante_parse: No s'ha pogut interpretar el PDF com un justificant.
+    fail_llm_cache: No s'ha pogut llegir, escriure o interpretar una entrada de la
+      memòria cau del model de llenguatge.
+    fail_llm_provider: El proveïdor del model de llenguatge ha retornat un error irrecuperable.
+    fail_llm_rate_limit: El proveïdor del model de llenguatge ha rebutjat la sol·licitud
+      per límit d'ús. Espera uns minuts i torna-ho a provar.
+    fail_locale_manager: S'ha produït un error en gestionar o llegir els fitxers d'idioma.
+    fail_manuals_manual_parse: Un registre de manual no ha superat la validació de
+      l'esquema.
+    fail_mcp_launch: No s'ha pogut iniciar el servidor MCP.
+    fail_modelo_calculation_revision_persistence: No s'ha pogut desar o llegir el
+      catàleg de revisions de càlcul.
+    fail_modelo_filing_record_persistence: No s'ha pogut desar o llegir el catàleg
+      de declaracions registrades.
+    fail_modelo_verification_report_persistence: No s'ha pogut desar o llegir el catàleg
+      d'informes de verificació.
+    fail_modelo_work_unit_persistence: No s'ha pogut desar o llegir el catàleg d'unitats
+      de treball.
+    fail_normatives_normative_parse: Un registre normatiu no ha superat la validació
+      de l'esquema.
+    fail_outbound_storage: S'ha produït un error en el proveïdor d'emmagatzematge.
+    fail_outbound_storage_network: No s'ha pogut contactar amb el servei d'emmagatzematge.
+      Comprova la connexió a internet i torna-ho a provar.
+    fail_outbound_storage_unavailable: El servei d'emmagatzematge no està disponible
+      temporalment. Espera uns minuts i torna-ho a provar.
+    fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
+    fail_sanitization_source_parse: El PDF d'origen no s'ha pogut obrir per sanejar-lo.
+    fail_sede_census_parse: Un valor de la pàgina del cens de la Seu de l'AEAT no
+      s'ha pogut interpretar.
+    fail_sede_justificante_fetch: La descàrrega del justificant en PDF des de la Seu
+      de l'AEAT ha fallat o el fitxer no és vàlid.
+    fail_sede_parse: No s'ha pogut interpretar la pàgina capturada de la Seu de l'AEAT.
+    fail_sede_validation: Les dades capturades de la Seu de l'AEAT no tenen la forma
+      esperada.
+    fail_site_health: La comprovació d'estat del lloc ha fallat.
+    fail_storage: S'ha produït un error en l'emmagatzematge.
+    fail_storage_blob_not_found: No s'ha trobat l'objecte sol·licitat al magatzem
+      xifrat.
+    fail_storage_bucket_recovery_unavailable: No s'ha pogut carregar la còpia de recuperació
+      del bucket actiu. És possible que la recuperació no s'hagi configurat mai.
+    fail_storage_persistence: S'ha produït un error de persistència en l'emmagatzematge
+      segur.
+    fail_storage_repository: Una operació de repositori ha fallat.
+    fail_storage_secret_not_found: No s'ha trobat cap secret per a la clau sol·licitada.
+    fail_storage_secret_store: S'ha produït un error d'entrada o sortida en el magatzem
+      de secrets.
+    fail_user_profile_not_found: No s'ha trobat la secció o el camp sol·licitat del
+      perfil d'usuari.
+    fail_user_profile_schema_load: No s'ha pogut carregar l'esquema del perfil d'usuari.
+    ledger_check: Una comprovació de consistència del llibre ha detectat un problema
+      que impedeix continuar.
+    ledger_link: No s'ha pogut vincular una transacció del llibre a un binding de
+      model.
+    missing_exchange_rate: Falta el tipus de canvi per a la data i la moneda indicades.
+    modelo_036_lifecycle: S'ha produït un error en el cicle de vida del Model 036
+      (alta, modificació o baixa).
+    modelo_export: S'ha produït un error en exportar la revisió del model.
+    modelo_export_manifest: No s'ha pogut construir o validar el manifest d'exportació
+      del model.
+    overview: S'ha produït un error en generar el resum.
+    overview_agenda: No s'han pogut enumerar les properes accions del resum.
+    overview_backlog: No s'han pogut classificar les obligacions vençudes del resum.
+    overview_calendar: No s'ha pogut muntar el calendari del resum per al període
+      sol·licitat.
+    overview_explain: No s'ha pogut descompondre l'explicació del resum per a l'obligació
+      sol·licitada.
+    profile_export: S'ha produït un error en exportar l'arxiu del perfil.
+    profile_import: S'ha produït un error en importar l'arxiu del perfil.
+    reconciliation: S'ha produït un error en conciliar les declaracions periòdiques
+      amb el resum anual.
+    stale_exchange_rate: L'únic tipus de canvi disponible està fora del marge de frescor
+      acceptable.
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
   identity:
@@ -2395,6 +2493,7 @@ errors:
       la validació.
     refused_profile_basis_cap_exceeded: L'amortització acumulada superaria la base
       de cost de l'actiu.
+    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
     refused_profile_foral_regime: El règim foral seleccionat no està modelat per aquest
       perfil. Selecciona un règim admès.
     refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
@@ -2929,14 +3028,22 @@ wizard:
       title: Primer declarant
     title: Auxiliar de configuració
     verifier:
-      activity_present: wizard.setup.verifier.activity_present
-      eu_eea_country_missing: wizard.setup.verifier.eu_eea_country_missing
-      eu_eea_country_ok: wizard.setup.verifier.eu_eea_country_ok
-      obligations_consistency_ok: wizard.setup.verifier.obligations_consistency_ok
-      obligations_inconsistent: wizard.setup.verifier.obligations_inconsistent
-      spouse_consistency_missing: wizard.setup.verifier.spouse_consistency_missing
-      spouse_consistency_ok: wizard.setup.verifier.spouse_consistency_ok
-      tax_id_present: wizard.setup.verifier.tax_id_present
+      activity_present: 'Activitat econòmica: comprovació que el perfil declara una
+        activitat.'
+      eu_eea_country_missing: 'Residència del cònjuge: has indicat residència a la
+        UE o l''EEE però falta el país. Afegeix el país de residència.'
+      eu_eea_country_ok: 'Residència del cònjuge: el país de residència a la UE o
+        l''EEE és coherent.'
+      obligations_consistency_ok: 'Obligacions de retenció: les respostes sobre retencions
+        són coherents.'
+      obligations_inconsistent: 'Obligacions de retenció: has declarat retencions
+        professionals però no que paguis a professionals amb retenció. Revisa aquestes
+        dades.'
+      spouse_consistency_missing: 'Tributació conjunta: falta la identificació fiscal
+        del cònjuge. Afegeix-la per poder presentar conjuntament.'
+      spouse_consistency_ok: 'Tributació conjunta: les dades del cònjuge són coherents.'
+      tax_id_present: 'Identificació fiscal: comprovació que el perfil té un NIF o
+        NIE.'
   test:
     description: Test your configuration and connectivity
     example:
