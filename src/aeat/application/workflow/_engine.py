@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
-from typing import Literal, NoReturn
+from typing import Literal, NoReturn, cast
 
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
@@ -36,6 +36,7 @@ from ._errors import WorkflowAbortSignalError, WorkflowComponentError, WorkflowE
 from ._models import (
     DeclaracionPointer,
     SiteHealthAlert,
+    SiteHealthStatus,
     WorkflowAbortReason,
     WorkflowPurpose,
     WorkflowResult,
@@ -1221,7 +1222,13 @@ class WorkflowEngine:
     ) -> NoReturn:
         """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
 
-        status = exc.status
+        # ``SiteHealthError`` types its payload through the structural
+        # ``SiteHealthStatusLike`` protocol so ``core.errors`` need not
+        # import the browser adapter. Every site-health failure raised
+        # by the AEAT browser adapter carries the concrete
+        # ``SiteHealthStatus`` record, which the workflow ``SiteHealthAlert``
+        # requires; narrow at this adapter boundary.
+        status = cast("SiteHealthStatus", exc.status)
         alert_run_id = self._compute_current_run_id() or "-"
         summary = _summary_text(f"AEAT site unavailable at stage={stage.value}: {status.state.value}")
         steps.append(

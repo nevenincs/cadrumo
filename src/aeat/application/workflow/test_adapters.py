@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -42,8 +42,14 @@ class _DraftBuilder:
 
 
 class _SubmissionEngine:
-    def preflight(self, draft, *, today) -> None:
-        del draft, today
+    def preflight(
+        self,
+        draft: object,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
+        del draft, today, skip_deadline_window
 
 
 def test_default_engine_requires_bucket_backed_inputs_provider() -> None:
