@@ -84,11 +84,13 @@ class Modelo100ObservedV2025Extractor:
             raise BorradorParseError("DECLARACION artefact must carry a CSV stamp but none was found")
 
         observed, warnings = _observed_values(text)
-        target_casillas = set(extraction_profile.target_casillas) if extraction_profile else None
+        target_casilla_ids = (
+            {t.casilla_id for t in extraction_profile.target_casillas} if extraction_profile else None
+        )
         values: list[ExtractedCasilla] = []
         matched_targets: set[str] = set()
         for casilla_id, value in sorted(observed.items()):
-            if target_casillas is not None and casilla_id not in target_casillas:
+            if target_casilla_ids is not None and casilla_id not in target_casilla_ids:
                 continue
             matched_targets.add(casilla_id)
             values.append(
@@ -105,7 +107,7 @@ class Modelo100ObservedV2025Extractor:
         if extraction_profile is not None:
             coverage = Decimal(len(matched_targets)) / Decimal(len(extraction_profile.target_casillas))
             if coverage < extraction_profile.min_coverage:
-                missing = sorted(set(extraction_profile.target_casillas) - matched_targets)
+                missing = sorted(target_casilla_ids - matched_targets if target_casilla_ids else set())
                 raise BorradorParseError(
                     "registry extraction profile coverage below minimum: "
                     f"profile={extraction_profile.id!r} coverage={coverage} "

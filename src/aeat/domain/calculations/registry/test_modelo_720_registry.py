@@ -133,7 +133,7 @@ def test_committed_modelo_720_declaration_pdf_extraction_profile_targets_declara
             assert profile.parser == "aeat.adapters.inbound.declaracion.parse_declaracion"
             assert profile.confidence == "strict"
             assert profile.failure_semantics == "fail_hard"
-            assert set(profile.target_casillas) <= casilla_ids
+            assert {t.casilla_id for t in profile.target_casillas} <= casilla_ids
 
 
 def test_committed_modelo_720_verification_expectation_is_informative_strict() -> None:

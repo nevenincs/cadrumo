@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from aeat.core.resources import bundled_path
 
 from . import (
+    ExtractionProfileDefinition,
     RegistryCatalogues,
     RegistryLoadError,
     RegistryValidationError,
@@ -22,6 +23,7 @@ from . import (
 from ._loader import load_registry_tree
 from ._schema import (
     ExportFieldDefinition,
+    ExtractionTargetDefinition,
     FormulaExpression,
     ModeloDefinition,
     ModeloRevision,
@@ -746,7 +748,17 @@ def test_validator_rejects_missing_legal_reference() -> None:
 def test_validator_rejects_extraction_profile_unknown_casilla() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    profile = revision.extraction_profiles[0].model_copy(update={"target_casillas": ("missing",)})
+    profile = revision.extraction_profiles[0].model_copy(
+        update={
+            "target_casillas": (
+                ExtractionTargetDefinition(
+                    casilla_id="missing",
+                    match_strategy="numeric_casilla",
+                    value_kind="amount",
+                ),
+            )
+        }
+    )
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
     with pytest.raises(RegistryValidationError, match=r"extraction profile .* unknown casilla"):
@@ -761,6 +773,87 @@ def test_validator_rejects_extraction_profile_artefact_surface_mismatch() -> Non
 
     with pytest.raises(RegistryValidationError, match="surface 'declaracion_pdf' requires"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_extraction_target_definition_roundtrip() -> None:
+    """ExtractionTargetDefinition strict-frozen roundtrip with non-default fields."""
+    target = ExtractionTargetDefinition(
+        casilla_id="my-label",
+        match_strategy="named_label",
+        value_kind="text",
+        label_pattern=r"Mi etiqueta especial",
+    )
+    raw = target.model_dump()
+    restored = ExtractionTargetDefinition.model_validate(raw)
+    assert restored == target
+    assert restored.casilla_id == "my-label"
+    assert restored.match_strategy == "named_label"
+    assert restored.value_kind == "text"
+    assert restored.label_pattern == r"Mi etiqueta especial"
+
+
+def test_extraction_target_definition_anti_tautology() -> None:
+    """Mutating the serialised payload surfaces inequality after reload."""
+    target = ExtractionTargetDefinition(
+        casilla_id="01",
+        match_strategy="numeric_casilla",
+        value_kind="amount",
+    )
+    raw = target.model_dump()
+    raw["match_strategy"] = "named_label"
+    raw["label_pattern"] = "Retenciones"
+    mutated = ExtractionTargetDefinition.model_validate(raw)
+    assert mutated != target
+
+
+def test_extraction_target_named_label_requires_label_pattern() -> None:
+    with pytest.raises(ValidationError, match="named_label extraction targets require label_pattern"):
+        ExtractionTargetDefinition(
+            casilla_id="decl.cnae",
+            match_strategy="named_label",
+            value_kind="text",
+        )
+
+
+def test_extraction_target_numeric_casilla_rejects_label_pattern() -> None:
+    with pytest.raises(ValidationError, match="numeric_casilla extraction targets must not define label_pattern"):
+        ExtractionTargetDefinition(
+            casilla_id="01",
+            match_strategy="numeric_casilla",
+            value_kind="amount",
+            label_pattern="Retenciones",
+        )
+
+
+def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla_id() -> None:
+    """target_casillas with duplicate casilla_id values raises ValidationError."""
+    from pydantic import ValidationError as PydanticValidationError
+
+    with pytest.raises(PydanticValidationError):
+        ExtractionProfileDefinition(
+            id="test.profile",
+            surface="declaracion_pdf",
+            artefact_kind="declaration_pdf",
+            accepted_artefact_kinds=("declaration_pdf",),
+            parser="aeat.adapters.inbound.declaracion.parse_declaracion",
+            target_casillas=(
+                ExtractionTargetDefinition(
+                    casilla_id="01",
+                    match_strategy="numeric_casilla",
+                    value_kind="amount",
+                ),
+                ExtractionTargetDefinition(
+                    casilla_id="01",
+                    match_strategy="numeric_casilla",
+                    value_kind="amount",
+                ),
+            ),
+            confidence="strict",
+            min_coverage="1",
+            failure_semantics="fail_hard",
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=("aeat-dr-130-2019-v12",),
+        )
 
 
 def test_validator_rejects_extraction_profile_parser_that_does_not_resolve() -> None:
@@ -938,7 +1031,7 @@ def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> 
     modelo, catalogues = _committed_modelo("131")
     revision = modelo.revisions["2026"]
     profile = next(item for item in revision.extraction_profiles if item.surface == "export_record")
-    target = profile.target_casillas[0]
+    target = profile.target_casillas[0].casilla_id
     removed_export_fields = {
         field.id
         for layout in revision.export_layouts
