@@ -720,8 +720,9 @@ cli:
       event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
       help: Inspeccionar el almacenamiento por bucket y su historial de eventos
       history:
-        invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00); se recibió {raw}.'
-        since_after_until: '--since debe ser anterior o igual a --until.'
+        invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
+          se recibió {raw}.'
+        since_after_until: --since debe ser anterior o igual a --until.
       history_help: Mostrar el historial de eventos solo-append de un bucket
       object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia
         exacta)
@@ -839,6 +840,9 @@ cli:
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
       create_help: Inicializa un nuevo perfil activo y su bucket de configuración.
+      delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
+        activo se ha borrado. Ejecuta 'aeat config profile switch NOMBRE' o 'aeat config
+        profile create NOMBRE' para volver a trabajar.
       delete_help: Elimina un perfil y su estado local; --yes confirma
       delete_name_help: Nombre del perfil que quieres eliminar
       delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
@@ -1626,7 +1630,8 @@ cli:
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
     language_help: Idioma de salida para este comando (sustituye al perfil activo)
     quiet_help: Mostrar solo errores en stderr
-    startup_import_error: 'No se puede iniciar la interfaz de comandos de AEAT: falta la dependencia {dependency}. Ejecuta `aeat config repair`.'
+    startup_import_error: 'No se puede iniciar la interfaz de comandos de AEAT: falta
+      la dependencia {dependency}. Ejecuta `aeat config repair`.'
     unavailable_app_help: Los comandos de app no están disponibles porque falta una
       dependencia opcional
     verbose_help: Mostrar logs internos informativos en stderr

@@ -697,8 +697,10 @@ cli:
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
       history:
-        invalid_timestamp: 'A(z) {flag} ISO-8601 időbélyeg kell legyen (pl. 2026-04-01T00:00:00+00:00); a kapott érték {raw}.'
-        since_after_until: 'A --since értékének a --until értékénél korábbinak vagy azzal egyenlőnek kell lennie.'
+        invalid_timestamp: A(z) {flag} ISO-8601 időbélyeg kell legyen (pl. 2026-04-01T00:00:00+00:00);
+          a kapott érték {raw}.
+        since_after_until: A --since értékének a --until értékénél korábbinak vagy
+          azzal egyenlőnek kell lennie.
       history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
       object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos
         egyezés)
@@ -812,6 +814,9 @@ cli:
         show_help: Mutasd az AEAT által ehhez a profilhoz közölt legutóbbi nyilvántartást
         snapshot_id_help: Konkrét snapshot azonosító (előtagok elfogadottak)
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
+      delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutatója
+        törlődött. Futtasd az 'aeat config profile switch NÉV' vagy az 'aeat config profile
+        create NÉV' parancsot a munka folytatásához.
       delete_help: Törölj egy profilt és a helyi állapotát; a --yes megerősíti
       delete_name_help: Törlendő profil neve
       delete_requires_yes: 'A törlés destruktív. Megerősítéshez futtasd újra: ''aeat
@@ -1585,7 +1590,8 @@ cli:
       welcome_profile: Udvozlet ujra. Az aktiv profil `%{profile}`.
     language_help: A parancs kimeneti nyelve (felülírja az aktív profilt)
     quiet_help: Csak hibák megjelenítése stderr-en
-    startup_import_error: 'Az AEAT parancsfelület nem indítható: hiányzó függőség: {dependency}. Futtasd az `aeat config repair` parancsot.'
+    startup_import_error: 'Az AEAT parancsfelület nem indítható: hiányzó függőség:
+      {dependency}. Futtasd az `aeat config repair` parancsot.'
     unavailable_app_help: Az app parancsok nem érhetők el, mert hiányzik egy opcionális
       függőség
     verbose_help: Belső információs naplók megjelenítése stderr-en

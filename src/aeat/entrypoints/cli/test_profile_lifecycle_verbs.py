@@ -773,3 +773,262 @@ def test_profile_import_label_lands_second_copy_under_new_name(
     assert restored is not None
     # Distinct buckets, distinct minted UUID identities.
     assert original.bucket_id != restored.bucket_id
+
+
+# --- profile-lifecycle navigation from a no-active-session state ---
+#
+# These tests drive the full ``root_app`` so the CLI root callback (the
+# active-session gate) participates. The ``profile_app``-direct tests
+# above never reach that callback, so they cannot observe the lockout
+# where a lifecycle-navigation verb reaches a decrypting read with no
+# bucket session opened for it.
+
+
+def test_switch_to_surviving_profile_after_deleting_the_active_one(
+    _per_bucket_backend: Path,
+) -> None:
+    """Deleting the active profile must not lock the operator out of survivors.
+
+    Reproduces the delete-active lockout: with two profiles, ``switch``
+    the first so it is active, ``delete`` it, then ``switch`` to the
+    surviving profile. The final switch must succeed and make the
+    survivor active. Before the fix it refused with ``no active bucket
+    session`` — the very recovery command the refusal recommended.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.application.workflow._models import resolve_active_bucket_id
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+    _create_via_cli(runner, "beta")
+
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "switch", "alpha"]).exit_code == 0
+
+    dispose_engine()
+    deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
+    assert deleted.exit_code == 0, deleted.output
+
+    # The active-profile pointer is now cleared. ``switch`` must still
+    # succeed — it is the verb that establishes a session, not one that
+    # requires a pre-existing one.
+    dispose_engine()
+    switched = runner.invoke(root_app, ["config", "profile", "switch", "beta"])
+    assert switched.exit_code == 0, switched.output
+    assert "active_profile\tbeta" in switched.output
+
+    dispose_engine()
+    survivor = read_profile_bucket("beta")
+    assert survivor is not None
+    assert resolve_active_bucket_id() == survivor.bucket_id
+
+
+def test_first_switch_from_a_no_active_profile_state_succeeds(
+    _per_bucket_backend: Path,
+) -> None:
+    """``switch`` works from a cold no-active-profile state.
+
+    ``create`` lands a profile and leaves it active; logging out clears
+    the pointer so no session resolves at root-callback time. ``switch``
+    must still open its own session and activate the named profile.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.application.workflow._models import resolve_active_bucket_id
+
+    runner = CliRunner()
+    _create_via_cli(runner, "solo")
+
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+    dispose_engine()
+    assert resolve_active_bucket_id() is None
+
+    dispose_engine()
+    switched = runner.invoke(root_app, ["config", "profile", "switch", "solo"])
+    assert switched.exit_code == 0, switched.output
+    assert "active_profile\tsolo" in switched.output
+
+
+def test_list_and_status_work_from_a_no_active_session_state(
+    _per_bucket_backend: Path,
+) -> None:
+    """``list`` and ``status`` resolve without a bucket session.
+
+    Both are lifecycle-navigation surfaces; neither must be gated behind
+    an active session. With the active pointer cleared, ``list`` still
+    enumerates registered profiles and ``status`` reports the empty
+    no-active-profile state instead of refusing.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+
+    dispose_engine()
+    listed = runner.invoke(root_app, ["config", "profile", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert "alpha" in listed.output
+
+    dispose_engine()
+    status = runner.invoke(root_app, ["config", "profile", "status"])
+    assert status.exit_code == 0, status.output
+    assert "bucket session" not in status.output
+
+
+def test_delete_active_profile_states_the_pointer_was_cleared(
+    _per_bucket_backend: Path,
+) -> None:
+    """Deleting the active profile names the cleared-pointer consequence.
+
+    ``delete <active> --yes`` must not silently clear the active-profile
+    pointer. The result output must state the active profile was cleared
+    and steer the operator at ``switch`` / ``create``.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "switch", "alpha"]).exit_code == 0
+
+    dispose_engine()
+    deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
+    assert deleted.exit_code == 0, deleted.output
+    assert "status\ttombstoned" in deleted.output
+    # The cleared-pointer consequence is explicit in the output.
+    assert "active_profile\t<none>" in deleted.output
+    assert "notice\t" in deleted.output
+    flat = deleted.output.replace("\n", " ")
+    assert "switch" in flat and "create" in flat
+
+
+def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
+    _per_bucket_backend: Path,
+) -> None:
+    """Deleting a non-active profile does not claim the pointer was cleared.
+
+    The cleared-pointer notice belongs only to the delete-active path;
+    deleting an inactive profile leaves the active pointer untouched and
+    must not emit the notice.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+    _create_via_cli(runner, "beta")
+
+    # ``beta`` is active after the second create; delete the inactive
+    # ``alpha``.
+    dispose_engine()
+    deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
+    assert deleted.exit_code == 0, deleted.output
+    assert "status\ttombstoned" in deleted.output
+    assert "active_profile\t<none>" not in deleted.output
+    assert "notice\t" not in deleted.output
+
+
+def test_delete_unknown_profile_refuses_with_an_unknown_profile_message(
+    _per_bucket_backend: Path,
+) -> None:
+    """``delete <unknown>`` gives an unknown-profile refusal, not a session error.
+
+    With no active session, deleting a name that no profile carries must
+    surface a clear ``unknown profile`` refusal. The operator must be
+    able to tell the name does not exist — distinct from any
+    session-state diagnostic.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+
+    dispose_engine()
+    refused = runner.invoke(root_app, ["config", "profile", "delete", "ghost", "--yes"])
+    assert refused.exit_code != 0, refused.output
+    flat = refused.output.lower()
+    # The refusal names the unknown profile and does NOT leak the
+    # session-state diagnostic.
+    assert "ghost" in flat
+    assert "desconocido" in flat or "unknown" in flat
+    assert "bucket session" not in flat
+
+
+def test_delete_valid_profile_with_no_active_session_succeeds(
+    _per_bucket_backend: Path,
+) -> None:
+    """``delete <valid>`` works with no pre-existing session.
+
+    Deleting a registered, non-active profile from a no-active-session
+    state must succeed — ``delete`` opens its own bucket session scoped
+    to the target, it does not require one to already be open.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+
+    dispose_engine()
+    deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
+    assert deleted.exit_code == 0, deleted.output
+    assert "status\ttombstoned" in deleted.output
+    # The profile is gone from the live surface.
+    dispose_engine()
+    assert read_profile_bucket("alpha") is None
+
+
+def test_show_tombstoned_profile_is_session_context_independent(
+    _per_bucket_backend: Path,
+) -> None:
+    """``show <tombstoned>`` behaves the same regardless of the active session.
+
+    A tombstoned profile inspected with another profile's session
+    active, and the same profile inspected with no session at all, must
+    both resolve the tombstoned record and report ``readiness
+    tombstoned`` — never an ``unknown profile`` refusal in one context
+    and a full record in the other.
+    """
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    runner = CliRunner()
+    _create_via_cli(runner, "alpha")
+    _create_via_cli(runner, "beta")
+
+    # ``beta`` is active after the second create. Tombstone ``alpha``.
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"]).exit_code == 0
+
+    # Context 1: ``beta`` session active.
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "switch", "beta"]).exit_code == 0
+    dispose_engine()
+    with_session = runner.invoke(root_app, ["config", "profile", "show", "alpha"])
+
+    # Context 2: no active session.
+    dispose_engine()
+    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+    dispose_engine()
+    no_session = runner.invoke(root_app, ["config", "profile", "show", "alpha"])
+
+    # Identical outcome in both session contexts: the tombstoned record
+    # resolves and renders its tombstoned status.
+    assert with_session.exit_code == 0, with_session.output
+    assert no_session.exit_code == 0, no_session.output
+    assert "readiness\ttombstoned" in with_session.output
+    assert "readiness\ttombstoned" in no_session.output
+    assert "status\ttombstoned" in with_session.output
+    assert "status\ttombstoned" in no_session.output
+    for context in (with_session, no_session):
+        flat = context.output.lower()
+        assert "desconocido" not in flat and "unknown profile" not in flat
