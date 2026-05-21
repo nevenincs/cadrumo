@@ -21,6 +21,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from aeat.core.resources import bundled_path
+
+from . import load_modelo_path
 from ._schema import CasillaAlias, CasillaConstraints, CasillaDefinition
 from ._validate import (
     _emit_semantic_role_typo_twin_warnings,
@@ -77,6 +80,13 @@ def _modelo(modelo_id: str, revision_id: str, casillas: Iterable[CasillaDefiniti
             self.revisions = {revision_id: _Rev()}
 
     return _Mod()
+
+
+def _bundled_modelo(modelo_id: str) -> Any:
+    path = bundled_path("registry", "aeat", "modelos", modelo_id)
+    if path.exists():
+        return load_modelo_path(path)
+    return load_modelo_path(path.with_suffix(".toml"))
 
 
 class TestSemanticRoleFieldShape:
@@ -206,6 +216,78 @@ class TestValidateSemanticRoleCardinality:
 
 
 class TestTypoTwinWarning:
+    def test_reviewed_singleton_roles_are_marked_in_committed_registry(self) -> None:
+        reviewed_singletons = (
+            ("184", "2015-y-siguientes", "tipo2.clave", "tipo_renta_atribuida_clave"),
+            ("184", "2015-y-siguientes", "tipo2.subclave", "tipo_renta_atribuida_subclave"),
+            ("190", "2025-y-siguientes", "decl.total-percepciones", "total_percepciones_count"),
+            ("190", "2025-y-siguientes", "decl.percepciones-total", "total_percepciones_amount"),
+            ("202", "2025-y-siguientes", "61", "is_pf_mod_40_3_b2_base_tipo_3"),
+            ("202", "2025-y-siguientes", "62", "is_pf_mod_40_3_b2_porcentaje_3"),
+            ("202", "2025-y-siguientes", "64", "is_pf_mod_40_3_b2_base_tipo_4"),
+            ("202", "2025-y-siguientes", "65", "is_pf_mod_40_3_b2_porcentaje_4"),
+            ("202", "2025-y-siguientes", "67", "is_pf_mod_40_3_correcciones_impuesto_complementario"),
+            (
+                "303",
+                "2009-y-siguientes",
+                "iva.compensacion-pendiente-periodos-anteriores",
+                "iva_compensacion_pendiente_anteriores",
+            ),
+            (
+                "303",
+                "2009-y-siguientes",
+                "iva.compensacion-pendiente-periodos-posteriores",
+                "iva_compensacion_pendiente_posteriores",
+            ),
+            ("369", "esquema-union", "iva.union.de.services-cuota", "iva_oss_union_servicios_destino_de_cuota"),
+            ("369", "esquema-union", "iva.union.fr.services-cuota", "iva_oss_union_servicios_destino_fr_cuota"),
+        )
+        modelos = tuple(_bundled_modelo(modelo_id) for modelo_id in sorted({item[0] for item in reviewed_singletons}))
+        casillas = {
+            (modelo.id, revision.id, casilla.id): casilla
+            for modelo in modelos
+            for revision in modelo.revisions.values()
+            for casilla in revision.casillas
+        }
+
+        for modelo_id, revision_id, casilla_id, role in reviewed_singletons:
+            casilla = casillas[(modelo_id, revision_id, casilla_id)]
+            assert casilla.semantic_role == role
+            assert casilla.semantic_role_cardinality == "intentional_singleton"
+            assert casilla.semantic_role_cardinality_reason is not None
+
+    def test_reviewed_singleton_markers_do_not_warn(self) -> None:
+        reviewed_modelos = (
+            _bundled_modelo("184"),
+            _bundled_modelo("190"),
+            _bundled_modelo("202"),
+            _bundled_modelo("303"),
+            _bundled_modelo("369"),
+        )
+        reviewed_roles = {
+            "tipo_renta_atribuida_clave",
+            "tipo_renta_atribuida_subclave",
+            "total_percepciones_count",
+            "total_percepciones_amount",
+            "iva_compensacion_pendiente_anteriores",
+            "iva_compensacion_pendiente_posteriores",
+            "is_pf_mod_40_3_b2_base_tipo_3",
+            "is_pf_mod_40_3_b2_porcentaje_3",
+            "is_pf_mod_40_3_b2_base_tipo_4",
+            "is_pf_mod_40_3_b2_porcentaje_4",
+            "is_pf_mod_40_3_correcciones_impuesto_complementario",
+            "iva_oss_union_servicios_destino_de_cuota",
+            "iva_oss_union_servicios_destino_fr_cuota",
+        }
+
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            _emit_semantic_role_typo_twin_warnings(reviewed_modelos)
+
+        messages = [str(item.message) for item in captured]
+        for role in reviewed_roles:
+            assert not any(role in message for message in messages)
+
     def test_single_occurrence_role_emits_warning(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer-nif", data_type="nif")  # note hyphen typo
         m = _modelo("180", "2023", [a])
