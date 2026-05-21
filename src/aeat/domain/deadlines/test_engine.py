@@ -276,6 +276,73 @@ class TestRegistryApplicability:
             explain(_profile(), "999")
 
 
+class TestAnnualFilingWindows:
+    """The IRPF Renta and IVA/informative annual filing windows must be
+    registered so they resolve through the deadline engine.
+
+    Grounding for the IRPF dates:
+
+    * Orden HAC/277/2026, art. 7 — IRPF ejercicio 2025: plazo general
+      8 de abril a 30 de junio de 2026; domiciliacion hasta el 25 de
+      junio de 2026.
+    * Orden HAC/265/2024, art. 8 — IRPF ejercicio 2023: plazo general
+      3 de abril a 1 de julio de 2024; domiciliacion hasta el 26 de
+      junio de 2024.
+    """
+
+    def test_modelo_100_window_resolves_for_renta_2025_campaign(self) -> None:
+        windows = [
+            window
+            for code, _revision, window in _engine()._registry.deadline_windows(2025)
+            if code == "100"
+        ]
+        assert len(windows) == 1
+        window = windows[0]
+        assert window.id == "modelo-100-2025-0a"
+        assert window.period_kind == "annual"
+        assert window.opens_on == date(2026, 4, 8)
+        assert window.closes_on == date(2026, 6, 30)
+        assert window.payment_cutoff_on == date(2026, 6, 25)
+        assert "orden-hac-277-2026:art-7" in window.legal_refs
+
+    def test_modelo_100_window_resolves_for_renta_2023_campaign(self) -> None:
+        windows = [
+            window
+            for code, _revision, window in _engine()._registry.deadline_windows(2023)
+            if code == "100"
+        ]
+        assert len(windows) == 1
+        window = windows[0]
+        assert window.id == "modelo-100-2023-0a"
+        assert window.opens_on == date(2024, 4, 3)
+        assert window.closes_on == date(2024, 7, 1)
+        assert window.payment_cutoff_on == date(2024, 6, 26)
+        assert "orden-hac-265-2024:art-8" in window.legal_refs
+
+    def test_modelo_100_explain_no_longer_errors(self) -> None:
+        engine = _engine()
+        assert engine.explain(_profile(), "100", year=2025)
+        assert engine.explain(_profile(), "100", year=2023)
+
+    def test_modelo_303_quarterly_windows_resolve(self) -> None:
+        for year in (2025, 2026):
+            periods = sorted(
+                window.period
+                for code, _revision, window in _engine()._registry.deadline_windows(year)
+                if code == "303"
+            )
+            assert periods == [f"{year}-1T", f"{year}-2T", f"{year}-3T", f"{year}-4T"]
+
+    def test_modelo_347_annual_window_resolves(self) -> None:
+        for year in (2025, 2026):
+            windows = [
+                window
+                for code, _revision, window in _engine()._registry.deadline_windows(year)
+                if code == "347"
+            ]
+            assert [window.period for window in windows] == [f"{year}-0A"]
+
+
 class TestEnginePurity:
     def test_compute_does_not_mutate_profile(self) -> None:
         profile = _profile()
