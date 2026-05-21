@@ -7,7 +7,12 @@ from datetime import date
 import pytest
 
 from aeat.domain.deadlines import TaxpayerProfile
-from aeat.domain.deadlines._models import IVARegime
+from aeat.domain.deadlines._models import (
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+)
 
 from ._agenda import OverviewAgenda, build_overview_agenda
 
@@ -15,8 +20,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _profile() -> TaxpayerProfile:
+    """A declared autónomo en estimación directa (unchanged persona)."""
+
     return TaxpayerProfile(
         tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
         iva_regime=IVARegime.GENERAL,
     )
 

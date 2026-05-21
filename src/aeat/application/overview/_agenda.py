@@ -60,6 +60,12 @@ class OverviewAgenda(BaseModel):
             calendar build (under-specified profile keys).
         completeness: Calendar completeness inherited from the
             underlying calendar build.
+        taxpayer_model_declared: Whether the profile carries a usable
+            three-axis taxpayer model. When ``False`` every cohort is
+            empty and the operator must declare their taxpayer type
+            first (W02.S09).
+        incomplete_reason: "declare your taxpayer type first" guidance,
+            present only when ``taxpayer_model_declared`` is ``False``.
     """
 
     model_config = _STRICT_FROZEN
@@ -73,6 +79,8 @@ class OverviewAgenda(BaseModel):
     generated_at: datetime
     warnings: tuple[CalendarWarning, ...] = ()
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
+    taxpayer_model_declared: bool = True
+    incomplete_reason: str | None = None
 
 
 def build_overview_agenda(
@@ -144,6 +152,8 @@ def build_overview_agenda(
         generated_at=datetime.now(UTC),
         warnings=calendar.warnings,
         completeness=calendar.completeness,
+        taxpayer_model_declared=calendar.taxpayer_model_declared,
+        incomplete_reason=calendar.incomplete_reason,
     )
 
 

@@ -163,6 +163,25 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     )
     assert init_result.exit_code == 0, init_result.output
 
+    # Modelo applicability is derived from the taxpayer model; declare
+    # an autónomo (natural person with actividad económica) so the
+    # overview calendar can compute obligations rather than reporting
+    # the taxpayer model incomplete.
+    declare_result = _invoke(
+        [
+            "config",
+            "profile",
+            "edit",
+            "operator",
+            "--quiet",
+            "--entity-type",
+            "natural_person",
+            "--irpf-income-categories",
+            "actividad_economica",
+        ]
+    )
+    assert declare_result.exit_code == 0, declare_result.output
+
     from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.user_profile._orchestration import set_active_field
     from aeat.application.workflow._profile_bucket_scan import read_profile_bucket

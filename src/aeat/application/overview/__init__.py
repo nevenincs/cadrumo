@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...core.i18n import tr
 from ...domain.deadlines import (
     DeadlineEngine,
     HolidayJurisdiction,
@@ -50,6 +51,12 @@ from ...domain.deadlines import (
     shift_deadline,
 )
 from ...domain.deadlines._festivos import DeadlineValidationError
+from ._applicability import (
+    ApplicabilityVerdict,
+    ModeloApplicability,
+    derive_modelo_applicability,
+    taxpayer_model_is_declared,
+)
 from ._errors import (
     OverviewAgendaError,
     OverviewBacklogError,
@@ -272,7 +279,11 @@ class OverviewCalendar(BaseModel):
             to.
         entries: Tuple of :class:`OverviewCalendarEntry` rows ordered
             by ``(closes_on, modelo, period)`` — same key the engine
-            uses, so the CLI table is deterministic.
+            uses, so the CLI table is deterministic. Obligations the
+            taxpayer model positively excludes (e.g. Modelo 130 for a
+            pure landlord) are filtered out; an undeclared taxpayer
+            model yields an empty tuple plus
+            ``taxpayer_model_declared = False``.
         generated_at: UTC timestamp of when the aggregator ran. The
             only non-deterministic field.
         warnings: Tuple of :class:`CalendarWarning` rows for every
@@ -281,6 +292,14 @@ class OverviewCalendar(BaseModel):
         completeness: Per-key / per-modelo breakdown of explicit vs
             defaulted resolution. Always present; carries empty
             tuples when no ``raw_values`` was supplied at build time.
+        taxpayer_model_declared: Whether the profile carries a usable
+            three-axis taxpayer model. When ``False`` the calendar is
+            empty and the operator must declare their taxpayer type
+            first — the engine never reports a confident wrong
+            obligation (W02.S09).
+        incomplete_reason: Operator-facing "declare your taxpayer type
+            first" guidance, present only when
+            ``taxpayer_model_declared`` is ``False``.
     """
 
     model_config = _STRICT_FROZEN
@@ -290,6 +309,8 @@ class OverviewCalendar(BaseModel):
     generated_at: datetime
     warnings: tuple[CalendarWarning, ...] = Field(default=())
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
+    taxpayer_model_declared: bool = True
+    incomplete_reason: str | None = None
 
 
 class OverviewStatusReport(BaseModel):
@@ -439,6 +460,20 @@ def build_overview_calendar(
             range. Re-raised verbatim from
             :class:`aeat.domain.deadlines.ScheduleComputationError`.
     """
+    if not taxpayer_model_is_declared(profile):
+        # W02.S09: an undeclared taxpayer model yields an explicit
+        # incomplete answer — never a confident wrong obligation. The
+        # engine does not fall back to the autónomo guess.
+        return OverviewCalendar(
+            range=calendar_range,
+            entries=(),
+            generated_at=datetime.now(UTC),
+            warnings=(),
+            completeness=CalendarCompleteness(),
+            taxpayer_model_declared=False,
+            incomplete_reason=tr("cli.overview.taxpayer_model_undeclared"),
+        )
+
     deadline_engine = engine if engine is not None else DeadlineEngine()
     schedules: list[Schedule] = []
     for year in calendar_range.covered_years():
@@ -448,6 +483,15 @@ def build_overview_calendar(
     for schedule in schedules:
         for obligation in schedule.obligations:
             if not _entry_intersects_range(obligation, calendar_range):
+                continue
+            # W02.S07: each modelo's applicability is DERIVED from the
+            # taxpayer model. An obligation the taxpayer model positively
+            # excludes (e.g. Modelo 130 for a pure landlord) is dropped.
+            # A modelo without a seed rule is left in place — the seed
+            # covers the W02.S10 persona set, full per-modelo coverage
+            # is Wave W03.
+            applicability = derive_modelo_applicability(profile, obligation.modelo)
+            if applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
                 continue
             try:
                 shift = shift_deadline(
@@ -557,8 +601,10 @@ def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...
 
 
 __all__ = [
+    "ApplicabilityVerdict",
     "CalendarCompleteness",
     "CalendarWarning",
+    "ModeloApplicability",
     "OverviewAgendaError",
     "OverviewBacklogError",
     "OverviewCalendar",
@@ -571,6 +617,7 @@ __all__ = [
     "OverviewStatusReport",
     "build_overview_calendar",
     "build_overview_status_report",
+    "derive_modelo_applicability",
     "overview_status_report_from_projection",
     "render_overview_status_lines",
     "user_state_for",

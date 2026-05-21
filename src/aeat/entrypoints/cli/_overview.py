@@ -125,6 +125,11 @@ def overview_calendar(
         today=_date.today(),
         raw_values=raw_values,
     )
+    if not cal.taxpayer_model_declared:
+        # W02.S09: the taxpayer model is undeclared — the engine refuses
+        # to guess. Surface the "declare your taxpayer type first"
+        # guidance instead of an empty calendar with no explanation.
+        raise _bad(cal.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if cal.warnings and not allow_incomplete:
         warning_summary = ", ".join(warning.code for warning in cal.warnings)
         raise _bad(
@@ -217,6 +222,8 @@ def overview_agenda(
         horizon_days=horizon_days,
         raw_values=raw_values,
     )
+    if not agenda.taxpayer_model_declared:
+        raise _bad(agenda.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if agenda.warnings and not allow_incomplete:
         warning_summary = ", ".join(warning.code for warning in agenda.warnings)
         raise _bad(
@@ -305,6 +312,8 @@ def overview_backlog(
         to_date=parsed_to,
         raw_values=raw_values,
     )
+    if not backlog.taxpayer_model_declared:
+        raise _bad(backlog.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if backlog.warnings and not allow_incomplete:
         warning_summary = ", ".join(warning.code for warning in backlog.warnings)
         raise _bad(
@@ -378,8 +387,12 @@ def overview_explain(
         f"modelo\t{result.modelo}",
         f"year\t{result.year}",
         f"applicable\t{str(result.applicable).lower()}",
+        f"verdict\t{result.verdict.value}",
         f"rationale\t{result.rationale}",
+        f"legal_refs\t{', '.join(result.legal_refs)}",
     ]
+    if result.scheduling_rationale is not None:
+        lines.append(f"scheduling_rationale\t{result.scheduling_rationale}")
     for fact_name, fact_value in sorted(result.profile_facts.items()):
         lines.append(f"profile_fact\t{fact_name}\t{fact_value}")
     _emit(ctx, payload, lines)
