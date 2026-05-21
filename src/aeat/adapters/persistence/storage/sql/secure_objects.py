@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime
+from typing import cast
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -815,11 +817,18 @@ class SecureObjectRepository:
 
         self._check_session_freshness()
         with session_scope(self._engine) as session:
-            result = session.execute(
-                delete(_orm.SecureObjectRow).where(
-                    _orm.SecureObjectRow.namespace == namespace,
-                    _orm.SecureObjectRow.object_key == object_key,
-                )
+            # SQLAlchemy types Session.execute() as Result[Any]; a DML
+            # statement always yields a CursorResult at runtime, and only
+            # CursorResult exposes .rowcount. Cast at this third-party API
+            # boundary to read the affected-row count.
+            result = cast(
+                "CursorResult[object]",
+                session.execute(
+                    delete(_orm.SecureObjectRow).where(
+                        _orm.SecureObjectRow.namespace == namespace,
+                        _orm.SecureObjectRow.object_key == object_key,
+                    )
+                ),
             )
             return bool(result.rowcount and result.rowcount > 0)
 
