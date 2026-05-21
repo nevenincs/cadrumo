@@ -198,5 +198,42 @@ registration). At the real CLI level error rendering works; the
 failures resolve when that campaign commits. Not actioned here -
 foreign uncommitted WIP.
 
-Wave 2 (dispatched): clusters C (auth coherence), D (ledger UX),
-E (modelo-work UX). Cluster F (`repair` detail) follows C.
+Wave 2 (landed, verified):
+
+- **NIF message** - `364994987`. The NIF/NIE/CIF refusal now names the
+  correct check letter and the corrected id; the highest-consensus
+  finding (4 personas) closed.
+- **Cluster C** - `1c8772ff4` (+ `a357d389f`). Auth coherence: M2
+  configure-without-file reports incomplete; M3 `auth status` and
+  `auth test` agree (verified byte-identical); M4 `configured`
+  requires the certificate path to resolve.
+- **Cluster D** - `84b66dd1c`. Ledger UX: M9 `ledger categories`
+  catalogue + `--category-id` validation; M11 provider list
+  discoverable; M12 silent-0 import explained; M8/M10 opaque
+  "run config repair" errors traced to `pydantic.ValidationError`
+  re-wrapping and given specific messages.
+- **Cluster E** - `ed6668763`. Modelo-work UX: M16 revision-id
+  discovery via `modelo describe`; M17 `modelo.work_unit.created`
+  event (roundtrip-tested); M18 binding-error guidance; M19 and the
+  overview wording made state-aware.
+- **Cluster F** - `425db5d60`. `config repair` now names every unset
+  key with its fix command and tags operator-fixable vs internal.
+- **Wizard-UX** - `235ec2bd3`. `profile create` non-interactive
+  refusal names both recovery paths; no `--quiet` precondition claim,
+  no internal tokens leaked.
+- **Residual polish P1-P6** - `6ee49857d`. `work revisions` positional
+  arg; "draft saved" confirmation; new `work revision` view verb;
+  overview active/discarded split; idempotent-create reuse signal;
+  full `ledger view` detail.
+
+## Outcome
+
+All seven remediation clusters plus the NIF, wizard-UX, and residual
+polish items are landed and verified. A consolidated independent code
+review returned the remediation **SOUND** - no blocker, no major, no
+cluster needing rework, test honesty intact throughout; its two MINOR
+test/doc items were actioned in `5e931815b`. Two inventory findings
+were transient concurrent-worktree state and resolved meanwhile; two
+persona observations were correctly downgraded on reproduction. The
+12-persona testimonial fleet -> inventory -> reproduce/triage ->
+fix-with-regression-tests -> independent-review cycle is complete.
