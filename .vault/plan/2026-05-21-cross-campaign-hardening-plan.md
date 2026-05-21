@@ -68,7 +68,7 @@ roundtrip / anti-tautology gaps.
 - [ ] `P05.S19` - PERS-4: unify `object_key` type across record/write and add identity roundtrip test; `src/aeat/adapters/persistence`.
 - [x] `P05.S20` - PERS-5: `RecoveryRecord` serialization anti-tautology proof (5850e665e) - re-verified: no file-Envelope path exists; added drop-field + mutate-field anti-tautology tests; 11 tests green; `src/aeat/adapters/persistence`.
 - [x] `P05.S21` - PERS-6: `peek_metadata` consistency test + on-disk schema-version-drift anti-tautology (50cd0b7fe); 12 secure-objects tests green; `src/aeat/adapters/persistence`.
-- [ ] `P05.S22` - PERS-7: concurrent-write serialization test for `SecureObjectRepository`; `src/aeat/adapters/persistence`.
+- [x] `P05.S22` - PERS-7: two-instance upsert-convergence test for `SecureObjectRepository` (45b383329) - two repos, one key, asserts single-row last-write-wins; 13 tests green; `src/aeat/adapters/persistence`.
 - [x] `P05.S23` - EXIM-2: fichero-BOE RESERVED-field anti-tautology proof (ed4b529ac) - corrupt-the-literal test, 9 roundtrip tests green; `src/aeat/adapters/outbound/aeat/export/_formats`.
 - [ ] `P05.S24` - EXIM-3: asset-ledger delete-field anti-tautology proof; `src/aeat/application/modelo`.
 
