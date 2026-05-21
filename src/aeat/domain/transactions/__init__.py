@@ -60,8 +60,11 @@ from ._models import (
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
+    derive_import_fingerprint,
+    derive_movement_day_key,
     derive_split_group_id,
     derive_transaction_id,
+    normalise_movement_reference,
 )
 from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ._service import (
@@ -147,11 +150,14 @@ __all__ = [
     "catalogue",
     "default_classification_choices",
     "default_prompt_spec",
+    "derive_import_fingerprint",
+    "derive_movement_day_key",
     "derive_split_group_id",
     "derive_transaction_id",
     "find_transaction",
     "is_classified",
     "link_invoice",
+    "normalise_movement_reference",
     "parse_response",
     "profiles_for_provider",
     "prompt_spec_with_every_spending_category",

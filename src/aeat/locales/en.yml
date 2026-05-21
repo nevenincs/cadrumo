@@ -111,6 +111,10 @@ aggregation:
         Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
+  source_mesh:
+    errors:
+      duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
+      duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
 application:
   auth:
     acquisition_lock:
@@ -333,12 +337,16 @@ cli:
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
-        app_help: AEAT IVA compensation wallet capture (read-only).
+        app_help: AEAT IVA compensation wallet capture (read-only; allows only own-name
+          representation and the guarded wallet read query).
+        as_of_year_help: Year used to age IVA compensation carry-forward lots.
         capture_history_help: Live-capture filed Modelo 303 history and persist secure
-          IVA compensation state.
-        history_help: List secure local IVA compensation history derived from filed
-          Modelo 303 captures.
-        pull_help: Live-fetch and persist AEAT's IVA compensation wallet.
+          IVA compensation state. No AEAT filing or wallet form choices are submitted.
+        history_help: List secure local IVA compensation history, carry-forward lots,
+          and persisted wallet authority decisions derived from Modelo 303 captures.
+        pull_help: Live-fetch and persist AEAT's IVA compensation wallet. The only
+          AEAT form action allowed is the guarded wallet read query; representation
+          gates only continue in own-name mode.
         taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
@@ -424,8 +432,8 @@ cli:
         missing_required_options: 'Missing required options: %{options}'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
-          periodic examples include 2026Q1 and 2026-01
+        period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for census
+          modelos (036) use alta, modificacion, or baja.'
         preview_help: Preview bindings with temporary overrides without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
@@ -441,9 +449,9 @@ cli:
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Period token used to resolve the modelo revision; for Modelo
-          036 use alta, modificacion, or baja; periodic examples include 2026Q1 and
-          2026-01
+        period_help: 'Period token used to resolve the modelo revision: 0A annual,
+          1T-4T quarters, 01-12 months; for census modelos (036) use alta, modificacion,
+          or baja.'
         period_token_invalid: '--period ''%{period}'' is not a valid period token
           for modelo %{modelo}. Valid tokens: %{tokens}.'
       export:
@@ -542,7 +550,9 @@ cli:
           with `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
-        casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
+        casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
+          accepts the casilla id, the registry number, or the BOE printed casilla
+          number shown by `aeat app modelo casillas`.
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
@@ -587,8 +597,8 @@ cli:
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
           needs.
-        period_help: Work-unit period token; for Modelo 036 use alta, modificacion,
-          or baja; periodic examples include Q1, 4T, 0A, and 01
+        period_help: 'Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months;
+          for census modelos (036) use alta, modificacion, or baja.'
         period_token_invalid: '--period ''%{token}'' is not a valid period token for
           modelo %{modelo}. --year and --period are composed separately: pass --year
           %{year} for the filing year and one of the declared period tokens for --period.
@@ -602,6 +612,7 @@ cli:
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
         relation_not_decimal: 'The --relation value for {key} is not a decimal: {value}.'
         rename_help: Update the display name of a work unit
+        result_summary_header: 'result summary  Modelo %{modelo} %{year} %{period}'
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT
         resume_workflow_run_id_help: 16-character workflow run id
@@ -1080,8 +1091,12 @@ cli:
       purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
         transaction
     categories:
+      family_column: family
       header: RECOGNISED LEDGER SPENDING CATEGORIES
       help: List the spending-category ids accepted by --category-id, grouped by family
+      id_column: category-id (pass this exact value)
+      usage_example: Pass the bare id, e.g. --category-id {example} (not a family-prefixed
+        or compound key).
     check:
       bucket_id_help: Bucket id to probe (defaults to the active profile bucket).
       help: Probe ledger transactions in the addressed bucket (defaults to the active
@@ -1089,6 +1104,11 @@ cli:
         touches. Local-only; never contacts AEAT.
     classify:
       actor_help: Operator name recorded on the bucket event
+      business_pct_help: Business-use share from 0 to 1; required with --classification
+        MIXED and rejected for any other classification
+      business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
+        classification. A BUSINESS or PERSONAL row is wholly business or wholly private;
+        drop --business-pct, or pass --classification MIXED.
       category_help: Spending or income category id
       classification_help: Business classification state for the transaction
       help: Classify one ledger transaction in the active profile bucket
@@ -1096,6 +1116,9 @@ cli:
       irpf_category_help: IRPF category for modelo calculations
       iva_amount_help: IVA amount
       iva_rate_help: IVA rate as a decimal, for example 0.21
+      mixed_requires_business_pct: Refused. --classification MIXED needs a business
+        share. Pass --business-pct with a value from 0 to 1, or classify the row as
+        BUSINESS or PERSONAL instead.
       taxable_base_help: Taxable base amount
     errors:
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
@@ -1112,8 +1135,9 @@ cli:
       id_prefix_too_long: Transaction id prefix %{prefix!r} is longer than 64 characters
         (a full SHA-256 digest).
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
-      unknown_category: Unrecognised --category-id {category!r}. Run `aeat app ledger
-        categories` to list the recognised spending-category ids.
+      unknown_category: Unrecognised --category-id {category!r}. Pass a bare category
+        id such as {example!r} - not a family-prefixed or compound key. Run `aeat
+        app ledger categories` to list every recognised id.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
     export:
@@ -1131,7 +1155,13 @@ cli:
       all_rows_skipped: 'No new entries were imported: all {skipped} parsed row(s)
         already exist in the ledger (duplicate transaction ids).'
       dry_run_help: Run the import in dry-run mode (without saving)
+      dry_run_preview: 'Dry run: no rows were saved. The counts above are a preview
+        of what a real import would add and skip.'
       help: Import bank statements or records into the accounting ledger
+      likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
+        already in the ledger but have a different description - a likely duplicate
+        of the same movement imported from another file or format. Review them with
+        `aeat app ledger list`.'
       no_rows_imported: 'No entries were imported: the file parsed but contained no
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
@@ -1191,6 +1221,7 @@ cli:
       taxable_base: Taxable base
       valid: Valid
       value_date: Value date
+      warning: Warning
       warnings: Warnings
       'yes': 'Yes'
     link:
@@ -1475,8 +1506,12 @@ cli:
         local draft state.'
       integrity_next: Run `aeat config repair` for detail. Do not quarantine rows
         unless you intentionally want to archive unreadable old local data.
-      invoices_empty: No business-operation records have been imported yet.
-      invoices_present: '%{count} business-operation record(s) are available for review.'
+      invoices_empty: No sales or purchase invoices are stored in the invoice register.
+        This is a separate store from your bank ledger - it does not count classified
+        ledger transactions. An empty invoice register is normal if you only use the
+        bank ledger.
+      invoices_present: '%{count} sales/purchase invoice(s) are stored in the invoice
+        register (a separate store from the bank ledger).'
       next_heading: What to type next
       next_import_command: '  aeat app ledger import <bank-statement.csv> --provider
         csv - import bank transactions.'

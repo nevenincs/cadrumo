@@ -144,15 +144,20 @@ def _purchase_invoice() -> Invoice:
     )
 
 
-def _raw_import_transaction(*, transaction_id: str = "provider-row-1") -> RawTransaction:
+def _raw_import_transaction(
+    *,
+    transaction_id: str = "provider-row-1",
+    amount: Decimal = Decimal("-80.00"),
+    description: str = "provider import row",
+) -> RawTransaction:
     return RawTransaction(
         transaction_id=transaction_id,
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
-        amount=Decimal("-80.00"),
+        amount=amount,
         currency="EUR",
         counterparty="Proveedor SL",
-        description="provider import row",
+        description=description,
         provenance=RawProvenance(
             source_path=Path(__file__),
             source_sha256="d" * 64,
@@ -161,7 +166,7 @@ def _raw_import_transaction(*, transaction_id: str = "provider-row-1") -> RawTra
             ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
-        raw_fields={"Concepto": "provider import row"},
+        raw_fields={"Concepto": description},
     )
 
 
@@ -402,7 +407,14 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
 def test_import_ledger_transactions_persists_rows_and_emits_import_events(secure_engine: Engine) -> None:
     transaction_repository, event_repository = _repositories(secure_engine)
     first_raw = _raw_import_transaction()
-    second_raw = _raw_import_transaction(transaction_id="provider-row-2")
+    # A genuinely distinct movement: import dedup keys on the movement
+    # identity (date + amount + normalised narrative), so the second
+    # row must differ in one of those — not merely in the provider id.
+    second_raw = _raw_import_transaction(
+        transaction_id="provider-row-2",
+        amount=Decimal("-48.40"),
+        description="second provider import row",
+    )
 
     first_import = import_ledger_transactions(
         bucket_id="bucket-a",
@@ -470,7 +482,10 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
 
     assert dry_run.dry_run is True
     assert dry_run.rows == 2
-    assert dry_run.imported == 0
+    # A dry run previews the real outcome: against an empty catalogue
+    # both parsed rows would be imported. A flat zero was the defect.
+    assert dry_run.imported == 2
+    assert dry_run.skipped == 0
     assert dry_run.source.sha256 is not None
     assert persisted.bucket_id == "bucket-a"
     assert persisted.imported == 2

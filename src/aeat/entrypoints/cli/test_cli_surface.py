@@ -156,7 +156,9 @@ def test_app_ledger_import_dry_run_does_not_persist(
     assert dry.exit_code == 0
     payload = json.loads(dry.output)
     assert payload["dry_run"] is True
-    assert payload["imported"] == 0
+    # The dry run previews what a real import would add - one row here -
+    # but persists nothing: the overview still reports zero transactions.
+    assert payload["imported"] == 1
     after = _invoke(["--format", "json", "app", "overview", "status"])
     assert json.loads(after.output)["transactions"] == 0
 

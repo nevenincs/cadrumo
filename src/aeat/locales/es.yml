@@ -121,6 +121,10 @@ aggregation:
         libro de Renta.
       period_mismatch: El periodo no coincide con el periodo esperado del libro de
         Renta.
+  source_mesh:
+    errors:
+      duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
+      duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
 application:
   auth:
     acquisition_lock:
@@ -358,13 +362,21 @@ cli:
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
-        app_help: Captura de la cartera de compensación de IVA de la AEAT (solo lectura).
+        app_help: Captura de la cartera de compensación de IVA de la AEAT (solo lectura;
+          solo permite representación en nombre propio y la consulta de lectura protegida
+          de cartera).
+        as_of_year_help: Ejercicio usado para calcular la antigüedad de los saldos
+          de compensación de IVA.
         capture_history_help: Captura en directo el historial de Modelo 303 presentados
-          y persiste el estado seguro de compensación de IVA.
-        history_help: Lista el historial local seguro de compensación de IVA derivado
-          de las capturas de Modelo 303 presentados.
+          y persiste el estado seguro de compensación de IVA. No se envian opciones
+          de presentación AEAT ni formularios de cartera.
+        history_help: Lista el historial local seguro de compensación de IVA, saldos
+          arrastrados y decisiones de autoridad de cartera persistidas derivadas de
+          las capturas de Modelo 303 presentados.
         pull_help: Descarga en directo y persiste la cartera de compensación de IVA
-          de la AEAT.
+          de la AEAT. La única acción de formulario AEAT permitida es la consulta
+          de lectura protegida de cartera; las puertas de representación solo continuan
+          en modo nombre propio.
         taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
       limit_help: Número máximo de filas a capturar
       modelo_help: Código de modelo
@@ -457,8 +469,8 @@ cli:
         missing_required_options: 'Faltan opciones obligatorias: %{options}'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
-        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
-          ejemplos periodicos incluyen 2026Q1 y 2026-01
+        period_help: 'Token de periodo: 0A anual, 1T-4T trimestres, 01-12 meses; para
+          modelos censales (036) usa alta, modificacion o baja.'
         preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
           el estado
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
@@ -479,9 +491,9 @@ cli:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Token de periodo para resolver la revision del modelo; para Modelo
-          036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y
-          2026-01
+        period_help: 'Token de periodo para resolver la revision del modelo: 0A anual,
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
+          o baja.'
         period_token_invalid: '--period ''%{period}'' no es un token de periodo válido
           para el modelo %{modelo}. Tokens válidos: %{tokens}.'
       export:
@@ -584,14 +596,15 @@ cli:
           prioridad.
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
-        calculate_saved: >-
-          Guardado como revisión de cálculo en borrador %{revision_id}
+        calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
           revisiones con `aeat app modelo work revisions %{work_unit_id}` y vuelve
-          a consultar esta con `aeat app modelo work revision %{revision_id}`.
+          a consultar esta con `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
-        casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible)
+        casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible). CASILLA
+          admite el id de casilla, el número del registro o el número de casilla impreso
+          en el BOE mostrados por `aeat app modelo casillas`.
         casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
         create_created: Nueva unidad de trabajo creada.
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
@@ -644,8 +657,8 @@ cli:
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
           el cálculo.
-        period_help: Token de periodo de la unidad; para Modelo 036 usa alta, modificacion
-          o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
+        period_help: 'Token de periodo de la unidad: 0A anual, 1T-4T trimestres, 01-12
+          meses; para modelos censales (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no es un token de periodo válido
           para el modelo %{modelo}. --year y --period se componen por separado: pasa
           --year %{year} para el ejercicio fiscal y uno de los tokens de periodo declarados
@@ -660,6 +673,7 @@ cli:
         relation_not_decimal: 'El valor de --relation para {key} no es un decimal:
           {value}.'
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
+        result_summary_header: 'resumen del resultado  Modelo %{modelo} %{year} %{period}'
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT
         resume_workflow_run_id_help: Id de ejecución de flujo de 16 caracteres
@@ -1153,9 +1167,13 @@ cli:
       purchase_invoice_evidence_help: Id de justificante de factura de compra que
         soporta el movimiento
     categories:
+      family_column: familia
       header: CATEGORIAS DE GASTO RECONOCIDAS DEL LIBRO
       help: Lista los identificadores de categoria aceptados por --category-id, agrupados
         por familia
+      id_column: category-id (pasa este valor exacto)
+      usage_example: Pasa el id sin prefijo, p. ej. --category-id {example} (no una
+        clave compuesta ni con prefijo de familia).
     check:
       bucket_id_help: Id del bucket a examinar (por defecto el bucket del perfil activo).
       help: Examina los movimientos del libro del bucket direccionado (por defecto
@@ -1164,6 +1182,11 @@ cli:
         AEAT.
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
+      business_pct_help: Porcentaje de uso profesional de 0 a 1; obligatorio con --classification
+        MIXED y rechazado para cualquier otra clasificación
+      business_pct_requires_mixed: Rechazado. --business-pct solo se aplica a una
+        clasificación MIXED. Una fila BUSINESS o PERSONAL es totalmente profesional
+        o totalmente privada; quita --business-pct o pasa --classification MIXED.
       category_help: Id de categoría de gasto o ingreso
       classification_help: Estado de clasificación profesional del movimiento
       help: Clasificar un movimiento del libro en el bucket del perfil activo
@@ -1171,6 +1194,9 @@ cli:
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
+      mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
+        profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
+        como BUSINESS o PERSONAL.
       taxable_base_help: Importe de base imponible
     errors:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
@@ -1188,8 +1214,9 @@ cli:
       id_prefix_too_long: El prefijo de id %{prefix!r} supera los 64 caracteres de
         un SHA-256 completo.
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
-      unknown_category: --category-id {category!r} no reconocido. Ejecuta `aeat app
-        ledger categories` para ver los identificadores de categoría reconocidos.
+      unknown_category: --category-id {category!r} no reconocido. Pasa un id de categoría
+        sin prefijo como {example!r}, no una clave compuesta ni con prefijo de familia.
+        Ejecuta `aeat app ledger categories` para ver todos los identificadores reconocidos.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     export:
@@ -1207,7 +1234,13 @@ cli:
       all_rows_skipped: 'No se importó ninguna entrada nueva: las {skipped} fila(s)
         analizadas ya existen en el libro (ids de transacción duplicados).'
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
+      dry_run_preview: 'Modo de prueba: no se guardó ninguna fila. Los recuentos anteriores
+        son una vista previa de lo que una importación real añadiría y omitiría.'
       help: Importar extractos bancarios o registros al libro contable
+      likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
+        una transacción que ya está en el libro pero tienen una descripción distinta:
+        un probable duplicado del mismo movimiento importado desde otro archivo o
+        formato. Revísalas con `aeat app ledger list`.'
       no_rows_imported: 'No se importó ninguna entrada: el archivo se analizó pero
         no contenía filas de datos. Un CSV bancario debe tener una fila de cabecera
         con una columna de fecha, importe y descripción seguida de al menos una fila
@@ -1268,6 +1301,7 @@ cli:
       taxable_base: Base imponible
       valid: Válido
       value_date: Fecha valor
+      warning: Aviso
       warnings: Avisos
       'yes': Sí
     link:
@@ -1547,9 +1581,12 @@ cli:
       integrity_next: Ejecuta `aeat config repair` para ver el detalle. No pongas
         filas en cuarentena salvo que quieras archivar deliberadamente datos locales
         antiguos ilegibles.
-      invoices_empty: Aun no se han importado operaciones de negocio.
-      invoices_present: '%{count} operacion(es) de negocio estan disponibles para
-        revisar.'
+      invoices_empty: No hay facturas emitidas ni recibidas en el registro de facturas.
+        Es un almacen distinto del libro bancario y no cuenta las transacciones del
+        libro clasificadas. Un registro de facturas vacio es normal si solo usas el
+        libro bancario.
+      invoices_present: '%{count} factura(s) emitida(s)/recibida(s) en el registro
+        de facturas (un almacen distinto del libro bancario).'
       next_heading: Que escribir ahora
       next_import_command: '  aeat app ledger import <extracto-bancario.csv> --provider
         csv - importar movimientos bancarios.'

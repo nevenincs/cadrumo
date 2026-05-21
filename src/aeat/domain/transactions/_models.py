@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+import unicodedata
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
@@ -59,6 +61,74 @@ def derive_transaction_id(raw: RawTransaction) -> str:
         sort_keys=True,
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+_REFERENCE_NOISE = re.compile(r"[^0-9a-z]+")
+
+
+def normalise_movement_reference(value: str) -> str:
+    """Return a provider-agnostic normalised form of a transaction narrative.
+
+    OFX and CSV exports of the same bank movement describe it with
+    different verbatim narratives (an OFX ``MEMO`` versus a CSV
+    reference column), and a later manual edit may further reword the
+    description. Cross-format and post-edit deduplication therefore
+    cannot key on the raw narrative.
+
+    This collapses a narrative to a stable comparison token: Unicode
+    is NFKD-decomposed and combining accents are dropped (``Ó`` -> ``o``),
+    the result is lower-cased, and every run of non-alphanumeric
+    characters is squeezed out. Two narratives that differ only in
+    accents, casing, punctuation, or whitespace map to the same token.
+    """
+
+    decomposed = unicodedata.normalize("NFKD", value)
+    stripped = "".join(char for char in decomposed if not unicodedata.combining(char))
+    return _REFERENCE_NOISE.sub("", stripped.lower())
+
+
+def derive_import_fingerprint(raw: RawTransaction) -> str:
+    """Return the stable cross-format import-dedup fingerprint for a raw row.
+
+    Unlike :func:`derive_transaction_id` — which keys on the provider
+    identifier and the verbatim narrative and therefore changes when a
+    transaction is edited or re-exported in a different file format —
+    this fingerprint keys only on the *movement identity* an operator
+    would recognise: the effective date, the signed amount, and the
+    normalised narrative (see :func:`normalise_movement_reference`).
+
+    The fingerprint is stamped onto :class:`Transaction` at import time
+    and carried verbatim through every later edit, so re-importing the
+    same statement (or the same movements exported as a different file
+    format) recognises the row as already present.
+    """
+
+    effective_value_date = raw.value_date or raw.booked_date
+    payload = json.dumps(
+        {
+            "amount": canonical_decimal_string(raw.amount),
+            "reference": normalise_movement_reference(raw.description),
+            "value_date": effective_value_date.isoformat(),
+        },
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def derive_movement_day_key(raw: RawTransaction) -> str:
+    """Return the coarse (effective date, amount) key for a raw row.
+
+    Two rows that share this key but not the full
+    :func:`derive_import_fingerprint` are *likely* — but not
+    confidently — the same movement: same day, same amount, divergent
+    narrative. The import path uses this to warn the operator about a
+    probable cross-format duplicate rather than silently importing it.
+    """
+
+    effective_value_date = raw.value_date or raw.booked_date
+    return f"{effective_value_date.isoformat()}:{canonical_decimal_string(raw.amount)}"
 
 
 def _json_default(value: object) -> str:
@@ -156,11 +226,24 @@ def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     return normalized
 
 
+_NON_NEGATIVE_DECIMAL_HINTS = {
+    "taxable_base": (
+        "taxable_base must be non-negative; it is the VAT-exclusive base amount, "
+        "and the income/expense direction is taken from the transaction itself, "
+        "not from the sign of this value"
+    ),
+    "iva_amount": "iva_amount must be non-negative; it is the IVA charged on the row, never a signed delta",
+    "iva_rate": "iva_rate must be non-negative; express the rate as a fraction such as 0.21",
+}
+
+
 def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
     """Reject negative monetary or percentage values when supplied."""
 
     if value is not None and value < Decimal("0"):
-        raise TransactionValidationError(f"{field_name} must be non-negative")
+        raise TransactionValidationError(
+            _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative")
+        )
     return value
 
 
@@ -219,7 +302,7 @@ def _coerce_transaction_temporal_fields(payload: dict[str, object]) -> None:
 
 def _normalize_transaction_optional_strings(payload: dict[str, object]) -> None:
     """Trim optional id strings and collapse empty strings to None."""
-    for key in ("source_import_id", "purchase_invoice_evidence_id"):
+    for key in ("import_fingerprint", "purchase_invoice_evidence_id"):
         value = payload.get(key)
         if not isinstance(value, str):
             continue
@@ -625,6 +708,12 @@ class Transaction(BaseModel):
             role within an N-way split cohort. ``None`` for transactions
             that have never been split.
         notes: Free-text notes.
+        import_fingerprint: Stable cross-format dedup fingerprint stamped
+            at import time (see :func:`derive_import_fingerprint`) and
+            carried verbatim through every later edit so re-imports of
+            the same statement — or the same movements in a different
+            file format — are recognised as already present. ``None``
+            for hand-entered rows that never came from an import.
         classified_at: Timezone-aware timestamp of the active decision
             (``None`` when never classified).
         classified_by: Classifier source string for the active decision.
@@ -661,7 +750,7 @@ class Transaction(BaseModel):
     lifecycle_lineage: tuple[TransactionLifecycleLineageEntry, ...] = ()
     split_lineage: SplitLineage | None = None
     notes: str = ""
-    source_import_id: str | None = None
+    import_fingerprint: str | None = None
     classified_at: datetime | None = None
     classified_by: str = Field(default="auto", min_length=1)
     classification_reason: str = ""
