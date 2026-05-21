@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 import click
 import pytest
@@ -148,6 +150,18 @@ class _ApexWorkflowOutcome:
     review_payload: dict[str, object]
 
 
+def _review_rows(outcome: _ApexWorkflowOutcome) -> list[Mapping[str, object]]:
+    """Return the typed review-queue rows from the JSON ``review_payload``."""
+    rows = outcome.review_payload["rows"]
+    assert isinstance(rows, list)
+    typed_rows: list[Mapping[str, object]] = []
+    for row in rows:
+        assert isinstance(row, Mapping)
+        # Review-queue rows decode from JSON as string-keyed objects.
+        typed_rows.append(cast("Mapping[str, object]", row))
+    return typed_rows
+
+
 def _drive_apex_workflow_round_trip(backend: Path) -> _ApexWorkflowOutcome:
     """Drive the canonical operator round-trip through the apex CLI.
 
@@ -262,7 +276,7 @@ def test_config_app_round_trip_overview_reports_one_transaction(_isolated_cli_ba
 
 def test_config_app_round_trip_review_queue_lists_imported_row(_isolated_cli_backend: Path) -> None:
     outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
-    assert len(outcome.review_payload["rows"]) == 1
+    assert len(_review_rows(outcome)) == 1
 
 
 _REVIEW_ROW_EXPECTATIONS = (
@@ -276,7 +290,7 @@ def test_config_app_round_trip_review_row_records_field(
     _isolated_cli_backend: Path, key: str, expected: str
 ) -> None:
     outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
-    assert outcome.review_payload["rows"][0][key] == expected
+    assert _review_rows(outcome)[0][key] == expected
 
 
 def test_config_app_round_trip_review_row_records_bucket_id(_isolated_cli_backend: Path) -> None:
@@ -288,19 +302,20 @@ def test_config_app_round_trip_review_row_records_bucket_id(_isolated_cli_backen
     """
 
     outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
-    assert outcome.review_payload["rows"][0]["bucket_id"] == outcome.status_payload["profile_id"]
+    assert _review_rows(outcome)[0]["bucket_id"] == outcome.status_payload["profile_id"]
 
 
 def test_config_app_round_trip_review_row_has_affected_object(_isolated_cli_backend: Path) -> None:
     outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
-    assert outcome.review_payload["rows"][0]["affected_object_id"]
+    assert _review_rows(outcome)[0]["affected_object_id"]
 
 
 def test_config_app_round_trip_review_row_canonical_next_command_is_review_verb(
     _isolated_cli_backend: Path,
 ) -> None:
     outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
-    canonical_next_command = outcome.review_payload["rows"][0]["canonical_next_command"]
+    canonical_next_command = _review_rows(outcome)[0]["canonical_next_command"]
+    assert isinstance(canonical_next_command, str)
     assert canonical_next_command.startswith("aeat app ledger review --id ")
     assert " edit " not in canonical_next_command
     assert "--set" not in canonical_next_command
