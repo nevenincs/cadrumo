@@ -53,9 +53,14 @@ against ``src/aeat/_data/registry/aeat/legal/*.toml`` — per
 ``.claude/rules/aeat-calculation-grounding.md``: applicability is
 regulatory data and must be registry-grounded, and every typed-ID
 reference must point at an existing registry entity. The seed table
-below covers only the modelos the operator personas exercise;
-per-entity / per-regime expansion to the full modelo set is
-intentionally deferred, marked at :data:`_SEED_COVERAGE_NOTICE`.
+below covers the core modelo set an ordinary taxpayer encounters —
+the IRPF Renta and pago-fraccionado modelos (100 / 130 / 131), the
+corporate IS modelos (200 / 202), the IVA modelos (303 / 390), the
+retención modelos and their annual companions (111 / 190, 115 / 180),
+the operaciones modelos (349 / 347), and the attribution-entity
+informational Modelo 184. Per-entity / per-regime expansion to the
+remaining registered modelos is intentionally deferred, marked at
+:data:`_SEED_COVERAGE_NOTICE`.
 """
 
 from __future__ import annotations
@@ -66,6 +71,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...domain.deadlines import (
     EntityType,
+    IrpfEstimationRegime,
     IrpfIncomeCategory,
     TaxpayerProfile,
 )
@@ -84,27 +90,6 @@ A modelo absent from :data:`_MODELO_APPLICABILITY_RULES` is reported
 with :attr:`ApplicabilityVerdict.INCOMPLETE` and a rationale pointing
 at the deferred expansion — never a confident guess.
 """
-
-_IS_RATE_SCHEDULE_BOUNDARY = (
-    "The IS rate schedule lives in the registry, not in this module. "
-    "The LIS Art. 29 tipo de gravamen and the entity-type rate dispatch "
-    "are registry data on Modelo 200 (the is.modelo-200.tipo-gravamen-* "
-    "parameters and the modelo-200-tipo-gravamen-por-forma-juridica "
-    "formula). This module routes a profile to its tax and derives "
-    "modelo applicability only; it does not encode rates or the "
-    "corporate calendar. The Modelo 202 deadline windows / corporate "
-    "filing calendar and the Modelo 202 modality (Art. 40.2 vs 40.3) "
-    "INCN-threshold selection remain registry-data gaps."
-)
-"""Explicit marker for the applicability / rate-schedule boundary.
-
-This module routes a profile to its *tax* (entity-type → IRPF / IS /
-attribution pass-through) and derives modelo applicability. The IS rate
-schedule and the corporate calendar are registry data, not application
-logic; this constant records the boundary so no rate shell is added
-here in violation of ``.claude/rules/aeat-source-hygiene.md``.
-"""
-
 
 class ApplicabilityVerdict(StrEnum):
     """Whether a modelo applies to a taxpayer, derived from its model.
@@ -133,6 +118,63 @@ class ApplicabilityVerdict(StrEnum):
     NOT_APPLICABLE = "not_applicable"
     ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
     INCOMPLETE = "incomplete"
+
+
+class PayerFact(StrEnum):
+    """A withholding-payer / trade fact a modelo's applicability needs.
+
+    Several modelos — Modelo 111 / 115 (retenciones e ingresos a cuenta)
+    and their annual companions Modelo 190 / 180, plus Modelo 349 / 347
+    (operaciones intracomunitarias / con terceros) — apply only when the
+    taxpayer performs a specific *fact* (pays salaries, pays rent subject
+    to retención, trades intracommunity, exceeds the third-party
+    threshold). The :class:`~aeat.domain.deadlines.TaxpayerProfile`
+    carries each as a plain boolean.
+
+    A plain boolean has no tri-state: a ``False`` value cannot be
+    distinguished from "not declared". Applicability therefore can only
+    be asserted in the positive direction — a ``True`` fact yields
+    :attr:`ApplicabilityVerdict.APPLICABLE`. A ``False`` fact yields
+    :attr:`ApplicabilityVerdict.INCOMPLETE` (the engine refuses to guess
+    a ``NOT_APPLICABLE`` it cannot positively justify), per the parent
+    ADR's safe default and ``.claude/rules/aeat-calculation-grounding.md``.
+
+    Attributes:
+        PAYS_WITHHELD_INCOME: The taxpayer pays salaries (rendimientos
+            del trabajo) or professional fees subject to retención —
+            the Modelo 111 / 190 trigger.
+        PAYS_RENT_WITH_RETENCION: The taxpayer pays alquiler de inmueble
+            urbano subject to retención — the Modelo 115 / 180 trigger.
+        TRADES_INTRACOMMUNITY: The taxpayer performs operaciones
+            intracomunitarias — the Modelo 349 trigger.
+        EXCEEDS_THIRD_PARTY_THRESHOLD: The taxpayer's third-party
+            transactions exceeded the Modelo 347 declaration threshold.
+    """
+
+    PAYS_WITHHELD_INCOME = "pays_withheld_income"
+    PAYS_RENT_WITH_RETENCION = "pays_rent_with_retencion"
+    TRADES_INTRACOMMUNITY = "trades_intracommunity"
+    EXCEEDS_THIRD_PARTY_THRESHOLD = "exceeds_third_party_threshold"
+
+
+def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
+    """Return whether ``profile`` positively declares the payer ``fact``.
+
+    Only a positive (``True``) declaration is a confident yes. The
+    :class:`~aeat.domain.deadlines.TaxpayerProfile` booleans default to
+    ``False``, which is indistinguishable from "not declared" — see
+    :class:`PayerFact`.
+    """
+
+    match fact:
+        case PayerFact.PAYS_WITHHELD_INCOME:
+            return profile.has_employees or profile.pays_professionals_with_retencion
+        case PayerFact.PAYS_RENT_WITH_RETENCION:
+            return profile.pays_rent_with_retencion
+        case PayerFact.TRADES_INTRACOMMUNITY:
+            return profile.does_intracomunitario
+        case PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD:
+            return profile.third_party_transactions_above_347_threshold
 
 
 class ModeloApplicability(BaseModel):
@@ -201,6 +243,21 @@ class ModeloApplicabilityRule(BaseModel):
             person without any of these categories gets
             ``NOT_APPLICABLE`` — this is the gate that excludes Modelo
             130 for a pure landlord.
+        required_estimation_regimes: The IRPF estimation regimes the
+            modelo applies to. Empty means the modelo does not gate on
+            the estimation regime. Non-empty means a natural person
+            whose ``irpf_estimation_regime`` is outside the set gets
+            ``NOT_APPLICABLE``, and an *undeclared* regime yields
+            ``INCOMPLETE``. This is the axis that splits Modelo 130
+            (estimación directa) from Modelo 131 (estimación objetiva):
+            the two are mutually exclusive on the regime.
+        required_payer_fact: The :class:`PayerFact` the modelo's
+            applicability depends on, or ``None`` when the modelo does
+            not gate on a payer fact. When set, a profile that
+            positively declares the fact gets ``APPLICABLE``; a profile
+            that does not gets ``INCOMPLETE`` — the underlying boolean
+            has no tri-state, so the engine cannot positively justify a
+            ``NOT_APPLICABLE`` (see :class:`PayerFact`).
         applicable_reason: Operator-facing prose for the
             ``APPLICABLE`` verdict.
         not_applicable_reason: Operator-facing prose for the
@@ -225,6 +282,8 @@ class ModeloApplicabilityRule(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     applicable_entity_types: frozenset[EntityType] = Field(min_length=1)
     required_income_categories: frozenset[IrpfIncomeCategory] = frozenset()
+    required_estimation_regimes: frozenset[IrpfEstimationRegime] = frozenset()
+    required_payer_fact: PayerFact | None = None
     applicable_reason: str = Field(min_length=1)
     not_applicable_reason: str = Field(min_length=1)
     cuota_bearing: bool = False
@@ -238,7 +297,8 @@ class ModeloApplicabilityRule(BaseModel):
         ``ATTRIBUTION_PASS_THROUGH`` verdict when the modelo is a cuota
         self-assessment asked of an attribution entity; otherwise an
         ``APPLICABLE`` / ``NOT_APPLICABLE`` verdict derived from the
-        entity-type and income-category axes.
+        entity-type, income-category, estimation-regime, and
+        payer-fact axes.
         """
 
         if profile.entity_type is None:
@@ -260,28 +320,57 @@ class ModeloApplicabilityRule(BaseModel):
                     reason=_ATTRIBUTION_PASS_THROUGH_REASON,
                     legal_refs=_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
                 )
-            return ModeloApplicability(
-                modelo=self.modelo,
-                verdict=ApplicabilityVerdict.NOT_APPLICABLE,
-                reason=self.not_applicable_reason,
-                legal_refs=self.legal_refs,
-            )
-        # The entity type matches. A natural-person modelo that gates on
-        # income category needs at least one declared category to match.
-        if self.required_income_categories:
-            if not profile.irpf_income_categories:
-                return _incomplete_applicability(self.modelo)
-            if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
-                return ModeloApplicability(
-                    modelo=self.modelo,
-                    verdict=ApplicabilityVerdict.NOT_APPLICABLE,
-                    reason=self.not_applicable_reason,
-                    legal_refs=self.legal_refs,
-                )
+            return self._not_applicable()
+        # The income-category and estimation-regime axes are
+        # natural-person facts: a legal entity carries neither (income
+        # categories and the IRPF estimation regime only describe a
+        # persona física). A legal entity that matched the entity-type
+        # gate of a modelo applicable to it (e.g. Modelo 303 / 390) is
+        # not re-gated on those axes — its applicability is settled by
+        # the entity type.
+        if profile.entity_type is EntityType.NATURAL_PERSON:
+            # A natural-person modelo that gates on income category needs
+            # at least one declared category to match.
+            if self.required_income_categories:
+                if not profile.irpf_income_categories:
+                    return _incomplete_applicability(self.modelo)
+                if profile.irpf_income_categories.isdisjoint(
+                    self.required_income_categories
+                ):
+                    return self._not_applicable()
+            # The estimation-regime axis splits Modelo 130 (estimación
+            # directa) from Modelo 131 (estimación objetiva). An
+            # undeclared regime cannot be decided — the engine refuses to
+            # guess; a regime outside the rule's set is a positive
+            # exclusion.
+            if self.required_estimation_regimes:
+                regime = profile.irpf_estimation_regime
+                if regime is None:
+                    return _incomplete_applicability(self.modelo)
+                if regime not in self.required_estimation_regimes:
+                    return self._not_applicable()
+        # The payer-fact axis (Modelo 111 / 115 / 349 / 347) can only be
+        # asserted in the positive direction — the underlying boolean has
+        # no tri-state, so an absent fact yields INCOMPLETE rather than a
+        # NOT_APPLICABLE the engine cannot positively justify.
+        if self.required_payer_fact is not None and not _payer_fact_holds(
+            profile, self.required_payer_fact
+        ):
+            return _undetermined_applicability(self.modelo)
         return ModeloApplicability(
             modelo=self.modelo,
             verdict=ApplicabilityVerdict.APPLICABLE,
             reason=self.applicable_reason,
+            legal_refs=self.legal_refs,
+        )
+
+    def _not_applicable(self) -> ModeloApplicability:
+        """Return the ``NOT_APPLICABLE`` applicability for this rule."""
+
+        return ModeloApplicability(
+            modelo=self.modelo,
+            verdict=ApplicabilityVerdict.NOT_APPLICABLE,
+            reason=self.not_applicable_reason,
             legal_refs=self.legal_refs,
         )
 
@@ -354,6 +443,26 @@ about the operator. It must never tell a declared operator to declare
 their taxpayer type.
 """
 
+_INCOMPLETE_UNDETERMINED_REASON = (
+    "No se puede determinar la aplicabilidad de este modelo desde el modelo "
+    "de contribuyente declarado: depende de un hecho que el perfil no "
+    "expresa con certeza (si paga retribuciones o alquileres sujetos a "
+    "retención, o si realiza operaciones intracomunitarias o con terceros). "
+    "El modelo solo se afirma aplicable cuando ese hecho se declara "
+    "positivamente; en otro caso no se conjetura una obligación."
+)
+"""``INCOMPLETE`` rationale for a *payer fact the profile cannot decide*.
+
+Used by :func:`_undetermined_applicability` when a modelo gates on a
+:class:`PayerFact` (Modelo 111 / 115 / 349 / 347) and the profile does
+not positively declare it. The underlying boolean has no tri-state, so
+a ``False`` value is indistinguishable from "not declared" — the engine
+refuses to guess a ``NOT_APPLICABLE`` it cannot positively justify.
+This is structurally distinct from the *undeclared taxpayer model*
+rationale: the entity type and regime can be fully declared and this
+verdict still holds.
+"""
+
 
 def _incomplete_applicability(
     modelo: str,
@@ -379,6 +488,30 @@ def _incomplete_applicability(
         modelo=modelo,
         verdict=ApplicabilityVerdict.INCOMPLETE,
         reason=reason,
+        legal_refs=_INCOMPLETE_LEGAL_REFS,
+    )
+
+
+def _undetermined_applicability(modelo: str) -> ModeloApplicability:
+    """Return the ``INCOMPLETE`` applicability for an *undecidable* fact.
+
+    Used when a modelo gates on a :class:`PayerFact` (Modelo
+    111 / 115 / 349 / 347) and the profile does not positively declare
+    the fact. The taxpayer model itself may be fully declared — the
+    entity type and regime are known — but the payer fact has no
+    tri-state, so the engine refuses to guess a ``NOT_APPLICABLE`` it
+    cannot positively justify. The rationale is distinct from the
+    *undeclared taxpayer model* one: it never tells a declared operator
+    to declare their taxpayer type.
+
+    Args:
+        modelo: The AEAT modelo identifier the verdict decides.
+    """
+
+    return ModeloApplicability(
+        modelo=modelo,
+        verdict=ApplicabilityVerdict.INCOMPLETE,
+        reason=_INCOMPLETE_UNDETERMINED_REASON,
         legal_refs=_INCOMPLETE_LEGAL_REFS,
     )
 
@@ -427,35 +560,302 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         # obliga a la persona física a presentar la Renta.
         legal_refs=("ley-35-2006:art-99", "ley-35-2006:art-17"),
     ),
-    # Modelo 130 — pago fraccionado del IRPF, estimación directa. Triggered
-    # ONLY by the rendimientos de actividades económicas income category
-    # (LIRPF Arts. 27-32). A natural person whose only income is capital
-    # inmobiliario (a pure landlord), trabajo, pensión, etc. has no
-    # actividad económica and therefore no Modelo 130 obligation. A legal
-    # entity never files Modelo 130.
+    # Modelo 130 — pago fraccionado del IRPF, estimación DIRECTA. Triggered
+    # by the rendimientos de actividades económicas income category (LIRPF
+    # Arts. 27-32) ONLY when the activity is in estimación directa (normal
+    # o simplificada). An activity in estimación objetiva (módulos) files
+    # Modelo 131 instead — the two are mutually exclusive on the regime.
+    # A natural person whose only income is capital inmobiliario (a pure
+    # landlord), trabajo, pensión, etc. has no actividad económica and
+    # therefore no Modelo 130. A legal entity never files Modelo 130.
     "130": ModeloApplicabilityRule(
         modelo="130",
         applicable_entity_types=_NATURAL_PERSON,
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        required_estimation_regimes=frozenset(
+            {
+                IrpfEstimationRegime.DIRECTA_NORMAL,
+                IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
+            }
+        ),
         applicable_reason=(
             "Modelo 130 (pago fraccionado del IRPF): la persona física "
-            "declara rendimientos de actividades económicas, que generan "
-            "la obligación del pago fraccionado en estimación directa."
+            "declara rendimientos de actividades económicas en estimación "
+            "directa, que generan la obligación del pago fraccionado."
         ),
         not_applicable_reason=(
-            "Modelo 130 no aplica: el pago fraccionado del IRPF solo "
-            "corresponde a la persona física que obtiene rendimientos de "
-            "actividades económicas. El tipo de contribuyente declarado no "
-            "obtiene rendimientos de actividades económicas."
+            "Modelo 130 no aplica: el pago fraccionado en estimación "
+            "directa solo corresponde a la persona física que obtiene "
+            "rendimientos de actividades económicas determinados por ese "
+            "método. Una actividad en estimación objetiva presenta el "
+            "Modelo 131."
         ),
         # Modelo 130 is an IRPF pago-fraccionado cuota self-assessment:
         # an attribution entity asked about it gets the pass-through
         # verdict — it runs no IRPF cuota of its own.
         cuota_bearing=True,
-        # LIRPF art. 27 — definición de los rendimientos de actividades
-        # económicas, la categoría de renta que dispara el Modelo 130;
-        # art. 99 — pagos fraccionados como pagos a cuenta del IRPF.
-        legal_refs=("ley-35-2006:art-27", "ley-35-2006:art-99"),
+        # RD 439/2007 art. 110 — pago fraccionado del IRPF en estimación
+        # directa, importe y cálculo; Orden EHA/672/2007 art. 1 —
+        # aprobación del Modelo 130; LIRPF art. 99 — pagos fraccionados
+        # como pagos a cuenta del IRPF.
+        legal_refs=(
+            "rd-439-2007:art-110",
+            "orden-eha-672-2007:art-1",
+            "ley-35-2006:art-99",
+        ),
+    ),
+    # Modelo 131 — pago fraccionado del IRPF, estimación OBJETIVA (módulos).
+    # Triggered by the rendimientos de actividades económicas income
+    # category ONLY when the activity is determined under estimación
+    # objetiva. This is the regime counterpart of Modelo 130: an activity
+    # in estimación directa files Modelo 130, never Modelo 131. A legal
+    # entity never files Modelo 131. Research §2.1.
+    "131": ModeloApplicabilityRule(
+        modelo="131",
+        applicable_entity_types=_NATURAL_PERSON,
+        required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        required_estimation_regimes=frozenset({IrpfEstimationRegime.OBJETIVA}),
+        applicable_reason=(
+            "Modelo 131 (pago fraccionado del IRPF): la persona física "
+            "declara rendimientos de actividades económicas en estimación "
+            "objetiva (módulos), que generan la obligación del pago "
+            "fraccionado por ese método."
+        ),
+        not_applicable_reason=(
+            "Modelo 131 no aplica: el pago fraccionado en estimación "
+            "objetiva solo corresponde a la persona física cuya actividad "
+            "económica se determina por el método de módulos. Una "
+            "actividad en estimación directa presenta el Modelo 130."
+        ),
+        # Modelo 131 is an IRPF pago-fraccionado cuota self-assessment:
+        # an attribution entity asked about it gets the pass-through
+        # verdict.
+        cuota_bearing=True,
+        # RD 439/2007 art. 110 — pago fraccionado del IRPF, importe y
+        # cálculo; Orden EHA/672/2007 art. 1 — aprobación del Modelo 131
+        # junto con el 130; LIRPF art. 99 — pagos fraccionados como pagos
+        # a cuenta del IRPF.
+        legal_refs=(
+            "rd-439-2007:art-110",
+            "orden-eha-672-2007:art-1",
+            "ley-35-2006:art-99",
+        ),
+    ),
+    # Modelo 111 — autoliquidación de retenciones e ingresos a cuenta del
+    # IRPF (rendimientos del trabajo / actividades profesionales). It is
+    # the PAYER's obligation: a taxpayer — a natural person with actividad
+    # económica or a legal entity — who pays salaries or withholding-
+    # subject professional fees. Whether the taxpayer pays such income is
+    # a payer fact the three-axis model cannot decide on its own; a
+    # profile that does not positively declare it yields INCOMPLETE rather
+    # than a guessed NOT_APPLICABLE. Research §1.1.
+    "111": ModeloApplicabilityRule(
+        modelo="111",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
+        applicable_reason=(
+            "Modelo 111 (retenciones e ingresos a cuenta del IRPF): el "
+            "contribuyente paga rendimientos del trabajo o de actividades "
+            "profesionales sujetos a retención y autoliquida las "
+            "retenciones practicadas."
+        ),
+        not_applicable_reason=(
+            "Modelo 111 no aplica: la autoliquidación de retenciones del "
+            "IRPF solo corresponde a quien paga rendimientos sujetos a "
+            "retención."
+        ),
+        # LIRPF art. 99 — obligación de practicar retenciones e ingresos a
+        # cuenta; RD 439/2007 art. 108 — declaración e ingreso de las
+        # retenciones (Modelo 111); Orden EHA/586/2011 art. 1 — aprobación
+        # del Modelo 111.
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "orden-eha-586-2011:art-1",
+        ),
+    ),
+    # Modelo 115 — autoliquidación de retenciones por arrendamiento de
+    # inmuebles urbanos. The PAYER's obligation: a taxpayer who pays rent
+    # subject to retención. Whether the taxpayer pays such rent is a payer
+    # fact the three-axis model cannot decide alone; an undeclared fact
+    # yields INCOMPLETE.
+    "115": ModeloApplicabilityRule(
+        modelo="115",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 115 (retenciones por arrendamiento de inmuebles "
+            "urbanos): el contribuyente paga alquiler de inmueble urbano "
+            "sujeto a retención y autoliquida las retenciones practicadas."
+        ),
+        not_applicable_reason=(
+            "Modelo 115 no aplica: la autoliquidación de retenciones por "
+            "arrendamiento solo corresponde a quien paga alquileres "
+            "sujetos a retención."
+        ),
+        # LIRPF art. 99 — obligación de practicar retenciones; RD 439/2007
+        # art. 100 — retención sobre rendimientos del arrendamiento de
+        # inmuebles urbanos; RD 439/2007 art. 108 — declaración e ingreso
+        # de las retenciones (Modelo 115).
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-100",
+            "rd-439-2007:art-108",
+        ),
+    ),
+    # Modelo 190 — resumen anual de retenciones e ingresos a cuenta del
+    # IRPF sobre rendimientos del trabajo y de actividades económicas. The
+    # annual companion to Modelo 111: a taxpayer who files Modelo 111
+    # files Modelo 190. Gated on the same payer fact as Modelo 111.
+    "190": ModeloApplicabilityRule(
+        modelo="190",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
+        applicable_reason=(
+            "Modelo 190 (resumen anual de retenciones del IRPF): el "
+            "contribuyente que paga rendimientos del trabajo o de "
+            "actividades profesionales sujetos a retención presenta el "
+            "resumen anual de las retenciones declaradas en el Modelo 111."
+        ),
+        not_applicable_reason=(
+            "Modelo 190 no aplica: el resumen anual de retenciones del "
+            "IRPF solo corresponde a quien paga rendimientos sujetos a "
+            "retención."
+        ),
+        # LIRPF art. 99 — obligación de retener; RD 439/2007 art. 108 —
+        # resumen anual de las retenciones e ingresos a cuenta; RD
+        # 439/2007 art. 109 — declaración informativa anual (Modelo 190).
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "rd-439-2007:art-109",
+        ),
+    ),
+    # Modelo 180 — resumen anual de retenciones e ingresos a cuenta del
+    # IRPF sobre rendimientos del arrendamiento de inmuebles urbanos. The
+    # annual companion to Modelo 115: gated on the same payer fact.
+    "180": ModeloApplicabilityRule(
+        modelo="180",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 180 (resumen anual de retenciones por arrendamiento): "
+            "el contribuyente que paga alquiler de inmueble urbano sujeto "
+            "a retención presenta el resumen anual de las retenciones "
+            "declaradas en el Modelo 115."
+        ),
+        not_applicable_reason=(
+            "Modelo 180 no aplica: el resumen anual de retenciones por "
+            "arrendamiento solo corresponde a quien paga alquileres "
+            "sujetos a retención."
+        ),
+        # LIRPF art. 99 — obligación de retener; RD 439/2007 art. 100 —
+        # retención sobre el arrendamiento de inmuebles urbanos; RD
+        # 439/2007 art. 109 — declaración informativa anual (Modelo 180).
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-100",
+            "rd-439-2007:art-109",
+        ),
+    ),
+    # Modelo 349 — declaración recapitulativa de operaciones
+    # intracomunitarias. Applies to a taxpayer — a natural person with
+    # actividad económica or a legal entity — who performs operaciones
+    # intracomunitarias. Whether the taxpayer trades intracommunity is a
+    # payer fact the three-axis model cannot decide alone; an undeclared
+    # fact yields INCOMPLETE. Research §3.3.
+    "349": ModeloApplicabilityRule(
+        modelo="349",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_payer_fact=PayerFact.TRADES_INTRACOMMUNITY,
+        applicable_reason=(
+            "Modelo 349 (declaración recapitulativa de operaciones "
+            "intracomunitarias): el contribuyente realiza operaciones "
+            "intracomunitarias y presenta su declaración recapitulativa."
+        ),
+        not_applicable_reason=(
+            "Modelo 349 no aplica: la declaración recapitulativa solo "
+            "corresponde a quien realiza operaciones intracomunitarias."
+        ),
+        # Orden EHA/769/2010 art. 1 — aprobación del Modelo 349; Orden
+        # HAC/174/2020 art. 1 — modificación del Modelo 349; LGT art. 93 —
+        # obligación de información sobre operaciones con terceros.
+        legal_refs=(
+            "orden-eha-769-2010:art-1",
+            "orden-hac-174-2020:art-1",
+            "ley-58-2003:art-93",
+        ),
+    ),
+    # Modelo 347 — declaración anual de operaciones con terceras personas.
+    # Applies to a taxpayer whose third-party transactions exceeded the
+    # declaration threshold. Whether the threshold is exceeded is a payer
+    # fact the three-axis model cannot decide alone; an undeclared fact
+    # yields INCOMPLETE.
+    "347": ModeloApplicabilityRule(
+        modelo="347",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_payer_fact=PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD,
+        applicable_reason=(
+            "Modelo 347 (declaración anual de operaciones con terceras "
+            "personas): las operaciones del contribuyente con un tercero "
+            "superan el umbral de declaración y debe presentar la "
+            "declaración informativa anual."
+        ),
+        not_applicable_reason=(
+            "Modelo 347 no aplica: la declaración de operaciones con "
+            "terceros solo corresponde a quien supera el umbral de "
+            "operaciones declarable."
+        ),
+        # Orden EHA/3012/2008 art. 1 — aprobación del Modelo 347 y
+        # obligados a presentarlo; Orden EHA/3012/2008 art. 10 — contenido
+        # de la declaración; LGT art. 93 — obligación de información sobre
+        # operaciones con terceros.
+        legal_refs=(
+            "orden-eha-3012-2008:art-1",
+            "orden-eha-3012-2008:art-10",
+            "ley-58-2003:art-93",
+        ),
+    ),
+    # Modelo 390 — declaración-resumen anual del IVA. The annual companion
+    # to Modelo 303: a taxpayer carrying on an IVA-subject actividad
+    # económica — a natural person with actividad económica or a legal
+    # entity — files it. Same applicability gate as Modelo 303. (SII
+    # filers are exempt from Modelo 390; that suppression is a deferred
+    # expansion gated on the SII enrolment axis — research §3.1.)
+    "390": ModeloApplicabilityRule(
+        modelo="390",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        applicable_reason=(
+            "Modelo 390 (resumen anual del IVA): el contribuyente realiza "
+            "una actividad económica sujeta al IVA y presenta la "
+            "declaración-resumen anual del impuesto."
+        ),
+        not_applicable_reason=(
+            "Modelo 390 no aplica: sin una actividad económica sujeta al "
+            "IVA no hay declaración-resumen anual del impuesto."
+        ),
+        # RD 1624/1992 art. 71 — declaraciones-liquidaciones del IVA y la
+        # declaración-resumen anual; Orden EHA/3111/2009 art. 1 —
+        # aprobación del Modelo 390.
+        legal_refs=(
+            "rd-1624-1992:art-71",
+            "orden-eha-3111-2009:art-1",
+        ),
     ),
     # Modelo 303 — autoliquidación periódica del IVA. Triggered by carrying
     # on an actividad económica subject to IVA: a natural person with
@@ -711,6 +1111,7 @@ __all__ = [
     "ApplicabilityVerdict",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
+    "PayerFact",
     "TaxRoute",
     "derive_modelo_applicability",
     "derive_tax_route",
