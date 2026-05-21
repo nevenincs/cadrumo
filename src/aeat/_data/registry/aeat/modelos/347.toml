@@ -289,6 +289,12 @@ closes_on = 2027-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-347-2008-form"]
 
+# PROVISIONAL: label_pattern values in this profile were derived from registry
+# casilla LABEL fields (aeat-dr-347-2025 diseño de registro), NOT verified
+# against a real AEAT printed-declaración-form PDF specimen. The diseño de
+# registro is an EDI record-layout spec; it cannot ground named_label patterns.
+# Verification is pending a W05 round-trip parse test against a real M347
+# printed-form PDF. Until that test passes, these patterns are unconfirmed guesses.
 [[revisions."2008-y-siguientes".extraction_profiles]]
 id = "modelo-347-declaracion-pdf"
 surface = "declaracion_pdf"

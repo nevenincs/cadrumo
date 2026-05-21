@@ -154,6 +154,12 @@ profile_condition_mode = "all"
 legal_refs = ["orden-hac-2572-2003:apartado-6", "rdl-2-2004:art-90"]
 source_refs = ["boe-modelo-840-2003-form"]
 
+# PROVISIONAL: label_pattern values in this profile were derived from registry
+# casilla LABEL fields (aeat-dr-840 / boe-modelo-840-2003-form diseño PDF), NOT
+# verified against a real AEAT printed-declaración-form PDF specimen. The diseño
+# de registro is an EDI record-layout spec; it cannot ground named_label patterns.
+# Verification is pending a W05 round-trip parse test against a real M840
+# printed-form PDF. Until that test passes, these patterns are unconfirmed guesses.
 [[revisions."2003-y-siguientes".extraction_profiles]]
 id = "modelo-840-declaracion-pdf"
 surface = "declaracion_pdf"

@@ -31,6 +31,12 @@ Wired into the `modelo-347-informative` construct.
 Source grounding: `aeat-dr-347-2025`, `aeat-modelo-347-procedure`
 (Diseño PDFs 2025 + procedure HTML in corpus).
 
+**PROVISIONAL LABEL PATTERNS**: The corpus artefacts are diseño de registro files
+(EDI record-layout specs) and procedure HTML, NOT a real printed-declaración-form PDF
+specimen. The `label_pattern` values were derived from registry casilla LABEL fields
+and are unverified guesses. Verification requires a W05 round-trip parse test against
+a real M347 printed-form PDF. No such PDF exists in the corpus yet.
+
 ## Commit
 
 `3af7ea87e` — W04: author named_label declaracion_pdf profiles for M036, M347, M369, M840

@@ -361,6 +361,12 @@ closes_on = 2026-04-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form"]
 
+# PROVISIONAL: label_pattern values in this profile were derived from registry
+# casilla LABEL fields (aeat-dr-369-2021 diseño de registro), NOT verified
+# against a real AEAT printed-declaración-form PDF specimen. The diseño de
+# registro is an EDI record-layout spec; it cannot ground named_label patterns.
+# Verification is pending a W05 round-trip parse test against a real M369
+# printed-form PDF. Until that test passes, these patterns are unconfirmed guesses.
 [[revisions."esquema-union".extraction_profiles]]
 id = "modelo-369-union-declaracion-pdf"
 surface = "declaracion_pdf"
