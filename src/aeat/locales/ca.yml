@@ -606,6 +606,8 @@ cli:
         view_help: Mostrar un informe de verificació per id
       work:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
+        allow_not_applicable_help: Crea la unitat de treball encara que el model no
+          s'apliqui al tipus de contribuent del perfil actiu.
         amend_help: Construir una declaració complementària sobre una declaració presentada
           externament. Requereix un filing record amb evidència oficial importada
           de l'AEAT
@@ -636,6 +638,9 @@ cli:
         create_created: Nova unitat de treball creada.
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
+        create_not_applicable_refused: 'El model %{modelo} no s''aplica al tipus de
+          contribuent del perfil actiu: %{reason} Si teniu un motiu per crear la unitat
+          de treball igualment, torneu a executar l''ordre amb --allow-not-applicable.'
         create_reused: S'ha retornat la unitat de treball existent (idempotent sobre
           model/exercici/període/revisió); no s'ha creat res nou. Reanomena-la amb
           `aeat app modelo work rename`.

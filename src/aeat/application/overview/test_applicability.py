@@ -13,9 +13,10 @@ applicability research grounding, not hand-invented:
 * An autónomo en estimación directa → 130 / 303 (research §1.1, §2.1 —
   the unchanged-by-design persona).
 * A sociedad limitada → 200 / 202, NOT 100 / 130 (research §1.2).
-* An attribution entity → ``not_applicable`` for 100 / 130 / 200 with
-  entity-type-neutral rationale (it is neither persona física nor
-  entidad jurídica).
+* An attribution entity → ``attribution_pass_through`` for the cuota
+  modelos 100 / 130 / 200 / 202 (it runs no IS and no IRPF cuota of
+  its own) and ``applicable`` for its own informational Modelo 184
+  (corporate-entity ADR §2).
 * An undeclared profile → ``incomplete`` with the undeclared rationale.
 * A modelo with no seed rule → ``incomplete`` with the un-ruled
   rationale, distinct from the undeclared one even on a declared
@@ -39,12 +40,15 @@ from aeat.domain.deadlines._models import (
 )
 
 from ._applicability import (
+    _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
     _INCOMPLETE_LEGAL_REFS,
     _INCOMPLETE_UNDECLARED_REASON,
     _INCOMPLETE_UNRULED_REASON,
     _MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,
+    TaxRoute,
     derive_modelo_applicability,
+    derive_tax_route,
     taxpayer_model_is_declared,
 )
 
@@ -382,36 +386,104 @@ def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_attribution_entity_modelo_200_reason_not_persona_fisica() -> None:
-    """An attribution entity (comunidad de bienes / sociedad civil) is
-    neither persona física nor entidad jurídica. Its Modelo 200
-    not-applicable rationale must not mislabel it a persona física."""
+def test_attribution_entity_cuota_modelos_are_pass_through() -> None:
+    """An attribution entity asked about a cuota self-assessment
+    (Modelo 100 / 130 / 200 / 202) gets the ATTRIBUTION_PASS_THROUGH
+    verdict — it runs no IS and no IRPF cuota of its own. This is the
+    honest answer to 'what is my cuota': none, the income is taxed in
+    the members' returns (corporate-entity ADR §2)."""
+
+    profile = _attribution_entity()
+    for modelo in ("100", "130", "200", "202"):
+        result = derive_modelo_applicability(profile, modelo)
+        assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH, modelo
+        # A pass-through verdict is not an applicable obligation.
+        assert result.applicable is False, modelo
+
+
+def test_attribution_entity_pass_through_reason_is_honest() -> None:
+    """The pass-through rationale states the entity runs no cuota of its
+    own and the income is taxed in the members' returns — not a generic
+    'modelo does not apply' line."""
 
     result = derive_modelo_applicability(_attribution_entity(), "200")
+    assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH
+    assert "atribución de rentas" in result.reason
+    assert "cada miembro" in result.reason
+    # The pass-through verdict is grounded in the LIRPF attribution
+    # articles, not the modelo-specific IS / IRPF refs.
+    assert result.legal_refs == _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS
+
+
+def test_attribution_entity_owes_modelo_184() -> None:
+    """Modelo 184 (declaración informativa de atribución de rentas) is
+    the attribution entity's OWN obligation — applicable, not a
+    pass-through (corporate-entity ADR §2)."""
+
+    result = derive_modelo_applicability(_attribution_entity(), "184")
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    assert result.applicable is True
+    assert result.legal_refs
+
+
+def test_natural_person_does_not_owe_modelo_184() -> None:
+    """Modelo 184 is informational, not cuota-bearing: a natural person
+    asked about it gets a plain NOT_APPLICABLE, never a pass-through."""
+
+    result = derive_modelo_applicability(_landlord(), "184")
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-    assert "persona física" not in result.reason
-    assert "Impuesto sobre Sociedades" in result.reason
+    assert result.applicable is False
+
+
+def test_legal_entity_does_not_owe_modelo_184() -> None:
+    """A sociedad limitada is not an attribution entity: Modelo 184
+    does not apply, and the verdict is a plain NOT_APPLICABLE."""
+
+    result = derive_modelo_applicability(_sociedad_limitada(), "184")
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
 def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
-    """Modelo 100's not-applicable rationale for an attribution entity
-    must not assert the excluded taxpayer is an entidad jurídica or
-    otherwise mislabel it."""
+    """The Modelo 100 pass-through rationale for an attribution entity
+    must not mislabel it a persona física or an entidad jurídica."""
 
     result = derive_modelo_applicability(_attribution_entity(), "100")
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH
+    assert "persona física" not in result.reason
     assert "entidad jurídica" not in result.reason
-    assert "personas físicas" in result.reason
 
 
-def test_attribution_entity_modelo_130_reason_neutral() -> None:
-    """Modelo 130's not-applicable rationale for an attribution entity
-    must not assert it earns IRPF income categories it cannot have."""
+# ---------------------------------------------------------------------
+# Tax-routing contract — entity_type selects the tax (ADR §4)
+# ---------------------------------------------------------------------
 
-    result = derive_modelo_applicability(_attribution_entity(), "130")
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-    assert "capital inmobiliario" not in result.reason
-    assert "actividades económicas" in result.reason
+
+def test_natural_person_routes_to_irpf() -> None:
+    """A natural-person profile routes to the IRPF tax branch."""
+
+    assert derive_tax_route(_landlord()) is TaxRoute.IRPF
+    assert derive_tax_route(_autonomo()) is TaxRoute.IRPF
+
+
+def test_legal_entity_routes_to_impuesto_sociedades() -> None:
+    """A legal-entity profile routes to the Impuesto sobre Sociedades
+    branch — never the IRPF tarifa (corporate-entity ADR §4)."""
+
+    assert derive_tax_route(_sociedad_limitada()) is TaxRoute.IMPUESTO_SOCIEDADES
+
+
+def test_attribution_entity_routes_to_pass_through() -> None:
+    """An attribution-entity profile routes to the member pass-through —
+    no IS and no IRPF cuota of its own."""
+
+    assert derive_tax_route(_attribution_entity()) is TaxRoute.ATTRIBUTION_PASS_THROUGH
+
+
+def test_undeclared_entity_type_routes_incomplete() -> None:
+    """An undeclared entity_type yields an INCOMPLETE route — the engine
+    never defaults a tax (corporate-entity ADR §4 safe default)."""
+
+    assert derive_tax_route(_undeclared()) is TaxRoute.INCOMPLETE
 
 
 def test_no_seed_not_applicable_reason_asserts_excluded_taxpayer_type() -> None:
@@ -455,6 +527,7 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     assert registered_legal_ids, "registry legal catalogue is empty"
 
     seed_refs: set[str] = set(_INCOMPLETE_LEGAL_REFS)
+    seed_refs.update(_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS)
     for rule in _MODELO_APPLICABILITY_RULES.values():
         seed_refs.update(rule.legal_refs)
     assert seed_refs, "seed table carries no legal_refs"

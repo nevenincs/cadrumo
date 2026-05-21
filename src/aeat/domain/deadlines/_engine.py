@@ -22,7 +22,11 @@ from ..calculations.registry import (
     applicable_filing_schedules,
     evaluate_profile_conditions,
 )
-from ._errors import DeadlineValidationError, ScheduleComputationError
+from ._errors import (
+    DeadlineValidationError,
+    NoDeadlineWindowsError,
+    ScheduleComputationError,
+)
 from ._models import (
     ModeloDeadline,
     ObligationStatus,
@@ -85,9 +89,7 @@ def _window_outside_activity_period(
 
     if activity_start_date is not None and closes_on < activity_start_date:
         return True
-    if activity_end_date is not None and opens_on > activity_end_date:
-        return True
-    return False
+    return activity_end_date is not None and opens_on > activity_end_date
 
 
 class DeadlineEngine:
@@ -159,8 +161,13 @@ class DeadlineEngine:
             applies to ``profile`` for ``year``.
 
         Raises:
-            :exc:`aeat.domain.deadlines.ScheduleComputationError`: If no
-                validated registry deadline windows apply to ``year``.
+            :exc:`aeat.domain.deadlines.NoDeadlineWindowsError`: If no
+                validated registry deadline windows are registered for
+                ``year`` — the benign data gap callers degrade around.
+            :exc:`aeat.domain.deadlines.ScheduleComputationError`: If
+                the registry fails validation or a profile condition
+                cannot be evaluated — a genuine integrity fault that
+                must not be masked.
         """
         reference_today = today or date.today()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
@@ -177,7 +184,7 @@ class DeadlineEngine:
                 obligations.append(obligation)
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
         if not obligations and not self._has_deadline_windows(year):
-            raise ScheduleComputationError(f"No registry deadline windows registered for year {year}")
+            raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
         if obligations:
             _logger.debug("computed schedule year=%d obligations=%d", year, len(obligations))
         else:
@@ -258,7 +265,7 @@ class DeadlineEngine:
             if code == modelo and self._schedule_applies(profile, revision, window)
         ]
         if not windows:
-            raise ScheduleComputationError(
+            raise NoDeadlineWindowsError(
                 f"No registry deadline windows registered for modelo {modelo!r} in year {selected_year}"
             )
         condition_text = self._evaluate_conditions(

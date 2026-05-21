@@ -114,6 +114,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.deadlines._errors.NoDeadlineWindowsError",
+        ErrorCode(
+            code="ERROR_DEADLINES_MISSING_WINDOWS",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_deadlines_missing_windows",
+            default_suggestion="aeat app overview explain MODELO --year YEAR",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.filing._errors.ModeloAmendmentError",
         ErrorCode(
             code="ERROR_FILING_AMENDMENT",

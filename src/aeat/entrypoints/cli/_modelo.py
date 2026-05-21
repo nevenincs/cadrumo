@@ -1174,6 +1174,67 @@ def _validate_registry_target(modelo: str, revision_id: str) -> None:
         )
 
 
+def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> None:
+    """Refuse a ``work create`` for a modelo the active profile cannot file.
+
+    Round-4 finding M4: ``work create --modelo 202`` succeeded for a
+    natural person with no guard, provisioning a work unit for a modelo
+    the operator's taxpayer model positively excludes — the engine
+    would then be asked to run an IS cuota for a natural person.
+
+    The guard consults :func:`derive_modelo_applicability` against the
+    active profile's three-axis taxpayer model (corporate-entity ADR §4
+    routing contract). A ``NOT_APPLICABLE`` verdict (e.g. Modelo 202
+    for a natural person, Modelo 100 for a sociedad limitada) or an
+    ``ATTRIBUTION_PASS_THROUGH`` verdict (a cuota self-assessment asked
+    of an attribution entity, which runs no cuota of its own) is
+    refused with the registry-grounded rationale. An ``INCOMPLETE``
+    verdict — undeclared taxpayer model, or a modelo the seed table
+    cannot yet decide — does not block: the operator may not have
+    declared their type yet, and the seed coverage is intentionally
+    narrow; refusing there would be a confident wrong answer of the
+    opposite kind.
+
+    The ``--allow-not-applicable`` escape hatch lets an operator who
+    has a genuine reason override the refusal; the override is recorded
+    in the create payload so the audit trail shows the guard was
+    bypassed deliberately.
+    """
+
+    from ...application.overview._applicability import (
+        ApplicabilityVerdict,
+        derive_modelo_applicability,
+    )
+    from ...application.workflow._persistence import workflow_state_repository
+    from ._common import _profile_to_taxpayer
+    from ._errors import CliRefusedBoundaryError
+
+    state = workflow_state_repository().load()
+    profile = _profile_to_taxpayer(state)
+    applicability = derive_modelo_applicability(profile, modelo.strip())
+    blocking = {
+        ApplicabilityVerdict.NOT_APPLICABLE,
+        ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
+    }
+    if applicability.verdict not in blocking:
+        return
+    if allow_not_applicable:
+        return
+    raise CliRefusedBoundaryError(
+        tr(
+            "cli.app.modelo.work.create_not_applicable_refused",
+            default=(
+                "Modelo {modelo} no aplica al tipo de contribuyente del "
+                "perfil activo: {reason} Si tiene un motivo para crear la "
+                "unidad de trabajo de todas formas, repita el comando con "
+                "--allow-not-applicable."
+            ),
+            modelo=modelo.strip(),
+            reason=applicability.reason,
+        )
+    )
+
+
 #: Registry-validation translated-message keys that signal an
 #: unsatisfied calculation input the operator can supply with
 #: ``--binding`` / ``--relation``. The first ``work calculate`` of a
@@ -1264,6 +1325,19 @@ def work_create(
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
+    allow_not_applicable: Annotated[
+        bool,
+        typer.Option(
+            "--allow-not-applicable",
+            help=tr(
+                "cli.app.modelo.work.allow_not_applicable_help",
+                default=(
+                    "Crear la unidad de trabajo aunque el modelo no aplique "
+                    "al tipo de contribuyente del perfil activo."
+                ),
+            ),
+        ),
+    ] = False,
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
@@ -1276,6 +1350,12 @@ def work_create(
     _validate_registry_target(modelo, revision)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
+    # Round-4 M4: refuse a work unit for a modelo the active profile's
+    # taxpayer model positively excludes (a natural person has no
+    # Modelo 202; an attribution entity runs no cuota). The guard runs
+    # once the profile is known and before the bucket database is
+    # opened by create_work_unit.
+    _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
     # --bucket-id is an explicit override; without it the work unit binds
     # to the active profile's bucket (never the literal string "default").
     resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
@@ -1358,6 +1438,7 @@ def work_create(
         "status": status,
         "status_message": status_message,
         "name_applied": name_applied,
+        "applicability_guard_bypassed": allow_not_applicable,
         **_work_unit_payload(unit),
     }
     lines = [

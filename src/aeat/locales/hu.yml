@@ -600,6 +600,8 @@ cli:
         view_help: Egy verifikációs jelentés megjelenítése azonosító alapján
       work:
         actor_help: A művelet felelőse (legfeljebb 64 karakteres szabadszöveges címke)
+        allow_not_applicable_help: A munkaegység létrehozása akkor is, ha a modell
+          nem vonatkozik az aktív profil adózói típusára.
         amend_help: Helyesbítő (complementaria) bevallás építése egy külsőleg leadott
           bevallás fölött. Importált AEAT-hitelesített evidenciával rendelkező filing
           record szükséges
@@ -627,6 +629,9 @@ cli:
         create_created: Új munkaegység létrehozva.
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
           revízió) kulcsra
+        create_not_applicable_refused: 'A(z) %{modelo} modell nem vonatkozik az aktív
+          profil adózói típusára: %{reason} Ha mégis indokolt a munkaegység létrehozása,
+          futtassa újra a parancsot a --allow-not-applicable kapcsolóval.'
         create_reused: A meglévő munkaegység lett visszaadva (idempotens a modell/év/időszak/revízió
           kulcsra); semmi új nem jött létre. Nevezd át az `aeat app modelo work rename`
           paranccsal.

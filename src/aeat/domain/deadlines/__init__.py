@@ -43,6 +43,7 @@ from ._engine import (
 )
 from ._errors import (
     DeadlineError,
+    NoDeadlineWindowsError,
     ProfileError,
     ScheduleComputationError,
 )
@@ -98,6 +99,7 @@ __all__ = [
     "ModeloEnrollment",
     "ModeloIVAProfile",
     "ModeloIdentifier",
+    "NoDeadlineWindowsError",
     "ObligationStatus",
     "ProfileError",
     "RecargoBand",

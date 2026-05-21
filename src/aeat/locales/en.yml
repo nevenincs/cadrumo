@@ -563,6 +563,8 @@ cli:
         view_help: Show one verification report by id
       work:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
+        allow_not_applicable_help: Create the work unit even when the modelo does
+          not apply to the active profile's taxpayer type.
         amend_help: Build a corrective amendment over an externally-filed return.
           Requires a filing record with imported AEAT-attested evidence
         amend_missing_options: 'An amendment requires every one of these options:
@@ -589,6 +591,9 @@ cli:
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
+        create_not_applicable_refused: 'Modelo %{modelo} does not apply to the active
+          profile''s taxpayer type: %{reason} If you have a reason to create the work
+          unit anyway, re-run the command with --allow-not-applicable.'
         create_reused: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. Rename it with `aeat app modelo work rename`.
         create_reused_name_match: Existing work unit returned (idempotent on modelo/year/period/revision);
