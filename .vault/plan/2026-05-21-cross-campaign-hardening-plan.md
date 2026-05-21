@@ -47,13 +47,13 @@ resolved by inspecting the actual class hierarchy before `P01.S06`.
 Eliminate the eight CRITICAL findings: provenance loss, persistence
 roundtrip gaps, blank CLI refusals, and a domain→adapter import.
 
-- [ ] `P01.S01` - CALC-1: restore casilla provenance on `amend_modelo_revision`; re-run typed-observation build over the corrected casilla map.
+- [x] `P01.S01` - CALC-1: restore casilla provenance on `amend_modelo_revision` (dd10fd70d) — `_amendment_observations` helper; 16 amend-flow tests green.
 - [ ] `P01.S02` - EXIM-1: add `casilla_provenance` to `ModeloDraft`; carry `legal_refs`/`source_refs` through export + verify.
 - [ ] `P01.S03` - PERS-1: strict `SecureObjectRecord` roundtrip test (6 fields non-default) + on-disk-mutation anti-tautology.
 - [ ] `P01.S04` - PERS-2: strict `SecretRecord` roundtrip witness + anti-tautology on the JSON index.
 - [ ] `P01.S05` - PERS-3: `BucketManifest` fail-closed on an absent `status` key in TOML reads.
-- [ ] `P01.S06` - WCLI-1/WCLI-2: `_config/__init__.py` `str(exc)` refusals → `resolve_error_message` (verify the contested classification first).
-- [ ] `P01.S07` - XDOM-1: export `SecureBoundRepository` from a public surface; re-point the three domain repository imports.
+- [x] `P01.S06` - WCLI-2: apoderado-check refusal → `resolve_error_message` (f065b1aed). CONTESTED WCLI-1 resolved: `AuthConfigureDanglingActiveProfileError` is a plain `ValueError`, `str(exc)` correct — no change.
+- [x] `P01.S07` - XDOM-1: export `SecureBoundRepository` from the envelope public surface (9199b7a2b); 3 domain imports re-pointed, 45 tests green.
 
 ### Phase `P02` - HIGH: CLI error-rendering localization
 
