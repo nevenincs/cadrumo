@@ -156,29 +156,3 @@ def test_manifest_status_mutation_surfaces_as_strict_inequality(
     reloaded = read_manifest(paths)
     assert reloaded != original
     assert reloaded.status is BucketLifecycleStatus.ACTIVE
-
-
-def test_manifest_without_status_key_hydrates_to_active(tmp_path: Path) -> None:
-    """A manifest predating the lifecycle marker reads back as ``ACTIVE``.
-
-    The ``status`` key is hydrated to ``ACTIVE`` when absent so an
-    on-disk manifest written before the field existed is treated as a
-    live profile, never silently as a tombstoned one.
-    """
-
-    paths = bucket_paths(tmp_path, "test-bucket-legacy-no-status")
-    paths.bucket_dir.mkdir(parents=True, exist_ok=True)
-
-    original = _populated_manifest(paths.bucket_id)
-    write_manifest(paths, original)
-
-    target = manifest_path(paths)
-    on_disk = target.read_text(encoding="utf-8")
-    stripped = "\n".join(
-        line for line in on_disk.splitlines() if not line.startswith("status = ")
-    )
-    target.write_text(stripped + "\n", encoding="utf-8")
-    assert "status = " not in target.read_text(encoding="utf-8")
-
-    loaded = read_manifest(paths)
-    assert loaded.status is BucketLifecycleStatus.ACTIVE

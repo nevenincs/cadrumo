@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ._manifest import BucketManifest, ManifestKdfParams
+from ._manifest import BucketLifecycleStatus, BucketManifest, ManifestKdfParams
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -39,6 +39,7 @@ def _manifest(**overrides: object) -> BucketManifest:
         "kdf_params": _kdf(),
         "recovery_enrolled": False,
         "schema_version": 1,
+        "status": BucketLifecycleStatus.ACTIVE,
     }
     defaults.update(overrides)
     return BucketManifest(**defaults)
