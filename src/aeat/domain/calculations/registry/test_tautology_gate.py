@@ -391,6 +391,15 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         # unrelated repercutido cuota and a pendiente-posteriores
         # value); no aggregation produces the 1200.
         "src/aeat/application/modelo/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history",
+        # Both -20.000 (cuota del ejercicio 00599) and -30.000 (cuota
+        # diferencial 00611) are AEAT-published oracle figures lifted
+        # verbatim from the Manual práctico de Sociedades 2024 worked
+        # example (pages 399/401); 10.000 is the manual's pagos
+        # fraccionados figure delivered as the modelo-202 relation
+        # value. The gate coincidentally matches -30000 + 10000 =
+        # -20000 across two independent manual oracles — neither
+        # assertion target is hand-summed by the test author.
+        "src/aeat/domain/calculations/registry/test_modelo_200_registry.py::test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example",
     }
 )
 """Functions whose hand-summed pattern is documented as legitimate.
