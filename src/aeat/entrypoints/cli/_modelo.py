@@ -388,11 +388,21 @@ def _parse_kv_spec[T](
     """
 
     if "=" not in spec:
-        raise typer.BadParameter(f"{flag} must be {key_label}={value_label}; got {spec!r}")
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.kv_format_error",
+                flag=flag,
+                key_label=key_label,
+                value_label=value_label,
+                spec=spec,
+            )
+        )
     key, _, value = spec.partition("=")
     key = key.strip()
     if not key:
-        raise typer.BadParameter(f"{flag} key must be non-empty; got {spec!r}")
+        raise typer.BadParameter(
+            tr("cli.app.modelo.work.kv_empty_key_error", flag=flag, spec=spec)
+        )
     if key_validator is not None:
         key_validator(key, spec)
     return key, transform(value)
@@ -727,8 +737,14 @@ def bindings_preview(
     if unknown_keys:
         suggestion = ", ".join(sorted(known_ids))
         raise typer.BadParameter(
-            f"unknown --binding key(s) {unknown_keys!r}; known bindings for "
-            f"{report.code}@{report.revision} ({report.period}): {suggestion}"
+            tr(
+                "cli.app.modelo.bindings.unknown_keys",
+                keys=unknown_keys,
+                code=report.code,
+                revision=report.revision,
+                period=report.period,
+                suggestion=suggestion,
+            )
         )
     payload = {
         "operation": "registry.modelo.bindings.preview",
@@ -835,9 +851,11 @@ def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[
         try:
             value = json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise typer.BadParameter(f"{flag} must be a JSON object; invalid JSON at byte {exc.pos}") from exc
+            raise typer.BadParameter(
+                tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)
+            ) from exc
         if not isinstance(value, dict):
-            raise typer.BadParameter(f"{flag} must be a JSON object")
+            raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_not_object", flag=flag))
         parsed.append(value)
     return tuple(parsed)
 
@@ -1477,7 +1495,9 @@ def work_calculate(
         try:
             casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(f"--casilla value for {k!r} is not a decimal: {v!r}") from exc
+            raise typer.BadParameter(
+                tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)
+            ) from exc
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
@@ -1495,7 +1515,7 @@ def work_calculate(
             relation_values[key] = Decimal(raw_value)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(
-                f"--relation value for {key!r} is not a decimal: {raw_value!r}"
+                tr("cli.app.modelo.work.relation_not_decimal", key=key, value=raw_value)
             ) from exc
 
     try:
@@ -1850,7 +1870,9 @@ def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
         try:
             return Decimal(value.strip())
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(f"--set value must be a decimal; got {value!r}") from exc
+            raise typer.BadParameter(
+                tr("cli.app.modelo.work.set_not_decimal", value=value)
+            ) from exc
 
     return _parse_kv_spec(
         spec,
@@ -1932,7 +1954,11 @@ def work_amend(
         amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
     except ValueError as exc:
         raise typer.BadParameter(
-            f"--kind must be one of {', '.join(repr(k.value) for k in CalculationRevisionAmendmentKind)}; got {kind!r}"
+            tr(
+                "cli.app.modelo.work.invalid_amendment_kind",
+                choices=", ".join(repr(k.value) for k in CalculationRevisionAmendmentKind),
+                kind=kind,
+            )
         ) from exc
 
     overrides: dict[str, Decimal] = {}
@@ -1940,7 +1966,7 @@ def work_amend(
         key, value = _parse_amendment_casilla(spec)
         overrides[key] = value
     if not overrides:
-        raise typer.BadParameter("--set is required at least once for an amendment")
+        raise typer.BadParameter(tr("cli.app.modelo.work.amend_set_required"))
 
     try:
         record = amend_modelo_revision(
@@ -2169,14 +2195,20 @@ def filing_record_import(
         kind = ExternalEvidenceKind(evidence_kind)
     except ValueError as exc:
         canonical = ", ".join(repr(k.value) for k in ExternalEvidenceKind)
-        raise typer.BadParameter(f"--evidence-kind must be one of {canonical}; got {evidence_kind!r}") from exc
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.filing_record.invalid_evidence_kind",
+                canonical=canonical,
+                kind=evidence_kind,
+            )
+        ) from exc
 
     casilla_values: dict[str, Decimal] = {}
     for spec in set_overrides or ():
         key, value = _parse_amendment_casilla(spec)
         casilla_values[key] = value
     if not casilla_values:
-        raise typer.BadParameter("--set is required at least once for an import")
+        raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
 
     try:
         record = import_external_filing_evidence(

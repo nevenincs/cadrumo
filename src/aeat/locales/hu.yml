@@ -321,7 +321,8 @@ cli:
       borrador:
         app_help: Modelo 100 borrador snapshotok
         filing_year_help: Adóév (pl. 2024)
-        invalid_state: 'Az --state értékének a következők egyikének kell lennie: active, superseded, discarded, all.'
+        invalid_state: 'Az --state értékének a következők egyikének kell lennie: active,
+          superseded, discarded, all.'
         latest_help: A legutóbbi aktív snapshot megjelenítése egy adóévre
         list_help: Rögzített Modelo 100 borrador snapshotok listázása
         modelo_100_help: Modelo 100 borrador snapshot parancsok
@@ -363,7 +364,8 @@ cli:
       portals:
         app_help: Csak olvasható helyi AEAT portálkatalógus
         category_help: Szűrés portálkategória szerint
-        category_modelo_exclusive: 'A --category és a --modelo kölcsönösen kizárják egymást.'
+        category_modelo_exclusive: A --category és a --modelo kölcsönösen kizárják
+          egymást.
         list_help: Listázd a portálkatalógus bejegyzéseit
         modelo_help: Szűrés egy modelohoz kapcsolt portálokra
         portal_id_help: Portálazonosító
@@ -375,7 +377,8 @@ cli:
       verify:
         app_help: Csak olvasható NIF-ellenőrzési auditnapló
         expected_help: Opcionális várt eredmény (valid, invalid vagy unknown)
-        expected_values_error: 'Az --expected értékének a következők egyikének kell lennie: valid, invalid, unknown.'
+        expected_values_error: 'Az --expected értékének a következők egyikének kell
+          lennie: valid, invalid, unknown.'
         latest_help: Mutasd a legfrissebb megfigyelést felület és NIF szerint
         latest_nif_help: Lekérdezendő NIF
         latest_surface_help: 'Ellenőrzési felület: nif_iva vagy tgvi'
@@ -384,12 +387,13 @@ cli:
         nif_iva_arg_help: NIF-IVA érték (pl. ESB12345678)
         nif_iva_help: Ellenőrizz egy közösségi NIF-IVA értéket AEAT IXVI-ben és mentsd
           a megfigyelést
-        no_observation_for_nif: 'Nem érkezett megfigyelés a(z) {nif} NIF-hez.'
+        no_observation_for_nif: Nem érkezett megfigyelés a(z) {nif} NIF-hez.
         observation_id_help: Megfigyelésazonosító (vagy egyértelmű előtag)
         surface_help: 'Szűrés felület szerint: nif_iva vagy tgvi'
         tgvi_arg_help: Ellenőrizendő spanyol NIF/NIE
         tgvi_help: Ellenőrizd egy NIF ROI/VIES bejegyzését GROI-ban és mentsd a megfigyelést
-        unknown_surface: 'Ismeretlen ellenőrzési felület: {surface} (a várt érték nif_iva vagy tgvi).'
+        unknown_surface: 'Ismeretlen ellenőrzési felület: {surface} (a várt érték
+          nif_iva vagy tgvi).'
         view_help: Mutass egy mentett ellenőrzési megfigyelést
       year_help: Benyújtási év
     modelo:
@@ -398,6 +402,8 @@ cli:
           ismételd az opciót
         foreign_asset_observation_help: JSON ForeignAssetObservation objektum; több
           megfigyeléshez ismételd az opciót
+        json_not_object: 'A(z) {flag} JSON-objektum kell legyen.'
+        json_parse_error: 'A(z) {flag} JSON-objektum kell legyen; érvénytelen JSON a(z) {pos}. bájtnál.'
         modelo_help: Támogatott modelo kód (111, 115, 123, 180, 190, 193, 347, 349
           vagy 720)
         period_help: Az összesítési szolgáltatásnak átadott időszak
@@ -432,6 +438,7 @@ cli:
           periodikus peldak: 2026Q1 es 2026-01'
         preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció
           nélkül
+        unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések ehhez: {code}@{revision} ({period}): {suggestion}.'
         year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
@@ -474,8 +481,10 @@ cli:
           legalább egy kötelező)
         import_help: Külsőleg leadott bevallás rögzítése alap filing recordként, importált
           AEAT-hitelesített evidenciával
+        import_set_required: 'Az --set legalább egyszer kötelező egy importáláshoz.'
         include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
           kihagyva)
+        invalid_evidence_kind: 'Az --evidence-kind értékének a következők egyikének kell lennie: {canonical}; a kapott érték {kind}.'
         list_help: Regisztrált filing recordok listázása
         view_help: Egy filing record megjelenítése azonosító alapján
       formulas:
@@ -533,6 +542,7 @@ cli:
           record szükséges
         amend_missing_options: 'A módosításhoz az alábbi összes kapcsoló szükséges:
           %{missing}.'
+        amend_set_required: 'Az --set legalább egyszer kötelező egy módosításhoz.'
         amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
         amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése
@@ -544,6 +554,7 @@ cli:
         calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256
           azonosítója
         casilla_help: Cella értéke CASILLA=DECIMAL szintaxissal (ismételhető)
+        casilla_not_decimal: 'A(z) {key} --casilla értéke nem decimális szám: {value}.'
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
           revízió) kulcsra
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
@@ -558,12 +569,15 @@ cli:
         history_work_unit_id_help: A megjelenítendő életciklusú munkaegység azonosítója
         include_discarded_help: A megszakított munkaegységeket is mutassa a listában
           (alapértelmezetten kihagyva)
+        invalid_amendment_kind: 'A --kind értékének a következők egyikének kell lennie: {choices}; a kapott érték {kind}.'
         invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
           plusz . _ : - elválasztók, max. 128 karakter)'
         invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
           plusz . _ : - elválasztók, max. 64 karakter)'
         invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
           kell legyen (SHA-256 kivonat)
+        kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; a kapott érték {spec}.'
+        kv_format_error: 'A(z) {flag} formátuma {key_label}={value_label} kell legyen; a kapott érték {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
           szűrve
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
@@ -584,6 +598,7 @@ cli:
           500 karakter)
         relation_help: Előző időszak relációs érték KEY=VALUE szintaxissal. A KEY
           egy registry relációazonosító; a VALUE decimális. Ismételhető.
+        relation_not_decimal: 'A(z) {key} --relation értéke nem decimális szám: {value}.'
         rename_help: Munkaegység megjelenítési nevének módosítása
         resume_help: Ellenőrizd, hogy újrapróbálhatsz-e megszakadt folyamatfutást
           AEAT-kapcsolat nélkül
@@ -591,6 +606,7 @@ cli:
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
+        set_not_decimal: 'A(z) --set értéke decimális szám kell legyen; a kapott érték {value}.'
         set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy kötelező)
         status_help: Egy munkaegység metaadatainak megjelenítése

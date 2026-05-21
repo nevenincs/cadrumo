@@ -371,7 +371,7 @@ cli:
       portals:
         app_help: Catálogo local de portales AEAT de solo lectura
         category_help: Filtra por una categoría de portal
-        category_modelo_exclusive: '--category y --modelo son mutuamente excluyentes.'
+        category_modelo_exclusive: --category y --modelo son mutuamente excluyentes.
         list_help: Lista entradas del catálogo de portales
         modelo_help: Filtra por portales vinculados a un modelo
         portal_id_help: Identificador del portal
@@ -392,12 +392,13 @@ cli:
         nif_iva_arg_help: Valor NIF-IVA (p. ej. ESB12345678)
         nif_iva_help: Verifica un NIF-IVA intracomunitario en AEAT IXVI y guarda la
           observación
-        no_observation_for_nif: 'No se devolvió ninguna observación para el NIF {nif}.'
+        no_observation_for_nif: No se devolvió ninguna observación para el NIF {nif}.
         observation_id_help: Id de observación (o prefijo no ambiguo)
         surface_help: 'Filtra por superficie: nif_iva o tgvi'
         tgvi_arg_help: NIF/NIE español que quieres comprobar
         tgvi_help: Verifica el alta ROI/VIES de un NIF en GROI y guarda la observación
-        unknown_surface: 'Superficie de verificación desconocida: {surface} (se esperaba nif_iva o tgvi).'
+        unknown_surface: 'Superficie de verificación desconocida: {surface} (se esperaba
+          nif_iva o tgvi).'
         view_help: Muestra una observación de verificación guardada
       year_help: Ejercicio de presentación
     modelo:
@@ -408,6 +409,8 @@ cli:
         foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
+        json_not_object: '{flag} debe ser un objeto JSON.'
+        json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte {pos}.'
         modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: Periodo de agregacion enviado al servicio backend.
@@ -448,6 +451,7 @@ cli:
           ejemplos periodicos incluyen 2026Q1 y 2026-01
         preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
           el estado
+        unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones conocidas para {code}@{revision} ({period}): {suggestion}.'
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -494,8 +498,10 @@ cli:
           (repetible; al menos uno requerido)
         import_help: Persistir una declaración presentada externamente como filing
           record base con evidencia oficial importada de la AEAT
+        import_set_required: '--set es obligatorio al menos una vez para una importación.'
         include_superseded_help: Incluir los filing records superados (excluidos por
           defecto)
+        invalid_evidence_kind: '--evidence-kind debe ser uno de {canonical}; se recibió {kind}.'
         list_help: Listar los filing records registrados
         view_help: Mostrar un filing record por id
       formulas:
@@ -554,6 +560,7 @@ cli:
           presentada externamente. Requiere un filing record con evidencia oficial
           importada de la AEAT
         amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
+        amend_set_required: '--set es obligatorio al menos una vez para una complementaria.'
         amendment_kind_help: Tipo legal de la amendación (complementaria o sustitutiva)
         amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
           operador)
@@ -568,6 +575,7 @@ cli:
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible)
+        casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
         discard_help: Marcar una unidad de trabajo como descartada (transición de
@@ -586,12 +594,15 @@ cli:
           ver
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
+        invalid_amendment_kind: '--kind debe ser uno de {choices}; se recibió {kind}.'
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
           en minúsculas más separadores . _ : -, máx. 128 caracteres)'
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
           64 caracteres (resumen SHA-256)
+        kv_empty_key_error: 'La clave de {flag} no puede estar vacía; se recibió {spec}.'
+        kv_format_error: '{flag} debe tener el formato {key_label}={value_label}; se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por bucket
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
@@ -611,6 +622,7 @@ cli:
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
+        relation_not_decimal: 'El valor de --relation para {key} no es un decimal: {value}.'
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT
@@ -618,6 +630,7 @@ cli:
         revision_help: Identificador estable de la revisión registrada del modelo
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
+        set_not_decimal: 'El valor de --set debe ser un decimal; se recibió {value}.'
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
         status_help: Mostrar los metadatos de una unidad de trabajo

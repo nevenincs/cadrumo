@@ -370,7 +370,7 @@ cli:
       portals:
         app_help: Catàleg local de portals AEAT de només lectura
         category_help: Filtra per una categoria de portal
-        category_modelo_exclusive: '--category i --modelo són mútuament excloents.'
+        category_modelo_exclusive: --category i --modelo són mútuament excloents.
         list_help: Llista entrades del catàleg de portals
         modelo_help: Filtra per portals vinculats a un model
         portal_id_help: Identificador del portal
@@ -390,12 +390,13 @@ cli:
         nif_help: Filtra per un NIF
         nif_iva_arg_help: Valor NIF-IVA (p. ex. ESB12345678)
         nif_iva_help: Verifica un NIF-IVA intracomunitari a AEAT IXVI i desa l'observació
-        no_observation_for_nif: 'No s''ha retornat cap observació per al NIF {nif}.'
+        no_observation_for_nif: No s'ha retornat cap observació per al NIF {nif}.
         observation_id_help: Id d'observació (o prefix no ambigu)
         surface_help: 'Filtra per superfície: nif_iva o tgvi'
         tgvi_arg_help: NIF/NIE espanyol que vols comprovar
         tgvi_help: Verifica l'alta ROI/VIES d'un NIF a GROI i desa l'observació
-        unknown_surface: 'Superfície de verificació desconeguda: {surface} (s''esperava nif_iva o tgvi).'
+        unknown_surface: 'Superfície de verificació desconeguda: {surface} (s''esperava
+          nif_iva o tgvi).'
         view_help: Mostra una observació de verificació desada
       year_help: Exercici de presentació
     modelo:
@@ -404,6 +405,8 @@ cli:
           l'opció per a diverses observacions
         foreign_asset_observation_help: Objecte JSON ForeignAssetObservation; repeteix
           l'opció per a diverses observacions
+        json_not_object: '{flag} ha de ser un objecte JSON.'
+        json_parse_error: '{flag} ha de ser un objecte JSON; JSON no vàlid al byte {pos}.'
         modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
           720)
         period_help: Període enviat al servei d'agregació
@@ -439,6 +442,7 @@ cli:
           exemples periodics inclouen 2026Q1 i 2026-01
         preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense
           mutar l'estat
+        unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes per a {code}@{revision} ({period}): {suggestion}.'
         year_help: Exercici fiscal del model (p. ex. 2026)
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -482,8 +486,10 @@ cli:
           (repetible; almenys un requerit)
         import_help: Persistir una declaració presentada externament com a filing
           record base amb evidència oficial importada de l'AEAT
+        import_set_required: '--set és obligatori almenys una vegada per a una importació.'
         include_superseded_help: Incloure els filing records superats (exclosos per
           defecte)
+        invalid_evidence_kind: '--evidence-kind ha de ser un de {canonical}; s''ha rebut {kind}.'
         list_help: Llistar els filing records registrats
         view_help: Mostrar un filing record per id
       formulas:
@@ -541,6 +547,7 @@ cli:
           externament. Requereix un filing record amb evidència oficial importada
           de l'AEAT
         amend_missing_options: 'Una esmena requereix totes aquestes opcions: %{missing}.'
+        amend_set_required: '--set és obligatori almenys una vegada per a una complementària.'
         amendment_kind_help: Tipus legal de l'amendació (complementaria o sustitutiva)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
@@ -555,6 +562,7 @@ cli:
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible)
+        casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal: {value}.'
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
@@ -573,12 +581,15 @@ cli:
           vols veure
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
+        invalid_amendment_kind: '--kind ha de ser un de {choices}; s''ha rebut {kind}.'
         invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
           en minúscules més separadors . _ : -, màx. 128 caràcters)'
         invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
           més separadors . _ : -, màx. 64 caràcters)'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
           de 64 caràcters (resum SHA-256)
+        kv_empty_key_error: 'La clau de {flag} no pot estar buida; s''ha rebut {spec}.'
+        kv_format_error: '{flag} ha de tenir el format {key_label}={value_label}; s''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per bucket
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
@@ -598,6 +609,7 @@ cli:
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.
+        relation_not_decimal: 'El valor de --relation per a {key} no és un decimal: {value}.'
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT
@@ -605,6 +617,7 @@ cli:
         revision_help: Identificador estable de la revisió registrada del model
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
+        set_not_decimal: 'El valor de --set ha de ser un decimal; s''ha rebut {value}.'
         set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
           almenys un requerit)
         status_help: Mostrar les metadades d'una unitat de treball
