@@ -175,25 +175,31 @@ def _payload(raw: bytes) -> dict[str, object]:
     payload = json.loads(raw.decode("utf-8"))
     if not isinstance(payload, dict):
         raise ValueError("auth diagnostic payload is not a JSON object")
-    return payload
+    return {str(key): value for key, value in payload.items()}
+
+
+def _json_object(value: object) -> dict[str, object]:
+    """Narrow a JSON value to a string-keyed object, or an empty one."""
+
+    if not isinstance(value, dict):
+        return {}
+    return {str(key): item for key, item in value.items()}
 
 
 def _summary_from_payload(payload: dict[str, object]) -> AuthDiagnosticSummary:
     captured_at = payload.get("captured_at")
     if not isinstance(captured_at, str):
         raise ValueError("auth diagnostic payload is missing captured_at")
-    auth_attempt = payload.get("auth_attempt")
-    if not isinstance(auth_attempt, dict):
-        auth_attempt = {}
-    operator_report = payload.get("operator_report")
-    if not isinstance(operator_report, dict):
-        operator_report = {}
+    auth_attempt = _json_object(payload.get("auth_attempt"))
+    operator_report = _json_object(payload.get("operator_report"))
     phone_state_reported_at = None
     raw_reported_at = operator_report.get("reported_at")
     if isinstance(raw_reported_at, str) and raw_reported_at:
         phone_state_reported_at = datetime.fromisoformat(raw_reported_at)
+    raw_diagnostic_id = payload.get("diagnostic_id")
+    raw_headless = auth_attempt.get("headless")
     summary = AuthDiagnosticSummary(
-        diagnostic_id=payload.get("diagnostic_id") if isinstance(payload.get("diagnostic_id"), str) else None,
+        diagnostic_id=raw_diagnostic_id if isinstance(raw_diagnostic_id, str) else None,
         reason=str(payload.get("reason") or ""),
         url=_redacted_url_summary(str(payload.get("url") or "")),
         captured_at=datetime.fromisoformat(captured_at),
@@ -202,7 +208,7 @@ def _summary_from_payload(payload: dict[str, object]) -> AuthDiagnosticSummary:
         and bool(str(payload.get("screenshot_png_base64")).strip()),
         auth_mode=str(auth_attempt.get("auth_mode") or ""),
         identity_kind=str(auth_attempt.get("identity_kind") or ""),
-        headless=auth_attempt.get("headless") if isinstance(auth_attempt.get("headless"), bool) else None,
+        headless=raw_headless if isinstance(raw_headless, bool) else None,
         active_profile_id=str(auth_attempt.get("active_profile_id") or ""),
         active_profile_label=str(auth_attempt.get("active_profile_label") or ""),
         active_profile_registered=_optional_bool(auth_attempt.get("active_profile_registered")),
@@ -227,9 +233,10 @@ def _optional_bool(value: object) -> bool | None:
 
 
 def _detail_fingerprints_from_payload(payload: dict[str, object]) -> dict[str, str]:
-    auth_attempt = payload.get("auth_attempt")
-    if not isinstance(auth_attempt, dict):
+    raw_auth_attempt = payload.get("auth_attempt")
+    if not isinstance(raw_auth_attempt, dict):
         return {}
+    auth_attempt = _json_object(raw_auth_attempt)
     keys = (
         "profile_tax_id_fingerprint",
         "clave_identity_fingerprint",
