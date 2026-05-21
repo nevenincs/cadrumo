@@ -1250,17 +1250,19 @@ class RegistryValidator:
         revision: ModeloRevision,
         casillas: set[str],
         exported_casillas: set[str],
+        casilla_by_id: dict[str, object] | None = None,
     ) -> None:
         for profile in revision.extraction_profiles:
             owner = f"extraction profile {profile.id}"
             failures.extend(self._missing_refs(prefix, owner, profile.legal_refs, self._legal, "legal"))
             failures.extend(self._missing_refs(prefix, owner, profile.source_refs, self._sources, "source"))
             failures.extend(self._validate_dotted_callable(prefix, owner, profile.parser))
-            for casilla_id in profile.target_casillas:
+            target_casilla_ids = tuple(t.casilla_id for t in profile.target_casillas)
+            for casilla_id in target_casilla_ids:
                 if casilla_id not in casillas:
                     failures.append(f"{prefix}: {owner} references unknown casilla {casilla_id!r}")
             if profile.surface == "export_record" or "submitted_file" in profile.accepted_artefact_kinds:
-                missing_exported_casillas = sorted(set(profile.target_casillas).difference(exported_casillas))
+                missing_exported_casillas = sorted(set(target_casilla_ids).difference(exported_casillas))
                 if missing_exported_casillas:
                     failures.append(
                         f"{prefix}: export_record extraction profile {profile.id!r} targets casillas without "

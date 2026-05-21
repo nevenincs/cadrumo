@@ -4,7 +4,11 @@ surface = "declaracion_pdf"
 artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
-target_casillas = ["decl.ejercicio", "decl.tipo-ejercicio", "decl.cnae"]
+target_casillas = [
+    {casilla_id = "decl.ejercicio", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "decl.tipo-ejercicio", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "decl.cnae", match_strategy = "named_label", value_kind = "text", label_pattern = 'C\.N\.A\.E\.?\s+de\s+la\s+actividad\s+principal'},
+]
 confidence = "strict"
 min_coverage = "1.0"
 failure_semantics = "fail_hard"
