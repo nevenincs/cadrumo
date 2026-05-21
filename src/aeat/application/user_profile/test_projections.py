@@ -58,3 +58,38 @@ def test_projection_for_autonomo_uses_defaults_when_record_is_blank() -> None:
     profile = projection_for_autonomo(record, tax_id_default="Z0000000Z")
     assert profile.tax_id == "Z0000000Z"
     assert profile.iva_regime is IVARegime.GENERAL
+
+
+def test_projection_for_autonomo_carries_section_prefixed_withholding_facts() -> None:
+    """A record whose facts live under section-prefixed schema paths
+    (irpf.*, withholding.*) must project those values onto the
+    AutonomoProfile.
+
+    These fields' schema model_selectors drop the section prefix
+    (``irpf.professional_income_withholding_ge_70pct`` ->
+    ``professional_income_withholding_ge_70pct``). The selector-aliased
+    projection then loses the value because the bare key has no wizard
+    catalogue entry. ``projection_for_autonomo`` must read the
+    canonical schema paths so an edited fact reaches the deadline
+    engine — this is the read-snapshot contract ``overview explain``
+    depends on.
+    """
+
+    record = UserProfileRecord(
+        profile_id="operator",
+        display_name="Operator",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(
+                path="irpf.professional_income_withholding_ge_70pct",
+                value=True,
+            ),
+            UserProfileFact(path="irpf.uses_objective_estimation", value=True),
+            UserProfileFact(path="withholding.has_employees", value=True),
+        ),
+    )
+    profile = projection_for_autonomo(record)
+    assert profile.professional_income_withholding_ge_70pct is True
+    assert profile.uses_objective_estimation_irpf is True
+    assert profile.has_employees is True

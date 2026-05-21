@@ -34,6 +34,23 @@ def _default_schema() -> ProfileSchemaDefinition:
     return _DEFAULT_SCHEMA
 
 
+def _render_fact_value(value: object) -> str:
+    """Render a profile-fact value as its canonical-token string.
+
+    A :class:`UserProfileFact` value is a typed union (``str | bool |
+    int | Decimal | date``). Downstream coercers — the wizard
+    descriptor's ``project_answers`` in particular — accept only the
+    lowercase canonical boolean tokens ``true`` / ``false``. Plain
+    ``str(True)`` yields ``"True"``, which ``project_answers`` rejects
+    as falsey, so a boolean fact must be lowercased here before the
+    projection's flat-string contract is built.
+    """
+
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+
 def _selector_index(schema: ProfileSchemaDefinition) -> dict[str, tuple[str, ...]]:
     """Map ``section.field`` paths to their declared ``model_selectors`` tuple."""
 
@@ -66,7 +83,7 @@ def facts_to_values(
         if fact.value is None:
             continue
         selectors = selector_index.get(fact.path, (fact.path,))
-        rendered = str(fact.value)
+        rendered = _render_fact_value(fact.value)
         for selector in selectors or (fact.path,):
             values[selector] = rendered
     return values
@@ -103,7 +120,7 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
 
     if record is None:
         return {}
-    return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    return {fact.path: _render_fact_value(fact.value) for fact in record.facts if fact.value is not None}
 
 
 def projection_for_autonomo(
