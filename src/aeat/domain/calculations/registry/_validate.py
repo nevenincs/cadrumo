@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
-from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -24,7 +23,6 @@ from ._schema import (
     DependencyClassificationDefinition,
     ExportFieldDefinition,
     ExportRecordDefinition,
-    ExtractionProfileDefinition,
     FormulaDefinition,
     LegalReference,
     ModeloDefinition,
@@ -38,6 +36,7 @@ from ._sources import verify_source_catalogue
 from ._text import normalise_corpus_text
 from ._validate_application_links import validate_application_link_closure
 from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
+from ._validate_extraction_profiles import validate_dotted_callable, validate_extraction_profile_artefacts
 from ._validate_formulas import validate_formula_dag, validate_formula_expression
 from ._validate_relation_sources import (
     period_selectors_overlap,
@@ -1023,7 +1022,7 @@ class RegistryValidator:
             owner = f"extraction profile {profile.id}"
             failures.extend(self._missing_refs(prefix, owner, profile.legal_refs, self._legal, "legal"))
             failures.extend(self._missing_refs(prefix, owner, profile.source_refs, self._sources, "source"))
-            failures.extend(self._validate_dotted_callable(prefix, owner, profile.parser))
+            failures.extend(validate_dotted_callable(prefix, owner, profile.parser))
             target_casilla_ids = tuple(t.casilla_id for t in profile.target_casillas)
             for casilla_id in target_casilla_ids:
                 if casilla_id not in casillas:
@@ -1035,7 +1034,7 @@ class RegistryValidator:
                         f"{prefix}: export_record extraction profile {profile.id!r} targets casillas without "
                         f"export fields {missing_exported_casillas!r}"
                     )
-            failures.extend(self._validate_extraction_profile_artefacts(prefix, profile))
+            failures.extend(validate_extraction_profile_artefacts(prefix, profile))
 
     def _validate_cross_reference_section(
         self,
@@ -1406,47 +1405,6 @@ class RegistryValidator:
                         f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}"
                     )
         return failures
-
-    @staticmethod
-    def _validate_extraction_profile_artefacts(
-        scope: str,
-        profile: ExtractionProfileDefinition,
-    ) -> list[str]:
-        expected_by_surface = {
-            "borrador_pdf": {"declaration_pdf"},
-            "declaracion_pdf": {"declaration_pdf"},
-            "justificante_pdf": {"justificante_pdf"},
-            "export_record": {"submitted_file"},
-            "official_workbook": {"official_workbook"},
-        }
-        expected = expected_by_surface[profile.surface]
-        accepted = set(profile.accepted_artefact_kinds)
-        failures: list[str] = []
-        if accepted != expected:
-            failures.append(
-                f"{scope}: extraction profile {profile.id!r} accepts {sorted(accepted)!r}, "
-                f"but surface {profile.surface!r} requires {sorted(expected)!r}"
-            )
-        if profile.surface == "justificante_pdf" and profile.target_casillas:
-            failures.append(f"{scope}: extraction profile {profile.id!r} cannot use justificante PDFs as casilla data")
-        return failures
-
-    @staticmethod
-    def _validate_dotted_callable(scope: str, owner: str, dotted_path: str) -> list[str]:
-        module_name, separator, attribute = dotted_path.rpartition(".")
-        if not separator or not module_name or not attribute:
-            return [f"{scope}: {owner} parser {dotted_path!r} must be a dotted callable path"]
-        try:
-            module = import_module(module_name)
-        except (ImportError, ValueError, SyntaxError) as exc:
-            return [f"{scope}: {owner} parser {dotted_path!r} cannot import module {module_name!r}: {exc}"]
-        try:
-            resolved = getattr(module, attribute)
-        except AttributeError as exc:
-            return [f"{scope}: {owner} parser {dotted_path!r} does not resolve attribute {attribute!r}: {exc}"]
-        if not callable(resolved):
-            return [f"{scope}: {owner} parser {dotted_path!r} is not callable"]
-        return []
 
     def _source_text(self, source: SourceReference) -> str:
         cached = self._source_text_cache.get(source.id)
