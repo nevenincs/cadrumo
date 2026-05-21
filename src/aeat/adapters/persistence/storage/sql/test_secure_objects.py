@@ -537,3 +537,57 @@ def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> 
             assert after.schema_version == 9
         finally:
             engine.dispose()
+
+
+def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Path) -> None:
+    """Two independent SecureObjectRepository instances writing the same
+    namespace + object_key converge to one row, last-write-wins.
+
+    `save` is an upsert: a second writer of one logical object must
+    replace the first in place, never fork it into divergent rows. The
+    deterministic end state — one row carrying the later write — is the
+    serialization contract; a duplicate-insert regression would leave
+    two divergent ciphertexts under the same logical key."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "converge.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.converge"
+        natural_key = "shared-object-key"
+        try:
+            SecureObjectRepository(engine=engine).save(
+                namespace=namespace,
+                object_key=natural_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 21, 7, 0, 0),
+                payload=b"first-writer-payload",
+            )
+            SecureObjectRepository(engine=engine).save(
+                namespace=namespace,
+                object_key=natural_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=2,
+                written_at=datetime(2026, 5, 21, 8, 0, 0),
+                payload=b"second-writer-payload",
+            )
+
+            loaded = SecureObjectRepository(engine=engine).load(
+                namespace,
+                natural_key,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=2,
+            )
+            assert loaded is not None
+            assert loaded.payload == b"second-writer-payload"
+            assert loaded.schema_version == 2
+
+            with sqlite3.connect(db_path) as con:
+                (row_count,) = con.execute(
+                    "SELECT COUNT(*) FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert row_count == 1
+        finally:
+            engine.dispose()
