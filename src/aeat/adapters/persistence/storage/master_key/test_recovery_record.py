@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import secrets
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
@@ -73,6 +74,42 @@ def test_rejects_non_utc_offset_created_at() -> None:
 def test_rejects_empty_hkdf_info() -> None:
     with pytest.raises(ValidationError):
         _record(hkdf_info="")
+
+
+def test_dropped_base64_field_in_serialized_blob_surfaces_at_reload() -> None:
+    """Anti-tautology proof for the RecoveryRecord serialization boundary.
+
+    ``test_round_trip_preserves_fields`` asserts a populated record
+    survives ``model_dump_json`` -> ``model_validate_json``. That
+    assertion is only meaningful if a corrupted serialized blob is
+    rejected on reload. Drop the required ``wrapped_dek_b64`` field from
+    the serialized JSON and assert reload raises ``ValidationError`` —
+    if a dropped field reloaded silently (re-defaulted or ignored),
+    every RecoveryRecord roundtrip assertion would be tautological.
+    """
+
+    record = _record()
+    document = json.loads(record.model_dump_json())
+    assert "wrapped_dek_b64" in document
+    del document["wrapped_dek_b64"]
+
+    with pytest.raises(ValidationError):
+        RecoveryRecord.model_validate_json(json.dumps(document))
+
+
+def test_mutated_base64_field_in_serialized_blob_surfaces_as_inequality() -> None:
+    """A wrapped-DEK value that diverges on disk must not reload as an
+    equal record. Re-encode a different 32-byte secret into
+    ``wrapped_dek_b64`` and assert the reloaded record is strictly
+    unequal to the original — the boundary carries the field verbatim,
+    it does not normalise divergent ciphertext away."""
+
+    record = _record()
+    document = json.loads(record.model_dump_json())
+    document["wrapped_dek_b64"] = _b64(32)
+
+    revived = RecoveryRecord.model_validate_json(json.dumps(document))
+    assert revived != record
 
 
 def test_rejects_unknown_keys() -> None:
