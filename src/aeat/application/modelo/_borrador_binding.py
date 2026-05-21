@@ -220,6 +220,7 @@ class Modelo100BorradorSourceResolver:
                 CalculationSourceProvenance(
                     source_kind="borrador",
                     source_ref=f"borrador:{result.borrador_snapshot_id}:binding:{binding_id}",
+                    fingerprint=f"sha256:{result.borrador_snapshot_id}",
                 )
                 for binding_id in result.bindings_sourced_from_borrador
                 if result.borrador_snapshot_id is not None

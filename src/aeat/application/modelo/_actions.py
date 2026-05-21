@@ -907,6 +907,8 @@ def calculate_modelo_revision(
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
+        bucket_id=work_unit.bucket_id,
+        revision=snapshot.revision,
         taxpayer_nif=_taxpayer_nif_for_bucket(work_unit.bucket_id),
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
@@ -1083,6 +1085,8 @@ def _apply_iva_compensation_decision_binding(
     filing_year: int,
     period: str,
     *,
+    bucket_id: str,
+    revision: ModeloRevision,
     taxpayer_nif: str | None = None,
     casilla_inputs: Mapping[str, Decimal] | None = None,
     backend_casilla_inputs: Mapping[str, Decimal] | None = None,
@@ -1149,7 +1153,19 @@ def _apply_iva_compensation_decision_binding(
         raise ModeloIvaWalletReconciliationBlocked(
             "backend casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
         )
-    backend_binding_values[binding_id] = selected
+    from ..aggregation import CalculationSourceContext
+    from ..calculations import IvaWalletDecisionSourceResolver
+
+    resolution = IvaWalletDecisionSourceResolver(decision).resolve(
+        CalculationSourceContext(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision=revision,
+        )
+    )
+    backend_binding_values.update(resolution.binding_values)
 
 
 def _require_persisted_iva_compensation_decision_for_work_unit(
