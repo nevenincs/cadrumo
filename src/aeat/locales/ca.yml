@@ -805,7 +805,8 @@ cli:
       event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment (repetible)
       help: Inspeccionar l'emmagatzematge per bucket i el seu historial d'esdeveniments
       history:
-        invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment vàlids: {valid}.'
+        invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
+          vàlids: {valid}.'
         invalid_timestamp: '{flag} ha de ser una marca de temps ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00);
           s''ha rebut {raw}.'
         since_after_until: --since ha de ser anterior o igual a --until.
@@ -2939,20 +2940,32 @@ wizard:
         help: Empresa de gran volum
       enrollment-public-administration-budget-gt-6000000:
         help: Pressupost administració pública superior a 6.000.000
+      entity-type:
+        help: Persona física, persona jurídica o entitat en atribució de rendes
       family-descendants-eu-eea-deduction:
         help: Descendents UE/EEE en deducció d'unitat familiar
       family-minor-children-in-unit:
         help: Fills menors en unitat familiar
       has-employees:
         help: Té empleats i paga salaris amb retenció
+      irpf-estimation-regime:
+        help: Règim d'estimació IRPF per a la renda d'activitat econòmica
+      irpf-income-categories:
+        help: Categories de renda IRPF separades per comes
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
         help: Alta en OSS
+      iva-redeme-enrolled:
+        help: Si el contribuent està inscrit a REDEME
       iva-regime:
         help: Règim IVA
       iva-roi-enrolled:
         help: Alta en ROI
+      iva-sii-enrolled:
+        help: Si el contribuent està inscrit al SII
+      legal-entity-form:
+        help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
       name:
         help: Nom visible mostrat en revisions locals
       notes:
@@ -3029,10 +3042,14 @@ wizard:
         prompt: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
         prompt: Alta en OSS
+      iva-redeme-enrolled:
+        prompt: Inscrit a REDEME (Registre de Devolució Mensual de l'IVA)
       iva-regime:
         prompt: Règim IVA
       iva-roi-enrolled:
         prompt: Alta en ROI
+      iva-sii-enrolled:
+        prompt: Inscrit al SII (Subministrament Immediat d'Informació)
       title: IVA
     notes:
       notes:
@@ -3045,6 +3062,17 @@ wizard:
         prompt: Realitza operacions intracomunitàries
       has-employees:
         prompt: Té empleats i paga salaris amb retenció
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            label: Estimació directa normal
+          directa-simplificada:
+            label: Estimació directa simplificada
+          objetiva:
+            label: Estimació objectiva (mòduls)
+        help: Com es determina el rendiment net de l'activitat econòmica; selecciona
+          Model 130 o 131
+        prompt: Règim d'estimació IRPF
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:
@@ -3069,6 +3097,8 @@ wizard:
             label: Exempt
           general:
             label: Règim general
+          reagp:
+            label: Règim especial de l'agricultura, ramaderia i pesca (REAGP)
           recargo-equivalencia:
             label: Recàrrec d'equivalència
           simplificado:
@@ -3180,6 +3210,51 @@ wizard:
       taxpayer-sex:
         prompt: Sexe del primer declarant
       title: Primer declarant
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            label: Entitat en atribució de rendes
+          legal-entity:
+            label: Persona jurídica (societat)
+          natural-person:
+            label: Persona física
+        help: Persona física (IRPF), persona jurídica (Impost sobre Societats) o entitat
+          en atribució de rendes
+        prompt: Tipus d'entitat
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            label: Activitat econòmica
+          capital-inmobiliario:
+            label: Rendiments del capital immobiliari
+          capital-mobiliario:
+            label: Rendiments del capital mobiliari
+          ganancias-patrimoniales:
+            label: Guanys patrimonials
+          pension:
+            label: Pensió
+          trabajo:
+            label: Rendiments del treball
+        help: Selecciona cada categoria de renda IRPF que tinguis; només l'activitat
+          econòmica obliga al Model 130/131
+        prompt: Categories de renda IRPF
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Societat cooperativa
+          other:
+            label: Altra forma jurídica
+          sa:
+            label: Societat anònima (S.A.)
+          sin-fines-lucrativos:
+            label: Entitat sense fins lucratius
+          sl:
+            label: Societat de responsabilitat limitada (S.L.)
+          sociedad-civil-mercantil:
+            label: Societat civil amb objecte mercantil
+        prompt: Forma jurídica
+      title: Tipus de contribuent
     title: Auxiliar de configuració
     verifier:
       activity_present: 'Activitat econòmica: comprovació que el perfil declara una

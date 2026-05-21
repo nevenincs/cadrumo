@@ -43,6 +43,10 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "28001",  # address-postcode
             "1",  # taxation-type (individual)
             "en",  # output-language
+            # ── taxpayer type ──────────────────────
+            "natural_person",  # entity-type
+            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
+            "trabajo,capital_inmobiliario",  # irpf-income-categories
             # ── taxpayer biographic ────────────────
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
@@ -62,6 +66,8 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "GENERAL",  # iva-regime
             "false",  # iva-roi-enrolled
             "false",  # iva-oss-enrolled
+            "false",  # iva-sii-enrolled
+            "false",  # iva-redeme-enrolled
             "false",  # iva-intracommunity-operations-exceed-50000-eur
             # ── enrollment ─────────────────────────
             "false",  # enrollment-large-company
@@ -73,6 +79,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "false",  # pays-rent-with-retencion
             "false",  # pays-capital-income-with-retencion
             "false",  # uses-objective-estimation-irpf
+            "directa_normal",  # irpf-estimation-regime
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold
             "false",  # bienes-extranjero-above-threshold
@@ -158,6 +165,9 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "28001",  # address-postcode
             "2",  # taxation-type (joint)
             "en",  # output-language
+            "natural_person",  # entity-type
+            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
+            "trabajo",  # irpf-income-categories
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
             "",  # taxpayer-birth-date
@@ -178,6 +188,8 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "GENERAL",  # iva-regime
             "false",  # iva-roi-enrolled
             "false",  # iva-oss-enrolled
+            "false",  # iva-sii-enrolled
+            "false",  # iva-redeme-enrolled
             "false",  # iva-intracommunity-operations-exceed-50000-eur
             "false",  # enrollment-large-company
             "false",  # enrollment-public-administration-budget-gt-6000000
@@ -187,6 +199,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "false",  # pays-rent-with-retencion
             "false",  # pays-capital-income-with-retencion
             "false",  # uses-objective-estimation-irpf
+            "directa_normal",  # irpf-estimation-regime
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold
             "false",  # bienes-extranjero-above-threshold

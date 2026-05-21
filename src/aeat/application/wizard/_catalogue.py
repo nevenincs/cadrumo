@@ -10,7 +10,13 @@ from __future__ import annotations
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
-from ...domain.deadlines._models import IVARegime
+from ...domain.deadlines._models import (
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    LegalEntityForm,
+)
 from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
 from ...domain.profile._ccaa import CCAA
 from ._models import (
@@ -57,9 +63,46 @@ _IVA_CHOICES: tuple[WizardChoice, ...] = (
         label=tr("wizard.setup.profile.iva-regime.choices.recargo-equivalencia.label"),
     ),
     WizardChoice(
+        value=IVARegime.REAGP.value,
+        label=tr("wizard.setup.profile.iva-regime.choices.reagp.label"),
+    ),
+    WizardChoice(
         value=IVARegime.EXENTO.value,
         label=tr("wizard.setup.profile.iva-regime.choices.exento.label"),
     ),
+)
+
+
+_ENTITY_TYPE_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(
+        value=member.value,
+        label=tr(f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.label"),
+    )
+    for member in EntityType
+)
+
+_LEGAL_ENTITY_FORM_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(
+        value=member.value,
+        label=tr(f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.label"),
+    )
+    for member in LegalEntityForm
+)
+
+_IRPF_INCOME_CATEGORY_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(
+        value=member.value,
+        label=tr(f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.label"),
+    )
+    for member in IrpfIncomeCategory
+)
+
+_IRPF_ESTIMATION_REGIME_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(
+        value=member.value,
+        label=tr(f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.label"),
+    )
+    for member in IrpfEstimationRegime
 )
 
 
@@ -202,6 +245,47 @@ _PROFILE_SECTION = WizardSection(
             prompt=tr("wizard.setup.profile.output-language.prompt"),
             choices=_OUTPUT_LANGUAGE_CHOICES,
             default="es",
+            required=False,
+            answer_type=str,
+        ),
+    ),
+)
+
+
+_ENTITY_LEGAL = WizardCondition(question_id="entity-type", equals=EntityType.LEGAL_ENTITY.value)
+
+
+_TAXPAYER_TYPE_SECTION = WizardSection(
+    id="taxpayer-type",
+    title=tr("wizard.setup.taxpayer-type.title"),
+    questions=(
+        WizardQuestion(
+            id="entity-type",
+            profile_key="taxpayer_type.entity_type",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.taxpayer-type.entity-type.prompt"),
+            help=tr("wizard.setup.taxpayer-type.entity-type.help"),
+            choices=_ENTITY_TYPE_CHOICES,
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="legal-entity-form",
+            profile_key="taxpayer_type.legal_entity_form",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.taxpayer-type.legal-entity-form.prompt"),
+            choices=_LEGAL_ENTITY_FORM_CHOICES,
+            required=False,
+            visible_when=_ENTITY_LEGAL,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="irpf-income-categories",
+            profile_key="taxpayer_type.irpf_income_categories",
+            widget=WizardWidget.CHECKBOX,
+            prompt=tr("wizard.setup.taxpayer-type.irpf-income-categories.prompt"),
+            help=tr("wizard.setup.taxpayer-type.irpf-income-categories.help"),
+            choices=_IRPF_INCOME_CATEGORY_CHOICES,
             required=False,
             answer_type=str,
         ),
@@ -377,6 +461,8 @@ _IVA_SECTION = WizardSection(
         ),
         _confirm("iva-roi-enrolled", "iva.roi_enrolled", suffix="iva"),
         _confirm("iva-oss-enrolled", "iva.oss_enrolled", suffix="iva"),
+        _confirm("iva-sii-enrolled", "iva.sii_enrolled", suffix="iva"),
+        _confirm("iva-redeme-enrolled", "iva.redeme_enrolled", suffix="iva"),
         _confirm(
             "iva-intracommunity-operations-exceed-50000-eur",
             "iva.intracommunity_operations_exceed_50000_eur",
@@ -425,6 +511,16 @@ _OBLIGATIONS_SECTION = WizardSection(
             "uses-objective-estimation-irpf",
             "irpf.uses_objective_estimation",
             suffix="obligations",
+        ),
+        WizardQuestion(
+            id="irpf-estimation-regime",
+            profile_key="irpf.estimation_regime",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.obligations.irpf-estimation-regime.prompt"),
+            help=tr("wizard.setup.obligations.irpf-estimation-regime.help"),
+            choices=_IRPF_ESTIMATION_REGIME_CHOICES,
+            required=False,
+            answer_type=str,
         ),
         _confirm("does-intracomunitario", "iva.does_intracomunitario", suffix="obligations"),
         _confirm(
@@ -481,6 +577,7 @@ SETUP_FLOW = WizardFlow(
     description=tr("wizard.setup.description"),
     sections=(
         _PROFILE_SECTION,
+        _TAXPAYER_TYPE_SECTION,
         _TAXPAYER_SECTION,
         _SPOUSE_SECTION,
         _FAMILY_SECTION,

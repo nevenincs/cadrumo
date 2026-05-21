@@ -15,28 +15,138 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._errors import DeadlineValidationError
 
 
 class IVARegime(StrEnum):
-    """The IVA regime an autónomo files under.
+    """The IVA regime a taxpayer files under.
 
     Registry deadline applicability can reference this value. The closed
-    set tracks the four regimes the project supports for autónomos.
+    set tracks the IVA regimes the project supports.
 
     Attributes:
-        GENERAL: Régimen general.
-        SIMPLIFICADO: Régimen simplificado.
-        RECARGO_EQUIVALENCIA: Recargo de equivalencia.
+        GENERAL: Régimen general (Ley 37/1992 LIVA).
+        SIMPLIFICADO: Régimen simplificado (módulos), coordinated with
+            IRPF estimación objetiva.
+        RECARGO_EQUIVALENCIA: Recargo de equivalencia for retail traders.
+        REAGP: Régimen especial de la agricultura, ganadería y pesca.
         EXENTO: IVA-exempt activity.
     """
 
     GENERAL = "GENERAL"
     SIMPLIFICADO = "SIMPLIFICADO"
     RECARGO_EQUIVALENCIA = "RECARGO_EQUIVALENCIA"
+    REAGP = "REAGP"
     EXENTO = "EXENTO"
+
+
+class EntityType(StrEnum):
+    """The taxpayer's entity type — the most consequential taxpayer axis.
+
+    Entity type selects the tax (IRPF vs Impuesto sobre Sociedades vs
+    régimen de atribución de rentas), and the tax selects the modelos,
+    the calendar, and the rate schedule. Grounded in Ley 35/2006 LIRPF
+    (BOE-A-2006-20764), Ley 27/2014 LIS (BOE-A-2014-12328), and LIRPF
+    Title X Section 2 (régimen de atribución de rentas).
+
+    Attributes:
+        NATURAL_PERSON: Persona física — an IRPF taxpayer
+            (contribuyente del IRPF).
+        LEGAL_ENTITY: A legal entity with personalidad jurídica — a
+            contribuyente del Impuesto sobre Sociedades.
+        ATTRIBUTION_ENTITY: An entity without legal personality
+            (comunidad de bienes, sociedad civil sin objeto mercantil,
+            herencia yacente) under the régimen de atribución de rentas;
+            income is taxed in the hands of each member.
+    """
+
+    NATURAL_PERSON = "natural_person"
+    LEGAL_ENTITY = "legal_entity"
+    ATTRIBUTION_ENTITY = "attribution_entity"
+
+
+class LegalEntityForm(StrEnum):
+    """The recognised legal form of an Impuesto sobre Sociedades entity.
+
+    Only meaningful when :class:`EntityType` is ``LEGAL_ENTITY``; the
+    sub-form drives the IS rate schedule (LIS Art. 29). Grounded in the
+    AEAT distinction between sociedades civiles and comunidades de
+    bienes and the project registry ``legal/is.toml``.
+
+    Attributes:
+        SL: Sociedad de responsabilidad limitada (S.L. / S.R.L.).
+        SA: Sociedad anónima (S.A.).
+        COOPERATIVA: Sociedad cooperativa — IS with a reduced rate.
+        SOCIEDAD_CIVIL_MERCANTIL: Sociedad civil con personalidad
+            jurídica y objeto mercantil — an IS contribuyente since 2016.
+        SIN_FINES_LUCRATIVOS: Asociación / fundación / entidad sin fines
+            lucrativos — IS contribuyente, partially exempt.
+        OTHER: Any other recognised legal form.
+    """
+
+    SL = "sl"
+    SA = "sa"
+    COOPERATIVA = "cooperativa"
+    SOCIEDAD_CIVIL_MERCANTIL = "sociedad_civil_mercantil"
+    SIN_FINES_LUCRATIVOS = "sin_fines_lucrativos"
+    OTHER = "other"
+
+
+class IrpfIncomeCategory(StrEnum):
+    """An IRPF income category (rendimiento) a natural person declares.
+
+    For a natural person the quarterly / informational modelo
+    obligations derive from the income category, not from being a
+    natural person as such. Grounded in Ley 35/2006 LIRPF
+    (BOE-A-2006-20764).
+
+    Attributes:
+        ACTIVIDAD_ECONOMICA: Rendimientos de actividades económicas
+            (autónomo / empresario / profesional) — LIRPF Arts. 27-32.
+            The only category that triggers Modelo 130 / 131.
+        TRABAJO: Rendimientos del trabajo (employment) — LIRPF
+            Arts. 17-20.
+        CAPITAL_INMOBILIARIO: Rendimientos del capital inmobiliario
+            (immovable property / rental) — LIRPF Arts. 22-24.
+        CAPITAL_MOBILIARIO: Rendimientos del capital mobiliario
+            (dividends, interest) — LIRPF Arts. 25-26.
+        GANANCIAS_PATRIMONIALES: Ganancias y pérdidas patrimoniales
+            (capital gains) — LIRPF Arts. 33-39.
+        PENSION: Pensión — a rendimiento del trabajo for IRPF purposes
+            (LIRPF Art. 17.2.a), modelled separately so a pensioner
+            profile is explicit.
+    """
+
+    ACTIVIDAD_ECONOMICA = "actividad_economica"
+    TRABAJO = "trabajo"
+    CAPITAL_INMOBILIARIO = "capital_inmobiliario"
+    CAPITAL_MOBILIARIO = "capital_mobiliario"
+    GANANCIAS_PATRIMONIALES = "ganancias_patrimoniales"
+    PENSION = "pension"
+
+
+class IrpfEstimationRegime(StrEnum):
+    """The IRPF method for determining net economic-activity income.
+
+    A closed regime choice for a natural person with rendimientos de
+    actividades económicas (LIRPF Arts. 16, 28-31; RIRPF RD 439/2007).
+    The regime selects Modelo 130 vs Modelo 131 and the
+    deductible-expense computation.
+
+    Attributes:
+        DIRECTA_NORMAL: Estimación directa normal — full accounting;
+            pago fraccionado on Modelo 130.
+        DIRECTA_SIMPLIFICADA: Estimación directa simplificada — applies
+            below the INCN threshold; pago fraccionado on Modelo 130.
+        OBJETIVA: Estimación objetiva (módulos) — net income from
+            signos, índices y módulos; pago fraccionado on Modelo 131.
+    """
+
+    DIRECTA_NORMAL = "directa_normal"
+    DIRECTA_SIMPLIFICADA = "directa_simplificada"
+    OBJETIVA = "objetiva"
 
 
 class ObligationStatus(StrEnum):
@@ -80,40 +190,74 @@ class ModeloEnrollment(BaseModel):
 
 
 class ModeloIVAProfile(BaseModel):
-    """IVA facts used by registry filing schedules."""
+    """IVA facts used by registry filing schedules.
+
+    Attributes:
+        roi_enrolled: Registered on the Registro de Operadores
+            Intracomunitarios (ROI / VIES).
+        oss_enrolled: Enrolled in the OSS / IOSS one-stop-shop regime.
+        intracommunity_operations_exceed_50000_eur: Modelo 349 cadence
+            threshold.
+        sii_enrolled: Enrolled in the SII (Suministro Inmediato de
+            Información) — the near-real-time IVA ledger-submission
+            system created by RD 596/2016. Mandatory for the monthly
+            IVA collective; voluntary for everyone else.
+        redeme_enrolled: Registered in REDEME (Registro de Devolución
+            Mensual del IVA) — one of the mandatory-SII triggers.
+    """
 
     model_config = _STRICT_FROZEN
 
     roi_enrolled: bool = False
     oss_enrolled: bool = False
     intracommunity_operations_exceed_50000_eur: bool = False
+    sii_enrolled: bool = False
+    redeme_enrolled: bool = False
 
 
 class TaxpayerProfile(BaseModel):
-    """The profile of a Spanish autónomo for filing-deadline computation.
+    """The profile of a Spanish taxpayer for filing-deadline computation.
+
+    Carries the structured three-axis taxpayer model — entity type,
+    tax regime, and special enrolments — alongside the flat filing
+    facts the deadline engine consumes today.
 
     Attributes:
-        tax_id: NIF / NIE. Stored verbatim, no normalisation.
-        iva_regime: The IVA regime the autónomo files under.
-        has_employees: Whether the autónomo pays salaries with
+        tax_id: NIF / NIE / CIF. Stored verbatim, no normalisation.
+        entity_type: The taxpayer's entity type (natural person, legal
+            entity, or attribution entity). ``None`` when the operator
+            has not yet declared it.
+        legal_entity_form: The recognised legal form when
+            ``entity_type`` is ``LEGAL_ENTITY``; ``None`` otherwise.
+        irpf_income_categories: The IRPF income categories a natural
+            person declares (rendimientos). Empty when undeclared or
+            when the taxpayer is not a natural person.
+        irpf_estimation_regime: The IRPF estimation regime for
+            economic-activity income. ``None`` when undeclared.
+        iva_regime: The IVA regime the taxpayer files under.
+        has_employees: Whether the taxpayer pays salaries with
             retención.
-        pays_professionals_with_retencion: Whether the autónomo pays
+        pays_professionals_with_retencion: Whether the taxpayer pays
             professional fees subject to retención.
         professional_income_withholding_ge_70pct: Whether at least 70%
-            of the autónomo's prior-year professional income was
+            of the taxpayer's prior-year professional income was
             already subject to withholding.
-        pays_rent_with_retencion: Whether the autónomo pays alquiler de
+        pays_rent_with_retencion: Whether the taxpayer pays alquiler de
             local with retención.
-        pays_capital_income_with_retencion: Whether the autónomo pays
+        pays_capital_income_with_retencion: Whether the taxpayer pays
             capital-income rents subject to withholding.
-        uses_objective_estimation_irpf: Whether the autónomo computes IRPF
-            economic-activity income under estimación objetiva.
-        does_intracomunitario: Whether the autónomo conducts
+        uses_objective_estimation_irpf: Whether the taxpayer computes
+            IRPF economic-activity income under estimación objetiva.
+            Kept in lockstep with ``irpf_estimation_regime``: when the
+            regime is ``OBJETIVA`` this flag is forced ``True``. The
+            registry ``schedule_predicates`` / ``model_selectors`` that
+            test ``uses_objective_estimation_irpf`` still resolve.
+        does_intracomunitario: Whether the taxpayer conducts
             operaciones intracomunitarias.
         third_party_transactions_above_347_threshold: Whether the
             profile exceeded the applicable third-party transaction
             threshold during the prior year.
-        bienes_extranjero_above_threshold: Whether the autónomo holds
+        bienes_extranjero_above_threshold: Whether the taxpayer holds
             bienes en el extranjero above the legal threshold.
         iva: IVA-specific filing facts that can change filing cadence.
         enrollment: AEAT enrollment facts that can change filing cadence.
@@ -124,6 +268,10 @@ class TaxpayerProfile(BaseModel):
     model_config = _STRICT_FROZEN
 
     tax_id: str = Field(min_length=1)
+    entity_type: EntityType | None = None
+    legal_entity_form: LegalEntityForm | None = None
+    irpf_income_categories: frozenset[IrpfIncomeCategory] = frozenset()
+    irpf_estimation_regime: IrpfEstimationRegime | None = None
     iva_regime: IVARegime
     has_employees: bool = False
     pays_professionals_with_retencion: bool = False
@@ -146,6 +294,77 @@ class TaxpayerProfile(BaseModel):
     vivienda_office_office_m2: Decimal | None = None
     iae_epigraph: str = ""
     notes: str = ""
+
+    @field_validator("irpf_income_categories", mode="before")
+    @classmethod
+    def _coerce_income_categories(cls, value: object) -> object:
+        """Accept any iterable of categories under strict mode.
+
+        ``strict=True`` rejects a JSON array for a ``frozenset`` field,
+        so a model loaded from ``model_dump_json`` would fail. Coercing
+        a list / tuple / set into a ``frozenset`` here keeps the JSON
+        persistence roundtrip loss-free while the field stays a typed,
+        order-independent ``frozenset`` on the model.
+        """
+
+        if isinstance(value, frozenset):
+            return value
+        if isinstance(value, list | tuple | set):
+            return frozenset(value)
+        return value
+
+    @model_validator(mode="after")
+    def _check_objective_estimation_consistency(self) -> Self:
+        """Reject a regime that contradicts ``uses_objective_estimation_irpf``.
+
+        ``irpf_estimation_regime`` is the structured tax-regime axis;
+        ``uses_objective_estimation_irpf`` is the legacy boolean that
+        the registry ``schedule_predicates`` and ``model_selectors``
+        still test. The two must not contradict: a non-objective
+        regime declared together with a ``True`` boolean is rejected,
+        and an ``OBJETIVA`` regime declared with a ``False`` boolean is
+        rejected. The boolean is *derived* from the regime by the
+        ``mode="before"`` validator below, so this check only fires
+        when a caller bypasses that derivation. When the regime is
+        undeclared the boolean is left untouched so existing profiles
+        keep working until the engine is rewired.
+        """
+
+        regime = self.irpf_estimation_regime
+        if regime is None:
+            return self
+        wants_objective = regime is IrpfEstimationRegime.OBJETIVA
+        if wants_objective != self.uses_objective_estimation_irpf:
+            raise DeadlineValidationError(
+                f"irpf_estimation_regime {regime.value!r} contradicts "
+                f"uses_objective_estimation_irpf={self.uses_objective_estimation_irpf}; "
+                "the objective-estimation boolean must be True only for the "
+                "OBJETIVA regime"
+            )
+        return self
+
+    @model_validator(mode="before")
+    @classmethod
+    def _derive_objective_estimation_flag(cls, data: object) -> object:
+        """Derive ``uses_objective_estimation_irpf`` from the regime axis.
+
+        When the structured ``irpf_estimation_regime`` is supplied
+        without an explicit ``uses_objective_estimation_irpf``, the
+        boolean is set from the regime (``OBJETIVA`` ⇒ ``True``) so the
+        registry conditions that still test the boolean keep resolving
+        correctly. An explicit boolean is left in place for the
+        consistency check above to adjudicate.
+        """
+
+        if not isinstance(data, dict):
+            return data
+        regime = data.get("irpf_estimation_regime")
+        if regime is None or "uses_objective_estimation_irpf" in data:
+            return data
+        parsed = regime if isinstance(regime, IrpfEstimationRegime) else IrpfEstimationRegime(regime)
+        derived = dict(data)
+        derived["uses_objective_estimation_irpf"] = parsed is IrpfEstimationRegime.OBJETIVA
+        return derived
 
 
 class RecargoBand(BaseModel):

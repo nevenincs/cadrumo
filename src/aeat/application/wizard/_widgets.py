@@ -127,14 +127,25 @@ def validate_confirm(raw: str, question: WizardQuestion) -> str:
 
 
 def validate_select(raw: str, question: WizardQuestion) -> str:
-    """Reject any answer that is not declared in the question's choices."""
+    """Reject any answer that is not declared in the question's choices.
+
+    A blank answer is accepted for an optional, unconditional question
+    that declares no default — it represents an undeclared closed-set
+    fact. A required (or conditionally-required) question with no
+    answer still fails, and any non-blank answer must match a choice.
+    """
 
     if not question.choices:
         raise _fail(question, "select_without_choices")
+    value = raw.strip()
+    if not value:
+        if question.required and question.visible_when is None:
+            raise _fail(question, "select_unknown", raw=raw, choices=sorted({c.value for c in question.choices}))
+        return value
     allowed = {choice.value for choice in question.choices}
-    if raw not in allowed:
+    if value not in allowed:
         raise _fail(question, "select_unknown", raw=raw, choices=sorted(allowed))
-    return raw
+    return value
 
 
 def validate_checkbox(raw: str, question: WizardQuestion) -> str:

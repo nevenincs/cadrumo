@@ -125,6 +125,44 @@ def test_select_rejects_when_no_choices_declared() -> None:
         validate_widget_answer(question, "anything")
 
 
+def test_select_accepts_blank_for_optional_unconditional_question() -> None:
+    """An optional SELECT with no default accepts a blank answer.
+
+    An optional closed-set fact that the operator did not declare —
+    the taxpayer entity-type axis, for example — must be representable
+    as undeclared rather than forcing a default choice.
+    """
+
+    choices = (
+        WizardChoice(value="general", label=tr("wizard.choices.general")),
+        WizardChoice(value="simplificado", label=tr("wizard.choices.simplificado")),
+    )
+    question = _question(
+        WizardWidget.SELECT,
+        choices=choices,
+        required=False,
+        prompt=_SELECT_PROMPT,
+    )
+    assert validate_widget_answer(question, "") == ""
+
+
+def test_select_rejects_blank_for_required_unconditional_question() -> None:
+    """A required SELECT still rejects a blank answer."""
+
+    choices = (
+        WizardChoice(value="general", label=tr("wizard.choices.general")),
+        WizardChoice(value="simplificado", label=tr("wizard.choices.simplificado")),
+    )
+    question = _question(
+        WizardWidget.SELECT,
+        choices=choices,
+        required=True,
+        prompt=_SELECT_PROMPT,
+    )
+    with pytest.raises(WizardValidationError, match=r"select_unknown"):
+        validate_widget_answer(question, "")
+
+
 def test_checkbox_accepts_multi_token_membership() -> None:
     choices = (
         WizardChoice(value="iva", label=tr("wizard.choices.iva")),
