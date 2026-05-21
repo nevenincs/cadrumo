@@ -1499,8 +1499,11 @@ def auth_configure(
     lines = [
         f"provider\t{result.provider}",
         f"file\t{result.file}",
+        f"status\t{'configured' if result.complete else 'incomplete'}",
         f"active_profile\t{result.active_profile}",
     ]
+    if not result.complete:
+        lines.append(f"incomplete_reason\t{result.incomplete_reason}")
     if result.provider == "clave_movil":
         lines.extend(
             (
