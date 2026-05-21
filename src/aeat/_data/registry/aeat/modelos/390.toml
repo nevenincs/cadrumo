@@ -734,3 +734,53 @@ deadline_windows = [
     "modelo-390-2025-0a",
     "modelo-390-2026-0a",
 ]
+
+# Calculation-completeness manifest for revision 2010-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed on each casilla's own registry (segmento, number)
+# identity. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.
+[revisions."2010-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-390-2025"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "662"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "97"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.autorepercutido.intracomunitaria"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.cuota-deducible-total"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.cuota-devengada-total"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.reconciliacion.deducible-303"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.reconciliacion.devengada-303"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.reconciliacion.resultado-303"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.repercutido.general"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.repercutido.reducido"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.repercutido.super-reducido"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.resultado-regimen-general"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.soportado.interiores"

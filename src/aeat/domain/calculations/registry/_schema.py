@@ -1579,18 +1579,25 @@ class CalculationCompletenessCasilla(RegistryModel):
 
     A casilla's identity is the pair ``(segmento, number)``. A
     single-segment modelo leaves ``segmento`` unset, so the pair degrades
-    to ``(None, number)`` and the manifest enumerates bare numbers
-    exactly as the AEAT Diseño de Registros declares them.
+    to ``(None, number)`` and the manifest enumerates bare numbers.
+
+    ``number`` carries the registry ``number`` of the closure casilla
+    verbatim. Only Modelo 200's casilla numbers are five-digit AEAT
+    Diseño tags; the other calculation-bearing modelos identify casillas
+    by semantic slug (``iva.cuota-devengada-total``) or short ordinal
+    (``01``-``19``), so the manifest carries whatever vocabulary the
+    modelo's registry uses. The field is unbounded above to match the
+    unconstrained ``CasillaDefinition.number``.
 
     The manifest enumerates only the casillas inside a modelo's
     *calculation closure* — formula targets, the casillas referenced
-    inside any formula expression, binding and relation endpoint
-    casillas, and verification-expectation operands. Pure
-    accounting-statement data-entry fields that feed no calculation are
-    intentionally absent from this required set.
+    inside any formula expression, formula and binding endpoint casillas,
+    and verification-expectation operands. Pure accounting-statement
+    data-entry fields that feed no calculation are intentionally absent
+    from this required set.
     """
 
-    number: str = Field(min_length=1, max_length=32)
+    number: str = Field(min_length=1)
     segmento: str | None = Field(
         default=None,
         min_length=1,

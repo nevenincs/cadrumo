@@ -532,3 +532,38 @@ deadline_windows = [
     "modelo-353-2025-12",
     "modelo-353-2026-01",
 ]
+
+# Calculation-completeness manifest for revision 2008-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed on each casilla's own registry (segmento, number)
+# identity. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.
+[revisions."2008-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-353-2026"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
+number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
+number = "iva.cuota-deducible-total"
+
+[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
+number = "iva.cuota-devengada-total"
+
+[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
+number = "iva.repercutido.general"
+
+[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
+number = "iva.repercutido.reducido"
+
+[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
+number = "iva.repercutido.super-reducido"
+
+[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
+number = "iva.resultado-regimen-general"
+
+[[revisions."2008-y-siguientes".completeness_manifest.casillas]]
+number = "iva.soportado.interiores"
