@@ -267,7 +267,9 @@ class TestEncryptionMetadata:
 
     def test_missing_associated_data_is_rejected(self) -> None:
         with pytest.raises(ValidationError, match="associated_data_b64"):
-            EncryptionMetadata(
-                nonce_b64=base64.b64encode(b"\x00" * 12).decode("ascii"),
-                ciphertext_b64=base64.b64encode(b"x" * 16).decode("ascii"),
+            EncryptionMetadata.model_validate(
+                {
+                    "nonce_b64": base64.b64encode(b"\x00" * 12).decode("ascii"),
+                    "ciphertext_b64": base64.b64encode(b"x" * 16).decode("ascii"),
+                }
             )
