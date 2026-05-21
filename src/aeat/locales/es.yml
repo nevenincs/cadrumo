@@ -1782,12 +1782,18 @@ errors:
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
+  censo:
+    no_snapshot_captured: 'No se ha capturado ninguna instantánea del censo para el perfil {profile_id}.'
+    profile_not_found: 'El perfil {profile_id} no existe; créalo antes de aplicar el censo.'
+    sede_g313_no_census: 'La sede de la AEAT (G313) no devolvió ningún censo legible para el perfil {profile_id}; confirma que tu certificado o Cl@ve está registrado para este NIF.'
+    sede_no_census: 'La sede de la AEAT no devolvió ningún censo legible para el perfil {profile_id}.'
   financial:
     source_file_not_found: 'El archivo de origen no existe: {path}'
   internal:
-    internal_cli_unexpected_boundary: 'El comando falló por un error interno inesperado.'
+    internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
   refused:
-    refused_cli_validation_boundary: 'La entrada del comando no superó la validación. Ejecuta `aeat config repair` o restablece el estado del perfil.'
+    refused_cli_validation_boundary: La entrada del comando no superó la validación.
+      Ejecuta `aeat config repair` o restablece el estado del perfil.
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
     ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'
@@ -1803,7 +1809,7 @@ filing:
 profile:
   errors:
     foral_regime: '{tax_region} es un régimen foral fuera del alcance de este perfil.'
-    not_configured: 'No hay ningún perfil de residencia fiscal configurado para RENTA.'
+    not_configured: No hay ningún perfil de residencia fiscal configurado para RENTA.
   keys:
     description: Profile configuration keys and their descriptions
     tax:
