@@ -127,7 +127,7 @@ def _gather_observations(
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     ):
-        payload = repository.load(requirement.modelo, requirement.filing_year, requirement.period)
+        payload = repository.load_observation(requirement.modelo, requirement.filing_year, requirement.period)
         if payload is not None:
             obs = payload.observation
         elif requirement.modelo == "303" and iva_history_repository is not None:

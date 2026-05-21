@@ -201,7 +201,7 @@ def _store_prior_compensation(repository: CalculationObservationRepository, *, a
         item for item in snapshot.revision.casillas if item.id == "iva.compensacion-disponible-fin-periodo"
     )
     formula = next(item for item in snapshot.revision.formulas if item.target == casilla.id)
-    repository.save(
+    repository.save_observation(
         RegistryModeloObservation(
             modelo="303",
             filing_year=2026,

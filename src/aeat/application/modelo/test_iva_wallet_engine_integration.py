@@ -118,7 +118,7 @@ def _store_prior_303_compensation(
     formula = next(
         item for item in snapshot.revision.formulas if item.target == "iva.compensacion-disponible-fin-periodo"
     )
-    repo.save(
+    repo.save_observation(
         RegistryModeloObservation(
             modelo="303",
             filing_year=filing_year,

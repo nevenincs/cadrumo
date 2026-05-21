@@ -473,7 +473,7 @@ def persist_filed_calculation_observation(
     registry_observation = registry_observation_from_filed_declaration(observation)
     registry_observation = _with_derived_303_compensation_available(registry_observation)
     repo = repository if repository is not None else CalculationObservationRepository()
-    repo.save(
+    repo.save_observation(
         registry_observation,
         source_kind="aeat_sede_justificante",
         captured_at=observation.presented_at,

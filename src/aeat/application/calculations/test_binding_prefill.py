@@ -133,7 +133,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             }
             repository = CalculationObservationRepository()
             for period, result in quarterly_results.items():
-                repository.save(
+                repository.save_observation(
                     _registry_observation(filing_year=2025, period=period, result=result),
                     source_kind="app_filing",
                 )
