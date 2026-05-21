@@ -105,9 +105,16 @@ class ProjectionAuthReadiness(BaseModel):
             ``available`` reading, but it never recomputes
             ``configured``.
         health_summary: The backend-reported health summary text.
-        health_severity: The backend-reported health severity token.
-        certificate_path: Recorded certificate filesystem reference, or
-            ``""``.
+        health_severity: A non-empty health severity token coherent
+            with ``health_summary``. The certificate backend's own
+            tokens (``OK`` / ``EXPIRED`` / ...) pass through; for a
+            provider whose backend reports no severity the projection
+            derives ``ok`` / ``warning`` / ``error`` from the readiness
+            signals. Empty only when no provider is selected.
+        certificate_path: Recorded certificate filesystem reference for
+            the certificate provider, or ``""``. A non-certificate
+            provider always reports ``""`` — it never carries a stale
+            path from an earlier certificate configuration.
     """
 
     model_config = _STRICT_FROZEN
@@ -331,15 +338,67 @@ def _build_auth_readiness(
             )
             available = False
 
+    authenticated = configured and bool(auth.authenticated_at)
+    health_severity = _resolve_health_severity(
+        health_severity,
+        health_summary=health_summary,
+        provider=provider,
+        configured=configured,
+        available=available,
+        authenticated=authenticated,
+    )
+
     return ProjectionAuthReadiness(
         provider=provider,
         configured=configured,
-        authenticated=configured and bool(auth.authenticated_at),
+        authenticated=authenticated,
         available=available,
         health_summary=health_summary,
         health_severity=health_severity,
-        certificate_path=auth.certificate_path or "",
+        # G1: the certificate path is a certificate-provider field; a
+        # non-certificate provider must never carry a stale path left
+        # over from an earlier certificate configuration.
+        certificate_path=(
+            auth.certificate_path or ""
+            if provider == AuthProviderKind.CERTIFICATE.value
+            else ""
+        ),
     )
+
+
+def _resolve_health_severity(
+    backend_severity: str,
+    *,
+    health_summary: str,
+    provider: str,
+    configured: bool,
+    available: bool,
+    authenticated: bool,
+) -> str:
+    """Return a non-empty, coherent ``health_severity`` token.
+
+    The certificate backend already emits its own severity tokens
+    (``OK`` / ``EXPIRED`` / ``EXPIRING`` ...); those are authoritative
+    and pass through unchanged. The Cl@ve Móvil backend reports a
+    ``health_summary`` but no severity, so the field would otherwise
+    always be empty (persona-fleet finding G4). When a provider is
+    selected and the backend left the severity blank, derive a token
+    that agrees with the readiness signals: ``ok`` for a configured,
+    available, authenticated provider; ``warning`` for one that is
+    configured but not yet usable end-to-end; ``error`` when no
+    provider is configured at all. With no provider selected and no
+    summary the field stays empty — there is nothing to classify.
+    """
+
+    if backend_severity:
+        return backend_severity
+    if not provider:
+        return ""
+    if not configured:
+        return "error"
+    if available and authenticated:
+        return "ok"
+    return "warning"
 
 
 def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSummary:

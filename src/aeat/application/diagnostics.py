@@ -972,6 +972,24 @@ def secure_object_unreadable_total() -> int:
     return _probe_secure_objects_integrity().unreadable_total
 
 
+def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
+    """Report the rows ``repair quarantine`` would move, mutating nothing.
+
+    Backs the ``aeat config repair quarantine --dry-run`` preview. Runs
+    the same per-namespace decryptability probe that
+    :func:`quarantine_unreadable_secure_objects` uses to decide which
+    rows to archive, but performs no copy and no delete: the
+    ``secure_objects`` table is left exactly as found. The returned
+    :class:`SecureObjectIntegrityReport` carries, per namespace, the
+    ``unreadable`` count (= rows the non-dry-run verb would quarantine)
+    and the ``readable`` count (= rows it would retain), so the
+    operator can confirm the blast radius before committing — the same
+    preview shape ``reset-state --dry-run`` already offers.
+    """
+
+    return _probe_secure_objects_integrity()
+
+
 def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
     """Move every undecryptable secure-object row into the quarantine table.
 
@@ -1017,6 +1035,7 @@ __all__ = [
     "build_cli_version_report",
     "build_config_repair_report",
     "build_registry_integrity_report",
+    "preview_quarantine_unreadable_secure_objects",
     "probe_browser_connectivity",
     "quarantine_unreadable_secure_objects",
     "render_browser_connectivity_text",

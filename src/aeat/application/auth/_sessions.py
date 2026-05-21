@@ -397,18 +397,17 @@ def _assert_active_profile_identity_matches_provider(
     provider_identity = _normalise_tax_identity(settings.aeat_clave_movil_dni_nie)
     if not provider_identity:
         raise AuthProfileIdentityMismatchError(
-            "Cl@ve Móvil live auth requires a configured DNI/NIE before any AEAT session can be used."
+            tr("application.auth.sessions.errors.clave_identity_missing")
         )
 
     profile_identity = _active_profile_tax_identity()
     if not profile_identity:
         raise AuthProfileIdentityMismatchError(
-            "Cl@ve Móvil live auth requires the active profile to carry identity.tax_id."
+            tr("application.auth.sessions.errors.profile_tax_id_missing")
         )
     if profile_identity != provider_identity:
         raise AuthProfileIdentityMismatchError(
-            "Cl@ve Móvil identity does not match the active profile tax identity; "
-            "switch to the matching profile or update the profile before live AEAT auth."
+            tr("application.auth.sessions.errors.clave_identity_profile_mismatch")
         )
     return provider_identity
 
@@ -454,8 +453,7 @@ def _assert_session_identity_matches_expected(session: object, expected_identity
     session_identity = _normalise_tax_identity(getattr(session, "identity_nif", ""))
     if session_identity and session_identity != expected_identity:
         raise AuthProfileIdentityMismatchError(
-            "AEAT session identity does not match the active profile tax identity; "
-            "clear auth sessions and authenticate the matching profile before live AEAT reads."
+            tr("application.auth.sessions.errors.session_identity_profile_mismatch")
         )
 
 

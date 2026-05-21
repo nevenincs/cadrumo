@@ -130,13 +130,25 @@ class WorkflowStateRepository:
     def fingerprint_state(
         self,
         *,
-        reason_class: str = "unreadable",
+        reason_class: str | None = None,
     ) -> WorkflowStateResetFingerprint:
         """Return a row-level fingerprint of the persisted state envelope.
 
-        Reads row-level metadata only; never decrypts the payload. When
-        no envelope is persisted the fingerprint records empty metadata
-        and the supplied ``reason_class`` for the emitted event.
+        Reads row-level metadata only; never decrypts the payload for
+        the fingerprint fields. The state envelope is loaded once to
+        derive ``recovered_bucket_id`` and to classify the envelope's
+        readability — a healthy, decryptable envelope is reported with
+        ``reason_class="readable"``, an absent envelope with
+        ``"absent"``, and an envelope row that cannot be decoded with
+        ``"unreadable"``. A freshly-created storage root that has only
+        just persisted a healthy state must therefore report
+        ``readable``, never ``unreadable``.
+
+        ``reason_class`` may be supplied to override the derived
+        classification when the caller already knows the trigger that
+        forced the reset (e.g. a downstream handler that caught the
+        concrete failure). When ``None`` the classification is derived
+        from the envelope itself.
 
         The ``repair reset-state`` recovery verb is bootstrap-exempt
         and may run on a cold root where ``aeat_database_url`` does
@@ -153,10 +165,11 @@ class WorkflowStateRepository:
                 schema_version=None,
                 written_at=None,
                 byte_length=None,
-                reason_class=reason_class,
+                reason_class=reason_class or "absent",
                 recovered_bucket_id=None,
             )
         recovered_bucket_id: str | None = None
+        envelope_readable = True
         try:
             state = self.load()
         except (
@@ -175,6 +188,7 @@ class WorkflowStateRepository:
             # the recovery verb must still delete the row by key.
             # Fall back to row-level metadata only.
             state = None
+            envelope_readable = False
         if state is not None:
             recovered_bucket_id = state.active_profile_bucket_id()
         if metadata is None:
@@ -182,14 +196,15 @@ class WorkflowStateRepository:
                 schema_version=None,
                 written_at=None,
                 byte_length=None,
-                reason_class=reason_class,
+                reason_class=reason_class or "absent",
                 recovered_bucket_id=recovered_bucket_id,
             )
+        derived_reason = "readable" if envelope_readable else "unreadable"
         return WorkflowStateResetFingerprint(
             schema_version=metadata.schema_version,
             written_at=metadata.written_at,
             byte_length=metadata.byte_length,
-            reason_class=reason_class,
+            reason_class=reason_class or derived_reason,
             recovered_bucket_id=recovered_bucket_id,
         )
 
@@ -198,7 +213,7 @@ class WorkflowStateRepository:
         *,
         actor: str = "aeat.application.workflow",
         source: str = "aeat config repair reset-state",
-        reason_class: str = "unreadable",
+        reason_class: str | None = None,
     ) -> WorkflowStateResetFingerprint:
         """Delete the workflow-state envelope and emit a reset event.
 
@@ -308,7 +323,7 @@ def reset_workflow_state(
     *,
     actor: str = "aeat.application.workflow",
     source: str = "aeat config repair reset-state",
-    reason_class: str = "unreadable",
+    reason_class: str | None = None,
 ) -> WorkflowStateResetFingerprint:
     """Module-level helper around :meth:`WorkflowStateRepository.reset_workflow_state`."""
 
@@ -319,7 +334,7 @@ def reset_workflow_state(
     )
 
 
-def fingerprint_workflow_state(*, reason_class: str = "unreadable") -> WorkflowStateResetFingerprint:
+def fingerprint_workflow_state(*, reason_class: str | None = None) -> WorkflowStateResetFingerprint:
     """Module-level helper around :meth:`WorkflowStateRepository.fingerprint_state`."""
 
     return workflow_state_repository().fingerprint_state(reason_class=reason_class)

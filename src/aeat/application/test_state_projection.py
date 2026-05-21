@@ -327,3 +327,67 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
         "configured must not contradict the health summary — "
         f"got configured={auth.configured!r}, health_summary={auth.health_summary!r}"
     )
+
+
+def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path: Path) -> None:
+    """A non-certificate provider must not carry a stale ``certificate_path``.
+
+    After ``configure --provider certificate --file PATH`` then
+    ``configure --provider clave_movil``, the projection's
+    ``certificate_path`` must be empty — the certificate path is a
+    certificate-provider field and must not leak beside a different
+    active provider (persona-fleet finding G1).
+    """
+
+    from .auth._operator import configure_operator_auth
+
+    _register_active_profile()
+    cert_file = tmp_path / "operator-cert.pfx"
+    cert_file.write_bytes(b"placeholder pkcs12 bytes")
+
+    configure_operator_auth("certificate", certificate_path=cert_file)
+    after_cert = build_operator_state_projection(probe_live_backend=False)
+    assert after_cert.auth.certificate_path == str(cert_file)
+
+    configure_operator_auth("clave_movil")
+    after_switch = build_operator_state_projection(probe_live_backend=False)
+
+    assert after_switch.auth.provider == "clave_movil"
+    assert after_switch.auth.certificate_path == "", (
+        "certificate_path must be empty for a non-certificate provider — "
+        f"got {after_switch.auth.certificate_path!r}"
+    )
+
+
+def test_auth_readiness_health_severity_is_populated_for_a_configured_provider() -> None:
+    """``health_severity`` must carry a meaningful, non-empty token.
+
+    The Cl@ve backend reports a ``health_summary`` but no severity; the
+    projection must derive a coherent token so ``health_severity`` is
+    never silently empty for a configured provider (persona-fleet
+    finding G4).
+    """
+
+    from .auth._operator import configure_operator_auth
+
+    _register_active_profile()
+    configure_operator_auth("clave_movil")
+
+    auth = build_operator_state_projection(probe_live_backend=True).auth
+
+    assert auth.health_severity != "", (
+        "health_severity must be populated for a configured provider — "
+        f"got health_summary={auth.health_summary!r}"
+    )
+    assert auth.health_severity in {"ok", "warning", "error"}
+
+
+def test_auth_readiness_health_severity_empty_only_when_no_provider() -> None:
+    """With no provider selected there is nothing to classify; severity stays empty."""
+
+    _register_active_profile()
+
+    auth = build_operator_state_projection(probe_live_backend=True).auth
+
+    assert auth.provider == ""
+    assert auth.health_severity == ""

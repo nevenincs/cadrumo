@@ -141,6 +141,21 @@ application:
         operator_completion_required: Preparat; requereix finalització de Cl@ve mediada
           per l'operador.
     operator:
+      alignment:
+        both_missing_detail: No estan configurades ni la identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+          ni l'identificador fiscal del perfil actiu. Configura tots dos amb el mateix
+          DNI/NIE abans de l'autenticació AEAT en directe.
+        clave_identity_missing_detail: La identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+          no està configurada, de manera que no es pot comparar amb l'identificador
+          fiscal del perfil actiu. Configura-la amb el DNI/NIE del perfil actiu.
+        mismatch_detail: El DNI/NIE de la identitat Cl@ve '%{clave_identity}' no coincideix
+          amb l'identificador fiscal del perfil actiu '%{profile_tax_id}'. L'autenticació
+          AEAT en directe vincularia la sessió d'un contribuent a un altre perfil.
+          Canvia al perfil l'identificador fiscal del qual coincideixi amb el DNI/NIE
+          de Cl@ve, o corregeix el valor que sigui erroni.
+        profile_tax_id_missing_detail: El perfil actiu no té identificador fiscal,
+          de manera que no es pot comparar amb la identitat Cl@ve. Configura l'identificador
+          fiscal del perfil amb el DNI/NIE utilitzat per a Cl@ve.
       errors:
         certificate_file_required: El proveïdor de certificat requereix un fitxer
           de certificat. Executa `aeat config auth configure --provider certificate
@@ -158,6 +173,16 @@ application:
           de bucket però no té cap registre de perfil llegible (status=%{status}).
           Executa `aeat config repair profile --clear-active --yes` i després canvia
           a un perfil vàlid o crea'l abans de configurar l'autenticació.
+      probe:
+        no_provider: No hi ha cap proveïdor d'autenticació configurat; res a comprovar
+          localment.
+        no_session: No hi ha cap testimoni de sessió AEAT persistit al disc; executa
+          `aeat config auth login` per obtenir-ne un.
+        session_expired: Hi ha un testimoni de sessió AEAT persistit al disc però
+          ha superat el seu límit d'inactivitat; executa `aeat config auth login --fresh`
+          per renovar-lo.
+        session_live: Hi ha un testimoni de sessió AEAT persistit al disc i dins del
+          seu límit d'inactivitat.
     provider_impact:
       certificate_ready: L'autenticació amb certificat està a punt. L'operador manté
         el mateix flux de presentació a la CLI per a lectures recolzades per l'AEAT;
@@ -173,15 +198,26 @@ application:
         fins que es configuri un proveïdor d'autenticació.
     sessions:
       errors:
+        clave_identity_missing: L'autenticació Cl@ve Móvil en directe requereix un
+          DNI/NIE configurat (AEAT_CLAVE_MOVIL_DNI_NIE) abans de fer servir cap sessió
+          AEAT.
+        clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
+          amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
+          o actualitza el perfil abans de l'autenticació AEAT en directe.
         corrupt_session: La sessió d'autenticació guardada està danyada i no es pot
           llegir. Executa `aeat config auth clear --sessions` i després `aeat config
           auth test`.
         no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
           de llegir dades AEAT.
+        profile_tax_id_missing: L'autenticació Cl@ve Móvil en directe requereix que
+          el perfil actiu tingui identity.tax_id.
         sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config
           auth test` abans de llegir dades AEAT.
         session_expired: La sessió AEAT ha caducat; executa `aeat config auth test`
           abans de llegir dades AEAT.
+        session_identity_profile_mismatch: La identitat de la sessió AEAT no coincideix
+          amb la identitat fiscal del perfil actiu; esborra les sessions d'autenticació
+          i autentica el perfil que coincideixi abans de les lectures AEAT en directe.
         state_missing: Falta l'estat de la sessió AEAT; executa `aeat config auth
           test` abans de llegir dades AEAT.
         verify_failed: No s'ha pogut verificar la sessió AEAT; executa `aeat config
@@ -213,6 +249,9 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
+      no_deadline_windows: No hi ha dades de finestres de termini registrades per
+        al model %{modelo} en l'exercici %{year}; no es pot determinar el calendari
+        de presentació.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
@@ -661,16 +700,26 @@ cli:
         relation_not_decimal: 'El valor de --relation per a {key} no és un decimal:
           {value}.'
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
-        result_summary_header: 'resum del resultat  Modelo %{modelo} %{year} %{period}'
+        result_summary_header: resum del resultat  Modelo %{modelo} %{year} %{period}
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
-          contactar amb AEAT
-        resume_workflow_run_id_help: Id d'execució de flux de 16 caràcters
+          contactar amb AEAT. Accepta un id d'execució de flux o un id d'unitat de
+          treball.
+        resume_invalid_target: 'El destí de resume ha de ser un id d''execució de
+          flux de 16 caràcters o un id d''unitat de treball de 64 caràcters; s''ha
+          rebut {target}. Executa `aeat app modelo work runs` per llistar els ids
+          d''execució.'
+        resume_target_help: 'Id d''execució de flux de 16 caràcters, o l''id d''unitat
+          de treball de 64 caràcters (es resol automàticament la seva darrera execució).
+          Executa `aeat app modelo work runs` per llistar els ids d''execució.'
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
+        runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
+          de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
+          work resume`. Només local; mai contacta amb AEAT.
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
         set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
           almenys un requerit)
@@ -994,6 +1043,8 @@ cli:
       profile_help: Inspeccionar i reparar el punter de perfil actiu.
       profile_name_help: Inspeccionar un bucket de perfil registrat concret.
       profile_requires_yes: Passa --yes per netejar el punter de perfil actiu.
+      quarantine_dry_run_help: Previsualitza les files que es posarien en quarantena
+        sense moure res
       quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu;
         requereix --yes)
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
@@ -1108,7 +1159,8 @@ cli:
       amount_help: Import signat de la transacció en la moneda del bucket
       attachment_help: Id d'adjunt segur addicional; es pot repetir
       business_pct_help: Proporció d'ús professional de 0 a 1
-      category_help: Id de categoria de despesa o ingrés
+      category_help: Id de categoria de despesa deduïble (només moviments de despesa;
+        els ingressos no necessiten categoria)
       classification_help: Classificació professional (BUSINESS, PERSONAL o MIXED)
       counterparty_help: Descripció de la contrapart
       currency_help: Codi de moneda ISO 4217 de tres lletres
@@ -1129,7 +1181,8 @@ cli:
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       business_pct_help: Proporció d'ús professional de 0 a 1
-      category_help: Id de categoria de despesa o ingrés
+      category_help: Id de categoria de despesa deduïble (només moviments de despesa;
+        els ingressos no necessiten categoria)
       help: Registrar proporcionalitat professional/personal per a un moviment del
         llibre
       id_help: Id del moviment del llibre a assignar
@@ -1156,6 +1209,9 @@ cli:
       help: Llista els identificadors de categoria acceptats per --category-id, agrupats
         per família
       id_column: category-id (passa aquest valor exacte)
+      income_note: Només despeses deduïbles. Els moviments d'ingrés (INCOMING) es
+        classifiquen per direcció i no necessiten --category-id; `ledger check` i
+        `ledger preflight` no marquen un ingrés com a missing_category.
       usage_example: Passa l'id sense prefix, p. ex. --category-id {example} (no una
         clau composta ni amb prefix de família).
     check:
@@ -1170,7 +1226,8 @@ cli:
       business_pct_requires_mixed: Rebutjat. --business-pct només s'aplica a una classificació
         MIXED. Una fila BUSINESS o PERSONAL és totalment professional o totalment
         privada; treu --business-pct o passa --classification MIXED.
-      category_help: Id de categoria de despesa o ingrés
+      category_help: Id de categoria de despesa deduïble (només moviments de despesa;
+        els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
       help: Classificar un moviment del llibre al bucket del perfil actiu
       id_help: Id del moviment del llibre a classificar

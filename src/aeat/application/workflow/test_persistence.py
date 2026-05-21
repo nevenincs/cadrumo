@@ -152,3 +152,51 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
         "emit-first contract violated: secure-object row was deleted before the "
         "audit event landed; the recovery route lost its trail."
     )
+
+
+def test_fingerprint_state_classifies_healthy_envelope_as_readable() -> None:
+    """A freshly-persisted, decryptable state envelope fingerprints as ``readable``.
+
+    The dry-run preview of ``repair reset-state`` must never slander a
+    sound envelope as ``unreadable`` (persona-fleet finding H4): on a
+    fresh storage root the operator has only just written a healthy
+    state, so the classification must reflect that.
+    """
+
+    from ._models import WorkflowState
+    from ._persistence import WorkflowStateRepository
+
+    repository = WorkflowStateRepository()
+    repository.save(WorkflowState())
+
+    fingerprint = repository.fingerprint_state()
+
+    assert fingerprint.reason_class == "readable"
+    assert fingerprint.byte_length is not None and fingerprint.byte_length > 0
+    assert fingerprint.schema_version == 1
+
+
+def test_fingerprint_state_classifies_absent_envelope_as_absent() -> None:
+    """With no state envelope persisted the fingerprint classifies as ``absent``."""
+
+    from ._persistence import WorkflowStateRepository
+
+    fingerprint = WorkflowStateRepository().fingerprint_state()
+
+    assert fingerprint.reason_class == "absent"
+    assert fingerprint.byte_length is None
+    assert fingerprint.schema_version is None
+
+
+def test_fingerprint_state_honours_explicit_reason_class_override() -> None:
+    """An explicit ``reason_class`` from a caller that knows the trigger wins."""
+
+    from ._models import WorkflowState
+    from ._persistence import WorkflowStateRepository
+
+    repository = WorkflowStateRepository()
+    repository.save(WorkflowState())
+
+    fingerprint = repository.fingerprint_state(reason_class="caller-supplied")
+
+    assert fingerprint.reason_class == "caller-supplied"

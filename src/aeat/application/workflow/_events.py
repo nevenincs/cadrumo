@@ -34,9 +34,10 @@ class WorkflowStateResetFingerprint(BaseModel):
 
     Captured before the row is deleted so the operator-visible audit
     trail records what was discarded without retaining any plaintext
-    payload. ``reason_class`` carries the exception class name that
-    triggered the reset, or ``"unreadable"`` when the trigger is not
-    known at this layer.
+    payload. ``reason_class`` classifies the discarded envelope:
+    ``"readable"`` when it decrypts and validates cleanly,
+    ``"unreadable"`` when the row exists but cannot be decoded, and
+    ``"absent"`` when no envelope row is present.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
