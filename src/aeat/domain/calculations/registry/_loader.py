@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, ValidationError
 
@@ -88,6 +88,30 @@ class ModeloSource:
     path: Path
     manifest_path: Path
     revision_sources: tuple[ModeloRevisionSource, ...] = ()
+
+
+def _as_toml_table(value: object) -> dict[str, object] | None:
+    """Narrow a parsed TOML value to a string-keyed table, or ``None``.
+
+    ``tomllib`` and :func:`freeze_toml` always emit ``str`` keys, so a
+    parsed-TOML ``dict`` is genuinely ``dict[str, object]``. The runtime
+    ``isinstance`` check loses the key type because TOML payloads flow
+    through ``object``; the ``cast`` re-attaches the key type at this
+    single deserialization boundary so callers index tables without
+    type-erasure escapes downstream.
+    """
+    if isinstance(value, dict):
+        return cast("dict[str, object]", value)
+    return None
+
+
+def _toml_table_id(value: object) -> str | None:
+    """Return the string ``id`` of a TOML table value, or ``None``."""
+    table = _as_toml_table(value)
+    if table is None:
+        return None
+    table_id = table.get("id")
+    return table_id if isinstance(table_id, str) else None
 
 
 def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:
@@ -296,9 +320,10 @@ def _merge_revision_fragment(path: Path, expected_revision_id: str, merged_revis
         raise RegistryLoadError(
             f"{path}: revision fragment declares {revision_id!r}, expected {expected_revision_id!r}"
         )
-    if not isinstance(raw_revision, dict):
+    raw_revision_table = _as_toml_table(raw_revision)
+    if raw_revision_table is None:
         raise RegistryLoadError(f"{path}: revision {revision_id!r} must be a table")
-    for key, value in raw_revision.items():
+    for key, value in raw_revision_table.items():
         _merge_revision_fragment_field(path, key, value, merged_revision)
 
 
@@ -354,22 +379,24 @@ def _merge_export_layout_fragments(
     layouts: list[object] = list(existing)
     index_by_id: dict[str, int] = {}
     for index, layout in enumerate(layouts):
-        if isinstance(layout, dict) and isinstance(layout.get("id"), str):
-            index_by_id[layout["id"]] = index
+        layout_id = _toml_table_id(layout)
+        if layout_id is not None:
+            index_by_id[layout_id] = index
     for layout in incoming:
-        if not isinstance(layout, dict) or not isinstance(layout.get("id"), str):
+        incoming_table = _as_toml_table(layout)
+        layout_id = None if incoming_table is None else _toml_table_id(incoming_table)
+        if incoming_table is None or layout_id is None:
             layouts.append(layout)
             continue
-        layout_id = layout["id"]
         existing_index = index_by_id.get(layout_id)
         if existing_index is None:
             index_by_id[layout_id] = len(layouts)
             layouts.append(layout)
             continue
-        existing_layout = layouts[existing_index]
-        if not isinstance(existing_layout, dict):
+        existing_layout = _as_toml_table(layouts[existing_index])
+        if existing_layout is None:
             raise RegistryLoadError(f"{path}: export layout {layout_id!r} conflicts with a non-table layout")
-        layouts[existing_index] = _merge_export_layout_by_id(path, layout_id, existing_layout, layout)
+        layouts[existing_index] = _merge_export_layout_by_id(path, layout_id, existing_layout, incoming_table)
     return tuple(layouts)
 
 
@@ -418,25 +445,27 @@ def _merge_table_array_fragments(
     items: list[object] = list(existing)
     index_by_id: dict[str, int] = {}
     for index, item in enumerate(items):
-        if isinstance(item, dict) and isinstance(item.get("id"), str):
-            index_by_id[item["id"]] = index
+        item_id = _toml_table_id(item)
+        if item_id is not None:
+            index_by_id[item_id] = index
     for item in incoming:
-        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+        incoming_table = _as_toml_table(item)
+        item_id = None if incoming_table is None else _toml_table_id(incoming_table)
+        if incoming_table is None or item_id is None:
             items.append(item)
             continue
-        item_id = item["id"]
         existing_index = index_by_id.get(item_id)
         if existing_index is None:
             index_by_id[item_id] = len(items)
             items.append(item)
             continue
-        existing_item = items[existing_index]
-        if not isinstance(existing_item, dict):
+        existing_item = _as_toml_table(items[existing_index])
+        if existing_item is None:
             raise RegistryLoadError(f"{path}: {item_label} {item_id!r} conflicts with a non-table fragment")
         items[existing_index] = _merge_table_fragment_by_id(
             path,
             existing_item,
-            item,
+            incoming_table,
             item_label=item_label,
             item_id=item_id,
             append_array_fields=append_array_fields,
@@ -482,8 +511,12 @@ def _reject_duplicate_appended_table_ids(
     item_id: str,
     field: str,
 ) -> None:
-    existing_ids = {item["id"] for item in existing if isinstance(item, dict) and isinstance(item.get("id"), str)}
-    incoming_ids = {item["id"] for item in incoming if isinstance(item, dict) and isinstance(item.get("id"), str)}
+    existing_ids = {
+        item_id for item in existing if (item_id := _toml_table_id(item)) is not None
+    }
+    incoming_ids = {
+        item_id for item in incoming if (item_id := _toml_table_id(item)) is not None
+    }
     duplicate_ids = sorted(existing_ids.intersection(incoming_ids))
     if duplicate_ids:
         raise RegistryLoadError(
