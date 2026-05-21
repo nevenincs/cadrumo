@@ -535,6 +535,125 @@ def test_agenda_and_backlog_inherit_the_incomplete_exclusion() -> None:
 
 
 # ---------------------------------------------------------------------
+# Multi-year ranges degrade gracefully across years with no window data
+# ---------------------------------------------------------------------
+
+
+def test_calendar_year_without_windows_only_does_not_raise() -> None:
+    """A range that lies entirely inside a year with no registered
+    deadline windows yields an empty calendar rather than raising.
+
+    The registry has no deadline windows for 2027 (registry-track gap
+    R1). Before the multi-year degradation fix the deadline engine's
+    ``ScheduleComputationError`` for that year propagated all the way to
+    the operator as a hard error. A year with no registered window data
+    is a normal "no data yet" state: ``build_overview_calendar`` must
+    return a valid empty :class:`OverviewCalendar` instead.
+    """
+
+    profile = _fully_enrolled_autonomo()
+    rng = OverviewCalendarRange(from_date=date(2027, 1, 1), to_date=date(2027, 12, 31))
+
+    # The contract: this call does not raise.
+    cal = build_overview_calendar(profile, rng, today=date(2027, 6, 1))
+
+    assert isinstance(cal, OverviewCalendar)
+    assert cal.entries == ()
+    assert cal.taxpayer_model_declared is True
+    assert cal.incomplete_reason is None
+
+
+def test_calendar_spanning_a_year_without_windows_does_not_raise() -> None:
+    """A range crossing into a year with no registered deadline windows
+    must succeed instead of raising.
+
+    The registry has no deadline windows for 2027. Before the
+    degradation fix the engine's ``ScheduleComputationError`` for the
+    uncovered 2027 year propagated through ``build_overview_calendar``
+    and surfaced to the operator as a hard error. A range spanning
+    2026 (populated) and 2027 (no data) must instead return a valid
+    :class:`OverviewCalendar`: the empty year's swallowed schedule
+    contributes nothing while the populated years still answer.
+
+    The degradation invariant: extending a populated-year range into a
+    no-windows year never *removes* an entry — every row a 2026-only
+    range produces, the 2026/2027-spanning range still produces (a
+    wider window can only admit more rows, never fewer).
+    """
+
+    profile = _fully_enrolled_autonomo()
+    multi_year = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 7, 31))
+    populated_only = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+
+    # The contract: neither call raises on the empty 2027 year.
+    multi_cal = build_overview_calendar(profile, multi_year, today=date(2026, 4, 1))
+    populated_cal = build_overview_calendar(profile, populated_only, today=date(2026, 4, 1))
+
+    assert isinstance(multi_cal, OverviewCalendar)
+    assert multi_cal.taxpayer_model_declared is True
+    assert multi_cal.incomplete_reason is None
+    # The empty 2027 year never drops a populated-year obligation: the
+    # spanning range is a superset of the 2026-only range.
+    populated_keys = {
+        (entry.modelo, entry.period, entry.closes_on) for entry in populated_cal.entries
+    }
+    multi_keys = {
+        (entry.modelo, entry.period, entry.closes_on) for entry in multi_cal.entries
+    }
+    assert populated_keys <= multi_keys
+
+
+def test_agenda_across_year_boundary_without_windows_does_not_raise() -> None:
+    """``overview agenda`` composes the calendar over a window anchored
+    on ``as_of``; a horizon that pushes the window into a year with no
+    registered windows must not raise.
+
+    With ``as_of`` late in 2026 and a 365-day horizon the agenda window
+    crosses into 2027 (no windows). Before the degradation fix the
+    engine's ``ScheduleComputationError`` for 2027 surfaced as a hard
+    operator error. The agenda must answer instead — every cohort is a
+    valid tuple.
+    """
+
+    from ._agenda import build_overview_agenda
+
+    profile = _fully_enrolled_autonomo()
+
+    # The contract: this call does not raise on the empty 2027 year.
+    agenda = build_overview_agenda(profile, as_of=date(2026, 11, 1), horizon_days=365)
+
+    assert agenda.taxpayer_model_declared is True
+    assert agenda.incomplete_reason is None
+    # Every cohort is a valid tuple; the agenda answered rather than
+    # crashing on the uncovered 2027 year.
+    assert isinstance(agenda.due_today, tuple)
+    assert isinstance(agenda.due_soon, tuple)
+    assert isinstance(agenda.overdue, tuple)
+
+
+def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
+    """``overview backlog`` composes the calendar; a lookback window that
+    starts in a year with no registered windows must not raise.
+
+    ``as_of`` in 2027 (no windows) with the default 365-day lookback
+    spans into 2026. The backlog must answer rather than crash on the
+    uncovered 2027 year.
+    """
+
+    from ._backlog import build_overview_backlog
+
+    profile = _fully_enrolled_autonomo()
+
+    # The contract: this call does not raise on the empty 2027 year.
+    backlog = build_overview_backlog(profile, as_of=date(2027, 3, 1))
+
+    assert backlog.taxpayer_model_declared is True
+    # Every surfaced backlog item is past-due relative to as_of — the
+    # backlog answered instead of crashing on the uncovered 2027 year.
+    assert all(item.adjusted_closes_on < date(2027, 3, 1) for item in backlog.items)
+
+
+# ---------------------------------------------------------------------
 # Undeclared-profile operator message — locale delivery
 # ---------------------------------------------------------------------
 
