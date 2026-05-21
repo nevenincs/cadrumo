@@ -544,7 +544,9 @@ def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, 
     payload = json.loads(_json_output(imported))
     assert payload["rows"] == 1
     assert payload["dry_run"] is True
-    assert payload["imported"] == 0
+    # The dry run previews the one row a real import would add, while
+    # persisting nothing - the overview still shows zero transactions.
+    assert payload["imported"] == 1
     assert overview.exit_code == 0, overview.output
     assert json.loads(_json_output(overview))["transactions"] == 0
 

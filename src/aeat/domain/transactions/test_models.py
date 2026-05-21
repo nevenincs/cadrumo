@@ -18,6 +18,10 @@ from aeat.domain.transactions import (
     Transaction,
     TransactionDirection,
     TransactionLifecycleState,
+    derive_import_fingerprint,
+    derive_movement_day_key,
+    derive_transaction_id,
+    normalise_movement_reference,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -303,3 +307,82 @@ def test_classification_history_entry_round_trips_through_json() -> None:
     assert restored == entry
     assert restored.confidence is None
     assert restored.provenance is None
+
+
+# ---------------------------------------------------------------------------
+# Cross-format / post-edit import-dedup fingerprint
+# ---------------------------------------------------------------------------
+
+
+def _ofx_sample_raw(*, provider_id: str, description: str = "Office rent") -> RawTransaction:
+    """Return a sample row tagged as an OFX export of the same movement."""
+    return RawTransaction(
+        transaction_id=provider_id,
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
+        amount=Decimal("123.45"),
+        currency="EUR",
+        counterparty="Landlord SL",
+        description=description,
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="b" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.OFX,
+            ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+            provider_name="OFX provider",
+        ),
+        raw_fields={"MEMO": description},
+    )
+
+
+def test_import_fingerprint_ignores_provider_id_and_file_format() -> None:
+    """The same movement exported by two providers shares one fingerprint.
+
+    `derive_import_fingerprint` keys on the movement identity (date,
+    amount, normalised narrative) — not on the provider-assigned id or
+    the source file format — so an OFX export and a CSV export of the
+    same bank movement deduplicate against each other.
+    """
+    ofx_row = _ofx_sample_raw(provider_id="ofx-fitid-1")
+    csv_row = _sample_raw(provider_id="csv-row-7")
+
+    assert derive_import_fingerprint(ofx_row) == derive_import_fingerprint(csv_row)
+    # The legacy transaction id still diverges — it folds in the
+    # provider id — which is exactly why a coarser dedup key is needed.
+    assert derive_transaction_id(ofx_row) != derive_transaction_id(csv_row)
+
+
+def test_import_fingerprint_normalises_accents_and_punctuation() -> None:
+    """Narratives differing only in accents / casing / punctuation match."""
+    accented = _sample_raw(description="Reunió de negòcis - Òscar")
+    plain = _sample_raw(description="reunio  de negocis: oscar")
+
+    assert derive_import_fingerprint(accented) == derive_import_fingerprint(plain)
+
+
+def test_import_fingerprint_distinguishes_genuinely_different_movements() -> None:
+    """A different amount or date produces a different fingerprint."""
+    base = _sample_raw()
+    other_amount = _sample_raw(amount=Decimal("999.99"))
+    other_date = _sample_raw(value_date=date(2026, 4, 11))
+
+    assert derive_import_fingerprint(base) != derive_import_fingerprint(other_amount)
+    assert derive_import_fingerprint(base) != derive_import_fingerprint(other_date)
+
+
+def test_movement_day_key_groups_same_date_and_amount() -> None:
+    """The coarse day key matches on date + amount regardless of narrative."""
+    a = _sample_raw(description="Transferencia 1")
+    b = _sample_raw(description="Pago cliente nota 4471")
+
+    assert derive_movement_day_key(a) == derive_movement_day_key(b)
+    assert derive_movement_day_key(a) != derive_movement_day_key(
+        _sample_raw(amount=Decimal("1.00"))
+    )
+
+
+def test_normalise_movement_reference_strips_accents_case_and_noise() -> None:
+    """The reference normaliser collapses accents, casing, and punctuation."""
+    assert normalise_movement_reference("Compra à material  ÒSCAR!") == "compraamaterialoscar"
+    assert normalise_movement_reference("a-b_c") == "abc"

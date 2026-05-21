@@ -171,10 +171,16 @@ def _validate_category_id(category_id: str | None) -> str | None:
     try:
         return SpendingCategory(trimmed).value
     except ValueError as exc:
+        # Show one concrete valid id inline: operators repeatedly
+        # guessed compound keys (`office:material_oficina`,
+        # `office_material_oficina`); only the bare enum value is
+        # accepted, so the refusal must demonstrate the exact shape.
+        example = next(iter(SpendingCategory)).value
         raise _bad(
             tr(
                 "cli.ledger.errors.unknown_category",
                 category=category_id,
+                example=example,
             )
         ) from exc
 
@@ -468,6 +474,11 @@ def ledger_classify(
         "--classification",
         help=tr("cli.ledger.classify.classification_help"),
     ),
+    business_pct: str | None = typer.Option(
+        None,
+        "--business-pct",
+        help=tr("cli.ledger.classify.business_pct_help"),
+    ),
     category_id: str | None = typer.Option(None, "--category-id", help=tr("cli.ledger.classify.category_help")),
     taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.classify.taxable_base_help")),
     iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.classify.iva_rate_help")),
@@ -484,21 +495,42 @@ def ledger_classify(
     transaction_repository = _tx_repo(state)
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    result = update_manual_transaction_fields(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        patch=_patch_from_options(
+    if classification is BusinessClassification.MIXED and business_pct is None:
+        # MIXED demands a proportion; surface the `--business-pct` flag
+        # directly rather than letting the patch validator's generic
+        # message route through the opaque boundary.
+        raise _bad(tr("cli.ledger.classify.mixed_requires_business_pct"))
+    if classification is not BusinessClassification.MIXED and business_pct is not None:
+        # `--business-pct` only carries meaning for a MIXED row; a
+        # BUSINESS or PERSONAL classification is wholly business or
+        # wholly private. Refuse rather than silently dropping it.
+        raise _bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
+    # A leaked `pydantic.ValidationError` (negative `--taxable-base`,
+    # an illegal field combination) is otherwise wrapped by the generic
+    # CLI boundary into "command input failed validation. Run config
+    # repair" — a misleading hint, since `config repair` cannot fix a
+    # bad CLI argument. Catch it here and surface the real validator
+    # cause, matching the `ledger add` / `ledger review --id` treatment.
+    try:
+        patch = _patch_from_options(
             business_classification=classification,
+            business_pct=_parse_decimal(business_pct, label="business-pct"),
             category_id=validated_category_id,
             taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
             irpf_category=irpf_category,
-        ),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger classify",
-        transaction_repository=transaction_repository,
-    )
+        )
+        result = update_manual_transaction_fields(
+            bucket_id=transaction_repository.bucket_id,
+            transaction_id=resolved_id,
+            patch=patch,
+            actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger classify",
+            transaction_repository=transaction_repository,
+        )
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
     _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
 
 
@@ -517,7 +549,16 @@ def ledger_categories(ctx: typer.Context) -> None:
     """
 
     families: list[dict[str, object]] = []
-    lines: list[str] = [tr("cli.ledger.categories.header")]
+    # The first column is the literal `--category-id` value; the second
+    # is the family it belongs to. An earlier `family<TAB>id` layout
+    # read like a compound key, so operators guessed `office:material…`
+    # or `office_material…` and every guess was refused. The id is now
+    # first and the column header names it explicitly.
+    lines: list[str] = [
+        tr("cli.ledger.categories.header"),
+        f"{tr('cli.ledger.categories.id_column')}\t{tr('cli.ledger.categories.family_column')}",
+    ]
+    first_category_id: str | None = None
     for family in SpendingCategoryFamily:
         members = CATEGORY_FAMILY_MEMBERS.get(family, ())
         if not members:
@@ -525,7 +566,11 @@ def ledger_categories(ctx: typer.Context) -> None:
         category_ids = tuple(member.value for member in members)
         families.append({"family": family.value, "category_ids": list(category_ids)})
         for category_id in category_ids:
-            lines.append(f"{family.value}\t{category_id}")
+            if first_category_id is None:
+                first_category_id = category_id
+            lines.append(f"{category_id}\t{family.value}")
+    if first_category_id is not None:
+        lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
     payload = {
         "families": families,
         "category_ids": [category.value for category in SpendingCategory],
@@ -1139,7 +1184,7 @@ def ledger_preflight(
 @app.command("history", help=tr("cli.ledger.history.help"))
 def ledger_history(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.history.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.history.id_help")),
     include_split_siblings: bool = typer.Option(
         False,
         "--include-split-siblings",
@@ -1354,6 +1399,7 @@ def ledger_status(
         period=_canonical_period(period) if period else None,
         transaction_repository=transaction_repository,
     )
+    transactions = transaction_repository.load()
     payload = report.model_dump(mode="json")
     lines = [
         f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
@@ -1374,7 +1420,40 @@ def ledger_status(
                 f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
             ]
         )
+        from ...application.ledger._preflight import preflight_ledger_tax_readiness
+
+        preflight = preflight_ledger_tax_readiness(
+            bucket_id=transaction_repository.bucket_id,
+            period=report.period,
+            transaction_repository=transaction_repository,
+        )
+        for issue in preflight.issues:
+            transaction = transactions.get(issue.transaction_id)
+            if transaction is None:
+                continue
+            lines.append(
+                _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail)
+            )
     _emit(ctx, payload, lines)
+
+
+def _ledger_status_readiness_issue_line(transaction: Transaction, *, reason: str, detail: str) -> str:
+    def _value(value: object) -> str:
+        return "-" if value is None or value == "" else str(value)
+
+    return "\t".join(
+        (
+            "readiness_issue",
+            transaction.transaction_id,
+            f"classification={transaction.business_classification.value}",
+            f"category_id={_value(transaction.category_id)}",
+            f"taxable_base={_value(transaction.taxable_base)}",
+            f"iva_rate={_value(transaction.iva_rate)}",
+            f"iva_amount={_value(transaction.iva_amount)}",
+            f"reason={reason}",
+            f"detail={detail}",
+        )
+    )
 
 
 @app.command("track", help=tr("cli.ledger.track.help"))
@@ -1427,7 +1506,18 @@ def ledger_import(
     bucket_id: str | None = None
     actor = "operator"
     transaction_repository = None
-    if not dry_run:
+    # A real import requires an active profile. A dry run resolves the
+    # active bucket *when one exists* so the preview can count rows
+    # against the already-stored catalogue (accurate would-import /
+    # would-skip dedup) — but it degrades gracefully to an empty
+    # catalogue when no profile is configured, so the preview still
+    # works on a cold workspace. `import_ledger_source` never persists
+    # on a dry run.
+    if dry_run:
+        if resolve_active_bucket_id() is not None:
+            transaction_repository = _tx_repo(_state())
+            bucket_id = transaction_repository.bucket_id
+    else:
         current_state = _state()
         transaction_repository = _tx_repo(current_state)
         bucket_id = transaction_repository.bucket_id
@@ -1454,10 +1544,26 @@ def ledger_import(
     ]
     if result.dry_run:
         lines.append(f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}")
+        # A dry run reports what *would* happen; make that explicit so
+        # the imported/skipped counts above are not read as a no-op.
+        dry_run_notice = f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.dry_run_preview')}"
+        lines.append(dry_run_notice)
+        payload["dry_run_notice"] = dry_run_notice
     empty_import_notice = _empty_import_notice(result)
     if empty_import_notice is not None:
         lines.append(empty_import_notice)
         payload["empty_import_notice"] = empty_import_notice
+    if result.likely_duplicates > 0:
+        # Cross-format duplicate suspicion: same date and amount as an
+        # existing row but a divergent narrative. The row is imported;
+        # the operator is warned so they can review rather than silently
+        # double-count a movement re-exported in a different format.
+        likely_duplicate_notice = (
+            f"{tr('cli.ledger.labels.warning')}\t"
+            f"{tr('cli.ledger.import.likely_duplicates', count=result.likely_duplicates)}"
+        )
+        lines.append(likely_duplicate_notice)
+        payload["likely_duplicate_notice"] = likely_duplicate_notice
     if verbose or verify:
         lines.extend(_validation_lines(result.validation, result.source))
     _emit(
