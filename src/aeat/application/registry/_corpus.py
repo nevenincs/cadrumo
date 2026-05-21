@@ -668,7 +668,7 @@ def _registry_topic_locale(locale: str | None) -> str:
             context={
                 "registry_service": "registry.topics",
                 "locale": locale,
-                "allowed_locales": SUPPORTED_OUTPUT_LANGUAGES,
+                "allowed_locales": ", ".join(SUPPORTED_OUTPUT_LANGUAGES),
             },
         )
     return normalized
