@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import re
 import warnings
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -1275,7 +1275,30 @@ class DerivedDisenoCasilla:
     number: str
 
 
-def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
+def _selector_is_cross_modelo(
+    selector: Mapping[str, object], modelo_id: str
+) -> bool:
+    """Return whether a binding / relation selector names a foreign modelo.
+
+    A binding ``selector`` (or a relation's ``source_modelo``) is
+    *cross-modelo* when it explicitly names a ``source_modelo`` that is
+    not the modelo whose closure is being derived. A selector that omits
+    ``source_modelo``, or sets it equal to ``modelo_id``, is a
+    *within-modelo* selector: its ``source_casillas`` / ``source_output``
+    name casillas on the modelo being derived (a ``previous_filing``
+    self-binding or a ``previous_period`` self-relation), and those
+    casillas belong in the modelo's own calculation closure.
+    """
+
+    source_modelo = selector.get("source_modelo")
+    if source_modelo is None:
+        return False
+    return str(source_modelo) != modelo_id
+
+
+def calculation_closure_numbers(
+    revision: ModeloRevision, modelo_id: str
+) -> frozenset[str]:
     """Return the bare casilla numbers in a revision's calculation closure.
 
     The *calculation closure* is the set of casillas the cross-connecting
@@ -1288,22 +1311,29 @@ def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
     - every casilla that declares a ``formula`` (a computed endpoint) or
       a ``binding`` (a bound endpoint) — the engine-visible casillas;
     - every verification-expectation operand casilla
-      (``computed_casillas`` and the ``reconciliation_totals`` targets).
+      (``computed_casillas`` and the ``reconciliation_totals`` targets);
+    - every *within-modelo* binding ``source_casillas`` / ``source_output``
+      selector casilla, and every *within-modelo*
+      ``RelationDefinition.source_output``.
 
-    A cross-modelo binding's ``source_casillas`` / ``source_output``
-    selector entries are intentionally **not** part of this closure. A
-    binding selector that names a ``source_modelo`` is a previous-filing
-    or cross-modelo binding: its ``source_casillas`` / ``source_output``
+    A binding ``source_casillas`` / ``source_output`` selector — and a
+    ``RelationDefinition.source_output`` — is excluded from this closure
+    **only when it is genuinely cross-modelo**: when the selector
+    explicitly names a ``source_modelo`` that differs from ``modelo_id``.
+    A cross-modelo selector's ``source_casillas`` / ``source_output``
     name casillas on that *foreign* modelo, not on the modelo whose
-    closure is being derived. The cross-modelo edge enters the current
+    closure is being derived; the cross-modelo edge enters the current
     modelo through the *bound* casilla — the current-modelo casilla that
-    declares the binding — which is already counted above as a binding
-    endpoint. Folding a foreign-modelo casilla number into this closure
-    would make the completeness gate demand it from the wrong modelo's
-    registry. This is the same reasoning that already excludes a
-    ``RelationDefinition.source_output``: a relation always carries a
-    ``source_modelo`` and its ``source_output`` is a foreign-modelo
-    casilla reached through ``relation.target_binding``.
+    declares the binding (or, for a relation, ``relation.target_binding``)
+    — which is already counted above as a binding endpoint. Folding a
+    foreign-modelo casilla number into this closure would make the
+    completeness gate demand it from the wrong modelo's registry.
+
+    A selector that omits ``source_modelo`` or sets it equal to
+    ``modelo_id`` is a *within-modelo* selector: a ``previous_filing``
+    self-binding or a ``previous_period`` self-relation names a casilla
+    on the modelo being derived, so that casilla is a genuine closure
+    member and is kept.
 
     References are reduced to bare casilla numbers: a reference token may
     be either a casilla ``id`` or a bare ``number``, and a declared
@@ -1332,11 +1362,25 @@ def calculation_closure_numbers(revision: ModeloRevision) -> frozenset[str]:
             closure.add(_as_number(ref))
         for ref in expectation.reconciliation_totals.values():
             closure.add(_as_number(ref))
+    for binding in revision.bindings:
+        if _selector_is_cross_modelo(binding.selector, modelo_id):
+            continue
+        source_casillas = binding.selector.get("source_casillas")
+        if isinstance(source_casillas, tuple):
+            for token in source_casillas:
+                if isinstance(token, str):
+                    closure.add(_as_number(token))
+        source_output = binding.selector.get("source_output")
+        if isinstance(source_output, str):
+            closure.add(_as_number(source_output))
+    for relation in revision.relations:
+        if relation.source_modelo == modelo_id:
+            closure.add(_as_number(relation.source_output))
     return frozenset(closure)
 
 
 def calculation_closure_identities(
-    revision: ModeloRevision,
+    revision: ModeloRevision, modelo_id: str
 ) -> frozenset[tuple[str | None, str]]:
     """Return the ``(segmento, number)`` identities in a revision's calculation closure.
 
@@ -1348,11 +1392,13 @@ def calculation_closure_identities(
     ``(segmento, number)`` identity.
 
     The closure spans the same surface (formula targets, transitive
-    formula-expression refs, formula/binding endpoint casillas, and
-    verification-expectation operands; cross-modelo binding source
-    casillas excluded — see :func:`calculation_closure_numbers`). A
-    reference token is resolved against both the casilla ``id`` index and
-    the casilla ``number`` index:
+    formula-expression refs, formula/binding endpoint casillas,
+    verification-expectation operands, and within-modelo binding /
+    relation source casillas; only genuinely cross-modelo selectors —
+    those whose ``source_modelo`` differs from ``modelo_id`` — are
+    excluded, see :func:`calculation_closure_numbers`). A reference token
+    is resolved against both the casilla ``id`` index and the casilla
+    ``number`` index:
 
     - a token that matches a casilla ``id`` resolves to that exact
       casilla's identity — this is how a multi-segment modelo's formulas,
@@ -1405,11 +1451,26 @@ def calculation_closure_identities(
             _resolve(ref)
         for ref in expectation.reconciliation_totals.values():
             _resolve(ref)
+    for binding in revision.bindings:
+        if _selector_is_cross_modelo(binding.selector, modelo_id):
+            continue
+        source_casillas = binding.selector.get("source_casillas")
+        if isinstance(source_casillas, tuple):
+            for token in source_casillas:
+                if isinstance(token, str):
+                    _resolve(token)
+        source_output = binding.selector.get("source_output")
+        if isinstance(source_output, str):
+            _resolve(source_output)
+    for relation in revision.relations:
+        if relation.source_modelo == modelo_id:
+            _resolve(relation.source_output)
     return frozenset(identities)
 
 
 def derive_calculation_completeness_casillas(
     revision: ModeloRevision,
+    modelo_id: str,
     *,
     multi_segment: bool,
     diseno_path: Path | None = None,
@@ -1474,7 +1535,8 @@ def derive_calculation_completeness_casillas(
 
     ordered: list[DerivedDisenoCasilla] = []
     for segmento, number in sorted(
-        calculation_closure_identities(revision), key=lambda item: (item[0] or "", item[1])
+        calculation_closure_identities(revision, modelo_id),
+        key=lambda item: (item[0] or "", item[1]),
     ):
         if (segmento, number) not in declared_identities:
             # The closure references a casilla the registry never

@@ -69,9 +69,11 @@ _FRAGMENT_HEADER = (
     "# Enumerates the casillas in this revision's calculation closure --\n"
     "# the casilla set the cross-connecting calculation engine traverses:\n"
     "# every formula target, every casilla referenced inside a formula\n"
-    "# expression, every formula/binding endpoint casilla, and every\n"
-    "# verification-expectation operand. Cross-modelo binding source\n"
-    "# casillas belong to foreign modelos and are excluded.\n"
+    "# expression, every formula/binding endpoint casilla, every\n"
+    "# verification-expectation operand, and every within-modelo binding\n"
+    "# or relation source casilla. Only genuinely cross-modelo selectors\n"
+    "# (source_modelo differs from this modelo) name foreign casillas and\n"
+    "# are excluded.\n"
     "#\n"
     "# Derived off-load-path from the modelo's calculation surface, keyed\n"
     "# on each closure casilla's own registry (segmento, number) identity.\n"
@@ -102,7 +104,7 @@ def main() -> None:
         for revision in modelo.revisions.values():
             if revision.completeness_manifest is not None:
                 continue
-            closure = calculation_closure_identities(revision)
+            closure = calculation_closure_identities(revision, modelo.id)
             if not closure:
                 skipped_empty.append(f"{modelo.id}/{revision.id}")
                 continue
@@ -128,7 +130,7 @@ def main() -> None:
                 continue
 
             derived = derive_calculation_completeness_casillas(
-                revision, multi_segment=multi_segment, diseno_path=None
+                revision, modelo.id, multi_segment=multi_segment, diseno_path=None
             )
             casillas = tuple(
                 sorted(
