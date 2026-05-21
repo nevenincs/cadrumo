@@ -37,7 +37,7 @@ from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider
 from ._orm import Base
 from .engine import create_engine_from_settings
-from .secure_objects import SecureObjectRepository
+from .secure_objects import SecureObjectRawRow, SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -142,14 +142,16 @@ def _assert_raw_bundle_is_ciphertext(
             assert plaintext not in raw.payload
 
 
-def _index_bundle_by_namespace(bundle: tuple) -> dict[str, dict[bytes, object]]:  # type: ignore[type-arg]
+def _index_bundle_by_namespace(
+    bundle: tuple[SecureObjectRawRow, ...],
+) -> dict[str, dict[bytes, SecureObjectRawRow]]:
     """Index the raw bundle by ``(namespace, hashed_object_key)``.
 
     The restore loop pairs each plaintext payload to its HMAC
     digest through this index; the one-row-per-namespace fixture
     shape makes the lookup deterministic.
     """
-    bundle_by_namespace: dict[str, dict[bytes, object]] = {}
+    bundle_by_namespace: dict[str, dict[bytes, SecureObjectRawRow]] = {}
     for raw in bundle:
         bundle_by_namespace.setdefault(raw.namespace, {})[raw.object_key] = raw
     return bundle_by_namespace
@@ -166,7 +168,7 @@ def _restore_rows_under_hashed_keys(
     repo: SecureObjectRepository,
     *,
     rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
-    bundle_by_namespace: dict[str, dict[bytes, object]],
+    bundle_by_namespace: dict[str, dict[bytes, SecureObjectRawRow]],
 ) -> None:
     """Phase 3b: replay each plaintext under the captured HMAC digest via save_with_raw_key."""
     for namespace, _natural_key, classification, schema_version, payload in rows:
@@ -179,7 +181,7 @@ def _restore_rows_under_hashed_keys(
             hashed_object_key=hashed_key,
             classification=classification,
             schema_version=schema_version,
-            written_at=raw.written_at,  # type: ignore[attr-defined]
+            written_at=raw.written_at,
             payload=payload,
         )
 

@@ -26,6 +26,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...core.config import Settings
+from ._codes import ModeloCode
 from ._repository import WorkUnitCatalogueRepository
 from ._work_unit import (
     WorkUnit,
@@ -51,7 +52,7 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
 
     now = datetime.now(UTC).replace(microsecond=0)
     bucket_id = "b" * 32
-    modelo = "303"
+    modelo = ModeloCode("303")
     filing_year = 2025
     period = "1T"
     revision_id = "2025-y-siguientes"

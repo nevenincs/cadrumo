@@ -118,7 +118,9 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(
             assert loaded.attempts[0].browser_trace_path == Path("traces/attempt-1.zip")
             assert loaded.attempts[1].status is SubmissionStatus.ACEPTADA
             # The first-attempt-ended-before-submitted invariant survives.
-            assert loaded.submitted_at < loaded.acknowledged_at  # type: ignore[operator]
+            assert loaded.submitted_at is not None
+            assert loaded.acknowledged_at is not None
+            assert loaded.submitted_at < loaded.acknowledged_at
         finally:
             engine.dispose()
 
