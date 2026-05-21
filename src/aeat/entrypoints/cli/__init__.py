@@ -205,19 +205,31 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...application.workflow._models import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
 
-    if is_bootstrap_exempt(_full_invocation_verb_path()):
-        return
+    exempt = is_bootstrap_exempt(_full_invocation_verb_path())
     if resolve_active_bucket_id() is None:
         # No active profile: each non-exempt verb refuses for itself
         # with a translated message (see the per-verb
         # ``resolve_active_bucket_id() is None`` guards). Returning here
         # avoids opening a session against an absent per-bucket
         # database and keeps the bare-invocation landing card path
-        # (handled by the caller) intact.
+        # (handled by the caller) intact. Bootstrap-exempt verbs also
+        # return — they run cleanly with no profile by design.
         return
     if has_active_bucket_session():
         return
-    ctx.with_resource(get_master_key_provider())
+    if exempt:
+        # Bootstrap-exempt verbs (``config repair`` family) must run
+        # cleanly *without* a session, but when an active profile does
+        # exist they should still read its encrypted facts and honour
+        # its ``preferences.output_language``. Open the session
+        # opportunistically — a failure is non-fatal: the verb falls
+        # back to its sessionless path.
+        import contextlib
+
+        with contextlib.suppress(Exception):
+            ctx.with_resource(get_master_key_provider())
+    else:
+        ctx.with_resource(get_master_key_provider())
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
     # its cache key (env vars + `.env` mtime) does not vary when a
