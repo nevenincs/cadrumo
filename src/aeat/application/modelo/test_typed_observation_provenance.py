@@ -19,12 +19,14 @@ referential-integrity contract under test.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
 from aeat.application.modelo._actions import (
     CasillaProvenanceMissingError,
+    _amendment_observations,
     _build_typed_observations,
 )
 from aeat.core.resources import resources
@@ -32,6 +34,11 @@ from aeat.domain.calculations.registry import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
     RegistrySnapshot,
+)
+from aeat.domain.modelos._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -109,3 +116,57 @@ def test_unknown_casilla_raises_instead_of_emitting_empty_provenance() -> None:
 
     with pytest.raises(CasillaProvenanceMissingError, match=orphan_casilla):
         _build_typed_observations(engine_result=polluted_result, snapshot=snapshot)
+
+
+def _baseline_revision(casilla_values: dict[str, Decimal]) -> CalculationRevision:
+    """A minimal baseline CalculationRevision with no observations.
+
+    An externally-imported baseline carries no typed observations, so
+    a non-overridden casilla absent from the registry snapshot has no
+    provenance source at all — exactly the orphan path under test.
+    """
+    work_unit_id = "a" * 64
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    moment = datetime(2026, 1, 1, tzinfo=UTC)
+    return CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values=casilla_values,
+        created_at=moment,
+        updated_at=moment,
+    )
+
+
+def test_amendment_orphan_casilla_raises_instead_of_emitting_empty_provenance() -> None:
+    """``_amendment_observations`` hard-fails on an orphan casilla.
+
+    A non-overridden casilla that is absent from BOTH the baseline
+    revision's observations AND the registry snapshot revision has no
+    provenance source. Projecting it would emit empty legal_refs /
+    source_refs and silently erase legal grounding from the persisted
+    amendment. The guard must raise instead.
+    """
+    snapshot = _modelo_100_snapshot()
+    casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
+    orphan_casilla = "9999999"
+    assert orphan_casilla not in casilla_ids
+
+    # The orphan appears in corrected_values but NOT in overrides, and
+    # the baseline revision carries no observations to inherit from.
+    corrected_values = {orphan_casilla: Decimal("123")}
+    baseline = _baseline_revision(corrected_values)
+    assert baseline.observations == ()
+
+    with pytest.raises(CasillaProvenanceMissingError, match=orphan_casilla):
+        _amendment_observations(
+            corrected_values=corrected_values,
+            overrides={},
+            baseline_revision=baseline,
+            snapshot=snapshot,
+        )
