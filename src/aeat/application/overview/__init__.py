@@ -296,7 +296,7 @@ class OverviewCalendar(BaseModel):
             three-axis taxpayer model. When ``False`` the calendar is
             empty and the operator must declare their taxpayer type
             first — the engine never reports a confident wrong
-            obligation (W02.S09).
+            obligation.
         incomplete_reason: Operator-facing "declare your taxpayer type
             first" guidance, present only when
             ``taxpayer_model_declared`` is ``False``.
@@ -461,7 +461,7 @@ def build_overview_calendar(
             :class:`aeat.domain.deadlines.ScheduleComputationError`.
     """
     if not taxpayer_model_is_declared(profile):
-        # W02.S09: an undeclared taxpayer model yields an explicit
+        # An undeclared taxpayer model yields an explicit
         # incomplete answer — never a confident wrong obligation. The
         # engine does not fall back to the autónomo guess.
         return OverviewCalendar(
@@ -484,12 +484,12 @@ def build_overview_calendar(
         for obligation in schedule.obligations:
             if not _entry_intersects_range(obligation, calendar_range):
                 continue
-            # W02.S07: each modelo's applicability is DERIVED from the
+            # Each modelo's applicability is DERIVED from the
             # taxpayer model. An obligation the taxpayer model positively
             # excludes (e.g. Modelo 130 for a pure landlord) is dropped.
             # A modelo without a seed rule is left in place — the seed
-            # covers the W02.S10 persona set, full per-modelo coverage
-            # is Wave W03.
+            # covers the core persona set; full per-modelo coverage
+            # is a deferred expansion.
             applicability = derive_modelo_applicability(profile, obligation.modelo)
             if applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
                 continue

@@ -5,15 +5,13 @@ The overview surfaces (``explain`` / ``calendar`` / ``agenda`` /
 directa*: the :class:`~aeat.domain.deadlines.DeadlineEngine` produces an
 obligation for every modelo with a registered deadline window, and no
 layer asked *which kind of taxpayer this is*. A pure landlord was told
-Modelo 130 was overdue (round-3 finding Q1).
+Modelo 130 was overdue.
 
-This module is the derivation layer the
-``2026-05-21-taxpayer-type-applicability-adr`` mandates: each modelo's
-``applicable`` verdict is DERIVED from the three-axis
+This module is the derivation layer: each modelo's ``applicable``
+verdict is DERIVED from the three-axis
 :class:`~aeat.domain.deadlines.TaxpayerProfile` model (entity type,
-IRPF income categories, estimation regime) through a
-registry-grounded rule table. The autónomo-by-default assumption is
-removed.
+IRPF income categories, estimation regime) through a registry-grounded
+rule table. The autónomo-by-default assumption is removed.
 
 Three verdicts are possible:
 
@@ -25,14 +23,14 @@ Three verdicts are possible:
 * :attr:`ApplicabilityVerdict.INCOMPLETE` — the taxpayer model is
   undeclared (no ``entity_type`` and, for a natural person, no income
   categories). The engine refuses to guess: it never reports a
-  confident wrong obligation. This is the W02.S09 safe default.
+  confident wrong obligation.
 
 Every rule carries ``legal_refs`` — opaque BOE / AEAT citation keys —
 per ``.claude/rules/aeat-calculation-grounding.md``: applicability is
 regulatory data and must be registry-grounded. The seed table below
-covers only the modelos the W02.S10 personas exercise; per-entity /
-per-regime expansion to the full modelo set is Wave W03
-(``W03.S11``), marked at :data:`_W03_COVERAGE_MARKER`.
+covers only the modelos the operator personas exercise; per-entity /
+per-regime expansion to the full modelo set is intentionally deferred,
+marked at :data:`_SEED_COVERAGE_NOTICE`.
 """
 
 from __future__ import annotations
@@ -49,16 +47,17 @@ from ...domain.deadlines import (
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-_W03_COVERAGE_MARKER = (
-    "Seed coverage only — the modelos below are the W02.S10 persona set. "
-    "Full per-entity / per-regime applicability for every modelo is "
-    "Wave W03 (W03.S11)."
+_SEED_COVERAGE_NOTICE = (
+    "Seed coverage only — the modelos in this table are the core "
+    "natural-person and corporate-entity set. Full per-entity / "
+    "per-regime applicability for every registered modelo is a "
+    "deferred expansion."
 )
 """Explicit marker that the seed rule table is intentionally narrow.
 
 A modelo absent from :data:`_MODELO_APPLICABILITY_RULES` is reported
-with :attr:`ApplicabilityVerdict.INCOMPLETE` and the rationale points
-at the W03 expansion — never a confident guess.
+with :attr:`ApplicabilityVerdict.INCOMPLETE` and a rationale pointing
+at the deferred expansion — never a confident guess.
 """
 
 
@@ -212,9 +211,9 @@ _INCOMPLETE_REASON = (
 def _incomplete_applicability(modelo: str) -> ModeloApplicability:
     """Return the explicit ``INCOMPLETE`` applicability for ``modelo``.
 
-    This is the W02.S09 safe default: the engine never assumes autónomo
-    and never reports a confident wrong obligation when the taxpayer
-    model is undeclared.
+    The safe default: the engine never assumes autónomo and never
+    reports a confident wrong obligation when the taxpayer model is
+    undeclared.
     """
 
     return ModeloApplicability(
@@ -226,13 +225,13 @@ def _incomplete_applicability(modelo: str) -> ModeloApplicability:
 
 
 # ---------------------------------------------------------------------
-# Seed rule table — W02.S10 persona coverage only (see _W03_COVERAGE_MARKER)
+# Seed rule table — core persona coverage (see _SEED_COVERAGE_NOTICE)
 # ---------------------------------------------------------------------
 #
-# Every rule below is grounded against the BOE / AEAT sources transcribed
-# in the taxpayer-type-applicability research document. Citation keys are
-# opaque stable slugs, never URLs. Full per-entity / per-regime coverage
-# of every modelo is Wave W03 (W03.S11).
+# Every rule below is grounded against the BOE / AEAT sources for the
+# taxpayer-type applicability model. Citation keys are opaque stable
+# slugs, never URLs. Full per-entity / per-regime coverage of every
+# registered modelo is a deferred expansion.
 
 _NATURAL_PERSON: frozenset[EntityType] = frozenset({EntityType.NATURAL_PERSON})
 _LEGAL_ENTITY: frozenset[EntityType] = frozenset({EntityType.LEGAL_ENTITY})
@@ -263,9 +262,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # ONLY by the rendimientos de actividades económicas income category
     # (LIRPF Arts. 27-32). A natural person whose only income is capital
     # inmobiliario (a pure landlord), trabajo, pensión, etc. has no
-    # actividad económica and therefore no Modelo 130 obligation — this is
-    # the round-3 Q1 defect. A legal entity never files Modelo 130.
-    # Research §1.1.
+    # actividad económica and therefore no Modelo 130 obligation. A legal
+    # entity never files Modelo 130.
     "130": ModeloApplicabilityRule(
         modelo="130",
         applicable_entity_types=_NATURAL_PERSON,
@@ -292,8 +290,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # landlord of residential property, a salaried-only taxpayer, and a
     # pensioner carry on no IVA-subject activity. (Commercial rental can be
     # IVA-subject; the seed gates on the actividad-económica category,
-    # which the landlord persona does not declare. Finer rental-IVA
-    # nuance is W03.) Research §1.1, §2.2.
+    # which a pure landlord does not declare. Finer rental-IVA nuance is
+    # a deferred expansion.)
     "303": ModeloApplicabilityRule(
         modelo="303",
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
@@ -351,12 +349,12 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
     ),
 }
-"""Seed modelo-applicability rules — W02.S10 persona coverage only.
+"""Seed modelo-applicability rules — core persona coverage.
 
 A modelo absent from this table has no derived rule yet: its
 applicability is reported :attr:`ApplicabilityVerdict.INCOMPLETE` with
-a rationale pointing at the Wave W03 expansion. See
-:data:`_W03_COVERAGE_MARKER`.
+a rationale pointing at the deferred expansion. See
+:data:`_SEED_COVERAGE_NOTICE`.
 """
 
 
@@ -373,8 +371,8 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     ``entity_type`` and — for a natural person — at least one IRPF
     income category. Without these, modelo applicability cannot be
     derived: the engine must report ``INCOMPLETE`` rather than assume
-    autónomo (W02.S09). A legal / attribution entity needs no income
-    category; the ``entity_type`` alone selects its tax.
+    autónomo. A legal / attribution entity needs no income category;
+    the ``entity_type`` alone selects its tax.
     """
 
     if profile.entity_type is None:
@@ -390,16 +388,16 @@ def derive_modelo_applicability(
 ) -> ModeloApplicability:
     """Derive a modelo's applicability from the taxpayer model.
 
-    This is the W02.S07 / W02.S09 entry point. The verdict is DERIVED
-    from the three-axis :class:`~aeat.domain.deadlines.TaxpayerProfile`
-    model — never assumed. An undeclared taxpayer model yields an
-    explicit :attr:`ApplicabilityVerdict.INCOMPLETE` answer; the engine
-    never reports a confident wrong obligation.
+    The verdict is DERIVED from the three-axis
+    :class:`~aeat.domain.deadlines.TaxpayerProfile` model — never
+    assumed. An undeclared taxpayer model yields an explicit
+    :attr:`ApplicabilityVerdict.INCOMPLETE` answer; the engine never
+    reports a confident wrong obligation.
 
-    A modelo without a seed rule (the seed covers the W02.S10 persona
-    set only) is also reported ``INCOMPLETE`` so the operator is never
-    told a confident yes/no the registry rules cannot yet justify; the
-    rationale points at the Wave W03 expansion.
+    A modelo without a seed rule (the seed covers the core persona set
+    only) is also reported ``INCOMPLETE`` so the operator is never told
+    a confident yes/no the registry rules cannot yet justify; the
+    rationale points at the deferred expansion.
 
     Args:
         profile: The operator's three-axis taxpayer model.

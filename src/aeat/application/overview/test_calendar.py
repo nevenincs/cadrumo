@@ -390,7 +390,7 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
 
 
 # ---------------------------------------------------------------------
-# W02.S10 — taxpayer-model derivation at the calendar surface
+# Taxpayer-model derivation at the calendar surface
 # ---------------------------------------------------------------------
 
 
@@ -412,9 +412,9 @@ def _undeclared_profile() -> TaxpayerProfile:
 
 
 def test_calendar_landlord_never_shows_modelo_130() -> None:
-    """The round-3 Q1 fix at the calendar surface: a pure landlord's
-    calendar must not list Modelo 130, even across a full year where
-    every quarterly window is registered."""
+    """The wrong-guidance fix at the calendar surface: a pure
+    landlord's calendar must not list Modelo 130, even across a full
+    year where every quarterly window is registered."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
     cal = build_overview_calendar(_landlord_profile(), rng, today=date(2026, 4, 1))
@@ -434,8 +434,8 @@ def test_calendar_autonomo_still_shows_modelo_130() -> None:
 
 
 def test_calendar_undeclared_profile_yields_incomplete_empty_calendar() -> None:
-    """W02.S09: an undeclared taxpayer model yields an empty calendar
-    flagged taxpayer_model_declared=False — never the autónomo guess."""
+    """An undeclared taxpayer model yields an empty calendar flagged
+    taxpayer_model_declared=False — never the autónomo guess."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
     cal = build_overview_calendar(_undeclared_profile(), rng, today=date(2026, 4, 1))
