@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 import pytest
 
+from ...core.errors import BaseSeverity
 from ...core.resources import resources
 from ...domain.user_profile import (
     UserProfileFact,
@@ -45,6 +45,60 @@ def test_validation_accepts_known_field(schema) -> None:
     svc = ProfileValidationService(schema=schema)
     report = svc.validate_facts("operator", [UserProfileFact(path="identity.tax_id", value="12345678Z")])
     assert not any(issue.code == "unknown_field" for issue in report.issues)
+
+
+@pytest.mark.parametrize(
+    "garbage",
+    [
+        "1978-13-45",  # month 13, day 45 — impossible calendar date
+        "15/03/1978",  # DD/MM/YYYY layout, not ISO 8601
+        "1978-02-30",  # February never has 30 days
+        "not-a-date",  # plainly not a date
+        "1978-3-15",  # non-zero-padded ISO components
+        "19780315",  # ISO-ish but missing separators
+    ],
+)
+def test_validation_rejects_non_iso_date_value(schema, garbage: str) -> None:
+    svc = ProfileValidationService(schema=schema)
+    report = svc.validate_facts(
+        "operator",
+        [UserProfileFact(path="renta_taxpayer.birth_date", value=garbage)],
+    )
+    date_errors = [
+        issue
+        for issue in report.issues
+        if issue.code == "invalid_date_value" and issue.severity is BaseSeverity.ERROR
+    ]
+    assert len(date_errors) == 1
+    assert "YYYY-MM-DD" in date_errors[0].message
+    assert date_errors[0].path == "renta_taxpayer.birth_date"
+
+
+def test_validation_accepts_valid_iso_date_value(schema) -> None:
+    svc = ProfileValidationService(schema=schema)
+    report = svc.validate_facts(
+        "operator",
+        [UserProfileFact(path="renta_taxpayer.birth_date", value="1978-03-15")],
+    )
+    assert not any(issue.code == "invalid_date_value" for issue in report.issues)
+
+
+def test_validation_covers_every_date_typed_field(schema) -> None:
+    """A garbage value is refused on every field the schema types as a date."""
+
+    date_paths = [
+        f"{section.key}.{field.key}"
+        for section in schema.sections
+        for field in section.fields
+        if str(field.type) == "date"
+    ]
+    assert date_paths  # the schema declares at least one date field
+    svc = ProfileValidationService(schema=schema)
+    for path in date_paths:
+        report = svc.validate_facts("operator", [UserProfileFact(path=path, value="2024-13-99")])
+        assert any(
+            issue.code == "invalid_date_value" and issue.path == path for issue in report.issues
+        ), f"date field {path!r} did not reject a garbage value"
 
 
 def test_preflight_returns_ready_when_no_modelo_selectors_match(schema) -> None:
