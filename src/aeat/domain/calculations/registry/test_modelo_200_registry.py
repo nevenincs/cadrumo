@@ -227,6 +227,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "DP200014B:01784": Decimal("0"),
             "DP200026:00625": Decimal("100"),
         },
+        enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("10000")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
@@ -239,20 +240,28 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     )
 
 
-def test_modelo_200_cuota_integra_chain_applies_manual_rate_to_post_nivelacion_base() -> None:
-    """The cuota íntegra chain applies the printed rate to the post-nivelación base.
+def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelacion_base() -> None:
+    """The cuota íntegra chain applies the entity-type-dispatched rate to the post-nivelación base.
 
     The Manual práctico de Sociedades 2024 worked example (page 401)
     carries a base imponible después de la reserva de nivelación
     ``01330`` of 1.000.000 at a 25% tipo de gravamen yielding a cuota
-    íntegra ``00562`` of 250.000. This exercises the two upstream
-    cuota-chain formulas — ``01330 = 00552 + 01033 - 01034`` (manual
-    page 361) and ``00562 = 01330 x 00558 / 100`` (manual page 362) —
-    against those published figures.
+    íntegra ``00562`` of 250.000. This exercises three cuota-chain
+    formulas — ``01330 = 00552 + 01033 - 01034`` (manual page 361),
+    ``00558`` selected from the LIS Art. 29 tipo de gravamen by the
+    taxpayer's legal form via the ``modelo-200-tipo-gravamen-por-forma-
+    juridica`` dispatch, and ``00562 = 01330 x 00558 / 100`` (manual
+    page 362) — against those published figures.
+
+    The ``legal_entity_form`` enum binding is supplied as ``sl`` (a
+    sociedad de responsabilidad limitada). A sociedad de capital is
+    taxed at the LIS Art. 29 general rate, so the dispatch resolves
+    ``00558`` to the registry's ``is.modelo-200.tipo-gravamen-general``
+    value (25); the cuota íntegra then matches the manual oracle.
 
     The expected outputs are read from the manual table, not recomputed
-    by the test author, so the test fails if the registry formula
-    diverges from the AEAT manual.
+    by the test author, so the test fails if the registry formula or the
+    rate dispatch diverges from the AEAT manual.
     """
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
@@ -269,16 +278,20 @@ def test_modelo_200_cuota_integra_chain_applies_manual_rate_to_post_nivelacion_b
             "DP200014:00552": Decimal("1000000"),
             "DP200014:01033": Decimal("0"),
             "DP200014:01034": Decimal("0"),
-            "DP200014:00558": Decimal("25"),
             "DP200014B:00592": Decimal("0"),
             "DP200014B:01766": Decimal("0"),
             "DP200014B:01784": Decimal("0"),
             "DP200026:00625": Decimal("100"),
         },
+        enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
 
+    assert result.values["DP200014:00558"] == Decimal("25"), (
+        "tipo de gravamen 00558 must be dispatched to the LIS Art. 29 general "
+        "rate (25) for a sociedad limitada"
+    )
     assert result.values["DP200014:01330"] == Decimal("1000000.00"), (
         "base imponible después de la reserva de nivelación 01330 must equal "
         "the AEAT manual worked-example figure of 1.000.000 (manual page 401)"

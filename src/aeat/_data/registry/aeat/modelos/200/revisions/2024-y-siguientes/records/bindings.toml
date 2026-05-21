@@ -12,3 +12,24 @@ required_text = [
     "modelo 202 de pago fraccionado",
     "pagos fraccionados",
 ]
+
+# Calculation-only enum binding: carries the taxpayer's recognised
+# legal form (sociedad limitada / anonima / cooperativa / sociedad
+# civil mercantil / sin fines lucrativos / other) so the cuota-integra
+# rate dispatch (`modelo-200-tipo-gravamen-por-forma-juridica`) selects
+# the LIS art. 29 tipo de gravamen by entity sub-form. Read from the
+# string-valued enum channel by `lookup_parameter_by_entity_type`; it
+# carries no xsd/dictionary addressing because it does not land on the
+# fichero-BOE record.
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-profile-legal-entity-form"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "legal_entity_form" }
+aggregation = { op = "copy" }
+typed_enum = "LegalEntityForm"
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
