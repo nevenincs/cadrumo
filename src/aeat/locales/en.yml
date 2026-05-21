@@ -1712,12 +1712,25 @@ errors:
     relation_value_missing: Relation {relation_id} has no supplied value.
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
   censo:
-    no_snapshot_captured: 'No census snapshot has been captured for profile {profile_id}.'
-    profile_not_found: 'Profile {profile_id} does not exist; create it before applying census.'
-    sede_g313_no_census: 'AEAT sede G313 returned no readable census for profile {profile_id}; confirm your certificate or Cl@ve is registered against this NIF.'
-    sede_no_census: 'AEAT''s sede returned no readable census for profile {profile_id}.'
+    no_snapshot_captured: No census snapshot has been captured for profile {profile_id}.
+    profile_not_found: Profile {profile_id} does not exist; create it before applying
+      census.
+    sede_g313_no_census: AEAT sede G313 returned no readable census for profile {profile_id};
+      confirm your certificate or Cl@ve is registered against this NIF.
+    sede_no_census: AEAT's sede returned no readable census for profile {profile_id}.
   financial:
     source_file_not_found: 'Source file does not exist: {path}'
+  identity:
+    cif_check_char_mismatch_mixed: 'CIF check character is incorrect (kind {kind}): expected {expected} or {alt}, got {got}.'
+    cif_check_digit_mismatch: 'CIF check digit is incorrect (kind {kind}): expected {expected}, got {got}.'
+    cif_check_letter_mismatch_kind: 'CIF check letter is incorrect (kind {kind}): expected {expected}, got {got}.'
+    cif_invalid_shape: '{candidate} is not a valid CIF.'
+    document_empty: 'The identity document is empty.'
+    nie_check_letter_mismatch: 'NIE check letter is incorrect: expected {expected}, got {got}.'
+    nie_invalid_shape: '{candidate} is not a valid NIE.'
+    nif_check_letter_mismatch: 'NIF check letter is incorrect: expected {expected}, got {got}.'
+    nif_invalid_shape: '{candidate} is not a valid NIF.'
+    validate_expects_str: 'Identity validation expects a text value; got {got_type}.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.

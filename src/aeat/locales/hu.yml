@@ -1735,12 +1735,27 @@ errors:
     relation_value_missing: A(z) {relation_id} reláció nem rendelkezik értékkel.
     unknown_input_casillas: 'Ismeretlen cellaazonosítók a bemenetben: {casilla_ids}.'
   censo:
-    no_snapshot_captured: 'Nem készült census-pillanatkép a(z) {profile_id} profilhoz.'
-    profile_not_found: 'A(z) {profile_id} profil nem létezik; hozd létre a census alkalmazása előtt.'
-    sede_g313_no_census: 'Az AEAT G313 portálja nem adott vissza beolvasható censót a(z) {profile_id} profilhoz; ellenőrizd, hogy a tanúsítványod vagy Cl@ve-d ehhez a NIF-hez van regisztrálva.'
-    sede_no_census: 'Az AEAT portálja nem adott vissza beolvasható censót a(z) {profile_id} profilhoz.'
+    no_snapshot_captured: Nem készült census-pillanatkép a(z) {profile_id} profilhoz.
+    profile_not_found: A(z) {profile_id} profil nem létezik; hozd létre a census alkalmazása
+      előtt.
+    sede_g313_no_census: Az AEAT G313 portálja nem adott vissza beolvasható censót
+      a(z) {profile_id} profilhoz; ellenőrizd, hogy a tanúsítványod vagy Cl@ve-d ehhez
+      a NIF-hez van regisztrálva.
+    sede_no_census: Az AEAT portálja nem adott vissza beolvasható censót a(z) {profile_id}
+      profilhoz.
   financial:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
+  identity:
+    cif_check_char_mismatch_mixed: 'A CIF ellenőrző karaktere helytelen ({kind} típus): várt érték {expected} vagy {alt}, kapott érték {got}.'
+    cif_check_digit_mismatch: 'A CIF ellenőrző számjegye helytelen ({kind} típus): várt érték {expected}, kapott érték {got}.'
+    cif_check_letter_mismatch_kind: 'A CIF ellenőrző betűje helytelen ({kind} típus): várt érték {expected}, kapott érték {got}.'
+    cif_invalid_shape: 'A(z) {candidate} nem érvényes CIF.'
+    document_empty: 'Az azonosító okmány üres.'
+    nie_check_letter_mismatch: 'A NIE ellenőrző betűje helytelen: várt érték {expected}, kapott érték {got}.'
+    nie_invalid_shape: 'A(z) {candidate} nem érvényes NIE.'
+    nif_check_letter_mismatch: 'A NIF ellenőrző betűje helytelen: várt érték {expected}, kapott érték {got}.'
+    nif_invalid_shape: 'A(z) {candidate} nem érvényes NIF.'
+    validate_expects_str: 'Az azonosító ellenőrzése szöveges értéket vár; a kapott típus {got_type}.'
   internal:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
   refused:

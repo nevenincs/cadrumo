@@ -1783,12 +1783,28 @@ errors:
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
   censo:
-    no_snapshot_captured: 'No se ha capturado ninguna instantánea del censo para el perfil {profile_id}.'
-    profile_not_found: 'El perfil {profile_id} no existe; créalo antes de aplicar el censo.'
-    sede_g313_no_census: 'La sede de la AEAT (G313) no devolvió ningún censo legible para el perfil {profile_id}; confirma que tu certificado o Cl@ve está registrado para este NIF.'
-    sede_no_census: 'La sede de la AEAT no devolvió ningún censo legible para el perfil {profile_id}.'
+    no_snapshot_captured: No se ha capturado ninguna instantánea del censo para el
+      perfil {profile_id}.
+    profile_not_found: El perfil {profile_id} no existe; créalo antes de aplicar el
+      censo.
+    sede_g313_no_census: La sede de la AEAT (G313) no devolvió ningún censo legible
+      para el perfil {profile_id}; confirma que tu certificado o Cl@ve está registrado
+      para este NIF.
+    sede_no_census: La sede de la AEAT no devolvió ningún censo legible para el perfil
+      {profile_id}.
   financial:
     source_file_not_found: 'El archivo de origen no existe: {path}'
+  identity:
+    cif_check_char_mismatch_mixed: 'El carácter de control del CIF es incorrecto (tipo {kind}): se esperaba {expected} o {alt}, se obtuvo {got}.'
+    cif_check_digit_mismatch: 'El dígito de control del CIF es incorrecto (tipo {kind}): se esperaba {expected}, se obtuvo {got}.'
+    cif_check_letter_mismatch_kind: 'La letra de control del CIF es incorrecta (tipo {kind}): se esperaba {expected}, se obtuvo {got}.'
+    cif_invalid_shape: '{candidate} no es un CIF válido.'
+    document_empty: 'El documento de identidad está vacío.'
+    nie_check_letter_mismatch: 'La letra de control del NIE es incorrecta: se esperaba {expected}, se obtuvo {got}.'
+    nie_invalid_shape: '{candidate} no es un NIE válido.'
+    nif_check_letter_mismatch: 'La letra de control del NIF es incorrecta: se esperaba {expected}, se obtuvo {got}.'
+    nif_invalid_shape: '{candidate} no es un NIF válido.'
+    validate_expects_str: 'La validación de identidad espera un valor de texto; se obtuvo {got_type}.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
   refused:

@@ -123,12 +123,16 @@ def _validate_nif(candidate: str) -> IdentityDocument:
     """Validate a NIF candidate, raising :class:`IdentityError` on mismatch."""
     match = _NIF_PATTERN.match(candidate)
     if match is None:
-        raise IdentityError(f"not a valid NIF shape: {candidate!r}")
+        raise IdentityError(
+            translated_message="errors.identity.nif_invalid_shape",
+            context={"candidate": candidate},
+        )
     digits, letter = match.group(1), match.group(2)
     expected = _compute_nif_check_letter(int(digits))
     if letter != expected:
         raise IdentityError(
-            f"NIF check letter mismatch: expected {expected!r}, got {letter!r}",
+            translated_message="errors.identity.nif_check_letter_mismatch",
+            context={"expected": expected, "got": letter},
         )
     return IdentityDocument.NIF
 
@@ -137,13 +141,17 @@ def _validate_nie(candidate: str) -> IdentityDocument:
     """Validate a NIE candidate, raising :class:`IdentityError` on mismatch."""
     match = _NIE_PATTERN.match(candidate)
     if match is None:
-        raise IdentityError(f"not a valid NIE shape: {candidate!r}")
+        raise IdentityError(
+            translated_message="errors.identity.nie_invalid_shape",
+            context={"candidate": candidate},
+        )
     prefix, digits, letter = match.group(1), match.group(2), match.group(3)
     numeric_str = _NIE_PREFIX_MAP[prefix] + digits
     expected = _compute_nif_check_letter(int(numeric_str))
     if letter != expected:
         raise IdentityError(
-            f"NIE check letter mismatch: expected {expected!r}, got {letter!r}",
+            translated_message="errors.identity.nie_check_letter_mismatch",
+            context={"expected": expected, "got": letter},
         )
     return IdentityDocument.NIE
 
@@ -152,27 +160,36 @@ def _validate_cif(candidate: str) -> IdentityDocument:
     """Validate a CIF candidate, raising :class:`IdentityError` on mismatch."""
     match = _CIF_PATTERN.match(candidate)
     if match is None:
-        raise IdentityError(f"not a valid CIF shape: {candidate!r}")
+        raise IdentityError(
+            translated_message="errors.identity.cif_invalid_shape",
+            context={"candidate": candidate},
+        )
     kind, digits, check = match.group(1), match.group(2), match.group(3)
     expected_digit = _compute_cif_check(kind, digits)
     if kind in _CIF_KIND_DIGIT_ONLY:
         if check != expected_digit:
             raise IdentityError(
-                f"CIF check digit mismatch (digit-only kind {kind!r}): expected {expected_digit!r}, got {check!r}",
+                translated_message="errors.identity.cif_check_digit_mismatch",
+                context={"kind": kind, "expected": expected_digit, "got": check},
             )
     elif kind in _CIF_KIND_LETTER_ONLY:
         if check != expected_digit:
             raise IdentityError(
-                f"CIF check letter mismatch (letter-only kind {kind!r}): expected {expected_digit!r}, got {check!r}",
+                translated_message="errors.identity.cif_check_letter_mismatch_kind",
+                context={"kind": kind, "expected": expected_digit, "got": check},
             )
     else:
         # Mixed kind: accept either the digit form or the corresponding letter form.
         check_int = int(expected_digit)
         if check != expected_digit and check != _CIF_LETTER_TABLE[check_int]:
             raise IdentityError(
-                f"CIF check character mismatch (mixed kind {kind!r}): "
-                f"expected {expected_digit!r} or {_CIF_LETTER_TABLE[check_int]!r}, "
-                f"got {check!r}",
+                translated_message="errors.identity.cif_check_char_mismatch_mixed",
+                context={
+                    "kind": kind,
+                    "expected": expected_digit,
+                    "alt": _CIF_LETTER_TABLE[check_int],
+                    "got": check,
+                },
             )
     return IdentityDocument.CIF
 
@@ -200,10 +217,13 @@ def validate_identity(candidate: str) -> IdentityDocument:
             digit fails the AEAT algorithm.
     """
     if not isinstance(candidate, str):
-        raise IdentityError(f"validate_identity expects str; got {type(candidate).__name__}")
+        raise IdentityError(
+            translated_message="errors.identity.validate_expects_str",
+            context={"got_type": type(candidate).__name__},
+        )
     normalised = candidate.strip().upper().replace("-", "").replace(" ", "")
     if not normalised:
-        raise IdentityError("identity document is empty")
+        raise IdentityError(translated_message="errors.identity.document_empty")
     # Try NIE first (it has the unambiguous X/Y/Z prefix); then CIF
     # (also unambiguous on its leading letter set); then NIF.
     if normalised[0] in "XYZ":
