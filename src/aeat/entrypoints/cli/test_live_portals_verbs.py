@@ -49,7 +49,7 @@ def test_portals_view_does_not_emit_raw_translation_keys(cli_runner: CliRunner) 
 
 
 def test_portals_list_resolves_genuine_labels(cli_runner: CliRunner) -> None:
-    """Every portal label must resolve to a real translation, not a stub.
+    """Every portal label must resolve to a real translation, not a raw-key fallback.
 
     When a label key carries no locale entry, ``tr()`` falls back to a
     humanised key segment such as ``Label 323061``. A genuine catalogue
@@ -63,13 +63,13 @@ def test_portals_list_resolves_genuine_labels(cli_runner: CliRunner) -> None:
 
 
 def test_every_portal_label_has_a_translation() -> None:
-    """The portal-catalogue label key must resolve to a non-stub value."""
+    """The portal-catalogue label key must resolve to a genuine catalogue value."""
 
     for metadata in PORTAL_REGISTRY.values():
         key = str(metadata.label)
         rendered = tr(key)
         assert rendered != key, key
-        # `_humanise_key` stubs surface the final dotted segment, e.g.
+        # `_humanise_key` fallbacks surface the final dotted segment, e.g.
         # `Label` — a genuine translation is never the bare word.
         assert rendered.lower() != "label", key
 
