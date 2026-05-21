@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+import click
 import pytest
 from click.exceptions import Exit
 from typer.main import get_command
@@ -35,8 +36,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def test_suggestions_parse_as_valid_cli_commands() -> None:
     """Every registered ``default_suggestion`` parses against the live Click context."""
     command = get_command(app)
-    top_level = {registered.name for registered in app.registered_commands if registered.name is not None}
-    top_level.update({registered.name for registered in app.registered_groups if registered.name is not None})
+    # Heavy subcommand groups are registered lazily, so the materialized
+    # Click group's ``list_commands`` — not the Typer ``registered_*``
+    # lists — is the canonical top-level command inventory.
+    assert isinstance(command, click.Group)
+    top_level = set(command.list_commands(click.Context(command)))
 
     suggestions = [code.default_suggestion for code in ERROR_REGISTRY.values() if code.default_suggestion is not None]
     assert suggestions

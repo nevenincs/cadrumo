@@ -19,6 +19,7 @@ import json
 import os
 from pathlib import Path
 
+import click
 import pytest
 from click import Group
 from click.testing import Result
@@ -280,27 +281,37 @@ def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
 
 
 def test_rejected_topic_and_help_commands_are_absent_from_discovery() -> None:
-    """Command discovery exposes registry corpus commands, not topic/help commands."""
+    """Command discovery exposes registry corpus commands, not topic/help commands.
+
+    Heavy subcommand groups register lazily, so discovery walks the
+    command tree through ``list_commands`` / ``get_command`` — the
+    canonical Click introspection surface — rather than the eager
+    ``.commands`` mapping.
+    """
+
+    def _names(group: Group) -> set[str]:
+        return set(group.list_commands(click.Context(group)))
+
+    def _child(group: Group, name: str) -> Group:
+        child = group.get_command(click.Context(group), name)
+        assert isinstance(child, Group)
+        return child
 
     root = aeat_click_command()
     assert isinstance(root, Group)
-    app_group = root.commands["app"]
-    assert isinstance(app_group, Group)
-    registry_group = app_group.commands["registry"]
-    assert isinstance(registry_group, Group)
-    citations_group = registry_group.commands["citations"]
-    manuals_group = registry_group.commands["manuals"]
-    assert isinstance(citations_group, Group)
-    assert isinstance(manuals_group, Group)
+    app_group = _child(root, "app")
+    registry_group = _child(app_group, "registry")
+    citations_group = _child(registry_group, "citations")
+    manuals_group = _child(registry_group, "manuals")
 
-    assert set(root.commands) == {"config", "app"}
-    assert {"citations", "manuals"} <= set(registry_group.commands)
+    assert _names(root) == {"config", "app"}
+    assert {"citations", "manuals"} <= _names(registry_group)
     for commands in (
-        set(root.commands),
-        set(app_group.commands),
-        set(registry_group.commands),
-        set(citations_group.commands),
-        set(manuals_group.commands),
+        _names(root),
+        _names(app_group),
+        _names(registry_group),
+        _names(citations_group),
+        _names(manuals_group),
     ):
         assert commands.isdisjoint({"topic", "topics", "help"})
 

@@ -16,7 +16,7 @@ application functions and pydantic records.
 
 from __future__ import annotations
 
-import types
+from collections.abc import Callable
 
 import click
 import typer
@@ -30,40 +30,21 @@ from ._stdio import configure_stdio_for_utf8
 # :mod:`._stdio` for the rationale.
 configure_stdio_for_utf8()
 
-from ...application.diagnostics import build_cli_version_report, render_cli_version_text
-from ...application.operator_surface import (
-    build_help_document,
-    build_root_landing_report,
-    render_help_text,
-)
-from ...application.overview import build_overview_status_report
-from ...application.workflow import workflow_state_repository
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from . import _config
-from ._command_suggestions import AeatTyperGroup
+from ._command_suggestions import AeatTyperGroup, LazySubcommand, register_lazy_subcommand
 from ._common import _FORMAT_TEXT, _emit
 from ._errors import decorate_typer_app, write_stderr
 from ._log_levels import apply_to_root_logger, resolve_log_level
-from ._root_landing import render_cli_root_landing_lines
 
-_overview_module: types.ModuleType | None = None
-_ledger_module: types.ModuleType | None = None
-_live_module: types.ModuleType | None = None
-_modelo_module: types.ModuleType | None = None
-_registry_module: types.ModuleType | None = None
-_review_module: types.ModuleType | None = None
-
-try:
-    from . import _app_live as _live_module
-    from . import _ledger as _ledger_module
-    from . import _modelo as _modelo_module
-    from . import _overview as _overview_module
-    from . import _review as _review_module
-    from . import registry as _registry_module
-except ModuleNotFoundError as exc:
-    _app_import_error: ModuleNotFoundError | None = exc
-else:
-    _app_import_error = None
+# The command tree is assembled lazily: each leaf command module pulls
+# the application layer and, transitively, the ~0.6 s registry parse.
+# Importing every module just to build the ``aeat`` app object made
+# ``aeat --version`` and ``aeat --help`` pay that cost even though they
+# never dispatch into a subcommand. Modules are imported by their
+# :class:`LazySubcommand` loader only when an operator actually invokes
+# something in the owning subtree (see :mod:`._command_suggestions`).
+# ``--version`` / ``--help`` / the bare landing surface short-circuit
+# in the callbacks below before any subcommand is resolved.
 
 # ---------------------------------------------------------------------
 # Root app + callback
@@ -77,6 +58,7 @@ app = typer.Typer(
     invoke_without_command=True,
     add_help_option=False,
     add_completion=True,
+    cls=AeatTyperGroup,
 )
 
 
@@ -132,7 +114,10 @@ def _root(
         # Fast-path: bare `aeat --version` skips the registry load
         # (disaster ADR Ruling 4 — registry validation must not run
         # on the version surface). The `--detail` variant re-invokes
-        # with the registry summary populated.
+        # with the registry summary populated. The diagnostics import
+        # is deferred here so it never loads on a non-version surface.
+        from ...application.diagnostics import build_cli_version_report, render_cli_version_text
+
         report = build_cli_version_report(with_registry=detail)
         if detail:
             typer.echo(render_cli_version_text(report))
@@ -140,6 +125,10 @@ def _root(
             typer.echo(f"{report.package_name} {report.package_version}")
         raise typer.Exit()
     if help_:
+        # The operator-surface import is deferred so the help-document
+        # builder loads only on a help surface, not on every dispatch.
+        from ...application.operator_surface import build_help_document, render_help_text
+
         document = build_help_document("root")
         _emit(ctx, document, render_help_text(document).splitlines())
         raise typer.Exit()
@@ -154,9 +143,14 @@ def _root(
 
     _activate_active_bucket_session(ctx)
     if ctx.invoked_subcommand is None:
-        if _app_import_error is not None:
-            _emit_startup_import_error(_app_import_error)
+        # The landing surface needs the workflow / overview application
+        # layer; deferring the import keeps it off the ``--version`` /
+        # ``--help`` fast-paths above.
+        from ...application.operator_surface import build_root_landing_report
+        from ...application.overview import build_overview_status_report
+        from ...application.workflow import workflow_state_repository
         from ...application.workflow._models import resolve_active_bucket_id
+        from ._root_landing import render_cli_root_landing_lines
 
         active = resolve_active_bucket_id()
         landing = build_root_landing_report(active)
@@ -333,36 +327,60 @@ def _app_root(
     """Render app-level workflow help when requested."""
 
     if help_ or ctx.invoked_subcommand is None:
+        from ...application.operator_surface import build_help_document, render_help_text
+
         document = build_help_document("app")
         _emit(ctx, document, render_help_text(document).splitlines())
         raise typer.Exit()
 
 
-if _app_import_error is None:
-    assert _overview_module is not None
-    assert _ledger_module is not None
-    assert _live_module is not None
-    assert _modelo_module is not None
-    assert _registry_module is not None
-    assert _review_module is not None
-    app_app.add_typer(_overview_module.app, name="overview")
-    app_app.add_typer(_ledger_module.app, name="ledger")
-    app_app.add_typer(_live_module.app, name="live")
-    app_app.add_typer(_modelo_module.app, name="modelo")
-    app_app.add_typer(_registry_module.app, name="registry")
-    app_app.add_typer(_review_module.app, name="review")
+def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer]:
+    """Build a deferred factory importing ``module_name``'s ``app`` Typer.
+
+    A :exc:`ModuleNotFoundError` from a missing optional dependency is
+    converted into a failure-surface Typer that refuses cleanly and
+    points the operator at ``aeat config repair`` — the same behaviour
+    the eager startup path produced, now deferred to the first time the
+    subtree is actually invoked.
+    """
+
+    def _factory() -> typer.Typer:
+        from importlib import import_module
+
+        try:
+            module = import_module(module_name, __name__)
+        except ModuleNotFoundError as error:
+            return _import_failure_surface(group_label, error)
+        return module.app
+
+    return _factory
+
+
+def _lazy(group_name: str, name: str, module_name: str) -> None:
+    """Register ``module_name`` as a lazily-loaded subcommand of ``group_name``."""
+
+    register_lazy_subcommand(
+        group_name,
+        LazySubcommand(name, _lazy_loader(module_name, name), decorate=decorate_typer_app),
+    )
 
 
 # ---------------------------------------------------------------------
-# Wiring
+# Wiring — every heavy subcommand module is registered lazily so the
+# `aeat` app object can be constructed without importing the command
+# tree (and therefore without the registry parse).
 # ---------------------------------------------------------------------
 
 
-app.add_typer(_config.app, name="config")
-if _app_import_error is None:
-    app.add_typer(app_app, name="app")
-else:
-    app.add_typer(_import_failure_surface("app", _app_import_error), name="app")
+_lazy("app", "overview", "._overview")
+_lazy("app", "ledger", "._ledger")
+_lazy("app", "live", "._app_live")
+_lazy("app", "modelo", "._modelo")
+_lazy("app", "registry", ".registry")
+_lazy("app", "review", "._review")
+
+_lazy("aeat", "config", "._config")
+app.add_typer(app_app, name="app")
 decorate_typer_app(app)
 
 

@@ -4,30 +4,31 @@ import re as _re
 from collections.abc import Iterable
 from datetime import date as _date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.aggregation import aggregate_renta_ledger_expenses_from_repositories
-from ...application.auth import AuthProviderListing
-from ...application.workflow import (
-    NoActiveProfileError,
-    WorkflowState,
-    active_bucket_id_or_raise,
-    active_transaction_catalogue_repository,
-    workflow_state_repository,
-)
 from ...core.i18n import tr
 from ...core.output_rendering import render_command_output
-from ...core.resources import resources
-from ...domain.calculations.registry import (
-    ModeloRevision,
-    resolve_ledger_renta_expense_aggregation_binding_values,
-)
-from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
-from ...domain.filing import ModeloDraft, ModeloDraftRepository
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-from ...domain.profile import ProfileKey
-from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogue, TransactionCatalogueRepository
+
+# The application- and domain-layer symbols below are imported lazily,
+# inside the helpers that use them at runtime. A module-level import
+# would pull the application layer — and transitively the registry
+# parse — into every consumer of this transport module, including the
+# ``aeat --version`` / ``aeat --help`` fast paths that import ``_emit``
+# but never reach a registry-backed helper. ``from __future__ import
+# annotations`` keeps the type annotations valid as strings without a
+# runtime import; the ``TYPE_CHECKING`` block keeps static checkers
+# resolving them.
+if TYPE_CHECKING:
+    from ...application.auth import AuthProviderListing
+    from ...application.workflow import WorkflowState
+    from ...domain.calculations.registry import ModeloRevision
+    from ...domain.deadlines import AutonomoProfile
+    from ...domain.filing import ModeloDraft, ModeloDraftRepository
+    from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+    from ...domain.profile import ProfileKey
+    from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 
 # ---------------------------------------------------------------------
 # Transport helpers
@@ -75,6 +76,7 @@ def _exit(code: int) -> None:
 
 
 def _state() -> WorkflowState:
+    from ...application.workflow import workflow_state_repository
     from ...application.workflow._models import resolve_active_bucket_id
 
     # Without an active profile there is no bucket database to open;
@@ -157,6 +159,7 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
 
 def _profile_to_autonomo(state: WorkflowState) -> AutonomoProfile:
     from ...application.user_profile._projections import record_to_values
+    from ...domain.deadlines import autonomo_profile_from_mapping
 
     record = state.active_profile_record()
     raw = record_to_values(record) if record is not None else {}
@@ -171,6 +174,8 @@ def _profile_to_autonomo(state: WorkflowState) -> AutonomoProfile:
 def _active_bucket_id_or_bad(state: WorkflowState) -> str:
     """Return the active profile bucket id or raise the CLI 'bad' error."""
 
+    from ...application.workflow import NoActiveProfileError, active_bucket_id_or_raise
+
     try:
         return active_bucket_id_or_raise()
     except NoActiveProfileError as exc:
@@ -178,6 +183,9 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
 
 
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
+    from ...application.workflow import active_transaction_catalogue_repository
+    from ...domain.transactions import LedgerNoActiveBucketError
+
     try:
         return active_transaction_catalogue_repository(state)
     except LedgerNoActiveBucketError as exc:
@@ -185,10 +193,14 @@ def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
 
 
 def _invoice_repo() -> InvoiceCatalogueRepository:
+    from ...domain.invoices import InvoiceCatalogueRepository
+
     return InvoiceCatalogueRepository()
 
 
 def _draft_repo() -> ModeloDraftRepository:
+    from ...domain.filing import ModeloDraftRepository
+
     return ModeloDraftRepository()
 
 
@@ -233,6 +245,10 @@ def _aggregate_renta_filing_inputs(
     transaction_repository: TransactionCatalogueRepository,
     invoice_repository: InvoiceCatalogueRepository,
 ) -> dict[str, object]:
+    from ...application.aggregation import aggregate_renta_ledger_expenses_from_repositories
+    from ...core.resources import resources
+    from ...domain.calculations.registry import resolve_ledger_renta_expense_aggregation_binding_values
+
     aggregation = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=bucket_id,
         period=str(filing_year),

@@ -6,14 +6,13 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+import click
 import pytest
 
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.operator_surface import get_operator_surface_contract
 from aeat.application.wizard._catalogue import SETUP_FLOW
-from aeat.tests.cli_runner import invoke_cached_cli
-
-from . import _config, app_app
+from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -53,20 +52,30 @@ def _json(result) -> dict:
     return json.loads(result.output)
 
 
-def _registered_command_names(typer_app) -> set[str]:
-    return {command.name for command in typer_app.registered_commands}
+def _mounted_child_names(root_name: str) -> set[str]:
+    """Return the subcommand names mounted under a top-level root.
 
+    The command tree registers heavy subcommand modules lazily, so the
+    Typer ``registered_groups`` list no longer carries them. The
+    materialized Click group's ``list_commands`` is the canonical
+    mount-point introspection surface and reports eager and lazy
+    subcommands alike.
+    """
 
-def _registered_group_names(typer_app) -> set[str]:
-    return {group.name for group in typer_app.registered_groups}
+    root = aeat_click_command()
+    ctx = click.Context(root)
+    assert isinstance(root, click.Group)
+    group = root.get_command(ctx, root_name)
+    assert isinstance(group, click.Group)
+    return set(group.list_commands(click.Context(group)))
 
 
 def test_backend_declared_command_families_are_mounted_in_cli() -> None:
     """The backend contract must not drift into a detached interface."""
 
     mounted = {
-        "config": _registered_command_names(_config.app) | _registered_group_names(_config.app),
-        "app": _registered_command_names(app_app) | _registered_group_names(app_app),
+        "config": _mounted_child_names("config"),
+        "app": _mounted_child_names("app"),
     }
 
     for family in get_operator_surface_contract().command_families:
@@ -82,8 +91,14 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
 def test_config_profile_create_mounts_existing_setup_wizard_flow() -> None:
     """First-run configuration is the wizard flow, not a parallel interface."""
 
-    profile_group = next(group.typer_instance for group in _config.app.registered_groups if group.name == "profile")
-    create_command = next(command for command in profile_group.registered_commands if command.name == "create")
+    root = aeat_click_command()
+    assert isinstance(root, click.Group)
+    config_group = root.get_command(click.Context(root), "config")
+    assert isinstance(config_group, click.Group)
+    profile_group = config_group.get_command(click.Context(config_group), "profile")
+    assert isinstance(profile_group, click.Group)
+    create_command = profile_group.get_command(click.Context(profile_group), "create")
+    assert create_command is not None
     callback = create_command.callback
     assert callback is not None
     wrapped = getattr(callback, "__wrapped__", callback)
