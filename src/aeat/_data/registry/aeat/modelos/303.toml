@@ -945,3 +945,65 @@ deadline_windows = [
     "modelo-303-2026-3t",
     "modelo-303-2026-4t",
 ]
+
+# Calculation-completeness manifest for revision 2009-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed on each casilla's own registry (segmento, number)
+# identity. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.
+[revisions."2009-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-303-2025"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "110"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "69"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "78"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "87"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "compensacion-disponible-fin-periodo"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "compensacion-generada-periodo"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "iva.cuota-deducible-total"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "iva.cuota-devengada-total"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "iva.repercutido.general"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "iva.repercutido.reducido"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "iva.repercutido.super-reducido"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "iva.resultado-regimen-general"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "iva.soportado.interiores"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "prorrata-porcentaje"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "prorrata-volumen-con-derecho"
+
+[[revisions."2009-y-siguientes".completeness_manifest.casillas]]
+number = "prorrata-volumen-total"

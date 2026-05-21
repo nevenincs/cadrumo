@@ -442,3 +442,32 @@ deadline_windows = [
     "modelo-184-2025-0a",
     "modelo-184-2026-0a",
 ]
+
+# Calculation-completeness manifest for revision 2015-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed on each casilla's own registry (segmento, number)
+# identity. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.
+[revisions."2015-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-184-2025"
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-58-2003:art-93", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+number = "178-190"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+number = "77"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+number = "78-79"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+number = "9-17"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+number = "ejercicio"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+number = "tipo-declaracion"

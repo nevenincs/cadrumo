@@ -1,39 +1,23 @@
 # Modelo 100 calculation-completeness manifest.
 #
-# Enumerates the casilla numbers in the Modelo 100 (IRPF) 2025
-# calculation closure -- the casilla set the cross-connecting calculation
-# engine traverses: every formula target, every casilla referenced
-# inside a formula expression, every binding endpoint casilla, and every
-# verification-expectation operand casilla.
+# Enumerates the casillas in this revision's calculation closure --
+# the casilla set the cross-connecting calculation engine traverses:
+# every formula target, every casilla referenced inside a formula
+# expression, every formula/binding endpoint casilla, and every
+# verification-expectation operand. Cross-modelo binding source
+# casillas belong to foreign modelos and are excluded.
 #
-# Modelo 100 is a single-segment modelo: every casilla leaves segmento
-# unset, so each manifest entry is a bare casilla number exactly as the
-# AEAT renta data dictionary declares it.
-#
-# Derived off-load-path from the modelo's calculation closure
-# (calculation_closure_numbers) intersected with the official AEAT renta
-# 2025 individual-declaration data dictionary (source
-# aeat-dr-100-2025-dictionary). That Diseno is published only in the
-# AEAT .properties dictionary format, which the record-design extractor
-# (extract_record_design supports .pdf/.xls/.xlsx only) cannot parse, so
-# the manifest is flagged manual_extraction: the casilla set was derived
-# from the registry calculation surface and verified by hand against the
-# .properties dictionary tokens rather than by machine re-extraction.
-#
-# The cross-model retencion / pago-fraccionado source_output casillas
-# (modelo 111/115/123/130/131/180/184/190/193) belong to those foreign
-# modelos' Disenos and enter Modelo 100 through binding endpoints, so
-# they are outside this revision's own calculation closure and absent
-# from the required set. A casilla the revision declares but the
-# manifest does not list (a pure accounting-statement data-entry field)
-# is not a gate failure.
+# Derived off-load-path from the modelo's calculation surface, keyed
+# on each closure casilla's own registry (segmento, number) identity.
+# A casilla the revision declares but the manifest does not list (a
+# pure data-entry field that feeds no calculation) is not a gate
+# failure. The off-load-path drift re-verification test re-derives
+# this set from the registry calculation surface.
 
 [revisions."2025".completeness_manifest]
 source_ref = "aeat-dr-100-2025-dictionary"
-manual_extraction = true
-manual_extraction_reason = "The Modelo 100 2025 AEAT Diseno de Registros is published only as a .properties data dictionary; extract_record_design parses .pdf/.xls/.xlsx workbooks, not .properties, so the calculation-closure casilla set is hand-derived from the registry calculation surface and verified against the dictionary tokens."
-legal_refs = ["orden-hac-277-2026:art-3"]
-source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+legal_refs = ["ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-101", "ley-35-2006:art-103", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-49", "ley-35-2006:art-50", "ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-68", "ley-35-2006:art-68.1", "ley-35-2006:art-68.2", "ley-35-2006:art-68.3", "ley-35-2006:art-68.4", "ley-35-2006:art-68.5", "ley-35-2006:art-69", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-79", "ley-35-2006:art-80", "ley-35-2006:art-81", "ley-35-2006:art-81-bis", "ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-85", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-99", "orden-hac-277-2026:art-3", "orden-hap-2250-2015:art-3", "rd-439-2007:art-100", "rd-439-2007:art-109", "rd-439-2007:art-110", "rd-439-2007:art-13", "rd-439-2007:art-30", "rd-439-2007:art-80", "rd-439-2007:art-86", "rd-439-2007:art-90", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-modelo-100-procedure", "aeat-renta-2025-manual-deducciones-autonomicas", "aeat-renta-2025-manual-parte1", "aeat-renta-web-open", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".completeness_manifest.casillas]]
 number = "###"
