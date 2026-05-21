@@ -48,11 +48,16 @@ def _is_dotted_literal(value: str) -> bool:
 
 
 def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
-    """Find positional and ``message_key=``/``translated_message=`` translation
-    keys passed to classes whose name ends with ``Error``/``Exception``, plus
-    direct ``tr("dotted.key")``/``t("dotted.key")`` calls anywhere in the
-    module, plus dotted-literal defaults for kw-only ``translated_message``/
-    ``message_key`` parameters and module-level ALL_CAPS sentinels."""
+    """Find translation keys declared anywhere in the module.
+
+    Collects positional translation keys passed to classes whose name
+    ends with ``Error``/``Exception``, ``message_key=``/
+    ``translated_message=`` dotted-literal kwargs on any callee
+    (exception constructors, ``ErrorCode`` registry rows,
+    ``WizardCheckFinding`` verifier findings), direct
+    ``tr("dotted.key")``/``t("dotted.key")`` calls, ``build_entry``
+    portal-catalogue keys, and dotted-literal defaults for kw-only
+    ``translated_message``/``message_key`` parameters."""
 
     findings: set[str] = set()
     for node in ast.walk(tree):
@@ -75,31 +80,40 @@ def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> N
 
 def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
     """Pick up ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
-    constructor translation keys, and ``build_entry(...)`` portal-catalogue
-    translation keys."""
+    constructor translation keys, ``build_entry(...)`` portal-catalogue
+    translation keys, and ``message_key=`` / ``translated_message=``
+    dotted-literal kwargs on any callee.
+
+    The translation-key kwargs (``message_key=`` / ``translated_message=``)
+    are collected callee-agnostically: any call that names one of those
+    kwargs with a dotted-literal value declares a live operator-facing
+    translation key. This covers the ``ErrorCode(message_key=...)``
+    registry rows and ``WizardCheckFinding(message_key=...)`` verifier
+    findings, neither of which carries an ``*Error`` callee name."""
 
     name = _callee_name(node.func)
     if name is None:
         return
+    _collect_translation_key_kwargs(node, findings)
     if name in {"tr", "t"}:
         _add_first_dotted_arg(node, findings)
         return
     if name == "build_entry":
         _collect_build_entry_keys(node, findings)
         return
-    if name == "__init__":
-        # ``*Error`` subclasses that wrap another exception delegate to
-        # ``super().__init__(translated_message="dotted.key", ...)`` from
-        # inside their own ``__init__``. The callee here is ``__init__``,
-        # not an ``*Error`` name, so collect the translation-key kwargs
-        # explicitly — the kwarg name alone identifies them.
-        for kw in node.keywords:
-            if kw.arg in {"message_key", "translated_message"} and _is_dotted_literal_constant(kw.value):
-                findings.add(kw.value.value)
-        return
-    if not (name.endswith("Error") or name.endswith("Exception")):
-        return
-    _add_first_dotted_arg(node, findings)
+    if name.endswith("Error") or name.endswith("Exception"):
+        _add_first_dotted_arg(node, findings)
+
+
+def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
+    """Collect ``message_key=`` / ``translated_message=`` dotted-literal kwargs.
+
+    The kwarg name alone identifies a translation key, so this is
+    callee-agnostic: it covers exception constructors,
+    ``super().__init__(...)`` delegations, ``ErrorCode(...)`` registry
+    declarations, and ``WizardCheckFinding(...)`` verifier findings
+    alike."""
+
     for kw in node.keywords:
         if kw.arg in {"message_key", "translated_message"} and _is_dotted_literal_constant(kw.value):
             findings.add(kw.value.value)

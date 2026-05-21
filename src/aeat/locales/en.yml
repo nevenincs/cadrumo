@@ -1871,197 +1871,263 @@ errors:
       confirm your certificate or Cl@ve is registered against this NIF.
     sede_no_census: AEAT's sede returned no readable census for profile {profile_id}.
   error:
-    error_access_gate_submission: errors.error.error_access_gate_submission
-    error_access_gate_submission_preflight: errors.error.error_access_gate_submission_preflight
-    error_aeat_core: errors.error.error_aeat_core
-    error_aeat_observability: errors.error.error_aeat_observability
-    error_application_live: errors.error.error_application_live
-    error_application_registry: errors.error.error_application_registry
-    error_borrador_artefact_not_recognised: errors.error.error_borrador_artefact_not_recognised
-    error_calculations_registry: errors.error.error_calculations_registry
-    error_calculations_registry_load: errors.error.error_calculations_registry_load
-    error_calculations_registry_snapshot: errors.error.error_calculations_registry_snapshot
-    error_calculations_registry_validation: errors.error.error_calculations_registry_validation
-    error_categories: errors.error.error_categories
-    error_categories_validation: errors.error.error_categories_validation
-    error_deadlines_deadline: errors.error.error_deadlines_deadline
-    error_deadlines_profile: errors.error.error_deadlines_profile
-    error_deadlines_schedule_computation: errors.error.error_deadlines_schedule_computation
-    error_deadlines_validation: errors.error.error_deadlines_validation
-    error_declaracion_template_not_detected: errors.error.error_declaracion_template_not_detected
-    error_domain: errors.error.error_domain
-    error_domain_submission: errors.error.error_domain_submission
-    error_domain_submission_preflight: errors.error.error_domain_submission_preflight
-    error_domain_validation: errors.error.error_domain_validation
-    error_filing_amendment: errors.error.error_filing_amendment
-    error_filing_application: errors.error.error_filing_application
-    error_filing_builder: errors.error.error_filing_builder
-    error_filing_computation: errors.error.error_filing_computation
-    error_filing_draft: errors.error.error_filing_draft
-    error_filing_export: errors.error.error_filing_export
-    error_filing_export_validation: errors.error.error_filing_export_validation
-    error_financial_aggregation: errors.error.error_financial_aggregation
-    error_financial_aggregation_period: errors.error.error_financial_aggregation_period
-    error_financial_aggregation_validation: errors.error.error_financial_aggregation_validation
-    error_financial_attachments_attachment: errors.error.error_financial_attachments_attachment
-    error_financial_attachments_attachment_not_found: errors.error.error_financial_attachments_attachment_not_found
-    error_financial_invoices_invoice: errors.error.error_financial_invoices_invoice
-    error_financial_invoices_invoice_catalogue: errors.error.error_financial_invoices_invoice_catalogue
-    error_financial_invoices_invoice_link: errors.error.error_financial_invoices_invoice_link
-    error_financial_invoices_invoice_not_found: errors.error.error_financial_invoices_invoice_not_found
-    error_financial_provider: errors.error.error_financial_provider
-    error_financial_transactions_transaction: errors.error.error_financial_transactions_transaction
-    error_financial_usage_ratios_usage_ratio: errors.error.error_financial_usage_ratios_usage_ratio
-    error_financial_vat: errors.error.error_financial_vat
-    error_financial_vat_catalogue: errors.error.error_financial_vat_catalogue
-    error_financial_vat_category_not_found: errors.error.error_financial_vat_category_not_found
-    error_financial_vat_classification: errors.error.error_financial_vat_classification
-    error_financial_vat_rate_not_found: errors.error.error_financial_vat_rate_not_found
-    error_financial_vat_rate_overlap: errors.error.error_financial_vat_rate_overlap
-    error_fixture_provisioning: errors.error.error_fixture_provisioning
-    error_invoice_link_inconsistency: errors.error.error_invoice_link_inconsistency
-    error_invoice_validation: errors.error.error_invoice_validation
-    error_justificante: errors.error.error_justificante
-    error_justificante_csv_not_found: errors.error.error_justificante_csv_not_found
-    error_llm: errors.error.error_llm
-    error_manuals_manual: errors.error.error_manuals_manual
-    error_manuals_manual_not_found: errors.error.error_manuals_manual_not_found
-    error_manuals_manual_review_required: errors.error.error_manuals_manual_review_required
-    error_manuals_rule_extraction: errors.error.error_manuals_rule_extraction
-    error_manuals_validation: errors.error.error_manuals_validation
-    error_modelo_aggregation_binding: errors.error.error_modelo_aggregation_binding
-    error_modelo_amendment_evidence_missing: errors.error.error_modelo_amendment_evidence_missing
-    error_modelo_amendment_target_state: errors.error.error_modelo_amendment_target_state
-    error_modelo_calculation_registry_unavailable: errors.error.error_modelo_calculation_registry_unavailable
-    error_modelo_calculation_revision_not_found: errors.error.error_modelo_calculation_revision_not_found
-    error_modelo_calculation_revision_state: errors.error.error_modelo_calculation_revision_state
-    error_modelo_casilla_provenance_missing: errors.error.error_modelo_casilla_provenance_missing
-    error_modelo_external_filing_import: errors.error.error_modelo_external_filing_import
-    error_modelo_filing_record_not_found: errors.error.error_modelo_filing_record_not_found
-    error_modelo_iva_wallet_reconciliation_blocked: errors.error.error_modelo_iva_wallet_reconciliation_blocked
-    error_modelo_verification_report_not_found: errors.error.error_modelo_verification_report_not_found
-    error_modelo_work_unit_already_discarded: errors.error.error_modelo_work_unit_already_discarded
-    error_modelo_work_unit_mutation_refused: errors.error.error_modelo_work_unit_mutation_refused
-    error_modelo_work_unit_not_found: errors.error.error_modelo_work_unit_not_found
-    error_modelos: errors.error.error_modelos
-    error_modelos_validation: errors.error.error_modelos_validation
-    error_normatives_normative: errors.error.error_normatives_normative
-    error_normatives_normative_not_found: errors.error.error_normatives_normative_not_found
-    error_normatives_validation: errors.error.error_normatives_validation
-    error_outbound_storage_not_found: errors.error.error_outbound_storage_not_found
-    error_pdf_import_pdf_modelo_import: errors.error.error_pdf_import_pdf_modelo_import
-    error_pdf_import_scrub: errors.error.error_pdf_import_scrub
-    error_period: errors.error.error_period
-    error_period_validation: errors.error.error_period_validation
-    error_portals_portal_registry: errors.error.error_portals_portal_registry
-    error_portals_unknown_portal: errors.error.error_portals_unknown_portal
-    error_portals_validation: errors.error.error_portals_validation
-    error_profile_amortization_ledger: errors.error.error_profile_amortization_ledger
-    error_profile_asset_record: errors.error.error_profile_asset_record
-    error_profile_cross_store_drift: errors.error.error_profile_cross_store_drift
-    error_profile_inventory_ledger: errors.error.error_profile_inventory_ledger
-    error_profile_tax_residence: errors.error.error_profile_tax_residence
-    error_profile_validation: errors.error.error_profile_validation
-    error_renta: errors.error.error_renta
-    error_renta_validation: errors.error.error_renta_validation
-    error_rental_amortization_cap_exceeded: errors.error.error_rental_amortization_cap_exceeded
-    error_rental_contract_not_found: errors.error.error_rental_contract_not_found
-    error_rental_finca_not_found: errors.error.error_rental_finca_not_found
-    error_rental_register: errors.error.error_rental_register
-    error_rental_tier_resolution: errors.error.error_rental_tier_resolution
-    error_rental_validation: errors.error.error_rental_validation
-    error_resources_backend: errors.error.error_resources_backend
-    error_resources_load: errors.error.error_resources_load
-    error_resources_not_found: errors.error.error_resources_not_found
-    error_resources_validation: errors.error.error_resources_validation
-    error_review: errors.error.error_review
-    error_sanitization: errors.error.error_sanitization
-    error_sede: errors.error.error_sede
-    error_sede_expediente_not_found: errors.error.error_sede_expediente_not_found
-    error_sede_navigation: errors.error.error_sede_navigation
-    error_storage_bucket: errors.error.error_storage_bucket
-    error_submission_validation: errors.error.error_submission_validation
-    error_transaction_catalogue: errors.error.error_transaction_catalogue
-    error_transaction_llm_classifier: errors.error.error_transaction_llm_classifier
-    error_transaction_not_found: errors.error.error_transaction_not_found
-    error_transaction_persistence: errors.error.error_transaction_persistence
-    error_transaction_validation: errors.error.error_transaction_validation
-    error_usage_ratios_validation: errors.error.error_usage_ratios_validation
-    error_user_profile: errors.error.error_user_profile
-    error_vat_prorrata: errors.error.error_vat_prorrata
-    error_vat_prorrata_input: errors.error.error_vat_prorrata_input
-    error_vat_prorrata_sector: errors.error.error_vat_prorrata_sector
-    error_vat_validation: errors.error.error_vat_validation
-    error_wizard: errors.error.error_wizard
-    error_wizard_compile: errors.error.error_wizard_compile
-    error_workflow: errors.error.error_workflow
-    error_workflow_component: errors.error.error_workflow_component
+    error_access_gate_submission: The access-gate policy rejected a submission operation.
+    error_access_gate_submission_preflight: Access-gate preflight rejected a write
+      operation.
+    error_aeat_core: An internal application error occurred.
+    error_aeat_observability: An error occurred in the application telemetry.
+    error_application_live: The live AEAT read orchestration failed.
+    error_application_registry: The modelo registry orchestration failed or was refused.
+    error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
+      100 borrador shape.
+    error_calculations_registry: An error occurred loading, resolving or validating
+      the calculation registry.
+    error_calculations_registry_load: The calculation registry files could not be
+      parsed.
+    error_calculations_registry_snapshot: A filing-grade registry snapshot could not
+      be selected.
+    error_calculations_registry_validation: The calculation registry definitions are
+      incomplete or contradictory.
+    error_categories: An error occurred in the expense categories.
+    error_categories_validation: A category record failed validation.
+    error_deadlines_deadline: An error occurred in the deadline calculation.
+    error_deadlines_profile: The self-employed profile could not be loaded or validated
+      for the deadline calculation.
+    error_deadlines_schedule_computation: The engine could not produce a valid deadline
+      schedule. Check the year requested and the profile facts.
+    error_deadlines_validation: A deadline record failed validation.
+    error_declaracion_template_not_detected: The declaration PDF's template revision
+      could not be auto-detected.
+    error_domain: A domain logic error occurred.
+    error_domain_submission: A submission-domain error occurred.
+    error_domain_submission_preflight: The draft could not pass the local submission
+      preflight.
+    error_domain_validation: A domain identifier or model is not valid.
+    error_filing_amendment: An amendment-related filing error occurred.
+    error_filing_application: An error occurred in the filing application layer.
+    error_filing_builder: Filing builder selection or execution failed.
+    error_filing_computation: The builder could not evaluate a formula casilla.
+    error_filing_draft: An error occurred in the filing draft.
+    error_filing_export: Exporting the draft to the AEAT wire format failed.
+    error_filing_export_validation: An export field value or layout is not valid.
+    error_financial_aggregation: An error occurred while aggregating the financial
+      transactions.
+    error_financial_aggregation_period: The requested filing period could not be parsed
+      unambiguously.
+    error_financial_aggregation_validation: The aggregation payload or state is not
+      valid.
+    error_financial_attachments_attachment: An attachment-service error occurred.
+    error_financial_attachments_attachment_not_found: The requested attachment was
+      not found.
+    error_financial_invoices_invoice: An invoice-catalogue error occurred.
+    error_financial_invoices_invoice_catalogue: The invoice catalogue is invalid or
+      inconsistent.
+    error_financial_invoices_invoice_link: The invoice and transaction could not be
+      linked.
+    error_financial_invoices_invoice_not_found: The requested invoice was not found.
+    error_financial_provider: An error occurred while importing the financial document.
+    error_financial_transactions_transaction: A transaction-catalogue error occurred.
+    error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
+    error_financial_vat: A VAT calculation error occurred.
+    error_financial_vat_catalogue: The VAT catalogue could not be loaded, resolved
+      or validated.
+    error_financial_vat_category_not_found: The requested VAT category was not found
+      in the catalogue.
+    error_financial_vat_classification: The VAT could not be classified deterministically.
+    error_financial_vat_rate_not_found: No VAT rate was found for the requested member
+      state and kind.
+    error_financial_vat_rate_overlap: Two VAT rates share an effective-date window.
+    error_fixture_provisioning: The test fixtures could not be provisioned.
+    error_invoice_link_inconsistency: The link left the invoice and transaction catalogues
+      out of sync. Reconcile both catalogues manually.
+    error_invoice_validation: An invoice record failed validation.
+    error_justificante: A receipt-related error occurred.
+    error_justificante_csv_not_found: The PDF does not contain a Código Seguro de
+      Verificación.
+    error_llm: A language-model error occurred.
+    error_manuals_manual: A manuals-related error occurred.
+    error_manuals_manual_not_found: The requested manual, year or part was not found.
+    error_manuals_manual_review_required: A manual record lacks reviewer metadata.
+    error_manuals_rule_extraction: Manual rule extraction is not available.
+    error_manuals_validation: A manual record failed validation.
+    error_modelo_aggregation_binding: The bucket-derived aggregation bindings conflict
+      with the input provided.
+    error_modelo_amendment_evidence_missing: A filing cannot be amended without imported
+      official evidence. Import the original filing receipt first.
+    error_modelo_amendment_target_state: A filing not in the current state cannot
+      be amended; it has already been superseded by a later one.
+    error_modelo_calculation_registry_unavailable: The registry snapshot for the work
+      unit's modelo, year and period could not be resolved.
+    error_modelo_calculation_revision_not_found: The requested calculation revision
+      was not found.
+    error_modelo_calculation_revision_state: The requested state transition is not
+      compatible with the calculation revision's current state.
+    error_modelo_casilla_provenance_missing: An engine-result casilla has no definition
+      in the registry.
+    error_modelo_external_filing_import: The imported external filing could not be
+      persisted. Check the casilla values and the evidence reference.
+    error_modelo_filing_record_not_found: The requested filing record was not found.
+    error_modelo_iva_wallet_reconciliation_blocked: The Modelo 303 calculation is
+      blocked by IVA wallet reconciliation. Resolve the pending reconciliation before
+      continuing.
+    error_modelo_verification_report_not_found: The requested verification report
+      was not found.
+    error_modelo_work_unit_already_discarded: The work unit is already discarded.
+    error_modelo_work_unit_mutation_refused: A discarded work unit cannot be modified.
+    error_modelo_work_unit_not_found: The requested work unit was not found.
+    error_modelos: A tax-modelo error occurred.
+    error_modelos_validation: A modelo code violates its shape invariants.
+    error_normatives_normative: A normative-related error occurred.
+    error_normatives_normative_not_found: The requested normative or article was not
+      found.
+    error_normatives_validation: A normative field value is not valid.
+    error_outbound_storage_not_found: The requested storage object or namespace does
+      not exist.
+    error_pdf_import_pdf_modelo_import: Importing the filing from the PDF failed.
+    error_pdf_import_scrub: A safe version of the PDF could not be produced.
+    error_period: A period-related error occurred.
+    error_period_validation: The period token provided is malformed.
+    error_portals_portal_registry: An error occurred in the AEAT portal registry.
+    error_portals_unknown_portal: The AEAT portal provided does not exist.
+    error_portals_validation: A portal's metadata failed validation.
+    error_profile_amortization_ledger: A profile amortization ledger operation is
+      not valid.
+    error_profile_asset_record: A profile asset record is structurally invalid.
+    error_profile_cross_store_drift: A profile's physical stores disagree on its identity.
+      The profile is not usable.
+    error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
+    error_profile_tax_residence: A tax-residence profile error occurred.
+    error_profile_validation: A profile record failed validation.
+    error_renta: An error occurred in the RENTA calculation.
+    error_renta_validation: A RENTA field value is not valid.
+    error_rental_amortization_cap_exceeded: The cumulative amortization would exceed
+      the legal cap for the rental asset.
+    error_rental_contract_not_found: The rental contract provided was not found.
+    error_rental_finca_not_found: The property provided was not found.
+    error_rental_register: An error occurred in the rental register.
+    error_rental_tier_resolution: The rental contract data is inconsistent and the
+      applicable reduction tier could not be resolved.
+    error_rental_validation: A rental record failed validation.
+    error_resources_backend: An error occurred while reading the bundled application
+      data.
+    error_resources_load: A bundled application resource could not be loaded.
+    error_resources_not_found: The requested bundled resource was not found.
+    error_resources_validation: A bundled application file failed strict validation.
+    error_review: A review error occurred.
+    error_sanitization: An error occurred while sanitizing the document.
+    error_sede: An error occurred in the AEAT electronic Sede.
+    error_sede_expediente_not_found: No expediente matched the requested filter.
+    error_sede_navigation: A navigation step in the AEAT Sede failed.
+    error_storage_bucket: An error occurred in the storage bucket lifecycle.
+    error_submission_validation: A submission model failed validation.
+    error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
+    error_transaction_llm_classifier: The transaction classification by the language
+      model failed.
+    error_transaction_not_found: The requested transaction was not found.
+    error_transaction_persistence: The transaction catalogue could not be persisted.
+    error_transaction_validation: A transaction field value is not valid.
+    error_usage_ratios_validation: A usage-ratio profile violates its domain invariants.
+    error_user_profile: A user-profile error occurred.
+    error_vat_prorrata: An error occurred in the IVA prorrata calculation.
+    error_vat_prorrata_input: The IVA prorrata inputs violate their invariants.
+    error_vat_prorrata_sector: The sectoral-separation inputs for the IVA prorrata
+      are inconsistent.
+    error_vat_validation: A VAT field value is not valid.
+    error_wizard: A wizard error occurred.
+    error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
+    error_workflow: A workflow error occurred.
+    error_workflow_component: A workflow component raised an unexpected exception.
   fail:
-    census_sync: errors.fail.census_sync
-    currency_error: errors.fail.currency_error
-    declaration_parse: errors.fail.declaration_parse
-    exchange_rate_provider: errors.fail.exchange_rate_provider
-    fail_borrador_parse: errors.fail.fail_borrador_parse
-    fail_browser_evasion: errors.fail.fail_browser_evasion
-    fail_browser_session_browser: errors.fail.fail_browser_session_browser
-    fail_browser_validation: errors.fail.fail_browser_validation
-    fail_declaracion_parse: errors.fail.fail_declaracion_parse
-    fail_export: errors.fail.fail_export
-    fail_export_format: errors.fail.fail_export_format
-    fail_filing_import: errors.fail.fail_filing_import
-    fail_financial_attachments_attachment_persistence: errors.fail.fail_financial_attachments_attachment_persistence
-    fail_financial_invoices_invoice_persistence: errors.fail.fail_financial_invoices_invoice_persistence
-    fail_financial_ledger_storage: errors.fail.fail_financial_ledger_storage
-    fail_financial_usage_ratios_usage_ratio_persistence: errors.fail.fail_financial_usage_ratios_usage_ratio_persistence
-    fail_google_browser_open: errors.fail.fail_google_browser_open
-    fail_google_loopback_bind: errors.fail.fail_google_loopback_bind
-    fail_google_network: errors.fail.fail_google_network
-    fail_justificante_parse: errors.fail.fail_justificante_parse
-    fail_llm_cache: errors.fail.fail_llm_cache
-    fail_llm_provider: errors.fail.fail_llm_provider
-    fail_llm_rate_limit: errors.fail.fail_llm_rate_limit
-    fail_locale_manager: errors.fail.fail_locale_manager
-    fail_manuals_manual_parse: errors.fail.fail_manuals_manual_parse
-    fail_mcp_launch: errors.fail.fail_mcp_launch
-    fail_modelo_calculation_revision_persistence: errors.fail.fail_modelo_calculation_revision_persistence
-    fail_modelo_filing_record_persistence: errors.fail.fail_modelo_filing_record_persistence
-    fail_modelo_verification_report_persistence: errors.fail.fail_modelo_verification_report_persistence
-    fail_modelo_work_unit_persistence: errors.fail.fail_modelo_work_unit_persistence
-    fail_normatives_normative_parse: errors.fail.fail_normatives_normative_parse
-    fail_outbound_storage: errors.fail.fail_outbound_storage
-    fail_outbound_storage_network: errors.fail.fail_outbound_storage_network
-    fail_outbound_storage_unavailable: errors.fail.fail_outbound_storage_unavailable
-    fail_review_source_load: errors.fail.fail_review_source_load
-    fail_sanitization_source_parse: errors.fail.fail_sanitization_source_parse
-    fail_sede_census_parse: errors.fail.fail_sede_census_parse
-    fail_sede_justificante_fetch: errors.fail.fail_sede_justificante_fetch
-    fail_sede_parse: errors.fail.fail_sede_parse
-    fail_sede_validation: errors.fail.fail_sede_validation
-    fail_site_health: errors.fail.fail_site_health
-    fail_storage: errors.fail.fail_storage
-    fail_storage_blob_not_found: errors.fail.fail_storage_blob_not_found
-    fail_storage_bucket_recovery_unavailable: errors.fail.fail_storage_bucket_recovery_unavailable
-    fail_storage_persistence: errors.fail.fail_storage_persistence
-    fail_storage_repository: errors.fail.fail_storage_repository
-    fail_storage_secret_not_found: errors.fail.fail_storage_secret_not_found
-    fail_storage_secret_store: errors.fail.fail_storage_secret_store
-    fail_user_profile_not_found: errors.fail.fail_user_profile_not_found
-    fail_user_profile_schema_load: errors.fail.fail_user_profile_schema_load
-    ledger_check: errors.fail.ledger_check
-    ledger_link: errors.fail.ledger_link
-    missing_exchange_rate: errors.fail.missing_exchange_rate
-    modelo_036_lifecycle: errors.fail.modelo_036_lifecycle
-    modelo_export: errors.fail.modelo_export
-    modelo_export_manifest: errors.fail.modelo_export_manifest
-    overview: errors.fail.overview
-    overview_agenda: errors.fail.overview_agenda
-    overview_backlog: errors.fail.overview_backlog
-    overview_calendar: errors.fail.overview_calendar
-    overview_explain: errors.fail.overview_explain
-    profile_export: errors.fail.profile_export
-    profile_import: errors.fail.profile_import
-    reconciliation: errors.fail.reconciliation
-    stale_exchange_rate: errors.fail.stale_exchange_rate
+    census_sync: The Modelo 036 census sync failed.
+    currency_error: Currency normalization failed.
+    declaration_parse: The filed declaration export could not be parsed for reconciliation.
+    exchange_rate_provider: The exchange-rate provider did not respond.
+    fail_borrador_parse: The Modelo 100 borrador PDF could not be parsed into a filing.
+    fail_browser_evasion: Browser evasion setup could not be applied.
+    fail_browser_session_browser: A browser session error occurred.
+    fail_browser_validation: The browser parameters failed validation.
+    fail_declaracion_parse: The PDF could not be parsed into a declaration.
+    fail_export: An error occurred while exporting to the AEAT.
+    fail_export_format: The filing draft could not be serialized to the BOE format
+      requested.
+    fail_filing_import: The filing could not be imported from the receipt PDF.
+    fail_financial_attachments_attachment_persistence: The attachment store could
+      not read or write the data.
+    fail_financial_invoices_invoice_persistence: The invoice catalogue could not be
+      saved or loaded.
+    fail_financial_ledger_storage: The bucket-scoped ledger storage could not be resolved
+      or used.
+    fail_financial_usage_ratios_usage_ratio_persistence: The usage-ratio profile could
+      not be read or written.
+    fail_google_browser_open: The browser could not be opened to show the Google consent
+      page. Open the link manually.
+    fail_google_loopback_bind: The local HTTP receiver could not bind a port. Close
+      other applications that may be using it and try again.
+    fail_google_network: The Google server could not be reached. Check your internet
+      connection and try again.
+    fail_justificante_parse: The PDF could not be parsed into a receipt.
+    fail_llm_cache: A language-model cache entry could not be read, written or parsed.
+    fail_llm_provider: The language-model provider returned an unrecoverable error.
+    fail_llm_rate_limit: The language-model provider rejected the request due to rate
+      limits. Wait a few minutes and try again.
+    fail_locale_manager: An error occurred while managing or parsing the locale files.
+    fail_manuals_manual_parse: A manual record failed schema validation.
+    fail_mcp_launch: The MCP server could not be launched.
+    fail_modelo_calculation_revision_persistence: The calculation-revision catalogue
+      could not be saved or loaded.
+    fail_modelo_filing_record_persistence: The filing-record catalogue could not be
+      saved or loaded.
+    fail_modelo_verification_report_persistence: The verification-report catalogue
+      could not be saved or loaded.
+    fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
+      or loaded.
+    fail_normatives_normative_parse: A normative record failed schema validation.
+    fail_outbound_storage: A storage-provider error occurred.
+    fail_outbound_storage_network: The storage service could not be reached. Check
+      your internet connection and try again.
+    fail_outbound_storage_unavailable: The storage service is temporarily unavailable.
+      Wait a few minutes and try again.
+    fail_review_source_load: The source file is present but could not be parsed.
+    fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
+    fail_sede_census_parse: A value on the AEAT Sede census page could not be parsed.
+    fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
+      or the file is malformed.
+    fail_sede_parse: The captured AEAT Sede page could not be parsed.
+    fail_sede_validation: The data captured from the AEAT Sede does not have the expected
+      shape.
+    fail_site_health: The site health check failed.
+    fail_storage: A storage error occurred.
+    fail_storage_blob_not_found: The requested object was not found in the encrypted
+      store.
+    fail_storage_bucket_recovery_unavailable: The recovery wrap for the active bucket
+      could not be loaded. Recovery may never have been enrolled.
+    fail_storage_persistence: A persistence error occurred in the secure store.
+    fail_storage_repository: A repository operation failed.
+    fail_storage_secret_not_found: No secret was found for the requested key.
+    fail_storage_secret_store: An input/output error occurred in the secret store.
+    fail_user_profile_not_found: The requested user profile section or field was not
+      found.
+    fail_user_profile_schema_load: The user-profile schema could not be loaded.
+    ledger_check: A ledger consistency check surfaced a blocking finding.
+    ledger_link: A ledger transaction could not be linked to a modelo binding.
+    missing_exchange_rate: An exchange rate is missing for the date and currency provided.
+    modelo_036_lifecycle: An error occurred in the Modelo 036 lifecycle (registration,
+      modification or deregistration).
+    modelo_export: An error occurred while exporting the modelo revision.
+    modelo_export_manifest: The modelo export manifest could not be built or validated.
+    overview: An error occurred while building the overview.
+    overview_agenda: The overview could not enumerate the next-due actions.
+    overview_backlog: The overview could not classify the past-due obligations.
+    overview_calendar: The overview calendar could not be assembled for the requested
+      window.
+    overview_explain: The overview explanation could not be decomposed for the requested
+      obligation.
+    profile_export: An error occurred while exporting the profile archive.
+    profile_import: An error occurred while importing the profile archive.
+    reconciliation: An error occurred while reconciling the periodic filings with
+      the annual summary.
+    stale_exchange_rate: The only available exchange rate is outside the acceptable
+      freshness window.
   financial:
     source_file_not_found: 'Source file does not exist: {path}'
   identity:
@@ -2310,6 +2376,7 @@ errors:
     refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
       asset's cost basis.
+    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
     refused_profile_foral_regime: The foral regime selected is not modelled by this
       profile. Select a supported regime.
     refused_profile_inventory_validation: A profile inventory ledger failed validation.
@@ -2837,14 +2904,21 @@ wizard:
       title: First taxpayer
     title: Setup wizard
     verifier:
-      activity_present: wizard.setup.verifier.activity_present
-      eu_eea_country_missing: wizard.setup.verifier.eu_eea_country_missing
-      eu_eea_country_ok: wizard.setup.verifier.eu_eea_country_ok
-      obligations_consistency_ok: wizard.setup.verifier.obligations_consistency_ok
-      obligations_inconsistent: wizard.setup.verifier.obligations_inconsistent
-      spouse_consistency_missing: wizard.setup.verifier.spouse_consistency_missing
-      spouse_consistency_ok: wizard.setup.verifier.spouse_consistency_ok
-      tax_id_present: wizard.setup.verifier.tax_id_present
+      activity_present: 'Economic activity: check that the profile declares an activity.'
+      eu_eea_country_missing: 'Spouse residence: you indicated EU or EEA residence
+        but the country is missing. Add the country of residence.'
+      eu_eea_country_ok: 'Spouse residence: the EU or EEA country of residence is
+        consistent.'
+      obligations_consistency_ok: 'Withholding obligations: the withholding answers
+        are consistent.'
+      obligations_inconsistent: 'Withholding obligations: you declared professional
+        withholding but not that you pay professionals with withholding. Review these
+        answers.'
+      spouse_consistency_missing: 'Joint taxation: the spouse''s tax identification
+        is missing. Add it to file jointly.'
+      spouse_consistency_ok: 'Joint taxation: the spouse details are consistent.'
+      tax_id_present: 'Tax identification: check that the profile carries a NIF or
+        NIE.'
   test:
     description: Test your configuration and connectivity
     example:

@@ -1910,197 +1910,265 @@ errors:
     sede_no_census: Az AEAT portálja nem adott vissza beolvasható censót a(z) {profile_id}
       profilhoz.
   error:
-    error_access_gate_submission: errors.error.error_access_gate_submission
-    error_access_gate_submission_preflight: errors.error.error_access_gate_submission_preflight
-    error_aeat_core: errors.error.error_aeat_core
-    error_aeat_observability: errors.error.error_aeat_observability
-    error_application_live: errors.error.error_application_live
-    error_application_registry: errors.error.error_application_registry
-    error_borrador_artefact_not_recognised: errors.error.error_borrador_artefact_not_recognised
-    error_calculations_registry: errors.error.error_calculations_registry
-    error_calculations_registry_load: errors.error.error_calculations_registry_load
-    error_calculations_registry_snapshot: errors.error.error_calculations_registry_snapshot
-    error_calculations_registry_validation: errors.error.error_calculations_registry_validation
-    error_categories: errors.error.error_categories
-    error_categories_validation: errors.error.error_categories_validation
-    error_deadlines_deadline: errors.error.error_deadlines_deadline
-    error_deadlines_profile: errors.error.error_deadlines_profile
-    error_deadlines_schedule_computation: errors.error.error_deadlines_schedule_computation
-    error_deadlines_validation: errors.error.error_deadlines_validation
-    error_declaracion_template_not_detected: errors.error.error_declaracion_template_not_detected
-    error_domain: errors.error.error_domain
-    error_domain_submission: errors.error.error_domain_submission
-    error_domain_submission_preflight: errors.error.error_domain_submission_preflight
-    error_domain_validation: errors.error.error_domain_validation
-    error_filing_amendment: errors.error.error_filing_amendment
-    error_filing_application: errors.error.error_filing_application
-    error_filing_builder: errors.error.error_filing_builder
-    error_filing_computation: errors.error.error_filing_computation
-    error_filing_draft: errors.error.error_filing_draft
-    error_filing_export: errors.error.error_filing_export
-    error_filing_export_validation: errors.error.error_filing_export_validation
-    error_financial_aggregation: errors.error.error_financial_aggregation
-    error_financial_aggregation_period: errors.error.error_financial_aggregation_period
-    error_financial_aggregation_validation: errors.error.error_financial_aggregation_validation
-    error_financial_attachments_attachment: errors.error.error_financial_attachments_attachment
-    error_financial_attachments_attachment_not_found: errors.error.error_financial_attachments_attachment_not_found
-    error_financial_invoices_invoice: errors.error.error_financial_invoices_invoice
-    error_financial_invoices_invoice_catalogue: errors.error.error_financial_invoices_invoice_catalogue
-    error_financial_invoices_invoice_link: errors.error.error_financial_invoices_invoice_link
-    error_financial_invoices_invoice_not_found: errors.error.error_financial_invoices_invoice_not_found
-    error_financial_provider: errors.error.error_financial_provider
-    error_financial_transactions_transaction: errors.error.error_financial_transactions_transaction
-    error_financial_usage_ratios_usage_ratio: errors.error.error_financial_usage_ratios_usage_ratio
-    error_financial_vat: errors.error.error_financial_vat
-    error_financial_vat_catalogue: errors.error.error_financial_vat_catalogue
-    error_financial_vat_category_not_found: errors.error.error_financial_vat_category_not_found
-    error_financial_vat_classification: errors.error.error_financial_vat_classification
-    error_financial_vat_rate_not_found: errors.error.error_financial_vat_rate_not_found
-    error_financial_vat_rate_overlap: errors.error.error_financial_vat_rate_overlap
-    error_fixture_provisioning: errors.error.error_fixture_provisioning
-    error_invoice_link_inconsistency: errors.error.error_invoice_link_inconsistency
-    error_invoice_validation: errors.error.error_invoice_validation
-    error_justificante: errors.error.error_justificante
-    error_justificante_csv_not_found: errors.error.error_justificante_csv_not_found
-    error_llm: errors.error.error_llm
-    error_manuals_manual: errors.error.error_manuals_manual
-    error_manuals_manual_not_found: errors.error.error_manuals_manual_not_found
-    error_manuals_manual_review_required: errors.error.error_manuals_manual_review_required
-    error_manuals_rule_extraction: errors.error.error_manuals_rule_extraction
-    error_manuals_validation: errors.error.error_manuals_validation
-    error_modelo_aggregation_binding: errors.error.error_modelo_aggregation_binding
-    error_modelo_amendment_evidence_missing: errors.error.error_modelo_amendment_evidence_missing
-    error_modelo_amendment_target_state: errors.error.error_modelo_amendment_target_state
-    error_modelo_calculation_registry_unavailable: errors.error.error_modelo_calculation_registry_unavailable
-    error_modelo_calculation_revision_not_found: errors.error.error_modelo_calculation_revision_not_found
-    error_modelo_calculation_revision_state: errors.error.error_modelo_calculation_revision_state
-    error_modelo_casilla_provenance_missing: errors.error.error_modelo_casilla_provenance_missing
-    error_modelo_external_filing_import: errors.error.error_modelo_external_filing_import
-    error_modelo_filing_record_not_found: errors.error.error_modelo_filing_record_not_found
-    error_modelo_iva_wallet_reconciliation_blocked: errors.error.error_modelo_iva_wallet_reconciliation_blocked
-    error_modelo_verification_report_not_found: errors.error.error_modelo_verification_report_not_found
-    error_modelo_work_unit_already_discarded: errors.error.error_modelo_work_unit_already_discarded
-    error_modelo_work_unit_mutation_refused: errors.error.error_modelo_work_unit_mutation_refused
-    error_modelo_work_unit_not_found: errors.error.error_modelo_work_unit_not_found
-    error_modelos: errors.error.error_modelos
-    error_modelos_validation: errors.error.error_modelos_validation
-    error_normatives_normative: errors.error.error_normatives_normative
-    error_normatives_normative_not_found: errors.error.error_normatives_normative_not_found
-    error_normatives_validation: errors.error.error_normatives_validation
-    error_outbound_storage_not_found: errors.error.error_outbound_storage_not_found
-    error_pdf_import_pdf_modelo_import: errors.error.error_pdf_import_pdf_modelo_import
-    error_pdf_import_scrub: errors.error.error_pdf_import_scrub
-    error_period: errors.error.error_period
-    error_period_validation: errors.error.error_period_validation
-    error_portals_portal_registry: errors.error.error_portals_portal_registry
-    error_portals_unknown_portal: errors.error.error_portals_unknown_portal
-    error_portals_validation: errors.error.error_portals_validation
-    error_profile_amortization_ledger: errors.error.error_profile_amortization_ledger
-    error_profile_asset_record: errors.error.error_profile_asset_record
-    error_profile_cross_store_drift: errors.error.error_profile_cross_store_drift
-    error_profile_inventory_ledger: errors.error.error_profile_inventory_ledger
-    error_profile_tax_residence: errors.error.error_profile_tax_residence
-    error_profile_validation: errors.error.error_profile_validation
-    error_renta: errors.error.error_renta
-    error_renta_validation: errors.error.error_renta_validation
-    error_rental_amortization_cap_exceeded: errors.error.error_rental_amortization_cap_exceeded
-    error_rental_contract_not_found: errors.error.error_rental_contract_not_found
-    error_rental_finca_not_found: errors.error.error_rental_finca_not_found
-    error_rental_register: errors.error.error_rental_register
-    error_rental_tier_resolution: errors.error.error_rental_tier_resolution
-    error_rental_validation: errors.error.error_rental_validation
-    error_resources_backend: errors.error.error_resources_backend
-    error_resources_load: errors.error.error_resources_load
-    error_resources_not_found: errors.error.error_resources_not_found
-    error_resources_validation: errors.error.error_resources_validation
-    error_review: errors.error.error_review
-    error_sanitization: errors.error.error_sanitization
-    error_sede: errors.error.error_sede
-    error_sede_expediente_not_found: errors.error.error_sede_expediente_not_found
-    error_sede_navigation: errors.error.error_sede_navigation
-    error_storage_bucket: errors.error.error_storage_bucket
-    error_submission_validation: errors.error.error_submission_validation
-    error_transaction_catalogue: errors.error.error_transaction_catalogue
-    error_transaction_llm_classifier: errors.error.error_transaction_llm_classifier
-    error_transaction_not_found: errors.error.error_transaction_not_found
-    error_transaction_persistence: errors.error.error_transaction_persistence
-    error_transaction_validation: errors.error.error_transaction_validation
-    error_usage_ratios_validation: errors.error.error_usage_ratios_validation
-    error_user_profile: errors.error.error_user_profile
-    error_vat_prorrata: errors.error.error_vat_prorrata
-    error_vat_prorrata_input: errors.error.error_vat_prorrata_input
-    error_vat_prorrata_sector: errors.error.error_vat_prorrata_sector
-    error_vat_validation: errors.error.error_vat_validation
-    error_wizard: errors.error.error_wizard
-    error_wizard_compile: errors.error.error_wizard_compile
-    error_workflow: errors.error.error_workflow
-    error_workflow_component: errors.error.error_workflow_component
+    error_access_gate_submission: A hozzáférés-szabályozási irányelv elutasított egy
+      beküldési műveletet.
+    error_access_gate_submission_preflight: A hozzáférés-szabályozási előellenőrzés
+      elutasított egy írási műveletet.
+    error_aeat_core: Belső alkalmazáshiba történt.
+    error_aeat_observability: Hiba történt az alkalmazás telemetriájában.
+    error_application_live: Az élő AEAT olvasás vezérlése sikertelen volt.
+    error_application_registry: A modellnyilvántartás vezérlése sikertelen volt vagy
+      elutasításra került.
+    error_borrador_artefact_not_recognised: A PDF nem felel meg egyetlen ismert 100-as
+      modell piszkozatformának sem.
+    error_calculations_registry: Hiba történt a számítási nyilvántartás betöltése,
+      feloldása vagy ellenőrzése közben.
+    error_calculations_registry_load: A számítási nyilvántartás fájljait nem sikerült
+      értelmezni.
+    error_calculations_registry_snapshot: Nem sikerült bevallás minőségű nyilvántartás-pillanatképet
+      kiválasztani.
+    error_calculations_registry_validation: A számítási nyilvántartás definíciói hiányosak
+      vagy ellentmondóak.
+    error_categories: Hiba történt a költségkategóriákban.
+    error_categories_validation: Egy kategóriarekord nem felelt meg az ellenőrzésnek.
+    error_deadlines_deadline: Hiba történt a határidők kiszámításában.
+    error_deadlines_profile: Az egyéni vállalkozói profilt nem sikerült betölteni
+      vagy ellenőrizni a határidők kiszámításához.
+    error_deadlines_schedule_computation: A motor nem tudott érvényes határidő-ütemtervet
+      készíteni. Ellenőrizd a kért évet és a profiladatokat.
+    error_deadlines_validation: Egy határidőrekord nem felelt meg az ellenőrzésnek.
+    error_declaracion_template_not_detected: A bevallás PDF-jének sablonverzióját
+      nem sikerült automatikusan felismerni.
+    error_domain: Tartományi logikai hiba történt.
+    error_domain_submission: Beküldési tartományi hiba történt.
+    error_domain_submission_preflight: A piszkozat nem ment át a helyi beküldési előellenőrzésen.
+    error_domain_validation: Egy tartományi azonosító vagy modell érvénytelen.
+    error_filing_amendment: Módosító bevallással kapcsolatos hiba történt.
+    error_filing_application: Hiba történt a bevallási alkalmazásrétegben.
+    error_filing_builder: A bevalláskészítő kiválasztása vagy futtatása sikertelen
+      volt.
+    error_filing_computation: A készítő nem tudott kiértékelni egy képletrovatot.
+    error_filing_draft: Hiba történt a bevallás piszkozatában.
+    error_filing_export: A piszkozat exportálása az AEAT formátumába sikertelen volt.
+    error_filing_export_validation: Egy export mezőérték vagy elrendezés érvénytelen.
+    error_financial_aggregation: Hiba történt a pénzügyi tranzakciók összesítése közben.
+    error_financial_aggregation_period: A kért bevallási időszakot nem sikerült egyértelműen
+      értelmezni.
+    error_financial_aggregation_validation: Az összesítés tartalma vagy állapota érvénytelen.
+    error_financial_attachments_attachment: Mellékletkezelő-szolgáltatási hiba történt.
+    error_financial_attachments_attachment_not_found: A kért melléklet nem található.
+    error_financial_invoices_invoice: Számlakatalógus-hiba történt.
+    error_financial_invoices_invoice_catalogue: A számlakatalógus érvénytelen vagy
+      inkonzisztens.
+    error_financial_invoices_invoice_link: A számlát és a tranzakciót nem sikerült
+      összekapcsolni.
+    error_financial_invoices_invoice_not_found: A kért számla nem található.
+    error_financial_provider: Hiba történt a pénzügyi dokumentum importálása közben.
+    error_financial_transactions_transaction: Tranzakciókatalógus-hiba történt.
+    error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
+    error_financial_vat: Áfaszámítási hiba történt.
+    error_financial_vat_catalogue: Az áfakatalógust nem sikerült betölteni, feloldani
+      vagy ellenőrizni.
+    error_financial_vat_category_not_found: A kért áfakategória nem található a katalógusban.
+    error_financial_vat_classification: Az áfát nem sikerült determinisztikusan besorolni.
+    error_financial_vat_rate_not_found: Nem található áfakulcs a kért tagállamhoz
+      és típushoz.
+    error_financial_vat_rate_overlap: Két áfakulcs ugyanazon érvényességi időablakot
+      osztja meg.
+    error_fixture_provisioning: A tesztadatokat nem sikerült előkészíteni.
+    error_invoice_link_inconsistency: A kapcsolat szinkronizálatlanul hagyta a számla-
+      és a tranzakciókatalógust. Egyeztesd kézzel mindkét katalógust.
+    error_invoice_validation: Egy számlarekord nem felelt meg az ellenőrzésnek.
+    error_justificante: Igazolással kapcsolatos hiba történt.
+    error_justificante_csv_not_found: A PDF nem tartalmaz Código Seguro de Verificación
+      azonosítót.
+    error_llm: Nyelvi modell hiba történt.
+    error_manuals_manual: Kézikönyvekkel kapcsolatos hiba történt.
+    error_manuals_manual_not_found: A kért kézikönyv, év vagy rész nem található.
+    error_manuals_manual_review_required: Egy kézikönyvrekordból hiányoznak a felülvizsgálati
+      metaadatok.
+    error_manuals_rule_extraction: A kézikönyv szabálykinyerése nem érhető el.
+    error_manuals_validation: Egy kézikönyvrekord nem felelt meg az ellenőrzésnek.
+    error_modelo_aggregation_binding: A tárolóegységből származó összesítési kötések
+      ütköznek a megadott bemenettel.
+    error_modelo_amendment_evidence_missing: Egy bevallás nem módosítható importált
+      hivatalos bizonyíték nélkül. Előbb importáld az eredeti bevallás igazolását.
+    error_modelo_amendment_target_state: Egy nem aktuális állapotú bevallás nem módosítható;
+      már felváltotta egy későbbi.
+    error_modelo_calculation_registry_unavailable: A munkaegység modelljéhez, évéhez
+      és időszakához tartozó nyilvántartás-pillanatképet nem sikerült feloldani.
+    error_modelo_calculation_revision_not_found: A kért számítási revízió nem található.
+    error_modelo_calculation_revision_state: A kért állapotátmenet nem kompatibilis
+      a számítási revízió jelenlegi állapotával.
+    error_modelo_casilla_provenance_missing: A motor eredményének egy rovata nem rendelkezik
+      definícióval a nyilvántartásban.
+    error_modelo_external_filing_import: Az importált külső bevallást nem sikerült
+      menteni. Ellenőrizd a rovatértékeket és a bizonyítékhivatkozást.
+    error_modelo_filing_record_not_found: A kért bevallási rekord nem található.
+    error_modelo_iva_wallet_reconciliation_blocked: A 303-as modell számítását az
+      áfatárca egyeztetése blokkolja. Oldd fel a függőben lévő egyeztetést a folytatás
+      előtt.
+    error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
+    error_modelo_work_unit_already_discarded: A munkaegység már el van vetve.
+    error_modelo_work_unit_mutation_refused: Egy elvetett munkaegység nem módosítható.
+    error_modelo_work_unit_not_found: A kért munkaegység nem található.
+    error_modelos: Adómodellhiba történt.
+    error_modelos_validation: Egy modellkód megsérti az alakzati feltételeit.
+    error_normatives_normative: Szabályozással kapcsolatos hiba történt.
+    error_normatives_normative_not_found: A kért szabályozás vagy cikk nem található.
+    error_normatives_validation: Egy szabályozási mezőérték érvénytelen.
+    error_outbound_storage_not_found: A kért tárolóobjektum vagy névtér nem létezik.
+    error_pdf_import_pdf_modelo_import: A bevallás importálása a PDF-ből sikertelen
+      volt.
+    error_pdf_import_scrub: A PDF biztonságos változatát nem sikerült létrehozni.
+    error_period: Időszakkal kapcsolatos hiba történt.
+    error_period_validation: A megadott időszak-token hibás formátumú.
+    error_portals_portal_registry: Hiba történt az AEAT portálnyilvántartásában.
+    error_portals_unknown_portal: A megadott AEAT-portál nem létezik.
+    error_portals_validation: Egy portál metaadatai nem feleltek meg az ellenőrzésnek.
+    error_profile_amortization_ledger: A profil értékcsökkenési könyvének egy művelete
+      érvénytelen.
+    error_profile_asset_record: A profil egy eszközrekordja szerkezetileg érvénytelen.
+    error_profile_cross_store_drift: Egy profil fizikai tárolói nem egyeznek az azonosságában.
+      A profil nem használható.
+    error_profile_inventory_ledger: A profil leltárkönyvének egy művelete érvénytelen.
+    error_profile_tax_residence: Adóügyi illetőségi profil hiba történt.
+    error_profile_validation: Egy profilrekord nem felelt meg az ellenőrzésnek.
+    error_renta: Hiba történt a RENTA-bevallás számításában.
+    error_renta_validation: Egy RENTA mezőérték érvénytelen.
+    error_rental_amortization_cap_exceeded: A halmozott értékcsökkenés meghaladná
+      a bérelt eszköz törvényi felső korlátját.
+    error_rental_contract_not_found: A megadott bérleti szerződés nem található.
+    error_rental_finca_not_found: A megadott ingatlan nem található.
+    error_rental_register: Hiba történt a bérleti nyilvántartásban.
+    error_rental_tier_resolution: A bérleti szerződés adatai inkonzisztensek, és az
+      alkalmazandó kedvezményi szint nem volt meghatározható.
+    error_rental_validation: Egy bérleti rekord nem felelt meg az ellenőrzésnek.
+    error_resources_backend: Hiba történt az alkalmazásba csomagolt adatok beolvasása
+      közben.
+    error_resources_load: Egy beépített alkalmazás-erőforrást nem sikerült betölteni.
+    error_resources_not_found: A kért beépített erőforrás nem található.
+    error_resources_validation: Egy beépített alkalmazásfájl nem felelt meg a szigorú
+      ellenőrzésnek.
+    error_review: Felülvizsgálati hiba történt.
+    error_sanitization: Hiba történt a dokumentum tisztítása közben.
+    error_sede: Hiba történt az AEAT elektronikus Sede oldalán.
+    error_sede_expediente_not_found: Egyetlen ügyirat sem felelt meg a kért szűrőnek.
+    error_sede_navigation: Egy navigációs lépés az AEAT Sede oldalán sikertelen volt.
+    error_storage_bucket: Hiba történt a tárolóegység életciklusában.
+    error_submission_validation: Egy beküldési modell nem felelt meg az ellenőrzésnek.
+    error_transaction_catalogue: A tranzakciókatalógus érvénytelen vagy inkonzisztens.
+    error_transaction_llm_classifier: A tranzakció besorolása a nyelvi modellel sikertelen
+      volt.
+    error_transaction_not_found: A kért tranzakció nem található.
+    error_transaction_persistence: A tranzakciókatalógust nem sikerült menteni.
+    error_transaction_validation: Egy tranzakció mezőértéke érvénytelen.
+    error_usage_ratios_validation: Egy használati arány profil megsérti a tartományi
+      feltételeit.
+    error_user_profile: Felhasználói profil hiba történt.
+    error_vat_prorrata: Hiba történt az áfa arányosításának számításában.
+    error_vat_prorrata_input: Az áfa arányosítás bemenetei megsértik a feltételeiket.
+    error_vat_prorrata_sector: Az áfa arányosítás ágazati elkülönítési bemenetei inkonzisztensek.
+    error_vat_validation: Egy áfamezőérték érvénytelen.
+    error_wizard: Varázslóhiba történt.
+    error_wizard_compile: A varázsló katalógusa hibás, és nem volt lefordítható.
+    error_workflow: Munkafolyamat-hiba történt.
+    error_workflow_component: Egy munkafolyamat-összetevő váratlan kivételt dobott.
   fail:
-    census_sync: errors.fail.census_sync
-    currency_error: errors.fail.currency_error
-    declaration_parse: errors.fail.declaration_parse
-    exchange_rate_provider: errors.fail.exchange_rate_provider
-    fail_borrador_parse: errors.fail.fail_borrador_parse
-    fail_browser_evasion: errors.fail.fail_browser_evasion
-    fail_browser_session_browser: errors.fail.fail_browser_session_browser
-    fail_browser_validation: errors.fail.fail_browser_validation
-    fail_declaracion_parse: errors.fail.fail_declaracion_parse
-    fail_export: errors.fail.fail_export
-    fail_export_format: errors.fail.fail_export_format
-    fail_filing_import: errors.fail.fail_filing_import
-    fail_financial_attachments_attachment_persistence: errors.fail.fail_financial_attachments_attachment_persistence
-    fail_financial_invoices_invoice_persistence: errors.fail.fail_financial_invoices_invoice_persistence
-    fail_financial_ledger_storage: errors.fail.fail_financial_ledger_storage
-    fail_financial_usage_ratios_usage_ratio_persistence: errors.fail.fail_financial_usage_ratios_usage_ratio_persistence
-    fail_google_browser_open: errors.fail.fail_google_browser_open
-    fail_google_loopback_bind: errors.fail.fail_google_loopback_bind
-    fail_google_network: errors.fail.fail_google_network
-    fail_justificante_parse: errors.fail.fail_justificante_parse
-    fail_llm_cache: errors.fail.fail_llm_cache
-    fail_llm_provider: errors.fail.fail_llm_provider
-    fail_llm_rate_limit: errors.fail.fail_llm_rate_limit
-    fail_locale_manager: errors.fail.fail_locale_manager
-    fail_manuals_manual_parse: errors.fail.fail_manuals_manual_parse
-    fail_mcp_launch: errors.fail.fail_mcp_launch
-    fail_modelo_calculation_revision_persistence: errors.fail.fail_modelo_calculation_revision_persistence
-    fail_modelo_filing_record_persistence: errors.fail.fail_modelo_filing_record_persistence
-    fail_modelo_verification_report_persistence: errors.fail.fail_modelo_verification_report_persistence
-    fail_modelo_work_unit_persistence: errors.fail.fail_modelo_work_unit_persistence
-    fail_normatives_normative_parse: errors.fail.fail_normatives_normative_parse
-    fail_outbound_storage: errors.fail.fail_outbound_storage
-    fail_outbound_storage_network: errors.fail.fail_outbound_storage_network
-    fail_outbound_storage_unavailable: errors.fail.fail_outbound_storage_unavailable
-    fail_review_source_load: errors.fail.fail_review_source_load
-    fail_sanitization_source_parse: errors.fail.fail_sanitization_source_parse
-    fail_sede_census_parse: errors.fail.fail_sede_census_parse
-    fail_sede_justificante_fetch: errors.fail.fail_sede_justificante_fetch
-    fail_sede_parse: errors.fail.fail_sede_parse
-    fail_sede_validation: errors.fail.fail_sede_validation
-    fail_site_health: errors.fail.fail_site_health
-    fail_storage: errors.fail.fail_storage
-    fail_storage_blob_not_found: errors.fail.fail_storage_blob_not_found
-    fail_storage_bucket_recovery_unavailable: errors.fail.fail_storage_bucket_recovery_unavailable
-    fail_storage_persistence: errors.fail.fail_storage_persistence
-    fail_storage_repository: errors.fail.fail_storage_repository
-    fail_storage_secret_not_found: errors.fail.fail_storage_secret_not_found
-    fail_storage_secret_store: errors.fail.fail_storage_secret_store
-    fail_user_profile_not_found: errors.fail.fail_user_profile_not_found
-    fail_user_profile_schema_load: errors.fail.fail_user_profile_schema_load
-    ledger_check: errors.fail.ledger_check
-    ledger_link: errors.fail.ledger_link
-    missing_exchange_rate: errors.fail.missing_exchange_rate
-    modelo_036_lifecycle: errors.fail.modelo_036_lifecycle
-    modelo_export: errors.fail.modelo_export
-    modelo_export_manifest: errors.fail.modelo_export_manifest
-    overview: errors.fail.overview
-    overview_agenda: errors.fail.overview_agenda
-    overview_backlog: errors.fail.overview_backlog
-    overview_calendar: errors.fail.overview_calendar
-    overview_explain: errors.fail.overview_explain
-    profile_export: errors.fail.profile_export
-    profile_import: errors.fail.profile_import
-    reconciliation: errors.fail.reconciliation
-    stale_exchange_rate: errors.fail.stale_exchange_rate
+    census_sync: A 036-os modell nyilvántartásának szinkronizálása sikertelen volt.
+    currency_error: A pénznem normalizálása sikertelen volt.
+    declaration_parse: A benyújtott bevallás exportját nem sikerült értelmezni az
+      egyeztetéshez.
+    exchange_rate_provider: Az árfolyam-szolgáltató nem válaszolt.
+    fail_borrador_parse: A 100-as modell piszkozat PDF-jét nem sikerült bevallássá
+      értelmezni.
+    fail_browser_evasion: A böngésző elkerülési beállítása nem volt alkalmazható.
+    fail_browser_session_browser: Böngészőmunkamenet-hiba történt.
+    fail_browser_validation: A böngésző paraméterei nem feleltek meg az ellenőrzésnek.
+    fail_declaracion_parse: A PDF-et nem sikerült bevallássá értelmezni.
+    fail_export: Hiba történt az AEAT felé történő exportálás közben.
+    fail_export_format: A bevallás piszkozatát nem sikerült a kért BOE formátumba
+      sorosítani.
+    fail_filing_import: A bevallást nem sikerült importálni az igazolás PDF-jéből.
+    fail_financial_attachments_attachment_persistence: A melléklettároló nem tudta
+      beolvasni vagy kiírni az adatokat.
+    fail_financial_invoices_invoice_persistence: A számlakatalógust nem sikerült menteni
+      vagy betölteni.
+    fail_financial_ledger_storage: A tárolóegységhez kötött könyvelési tárolót nem
+      sikerült feloldani vagy használni.
+    fail_financial_usage_ratios_usage_ratio_persistence: A használati arány profilt
+      nem sikerült beolvasni vagy kiírni.
+    fail_google_browser_open: A böngészőt nem sikerült megnyitni a Google hozzájárulási
+      oldalának megjelenítéséhez. Nyisd meg a hivatkozást kézzel.
+    fail_google_loopback_bind: A helyi HTTP-fogadó nem tudott portot lefoglalni. Zárd
+      be az azt esetleg használó alkalmazásokat, és próbáld újra.
+    fail_google_network: A Google szerverét nem sikerült elérni. Ellenőrizd az internetkapcsolatot,
+      és próbáld újra.
+    fail_justificante_parse: A PDF-et nem sikerült igazolássá értelmezni.
+    fail_llm_cache: Egy nyelvi modell gyorsítótár-bejegyzését nem sikerült beolvasni,
+      kiírni vagy értelmezni.
+    fail_llm_provider: A nyelvi modell szolgáltatója helyrehozhatatlan hibát adott
+      vissza.
+    fail_llm_rate_limit: A nyelvi modell szolgáltatója használati korlát miatt elutasította
+      a kérést. Várj néhány percet, és próbáld újra.
+    fail_locale_manager: Hiba történt a nyelvi fájlok kezelése vagy beolvasása közben.
+    fail_manuals_manual_parse: Egy kézikönyvrekord nem felelt meg a sémaellenőrzésnek.
+    fail_mcp_launch: Az MCP-kiszolgálót nem sikerült elindítani.
+    fail_modelo_calculation_revision_persistence: A számítási revíziók katalógusát
+      nem sikerült menteni vagy betölteni.
+    fail_modelo_filing_record_persistence: A bevallási rekordok katalógusát nem sikerült
+      menteni vagy betölteni.
+    fail_modelo_verification_report_persistence: Az ellenőrzési jelentések katalógusát
+      nem sikerült menteni vagy betölteni.
+    fail_modelo_work_unit_persistence: A munkaegységek katalógusát nem sikerült menteni
+      vagy betölteni.
+    fail_normatives_normative_parse: Egy szabályozási rekord nem felelt meg a sémaellenőrzésnek.
+    fail_outbound_storage: Tárolószolgáltatói hiba történt.
+    fail_outbound_storage_network: A tárolószolgáltatást nem sikerült elérni. Ellenőrizd
+      az internetkapcsolatot, és próbáld újra.
+    fail_outbound_storage_unavailable: A tárolószolgáltatás átmenetileg nem érhető
+      el. Várj néhány percet, és próbáld újra.
+    fail_review_source_load: A forrásfájl létezik, de nem sikerült értelmezni.
+    fail_sanitization_source_parse: A forrás PDF-et nem sikerült megnyitni a tisztításhoz.
+    fail_sede_census_parse: Az AEAT Sede nyilvántartási oldalának egy értékét nem
+      sikerült értelmezni.
+    fail_sede_justificante_fetch: Az igazolás PDF letöltése az AEAT Sede oldaláról
+      sikertelen volt, vagy a fájl hibás.
+    fail_sede_parse: Az AEAT Sede rögzített oldalát nem sikerült értelmezni.
+    fail_sede_validation: Az AEAT Sede oldaláról rögzített adatok nem a várt formájúak.
+    fail_site_health: A webhely állapotellenőrzése sikertelen volt.
+    fail_storage: Tárolási hiba történt.
+    fail_storage_blob_not_found: A kért objektum nem található a titkosított tárolóban.
+    fail_storage_bucket_recovery_unavailable: Az aktív tárolóegység helyreállítási
+      csomagját nem sikerült betölteni. Lehetséges, hogy a helyreállítás soha nem
+      lett beállítva.
+    fail_storage_persistence: Megőrzési hiba történt a biztonságos tárolóban.
+    fail_storage_repository: Egy tárházművelet sikertelen volt.
+    fail_storage_secret_not_found: Nem található titok a kért kulcshoz.
+    fail_storage_secret_store: Be-/kimeneti hiba történt a titoktárolóban.
+    fail_user_profile_not_found: A felhasználói profil kért szakasza vagy mezője nem
+      található.
+    fail_user_profile_schema_load: A felhasználói profil sémáját nem sikerült betölteni.
+    ledger_check: Egy könyvelési konzisztenciaellenőrzés a folytatást gátló problémát
+      talált.
+    ledger_link: Egy könyvelési tranzakciót nem sikerült modellkötéshez kapcsolni.
+    missing_exchange_rate: Hiányzik az árfolyam a megadott dátumhoz és pénznemhez.
+    modelo_036_lifecycle: Hiba történt a 036-os modell életciklusában (regisztráció,
+      módosítás vagy törlés).
+    modelo_export: Hiba történt a modellrevízió exportálása közben.
+    modelo_export_manifest: A modellexport jegyzékét nem sikerült létrehozni vagy
+      ellenőrizni.
+    overview: Hiba történt az áttekintés összeállítása közben.
+    overview_agenda: Az áttekintés nem tudta felsorolni a következő esedékes teendőket.
+    overview_backlog: Az áttekintés nem tudta besorolni a lejárt kötelezettségeket.
+    overview_calendar: Az áttekintési naptárt nem sikerült összeállítani a kért időszakra.
+    overview_explain: Az áttekintés magyarázatát nem sikerült lebontani a kért kötelezettségre.
+    profile_export: Hiba történt a profilarchívum exportálása közben.
+    profile_import: Hiba történt a profilarchívum importálása közben.
+    reconciliation: Hiba történt az időszaki bevallások és az éves összesítő egyeztetése
+      közben.
+    stale_exchange_rate: Az egyetlen elérhető árfolyam az elfogadható frissességi
+      időablakon kívül esik.
   financial:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
   identity:
@@ -2357,6 +2425,7 @@ errors:
       ellenőrzésnek.
     refused_profile_basis_cap_exceeded: A halmozott értékcsökkenés meghaladná az eszköz
       bekerülési alapját.
+    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
     refused_profile_foral_regime: A kiválasztott foral adórendszert ez a profil nem
       modellezi. Válassz támogatott adórendszert.
     refused_profile_inventory_validation: Egy profil leltárkönyve nem felelt meg az
@@ -2889,14 +2958,22 @@ wizard:
       title: Az első adózó
     title: Beállítás varázsló
     verifier:
-      activity_present: wizard.setup.verifier.activity_present
-      eu_eea_country_missing: wizard.setup.verifier.eu_eea_country_missing
-      eu_eea_country_ok: wizard.setup.verifier.eu_eea_country_ok
-      obligations_consistency_ok: wizard.setup.verifier.obligations_consistency_ok
-      obligations_inconsistent: wizard.setup.verifier.obligations_inconsistent
-      spouse_consistency_missing: wizard.setup.verifier.spouse_consistency_missing
-      spouse_consistency_ok: wizard.setup.verifier.spouse_consistency_ok
-      tax_id_present: wizard.setup.verifier.tax_id_present
+      activity_present: 'Gazdasági tevékenység: ellenőrzés, hogy a profil megad-e
+        tevékenységet.'
+      eu_eea_country_missing: 'Házastárs lakóhelye: EU- vagy EGT-tartózkodást jelöltél
+        meg, de hiányzik az ország. Add meg a tartózkodási országot.'
+      eu_eea_country_ok: 'Házastárs lakóhelye: az EU- vagy EGT-tartózkodási ország
+        konzisztens.'
+      obligations_consistency_ok: 'Levonási kötelezettségek: a levonással kapcsolatos
+        válaszok konzisztensek.'
+      obligations_inconsistent: 'Levonási kötelezettségek: szakmai levonást jelöltél
+        meg, de azt nem, hogy szakembereknek levonással fizetsz. Ellenőrizd ezeket
+        a válaszokat.'
+      spouse_consistency_missing: 'Közös adózás: hiányzik a házastárs adóazonosítója.
+        Add meg a közös benyújtáshoz.'
+      spouse_consistency_ok: 'Közös adózás: a házastárs adatai konzisztensek.'
+      tax_id_present: 'Adóazonosító: ellenőrzés, hogy a profil tartalmaz-e NIF vagy
+        NIE azonosítót.'
   test:
     description: Test your configuration and connectivity
     example:
