@@ -647,3 +647,5 @@ AEAT-published (the manual worked example plus the "Incremento en
 cuota íntegra estatal" column at each breakpoint), not author-computed,
 satisfying the no-tautological-calculation-tests rule. The decision
 and scope of this ADR are otherwise unchanged.
+
+The art.76 ahorro-base **autonómica** escala (casillas `0537`/`0539`/`0541`, parameter `renta-{year}-escala-autonomica-base-ahorro`, `legal_refs = ["ley-35-2006:art-76"]`) is now likewise authored for ejercicios 2020–2025; the AEAT Manual de Renta confirms the art.76 autonómica savings scale is bracket-identical to the art.66.1 estatal savings scale every year, and the page-954 worked example oracle "Gravamen autonómico 2.800 x 9,50% = 266" grounds `0541`.
