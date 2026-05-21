@@ -1399,11 +1399,7 @@ class ParameterDefinition(RegistryModel):
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: Literal[
-        "ledger",
         "invoice",
-        "rental",
-        "vat",
-        "category",
         "profile",
         "previous_filing",
         "manual_input",
