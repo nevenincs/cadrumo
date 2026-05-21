@@ -402,8 +402,9 @@ cli:
           ismételd az opciót
         foreign_asset_observation_help: JSON ForeignAssetObservation objektum; több
           megfigyeléshez ismételd az opciót
-        json_not_object: 'A(z) {flag} JSON-objektum kell legyen.'
-        json_parse_error: 'A(z) {flag} JSON-objektum kell legyen; érvénytelen JSON a(z) {pos}. bájtnál.'
+        json_not_object: A(z) {flag} JSON-objektum kell legyen.
+        json_parse_error: A(z) {flag} JSON-objektum kell legyen; érvénytelen JSON
+          a(z) {pos}. bájtnál.
         modelo_help: Támogatott modelo kód (111, 115, 123, 180, 190, 193, 347, 349
           vagy 720)
         period_help: Az összesítési szolgáltatásnak átadott időszak
@@ -438,7 +439,8 @@ cli:
           periodikus peldak: 2026Q1 es 2026-01'
         preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció
           nélkül
-        unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések ehhez: {code}@{revision} ({period}): {suggestion}.'
+        unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések ehhez:
+          {code}@{revision} ({period}): {suggestion}.'
         year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
@@ -481,10 +483,11 @@ cli:
           legalább egy kötelező)
         import_help: Külsőleg leadott bevallás rögzítése alap filing recordként, importált
           AEAT-hitelesített evidenciával
-        import_set_required: 'Az --set legalább egyszer kötelező egy importáláshoz.'
+        import_set_required: Az --set legalább egyszer kötelező egy importáláshoz.
         include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
           kihagyva)
-        invalid_evidence_kind: 'Az --evidence-kind értékének a következők egyikének kell lennie: {canonical}; a kapott érték {kind}.'
+        invalid_evidence_kind: 'Az --evidence-kind értékének a következők egyikének
+          kell lennie: {canonical}; a kapott érték {kind}.'
         list_help: Regisztrált filing recordok listázása
         view_help: Egy filing record megjelenítése azonosító alapján
       formulas:
@@ -542,7 +545,7 @@ cli:
           record szükséges
         amend_missing_options: 'A módosításhoz az alábbi összes kapcsoló szükséges:
           %{missing}.'
-        amend_set_required: 'Az --set legalább egyszer kötelező egy módosításhoz.'
+        amend_set_required: Az --set legalább egyszer kötelező egy módosításhoz.
         amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
         amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése
@@ -569,15 +572,17 @@ cli:
         history_work_unit_id_help: A megjelenítendő életciklusú munkaegység azonosítója
         include_discarded_help: A megszakított munkaegységeket is mutassa a listában
           (alapértelmezetten kihagyva)
-        invalid_amendment_kind: 'A --kind értékének a következők egyikének kell lennie: {choices}; a kapott érték {kind}.'
+        invalid_amendment_kind: 'A --kind értékének a következők egyikének kell lennie:
+          {choices}; a kapott érték {kind}.'
         invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
           plusz . _ : - elválasztók, max. 128 karakter)'
         invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
           plusz . _ : - elválasztók, max. 64 karakter)'
         invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
           kell legyen (SHA-256 kivonat)
-        kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; a kapott érték {spec}.'
-        kv_format_error: 'A(z) {flag} formátuma {key_label}={value_label} kell legyen; a kapott érték {spec}.'
+        kv_empty_key_error: A(z) {flag} kulcsa nem lehet üres; a kapott érték {spec}.
+        kv_format_error: A(z) {flag} formátuma {key_label}={value_label} kell legyen;
+          a kapott érték {spec}.
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
           szűrve
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
@@ -606,7 +611,8 @@ cli:
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
-        set_not_decimal: 'A(z) --set értéke decimális szám kell legyen; a kapott érték {value}.'
+        set_not_decimal: A(z) --set értéke decimális szám kell legyen; a kapott érték
+          {value}.
         set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy kötelező)
         status_help: Egy munkaegység metaadatainak megjelenítése
@@ -690,6 +696,9 @@ cli:
       bucket_id_help: A bucket azonosítója, amelynek eseménytörténetét megjelenítjük
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
+      history:
+        invalid_timestamp: 'A(z) {flag} ISO-8601 időbélyeg kell legyen (pl. 2026-04-01T00:00:00+00:00); a kapott érték {raw}.'
+        since_after_until: 'A --since értékének a --until értékénél korábbinak vagy azzal egyenlőnek kell lennie.'
       history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
       object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos
         egyezés)
@@ -1576,6 +1585,7 @@ cli:
       welcome_profile: Udvozlet ujra. Az aktiv profil `%{profile}`.
     language_help: A parancs kimeneti nyelve (felülírja az aktív profilt)
     quiet_help: Csak hibák megjelenítése stderr-en
+    startup_import_error: 'Az AEAT parancsfelület nem indítható: hiányzó függőség: {dependency}. Futtasd az `aeat config repair` parancsot.'
     unavailable_app_help: Az app parancsok nem érhetők el, mert hiányzik egy opcionális
       függőség
     verbose_help: Belső információs naplók megjelenítése stderr-en

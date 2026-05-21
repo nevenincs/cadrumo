@@ -292,7 +292,7 @@ def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
 
 def _startup_import_error_text(error: ModuleNotFoundError) -> str:
     dependency = _missing_dependency_name(error)
-    return f"Cannot start AEAT command surface: missing dependency {dependency!r}.\nRun: aeat config repair\n"
+    return tr("cli.root.startup_import_error", dependency=dependency) + "\n"
 
 
 def _missing_dependency_name(error: ModuleNotFoundError) -> str:
