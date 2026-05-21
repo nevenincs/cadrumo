@@ -6,6 +6,7 @@ from typing import Protocol
 
 import typer
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
@@ -213,10 +214,8 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     )
 
 
-def _format_validation_error(item: object) -> str:
+def _format_validation_error(item: ErrorDetails) -> str:
     """Render one pydantic error entry as ``field: message`` text."""
-    if not isinstance(item, dict):
-        return str(item)
     location = item.get("loc", ())
     message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
     field_path = ".".join(str(part) for part in location if part != "__root__")
@@ -1075,7 +1074,10 @@ def ledger_check(
 ) -> None:
     """Surface ledger anomalies for the addressed bucket without mutating state."""
 
-    from ...application.ledger._preflight import preflight_transaction_catalogue
+    from ...application.ledger._preflight import (
+        LedgerPreflightIssue,
+        preflight_transaction_catalogue,
+    )
     from ...domain.transactions import TransactionCatalogueRepository
 
     if bucket_id_option is not None:
@@ -1113,7 +1115,7 @@ def ledger_check(
         _emit(ctx, payload, lines)
         return
 
-    aggregated_issues: list[object] = []
+    aggregated_issues: list[LedgerPreflightIssue] = []
     aggregated_payload_issues: list[dict[str, object]] = []
     checked_total = 0
     for year in years:
