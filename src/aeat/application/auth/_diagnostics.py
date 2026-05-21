@@ -8,7 +8,14 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict
 
-from ...adapters.outbound.aeat.auth import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+# Imported from the defining `_clave_movil` module, not the `auth`
+# package surface: `adapters.outbound.aeat.auth.__init__` imports
+# `application.auth`, and `application.auth.__init__` imports this
+# module — re-entering the package surface here closes a circular
+# import. `_clave_movil` is a leaf module (no application-layer
+# import), so importing the public-named constant from it directly
+# breaks the cycle.
+from ...adapters.outbound.aeat.auth._clave_movil import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import SensitivityClass
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 
