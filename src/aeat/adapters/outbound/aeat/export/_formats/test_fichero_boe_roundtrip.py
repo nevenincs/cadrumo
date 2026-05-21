@@ -27,6 +27,7 @@ from decimal import Decimal
 
 import pytest
 
+from .._errors import ExportFormatError
 from ._deserialise import deserialise
 from ._record_spec import (
     DateFmt,
@@ -213,8 +214,8 @@ def test_currency_blank_input_rejected_at_decode() -> None:
     from a legitimate zero.
     """
 
-    from ._deserialise import deserialise
     from .._errors import ExportFormatError
+    from ._deserialise import deserialise
 
     specs = (
         record_field(
@@ -241,8 +242,8 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
     decode to a negative-zero.
     """
 
-    from ._deserialise import deserialise
     from .._errors import ExportFormatError
+    from ._deserialise import deserialise
 
     specs = (
         record_field(
@@ -296,3 +297,43 @@ def test_cp1252_encoded_field_round_trips_non_ascii() -> None:
 
     parsed = deserialise(payload, specs=specs, encoding="cp1252", total_length=8)
     assert parsed.field_values["NOMBRE"] == "Pañito"
+
+
+def test_reserved_field_corruption_rejected_at_decode() -> None:
+    """Anti-tautology proof for RESERVED literal fields.
+
+    A RESERVED field carries a fixed literal (record separator,
+    envelope tag, filler constant). The deserialiser must reject a
+    payload whose reserved bytes diverge from the declared
+    ``literal_value`` — a corrupted constant that round-tripped
+    silently would leave the export's structural integrity unverifiable.
+    Serialise a record, rewrite the reserved literal on disk to a
+    divergent value, and assert ``deserialise`` refuses it. If the
+    deserialiser's RESERVED invariant were removed, this test fails.
+    """
+
+    specs = (
+        record_field(
+            offset=1,
+            length=4,
+            field_id="ENVELOPE_TAG",
+            kind=FieldKind.RESERVED,
+            literal_value="AEAT",
+        ),
+    )
+    validate_record_specs(specs, total_length=4)
+
+    payload = serialise(
+        casilla_values={},
+        headers={},
+        specs=specs,
+        encoding="iso-8859-1",
+        total_length=4,
+    )
+    assert b"AEAT" in payload, payload
+
+    corrupted = payload.replace(b"AEAT", b"XXXX")
+    assert corrupted != payload
+
+    with pytest.raises(ExportFormatError, match="RESERVED"):
+        deserialise(corrupted, specs=specs, encoding="iso-8859-1", total_length=4)
