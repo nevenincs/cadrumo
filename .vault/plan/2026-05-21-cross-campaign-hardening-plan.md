@@ -76,8 +76,8 @@ roundtrip / anti-tautology gaps.
 
 Lock export-adjacent coverage after the critical provenance path lands.
 
-- [x] `P06.S25` - EXIM-4: document and test Google Sheets as a one-way export mirror (b37445ce2) - found and fixed a live defect: `_classify_metadata_match` never compared `registry_sha`, so a drifted-registry workbook classified `matches`; added the gate, the one-way-mirror docstring contract, and the malformed-sheet pull probe; 33 google tests green; `src/aeat/adapters/outbound/google`.
-- [ ] `P06.S26` - EXIM-5: export tests for no-layout modelos, `binding_rows`, and computed fields; `src/aeat/application/filing`.
+- [x] `P06.S25` - EXIM-4: document and test Google Sheets as a one-way export mirror (b37445ce2) - found and fixed a live defect: `_classify_metadata_match` never compared `registry_sha`, so a drifted-registry workbook classified `matches`; `added the gate, the one-way-mirror docstring contract, and the malformed-sheet pull probe; 33 google tests green; `src/aeat/adapters/outbound/google`.
+- [x] `P06.S26` - EXIM-5: export tests for no-layout modelos, `binding_rows`, and computed fields (ec2085049) - added the two untested no-layout guard cases (modelo 303: `export_draft` raises `FilingExportError`, `verify_export` returns `MISSING`); `computed`-field shapes already exercised by the 130 layout round-trip, `binding`-field shapes by the 131 binding-derived test; 38 export tests green; `src/aeat/application/filing`.
 
 ### Phase `P07` - MED cluster
 

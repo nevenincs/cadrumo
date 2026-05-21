@@ -146,6 +146,8 @@ CLEAN: CLI mounting (config + app roots only); workflow state transitions (froze
 
 ### EXIM-5 — HIGH — modelo export tests cover only 130/131; no negative test for no-layout modelos or `binding_rows`/computed-field shapes. **Remediation:** add the missing export-layout cases.
 
+**Resolution (2026-05-21, P06.S26, ec2085049) — fixed.** Verification narrowed the gap: `test_export.py` already covers modelos 130/131/111/115/123 (the audit's "130/131 only" was stale), and the `computed`-field path (`_computed_field_value` → `envelope_closing_tag`) is exercised transitively by `test_export_writes_modelo_130_registry_layout` because modelo 130's layout carries `kind="computed"` fields. The genuine untested gap was the no-layout guard in both `export_draft` (line 234, raises `FilingExportError`) and `verify_export` (line 266, returns `MISSING`). Added `test_export_rejects_modelo_without_registry_export_layout` and `test_verify_reports_missing_for_modelo_without_registry_export_layout` using a real modelo-303 draft (303 is filed via the AEAT web form and declares no fichero-BOE layout). 38 export tests green.
+
 ### EXIM-6 — MED — verify verdict's `unchecked_casillas` never reports RESERVED-field casillas. **Remediation:** track reserved casillas in the verify path.
 
 ## Axis E — cross-domain handoffs
