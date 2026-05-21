@@ -15,9 +15,12 @@
 # the closure bounds the set to the calculation surface. The Liquidación
 # III chain (01330, 00552, 01033, 01034, 00562, 00558) is declared under
 # segment DP200014; the Liquidación IV chain (00592, 00599, 01766, 01784,
-# 00611, 00601, 00603, 00605) under DP200014B; the Estado tributación
-# share (00625) under DP200026. The off-load-path drift re-verification
-# test re-derives this set from the corpus Diseño.
+# 00611) under DP200014B; the Estado tributación share (00625) under
+# DP200026. The pagos fraccionados (00601 / 00603 / 00605) enter the
+# cuota-diferencial netting through the modelo-202 cross-model relation,
+# not as in-modelo formula operands, so they are outside this revision's
+# calculation closure. The off-load-path drift re-verification test
+# re-derives this set from the corpus Diseño.
 
 [revisions."2024-y-siguientes".completeness_manifest]
 source_ref = "aeat-dr-200-2025"
@@ -62,18 +65,6 @@ segmento = "DP200014B"
 
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 number = "00599"
-segmento = "DP200014B"
-
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
-number = "00601"
-segmento = "DP200014B"
-
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
-number = "00603"
-segmento = "DP200014B"
-
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
-number = "00605"
 segmento = "DP200014B"
 
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]
