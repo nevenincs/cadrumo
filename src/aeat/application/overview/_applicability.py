@@ -89,9 +89,12 @@ class ModeloApplicability(BaseModel):
         modelo: The AEAT modelo identifier.
         verdict: The :class:`ApplicabilityVerdict` derived from the
             taxpayer model.
-        reason: Operator-facing prose explaining the verdict. For an
-            ``INCOMPLETE`` verdict this is the "declare your taxpayer
-            type first" guidance.
+        reason: Operator-facing prose explaining the verdict. An
+            ``INCOMPLETE`` verdict carries one of two distinct
+            rationales: the "declare your taxpayer type first" guidance
+            when the taxpayer model is undeclared, or a "no rule derived
+            yet" notice when the modelo has no seed rule (the latter is
+            not a statement about the operator's profile).
         legal_refs: Scoped registry citation keys (``law-slug:art-N``)
             grounding the rule, each resolvable against the registry
             ``legal/*.toml`` tables. Always at least one entry —
@@ -209,25 +212,61 @@ _INCOMPLETE_LEGAL_REFS: tuple[str, ...] = (
     "ley-27-2014:art-124",  # LIS art. 124 — obligación de declarar del IS.
 )
 
-_INCOMPLETE_REASON = (
+_INCOMPLETE_UNDECLARED_REASON = (
     "No se puede determinar la aplicabilidad: el tipo de contribuyente no "
     "está declarado. Declare primero el tipo de entidad y, en su caso, las "
     "categorías de renta del IRPF con 'aeat config profile edit'."
 )
+"""``INCOMPLETE`` rationale for an *undeclared taxpayer model*.
+
+Used only when the engine cannot decide because the profile itself is
+incomplete: no ``entity_type``, or a natural person with no declared
+IRPF income category against a category-gated rule. The guidance to
+declare the taxpayer type first is correct here.
+"""
+
+_INCOMPLETE_UNRULED_REASON = (
+    "No se puede determinar la aplicabilidad de este modelo: todavía no se "
+    "ha derivado una regla de aplicabilidad para él. La cobertura de reglas "
+    "es deliberadamente reducida (el conjunto inicial de personas) y la "
+    "expansión por entidad y régimen está pendiente. No es una afirmación "
+    "sobre su perfil: su tipo de contribuyente puede estar correctamente "
+    "declarado."
+)
+"""``INCOMPLETE`` rationale for a *modelo with no seed rule*.
+
+Used when :data:`_MODELO_APPLICABILITY_RULES` carries no rule for the
+requested modelo. The profile may be fully declared; this verdict is a
+statement about the seed coverage (:data:`_SEED_COVERAGE_NOTICE`), not
+about the operator. It must never tell a declared operator to declare
+their taxpayer type.
+"""
 
 
-def _incomplete_applicability(modelo: str) -> ModeloApplicability:
+def _incomplete_applicability(
+    modelo: str,
+    *,
+    unruled: bool = False,
+) -> ModeloApplicability:
     """Return the explicit ``INCOMPLETE`` applicability for ``modelo``.
 
     The safe default: the engine never assumes autónomo and never
-    reports a confident wrong obligation when the taxpayer model is
-    undeclared.
+    reports a confident wrong obligation. The two ``INCOMPLETE`` causes
+    are structurally distinct and carry distinct rationale:
+
+    Args:
+        modelo: The AEAT modelo identifier the verdict decides.
+        unruled: ``True`` when the cause is a *missing seed rule* for the
+            modelo — the profile may be fully declared. ``False`` (the
+            default) when the cause is an *undeclared taxpayer model* —
+            the operator must declare their taxpayer type first.
     """
 
+    reason = _INCOMPLETE_UNRULED_REASON if unruled else _INCOMPLETE_UNDECLARED_REASON
     return ModeloApplicability(
         modelo=modelo,
         verdict=ApplicabilityVerdict.INCOMPLETE,
-        reason=_INCOMPLETE_REASON,
+        reason=reason,
         legal_refs=_INCOMPLETE_LEGAL_REFS,
     )
 
@@ -262,9 +301,9 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "autoliquidación anual de la Renta."
         ),
         not_applicable_reason=(
-            "Modelo 100 no aplica: solo las personas físicas presentan la "
-            "Renta. Una entidad jurídica tributa por el Impuesto sobre "
-            "Sociedades (Modelo 200)."
+            "Modelo 100 no aplica: la declaración de la Renta corresponde "
+            "únicamente a las personas físicas contribuyentes del IRPF. El "
+            "tipo de contribuyente declarado no es una persona física."
         ),
         # LIRPF art. 99 — régimen general de pagos a cuenta del IRPF,
         # que identifica al contribuyente del IRPF; art. 17 —
@@ -289,9 +328,9 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
         not_applicable_reason=(
             "Modelo 130 no aplica: el pago fraccionado del IRPF solo "
-            "corresponde a quien obtiene rendimientos de actividades "
-            "económicas. Las rentas del capital inmobiliario, del trabajo "
-            "o las pensiones no generan obligación de Modelo 130."
+            "corresponde a la persona física que obtiene rendimientos de "
+            "actividades económicas. El tipo de contribuyente declarado no "
+            "obtiene rendimientos de actividades económicas."
         ),
         # LIRPF art. 27 — definición de los rendimientos de actividades
         # económicas, la categoría de renta que dispara el Modelo 130;
@@ -338,9 +377,10 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "la autoliquidación anual."
         ),
         not_applicable_reason=(
-            "Modelo 200 no aplica: el Impuesto sobre Sociedades solo grava "
-            "a las entidades jurídicas. Una persona física tributa por el "
-            "IRPF (Modelo 100)."
+            "Modelo 200 no aplica: la autoliquidación del Impuesto sobre "
+            "Sociedades corresponde únicamente a las entidades jurídicas "
+            "con personalidad jurídica contribuyentes del IS. El tipo de "
+            "contribuyente declarado no es una entidad de esta clase."
         ),
         # LIS art. 124 — obligación de presentar la declaración del
         # Impuesto sobre Sociedades, que el Modelo 200 liquida.
@@ -428,7 +468,7 @@ def derive_modelo_applicability(
 
     rule = _MODELO_APPLICABILITY_RULES.get(modelo)
     if rule is None:
-        return _incomplete_applicability(modelo)
+        return _incomplete_applicability(modelo, unruled=True)
     return rule.evaluate(profile)
 
 

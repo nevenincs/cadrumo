@@ -13,7 +13,13 @@ applicability research grounding, not hand-invented:
 * An autónomo en estimación directa → 130 / 303 (research §1.1, §2.1 —
   the unchanged-by-design persona).
 * A sociedad limitada → 200 / 202, NOT 100 / 130 (research §1.2).
-* An undeclared profile → ``incomplete`` (the safe default).
+* An attribution entity → ``not_applicable`` for 100 / 130 / 200 with
+  entity-type-neutral rationale (it is neither persona física nor
+  entidad jurídica).
+* An undeclared profile → ``incomplete`` with the undeclared rationale.
+* A modelo with no seed rule → ``incomplete`` with the un-ruled
+  rationale, distinct from the undeclared one even on a declared
+  profile.
 
 No mocks, no skips, no tautologies — every verdict is the real output
 of :func:`derive_modelo_applicability` over a constructed profile.
@@ -34,6 +40,8 @@ from aeat.domain.deadlines._models import (
 
 from ._applicability import (
     _INCOMPLETE_LEGAL_REFS,
+    _INCOMPLETE_UNDECLARED_REASON,
+    _INCOMPLETE_UNRULED_REASON,
     _MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -108,6 +116,20 @@ def _undeclared() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
     return TaxpayerProfile(tax_id="C5678901C", iva_regime=IVARegime.GENERAL)
+
+
+def _attribution_entity() -> TaxpayerProfile:
+    """An attribution entity: comunidad de bienes / sociedad civil.
+
+    A third entity type — neither persona física nor entidad jurídica —
+    under the régimen de atribución de rentas.
+    """
+
+    return TaxpayerProfile(
+        tax_id="E12345678",
+        entity_type=EntityType.ATTRIBUTION_ENTITY,
+        iva_regime=IVARegime.GENERAL,
+    )
 
 
 # ---------------------------------------------------------------------
@@ -293,6 +315,117 @@ def test_modelo_without_seed_rule_is_incomplete() -> None:
 
     result = derive_modelo_applicability(_autonomo(), "349")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+
+
+# ---------------------------------------------------------------------
+# INCOMPLETE rationale split — un-ruled modelo vs undeclared profile
+# ---------------------------------------------------------------------
+
+
+def test_unruled_modelo_on_declared_profile_uses_unruled_reason() -> None:
+    """A fully declared profile asking about an un-ruled modelo (131)
+    gets the *un-ruled* rationale — a statement about seed coverage, not
+    a wrong instruction to declare the taxpayer type the operator has
+    already declared."""
+
+    profile = _landlord()
+    assert taxpayer_model_is_declared(profile) is True
+
+    result = derive_modelo_applicability(profile, "131")
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert result.reason == _INCOMPLETE_UNRULED_REASON
+    # The un-ruled rationale must NOT tell a declared operator to
+    # declare their taxpayer type.
+    assert "no está declarado" not in result.reason
+    assert "config profile edit" not in result.reason
+    assert result.legal_refs
+
+
+def test_unruled_modelo_reason_differs_from_undeclared_reason() -> None:
+    """The two INCOMPLETE causes carry structurally distinct prose."""
+
+    assert _INCOMPLETE_UNRULED_REASON != _INCOMPLETE_UNDECLARED_REASON
+    unruled = derive_modelo_applicability(_autonomo(), "131")
+    undeclared = derive_modelo_applicability(_undeclared(), "100")
+    assert unruled.reason != undeclared.reason
+
+
+def test_undeclared_profile_still_uses_undeclared_reason() -> None:
+    """The undeclared-taxpayer path keeps the 'declare your taxpayer
+    type first' rationale — that guidance is correct when the profile
+    itself is incomplete."""
+
+    result = derive_modelo_applicability(_undeclared(), "100")
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert result.reason == _INCOMPLETE_UNDECLARED_REASON
+    assert "tipo de contribuyente" in result.reason
+    assert "config profile edit" in result.reason
+
+
+def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
+    """A natural person with a category-gated modelo but no declared
+    income category is an undeclared taxpayer model — it keeps the
+    undeclared rationale, not the un-ruled one."""
+
+    profile = TaxpayerProfile(
+        tax_id="F6789012F",
+        entity_type=EntityType.NATURAL_PERSON,
+        iva_regime=IVARegime.GENERAL,
+    )
+    result = derive_modelo_applicability(profile, "130")
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert result.reason == _INCOMPLETE_UNDECLARED_REASON
+
+
+# ---------------------------------------------------------------------
+# not_applicable rationale — entity-type-neutral wording
+# ---------------------------------------------------------------------
+
+
+def test_attribution_entity_modelo_200_reason_not_persona_fisica() -> None:
+    """An attribution entity (comunidad de bienes / sociedad civil) is
+    neither persona física nor entidad jurídica. Its Modelo 200
+    not-applicable rationale must not mislabel it a persona física."""
+
+    result = derive_modelo_applicability(_attribution_entity(), "200")
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert "persona física" not in result.reason
+    assert "Impuesto sobre Sociedades" in result.reason
+
+
+def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
+    """Modelo 100's not-applicable rationale for an attribution entity
+    must not assert the excluded taxpayer is an entidad jurídica or
+    otherwise mislabel it."""
+
+    result = derive_modelo_applicability(_attribution_entity(), "100")
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert "entidad jurídica" not in result.reason
+    assert "personas físicas" in result.reason
+
+
+def test_attribution_entity_modelo_130_reason_neutral() -> None:
+    """Modelo 130's not-applicable rationale for an attribution entity
+    must not assert it earns IRPF income categories it cannot have."""
+
+    result = derive_modelo_applicability(_attribution_entity(), "130")
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert "capital inmobiliario" not in result.reason
+    assert "actividades económicas" in result.reason
+
+
+def test_no_seed_not_applicable_reason_asserts_excluded_taxpayer_type() -> None:
+    """No seed rule's not-applicable rationale may positively assert
+    what *other* entity type the excluded taxpayer is — an attribution
+    entity is a third type that any such assertion would mislabel."""
+
+    forbidden = (
+        "Una persona física tributa",
+        "Una entidad jurídica tributa",
+    )
+    for rule in _MODELO_APPLICABILITY_RULES.values():
+        for phrase in forbidden:
+            assert phrase not in rule.not_applicable_reason, rule.modelo
 
 
 # ---------------------------------------------------------------------
