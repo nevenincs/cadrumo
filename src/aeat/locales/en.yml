@@ -575,8 +575,6 @@ cli:
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
-      no_active_profile: No active profile. Run `aeat config profile create NAME`
-        before using profile-scoped data commands.
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
   config:
@@ -1881,6 +1879,11 @@ wizard:
       \ this profile state may be stale or corrupt, inspect it first:\n  aeat config\
       \ repair\n\nTo discard only local profile state and start over:\n  aeat config\
       \ reset --scope profile --yes"
+    unsupported_console_edit: "The guided setup could not open an interactive prompt\
+      \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
+      \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
+      \ --quiet --<field> VALUE\n\nOr re-run the guided edit from an interactive terminal\
+      \ session:\n  aeat config profile edit %{profile_name}"
   other:
     description: Other configuration options
     section:

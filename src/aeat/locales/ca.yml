@@ -579,8 +579,14 @@ cli:
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: Token de periode de la unitat; per a Modelo 036 usa alta, modificacion
           o baja; exemples periodics inclouen Q1, 4T, 0A i 01
-        period_token_invalid: cli.app.modelo.work.period_token_invalid
-        period_token_unrecognised: cli.app.modelo.work.period_token_unrecognised
+        period_token_invalid: '--period ''%{token}'' no és un token de període vàlid
+          per al model %{modelo}. --year i --period es componen per separat: passa
+          --year %{year} per a l''exercici fiscal i un dels tokens de període declarats
+          a --period. Tokens vàlids: %{tokens}.'
+        period_token_unrecognised: '--period ''%{token}'' no és un token de període
+          reconegut. --year i --period es componen per separat: passa --year %{year}
+          per a l''exercici fiscal i un token de període (0A per anual, Qn per a un
+          trimestre o MM per a un mes) a --period.'
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.
@@ -607,8 +613,6 @@ cli:
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config profile create
-        NAME` abans d'usar ordres de dades del perfil.
       period_empty: El periode fiscal no pot estar buit
       period_unrecognised: Període no reconegut
   config:
@@ -1919,6 +1923,12 @@ wizard:
       \ del perfil pot estar obsolet o corrupte, revisa'l primer:\n  aeat config repair\n\
       \nPer descartar només l'estat local del perfil i començar de nou:\n  aeat config\
       \ reset --scope profile --yes"
+    unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
+      \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
+      \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\
+      \ profile edit %{profile_name} --quiet --<camp> VALOR\n\nO torna a executar l'edició\
+      \ guiada des d'una sessió de terminal interactiva:\n  aeat config profile edit\
+      \ %{profile_name}"
   other:
     description: Other configuration options
     section:

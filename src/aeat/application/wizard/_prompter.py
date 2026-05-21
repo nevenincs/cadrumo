@@ -37,6 +37,17 @@ class WizardUnsupportedConsoleError(AeatError):
     """
 
 
+class WizardEditUnsupportedConsoleError(WizardUnsupportedConsoleError):
+    """No-console refusal raised specifically from the ``profile edit`` flow.
+
+    The base error's recovery suggestion names ``profile create``, which
+    reads as a destructive replacement when an operator hit the
+    no-console state via ``profile edit``. This subclass carries its own
+    registered error code so the trailing recovery suggestion names the
+    non-interactive ``profile edit`` patch form instead.
+    """
+
+
 def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
     """Return the prompt_toolkit error classes that signal an
     unsupported console host. Windows-only error is included when

@@ -626,8 +626,6 @@ cli:
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hay perfil activo. Ejecuta `aeat config profile create
-        NAME` antes de usar comandos de datos del perfil.
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: Periodo no reconocido
   config:
@@ -1954,6 +1952,11 @@ wizard:
       \ perfil puede estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\
       \nPara descartar solo el estado local del perfil y empezar de nuevo:\n  aeat\
       \ config reset --scope profile --yes"
+    unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
+      Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
+      \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
+      \ --quiet --<campo> VALOR\n\nO vuelve a ejecutar la edición guiada desde una\
+      \ sesión de terminal interactiva:\n  aeat config profile edit %{profile_name}"
   other:
     description: Other configuration options
     section:
