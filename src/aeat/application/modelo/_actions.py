@@ -31,7 +31,13 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry import (
+    CasillaDefinition,
+    ModeloRevision,
+    RegistryCalculationEntry,
+    RegistryCalculationResult,
+    RegistrySnapshot,
+)
 from ...domain.calculations.registry._bindings import CasillaObservation
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.filing import ModeloDraftStatus
@@ -718,6 +724,20 @@ class ModeloAggregationBindingError(ModeloError):
 
 class ModeloIvaWalletReconciliationBlocked(ModeloError):  # noqa: N818
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
+
+
+class CasillaProvenanceMissingError(ModeloError):
+    """Raised when an engine-result casilla has no registry definition.
+
+    Every casilla in :attr:`RegistryCalculationResult.values` must be
+    a casilla declared on the registry snapshot's revision. A casilla
+    present in the engine result but absent from
+    ``snapshot.revision.casillas`` is a referential-integrity
+    violation: building a :class:`CasillaObservation` for it would
+    silently emit empty ``legal_refs`` / ``source_refs`` and erase the
+    legal provenance the audit surface depends on. The observation
+    build hard-fails instead of persisting a provenance-stripped row.
+    """
 
 
 def calculate_modelo_revision(
@@ -1751,7 +1771,9 @@ def _resolve_registry_snapshot_for_work_unit(work_unit):  # type: ignore[no-unty
         ) from exc
 
 
-def _build_typed_observations(*, engine_result, snapshot) -> tuple[CasillaObservation, ...]:  # type: ignore[no-untyped-def]
+def _build_typed_observations(
+    *, engine_result: RegistryCalculationResult, snapshot: RegistrySnapshot
+) -> tuple[CasillaObservation, ...]:
     """Build a typed CasillaObservation tuple for every casilla in the engine result.
 
     Computed casillas carry their full formula provenance from the
@@ -1760,6 +1782,12 @@ def _build_typed_observations(*, engine_result, snapshot) -> tuple[CasillaObserv
     Building observations purely from ``engine_result.entries``
     would drop grounding for every input and bound casilla — the
     audit surface depends on the full chain.
+
+    Every casilla in ``engine_result.values`` must be declared on the
+    snapshot revision. A casilla absent from
+    ``snapshot.revision.casillas`` raises
+    :exc:`CasillaProvenanceMissingError` rather than yielding an
+    observation with empty legal provenance.
     """
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     entries_by_target = {entry.target: entry for entry in engine_result.entries}
@@ -1774,7 +1802,13 @@ def _build_typed_observations(*, engine_result, snapshot) -> tuple[CasillaObserv
     )
 
 
-def _casilla_observation_for(*, casilla_id: str, value: Decimal, entry, registry_casilla) -> CasillaObservation:  # type: ignore[no-untyped-def]
+def _casilla_observation_for(
+    *,
+    casilla_id: str,
+    value: Decimal,
+    entry: RegistryCalculationEntry | None,
+    registry_casilla: CasillaDefinition | None,
+) -> CasillaObservation:
     """Project one casilla into a :class:`CasillaObservation` with full provenance."""
     if entry is not None:
         return CasillaObservation(
@@ -1786,14 +1820,21 @@ def _casilla_observation_for(*, casilla_id: str, value: Decimal, entry, registry
             legal_refs=entry.legal_refs,
             source_refs=entry.source_refs,
         )
+    if registry_casilla is None:
+        raise CasillaProvenanceMissingError(
+            f"casilla {casilla_id!r} is present in the engine result but absent "
+            f"from the registry snapshot revision; it has no legal_refs / "
+            f"source_refs definition and cannot be projected to a "
+            f"CasillaObservation without erasing legal provenance"
+        )
     return CasillaObservation(
         casilla_id=casilla_id,
         value=value,
         formula_id=None,
         operand_refs=(),
         operand_values=(),
-        legal_refs=registry_casilla.legal_refs if registry_casilla is not None else (),
-        source_refs=registry_casilla.source_refs if registry_casilla is not None else (),
+        legal_refs=registry_casilla.legal_refs,
+        source_refs=registry_casilla.source_refs,
     )
 
 
@@ -2534,6 +2575,7 @@ __all__ = [
     "CalculationRegistryUnavailableError",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
+    "CasillaProvenanceMissingError",
     "ExternalModeloImportError",
     "ModeloAggregationBindingError",
     "ModeloIvaWalletReconciliationBlocked",
