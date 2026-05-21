@@ -28,15 +28,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _casilla_with(data_type: str, label: str = "Test casilla") -> CasillaDefinition:
-    return CasillaDefinition(
-        id="test_casilla",
-        number="01",
-        label=label,
-        section=("test",),
-        data_type=data_type,  # type: ignore[arg-type]
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-manual-modelo",),
-    )
+    return CasillaDefinition.model_validate({
+        "id": "test_casilla",
+        "number": "01",
+        "label": label,
+        "section": ("test",),
+        "data_type": data_type,
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual-modelo",),
+    })
 
 
 def test_semantic_role_accepts_long_cross_modelo_domain_identifier() -> None:

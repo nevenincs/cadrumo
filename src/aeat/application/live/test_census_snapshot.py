@@ -11,9 +11,10 @@ invariants are proven to survive the secure-store boundary.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -39,6 +40,13 @@ from aeat.application.live._errors import LiveApplicationInputError
 from aeat.core.config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+
+class _DeriveKwargs(TypedDict):
+    profile_id: str
+    captured_at: datetime
+    source_url: str
+    censo_facts: Mapping[str, str]
 
 
 def _populated_facts() -> dict[str, str]:
@@ -78,12 +86,12 @@ def test_derive_census_snapshot_id_is_deterministic_over_canonical_inputs() -> N
     value changes the id."""
 
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
-    base_kwargs = dict(
-        profile_id="operator",
-        captured_at=captured_at,
-        source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
-        censo_facts=_populated_facts(),
-    )
+    base_kwargs: _DeriveKwargs = {
+        "profile_id": "operator",
+        "captured_at": captured_at,
+        "source_url": "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
+        "censo_facts": _populated_facts(),
+    }
     base_id = derive_census_snapshot_id(**base_kwargs)
     assert len(base_id) == 64
     assert int(base_id, 16) >= 0
@@ -92,13 +100,14 @@ def test_derive_census_snapshot_id_is_deterministic_over_canonical_inputs() -> N
     assert derive_census_snapshot_id(**base_kwargs) == base_id
 
     # Different profile_id => different id.
-    drift_kwargs = dict(base_kwargs, profile_id="other-operator")
+    drift_kwargs: _DeriveKwargs = {**base_kwargs, "profile_id": "other-operator"}
     assert derive_census_snapshot_id(**drift_kwargs) != base_id
 
     # Different fact value => different id.
     drift_facts = dict(_populated_facts())
     drift_facts["census.elected_withholding_pct"] = "7"
-    assert derive_census_snapshot_id(**dict(base_kwargs, censo_facts=drift_facts)) != base_id
+    drift_fact_kwargs: _DeriveKwargs = {**base_kwargs, "censo_facts": drift_facts}
+    assert derive_census_snapshot_id(**drift_fact_kwargs) != base_id
 
 
 def test_census_snapshot_object_key_namespaces_by_bucket_and_snapshot() -> None:
@@ -295,7 +304,9 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
 
     assert older.state is SnapshotLifecycleState.SUPERSEDED
     assert older.superseded_by_snapshot_id == newer.snapshot_id
-    assert service.latest_active(profile_id="operator").snapshot_id == newer.snapshot_id
+    latest_active = service.latest_active(profile_id="operator")
+    assert latest_active is not None
+    assert latest_active.snapshot_id == newer.snapshot_id
 
 
 def test_supersession_scopes_to_profile_id(isolated_secure_store: None) -> None:

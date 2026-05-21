@@ -16,11 +16,18 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import get_type_hints
+from typing import TypedDict, get_type_hints
 
 import pytest
 
-from ...filing._schema import ModeloDraft, ModeloDraftStatus, ModeloValue, ModeloValueKind
+from ...filing._schema import (
+    ModeloBindingValue,
+    ModeloDraft,
+    ModeloDraftStatus,
+    ModeloValidationFinding,
+    ModeloValue,
+    ModeloValueKind,
+)
 from ...modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -34,6 +41,20 @@ from ._bindings import (
 from ._schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+class _ModeloDraftCommonKwargs(TypedDict):
+    draft_id: str
+    modelo: str
+    period: str
+    profile_tax_id: str
+    status: ModeloDraftStatus
+    values: tuple[ModeloValue, ...]
+    binding_values: tuple[ModeloBindingValue, ...]
+    findings: tuple[ModeloValidationFinding, ...]
+    created_at: datetime
+    updated_at: datetime
+    schema_version: str
 
 
 # ---------------------------------------------------------------------------
@@ -259,19 +280,19 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
     from pydantic import ValidationError
 
     now = datetime.now(UTC).replace(microsecond=0)
-    common_kwargs = dict(
-        draft_id="f" * 64,
-        modelo="303",
-        period="2025Q1",
-        profile_tax_id="12345678Z",
-        status=ModeloDraftStatus.BORRADOR,
-        values=(),
-        binding_values=(),
-        findings=(),
-        created_at=now,
-        updated_at=now,
-        schema_version="schema-2025-1",
-    )
+    common_kwargs: _ModeloDraftCommonKwargs = {
+        "draft_id": "f" * 64,
+        "modelo": "303",
+        "period": "2025Q1",
+        "profile_tax_id": "12345678Z",
+        "status": ModeloDraftStatus.BORRADOR,
+        "values": (),
+        "binding_values": (),
+        "findings": (),
+        "created_at": now,
+        "updated_at": now,
+        "schema_version": "schema-2025-1",
+    }
 
     # 12345678Z is a valid Spanish NIF (checksum letter for 12345678 is Z).
     valid = ModeloDraft(subject_tax_id="12345678Z", **common_kwargs)

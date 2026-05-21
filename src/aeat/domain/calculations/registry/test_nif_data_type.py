@@ -21,7 +21,6 @@ from pydantic import TypeAdapter, ValidationError
 from ._errors import RegistryValidationError
 from ._schema import CasillaDefinition, NifString, _validate_nif_string
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
@@ -29,15 +28,15 @@ _NIF_ADAPTER: TypeAdapter[str] = TypeAdapter(NifString)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
-    return CasillaDefinition(
-        id="nif_test_casilla",
-        number="01",
-        label="NIF declarante",
-        section=("identificacion",),
-        data_type=data_type,  # type: ignore[arg-type]
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-manual-nif",),
-    )
+    return CasillaDefinition.model_validate({
+        "id": "nif_test_casilla",
+        "number": "01",
+        "label": "NIF declarante",
+        "section": ("identificacion",),
+        "data_type": data_type,
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual-nif",),
+    })
 
 
 class TestNifStringAccepts:

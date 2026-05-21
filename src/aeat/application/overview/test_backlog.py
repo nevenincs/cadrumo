@@ -10,6 +10,7 @@ running the engine across multiple years.
 from __future__ import annotations
 
 from datetime import date
+from typing import TypedDict
 
 import pytest
 
@@ -21,6 +22,12 @@ from ._backlog import OverviewBacklog, build_overview_backlog
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
+class _WindowArgs(TypedDict):
+    from_date: date
+    to_date: date
+    as_of: date
+
+
 def _profile() -> AutonomoProfile:
     return AutonomoProfile(
         tax_id="X1234567L",
@@ -28,7 +35,7 @@ def _profile() -> AutonomoProfile:
     )
 
 
-def _window_args() -> dict[str, date]:
+def _window_args() -> _WindowArgs:
     return {
         "from_date": date(2026, 1, 1),
         "to_date": date(2026, 12, 31),
