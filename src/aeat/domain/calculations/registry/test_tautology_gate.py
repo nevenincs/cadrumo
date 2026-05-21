@@ -65,7 +65,7 @@ def _evaluate_expression(expr: dict | None, casilla_values: dict[str, Decimal]) 
     if not isinstance(expr, dict):
         return None
     leaf_value = _evaluate_leaf_expression(expr, casilla_values)
-    if leaf_value is not _LEAF_NOT_LEAF:
+    if not isinstance(leaf_value, _LeafNotLeaf):
         return leaf_value
     op = expr.get("op")
     args = expr.get("args") or []
@@ -79,7 +79,11 @@ def _evaluate_expression(expr: dict | None, casilla_values: dict[str, Decimal]) 
         return None
 
 
-_LEAF_NOT_LEAF: object = object()
+class _LeafNotLeaf:
+    """Sentinel type for :data:`_LEAF_NOT_LEAF` — see that constant's docstring."""
+
+
+_LEAF_NOT_LEAF = _LeafNotLeaf()
 """Sentinel returned by :func:`_evaluate_leaf_expression` to mean "not a leaf".
 
 Distinct from ``None`` (which the leaf path returns when a casilla /
@@ -91,7 +95,7 @@ failed" from "wasn't a leaf in the first place".
 def _evaluate_leaf_expression(
     expr: dict,
     casilla_values: dict[str, Decimal],
-) -> Decimal | None | object:
+) -> Decimal | None | _LeafNotLeaf:
     """Return the leaf-shape value, ``None`` if the leaf can't resolve, or the sentinel."""
     if "literal" in expr:
         return Decimal(str(expr["literal"]))

@@ -357,7 +357,11 @@ def _modelo_180_parsed_casillas(
     declarante = _fixed_width_record(500, _MODELO_180_DECLARANTE_FIELDS)
     perceptor = _fixed_width_record(500, _MODELO_180_PERCEPTOR_FIELDS)
     parsed = parse_export_payload(layout, (declarante + perceptor).encode("latin-1"))
-    return {field.casilla_id: field.value for field in parsed.casillas}
+    return {
+        field.casilla_id: field.value
+        for field in parsed.casillas
+        if field.casilla_id is not None
+    }
 
 
 @pytest.mark.parametrize(("casilla_id", "expected_value"), _MODELO_180_EXPECTED_CASILLAS)
