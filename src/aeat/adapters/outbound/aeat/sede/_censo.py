@@ -214,7 +214,7 @@ def _take_value_token(after: str) -> str:
     swallow the next field's value.
     """
 
-    other_labels = sorted(_G313_LABELS.values(), key=len, reverse=True)
+    other_labels = sorted(_G313_LABELS.values(), key=lambda label: len(label), reverse=True)
     cutoff = len(after)
     for other in other_labels:
         for needle in (f"{other}:", other):
