@@ -111,6 +111,7 @@ from ._source_mesh import (
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
 )
+from ._source_profile import ProfileSourceResolver
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
@@ -157,6 +158,7 @@ __all__ = [
     "PerModeloRegistryBindingResolution",
     "Period",
     "PeriodKind",
+    "ProfileSourceResolver",
     "ProrrataAggregation",
     "ProrrataLedgerReference",
     "Quarter",

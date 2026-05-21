@@ -114,9 +114,8 @@ from ..workflow import (
     WorkflowStage,
 )
 from ._borrador_binding import (
-    Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingResult,
-    resolve_modelo_100_borrador_bindings,
+    Modelo100BorradorSourceResolver,
 )
 from ._profile_binding import ProfileSourcedBindingResult
 
@@ -1428,7 +1427,7 @@ def _resolve_profile_bindings_for_calculation(
     the profile already holds.
     """
 
-    from ._profile_binding import resolve_profile_sourced_bindings
+    from ..aggregation import CalculationSourceContext, ProfileSourceResolver
 
     caller_owned = (
         set(caller_binding_values)
@@ -1437,10 +1436,24 @@ def _resolve_profile_bindings_for_calculation(
         | set(borrador_result.enum_binding_values)
         | set(backend_binding_values)
     )
-    return resolve_profile_sourced_bindings(
-        snapshot,
-        bucket_id=bucket_id,
-        caller_binding_ids=frozenset(caller_owned),
+    resolution = ProfileSourceResolver(
+        caller_binding_ids=caller_owned,
+        registry_snapshot=snapshot,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=bucket_id,
+            modelo=snapshot.modelo.id,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+            revision=snapshot.revision,
+        )
+    )
+    return ProfileSourcedBindingResult(
+        binding_values=resolution.binding_values,
+        enum_binding_values=resolution.enum_binding_values,
+        bindings_sourced_from_profile=tuple(
+            sorted(set(resolution.binding_values) | set(resolution.enum_binding_values))
+        ),
     )
 
 
@@ -1508,20 +1521,30 @@ def _resolve_borrador_bindings_for_calculation(
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None,
 ) -> Modelo100BorradorBindingResult:
-    return resolve_modelo_100_borrador_bindings(
-        Modelo100BorradorBindingCommand(
+    from ..aggregation import CalculationSourceContext
+
+    resolution = Modelo100BorradorSourceResolver(
+        borrador_snapshot_id=borrador_snapshot_id,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        registry_snapshot=registry_snapshot,
+        snapshot_repository=snapshot_repository,
+    ).resolve(
+        CalculationSourceContext(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
             period=period,
-            borrador_snapshot_id=borrador_snapshot_id,
-            caller_binding_values=caller_binding_values,
-            caller_enum_binding_values=caller_enum_binding_values,
-        ),
-        registry_snapshot=registry_snapshot,
-        snapshot_repository=snapshot_repository,
+            revision=registry_snapshot.revision,
+        )
     )
-
+    sourced = tuple(sorted(set(resolution.binding_values) | set(resolution.enum_binding_values)))
+    return Modelo100BorradorBindingResult(
+        borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+        binding_values=resolution.binding_values,
+        enum_binding_values=resolution.enum_binding_values,
+        bindings_sourced_from_borrador=sourced,
+    )
 
 def _resolve_bound_casilla_inputs_for_available_bindings(
     revision: ModeloRevision,

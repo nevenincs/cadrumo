@@ -57,7 +57,7 @@ Route the default modelo calculation entrypoint through source ownership checks 
 - [x] `W01.P03.S15` - Route app modelo work calculate through mesh backed calculation; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W01.P03.S16` - Test caller binding override rejection for all resolver owned sources; `src/aeat/application/modelo/test_source_mesh_calculation.py`.
 - [x] `W01.P03.S17` - Test caller casilla override rejection for all resolver owned sources; `src/aeat/application/modelo/test_source_mesh_calculation.py`.
-- [ ] `W01.P03.S18` - Test CLI calculation persists ledger derived source observations; `src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py`.
+- [x] `W01.P03.S18` - Test CLI calculation persists ledger derived source observations; `src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py`.
 
 ## Wave `W02` - source family enrollment
 
@@ -67,9 +67,9 @@ Enroll the existing non-ledger source families after the default path has determ
 
 Enroll profile, previous filing, relation, borrador, and IVA wallet sources as explicit resolvers.
 
-- [ ] `W02.P04.S19` - Enroll profile bindings through a source mesh resolver; `src/aeat/application/aggregation/_source_profile.py`.
-- [ ] `W02.P04.S20` - Enroll previous filing values through a source mesh resolver; `src/aeat/application/calculations/_multi_year.py`.
-- [ ] `W02.P04.S21` - Enroll relation prefill values through a source mesh resolver; `src/aeat/application/calculations/_relation_prefill.py`.
+- [x] `W02.P04.S19` - Enroll profile bindings through a source mesh resolver; `src/aeat/application/aggregation/_source_profile.py`.
+- [x] `W02.P04.S20` - Enroll previous filing values through a source mesh resolver; `src/aeat/application/calculations/_multi_year.py`.
+- [x] `W02.P04.S21` - Enroll relation prefill values through a source mesh resolver; `src/aeat/application/calculations/_relation_prefill.py`.
 - [ ] `W02.P04.S22` - Enroll borrador Modelo 100 values through a source mesh resolver; `src/aeat/application/modelo/_borrador_binding.py`.
 - [ ] `W02.P04.S23` - Enroll IVA wallet decision values through a source mesh resolver; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
 - [ ] `W02.P04.S24` - Test profile and live source fingerprints appear in source resolution; `src/aeat/application/aggregation/test_source_mesh_profile_live.py`.
