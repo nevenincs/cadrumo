@@ -18,7 +18,7 @@ from collections.abc import Iterator, Sequence
 from ...core.i18n import Translatable as tr
 from ...domain.profile._keys import ProfileKey, ProfileKeyRequirement
 from ._errors import WizardCompileError
-from ._models import WizardCondition, WizardFlow, WizardQuestion
+from ._models import WizardCondition, WizardFlow, WizardQuestion, WizardVisibility
 
 
 def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
@@ -71,9 +71,16 @@ def _compile_one(
         if question.required and question.visible_when is None
         else ProfileKeyRequirement.OPTIONAL
     )
+    # The ``required_when_*`` pair expresses a *conditional requirement*:
+    # the key is REQUIRED only while its gate predicate holds. It is
+    # meaningful solely for a question that is itself ``required`` —
+    # a ``required=False`` gated question is optional whether or not
+    # its visibility gate is satisfied, so it carries no conditional
+    # requirement. Emitting the pair for an optional gated question
+    # wrongly promotes it to required as soon as the gate matches.
     required_when_key: str | None = None
     required_when_value: str | None = None
-    if question.visible_when is not None:
+    if question.required and question.visible_when is not None:
         required_when_key, required_when_value = _resolve_condition(question.visible_when, by_id)
     if question.profile_key is None:
         raise WizardCompileError(
@@ -90,9 +97,24 @@ def _compile_one(
 
 
 def _resolve_condition(
-    condition: WizardCondition,
+    condition: WizardCondition | WizardVisibility,
     by_id: dict[str, WizardQuestion],
 ) -> tuple[str | None, str | None]:
+    """Resolve a ``visible_when`` gate into the ``required_when_*`` pair.
+
+    The ``ProfileKey`` registry expresses a conditional requirement as a
+    single parent-key / parent-value pair. Only a single-clause
+    ``equals`` :class:`WizardCondition` maps to that shape. A
+    multi-clause :class:`WizardVisibility` disjunction and a
+    ``contains`` checkbox-membership clause have no single-pair
+    representation, so the conditional-requirement projection is left
+    empty; the key is still emitted as ``OPTIONAL``.
+    """
+
+    if isinstance(condition, WizardVisibility):
+        return None, None
+    if condition.equals is None:
+        return None, None
     parent = by_id.get(condition.question_id)
     if parent is None or parent.profile_key is None:
         return None, None

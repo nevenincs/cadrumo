@@ -30,7 +30,14 @@ class SetupAnswers(BaseModel):
     tax_id: str = Field(min_length=1)
     name: str = ""
     surnames: str = ""
-    activity: str = Field(min_length=1)
+    activity: str = ""
+    """Free-text actividad económica / epígrafe IAE description.
+
+    Optional: only a taxpayer that carries on an economic activity (a
+    legal entity, or a natural person who declared the
+    ``actividad_economica`` IRPF income category) is asked for it. A
+    pure landlord, a salaried-only taxpayer, and a pensioner have no
+    actividad económica and leave it blank."""
     address_postcode: str = ""
     taxation_type: RentaDeclaracionType | str = ""
     output_language: str = "es"

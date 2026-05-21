@@ -25,7 +25,7 @@ from __future__ import annotations
 import pytest
 
 from ...core.i18n import Translatable as tr
-from ._models import WizardCondition, WizardQuestion, WizardWidget
+from ._models import WizardCondition, WizardQuestion, WizardVisibility, WizardWidget
 from ._runner import _condition_satisfied
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def _question(
     *,
     qid: str = "example",
-    visible_when: WizardCondition | None = None,
+    visible_when: WizardCondition | WizardVisibility | None = None,
 ) -> WizardQuestion:
     return WizardQuestion(
         id=qid,
@@ -107,3 +107,50 @@ def test_condition_satisfied_matches_canonical_true_token_for_boolean_gates() ->
 
     assert _condition_satisfied(question, {"pays_iva": "true"}) is True
     assert _condition_satisfied(question, {"pays_iva": "false"}) is False
+
+
+def test_contains_clause_tests_checkbox_token_membership() -> None:
+    """A ``contains`` clause splits the parent's comma-joined CHECKBOX
+    answer into a token set and tests membership — an exact ``equals``
+    would never match a multi-token checkbox value."""
+    question = _question(
+        visible_when=WizardCondition(question_id="income", contains="actividad_economica"),
+    )
+
+    assert _condition_satisfied(question, {"income": "actividad_economica"}) is True
+    assert _condition_satisfied(question, {"income": "trabajo,actividad_economica,pension"}) is True
+    assert _condition_satisfied(question, {"income": "trabajo,pension"}) is False
+    assert _condition_satisfied(question, {"income": ""}) is False
+
+
+def test_visibility_disjunction_is_satisfied_when_any_clause_holds() -> None:
+    """A :class:`WizardVisibility` is satisfied when *any* clause is —
+    the OR semantics ``activity`` relies on (legal entity, or natural
+    person with an economic activity)."""
+    question = _question(
+        visible_when=WizardVisibility(
+            any_of=(
+                WizardCondition(question_id="entity", equals="legal_entity"),
+                WizardCondition(question_id="income", contains="actividad_economica"),
+            )
+        ),
+    )
+
+    assert _condition_satisfied(question, {"entity": "legal_entity", "income": ""}) is True
+    assert _condition_satisfied(question, {"entity": "natural_person", "income": "actividad_economica"}) is True
+    assert _condition_satisfied(question, {"entity": "natural_person", "income": "trabajo"}) is False
+
+
+def test_force_visible_overrides_an_unsatisfied_gate() -> None:
+    """A question whose id is in ``force_visible`` is visible even when
+    its gate is not satisfied — an explicitly-supplied flag is honoured."""
+    question = _question(
+        qid="activity",
+        visible_when=WizardCondition(question_id="entity", equals="legal_entity"),
+    )
+
+    assert _condition_satisfied(question, {"entity": "natural_person"}) is False
+    assert (
+        _condition_satisfied(question, {"entity": "natural_person"}, force_visible=frozenset({"activity"}))
+        is True
+    )
