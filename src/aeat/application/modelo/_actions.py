@@ -864,9 +864,15 @@ def calculate_modelo_revision(
         period=work_unit.period,
     )
     resolved_bindings = dict(sorted({**relation_binding_values, **resolved_bindings}.items()))
+    declaration_period_inputs = _resolve_declaration_period_inputs(
+        snapshot.revision,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
     resolved_inputs = dict(
         sorted(
             {
+                **declaration_period_inputs,
                 **dict(backend_casilla_inputs or {}),
                 **_resolve_bound_casilla_inputs_for_available_bindings(
                     snapshot.revision,
@@ -1175,6 +1181,76 @@ def _resolve_bound_casilla_inputs_for_available_bindings(
         value = binding_values.get(casilla.binding)
         if value is not None:
             resolved[casilla.id] = value
+    return resolved
+
+
+_FILING_PERIOD_ORDINALS: Mapping[str, int] = {
+    "1T": 1,
+    "2T": 2,
+    "3T": 3,
+    "4T": 4,
+    "0A": 0,
+    "01": 1,
+    "02": 2,
+    "03": 3,
+    "04": 4,
+    "05": 5,
+    "06": 6,
+    "07": 7,
+    "08": 8,
+    "09": 9,
+    "10": 10,
+    "11": 11,
+    "12": 12,
+}
+"""Numeric ordinal for every registry-native period token.
+
+The registry formula runtime's value map is Decimal-only; a
+``period_code`` casilla cannot carry the literal ``"1T"`` token.
+Each work unit carries exactly one period family (a Modelo 303
+work unit is quarterly or monthly, never both), so the ordinal
+alone is an unambiguous numeric projection of that work unit's
+period for the ``decl.periodo`` informational casilla.
+"""
+
+
+def _resolve_declaration_period_inputs(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+) -> dict[str, Decimal]:
+    """Return informational-casilla inputs sourced from work-unit metadata.
+
+    ``decl.ejercicio`` / ``decl.periodo`` (and any other casilla
+    tagged ``semantic_role`` ``filing_year`` / ``filing_period``)
+    are ``informational`` casillas: AEAT requires them on the
+    filed declaration, but they are neither operator-entered
+    figures nor formula outputs. Their values are determined
+    entirely by the work unit's ``(filing_year, period)`` axes.
+
+    Without this resolution the engine's ``_initial_values``
+    defaults every informational casilla to ``0`` — a Modelo 303
+    filed with ``ejercicio``/``periodo`` of ``0`` is structurally
+    invalid. The work unit is the authority for these axes, so the
+    calculate path projects them onto the matching semantic-role
+    casillas here, before the engine runs.
+    """
+
+    resolved: dict[str, Decimal] = {}
+    for casilla in revision.casillas:
+        if casilla.input_kind != "informational":
+            continue
+        if casilla.semantic_role == "filing_year":
+            resolved[casilla.id] = Decimal(filing_year)
+        elif casilla.semantic_role == "filing_period":
+            ordinal = _FILING_PERIOD_ORDINALS.get(period.strip().upper())
+            if ordinal is None:
+                raise ModeloError(
+                    f"work-unit period {period!r} has no registry period ordinal; "
+                    f"cannot resolve informational casilla {casilla.id!r}"
+                )
+            resolved[casilla.id] = Decimal(ordinal)
     return resolved
 
 
