@@ -446,10 +446,12 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     """
 
     from aeat.core.resources import bundled_path
-    from aeat.domain.calculations.registry._loader import load_registry_tree
+    from aeat.domain.calculations.registry import ValidatedRegistryAuthority
 
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    registered_legal_ids = set(catalogues.legal)
+    authority = ValidatedRegistryAuthority.load(
+        bundled_path("registry", "aeat"), source_root=bundled_path()
+    )
+    registered_legal_ids = set(authority.catalogues.legal)
     assert registered_legal_ids, "registry legal catalogue is empty"
 
     seed_refs: set[str] = set(_INCOMPLETE_LEGAL_REFS)
