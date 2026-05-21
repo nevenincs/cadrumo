@@ -257,9 +257,17 @@ class TestEncryptionMetadata:
                 }
             )
 
-    def test_default_associated_data_is_empty(self) -> None:
+    def test_explicit_empty_associated_data_is_empty(self) -> None:
         meta = EncryptionMetadata(
             nonce_b64=base64.b64encode(b"\x00" * 12).decode("ascii"),
             ciphertext_b64=base64.b64encode(b"x" * 16).decode("ascii"),
+            associated_data_b64="",
         )
         assert meta.associated_data() == b""
+
+    def test_missing_associated_data_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="associated_data_b64"):
+            EncryptionMetadata(
+                nonce_b64=base64.b64encode(b"\x00" * 12).decode("ascii"),
+                ciphertext_b64=base64.b64encode(b"x" * 16).decode("ascii"),
+            )
