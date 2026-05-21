@@ -465,3 +465,75 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
             assert rows[0].namespace == "aeat.rotated"
         finally:
             engine.dispose()
+
+
+def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
+    """`peek_metadata` reports a row's wire-envelope columns without
+    decrypting the payload; the namespace, classification,
+    schema_version, and written_at it returns must match what was
+    saved, and the byte_length must be the non-empty ciphertext size."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "peek.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.peek"
+        written_at = datetime(2026, 5, 21, 9, 15, 0)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="peek-key-non-default",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=4,
+                written_at=written_at,
+                payload=b"peek-metadata-payload-bytes",
+            )
+
+            metadata = repo.peek_metadata(namespace, "peek-key-non-default")
+
+            assert metadata is not None
+            assert metadata.namespace == namespace
+            assert metadata.classification == SensitivityClass.FINANCIAL.value
+            assert metadata.schema_version == 4
+            assert metadata.written_at == written_at
+            assert metadata.byte_length > 0
+        finally:
+            engine.dispose()
+
+
+def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> None:
+    """Anti-tautology: `peek_metadata` reads the row's actual on-disk
+    columns. Rewrite ``schema_version`` directly in SQLite and assert
+    the peeked value tracks the mutation — if `peek_metadata` returned
+    a cached or hard-coded version, on-disk drift would be invisible."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "peek-drift.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.peek.drift"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="drift-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 21, 8, 0, 0),
+                payload=b"drift-payload",
+            )
+            before = repo.peek_metadata(namespace, "drift-key")
+            assert before is not None and before.schema_version == 1
+
+            with sqlite3.connect(db_path) as con:
+                con.execute(
+                    "UPDATE secure_objects SET schema_version = 9 WHERE namespace = ?",
+                    (namespace,),
+                )
+
+            after = repo.peek_metadata(namespace, "drift-key")
+            assert after is not None
+            assert after.schema_version == 9
+        finally:
+            engine.dispose()
