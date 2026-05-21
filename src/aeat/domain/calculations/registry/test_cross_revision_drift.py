@@ -21,6 +21,8 @@ from . import load_registry_tree
 from ._schema import CasillaDefinition
 from ._validate import (
     RegistryValidator,
+)
+from ._validate_cross_revision import (
     _validate_cross_revision_casilla_consistency,
     validate_cross_revision_casilla_consistency,
 )
