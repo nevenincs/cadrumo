@@ -9,7 +9,7 @@ from contextlib import suppress
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
 import typer
 
@@ -408,7 +408,19 @@ def _readiness_for_source(source: str) -> str:
     return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
 
 
-def _profile_resolved_binding_ids(report: object) -> frozenset[str]:
+class _BindingReportLike(Protocol):
+    """Structural view of a modelo bindings report.
+
+    ``_profile_resolved_binding_ids`` needs only the modelo ``code``;
+    ``filing_year`` and ``period`` are read defensively via ``getattr``
+    because an unscoped (no ``--year``) report carries neither.
+    """
+
+    @property
+    def code(self) -> str: ...
+
+
+def _profile_resolved_binding_ids(report: _BindingReportLike) -> frozenset[str]:
     """Return binding ids the active profile already resolves for a report's scope.
 
     Backs ``bindings list --missing``: a binding the active profile
