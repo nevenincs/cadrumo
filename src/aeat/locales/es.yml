@@ -325,6 +325,7 @@ cli:
       borrador:
         app_help: Snapshots de borrador del modelo 100
         filing_year_help: Ejercicio fiscal (p. ej. 2024)
+        invalid_state: '--state debe ser uno de: active, superseded, discarded, all.'
         latest_help: Mostrar el snapshot activo más reciente de un ejercicio fiscal
         list_help: Listar snapshots persistidos del borrador del modelo 100
         modelo_100_help: Comandos de snapshots del borrador del modelo 100
@@ -370,9 +371,11 @@ cli:
       portals:
         app_help: Catálogo local de portales AEAT de solo lectura
         category_help: Filtra por una categoría de portal
+        category_modelo_exclusive: '--category y --modelo son mutuamente excluyentes.'
         list_help: Lista entradas del catálogo de portales
         modelo_help: Filtra por portales vinculados a un modelo
         portal_id_help: Identificador del portal
+        unknown_category: 'Categoría de portal desconocida: {category}.'
         view_help: Muestra una entrada del catálogo de portales
       registry_root_help: Raíz del registro
       source_root_help: Raíz del proyecto
@@ -380,6 +383,7 @@ cli:
       verify:
         app_help: Registro de auditoría de verificaciones NIF de solo lectura
         expected_help: Resultado esperado opcional (valid, invalid o unknown)
+        expected_values_error: '--expected debe ser uno de: valid, invalid, unknown.'
         latest_help: Muestra la observación más reciente para superficie y NIF
         latest_nif_help: NIF que quieres consultar
         latest_surface_help: 'Superficie de verificación: nif_iva o tgvi'
@@ -388,10 +392,12 @@ cli:
         nif_iva_arg_help: Valor NIF-IVA (p. ej. ESB12345678)
         nif_iva_help: Verifica un NIF-IVA intracomunitario en AEAT IXVI y guarda la
           observación
+        no_observation_for_nif: 'No se devolvió ninguna observación para el NIF {nif}.'
         observation_id_help: Id de observación (o prefijo no ambiguo)
         surface_help: 'Filtra por superficie: nif_iva o tgvi'
         tgvi_arg_help: NIF/NIE español que quieres comprobar
         tgvi_help: Verifica el alta ROI/VIES de un NIF en GROI y guarda la observación
+        unknown_surface: 'Superficie de verificación desconocida: {surface} (se esperaba nif_iva o tgvi).'
         view_help: Muestra una observación de verificación guardada
       year_help: Ejercicio de presentación
     modelo:
@@ -1795,16 +1801,22 @@ errors:
   financial:
     source_file_not_found: 'El archivo de origen no existe: {path}'
   identity:
-    cif_check_char_mismatch_mixed: 'El carácter de control del CIF es incorrecto (tipo {kind}): se esperaba {expected} o {alt}, se obtuvo {got}.'
-    cif_check_digit_mismatch: 'El dígito de control del CIF es incorrecto (tipo {kind}): se esperaba {expected}, se obtuvo {got}.'
-    cif_check_letter_mismatch_kind: 'La letra de control del CIF es incorrecta (tipo {kind}): se esperaba {expected}, se obtuvo {got}.'
+    cif_check_char_mismatch_mixed: 'El carácter de control del CIF es incorrecto (tipo
+      {kind}): se esperaba {expected} o {alt}, se obtuvo {got}.'
+    cif_check_digit_mismatch: 'El dígito de control del CIF es incorrecto (tipo {kind}):
+      se esperaba {expected}, se obtuvo {got}.'
+    cif_check_letter_mismatch_kind: 'La letra de control del CIF es incorrecta (tipo
+      {kind}): se esperaba {expected}, se obtuvo {got}.'
     cif_invalid_shape: '{candidate} no es un CIF válido.'
-    document_empty: 'El documento de identidad está vacío.'
-    nie_check_letter_mismatch: 'La letra de control del NIE es incorrecta: se esperaba {expected}, se obtuvo {got}.'
+    document_empty: El documento de identidad está vacío.
+    nie_check_letter_mismatch: 'La letra de control del NIE es incorrecta: se esperaba
+      {expected}, se obtuvo {got}.'
     nie_invalid_shape: '{candidate} no es un NIE válido.'
-    nif_check_letter_mismatch: 'La letra de control del NIF es incorrecta: se esperaba {expected}, se obtuvo {got}.'
+    nif_check_letter_mismatch: 'La letra de control del NIF es incorrecta: se esperaba
+      {expected}, se obtuvo {got}.'
     nif_invalid_shape: '{candidate} no es un NIF válido.'
-    validate_expects_str: 'La validación de identidad espera un valor de texto; se obtuvo {got_type}.'
+    validate_expects_str: La validación de identidad espera un valor de texto; se
+      obtuvo {got_type}.
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
   refused:

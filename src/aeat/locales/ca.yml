@@ -325,6 +325,7 @@ cli:
       borrador:
         app_help: Snapshots de borrador del model 100
         filing_year_help: Exercici fiscal (p. ex. 2024)
+        invalid_state: '--state ha de ser un de: active, superseded, discarded, all.'
         latest_help: Mostrar el snapshot actiu més recent d'un exercici fiscal
         list_help: Llistar snapshots persistits del borrador del model 100
         modelo_100_help: Ordres de snapshots del borrador del model 100
@@ -369,9 +370,11 @@ cli:
       portals:
         app_help: Catàleg local de portals AEAT de només lectura
         category_help: Filtra per una categoria de portal
+        category_modelo_exclusive: '--category i --modelo són mútuament excloents.'
         list_help: Llista entrades del catàleg de portals
         modelo_help: Filtra per portals vinculats a un model
         portal_id_help: Identificador del portal
+        unknown_category: 'Categoria de portal desconeguda: {category}.'
         view_help: Mostra una entrada del catàleg de portals
       registry_root_help: Arrel del registre
       source_root_help: Arrel del projecte
@@ -379,6 +382,7 @@ cli:
       verify:
         app_help: Registre d'auditoria de verificacions NIF de només lectura
         expected_help: Resultat esperat opcional (valid, invalid o unknown)
+        expected_values_error: '--expected ha de ser un de: valid, invalid, unknown.'
         latest_help: Mostra l'observació més recent per superfície i NIF
         latest_nif_help: NIF que vols consultar
         latest_surface_help: 'Superfície de verificació: nif_iva o tgvi'
@@ -386,10 +390,12 @@ cli:
         nif_help: Filtra per un NIF
         nif_iva_arg_help: Valor NIF-IVA (p. ex. ESB12345678)
         nif_iva_help: Verifica un NIF-IVA intracomunitari a AEAT IXVI i desa l'observació
+        no_observation_for_nif: 'No s''ha retornat cap observació per al NIF {nif}.'
         observation_id_help: Id d'observació (o prefix no ambigu)
         surface_help: 'Filtra per superfície: nif_iva o tgvi'
         tgvi_arg_help: NIF/NIE espanyol que vols comprovar
         tgvi_help: Verifica l'alta ROI/VIES d'un NIF a GROI i desa l'observació
+        unknown_surface: 'Superfície de verificació desconeguda: {surface} (s''esperava nif_iva o tgvi).'
         view_help: Mostra una observació de verificació desada
       year_help: Exercici de presentació
     modelo:
@@ -1767,16 +1773,22 @@ errors:
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
   identity:
-    cif_check_char_mismatch_mixed: 'El caràcter de control del CIF és incorrecte (tipus {kind}): s''esperava {expected} o {alt}, s''ha obtingut {got}.'
-    cif_check_digit_mismatch: 'El dígit de control del CIF és incorrecte (tipus {kind}): s''esperava {expected}, s''ha obtingut {got}.'
-    cif_check_letter_mismatch_kind: 'La lletra de control del CIF és incorrecta (tipus {kind}): s''esperava {expected}, s''ha obtingut {got}.'
+    cif_check_char_mismatch_mixed: 'El caràcter de control del CIF és incorrecte (tipus
+      {kind}): s''esperava {expected} o {alt}, s''ha obtingut {got}.'
+    cif_check_digit_mismatch: 'El dígit de control del CIF és incorrecte (tipus {kind}):
+      s''esperava {expected}, s''ha obtingut {got}.'
+    cif_check_letter_mismatch_kind: 'La lletra de control del CIF és incorrecta (tipus
+      {kind}): s''esperava {expected}, s''ha obtingut {got}.'
     cif_invalid_shape: '{candidate} no és un CIF vàlid.'
-    document_empty: 'El document d''identitat és buit.'
-    nie_check_letter_mismatch: 'La lletra de control del NIE és incorrecta: s''esperava {expected}, s''ha obtingut {got}.'
+    document_empty: El document d'identitat és buit.
+    nie_check_letter_mismatch: 'La lletra de control del NIE és incorrecta: s''esperava
+      {expected}, s''ha obtingut {got}.'
     nie_invalid_shape: '{candidate} no és un NIE vàlid.'
-    nif_check_letter_mismatch: 'La lletra de control del NIF és incorrecta: s''esperava {expected}, s''ha obtingut {got}.'
+    nif_check_letter_mismatch: 'La lletra de control del NIF és incorrecta: s''esperava
+      {expected}, s''ha obtingut {got}.'
     nif_invalid_shape: '{candidate} no és un NIF vàlid.'
-    validate_expects_str: 'La validació d''identitat espera un valor de text; s''ha obtingut {got_type}.'
+    validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
+      {got_type}.
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
   refused:
