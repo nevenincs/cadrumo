@@ -47,10 +47,11 @@ from ...domain.deadlines import (
     ObligationStatus,
     Recovery,
     Schedule,
+    ScheduleProducer,
     TaxpayerProfile,
     shift_deadline,
 )
-from ...domain.deadlines._errors import ScheduleComputationError
+from ...domain.deadlines._errors import NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError
 from ._applicability import (
     ApplicabilityVerdict,
@@ -437,7 +438,7 @@ def build_overview_calendar(
     calendar_range: OverviewCalendarRange,
     *,
     today: date,
-    engine: DeadlineEngine | None = None,
+    engine: ScheduleProducer | None = None,
     raw_values: Mapping[str, object] | None = None,
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
@@ -451,9 +452,11 @@ def build_overview_calendar(
         profile: The operator's :class:`TaxpayerProfile`.
         calendar_range: Inclusive date window to enumerate.
         today: Reference date for engine status classification.
-        engine: Optional :class:`DeadlineEngine` instance the caller
-            wants to share across queries. When ``None``, a default
-            engine is constructed.
+        engine: Optional :class:`ScheduleProducer` the caller wants to
+            share across queries — a concrete
+            :class:`aeat.domain.deadlines.DeadlineEngine` or any object
+            satisfying the schedule-producing protocol. When ``None``,
+            a default :class:`DeadlineEngine` is constructed.
 
     A year inside the range with no registered deadline windows is
     treated as a "no data yet" state: that year contributes zero
@@ -485,15 +488,19 @@ def build_overview_calendar(
     for year in calendar_range.covered_years():
         try:
             schedules.append(deadline_engine.compute(profile, year, today=today))
-        except ScheduleComputationError:
+        except NoDeadlineWindowsError:
             # A year inside the range with no registered deadline
             # windows is a normal "no data yet" state, not an error
             # (registry-track gap R1). The year contributes zero
             # entries; the calendar still answers for every year that
-            # does have window data. This mirrors the graceful
-            # degradation ``overview explain`` already applies via the
-            # same ``ScheduleComputationError`` catch when a
-            # modelo/year pair has no registered windows.
+            # does have window data. This catch is deliberately the
+            # narrow ``NoDeadlineWindowsError`` subtype: a genuine
+            # registry-integrity fault (validation failure,
+            # profile-condition evaluation failure) raises the bare
+            # ``ScheduleComputationError`` and must propagate — masking
+            # it here would silently hide a corrupt registry. This
+            # mirrors the graceful degradation ``overview explain``
+            # applies via the same narrow catch.
             continue
 
     entries: list[OverviewCalendarEntry] = []
@@ -505,10 +512,12 @@ def build_overview_calendar(
             # model. Only a positively ``APPLICABLE`` verdict earns a
             # calendar row. An obligation the taxpayer model excludes
             # (``NOT_APPLICABLE`` — e.g. Modelo 130 for a pure landlord)
-            # is dropped; so is a modelo the seed table cannot yet
-            # decide (``INCOMPLETE`` — no seed rule). Surfacing an
-            # un-ruled modelo as a confident due row would diverge from
-            # ``explain`` (which reports the same modelo INCOMPLETE) and
+            # is dropped; so is a cuota self-assessment routed to the
+            # attribution pass-through (``ATTRIBUTION_PASS_THROUGH`` — a
+            # comunidad de bienes owes no IS / IRPF cuota of its own);
+            # so is a modelo the seed table cannot yet decide
+            # (``INCOMPLETE`` — no seed rule). Surfacing any of these as
+            # a confident due row would diverge from ``explain`` and
             # re-create the confident-wrong-obligation defect. The seed
             # covers the core persona set; full per-modelo coverage is a
             # deferred expansion (see ``_SEED_COVERAGE_NOTICE``).

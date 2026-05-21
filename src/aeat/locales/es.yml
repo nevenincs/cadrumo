@@ -619,6 +619,8 @@ cli:
         view_help: Mostrar un informe de verificación por id
       work:
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
+        allow_not_applicable_help: Crear la unidad de trabajo aunque el modelo no
+          aplique al tipo de contribuyente del perfil activo.
         amend_help: Construir una declaración complementaria sobre una declaración
           presentada externamente. Requiere un filing record con evidencia oficial
           importada de la AEAT
@@ -648,6 +650,9 @@ cli:
         create_created: Nueva unidad de trabajo creada.
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
+        create_not_applicable_refused: 'Modelo %{modelo} no aplica al tipo de contribuyente
+          del perfil activo: %{reason} Si tiene un motivo para crear la unidad de
+          trabajo de todas formas, repita el comando con --allow-not-applicable.'
         create_reused: Se devolvió la unidad de trabajo existente (idempotente sobre
           modelo/ejercicio/periodo/revisión); no se creó nada nuevo. Renómbrala con
           `aeat app modelo work rename`.

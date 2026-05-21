@@ -12,6 +12,7 @@ from ...domain.deadlines import (
     IrpfIncomeCategory,
     IVARegime,
     ObligationStatus,
+    Schedule,
     TaxpayerProfile,
 )
 from . import (
@@ -689,3 +690,186 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
     assert cal.incomplete_reason == tr(key)
     assert cal.incomplete_reason is not None
     assert cal.incomplete_reason != key
+
+
+# ---------------------------------------------------------------------
+# Entity-type calendar correctness (corporate-entity ADR §4)
+# ---------------------------------------------------------------------
+
+
+def _legal_entity() -> TaxpayerProfile:
+    """A sociedad limitada — an Impuesto sobre Sociedades contribuyente."""
+
+    from ...domain.deadlines._models import LegalEntityForm
+
+    return TaxpayerProfile(
+        tax_id="B12345674",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+    )
+
+
+def _attribution_entity() -> TaxpayerProfile:
+    """An attribution entity — comunidad de bienes / sociedad civil."""
+
+    return TaxpayerProfile(
+        tax_id="E12345678",
+        entity_type=EntityType.ATTRIBUTION_ENTITY,
+        iva_regime=IVARegime.GENERAL,
+    )
+
+
+def test_calendar_legal_entity_is_never_shown_an_irpf_cuota() -> None:
+    """A legal entity's calendar must never list an IRPF cuota modelo.
+
+    Modelo 100 / 130 / 303 deadline windows are registered and the
+    deadline engine still surfaces them (the registry applicability
+    conditions are not yet entity-type-aware — a W03 registry gap).
+    The applicability filter in ``build_overview_calendar`` is what
+    keeps the calendar correct: a sociedad limitada is an Impuesto
+    sobre Sociedades contribuyente, so every IRPF modelo resolves
+    NOT_APPLICABLE and is dropped. The engine never shows a company an
+    IRPF tarifa obligation (corporate-entity ADR §4)."""
+
+    rng = OverviewCalendarRange(from_date=date(2024, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_legal_entity(), rng, today=date(2025, 7, 1))
+
+    surfaced = {entry.modelo for entry in cal.entries}
+    # No IRPF cuota modelo reaches a legal entity's calendar.
+    assert surfaced.isdisjoint({"100", "130"})
+    assert cal.taxpayer_model_declared is True
+
+
+def test_calendar_natural_person_shows_irpf_not_corporate() -> None:
+    """A natural person's calendar shows the IRPF obligations and never
+    a corporate-tax modelo. An autónomo en estimación directa keeps
+    Modelo 130 / 303; Modelo 200 / 202 never reach the calendar."""
+
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_profile(), rng, today=date(2026, 4, 1))
+
+    surfaced = {entry.modelo for entry in cal.entries}
+    assert "130" in surfaced
+    # A natural person is never shown a corporate-tax obligation.
+    assert surfaced.isdisjoint({"200", "202"})
+
+
+def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
+    """An attribution entity's calendar lists no IS and no IRPF cuota.
+
+    A comunidad de bienes runs no cuota self-assessment of its own —
+    the income is taxed in the members' returns (corporate-entity ADR
+    §2). Every cuota modelo (100 / 130 / 200 / 202) resolves to the
+    ATTRIBUTION_PASS_THROUGH verdict and is dropped from the calendar;
+    the engine never shows the entity a cuota obligation it does not
+    owe."""
+
+    rng = OverviewCalendarRange(from_date=date(2024, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_attribution_entity(), rng, today=date(2025, 7, 1))
+
+    surfaced = {entry.modelo for entry in cal.entries}
+    # No cuota self-assessment reaches an attribution entity's calendar.
+    assert surfaced.isdisjoint({"100", "130", "200", "202"})
+    # The taxpayer model is declared — the calendar answered, it did
+    # not refuse with an INCOMPLETE.
+    assert cal.taxpayer_model_declared is True
+    assert cal.incomplete_reason is None
+
+
+# ---------------------------------------------------------------------
+# NoDeadlineWindowsError catch-narrowing (round-4 #40)
+# ---------------------------------------------------------------------
+
+
+class _NoWindowsEngine:
+    """A ScheduleProducer that raises the benign no-windows fault.
+
+    Real-behaviour fault injector for the ``build_overview_calendar``
+    exception-narrowing contract: it raises the genuine
+    :class:`NoDeadlineWindowsError` the engine raises for a year with
+    no registered deadline windows. Not a mock of engine behaviour —
+    it exercises the calendar's pure catch logic against the real
+    exception type.
+    """
+
+    def compute(
+        self,
+        profile: TaxpayerProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ) -> Schedule:
+        from ...domain.deadlines._errors import NoDeadlineWindowsError
+
+        raise NoDeadlineWindowsError(
+            f"No registry deadline windows registered for year {year}"
+        )
+
+
+class _CorruptRegistryEngine:
+    """A ScheduleProducer that raises a genuine registry-integrity fault.
+
+    Raises the bare :class:`ScheduleComputationError` the deadline
+    engine raises for a real registry-integrity fault (validation
+    failure, profile-condition evaluation failure) — distinct from the
+    benign :class:`NoDeadlineWindowsError`. The calendar must let this
+    propagate, not swallow it as a missing-data state.
+    """
+
+    def compute(
+        self,
+        profile: TaxpayerProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ) -> Schedule:
+        from ...domain.deadlines._errors import ScheduleComputationError
+
+        raise ScheduleComputationError(
+            f"deadline registry validation failed for year {year}"
+        )
+
+
+def test_calendar_benign_no_windows_year_still_degrades() -> None:
+    """The benign no-windows fault still degrades gracefully after the
+    catch was narrowed to ``NoDeadlineWindowsError``.
+
+    A year whose schedule raises the benign ``NoDeadlineWindowsError``
+    contributes zero entries; the calendar still returns a valid empty
+    result rather than propagating the error."""
+
+    rng = OverviewCalendarRange(from_date=date(2030, 1, 1), to_date=date(2030, 12, 31))
+    cal = build_overview_calendar(
+        _profile(), rng, today=date(2030, 6, 1), engine=_NoWindowsEngine()
+    )
+
+    assert isinstance(cal, OverviewCalendar)
+    assert cal.entries == ()
+    assert cal.taxpayer_model_declared is True
+
+
+def test_calendar_propagates_genuine_registry_fault() -> None:
+    """A genuine registry-integrity fault must propagate past
+    ``build_overview_calendar`` instead of being swallowed.
+
+    Before the catch was narrowed, the broad ``ScheduleComputationError``
+    catch silently masked a registry validation failure as a benign
+    "no data yet" year. The narrowed ``NoDeadlineWindowsError`` catch
+    lets the genuine fault surface so a corrupt registry is never
+    hidden from the operator (round-4 #40)."""
+
+    from ...domain.deadlines._errors import (
+        NoDeadlineWindowsError,
+        ScheduleComputationError,
+    )
+
+    rng = OverviewCalendarRange(from_date=date(2030, 1, 1), to_date=date(2030, 12, 31))
+    with pytest.raises(ScheduleComputationError) as excinfo:
+        build_overview_calendar(
+            _profile(), rng, today=date(2030, 6, 1), engine=_CorruptRegistryEngine()
+        )
+    # The genuine fault is the bare base class, not the benign subtype —
+    # the narrowed catch deliberately let it through.
+    assert not isinstance(excinfo.value, NoDeadlineWindowsError)
+    assert "validation failed" in str(excinfo.value)

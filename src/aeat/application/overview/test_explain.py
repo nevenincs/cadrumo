@@ -160,3 +160,79 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
 
     assert result.applicable == derived.applicable
     assert result.verdict is derived.verdict
+
+
+def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
+    """``_scheduling_rationale`` lets a genuine registry-integrity fault
+    propagate after its catch was narrowed to ``NoDeadlineWindowsError``.
+
+    Before the narrowing, the broad ``ScheduleComputationError`` catch
+    swallowed a real registry validation failure as a benign "no window
+    data" state, leaving the operator with a silently-missing
+    scheduling rationale. The narrowed catch lets the genuine fault
+    surface (round-4 #40)."""
+
+    from ...domain.deadlines._errors import (
+        NoDeadlineWindowsError,
+        ScheduleComputationError,
+    )
+    from ._explain import _scheduling_rationale
+
+    class _CorruptRegistryEngine:
+        """Raises the genuine registry-integrity fault on explain."""
+
+        def explain(
+            self,
+            profile: TaxpayerProfile,
+            modelo: str,
+            *,
+            year: int | None = None,
+        ) -> str:
+            raise ScheduleComputationError(
+                "deadline registry validation failed",
+            )
+
+    # reason: deliberate fault-injection stub exercising the explain
+    # catch contract — not a DeadlineEngine subclass.
+    with pytest.raises(ScheduleComputationError) as excinfo:
+        _scheduling_rationale(
+            _autonomo_profile(),
+            modelo="303",
+            year=2026,
+            engine=_CorruptRegistryEngine(),  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        )
+    # The genuine fault is the bare base class, not the benign subtype.
+    assert not isinstance(excinfo.value, NoDeadlineWindowsError)
+
+
+def test_scheduling_rationale_degrades_on_benign_no_windows() -> None:
+    """The benign no-windows fault still degrades to ``None`` after the
+    catch narrowing — a year with no registered windows is a normal
+    data gap, not an error."""
+
+    from ...domain.deadlines._errors import NoDeadlineWindowsError
+    from ._explain import _scheduling_rationale
+
+    class _NoWindowsEngine:
+        """Raises the benign no-windows fault on explain."""
+
+        def explain(
+            self,
+            profile: TaxpayerProfile,
+            modelo: str,
+            *,
+            year: int | None = None,
+        ) -> str:
+            raise NoDeadlineWindowsError(
+                f"No registry deadline windows registered for modelo {modelo!r}",
+            )
+
+    # reason: deliberate fault-injection stub exercising the explain
+    # catch contract — not a DeadlineEngine subclass.
+    rationale = _scheduling_rationale(
+        _autonomo_profile(),
+        modelo="303",
+        year=2026,
+        engine=_NoWindowsEngine(),  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+    )
+    assert rationale is None

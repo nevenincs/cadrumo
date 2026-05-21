@@ -13,17 +13,39 @@ verdict is DERIVED from the three-axis
 IRPF income categories, estimation regime) through a registry-grounded
 rule table. The autónomo-by-default assumption is removed.
 
-Three verdicts are possible:
+Four verdicts are possible:
 
 * :attr:`ApplicabilityVerdict.APPLICABLE` — the taxpayer model
   triggers this modelo.
 * :attr:`ApplicabilityVerdict.NOT_APPLICABLE` — the taxpayer model
   positively excludes this modelo (a landlord has no Modelo 130;
   an S.L. has no Modelo 100).
+* :attr:`ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH` — the
+  profile is an *attribution entity* (comunidad de bienes, sociedad
+  civil sin objeto mercantil) and the modelo asked about is a cuota
+  self-assessment (the IRPF Modelo 100 / 130 or the IS Modelo
+  200 / 202). An attribution entity runs no IS and no IRPF cuota of
+  its own — the régimen de atribución de rentas (LIRPF Title X
+  Section 2) attributes the income to the members, who file the
+  substantive tax. The honest answer to "what is my cuota" is
+  "none — taxed in the members' returns". This is structurally
+  distinct from a plain ``NOT_APPLICABLE``: a salaried-only natural
+  person is positively excluded from Modelo 200 because they file a
+  *different* cuota (Modelo 100); an attribution entity files *no*
+  cuota at all.
 * :attr:`ApplicabilityVerdict.INCOMPLETE` — the taxpayer model is
   undeclared (no ``entity_type`` and, for a natural person, no income
-  categories). The engine refuses to guess: it never reports a
-  confident wrong obligation.
+  categories), or the entity form is recognised-but-unsupported. The
+  engine refuses to guess: it never reports a confident wrong
+  obligation, and it never runs an IRPF cuota for a company or an IS
+  cuota for an attribution entity.
+
+The entity-type axis selects the *tax*, and the tax selects the
+modelos: a legal entity routes to the IS path (Modelo 200 / 202), a
+natural person to the IRPF path (Modelo 100 / 130 / 303), and an
+attribution entity to the member pass-through (its own obligation is
+the informational Modelo 184). This is the corporate-entity ADR §4
+engine routing contract.
 
 Every rule carries ``legal_refs`` — scoped registry citation keys in
 the ``law-slug:art-N`` form (e.g. ``ley-35-2006:art-99``) that resolve
@@ -63,6 +85,26 @@ with :attr:`ApplicabilityVerdict.INCOMPLETE` and a rationale pointing
 at the deferred expansion — never a confident guess.
 """
 
+_IS_RATE_SCHEDULE_DEFERRAL = (
+    "The IS numeric rate schedule and the lookup_parameter_by_entity_type "
+    "rate dispatch are NOT wired here. The corporate-entity ADR §5 records "
+    "that the registry's flat is.modelo-200.tipo-gravamen-pyme = 23 is "
+    "wrong per LIS Art. 29 (a two-bracket micro-empresa scale); W03.S13 "
+    "supplies the corrected bracket data and connects the dispatch. The "
+    "Modelo 202 deadline windows / corporate filing calendar and the "
+    "Modelo 202 modality (Art. 40.2 vs 40.3) INCN-threshold selection are "
+    "registry-data gaps deferred to the W03 registry track."
+)
+"""Explicit marker for the W02.S08 → W03 deferral boundary.
+
+This module routes a profile to its *tax* (entity-type → IRPF / IS /
+attribution pass-through) and derives modelo applicability. It does not
+encode the IS rate schedule or the corporate calendar — those require
+registry data the W03 track supplies. A design-only rate shell is
+forbidden by ``.claude/rules/aeat-source-hygiene.md``; this constant
+records the boundary instead of shipping an empty shell.
+"""
+
 
 class ApplicabilityVerdict(StrEnum):
     """Whether a modelo applies to a taxpayer, derived from its model.
@@ -72,13 +114,24 @@ class ApplicabilityVerdict(StrEnum):
         NOT_APPLICABLE: The declared taxpayer model positively excludes
             this modelo (e.g. a landlord has no Modelo 130 obligation;
             a sociedad limitada files no Modelo 100).
+        ATTRIBUTION_PASS_THROUGH: The profile is an attribution entity
+            and the modelo is a cuota self-assessment (Modelo
+            100 / 130 / 200 / 202). The entity runs no IS and no IRPF
+            cuota of its own — the régimen de atribución de rentas
+            (LIRPF Title X Section 2) attributes the income to the
+            members, who file the substantive tax. The honest answer
+            to "what is my cuota" is "none — the income is taxed in
+            the members' returns". Distinct from ``NOT_APPLICABLE``,
+            which means the taxpayer files a *different* cuota.
         INCOMPLETE: The taxpayer model is not declared in enough detail
-            to decide. The engine refuses to guess — the operator must
-            declare their taxpayer type first.
+            to decide, or the entity form is recognised-but-unsupported.
+            The engine refuses to guess — the operator must declare
+            their taxpayer type first.
     """
 
     APPLICABLE = "applicable"
     NOT_APPLICABLE = "not_applicable"
+    ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
     INCOMPLETE = "incomplete"
 
 
@@ -117,9 +170,11 @@ class ModeloApplicability(BaseModel):
         """Return whether the modelo positively applies.
 
         Only :attr:`ApplicabilityVerdict.APPLICABLE` is a confident
-        yes. ``NOT_APPLICABLE`` and ``INCOMPLETE`` both yield ``False``
-        — the operative views must not surface an obligation the engine
-        cannot positively justify.
+        yes. ``NOT_APPLICABLE``, ``ATTRIBUTION_PASS_THROUGH`` and
+        ``INCOMPLETE`` all yield ``False`` — the operative views must
+        not surface an obligation the engine cannot positively justify.
+        An attribution entity owes no cuota self-assessment, so a
+        pass-through verdict is not an applicable obligation.
         """
 
         return self.verdict is ApplicabilityVerdict.APPLICABLE
@@ -150,6 +205,16 @@ class ModeloApplicabilityRule(BaseModel):
             ``APPLICABLE`` verdict.
         not_applicable_reason: Operator-facing prose for the
             ``NOT_APPLICABLE`` verdict.
+        cuota_bearing: ``True`` when the modelo is a cuota
+            self-assessment (the IRPF Modelo 100 / 130 or the IS Modelo
+            200 / 202). A cuota-bearing modelo asked of an *attribution
+            entity* yields an :attr:`ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH`
+            verdict rather than a plain ``NOT_APPLICABLE``: the entity
+            runs no cuota of its own, the income is taxed in the
+            members' returns (corporate-entity ADR §2). An
+            informational modelo (Modelo 184) is *not* cuota-bearing —
+            it stays a plain ``NOT_APPLICABLE`` for the entity types
+            its ``applicable_entity_types`` excludes.
         legal_refs: Scoped registry citation keys (``law-slug:art-N``)
             grounding the rule, each resolvable against the registry
             ``legal/*.toml`` tables.
@@ -162,13 +227,16 @@ class ModeloApplicabilityRule(BaseModel):
     required_income_categories: frozenset[IrpfIncomeCategory] = frozenset()
     applicable_reason: str = Field(min_length=1)
     not_applicable_reason: str = Field(min_length=1)
+    cuota_bearing: bool = False
     legal_refs: tuple[str, ...] = Field(min_length=1)
 
     def evaluate(self, profile: TaxpayerProfile) -> ModeloApplicability:
         """Derive the :class:`ModeloApplicability` for ``profile``.
 
         Returns an ``INCOMPLETE`` verdict when the taxpayer model is not
-        declared in enough detail to decide; otherwise an
+        declared in enough detail to decide; an
+        ``ATTRIBUTION_PASS_THROUGH`` verdict when the modelo is a cuota
+        self-assessment asked of an attribution entity; otherwise an
         ``APPLICABLE`` / ``NOT_APPLICABLE`` verdict derived from the
         entity-type and income-category axes.
         """
@@ -176,6 +244,22 @@ class ModeloApplicabilityRule(BaseModel):
         if profile.entity_type is None:
             return _incomplete_applicability(self.modelo)
         if profile.entity_type not in self.applicable_entity_types:
+            # An attribution entity asked about a cuota self-assessment
+            # gets the honest pass-through answer, not a plain
+            # exclusion: it runs no IS and no IRPF cuota — the income
+            # is attributed to and taxed in the members' returns
+            # (corporate-entity ADR §2). An informational modelo is not
+            # cuota-bearing and falls through to NOT_APPLICABLE.
+            if (
+                self.cuota_bearing
+                and profile.entity_type is EntityType.ATTRIBUTION_ENTITY
+            ):
+                return ModeloApplicability(
+                    modelo=self.modelo,
+                    verdict=ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
+                    reason=_ATTRIBUTION_PASS_THROUGH_REASON,
+                    legal_refs=_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
+                )
             return ModeloApplicability(
                 modelo=self.modelo,
                 verdict=ApplicabilityVerdict.NOT_APPLICABLE,
@@ -211,6 +295,34 @@ _INCOMPLETE_LEGAL_REFS: tuple[str, ...] = (
     "ley-35-2006:art-99",  # LIRPF art. 99 — IRPF contribuyente / pagos a cuenta.
     "ley-27-2014:art-124",  # LIS art. 124 — obligación de declarar del IS.
 )
+
+# Scoped registry citation keys grounding the attribution pass-through
+# verdict — the régimen de atribución de rentas. LIRPF art. 86 fixes
+# the general régimen (income attributed to socios / herederos /
+# comuneros / partícipes); LIRPF art. 87 defines which entities fall
+# under it (sociedades civiles sin objeto mercantil, comunidades de
+# bienes, herencias yacentes). Both keys resolve in the registry legal
+# table ``legal/irpf.toml``.
+_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS: tuple[str, ...] = (
+    "ley-35-2006:art-86",  # LIRPF art. 86 — régimen general de atribución de rentas.
+    "ley-35-2006:art-87",  # LIRPF art. 87 — entidades en régimen de atribución.
+)
+
+_ATTRIBUTION_PASS_THROUGH_REASON = (
+    "Una entidad en régimen de atribución de rentas (comunidad de bienes, "
+    "sociedad civil sin objeto mercantil) no presenta autoliquidación de "
+    "cuota propia: no tributa por el Impuesto sobre Sociedades ni por el "
+    "IRPF. La renta se atribuye a cada socio, comunero o partícipe y "
+    "tributa en la declaración de cada miembro. La obligación propia de la "
+    "entidad es informativa (Modelo 184)."
+)
+"""``ATTRIBUTION_PASS_THROUGH`` rationale.
+
+The honest answer to "what is my cuota" for an attribution entity: it
+files no IS and no IRPF cuota of its own (corporate-entity ADR §2).
+The substantive tax is each member's; the entity's own obligation is
+the informational Modelo 184.
+"""
 
 _INCOMPLETE_UNDECLARED_REASON = (
     "No se puede determinar la aplicabilidad: el tipo de contribuyente no "
@@ -284,6 +396,7 @@ def _incomplete_applicability(
 
 _NATURAL_PERSON: frozenset[EntityType] = frozenset({EntityType.NATURAL_PERSON})
 _LEGAL_ENTITY: frozenset[EntityType] = frozenset({EntityType.LEGAL_ENTITY})
+_ATTRIBUTION_ENTITY: frozenset[EntityType] = frozenset({EntityType.ATTRIBUTION_ENTITY})
 
 _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Modelo 100 — declaración anual de la Renta (IRPF). Applies to every
@@ -305,6 +418,9 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "únicamente a las personas físicas contribuyentes del IRPF. El "
             "tipo de contribuyente declarado no es una persona física."
         ),
+        # Modelo 100 is the IRPF cuota self-assessment: an attribution
+        # entity asked about it gets the pass-through verdict.
+        cuota_bearing=True,
         # LIRPF art. 99 — régimen general de pagos a cuenta del IRPF,
         # que identifica al contribuyente del IRPF; art. 17 —
         # rendimientos del trabajo, la categoría de renta más común que
@@ -332,6 +448,10 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "actividades económicas. El tipo de contribuyente declarado no "
             "obtiene rendimientos de actividades económicas."
         ),
+        # Modelo 130 is an IRPF pago-fraccionado cuota self-assessment:
+        # an attribution entity asked about it gets the pass-through
+        # verdict — it runs no IRPF cuota of its own.
+        cuota_bearing=True,
         # LIRPF art. 27 — definición de los rendimientos de actividades
         # económicas, la categoría de renta que dispara el Modelo 130;
         # art. 99 — pagos fraccionados como pagos a cuenta del IRPF.
@@ -382,6 +502,10 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "con personalidad jurídica contribuyentes del IS. El tipo de "
             "contribuyente declarado no es una entidad de esta clase."
         ),
+        # Modelo 200 is the IS cuota self-assessment: an attribution
+        # entity asked about it gets the pass-through verdict — it runs
+        # no IS cuota of its own.
+        cuota_bearing=True,
         # LIS art. 124 — obligación de presentar la declaración del
         # Impuesto sobre Sociedades, que el Modelo 200 liquida.
         legal_refs=("ley-27-2014:art-124",),
@@ -402,10 +526,52 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "Modelo 202 no aplica: el pago fraccionado del Impuesto sobre "
             "Sociedades solo corresponde a las entidades jurídicas."
         ),
+        # Modelo 202 is an IS pago-fraccionado cuota self-assessment:
+        # an attribution entity asked about it gets the pass-through
+        # verdict.
+        cuota_bearing=True,
         # LIS art. 40 — pago fraccionado del Impuesto sobre Sociedades,
         # las modalidades y el calendario de abril, octubre y diciembre
         # que liquida el Modelo 202.
         legal_refs=("ley-27-2014:art-40",),
+    ),
+    # Modelo 184 — declaración informativa anual de Entidades en
+    # régimen de atribución de rentas. This is the attribution entity's
+    # OWN obligation — informational, not a cuota self-assessment (the
+    # substantive tax is each member's). It applies ONLY to an
+    # attribution entity; a natural person and a legal entity never
+    # file it. Modelo 184 is not cuota-bearing: a non-attribution
+    # entity asked about it gets a plain NOT_APPLICABLE, never a
+    # pass-through verdict. Corporate-entity ADR §2; research §1.3.
+    "184": ModeloApplicabilityRule(
+        modelo="184",
+        applicable_entity_types=_ATTRIBUTION_ENTITY,
+        required_income_categories=frozenset(),
+        applicable_reason=(
+            "Modelo 184 (declaración informativa de entidades en régimen "
+            "de atribución de rentas): la entidad declara las rentas "
+            "obtenidas y las atribuibles a cada socio, comunero o "
+            "partícipe en el ejercicio. Es la obligación propia de la "
+            "entidad; la tributación de la renta corresponde a cada "
+            "miembro."
+        ),
+        not_applicable_reason=(
+            "Modelo 184 no aplica: la declaración informativa de "
+            "atribución de rentas solo corresponde a las entidades en "
+            "régimen de atribución de rentas (comunidades de bienes, "
+            "sociedades civiles sin objeto mercantil). El tipo de "
+            "contribuyente declarado no es una entidad de esta clase."
+        ),
+        cuota_bearing=False,
+        # Orden HAP/2250/2015 arts. 1-2 — aprobación del Modelo 184 y
+        # obligados a presentarlo (entidades en régimen de atribución de
+        # rentas; exención por debajo de 3.000 € sin actividad
+        # económica); art. 4 — plazo de presentación (mes de febrero).
+        legal_refs=(
+            "orden-hap-2250-2015:art-1",
+            "orden-hap-2250-2015:art-2",
+            "orden-hap-2250-2015:art-4",
+        ),
     ),
 }
 """Seed modelo-applicability rules — core persona coverage.
@@ -439,6 +605,75 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     if profile.entity_type is EntityType.NATURAL_PERSON:
         return bool(profile.irpf_income_categories)
     return True
+
+
+class TaxRoute(StrEnum):
+    """The tax branch a taxpayer profile routes to — corporate-entity ADR §4.
+
+    The ``entity_type`` axis selects the *tax*, and the tax selects the
+    modelos, the calendar, and the calculation chain. There are exactly
+    three substantive branches plus an explicit "cannot route" state.
+
+    Attributes:
+        IRPF: A natural person — routes to the IRPF path (Modelo
+            100 / 130 / 303, the IRPF tarifa).
+        IMPUESTO_SOCIEDADES: A legal entity — routes to the Impuesto
+            sobre Sociedades path (Modelo 200 / 202, the LIS Art. 29
+            rate scale). The engine never runs an IRPF cuota for it.
+        ATTRIBUTION_PASS_THROUGH: An attribution entity — runs no IS
+            and no IRPF cuota of its own; the income is taxed in the
+            members' returns. Its own obligation is the informational
+            Modelo 184.
+        INCOMPLETE: The ``entity_type`` is undeclared. The engine
+            refuses to guess and never defaults to a tax — a wrong tax
+            is worse than an incomplete answer (corporate-entity ADR
+            §4, parent ADR's safe default).
+    """
+
+    IRPF = "irpf"
+    IMPUESTO_SOCIEDADES = "impuesto_sociedades"
+    ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
+    INCOMPLETE = "incomplete"
+
+
+_TAX_ROUTE_FOR_ENTITY_TYPE: dict[EntityType, TaxRoute] = {
+    EntityType.NATURAL_PERSON: TaxRoute.IRPF,
+    EntityType.LEGAL_ENTITY: TaxRoute.IMPUESTO_SOCIEDADES,
+    EntityType.ATTRIBUTION_ENTITY: TaxRoute.ATTRIBUTION_PASS_THROUGH,
+}
+"""The entity-type → tax-route table (corporate-entity ADR §4).
+
+A closed mapping over every :class:`EntityType`. ``entity_type is
+None`` (undeclared) is handled separately by :func:`derive_tax_route`
+and yields :attr:`TaxRoute.INCOMPLETE` — the engine never defaults a
+tax.
+"""
+
+
+def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
+    """Return the tax branch ``profile`` routes to — corporate-entity ADR §4.
+
+    The routing contract: the ``entity_type`` axis selects the tax. A
+    legal-entity profile routes to the Impuesto sobre Sociedades
+    (Modelo 200 / 202); a natural person to the IRPF (Modelo
+    100 / 130 / 303); an attribution entity to the member pass-through.
+    An undeclared ``entity_type`` yields :attr:`TaxRoute.INCOMPLETE` —
+    the engine never runs an IRPF cuota for a company or an IS cuota
+    for an attribution entity, and never defaults a tax for a profile
+    that declared none.
+
+    Args:
+        profile: The operator's three-axis taxpayer model.
+
+    Returns:
+        The :class:`TaxRoute` branch the profile's ``entity_type``
+        selects, or :attr:`TaxRoute.INCOMPLETE` when ``entity_type``
+        is undeclared.
+    """
+
+    if profile.entity_type is None:
+        return TaxRoute.INCOMPLETE
+    return _TAX_ROUTE_FOR_ENTITY_TYPE[profile.entity_type]
 
 
 def derive_modelo_applicability(
@@ -476,7 +711,9 @@ __all__ = [
     "ApplicabilityVerdict",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
+    "TaxRoute",
     "derive_modelo_applicability",
+    "derive_tax_route",
     "has_applicability_rule",
     "taxpayer_model_is_declared",
 ]

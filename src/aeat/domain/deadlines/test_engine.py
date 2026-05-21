@@ -12,6 +12,7 @@ from . import (
     ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
+    NoDeadlineWindowsError,
     ObligationStatus,
     Schedule,
     ScheduleComputationError,
@@ -272,7 +273,12 @@ class TestRegistryApplicability:
         assert "estimacion directa" in text
 
     def test_unknown_modelo_raises(self) -> None:
-        with pytest.raises(ScheduleComputationError, match=r"No registry deadline windows registered for modelo"):
+        # The benign no-windows fault is the narrow NoDeadlineWindowsError
+        # subtype so callers can degrade gracefully around it.
+        with pytest.raises(
+            NoDeadlineWindowsError,
+            match=r"No registry deadline windows registered for modelo",
+        ):
             explain(_profile(), "999")
 
 
@@ -362,8 +368,16 @@ class TestEnginePurity:
 
 class TestComputeFailures:
     def test_missing_registry_year_raises(self) -> None:
-        with pytest.raises(ScheduleComputationError, match=r"No registry deadline windows registered for year"):
+        # A year with no registered windows raises the narrow
+        # NoDeadlineWindowsError — the benign data gap, not a genuine
+        # registry-integrity fault. It is still a ScheduleComputationError
+        # subclass, so existing broad callers keep working.
+        with pytest.raises(
+            NoDeadlineWindowsError,
+            match=r"No registry deadline windows registered for year",
+        ) as excinfo:
             _engine().compute(_profile(), 1999, today=date(1999, 1, 1))
+        assert isinstance(excinfo.value, ScheduleComputationError)
 
     def test_negative_due_soon_days_rejected(self) -> None:
         with pytest.raises(ValueError, match=r"due_soon_days must be >= 0"):

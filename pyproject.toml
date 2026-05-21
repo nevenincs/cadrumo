@@ -340,6 +340,9 @@ ignore = [
 "src/aeat/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
 "src/aeat/adapters/persistence/storage/crypto/_test_encrypted_columns.py" = ["S105", "S106"]
 "src/aeat/adapters/outbound/aeat/browser/test_live_evasion.py" = ["S603"]
+# `ATTRIBUTION_PASS_THROUGH` is a tax-routing verdict / enum value, not a
+# password literal; ruff's S105 heuristic flags the constant name.
+"src/aeat/application/overview/_applicability.py" = ["S105"]
 "src/aeat/application/wizard/_models.py" = ["S105"]
 "src/aeat/core/classification/__init__.py" = ["S105"]
 "src/aeat/core/test_config_override.py" = ["S108"]

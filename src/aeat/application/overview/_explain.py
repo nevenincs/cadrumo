@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.i18n import tr
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
-from ...domain.deadlines._errors import DeadlineValidationError, ScheduleComputationError
+from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
 from ._applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -252,7 +252,13 @@ def _scheduling_rationale(
     deadline_engine = engine or DeadlineEngine()
     try:
         return deadline_engine.explain(profile, modelo, year=year)
-    except ScheduleComputationError:
+    except NoDeadlineWindowsError:
+        # The benign no-windows data gap (registry-track R1): no
+        # deadline windows registered for this modelo/year. Degrade
+        # gracefully. The narrow ``NoDeadlineWindowsError`` catch lets a
+        # genuine registry-integrity fault (the bare
+        # ``ScheduleComputationError``) propagate instead of being
+        # swallowed as a missing-data state.
         return None
     except DeadlineValidationError as exc:
         raise OverviewExplainError(
