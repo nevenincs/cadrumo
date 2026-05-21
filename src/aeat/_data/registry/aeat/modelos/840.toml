@@ -198,20 +198,3 @@ application_links = [
 ]
 filing_schedules = ["modelo-840-ad-hoc"]
 extraction_profiles = ["modelo-840-declaracion-pdf"]
-
-# Calculation-completeness manifest for revision 2003-y-siguientes: the
-# casillas in this revision's calculation closure (formula targets,
-# formula-expression refs, formula/binding endpoints, verification
-# operands), keyed on each casilla's own registry (segmento, number)
-# identity. Derived off-load-path from the registry calculation
-# surface; the drift re-verification test re-derives it.
-[revisions."2003-y-siguientes".completeness_manifest]
-source_ref = "aeat-dr-840"
-legal_refs = ["orden-hac-2572-2003:apartado-1", "orden-hac-2572-2003:apartado-6"]
-source_refs = ["aeat-dr-840"]
-
-[[revisions."2003-y-siguientes".completeness_manifest.casillas]]
-number = "ejercicio"
-
-[[revisions."2003-y-siguientes".completeness_manifest.casillas]]
-number = "tipo-declaracion"
