@@ -18,12 +18,23 @@ Every test uses real :func:`serialise` / :func:`deserialise` against
 inline-built record specs — no fixtures, no mocks, no reused
 registry data — so a regression in any of the encoders or decoders
 surfaces as a strict equality failure naming the divergent field.
+
+The Modelo 130 golden test at the bottom of this file exercises the
+full registry-driven export path (application layer ``export_draft``
+→ ``ExportLayoutDefinition`` → byte payload) against a fixed set of
+inputs whose expected bytes are derived field-by-field from the AEAT
+Diseño de Registros DR 13001 (Orden HAP/258/2015, v1.2, March 2019).
+The golden SHA locks byte identity; the per-offset assertions make the
+test non-tautological: the test would fail if the DR field at any
+asserted position were wrong, not just if the overall SHA changed.
 """
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -337,3 +348,185 @@ def test_reserved_field_corruption_rejected_at_decode() -> None:
 
     with pytest.raises(ExportFormatError, match="RESERVED"):
         deserialise(corrupted, specs=specs, encoding="iso-8859-1", total_length=4)
+
+
+# ---------------------------------------------------------------------------
+# Modelo 130 golden-SHA fichero-BOE round-trip
+# ---------------------------------------------------------------------------
+#
+# Source authority: AEAT Diseño de Registros DR 13001, Orden HAP/258/2015,
+# version 1.2, updated March 2019 ("ejercicios 2019 y siguientes").
+# Corpus path: src/aeat/_data/corpus/aeat_official/disenos_registro/
+#              modelo_130/files/01-130-orden-hap-258-2015-ejercicios-
+#              2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xlsx
+#
+# Record layout (derived from DR):
+#   Envelope header (DR 13000):  328 bytes
+#   Page-01 record  (DR 13001):  600 bytes
+#   Envelope footer (computed):   18 bytes
+#   Total:                        946 bytes  (no inter-record delimiter)
+#
+# The golden SHA below was obtained by running export_draft against the
+# fixed inputs below, then verifying every asserted byte position against
+# the DR offset table before recording the hash. Changing any registry
+# field offset, length, or encoding in 130.toml will change the SHA and
+# fail this test; changes must be re-grounded against the DR before
+# updating the constant.
+#
+# Per-offset assertions are non-tautological: each one names the DR row
+# it corresponds to so a reviewer can verify the expected value
+# independently from the registry.
+_M130_GOLDEN_SHA256 = "feaffb81b89ce8b897066ac0383d31e4bfd45a15c526b650f711a89f25fe0120"
+
+# Envelope header is 328 bytes; page record begins at byte index 328 (0-based).
+_PAGE_START = 328
+
+# Money encoding helper: amount (Decimal) → expected bytes in a 17-byte
+# signed field.  Positive: " " + 16 zero-padded digits.  Negative: "N" + …
+def _money_bytes(amount: Decimal, *, signed: bool = False) -> bytes:
+    cents = int(abs(amount * 100))
+    if amount < 0:
+        return ("N" + str(cents).zfill(16)).encode("latin-1")
+    if signed:
+        return (" " + str(cents).zfill(16)).encode("latin-1")
+    return str(cents).zfill(17).encode("latin-1")
+
+
+def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
+    """Modelo 130 serialises to a byte-exact 946-byte fichero-BOE.
+
+    Inputs are fixed; expected values at each asserted byte offset are
+    derived from DR 13001 (Orden HAP/258/2015 v1.2).  The test is
+    non-tautological because a change to any registry field (offset,
+    length, sign flag, encoding) would alter the bytes at the
+    corresponding position and break this assertion before changing the
+    SHA — making the SHA a *consequence* of structural correctness, not
+    the sole check.
+    """
+    from aeat.application.filing import (
+        ModeloDraftStatus,
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
+
+    provider = build_runtime_schema_provider(modelos=("130",))
+    draft = build_draft(
+        modelo="130",
+        period="2026Q1",
+        profile=ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Golden test",
+        ),
+        inputs={
+            "01": Decimal("10000.00"),
+            "02": Decimal("4000.00"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        schema_provider=provider,
+    )
+    draft = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+    output = tmp_path / "modelo-130.txt"
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={
+            "declaration_type": "I",
+            "surnames": "GARCIA LOPEZ",
+            "name": "JUAN",
+            "program_version": "A001",
+            "presenter_nif": "12345678Z",
+        },
+        schema_provider=provider,
+    )
+    payload = output.read_bytes()
+
+    # --- DR-grounded structural assertions (non-tautological) ---------------
+
+    def _page(offset: int, length: int) -> bytes:
+        """Read bytes from DR 13001 page record (1-based offset)."""
+        s = _PAGE_START + offset - 1
+        return payload[s : s + length]
+
+    # Total length per DR: 328 (header) + 600 (page-01) + 18 (footer) = 946.
+    assert len(payload) == 946, f"expected 946-byte fichero-BOE; got {len(payload)}"
+
+    # DR 13001 rows 1-4: open tag <T, modelo 130, page 01, close 000>
+    assert _page(1, 2) == b"<T"
+    assert _page(3, 3) == b"130"
+    assert _page(6, 2) == b"01"
+    assert _page(8, 4) == b"000>"
+
+    # DR 13001 row 5: Indicador de pagina complementaria (offset 12, 1 byte).
+    # Blank = ordinary declaration.
+    assert _page(12, 1) == b" ", "complementaria indicator must be blank for ordinary declaration"
+
+    # DR 13001 row 6: Tipo declaracion (offset 13, 1 byte).
+    assert _page(13, 1) == b"I"
+
+    # DR 13001 row 7: NIF sujeto pasivo (offset 14, 9 bytes).
+    assert _page(14, 9) == b"12345678Z"
+
+    # DR 13001 rows 8-9: Apellidos / Nombre (offsets 23/83).
+    assert _page(23, 12) == b"GARCIA LOPEZ"
+    assert _page(83, 4) == b"JUAN"
+
+    # DR 13001 rows 10-11: Ejercicio / Periodo (offsets 103/107).
+    assert _page(103, 4) == b"2026"
+    assert _page(107, 2) == b"1T"
+
+    # DR 13001 rows 12-30: casillas 01-19 (17 bytes each, starting at offset 109).
+    # Unsigned (Num): 01, 02, 04, 05, 06, 08, 09, 10, 12, 13, 15, 16, 18
+    # Signed   (N):   03, 07, 11, 14, 17, 19
+    # Casilla 01: 10000.00 -> 1000000 cents -> 17-byte zero-padded
+    assert _page(109, 17) == _money_bytes(Decimal("10000.00"), signed=False)
+    # Casilla 02: 4000.00 -> 400000 cents
+    assert _page(126, 17) == _money_bytes(Decimal("4000.00"), signed=False)
+    # Casilla 03 (signed): rendimiento neto = 01 - 02 = 6000.00
+    assert _page(143, 17) == _money_bytes(Decimal("6000.00"), signed=True)
+    # Casilla 04 (unsigned): 20% x max(0, casilla 03) = 1200.00
+    assert _page(160, 17) == _money_bytes(Decimal("1200.00"), signed=False)
+    # Casilla 19 (signed): resultado final = casilla 17 - 18 = 1200.00 - 0
+    # Full chain: 04(1200)-05(0)-06(0)=07(1200); 08=0->09=0, 10=0->11(0)
+    # 12=max(0,1200+0)=1200; prev year income 13000>12000 -> casilla 13=0
+    # 14=12-13=1200; 15=0,16=0 -> 17=1200; 18=0 -> 19=1200
+    assert _page(415, 17) == _money_bytes(Decimal("1200.00"), signed=True)
+
+    # DR 13001 row 31: Declaración complementaria (offset 432, 1 byte An).
+    # This field is DISTINCT from the complementaria-indicator at offset 12.
+    # Blank = not a complementaria declaration.
+    assert _page(432, 1) == b" ", "declaracion-complementaria must be blank for ordinary declaration"
+
+    # DR 13001 row 32: Nº justificante anterior (offset 433, 13 bytes).
+    assert _page(433, 13) == b" " * 13, "previous receipt must be blank for first declaration"
+
+    # DR 13001 row 36: closing tag </T13001000> (offset 589, 12 bytes).
+    assert _page(589, 12) == b"</T13001000>"
+
+    # Envelope footer: dynamic closing tag (last 18 bytes of payload).
+    # Format: </T{modelo}0{AAAA}{PP}0000> e.g. </T130020261T0000>
+    assert payload[-18:] == b"</T130020261T0000>"
+
+    # --- Golden SHA (byte-identity lock) ------------------------------------
+    digest = hashlib.sha256(payload).hexdigest()
+    assert digest == _M130_GOLDEN_SHA256, (
+        f"Modelo 130 fichero-BOE SHA mismatch.\n"
+        f"  Expected: {_M130_GOLDEN_SHA256}\n"
+        f"  Got:      {digest}\n"
+        "Any change to the 130.toml export layout that alters byte output\n"
+        "must be re-grounded against the AEAT Diseño de Registros (DR 13001,\n"
+        "Orden HAP/258/2015 v1.2) before updating this constant."
+    )
+
+    # Receipt metadata sanity
+    assert receipt.byte_size == 946
+    assert receipt.file_sha256 == _M130_GOLDEN_SHA256
