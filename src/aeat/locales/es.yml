@@ -817,6 +817,7 @@ cli:
       event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
       help: Inspeccionar el almacenamiento por bucket y su historial de eventos
       history:
+        invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento válidos: {valid}.'
         invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
           se recibió {raw}.'
         since_after_until: --since debe ser anterior o igual a --until.

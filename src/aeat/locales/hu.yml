@@ -793,6 +793,7 @@ cli:
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
       history:
+        invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok: {valid}.'
         invalid_timestamp: A(z) {flag} ISO-8601 időbélyeg kell legyen (pl. 2026-04-01T00:00:00+00:00);
           a kapott érték {raw}.
         since_after_until: A --since értékének a --until értékénél korábbinak vagy

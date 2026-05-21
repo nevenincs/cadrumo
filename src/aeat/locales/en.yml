@@ -745,6 +745,7 @@ cli:
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
       history:
+        invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
         invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00);
           got {raw}.'
         since_after_until: --since must be before or equal to --until.

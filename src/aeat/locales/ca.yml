@@ -805,6 +805,7 @@ cli:
       event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment (repetible)
       help: Inspeccionar l'emmagatzematge per bucket i el seu historial d'esdeveniments
       history:
+        invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment vàlids: {valid}.'
         invalid_timestamp: '{flag} ha de ser una marca de temps ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00);
           s''ha rebut {raw}.'
         since_after_until: --since ha de ser anterior o igual a --until.
@@ -1043,8 +1044,8 @@ cli:
       profile_name_help: Inspeccionar un bucket de perfil registrat concret.
       profile_one_action: Tria --clear-active o --repair-manifest-status, no tots
         dos.
-      profile_repair_manifest_status_help: Reomplir l'estat d'un manifest legacy
-        del bucket actiu des del registre xifrat del perfil.
+      profile_repair_manifest_status_help: Reomplir l'estat d'un manifest legacy del
+        bucket actiu des del registre xifrat del perfil.
       profile_requires_yes: Passa --yes per aplicar la reparació del perfil actiu.
       quarantine_dry_run_help: Previsualitza les files que es posarien en quarantena
         sense moure res
