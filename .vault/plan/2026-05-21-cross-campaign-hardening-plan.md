@@ -83,7 +83,7 @@ Lock export-adjacent coverage after the critical provenance path lands.
 
 Close medium-severity calculation, persistence, CLI, boundary, export, and binding findings.
 
-- [ ] `P07.S27` - CALC-4/CALC-5/CALC-6: defence-in-depth note, typed per-source binding selectors, and formula-runtime test replacement; `src/aeat/domain/calculations/registry`.
+- [x] `P07.S27` - CALC-4/CALC-5/CALC-6 (4c486e840) - CALC-4 verified already-satisfied (the `_reject_non_decimal` defence-in-depth note already exists at `_formula_runtime.py:178-182`); CALC-5 verified already-satisfied (per-source typed selector models + `_validated_*_selector` accessors + snapshot-time selector-shape gate already exist in `_bindings.py`/`_validate_references.py`); CALC-6 grounded the modelo-130 sign-propagation test with a docstring framing it as the rule-permitted structural assertion; `src/aeat/domain/calculations/registry`.
 - [ ] `P07.S28` - PERS-8/PERS-9: TOML datetime ISO inspection and `EncryptionMetadata` AAD missing-vs-empty; `src/aeat/adapters/persistence`.
 - [ ] `P07.S29` - WCLI-5/WCLI-6: `BucketEventType` enum-error `tr()` and `InvoiceLinkError` disposition; `src/aeat/entrypoints/cli`.
 - [ ] `P07.S30` - XDOM-7/XDOM-8/XDOM-9: `LedgerTransactionPayload` model, public URL-validation helper, and public `sede` export; `src/aeat/application src/aeat/adapters/outbound/aeat/sede`.
