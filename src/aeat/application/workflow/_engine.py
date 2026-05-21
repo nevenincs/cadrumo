@@ -13,7 +13,6 @@ Safety invariants enforced by this module:
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING, NoReturn
@@ -23,13 +22,20 @@ from ...adapters.outbound.aeat.auth import CertificateHealthSeverity
 from ...adapters.outbound.aeat.export import ModeloDraftStatus
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot
 from ...application.auth import describe_provider_operator_impact
+from ...core.errors import BaseSeverity
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import AeatSession
 from ...core.config import Settings
 from ...core.errors import SiteHealthError
 from ...core.logging import get_logger
-from ...domain.deadlines import AutonomoProfile, ModeloDeadline, Schedule, next_deadline
+from ...domain.deadlines import (
+    AutonomoProfile,
+    ModeloDeadline,
+    Schedule,
+    compute_obligation_schedule,
+    next_deadline,
+)
 from ...domain.filing import ModeloBuilderError
 from ...domain.submission import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
@@ -465,6 +471,14 @@ class WorkflowEngine:
     ) -> ModeloDeadline:
         """Stage 3 — compute the target obligation.
 
+        The schedule is computed through
+        :func:`compute_obligation_schedule`, the single producer of the
+        pending-obligation datum shared with the operator state
+        read-projection, so this gate and ``projection.pending_obligations``
+        cannot draw a divergent obligation set. The gate then applies
+        its own narrow filtering (``next_deadline`` or per-target
+        ``(modelo, period)`` match) over that shared schedule.
+
         Aborts with ``NO_PENDING_OBLIGATION`` when the schedule is
         empty or the narrow-target is absent, and with
         ``DEADLINE_PASSED`` when the selected obligation has already
@@ -472,7 +486,9 @@ class WorkflowEngine:
         """
         started = _utcnow()
         try:
-            schedule: Schedule = self._deadline_engine.compute(profile, today.year, today=today)
+            schedule: Schedule = compute_obligation_schedule(
+                self._deadline_engine, profile, today=today
+            )
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.COMPUTING_DEADLINES,

@@ -32,15 +32,23 @@ Examples:
 
 from __future__ import annotations
 
-from ._engine import DeadlineEngine, applies_to, explain, next_deadline
+from .._identifiers import ModeloIdentifier
+from ._engine import (
+    DeadlineEngine,
+    ScheduleProducer,
+    applies_to,
+    compute_obligation_schedule,
+    explain,
+    next_deadline,
+)
 from ._errors import (
     DeadlineError,
     ProfileError,
     ScheduleComputationError,
 )
 from ._festivos import (
-    CalendarCCAA,
     MODELOS_WITHOUT_SHIFT,
+    CalendarCCAA,
     DeadlineShift,
     Holiday,
     HolidayCalendar,
@@ -52,17 +60,16 @@ from ._festivos import (
 )
 from ._models import (
     AutonomoProfile,
+    IVARegime,
+    ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
-    ModeloDeadline,
-    IVARegime,
     ObligationStatus,
     RecargoBand,
     Recovery,
     Schedule,
 )
 from ._profiles import autonomo_profile_from_mapping
-from .._identifiers import ModeloIdentifier
 from ._recargo import (
     build_recovery_for_overdue,
     load_recargo_bands,
@@ -70,9 +77,9 @@ from ._recargo import (
 )
 
 __all__ = [
-    "CalendarCCAA",
     "MODELOS_WITHOUT_SHIFT",
     "AutonomoProfile",
+    "CalendarCCAA",
     "DeadlineEngine",
     "DeadlineError",
     "DeadlineShift",
@@ -90,9 +97,11 @@ __all__ = [
     "Recovery",
     "Schedule",
     "ScheduleComputationError",
+    "ScheduleProducer",
     "applies_to",
     "autonomo_profile_from_mapping",
     "build_recovery_for_overdue",
+    "compute_obligation_schedule",
     "explain",
     "is_business_day",
     "load_holiday_calendar",

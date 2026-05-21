@@ -19,7 +19,6 @@ Playwright walkers without falsifying their record shape.
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -40,11 +39,11 @@ from ...adapters.outbound.aeat.export import (
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, RemoteNotification
 from ...application.auth import AuthProviderDescription, AuthProviderKind
 from ...core.config import Settings
-from ...core.errors import SiteHealthError
+from ...core.errors import BaseSeverity, SiteHealthError
 from ...domain.deadlines import (
     AutonomoProfile,
-    ModeloDeadline,
     IVARegime,
+    ModeloDeadline,
     ObligationStatus,
     Schedule,
 )
@@ -669,3 +668,118 @@ class TestSiteUnavailableArm:
             started_at=result.started_at,
         )
         assert last.site_health_alert.run_id != placeholder_hash
+
+
+class TestGateProjectionAgreement:
+    """The ``NO_PENDING_OBLIGATION`` gate and the state projection's
+    ``pending_obligations`` draw the obligation datum from one shared
+    producer (:func:`compute_obligation_schedule`), so they cannot
+    disagree about whether a target obligation exists.
+
+    These tests drive the *real* :class:`DeadlineEngine` — not the
+    Protocol-shaped test seam — through both consumers over one
+    ``(profile, today)`` pair, and assert the gate aborts with
+    ``NO_PENDING_OBLIGATION`` exactly when the projection carries no
+    obligation for that target.
+    """
+
+    @staticmethod
+    def _engine_with_real_deadlines() -> WorkflowEngine:
+        """Build a :class:`WorkflowEngine` driven by the production
+        :class:`DeadlineEngine`, so the gate computes the genuine
+        registry-backed schedule rather than a test seam's."""
+        from ...domain.deadlines import DeadlineEngine
+
+        fx = _fixtures()
+        return WorkflowEngine(
+            deadline_engine=DeadlineEngine(),
+            filing_draft_builder=fx.draft_builder,
+            submission_engine=fx.submission_engine,
+            session=fx.session,
+            certificate_bundle=fx.certificate_bundle,
+            inputs_provider=fx.inputs_provider,
+            settings=fx.settings,
+            expedientes_source=fx.expedientes_source,
+            notifications_source=fx.notifications_source,
+        )
+
+    def test_gate_proceeds_when_projection_carries_the_target(self) -> None:
+        """A target present in the shared schedule clears the gate, and
+        the projection's ``pending_obligations`` carries that same
+        ``(modelo, period)``."""
+        from ...application.state_projection import _build_pending_obligations
+
+        profile = _profile()
+        today = date(2026, 4, 12)
+
+        projection_obligations = _build_pending_obligations(profile, today=today)
+        target = next(o for o in projection_obligations if o.modelo == "130")
+
+        result = asyncio.run(
+            self._engine_with_real_deadlines().run_for_period(
+                profile,
+                target.modelo,
+                target.period,
+                today=today,
+            )
+        )
+
+        assert result.aborted_reason is not WorkflowAbortReason.NO_PENDING_OBLIGATION
+        computing = next(
+            step for step in result.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES
+        )
+        assert computing.success is True
+
+    def test_gate_aborts_when_projection_lacks_the_target(self) -> None:
+        """A target absent from the shared schedule aborts the gate with
+        ``NO_PENDING_OBLIGATION``, and the projection's
+        ``pending_obligations`` carries no such ``(modelo, period)``."""
+        from ...application.state_projection import _build_pending_obligations
+
+        profile = _profile()
+        today = date(2026, 4, 12)
+
+        absent_modelo = "130"
+        absent_period = "9999Q9"
+        projection_obligations = _build_pending_obligations(profile, today=today)
+        assert not [
+            o
+            for o in projection_obligations
+            if o.modelo == absent_modelo and o.period == absent_period
+        ]
+
+        result = asyncio.run(
+            self._engine_with_real_deadlines().run_for_period(
+                profile,
+                absent_modelo,
+                absent_period,
+                today=today,
+            )
+        )
+
+        assert result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+
+    def test_gate_and_projection_share_one_schedule(self) -> None:
+        """The obligation set the gate filters and the projection's
+        ``pending_obligations`` are byte-for-byte the same ``(modelo,
+        period, opens_on, closes_on, status)`` rows — proving a single
+        producer feeds both."""
+        from ...application.state_projection import _build_pending_obligations
+        from ...domain.deadlines import DeadlineEngine, compute_obligation_schedule
+
+        profile = _profile()
+        today = date(2026, 4, 12)
+
+        schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=today)
+        gate_rows = {
+            (o.modelo, o.period, o.opens_on, o.closes_on, o.status)
+            for o in schedule.obligations
+        }
+
+        projection_rows = {
+            (o.modelo, o.period, o.opens_on, o.closes_on, o.status)
+            for o in _build_pending_obligations(profile, today=today)
+        }
+
+        assert gate_rows == projection_rows
+        assert gate_rows
