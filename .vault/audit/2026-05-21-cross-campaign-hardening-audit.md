@@ -158,6 +158,8 @@ CLEAN: CLI mounting (config + app roots only); workflow state transitions (froze
 
 ### EXIM-6 — MED — verify verdict's `unchecked_casillas` never reports RESERVED-field casillas. **Remediation:** track reserved casillas in the verify path.
 
+**Resolution (2026-05-21, P07.S31, 0f412f364) — fixed.** `DeclaracionVerifyResult.unchecked_casillas` was a declared field that `verify_export` never populated — it always defaulted to `()`, so a `MATCH` verdict silently implied full coverage of casillas the parser never re-read. `verify_export` now computes `unchecked = draft casillas − parser-checked set` and reports it; `test_verify_reports_unchecked_casillas_outside_the_parsed_set` asserts the coverage partition (unchecked casillas are real draft casillas, disjoint from the confirmed and mismatched sets; modelo-130's `saldo-negativo-fin-periodo` carry-forward casilla surfaces as unchecked).
+
 ## Axis E — cross-domain handoffs
 
 ### XDOM-1 — CRITICAL — three domain repositories import a private adapter module
