@@ -2201,6 +2201,61 @@ def _casilla_observation_for(
     )
 
 
+def _amendment_observations(
+    *,
+    corrected_values: Mapping[str, Decimal],
+    overrides: Mapping[str, Decimal],
+    baseline_revision: CalculationRevision,
+    snapshot: RegistrySnapshot,
+) -> tuple[CasillaObservation, ...]:
+    """Build typed observations for an amendment revision.
+
+    An amendment is an operator-corrected value set, not an engine
+    recomputation: a casilla the operator did not override keeps the
+    baseline revision's observation verbatim (value and full formula
+    provenance); an overridden casilla gets a fresh observation
+    carrying the corrected value and the registry casilla's
+    ``legal_refs`` / ``source_refs`` (an operator override means the
+    casilla is no longer a formula output, so formula provenance is
+    dropped). Building the amendment without observations would discard
+    all regulatory grounding from the persisted revision and the CLI
+    emit — the audit surface depends on the full chain.
+
+    Every casilla in ``corrected_values`` must be declared on the
+    snapshot revision, mirroring :func:`_build_typed_observations`.
+    """
+
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}
+    observations: list[CasillaObservation] = []
+    for casilla_id, value in corrected_values.items():
+        if casilla_id not in overrides:
+            carried = baseline_by_id.get(casilla_id)
+            if carried is not None:
+                observations.append(carried)
+                continue
+        registry_casilla = casillas_by_id.get(casilla_id)
+        if registry_casilla is None:
+            raise CasillaProvenanceMissingError(
+                f"casilla {casilla_id!r} is present in the amendment's corrected "
+                f"values but absent from the registry snapshot revision; it has "
+                f"no legal_refs / source_refs definition and cannot be projected "
+                f"to a CasillaObservation without erasing legal provenance"
+            )
+        observations.append(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=value,
+                formula_id=None,
+                operand_refs=(),
+                operand_values=(),
+                legal_refs=registry_casilla.legal_refs,
+                source_refs=registry_casilla.source_refs,
+            )
+        )
+    return tuple(observations)
+
+
 def file_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -2603,6 +2658,18 @@ def amend_modelo_revision(
             f"that already exists in the catalogue; no-op overrides cannot be filed as amendments"
         )
 
+    # Carry regulatory grounding onto the amendment: build typed
+    # CasillaObservation rows for the corrected casilla map so the
+    # persisted amendment revision and its CLI emit preserve
+    # legal_refs / source_refs (and baseline formula provenance for
+    # non-overridden casillas) instead of an empty observations tuple.
+    amendment_observations = _amendment_observations(
+        corrected_values=corrected_values,
+        overrides=overrides,
+        baseline_revision=baseline_revision,
+        snapshot=_resolve_registry_snapshot_for_work_unit(work_unit),
+    )
+
     amendment_draft = CalculationRevision(
         calculation_revision_id=new_revision_id,
         work_unit_id=baseline.work_unit_id,
@@ -2613,6 +2680,7 @@ def amend_modelo_revision(
         borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
         casilla_values=corrected_values,
+        observations=amendment_observations,
         created_at=now,
         updated_at=now,
         amendment_kind=amendment_kind,

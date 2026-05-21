@@ -449,3 +449,29 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos) -> None
             bucket_event_repository=bv_repo,
             clock=_T4,
         )
+
+
+def test_amend_revision_carries_casilla_observations(repos) -> None:
+    """The amendment revision preserves regulatory grounding.
+
+    The amend path used to build the corrected `CalculationRevision`
+    with no `observations=` argument, defaulting it to `()` — every
+    complementaria/sustitutiva amendment discarded all
+    `CasillaObservation` provenance. The amendment must now carry one
+    typed observation per corrected casilla, synthesised from the
+    registry snapshot even when the baseline revision itself carries
+    no observations (the externally-imported baseline seeded here)."""
+
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, cr_repo, _, _, _ = repos
+    new_revision = get_calculation_revision(
+        outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
+    )
+
+    observed = {obs.casilla_id: obs for obs in new_revision.observations}
+    assert observed, "amendment revision persisted zero observations — provenance lost"
+    assert set(observed) == set(new_revision.casilla_values)
+    # the overridden casilla carries the corrected value
+    assert observed["01"].value == Decimal("1100")
+    # the non-overridden casilla carries the baseline value
+    assert observed["02"].value == new_revision.casilla_values["02"]
