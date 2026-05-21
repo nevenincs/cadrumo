@@ -442,6 +442,8 @@ cli:
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         period_help: 'Idoszak token a modellrevizio feloldasahoz; Modelo 036 eseten
           alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
+        period_token_invalid: 'A(z) ''%{period}'' --period nem érvényes időszak-token
+          a(z) %{modelo} modellhez. Érvényes tokenek: %{tokens}.'
       export:
         actor_help: A MODELO_EXPORTED eseménybe rögzített operátor címke.
         errors:
@@ -1904,11 +1906,11 @@ wizard:
       \  aeat config profile create NAME\n\nHa a profilállapot elavult vagy sérült\
       \ lehet, először vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot\
       \ eldobásához és újrakezdéshez:\n  aeat config reset --scope profile --yes"
-    unsupported_console_edit: "A vezetett beállítás nem tudott interaktív kérdést megnyitni\
-      \ ebben a futásban.\nMég semmi nincs mentve.\n\nSzerkeszd ezt a profilt nem interaktívan\
-      \ a módosítandó mező megnevezésével:\n  aeat config profile edit %{profile_name}\
-      \ --quiet --<mező> ÉRTÉK\n\nVagy futtasd újra a vezetett szerkesztést interaktív\
-      \ terminálból:\n  aeat config profile edit %{profile_name}"
+    unsupported_console_edit: "A vezetett beállítás nem tudott interaktív kérdést\
+      \ megnyitni ebben a futásban.\nMég semmi nincs mentve.\n\nSzerkeszd ezt a profilt\
+      \ nem interaktívan a módosítandó mező megnevezésével:\n  aeat config profile\
+      \ edit %{profile_name} --quiet --<mező> ÉRTÉK\n\nVagy futtasd újra a vezetett\
+      \ szerkesztést interaktív terminálból:\n  aeat config profile edit %{profile_name}"
   other:
     description: Other configuration options
     section:
