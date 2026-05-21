@@ -2376,7 +2376,8 @@ errors:
     refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
       asset's cost basis.
-    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
+    refused_profile_binding_resolution: A profile fact required for the calculation
+      could not be resolved into the correct binding channel.
     refused_profile_foral_regime: The foral regime selected is not modelled by this
       profile. Select a supported regime.
     refused_profile_inventory_validation: A profile inventory ledger failed validation.

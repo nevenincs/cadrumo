@@ -39,6 +39,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry._bindings import CasillaObservation
+from ...domain.calculations.registry._runtime_graph import enum_consumed_binding_ids
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -110,6 +111,7 @@ from ._borrador_binding import (
     Modelo100BorradorBindingResult,
     resolve_modelo_100_borrador_bindings,
 )
+from ._profile_binding import ProfileSourcedBindingResult
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by this module.
@@ -853,10 +855,34 @@ def calculate_modelo_revision(
         registry_snapshot=snapshot,
         snapshot_repository=borrador_snapshot_repository,
     )
-    resolved_bindings = dict(
-        sorted({**lower_precedence_binding_values, **borrador_result.binding_values, **caller_binding_values}.items())
+    profile_result = _resolve_profile_bindings_for_calculation(
+        bucket_id=work_unit.bucket_id,
+        snapshot=snapshot,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        borrador_result=borrador_result,
+        backend_binding_values=lower_precedence_binding_values,
     )
-    resolved_enum_bindings = dict(sorted({**borrador_result.enum_binding_values, **caller_enum_binding_values}.items()))
+    resolved_bindings = dict(
+        sorted(
+            {
+                **profile_result.binding_values,
+                **lower_precedence_binding_values,
+                **borrador_result.binding_values,
+                **caller_binding_values,
+            }.items()
+        )
+    )
+    resolved_enum_bindings = dict(
+        sorted(
+            {
+                **profile_result.enum_binding_values,
+                **borrador_result.enum_binding_values,
+                **caller_enum_binding_values,
+            }.items()
+        )
+    )
+    _reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
     resolved_relations = dict(relation_values or {})
     relation_binding_values = materialize_relation_binding_values(
         snapshot.revision,
@@ -1140,6 +1166,94 @@ def calculate_modelo_revision_from_bucket_aggregation(
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
         clock=clock,
+    )
+
+
+def _resolve_profile_bindings_for_calculation(
+    *,
+    bucket_id: str,
+    snapshot: RegistrySnapshot,
+    caller_binding_values: Mapping[str, Decimal],
+    caller_enum_binding_values: Mapping[str, str],
+    borrador_result: Modelo100BorradorBindingResult,
+    backend_binding_values: Mapping[str, Decimal],
+) -> ProfileSourcedBindingResult:
+    """Resolve ``source = "profile"`` bindings from the bucket's user profile.
+
+    Bindings already satisfied by a higher-precedence layer (caller
+    ``--binding`` / ``--enum-binding``, a consumed borrador snapshot, or
+    backend bucket aggregation) are excluded so the profile only fills
+    bindings nothing else provided. The profile is the substrate of
+    record for taxpayer facts such as the Modelo 100 tax-residence
+    CCAA; without this step the operator would have to re-type a fact
+    the profile already holds.
+    """
+
+    from ._profile_binding import resolve_profile_sourced_bindings
+
+    caller_owned = (
+        set(caller_binding_values)
+        | set(caller_enum_binding_values)
+        | set(borrador_result.binding_values)
+        | set(borrador_result.enum_binding_values)
+        | set(backend_binding_values)
+    )
+    return resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id=bucket_id,
+        caller_binding_ids=frozenset(caller_owned),
+    )
+
+
+def _reject_binding_channel_mismatch(
+    revision: ModeloRevision,
+    binding_values: Mapping[str, Decimal],
+    enum_binding_values: Mapping[str, str],
+) -> None:
+    """Refuse bindings supplied through the wrong engine channel.
+
+    The registry runtime resolves a binding leaf from the Decimal
+    ``binding_values`` channel unless a dispatch op consumes it as a
+    string enum key, in which case it is read from
+    ``enum_binding_values``. A caller that supplies an enum-dispatch
+    binding through the Decimal channel (or vice versa) would otherwise
+    get the opaque engine error ``binding ... has no supplied value``
+    even though a value was provided. The Modelo 100 estimacion-directa
+    modality binding is the canonical trap: it carries a ``typed_enum``
+    annotation yet is consumed as a Decimal operand, so a value routed
+    by ``typed_enum`` alone lands in the wrong channel. This guard
+    rejects the mismatch at the binding boundary with a clear message.
+    """
+
+    enum_consumed = enum_consumed_binding_ids(revision)
+    misrouted_to_decimal = sorted(set(binding_values) & enum_consumed)
+    if misrouted_to_decimal:
+        raise ModeloError(
+            f"bindings {misrouted_to_decimal!r} are consumed by the registry as enum "
+            f"dispatch keys and must be supplied through the enum-binding channel, "
+            f"not as Decimal binding values"
+        )
+    misrouted_to_enum = sorted(set(enum_binding_values) & {b.id for b in revision.bindings} - enum_consumed)
+    misrouted_to_enum = [
+        binding_id
+        for binding_id in misrouted_to_enum
+        if _binding_is_formula_consumed(revision, binding_id)
+    ]
+    if misrouted_to_enum:
+        raise ModeloError(
+            f"bindings {misrouted_to_enum!r} are consumed by the registry as Decimal "
+            f"operands and must be supplied as Decimal binding values, not through the "
+            f"enum-binding channel"
+        )
+
+
+def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: str) -> bool:
+    """Return whether any formula expression references ``binding_id``."""
+
+    from ...domain.calculations.registry._runtime_graph import expression_binding_refs
+
+    return any(
+        binding_id in expression_binding_refs(formula.expression) for formula in revision.formulas
     )
 
 

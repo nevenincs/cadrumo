@@ -66,6 +66,51 @@ def _collect_binding_refs(expression: FormulaExpression, refs: list[str]) -> Non
         _collect_binding_refs(arg, refs)
 
 
+#: Formula operators that consume a binding leaf as a string-valued enum
+#: dispatch key (``args[1]``) rather than as a Decimal operand. The
+#: runtime resolves the ``args[1]`` binding of these ops from
+#: ``enum_binding_values`` (string channel); every other binding leaf is
+#: resolved from ``binding_values`` (Decimal channel).
+_ENUM_DISPATCH_OPS: frozenset[str] = frozenset(
+    {"lookup_bracket_by_ccaa", "lookup_parameter_by_entity_type"}
+)
+
+
+def _collect_enum_dispatch_binding_refs(expression: FormulaExpression, refs: list[str]) -> None:
+    if expression.op in _ENUM_DISPATCH_OPS and len(expression.args) >= 2:
+        dispatch_binding = expression.args[1].binding
+        if dispatch_binding is not None:
+            refs.append(dispatch_binding)
+    for arg in expression.args:
+        _collect_enum_dispatch_binding_refs(arg, refs)
+
+
+def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[str]:
+    """Return binding ids the revision's formulas consume as string enums.
+
+    A registry binding leaf is resolved from one of two engine
+    channels. When a binding is the ``args[1]`` enum-key argument of a
+    dispatch op (``lookup_bracket_by_ccaa`` /
+    ``lookup_parameter_by_entity_type``) the runtime reads it from the
+    string-valued ``enum_binding_values`` channel. Every other binding
+    leaf is read from the Decimal-valued ``binding_values`` channel.
+
+    The engine channel is therefore a property of *how the formula
+    consumes the binding*, not of the binding's ``typed_enum``
+    annotation. A binding may carry ``typed_enum`` yet still be
+    consumed as a Decimal operand (the Modelo 100 estimacion-directa
+    modality binding is compared against a numeric literal). Routing a
+    binding into the wrong channel makes the engine raise
+    ``binding ... has no supplied value``; this query is the
+    authoritative discriminator that prevents that mismatch.
+    """
+
+    refs: list[str] = []
+    for formula in revision.formulas:
+        _collect_enum_dispatch_binding_refs(formula.expression, refs)
+    return frozenset(refs)
+
+
 def _collect_parameter_refs(expression: FormulaExpression, refs: list[str]) -> None:
     if expression.parameter is not None:
         refs.append(expression.parameter)

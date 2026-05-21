@@ -2510,7 +2510,8 @@ errors:
       validación.
     refused_profile_basis_cap_exceeded: La amortización acumulada superaría la base
       de coste del activo.
-    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
+    refused_profile_binding_resolution: Un dato del perfil necesario para el cálculo
+      no se pudo resolver en el canal de vínculo correcto.
     refused_profile_foral_regime: El régimen foral seleccionado no está modelado por
       este perfil. Selecciona un régimen admitido.
     refused_profile_inventory_validation: Un libro de inventario del perfil no superó
