@@ -9,7 +9,8 @@ steps:
   - W01.P03.S15
   - W01.P03.S16
   - W01.P03.S17
-status: partial
+  - W01.P03.S18
+status: complete
 date: 2026-05-21
 ---
 
@@ -24,15 +25,17 @@ Enrolled the default bucket-backed modelo calculation path into source mesh reso
 - Routed `aeat app modelo work calculate` through `calculate_modelo_revision_from_bucket_aggregation`.
 - Added source-owned override rejection coverage for Modelo 303 IVA and Modelo 100 Renta source bindings.
 - Added a CLI boundary test ensuring the calculate verb enters the bucket-backed calculation path.
+- Added a real CLI persistence roundtrip proving ledger-derived source transaction ids, binding overrides, and typed observation source refs survive `aeat app modelo work calculate`.
 
 ## Verification
 
 - `uv run ruff check src/aeat/application/modelo/_actions.py src/aeat/application/modelo/test_source_mesh_calculation.py src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/test_modelo.py`
 - `uv run pytest src/aeat/application/modelo/test_source_mesh_calculation.py src/aeat/application/modelo/test_bucket_aggregation_flow.py src/aeat/entrypoints/cli/test_modelo.py::test_work_calculate_enters_bucket_source_mesh_calculation_boundary -q --tb=short`
+- `uv run ruff check src/aeat/application/aggregation/_source_mesh.py src/aeat/application/aggregation/_modelo_bindings.py src/aeat/application/aggregation/_oss_ioss.py src/aeat/application/aggregation/__init__.py src/aeat/application/aggregation/test_modelo_source_mesh_ledger.py src/aeat/application/modelo/_actions.py src/aeat/application/modelo/test_source_mesh_calculation.py src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/test_modelo.py src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py`
+- `uv run pytest src/aeat/application/aggregation/test_source_mesh.py src/aeat/application/aggregation/test_modelo_source_mesh_ledger.py src/aeat/application/modelo/test_source_mesh_calculation.py src/aeat/application/modelo/test_bucket_aggregation_flow.py src/aeat/entrypoints/cli/test_modelo.py::test_work_calculate_enters_bucket_source_mesh_calculation_boundary src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py -q --tb=short`
 
 Both checks passed on 2026-05-21.
 
 ## Residual Work
 
-- W01.P03.S18 remains open: add a full CLI persistence roundtrip proving CLI calculation persists ledger-derived source observations.
-- The current CLI test is an orchestration boundary check; it intentionally does not claim persistence coverage.
+- W02.P04 is next: enroll profile, previous filing, relation prefill, borrador, and IVA wallet decision source families.

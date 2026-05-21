@@ -40,6 +40,11 @@ from ...domain.calculations.registry._relations import (
     resolve_relation_values_from_observations,
 )
 from ...domain.calculations.registry._schema import RegistrySnapshot
+from ..aggregation._source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
 from ._observations_repository import CalculationObservationRepository
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
@@ -67,13 +72,11 @@ def _gather_observations_for_snapshot(
         period=snapshot.period,
     )
     for requirement in requirements:
-        required_periods = set(requirement.periods)
-        for payload in repository.iter_modelo(requirement.source_modelo):
+        for period in requirement.periods:
+            payload = repository.load_observation(requirement.source_modelo, requirement.filing_year, period)
+            if payload is None:
+                continue
             obs = payload.observation
-            if obs.filing_year != requirement.filing_year:
-                continue
-            if obs.period not in required_periods:
-                continue
             key = (obs.modelo, obs.filing_year, obs.period)
             needed.setdefault(key, obs)
     return tuple(needed.values())
@@ -183,4 +186,54 @@ def resolve_relations_from_local_store(
     return RelationValues(values=tuple(values))
 
 
-__all__ = ["resolve_relations_from_local_store"]
+class RelationPrefillSourceResolver:
+    """Source mesh adapter for local relation prefill values."""
+
+    resolver_id = "relation_prefill"
+    owned_sources = ("relation_prefill",)
+
+    def __init__(
+        self,
+        *,
+        repository: CalculationObservationRepository | None = None,
+        registry_snapshot: RegistrySnapshot | None = None,
+        captured_at: datetime | None = None,
+    ) -> None:
+        self._repository = repository
+        self._registry_snapshot = registry_snapshot
+        self._captured_at = captured_at
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        snapshot = self._registry_snapshot
+        if snapshot is None:
+            from ...core.resources import resources
+
+            snapshot = resources().modelos.authority.snapshot(
+                context.modelo,
+                filing_year=context.filing_year,
+                period=context.period,
+            )
+        relation_values = resolve_relations_from_local_store(
+            snapshot,
+            repository=self._repository,
+            captured_at=self._captured_at or context.calculated_at,
+        )
+        resolved = tuple(item for item in relation_values.values if item.value is not None)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            relation_values={item.relation: item.value for item in resolved if item.value is not None},
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="relation_prefill",
+                    source_ref=(
+                        f"{item.relation}:{item.source_filing_year}:"
+                        f"{','.join(item.source_periods)}"
+                    ),
+                )
+                for item in resolved
+            ),
+        )
+
+
+__all__ = ["RelationPrefillSourceResolver", "resolve_relations_from_local_store"]

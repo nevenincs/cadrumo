@@ -114,6 +114,40 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             dispose_engine(settings)
 
 
+def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
+    tmp_path: Path,
+) -> None:
+    """Modelo scans must enumerate through decrypted records, not raw HMAC keys."""
+
+    provider = EphemeralMasterKeyProvider()
+    db_path = tmp_path / "observations-iter-modelo.db"
+    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        engine = get_engine(settings)
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            repo = CalculationObservationRepository()
+            target = _populated_observation()
+            other = target.model_copy(update={"modelo": "130", "period": "2T"})
+            repo.save_observation(
+                target,
+                source_kind="aeat_sede_justificante",
+                captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+            )
+            repo.save_observation(
+                other,
+                source_kind="aeat_sede_justificante",
+                captured_at=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
+            )
+
+            loaded = tuple(repo.iter_modelo("303"))
+
+            assert len(loaded) == 1
+            assert loaded[0].observation == target
+        finally:
+            dispose_engine(settings)
+
+
 def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     tmp_path: Path,
 ) -> None:

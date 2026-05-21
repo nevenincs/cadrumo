@@ -195,24 +195,9 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         """
 
         safe_repository_id(modelo, context="modelo")
-        prefix = f"{modelo}:".encode()
-        for raw_row in self._objects.iter_all_records_raw():
-            if raw_row.namespace != self.namespace:
-                continue
-            object_key_bytes = (
-                raw_row.object_key if isinstance(raw_row.object_key, bytes) else str(raw_row.object_key).encode("utf-8")
-            )
-            if not object_key_bytes.startswith(prefix):
-                continue
-            payload_bytes = (
-                raw_row.payload if isinstance(raw_row.payload, bytes) else str(raw_row.payload).encode("utf-8")
-            )
-            envelope = Envelope[_ObservationEnvelopePayload].model_validate_json(payload_bytes.decode("utf-8"))
-            if envelope.classification is not self.sensitivity:
-                continue
-            if envelope.schema_version > self.schema_version:
-                continue
-            yield envelope.payload
+        for payload in self.iter_records():
+            if payload.observation.modelo == modelo:
+                yield payload
 
 
 class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelopePayload]):

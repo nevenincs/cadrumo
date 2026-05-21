@@ -24,7 +24,9 @@ from ...domain.calculations.registry import (
     resolve_previous_filing_binding_values,
 )
 from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ..aggregation import CalculationSourceContext
 from ._binding_prefill import resolve_bindings_from_local_store
+from ._multi_year import PreviousFilingSourceResolver
 from ._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -140,6 +142,18 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
 
             snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
             prefill = resolve_bindings_from_local_store(snapshot, repository=repository)
+            source_resolution = PreviousFilingSourceResolver(
+                repository=repository,
+                registry_snapshot=snapshot,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id="operator",
+                    modelo="390",
+                    filing_year=2025,
+                    period="0A",
+                    revision=snapshot.revision,
+                )
+            )
             previous_filing_values = resolve_previous_filing_binding_values(
                 snapshot.revision,
                 (
@@ -162,6 +176,10 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             )
 
             assert prefill.binding_values == previous_filing_values
+            assert source_resolution.binding_values == prefill.binding_values
+            assert source_resolution.owned_sources == ("previous_filing",)
+            assert source_resolution.provenance
+            assert all(item.source_kind == "previous_filing" for item in source_resolution.provenance)
             assert {item.source_periods for item in prefill.prefilled} >= {
                 ("1T", "2T", "3T", "4T"),
                 ("4T",),
