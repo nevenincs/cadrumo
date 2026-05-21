@@ -21,6 +21,11 @@ from aeat.adapters.outbound.aeat.sede import (
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.application.auth import AuthProviderKind
 from aeat.application.live import (
+    IvaCompensationCarryForwardLotRow,
+    IvaCompensationHistoryReport,
+    IvaCompensationHistoryRow,
+    IvaWalletAuthorityDecisionRow,
+    IvaWalletCaptureReport,
     capture_source_filed_data,
     filed_data_listing_row,
     select_declarations_for_capture,
@@ -31,6 +36,7 @@ from aeat.application.registry import (
 from aeat.core.access_gate import AeatLiveReadNotEnabledError
 from aeat.core.resources import bundled_path, resources
 from aeat.domain.calculations.registry import calculate_registry_snapshot
+from aeat.entrypoints.cli._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
 from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -532,6 +538,140 @@ def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -
     assert old_capture.exit_code != 0
     assert "No such command" in old_list.output
     assert "No such command" in old_capture.output
+
+
+def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
+    group = invoke_cached_cli(
+        ["app", "live", "iva-wallet", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    pull = invoke_cached_cli(
+        ["app", "live", "iva-wallet", "pull", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    capture_history = invoke_cached_cli(
+        ["app", "live", "iva-wallet", "capture-history", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    history = invoke_cached_cli(
+        ["app", "live", "iva-wallet", "history", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert group.exit_code == 0
+    assert pull.exit_code == 0
+    assert capture_history.exit_code == 0
+    assert history.exit_code == 0
+    assert "read-only" in group.output or "solo lectura" in group.output
+    assert "read query" in pull.output or "lectura" in pull.output
+    assert "own-name" in pull.output or "nombre propio" in pull.output
+    assert (
+        "No AEAT filing or wallet form choices are submitted" in capture_history.output
+        or "No se envian opciones" in capture_history.output
+    )
+    assert "--as-of-year" in history.output
+
+
+def test_live_iva_wallet_pull_output_lines_name_guarded_read_query_policy() -> None:
+    report = IvaWalletCaptureReport(
+        taxpayer_ref="12345678Z",
+        target_year=2026,
+        target_period="2T",
+        observation_path="secure://wallet-observation",
+        decision_key="iva-wallet-decision:12345678Z:2026:2T",
+        row_count=1,
+        total_pending="1200.00",
+        selected_authority="aeat_wallet",
+        selected_amount="1200.00",
+        local_recurrence_amount="1200.00",
+        divergence="match",
+        blocked=False,
+        captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+    )
+
+    lines = _iva_wallet_pull_lines(report)
+
+    assert "safety_policy=read_only_fail_closed" in lines
+    assert "representation_gate_policy=own_name_only_no_represented_taxpayer_choice" in lines
+    assert (
+        "aeat_form_submission_policy=wallet_execute_read_query_only_no_filing_or_represented_taxpayer_data" in lines
+    )
+    assert "selected_authority=aeat_wallet" in lines
+
+
+def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisions() -> None:
+    report = IvaCompensationHistoryReport(
+        row_count=1,
+        rows=(
+            IvaCompensationHistoryRow(
+                year=2024,
+                period="1T",
+                status="ALTA",
+                presented_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+                prior_pending_amount="100.00",
+                applied_amount="40.00",
+                pending_for_later_amount="60.00",
+                period_result_amount="0.00",
+                final_result_amount="0.00",
+                generated_amount="0",
+                available_end_amount="60.00",
+            ),
+        ),
+        as_of_year=2026,
+        carry_forward_lot_count=1,
+        carry_forward_lots=(
+            IvaCompensationCarryForwardLotRow(
+                taxpayer_ref="sha256:abc123",
+                source_filing_year=2022,
+                source_period="4T",
+                generated_amount="100.00",
+                applied_amount="40.00",
+                remaining_amount="60.00",
+                age_years=4,
+                expiry_review_state="expiry_review_due",
+                source_observation_key="303:2022:4T:EXP",
+            ),
+        ),
+        unallocated_applied_amount="0",
+        authority_decision_count=1,
+        authority_decisions=(
+            IvaWalletAuthorityDecisionRow(
+                taxpayer_ref="sha256:abc123",
+                target_year=2026,
+                target_period="2T",
+                selected_authority="aeat_wallet",
+                selected_amount="60.00",
+                wallet_amount="60.00",
+                local_recurrence_amount="60.00",
+                override_amount=None,
+                divergence="match",
+                blocked=False,
+                stale_wallet=False,
+                reason="matched",
+                wallet_captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+                decided_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+                authority_sources=("aeat_wallet amount=60.00 ref=wallet:2026:2T",),
+            ),
+        ),
+    )
+
+    lines = _iva_wallet_history_lines(report)
+
+    assert "carry_forward_lot_count=1" in lines
+    assert any(
+        line.startswith("carry_forward_lot=")
+        and "2022\t4T" in line
+        and "remaining=60.00" in line
+        and "expiry_review_state=expiry_review_due" in line
+        for line in lines
+    )
+    assert any(
+        line.startswith("authority_decision=")
+        and "selected_authority=aeat_wallet" in line
+        and "blocked=False" in line
+        for line in lines
+    )
+    assert any(line.startswith("authority_source=2026\t2T\taeat_wallet") for line in lines)
 
 
 def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Path) -> None:

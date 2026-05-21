@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import hashlib
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.sede import (
+    PRE303_PRESENTATION_SERVICE_URL,
     Declaracion,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
@@ -27,7 +29,10 @@ from ...application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     IvaCompensationPeriodState,
+    IvaWalletDecisionRepository,
+    build_iva_compensation_carry_forward_report,
     iva_compensation_state_from_filed_observation,
+    iva_wallet_decision_key,
     observation_key,
     reconcile_modelo_303_iva_compensation,
 )
@@ -88,7 +93,7 @@ class IvaWalletCaptureReport(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    taxpayer_nif: str
+    taxpayer_ref: str
     target_year: int
     target_period: str
     observation_path: str
@@ -128,6 +133,50 @@ class IvaCompensationHistoryReport(BaseModel):
 
     row_count: int
     rows: tuple[IvaCompensationHistoryRow, ...]
+    as_of_year: int
+    carry_forward_lot_count: int
+    carry_forward_lots: tuple[IvaCompensationCarryForwardLotRow, ...] = ()
+    unallocated_applied_amount: str
+    authority_decision_count: int
+    authority_decisions: tuple[IvaWalletAuthorityDecisionRow, ...] = ()
+
+
+class IvaCompensationCarryForwardLotRow(BaseModel):
+    """One CLI-safe IVA compensation carry-forward lot."""
+
+    model_config = ConfigDict(frozen=True)
+
+    taxpayer_ref: str
+    source_filing_year: int
+    source_period: str
+    generated_amount: str
+    applied_amount: str
+    remaining_amount: str
+    age_years: int
+    expiry_review_state: str
+    source_observation_key: str
+
+
+class IvaWalletAuthorityDecisionRow(BaseModel):
+    """One persisted wallet/local/override authority decision for CLI display."""
+
+    model_config = ConfigDict(frozen=True)
+
+    taxpayer_ref: str
+    target_year: int
+    target_period: str
+    selected_authority: str
+    selected_amount: str | None
+    wallet_amount: str | None
+    local_recurrence_amount: str | None
+    override_amount: str | None
+    divergence: str
+    blocked: bool
+    stale_wallet: bool
+    reason: str
+    wallet_captured_at: datetime | None
+    decided_at: datetime
+    authority_sources: tuple[str, ...] = ()
 
 
 class IvaCompensationHistoryCaptureReport(BaseModel):
@@ -436,12 +485,28 @@ def persist_filed_calculation_observation(
 def list_iva_compensation_history(
     *,
     repository: IvaCompensationHistoryRepository | None = None,
+    decision_repository: IvaWalletDecisionRepository | None = None,
+    as_of_year: int | None = None,
 ) -> IvaCompensationHistoryReport:
     """List profile-local IVA compensation history derived from filed Modelo 303 observations."""
 
     repo = repository if repository is not None else IvaCompensationHistoryRepository()
-    rows = tuple(_history_row(state) for state in repo.list_periods())
-    return IvaCompensationHistoryReport(row_count=len(rows), rows=rows)
+    decision_repo = decision_repository if decision_repository is not None else IvaWalletDecisionRepository()
+    states = repo.list_periods()
+    rows = tuple(_history_row(state) for state in states)
+    resolved_as_of_year = as_of_year if as_of_year is not None else datetime.now(UTC).year
+    carry_forward = build_iva_compensation_carry_forward_report(states, as_of_year=resolved_as_of_year)
+    authority_decisions = tuple(_authority_decision_row(decision) for decision in decision_repo.list_decisions())
+    return IvaCompensationHistoryReport(
+        row_count=len(rows),
+        rows=rows,
+        as_of_year=carry_forward.as_of_year,
+        carry_forward_lot_count=len(carry_forward.lots),
+        carry_forward_lots=tuple(_carry_forward_lot_row(lot) for lot in carry_forward.lots),
+        unallocated_applied_amount=str(carry_forward.unallocated_applied_amount),
+        authority_decision_count=len(authority_decisions),
+        authority_decisions=authority_decisions,
+    )
 
 
 async def capture_iva_compensation_history(
@@ -524,8 +589,61 @@ def _history_row(state: IvaCompensationPeriodState) -> IvaCompensationHistoryRow
     )
 
 
+def _carry_forward_lot_row(lot: object) -> IvaCompensationCarryForwardLotRow:
+    return IvaCompensationCarryForwardLotRow(
+        taxpayer_ref=_taxpayer_ref(lot.taxpayer_nif),
+        source_filing_year=lot.source_filing_year,
+        source_period=lot.source_period,
+        generated_amount=str(lot.generated_amount),
+        applied_amount=str(lot.applied_amount),
+        remaining_amount=str(lot.remaining_amount),
+        age_years=lot.age_years,
+        expiry_review_state=lot.expiry_review_state.value,
+        source_observation_key=lot.source_observation_key,
+    )
+
+
+def _authority_decision_row(decision: object) -> IvaWalletAuthorityDecisionRow:
+    return IvaWalletAuthorityDecisionRow(
+        taxpayer_ref=_taxpayer_ref(decision.taxpayer_nif),
+        target_year=decision.target_year,
+        target_period=decision.target_period,
+        selected_authority=decision.selected_authority,
+        selected_amount=_decimal_text(decision.selected_amount),
+        wallet_amount=_decimal_text(decision.wallet_amount),
+        local_recurrence_amount=_decimal_text(decision.local_recurrence_amount),
+        override_amount=_decimal_text(decision.override_amount),
+        divergence=decision.divergence,
+        blocked=decision.blocked,
+        stale_wallet=decision.stale_wallet,
+        reason=decision.reason,
+        wallet_captured_at=decision.wallet_captured_at,
+        decided_at=decision.decided_at,
+        authority_sources=tuple(_authority_source_text(source) for source in decision.authority_sources),
+    )
+
+
+def _authority_source_text(source: object) -> str:
+    parts = [str(source.source_kind)]
+    if source.source_modelo is not None:
+        parts.append(f"modelo={source.source_modelo}")
+    if source.source_filing_year is not None:
+        parts.append(f"year={source.source_filing_year}")
+    if source.source_periods:
+        parts.append(f"periods={','.join(source.source_periods)}")
+    if source.amount is not None:
+        parts.append(f"amount={source.amount}")
+    parts.append(f"ref={source.source_locator}")
+    return " ".join(parts)
+
+
 def _decimal_text(value: Decimal | None) -> str | None:
     return str(value) if value is not None else None
+
+
+def _taxpayer_ref(taxpayer_nif: str) -> str:
+    digest = hashlib.sha256(taxpayer_nif.strip().upper().encode("utf-8")).hexdigest()
+    return f"sha256:{digest[:12]}"
 
 
 def _persist_latest_filed_calculation_observations(
@@ -655,6 +773,66 @@ def _with_derived_303_compensation_available(
     return observation.model_copy(update={"observations": (*observation.observations, derived)})
 
 
+def persist_and_reconcile_iva_compensation_wallet(
+    observation: IvaCompensationWalletObservation,
+    *,
+    output_root: Path,
+    repository: CalculationObservationRepository | None = None,
+    decided_at: datetime | None = None,
+) -> IvaWalletCaptureReport:
+    """Persist, reload, reconcile, and report one AEAT IVA wallet observation.
+
+    The reload is intentional: downstream reconciliation must use evidence that
+    actually survived the encrypted storage boundary, not only the in-memory
+    result returned by the browser driver.
+    """
+
+    store = FiledDeclaracionObservationStore(output_root)
+    path = store.persist_iva_wallet_observation(observation)
+    reloaded = store.load_iva_wallet_observation(path)
+    if reloaded != observation:
+        raise LiveApplicationError("persisted IVA wallet observation did not reload with identical evidence")
+    snapshot = resources().modelos.authority.snapshot(
+        "303",
+        filing_year=reloaded.target_year,
+        period=reloaded.target_period,
+    )
+    reconciliation = reconcile_modelo_303_iva_compensation(
+        snapshot,
+        taxpayer_nif=reloaded.taxpayer_nif,
+        wallet=reloaded,
+        repository=repository,
+        decided_at=decided_at,
+    )
+    decision = reconciliation.decision
+    loaded_decision = IvaWalletDecisionRepository().load_decision(
+        decision.taxpayer_nif,
+        decision.target_year,
+        decision.target_period,
+    )
+    if loaded_decision != decision:
+        raise LiveApplicationError(
+            "persisted IVA wallet reconciliation decision did not reload with identical evidence"
+        )
+    return IvaWalletCaptureReport(
+        taxpayer_ref=_taxpayer_ref(reloaded.taxpayer_nif),
+        target_year=reloaded.target_year,
+        target_period=reloaded.target_period,
+        observation_path=str(path),
+        decision_key=iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period),
+        row_count=len(reloaded.rows),
+        total_pending=str(reloaded.total_pending),
+        selected_authority=decision.selected_authority,
+        selected_amount=str(decision.selected_amount) if decision.selected_amount is not None else None,
+        local_recurrence_amount=(
+            str(decision.local_recurrence_amount) if decision.local_recurrence_amount is not None else None
+        ),
+        divergence=decision.divergence,
+        blocked=decision.blocked,
+        captured_at=reloaded.captured_at,
+    )
+
+
 async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     """Live-walk the AEAT declaration register and persist a bucket-scoped snapshot.
 
@@ -729,11 +907,9 @@ async def capture_iva_compensation_wallet(
     requires it.
     """
 
-    from ...adapters.outbound.aeat.sede._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
-
     session, settings = await _active_verified_session(
         operation="live-iva-wallet-read",
-        target_url=IVA_COMPENSATION_WALLET_URL,
+        target_url=PRE303_PRESENTATION_SERVICE_URL,
     )
     observation: IvaCompensationWalletObservation = await fetch_iva_compensation_wallet(
         session,
@@ -743,32 +919,7 @@ async def capture_iva_compensation_wallet(
         settings=settings,
     )
     store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-wallet"
-    store = FiledDeclaracionObservationStore(store_root)
-    path = store.persist_iva_wallet_observation(observation)
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=target_year, period=target_period)
-    reconciliation = reconcile_modelo_303_iva_compensation(
-        snapshot,
-        taxpayer_nif=observation.taxpayer_nif,
-        wallet=observation,
-    )
-    decision = reconciliation.decision
-    return IvaWalletCaptureReport(
-        taxpayer_nif=observation.taxpayer_nif,
-        target_year=observation.target_year,
-        target_period=observation.target_period,
-        observation_path=str(path),
-        decision_key=f"{decision.taxpayer_nif}:{decision.target_year}:{decision.target_period}",
-        row_count=len(observation.rows),
-        total_pending=str(observation.total_pending),
-        selected_authority=decision.selected_authority,
-        selected_amount=str(decision.selected_amount) if decision.selected_amount is not None else None,
-        local_recurrence_amount=(
-            str(decision.local_recurrence_amount) if decision.local_recurrence_amount is not None else None
-        ),
-        divergence=decision.divergence,
-        blocked=decision.blocked,
-        captured_at=observation.captured_at,
-    )
+    return persist_and_reconcile_iva_compensation_wallet(observation, output_root=store_root)
 
 
 async def _active_verified_session(
@@ -796,9 +947,11 @@ __all__ = [
     "FiledDataCaptureReport",
     "FiledDataListingReport",
     "FiledDataListingRow",
+    "IvaCompensationCarryForwardLotRow",
     "IvaCompensationHistoryCaptureReport",
     "IvaCompensationHistoryReport",
     "IvaCompensationHistoryRow",
+    "IvaWalletAuthorityDecisionRow",
     "IvaWalletCaptureReport",
     "LiveApplicationError",
     "LiveApplicationInputError",
@@ -814,6 +967,7 @@ __all__ = [
     "filed_data_listing_row",
     "list_filed_data",
     "list_iva_compensation_history",
+    "persist_and_reconcile_iva_compensation_wallet",
     "persist_filed_calculation_observation",
     "select_declarations_for_capture",
 ]

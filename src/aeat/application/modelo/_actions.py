@@ -40,7 +40,10 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry._bindings import CasillaObservation
-from ...domain.calculations.registry._runtime_graph import enum_consumed_binding_ids
+from ...domain.calculations.registry._runtime_graph import (
+    enum_consumed_binding_ids,
+    input_casilla_alias_map,
+)
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -809,6 +812,7 @@ def calculate_modelo_revision(
     backend_casilla_inputs: Mapping[str, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
+    ledger_preflight_transaction_repository: TransactionCatalogueRepository | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     source_transaction_ids: tuple[str, ...] = (),
@@ -860,6 +864,18 @@ def calculate_modelo_revision(
     work_units = wu_repo.load()
     work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
+    # Operator-supplied casilla keys may be the registry number or BOE
+    # form number shown by `modelo casillas`; normalise both the caller
+    # inputs and the backend-merged inputs to canonical casilla ids
+    # before the engine consumes them.
+    casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, casilla_inputs)
+    if backend_casilla_inputs is not None:
+        backend_casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, backend_casilla_inputs)
+    _raise_if_ledger_preflight_blocks_calculation(
+        work_unit=work_unit,
+        revision=snapshot.revision,
+        transaction_repository=ledger_preflight_transaction_repository,
+    )
     if iva_compensation_decision is None:
         iva_compensation_decision = _load_persisted_iva_compensation_decision_for_work_unit(
             work_unit,
@@ -1212,6 +1228,53 @@ def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
     return value.strip()
 
 
+_LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
+    {
+        "ledger_iva_aggregation",
+        "ledger_renta_expense_aggregation",
+    }
+)
+_ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
+
+
+def _raise_if_ledger_preflight_blocks_calculation(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    transaction_repository: TransactionCatalogueRepository | None = None,
+) -> None:
+    if not any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in revision.bindings):
+        return
+    from ..ledger import preflight_ledger_tax_readiness
+
+    report = preflight_ledger_tax_readiness(
+        bucket_id=work_unit.bucket_id,
+        period=_ledger_preflight_period_for_work_unit(work_unit),
+        transaction_repository=transaction_repository,
+    )
+    if report.ready:
+        return
+    first_issue = report.issues[0]
+    raise ModeloAggregationBindingError(
+        "ledger preflight blocks modelo calculation: "
+        f"{first_issue.transaction_id} {first_issue.reason.value}: {first_issue.detail}. "
+        f"Run `aeat app ledger preflight --period {report.period.raw}` before calculating."
+    )
+
+
+def _ledger_preflight_period_for_work_unit(work_unit: WorkUnit) -> str:
+    token = work_unit.period.strip().upper()
+    if token in {"1T", "2T", "3T", "4T"}:
+        return f"{work_unit.filing_year}Q{token[0]}"
+    if token in {"Q1", "Q2", "Q3", "Q4"}:
+        return f"{work_unit.filing_year}{token}"
+    if token in _ANNUAL_REGISTRY_PERIODS:
+        return str(work_unit.filing_year)
+    if len(token) == 2 and token.isdigit():
+        return f"{work_unit.filing_year}-{token}"
+    return token
+
+
 def calculate_modelo_revision_from_bucket_aggregation(
     work_unit_id: str,
     *,
@@ -1235,7 +1298,12 @@ def calculate_modelo_revision_from_bucket_aggregation(
     """Calculate a modelo revision using bucket-local ledger aggregation."""
 
     from ...domain.calculations.registry import RegistrySnapshotError
-    from ..aggregation import resolve_modelo_ledger_binding_values_from_repositories
+    from ..aggregation import (
+        CalculationSourceContext,
+        LedgerIvaAggregationSourceResolver,
+        LedgerRentaExpenseAggregationSourceResolver,
+        merge_source_resolutions,
+    )
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     work_units = wu_repo.load()
@@ -1263,17 +1331,40 @@ def calculate_modelo_revision_from_bucket_aggregation(
             f"could not be resolved: {exc}"
         ) from exc
 
-    ledger_bindings = resolve_modelo_ledger_binding_values_from_repositories(
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        revision=snapshot.revision,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
+    # Normalise operator-supplied casilla aliases (registry number / BOE
+    # form number) to canonical ids before the source-collision and
+    # bucket-merge checks compare them against registry casilla ids.
+    if casilla_inputs is not None:
+        casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, casilla_inputs)
+
+    source_resolution = merge_source_resolutions(
+        (
+            LedgerIvaAggregationSourceResolver(transaction_repository=transaction_repository).resolve(
+                CalculationSourceContext(
+                    bucket_id=work_unit.bucket_id,
+                    modelo=work_unit.modelo,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period,
+                    revision=snapshot.revision,
+                )
+            ),
+            LedgerRentaExpenseAggregationSourceResolver(
+                transaction_repository=transaction_repository,
+                invoice_repository=invoice_repository,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id=work_unit.bucket_id,
+                    modelo=work_unit.modelo,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period,
+                    revision=snapshot.revision,
+                )
+            ),
+        )
     )
-    _reject_caller_overrides_of_ledger_bindings(
+    _reject_caller_overrides_of_source_bindings(
         revision=snapshot.revision,
+        owned_sources=frozenset(source_resolution.owned_sources),
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
@@ -1282,7 +1373,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         casilla_inputs=casilla_inputs or {},
         bound_inputs=_resolve_bound_casilla_inputs_for_available_bindings(
             snapshot.revision,
-            ledger_bindings.binding_values,
+            source_resolution.binding_values,
         ),
     )
     return calculate_modelo_revision(
@@ -1290,14 +1381,15 @@ def calculate_modelo_revision_from_bucket_aggregation(
         actor=actor,
         casilla_inputs=casilla_inputs or {},
         binding_values=binding_values or {},
-        backend_binding_values=ledger_bindings.binding_values,
+        backend_binding_values=source_resolution.binding_values,
         backend_casilla_inputs=backend_inputs,
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
+        ledger_preflight_transaction_repository=transaction_repository,
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=relation_values,
-        source_transaction_ids=tuple(ledger_bindings.source_transaction_ids),
+        source_transaction_ids=tuple(source_resolution.source_transaction_ids),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
         calculation_repository=calculation_repository,
@@ -1381,7 +1473,9 @@ def _reject_binding_channel_mismatch(
         raise ModeloError(
             f"bindings {misrouted_to_enum!r} are consumed by the registry as Decimal "
             f"operands and must be supplied as Decimal binding values, not through the "
-            f"enum-binding channel"
+            f"enum-binding channel. `aeat app modelo bindings list` reports each "
+            f"binding's input_channel; a binding shown as input_channel=decimal "
+            f"takes a numeric --binding KEY=VALUE even when typed_enum is set"
         )
 
 
@@ -1523,49 +1617,54 @@ def _merge_bucket_bound_inputs(
     return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
 
 
-def _ledger_binding_ids(revision: ModeloRevision) -> frozenset[str]:
+def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:
     return frozenset(
         binding.id
         for binding in revision.bindings
-        if binding.source in {"ledger_iva_aggregation", "ledger_renta_expense_aggregation"}
+        if binding.source in owned_sources
     )
 
 
-def _ledger_bound_casilla_ids(revision: ModeloRevision) -> frozenset[str]:
-    ledger_binding_ids = _ledger_binding_ids(revision)
+def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:
+    source_owned_binding_ids = _source_owned_binding_ids(revision, owned_sources)
     return frozenset(
         casilla.id
         for casilla in revision.casillas
-        if casilla.input_kind == "bound" and casilla.binding in ledger_binding_ids
+        if casilla.input_kind == "bound" and casilla.binding in source_owned_binding_ids
     )
 
 
-def _reject_caller_overrides_of_ledger_bindings(
+def _reject_caller_overrides_of_source_bindings(
     *,
     revision: ModeloRevision,
+    owned_sources: frozenset[str],
     caller_binding_values: Mapping[str, Decimal],
     caller_casilla_inputs: Mapping[str, Decimal],
 ) -> None:
     """Refuse caller-supplied bindings or casilla inputs that collide with
-    values the bucket ledger aggregation owns.
+    values bucket source resolvers own.
 
-    Bucket-aggregation calculation derives ledger binding values (and the
-    casillas bound to them) from the transaction ledger. Letting a caller
-    override those silently would break calculation grounding: the
-    persisted revision would no longer reflect the ledger it claims to
-    aggregate. Both collisions are rejected before any value reaches the
-    engine.
+    Bucket-aggregation calculation derives source-owned binding values
+    (and the casillas bound to them) from bucket substrate. Letting a
+    caller override those silently would break calculation grounding:
+    the persisted revision would no longer reflect the sources it claims
+    to aggregate. Both collisions are rejected before any value reaches
+    the engine.
     """
 
-    rejected_bindings = sorted(set(caller_binding_values).intersection(_ledger_binding_ids(revision)))
+    rejected_bindings = sorted(
+        set(caller_binding_values).intersection(_source_owned_binding_ids(revision, owned_sources))
+    )
     if rejected_bindings:
         raise ModeloAggregationBindingError(
-            f"caller binding values cannot override bucket-derived ledger bindings: {rejected_bindings!r}"
+            f"caller binding values cannot override bucket-derived source bindings: {rejected_bindings!r}"
         )
-    rejected_casillas = sorted(set(caller_casilla_inputs).intersection(_ledger_bound_casilla_ids(revision)))
+    rejected_casillas = sorted(
+        set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources))
+    )
     if rejected_casillas:
         raise ModeloAggregationBindingError(
-            f"caller casilla inputs cannot override bucket-derived ledger bound casillas: {rejected_casillas!r}"
+            f"caller casilla inputs cannot override bucket-derived source bound casillas: {rejected_casillas!r}"
         )
 
 
@@ -1697,6 +1796,29 @@ def _reject_incomplete_amendment_casillas(
             f"amendment is incomplete: required casilla id(s) {missing!r} are not present "
             f"in the corrected map for modelo={modelo!r} filing_year={filing_year} period={period!r}"
         )
+
+
+def _normalize_casilla_input_aliases(
+    revision: ModeloRevision,
+    casilla_inputs: Mapping[str, Decimal],
+) -> dict[str, Decimal]:
+    """Resolve operator-supplied ``--casilla`` keys to canonical casilla ids.
+
+    The ``casillas`` discovery command surfaces a ``number`` column —
+    the registry number and BOE form number Spanish taxpayers read off
+    the paper form. Those numbers are legitimate operator-facing
+    identifiers, so a ``--casilla`` key supplied as an unambiguous
+    ``number`` or ``form_number`` is normalised here to the canonical
+    casilla ``id`` the calculation engine consumes. A key already equal
+    to a canonical ``id`` is unchanged; an unresolvable key passes
+    through verbatim so the engine still raises its unknown-casilla
+    refusal. A canonical ``id`` always wins over an alias collision.
+    """
+
+    if not casilla_inputs:
+        return dict(casilla_inputs)
+    alias_map = input_casilla_alias_map(revision)
+    return {alias_map.get(key, key): value for key, value in casilla_inputs.items()}
 
 
 def _reject_unknown_override_casillas(
@@ -1836,6 +1958,7 @@ def verify_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
@@ -1904,7 +2027,10 @@ def verify_modelo_revision(
         work_unit=work_unit,
         target=target,
     )
-    blocked_iva_wallet_decision = _persisted_blocked_iva_compensation_decision_for_work_unit(work_unit)
+    blocked_iva_wallet_decision = _persisted_blocked_iva_compensation_decision_for_work_unit(
+        work_unit,
+        repository=iva_compensation_decision_repository,
+    )
     if blocked_iva_wallet_decision is not None:
         findings.append(_iva_wallet_blocking_verification_finding(blocked_iva_wallet_decision))
     completeness, granted = _classify_verification_outcome(
@@ -2266,6 +2392,7 @@ def file_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: ModeloRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
@@ -2324,6 +2451,10 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
+    _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
+        work_unit,
+        repository=iva_compensation_decision_repository,
+    )
 
     now = clock or datetime.now(UTC)
     gate_engine = workflow_engine or _build_revision_workflow_engine(

@@ -35,6 +35,7 @@ class AeatDomains(_Frozen):
     www1: str = Field(min_length=1)
     www2: str = Field(min_length=1)
     www6: str = Field(min_length=1)
+    www12: str = Field(min_length=1)
     clave: str = Field(min_length=1)
     boe: str = Field(min_length=1)
 
@@ -52,6 +53,8 @@ class AeatSedePaths(_Frozen):
     certificate_selector: str
     census_g313_launcher: str
     expediente_detail_template: str
+    irpf_expediente_detail_year_prefix: str
+    irpf_expediente_detail_year_suffix: str
     notificaciones: str
     iva_compensation_wallet: str
 
@@ -62,9 +65,14 @@ class AeatClaveMovilSurface(_Frozen):
     selector_access_url_template: str = Field(min_length=1)
     selector_access_path_marker: str = Field(min_length=1)
     dialogo_representacion_path_marker: str = Field(min_length=1)
+    dialogo_representacion_path: str = Field(min_length=1)
     obtener_clave_movil_path_marker: str = Field(min_length=1)
     obtener_clave_movil_qr_path_marker: str = Field(min_length=1)
     cancelar_clave_movil_path_marker: str = Field(min_length=1)
+    obtener_clave_movil_qr_path: str = Field(min_length=1)
+    obtener_clave_movil_non_qr_path: str = Field(min_length=1)
+    autentica_dni_nie_contraste_path: str = Field(min_length=1)
+    cancelar_clave_movil_path: str = Field(min_length=1)
     authorize_button_selector: str = Field(min_length=1)
     non_qr_link_selector: str = Field(min_length=1)
     nif_input_selector: str = Field(min_length=1)
@@ -102,6 +110,7 @@ class AeatPre303Surface(_Frozen):
     iva_wallet_header_tokens: tuple[str, ...] = Field(min_length=1)
     iva_wallet_empty_page_tokens: tuple[str, ...] = Field(min_length=1)
     representation_own_name_selector: str = Field(min_length=1)
+    representation_own_name_label_selector: str = Field(min_length=1)
     representation_representative_selector: str = Field(min_length=1)
     representation_submit_selector: str = Field(min_length=1)
     alert_modal_selector: str = Field(min_length=1)
@@ -139,6 +148,32 @@ class AeatOracles(_Frozen):
     renta_web_open_app_template: str
 
 
+class AeatLiveSafety(_Frozen):
+    """Centralized allow-list labels for audited live AEAT browser actions."""
+
+    auth_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
+    wallet_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
+    declarations_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
+    csv_verify_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
+    consult_oracle_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
+    renta_web_open_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
+
+    @field_validator(
+        "auth_browser_action_patterns",
+        "wallet_browser_action_patterns",
+        "declarations_browser_action_patterns",
+        "csv_verify_browser_action_patterns",
+        "consult_oracle_browser_action_patterns",
+        "renta_web_open_browser_action_patterns",
+        mode="before",
+    )
+    @classmethod
+    def _tuples_from_toml_arrays(cls, value: object) -> object:
+        if isinstance(value, list):
+            return tuple(value)
+        return value
+
+
 class AeatSection(_Frozen):
     """Aggregates every AEAT-flavoured constant subsection.
 
@@ -165,6 +200,7 @@ class AeatSection(_Frozen):
     pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")
     help_pages: AeatHelpPages
     oracles: AeatOracles
+    live_safety: AeatLiveSafety
 
     @cached_property
     def pre303(self) -> AeatPre303Surface:

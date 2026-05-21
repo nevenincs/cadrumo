@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede import parse_iva_compensation_wallet_html
+from aeat.adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
@@ -90,7 +90,7 @@ def _wallet_observation(
         authenticated_identity=_TAXPAYER_NIF,
         target_year=target_year,
         target_period=target_period,
-        source_url="https://www1.agenciatributaria.gob.es/wlpl/DAI3-RUTI/CarteraCuotas",
+        source_url=IVA_COMPENSATION_WALLET_URL,
         captured_at=_DECIDED_AT,
     )
 
@@ -170,6 +170,7 @@ def _modelo_303_engine_inputs() -> dict[str, Decimal]:
 
 def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
+        _store_operator_profile()
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
         snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD)
@@ -185,6 +186,17 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         assert loaded_decision == report.decision
         assert report.decision.selected_authority == "aeat_wallet"
         assert report.decision.local_recurrence_amount == Decimal("1200.00")
+        assert {source.source_kind for source in report.decision.authority_sources} == {
+            "aeat_wallet",
+            "local_recurrence",
+            "filed_history_observation",
+        }
+        filed_history_source = next(
+            source for source in report.decision.authority_sources if source.source_kind == "filed_history_observation"
+        )
+        assert filed_history_source.source_modelo == "303"
+        assert filed_history_source.source_filing_year == _TARGET_YEAR
+        assert filed_history_source.source_periods == ("1T",)
 
         work_repo, calc_repo, event_repo = _work_unit_repositories()
         work_unit = create_work_unit(
@@ -221,8 +233,52 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         )
 
 
+def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        _store_operator_profile()
+        observation_repo = CalculationObservationRepository()
+        _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD)
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_NIF,
+            wallet=_wallet_observation(pending=Decimal("1200.00")),
+            repository=observation_repo,
+            decided_at=_DECIDED_AT,
+            persist=False,
+        )
+        assert IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, _TARGET_YEAR, _TARGET_PERIOD) is None
+
+        work_repo, calc_repo, event_repo = _work_unit_repositories()
+        work_unit = create_work_unit(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=_TARGET_YEAR,
+            period=_TARGET_PERIOD,
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_DECIDED_AT,
+        )
+
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="must be persisted"):
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=report.decision,
+                filing_period_date=date(2026, 6, 30),
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+                clock=_DECIDED_AT,
+            )
+        assert len(calc_repo.load()) == 0
+
+
 def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
+        _store_operator_profile()
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(
             observation_repo,
@@ -284,6 +340,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
 
 def test_wallet_divergence_blocks_real_modelo_303_engine_before_persisting_revision(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
+        _store_operator_profile()
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("800.00"))
         snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD)

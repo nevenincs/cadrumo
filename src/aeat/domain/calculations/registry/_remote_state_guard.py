@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from fnmatch import fnmatchcase
 from typing import Literal
 from urllib.parse import urlparse
 
@@ -129,6 +130,8 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     evidence_tier: RemoteEvidenceTier
     classification: CrossReferenceClassification
     allowed_hosts: tuple[str, ...] = Field(default_factory=tuple)
+    allowed_read_post_paths: tuple[str, ...] = Field(default_factory=tuple)
+    allowed_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     synthetic_data_allowed: bool
     requires_authentication: bool
     requires_aeat_authorization: bool
@@ -181,6 +184,22 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
                 raise RegistryValidationError(f"allowed host is not an AEAT host: {host!r}")
         return value
 
+    @field_validator("allowed_read_post_paths")
+    @classmethod
+    def _validate_read_post_paths(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        for path in value:
+            if not path.startswith("/"):
+                raise RegistryValidationError(f"allowed read POST path must be absolute: {path!r}")
+        return value
+
+    @field_validator("allowed_browser_action_patterns")
+    @classmethod
+    def _validate_allowed_browser_action_patterns(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        for pattern in value:
+            if not pattern.strip():
+                raise RegistryValidationError("allowed browser action pattern must not be blank")
+        return value
+
 
 class RemoteOperation(RemoteStateGuardModel):
     """One candidate browser/network/local operation before execution."""
@@ -231,6 +250,7 @@ def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecisio
         evidence_tier=evidence_tier,
         classification=classification,
         allowed_hosts=decision.allowed_hosts,
+        allowed_browser_action_patterns=_browser_action_patterns_for_decision(decision),
         synthetic_data_allowed=decision.synthetic_data_allowed,
         requires_authentication=decision.requires_authentication,
         requires_aeat_authorization=decision.requires_aeat_authorization,
@@ -268,9 +288,15 @@ def evaluate_remote_operation(policy: RemoteStateGuardPolicy, operation: RemoteO
 
 def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
     method = (operation.method or "").upper()
-    if method not in _READ_ONLY_HTTP_METHODS:
-        return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
     assert operation.url is not None
+    path = operation.url.path
+    read_post_allowed = (
+        method == "POST"
+        and policy.classification == "authenticated_read_surface"
+        and path in policy.allowed_read_post_paths
+    )
+    if method not in _READ_ONLY_HTTP_METHODS and not read_post_allowed:
+        return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
     host = operation.url.host
     if host is None or host.lower() not in policy.allowed_hosts:
         return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
@@ -293,6 +319,8 @@ def _evaluate_browser_action(policy: RemoteStateGuardPolicy, operation: RemoteOp
     token = _first_forbidden_token(normalized)
     if token is not None:
         return _blocked(policy, f"AEAT browser action token {token!r} is forbidden")
+    if policy.allowed_browser_action_patterns and not _matches_allowed_browser_action(policy, text):
+        return _blocked(policy, f"AEAT browser action {text!r} is not in the explicit read-only allow-list")
     return RemoteStateGuardResult(decision="allowed", reason="read-only browser action allowed", policy_id=policy.id)
 
 
@@ -312,6 +340,23 @@ def _first_declared_forbidden_action(policy: RemoteStateGuardPolicy, value: str)
         if action.lower() in value:
             return action
     return None
+
+
+def _matches_allowed_browser_action(policy: RemoteStateGuardPolicy, value: str) -> bool:
+    normalized = value.casefold()
+    return any(fnmatchcase(normalized, pattern.casefold()) for pattern in policy.allowed_browser_action_patterns)
+
+
+def _browser_action_patterns_for_decision(decision: LiveCrossReferenceDecision) -> tuple[str, ...]:
+    if decision.oracle_id in {"aeat-groi-spanish-roi-checker", "aeat-nif-iva-checker"}:
+        from ....core.config import Settings
+
+        return Settings.external_constants().aeat.live_safety.consult_oracle_browser_action_patterns
+    if decision.oracle_id == "modelo-100-renta-web-open":
+        from ....core.config import Settings
+
+        return Settings.external_constants().aeat.live_safety.renta_web_open_browser_action_patterns
+    return ()
 
 
 def _is_aeat_host(host: str) -> bool:

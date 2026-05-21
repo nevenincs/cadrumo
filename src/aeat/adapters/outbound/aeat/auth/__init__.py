@@ -29,6 +29,7 @@ from ._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
 )
 from ._clave_movil import (
+    CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
     ClaveMovilApprovalTimeoutError,
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
@@ -79,6 +80,7 @@ if TYPE_CHECKING:
 __all__ = [
     "AEAT_SESSION_IDLE_TTL",
     "CERTIFICATE_CONTEXT_MARKER",
+    "CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE",
     "AeatAccessGate",
     "AeatAuthenticator",
     "AeatGateEnvSnapshot",

@@ -28,7 +28,7 @@ from ...application.modelo import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
-    calculate_modelo_revision,
+    calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
     discard_work_unit,
     file_modelo_revision,
@@ -43,6 +43,7 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
+from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...domain.calculations.registry import RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
@@ -114,6 +115,12 @@ app = typer.Typer(
 )
 
 
+def _bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
+    """Render registered domain errors before crossing the Typer boundary."""
+
+    return typer.BadParameter(resolve_error_message(exc))
+
+
 def _resolve_default_actor() -> str:
     """Return the active profile display_name, or a permanent fallback label.
 
@@ -169,7 +176,7 @@ def _run_query[T](call: Callable[[], T]) -> T:
     try:
         return call()
     except (ValueError, RegistrySnapshotError) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
 
 @app.command(
@@ -401,6 +408,37 @@ def _readiness_for_source(source: str) -> str:
     return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
 
 
+def _profile_resolved_binding_ids(report: object) -> frozenset[str]:
+    """Return binding ids the active profile already resolves for a report's scope.
+
+    Backs ``bindings list --missing``: a binding the active profile
+    satisfies is no longer something the operator owes. Resolution
+    needs a concrete filing year; a report with no resolved
+    ``filing_year`` (the unscoped, no-``--year`` listing) yields an
+    empty set and ``--missing`` then drops only constant bindings. A
+    bucket with no active profile likewise yields an empty set.
+    """
+
+    filing_year = getattr(report, "filing_year", None)
+    if filing_year is None:
+        return frozenset()
+    from ...application.modelo._binding_readiness import profile_resolvable_binding_ids
+
+    try:
+        bucket_id = _active_bucket_id()
+    except typer.BadParameter:
+        return frozenset()
+    try:
+        return profile_resolvable_binding_ids(
+            modelo=str(report.code),
+            bucket_id=bucket_id,
+            filing_year=int(filing_year),
+            period=getattr(report, "period", None),
+        )
+    except Exception:
+        return frozenset()
+
+
 def _parse_kv_spec[T](
     spec: str,
     *,
@@ -493,6 +531,17 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
     if not token:
         raise typer.BadParameter(tr("cli.common.errors.period_empty"))
     lowered = token.lower()
+    # When the token matches a registry-declared period for the modelo
+    # verbatim (case-insensitively) it is already the registry period —
+    # return it directly. This is the only path that resolves the
+    # non-date census / event tokens ("alta", "modificacion", "baja",
+    # "AD-HOC") declared by census modelos (036, 308, ...); for quarterly
+    # / annual modelos it short-circuits to the same value the
+    # composition branches below would produce.
+    declared = _declared_period_tokens(modelo)
+    declared_match = next((d for d in declared if d.lower() == lowered), None)
+    if declared_match is not None:
+        return year, declared_match
     if lowered in {"annual", "anual", "0a"}:
         composed = f"{year}"
     elif lowered in {"q1", "1t", "1"}:
@@ -647,8 +696,13 @@ def bindings_list(
 
     With no filter, the full configured-binding set across every modelo
     in the registry is returned. ``--modelo`` narrows to one modelo;
-    ``--year`` + ``--period`` further narrow to that revision; ``--missing``
-    filters to bindings whose source is not constant-valued.
+    ``--year`` + ``--period`` further narrow to that revision. ``--year``
+    alone resolves the revision covering that filing year — the same
+    revision a work unit created for the same modelo / year resolves —
+    so the reported binding ids match the calculation. ``--missing``
+    filters to the bindings not yet resolvable from current state: it
+    drops constant-valued bindings and any binding the active profile
+    already satisfies.
     """
 
     service = _service()
@@ -666,6 +720,17 @@ def bindings_list(
                         as_of=_as_of(as_of),
                     )
                 )
+            elif year is not None:
+                # --year alone: resolve the revision covering that year
+                # rather than the latest revision, so a multi-revision
+                # modelo (e.g. Modelo 100) reports the right binding ids.
+                report = _run_query(
+                    lambda code=target, fy=year: service.bindings_for_year(
+                        code,
+                        filing_year=fy,
+                        as_of=_as_of(as_of),
+                    )
+                )
             else:
                 report = _run_query(lambda code=target: service.bindings(code, period=period, as_of=_as_of(as_of)))
         except Exception:
@@ -678,7 +743,12 @@ def bindings_list(
     for report in per_modelo_reports:
         rows = report.rows
         if missing:
-            rows = tuple(row for row in rows if row.source != "constant_value")
+            profile_resolved = _profile_resolved_binding_ids(report)
+            rows = tuple(
+                row
+                for row in rows
+                if row.source != "constant_value" and row.binding_id not in profile_resolved
+            )
         for row in rows:
             merged_rows.append(
                 {
@@ -690,13 +760,14 @@ def bindings_list(
                     "source": row.source,
                     "readiness": _readiness_for_source(row.source),
                     "typed_enum": row.typed_enum,
+                    "input_channel": row.input_channel,
                     "borrador_capable": row.borrador_capable,
                 }
             )
             text_rows.append(
                 f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
                 f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}\t"
-                f"{row.borrador_capable}"
+                f"{row.input_channel}\t{row.borrador_capable}"
             )
     payload = {
         "operation": "registry.modelo.bindings.list",
@@ -714,7 +785,7 @@ def bindings_list(
         f"period_filter\t{period or '-'}",
         f"missing_filter\t{missing}",
         f"binding_count\t{len(merged_rows)}",
-        "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tborrador_capable",
+        "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable",
     ]
     lines.extend(text_rows)
     _emit(ctx, payload, lines)
@@ -1351,7 +1422,7 @@ def work_status(
     try:
         unit = get_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
     payload = {
         "operation": "modelo.work.status",
         **_work_unit_payload(unit),
@@ -1383,7 +1454,7 @@ def work_rename(
     try:
         unit = rename_work_unit(work_unit_id, name, actor=actor or _resolve_default_actor())
     except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
     payload = {
         "operation": "modelo.work.rename",
         **_work_unit_payload(unit),
@@ -1437,7 +1508,7 @@ def work_discard(
     try:
         unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
     payload = {
         "operation": "modelo.work.discard",
         **_work_unit_payload(unit),
@@ -1477,6 +1548,11 @@ def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, object]
             }
             for obs in rev.observations
         ],
+        # Headline result summary: registry-declared result-to-pay /
+        # result-to-refund total plus the modelo's key computed
+        # casillas, so the JSON consumer gets the same lead figures the
+        # text surface shows.
+        "result_summary": _result_summary_payload(rev),
         "binding_overrides": dict(rev.binding_overrides),
         "inputs_snapshot": dict(rev.inputs_snapshot),
         "created_at": rev.created_at.isoformat(),
@@ -1487,6 +1563,55 @@ def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, object]
         "filed_by": rev.filed_by,
         "superseded_at": rev.superseded_at.isoformat() if rev.superseded_at else None,
     }
+
+
+def _result_summary_lines(rev: CalculationRevision) -> list[str]:
+    """Return the headline-result summary block for a calculation revision.
+
+    Leads ``work calculate`` / ``work revision`` text output: a flat
+    dump of every casilla (2235 rows for Modelo 100) buries the figures
+    an operator looks for. The summary surfaces the registry-declared
+    result-to-pay / result-to-refund total and the modelo's key
+    computed casillas above the full table. Returns an empty list when
+    no registry-grounded summary is available; the full table then
+    stands alone.
+    """
+
+    from ...application.modelo import calculation_result_summary
+
+    summary = calculation_result_summary(rev)
+    if summary is None or not summary.rows:
+        return []
+    header = tr(
+        "cli.app.modelo.work.result_summary_header",
+        default="result summary  %{modelo} %{year} %{period}",
+        modelo=summary.modelo,
+        year=summary.filing_year,
+        period=summary.period,
+    )
+    lines = [header, "role\tcasilla\tvalue\tlabel"]
+    for row in summary.rows:
+        lines.append(f"{row.role}\t{row.casilla_id}\t{row.value}\t{row.label}")
+    return lines
+
+
+def _result_summary_payload(rev: CalculationRevision) -> list[dict[str, object]]:
+    """Return the headline-result summary rows for the JSON payload."""
+
+    from ...application.modelo import calculation_result_summary
+
+    summary = calculation_result_summary(rev)
+    if summary is None:
+        return []
+    return [
+        {
+            "role": row.role,
+            "casilla_id": row.casilla_id,
+            "value": str(row.value),
+            "label": row.label,
+        }
+        for row in summary.rows
+    ]
 
 
 def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
@@ -1505,6 +1630,11 @@ def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
         lines.append(f"filed_by\t{rev.filed_by}")
     if rev.superseded_at is not None:
         lines.append(f"superseded_at\t{rev.superseded_at.isoformat()}")
+    # The headline result summary leads the casilla table so the key
+    # figures are readable without scanning the full dump.
+    summary_lines = _result_summary_lines(rev)
+    if summary_lines:
+        lines.extend(summary_lines)
     for casilla, value in sorted(rev.casilla_values.items()):
         lines.append(f"casilla\t{casilla}\t{value}")
     return lines
@@ -1694,7 +1824,7 @@ def work_calculate(
             ) from exc
 
     try:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation(
             work_unit_id,
             actor=actor or _resolve_default_actor(),
             casilla_inputs=casilla_inputs,
@@ -1717,7 +1847,7 @@ def work_calculate(
         Modelo100BorradorBindingError,
         ModeloIvaWalletReconciliationBlocked,
     ) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     # The casilla table alone gives the operator no signal that the
     # result was persisted. Each calculate writes a `borrador` revision
@@ -1801,7 +1931,7 @@ def work_revision(
     try:
         revision = get_calculation_revision(calculation_revision_id)
     except CalculationRevisionNotFoundError as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
     payload = {
         "operation": "modelo.work.revision",
         **_calculation_revision_payload(revision),
@@ -1978,7 +2108,7 @@ def work_verify(
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
     ) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     payload = {
         "operation": "modelo.work.verify",
@@ -2029,7 +2159,7 @@ def work_file(
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
     ) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     payload = {
         "operation": "modelo.work.file",
@@ -2074,7 +2204,7 @@ def work_resume(
     try:
         result = resume_modelo_workflow(workflow_run_id)
     except (WorkflowResumeRefusedError, WorkflowError) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     payload = {
         "operation": "modelo.work.resume",
@@ -2216,7 +2346,7 @@ def work_amend(
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
     ) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     payload = {
         "operation": "modelo.work.amend",
@@ -2348,7 +2478,7 @@ def verification_report_show(
     try:
         report = get_verification_report(verification_report_id)
     except VerificationReportNotFoundError as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     payload = {
         "operation": "modelo.verification_report.show",
@@ -2371,7 +2501,7 @@ def filing_record_show(
     try:
         record = get_filing_record(filing_record_id)
     except ModeloRecordNotFoundError as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     payload = {
         "operation": "modelo.filing_record.show",
@@ -2455,7 +2585,7 @@ def filing_record_import(
         WorkUnitMutationRefusedError,
         ExternalModeloImportError,
     ) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     payload = {
         "operation": "modelo.filing_record.import",
@@ -3027,7 +3157,7 @@ def modelo_export_verb(
         ModeloExportNoActiveBucketError,
         ModeloIvaWalletReconciliationBlocked,
     ) as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise _bad_parameter_from_error(exc) from exc
 
     payload = result.model_dump(mode="json")
     lines = [

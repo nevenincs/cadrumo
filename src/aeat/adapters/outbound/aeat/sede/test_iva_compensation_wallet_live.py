@@ -1,10 +1,10 @@
 """Opt-in live smoke test for the AEAT IVA compensation wallet reader.
 
 Runs only when ``AEAT_LIVE_TESTS_ENABLED=1`` is set. The test acquires
-an operator-approved Cl@ve Móvil session against the wallet URL and
-then drives the same read-only adapter used by the application capture
-workflow. It asserts structural evidence only; it never embeds an
-operator's tax amounts into source or snapshots.
+an operator-approved Cl@ve Móvil session against the Pre303 presentation
+surface and then drives the same read-only wallet adapter used by the
+application capture workflow. It asserts structural evidence only; it
+never embeds an operator's tax amounts into source or snapshots.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import pytest
 from aeat.adapters.outbound.aeat.sede._errors import SedeError
 from aeat.adapters.outbound.aeat.sede._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
+    PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
 )
 from aeat.adapters.persistence.storage import get_master_key_provider
@@ -39,7 +40,7 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
                 settings,
                 kind=AuthProviderKind.CLAVE_MOVIL,
                 operation="sede-iva-wallet-live-test",
-                target_url=IVA_COMPENSATION_WALLET_URL,
+                target_url=PRE303_PRESENTATION_SERVICE_URL,
             )
     except AeatError as exc:
         pytest.fail(f"Cl@ve-móvil live authentication is not available: {exc}")

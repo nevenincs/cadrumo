@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
+from openpyxl import load_workbook
 from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -33,7 +34,7 @@ from aeat.application.filing import (
     export_draft,
 )
 from aeat.core.config import Settings
-from aeat.core.resources import resources
+from aeat.core.resources import bundled_path, resources
 from aeat.domain.calculations.registry import (
     RegistryValidationError,
     calculate_registry_snapshot,
@@ -72,6 +73,14 @@ _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _SUBMITTED_FILE_130_2026_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-130-2026-1T-redacted.txt"
 _SUBMITTED_FILE_111_2025_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
 _SUBMITTED_FILE_100_2023_0A = _FIXTURE_ROOT / "submitted-files" / "modelo-100-2023-0A-redacted.xml"
+_MODELO_303_2022_RECORD_DESIGN = bundled_path(
+    "corpus",
+    "aeat_official",
+    "disenos_registro",
+    "modelo_303",
+    "files",
+    "02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx",
+)
 _MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"})
 
 
@@ -96,11 +105,18 @@ def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_
     assert selected.expediente_id == "202430313521428B"
 
 
-def _declaration_row(*, expediente_id: str, presented_at: datetime, estado: str = "ALTA") -> Declaracion:
+def _declaration_row(
+    *,
+    expediente_id: str,
+    presented_at: datetime,
+    estado: str = "ALTA",
+    ejercicio: int = 2024,
+    period: str = "3T",
+) -> Declaracion:
     return Declaracion(
         modelo="303",
-        ejercicio=2024,
-        period="3T",
+        ejercicio=ejercicio,
+        period=period,
         expediente_id=expediente_id,
         estado=estado,
         presented_at=presented_at,
@@ -119,6 +135,20 @@ def _modelo_130_snapshot():
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
+
+
+def _modelo_303_design_position(workbook_path: Path, *, casilla_id: str) -> int:
+    workbook = load_workbook(workbook_path, read_only=True, data_only=True)
+    try:
+        worksheet = workbook["DP30303"]
+        marker = f"[{casilla_id}]"
+        for row in worksheet.iter_rows(values_only=True):
+            position, description = row[1], row[4]
+            if isinstance(position, int) and isinstance(description, str) and marker in description:
+                return position
+    finally:
+        workbook.close()
+    raise AssertionError(f"official Modelo 303 page-03 design does not define casilla {casilla_id}")
 
 
 def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
@@ -155,6 +185,44 @@ def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
         "69": "-258.02",
         "71": "-258.02",
     }
+
+
+def test_modelo_303_2022_submitted_file_fallback_uses_2022_result_position() -> None:
+    snapshot = _modelo_snapshot("303", filing_year=2022, period="1T")
+    casilla_71_position = _modelo_303_design_position(_MODELO_303_2022_RECORD_DESIGN, casilla_id="71")
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+        content_type="application/octet-stream",
+        byte_count=1017,
+        sha256="0" * 64,
+        captured_at=datetime(2022, 4, 20, 13, 7, 33, tzinfo=UTC),
+    )
+
+    observed = _observed_casillas_from_submitted_file(
+        snapshot=snapshot,
+        declaration=_declaration_row(
+            ejercicio=2022,
+            period="1T",
+            expediente_id="202230313521429A",
+            presented_at=datetime(2022, 4, 20, 13, 7, 33, tzinfo=UTC),
+        ),
+        body=_modelo_303_page_03_payload(
+            casilla_110="00000000000000000",
+            casilla_78="00000000000000000",
+            casilla_87="00000000000000000",
+            casilla_69="N0000000000025802",
+            casilla_71="N0000000000025802",
+            casilla_71_position=casilla_71_position,
+            filler_at_374="X",
+        ),
+        artefact=artefact,
+    )
+
+    assert {casilla.casilla_id: casilla.value for casilla in observed}["71"] == "-258.02"
+    assert next(casilla for casilla in observed if casilla.casilla_id == "71").source_locator == (
+        f"record:T30303:pos:{casilla_71_position}:width:17"
+    )
 
 
 def test_modelo_303_submitted_file_fallback_refuses_invalid_page_record_footer() -> None:
@@ -214,6 +282,8 @@ def _modelo_303_page_03_payload(
     casilla_87: str,
     casilla_69: str,
     casilla_71: str,
+    casilla_71_position: int = 374,
+    filler_at_374: str | None = None,
 ) -> bytes:
     page = list("<T30303000>" + (" " * (1017 - len("<T30303000>"))))
     for position, raw in (
@@ -221,9 +291,11 @@ def _modelo_303_page_03_payload(
         (272, casilla_78),
         (289, casilla_87),
         (323, casilla_69),
-        (374, casilla_71),
+        (casilla_71_position, casilla_71),
     ):
         page[position - 1 : position - 1 + len(raw)] = raw
+    if filler_at_374 is not None:
+        page[373 : 373 + len(filler_at_374)] = filler_at_374
     page[1005:1017] = list("</T30303000>")
     return "".join(page).encode("latin-1")
 
@@ -1059,11 +1131,15 @@ class TestReadOperationGuard:
             "https://www6.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=S3RASL6U73H49Y83",
         )
 
-    def test_declaration_copy_action_allowed(self) -> None:
-        _assert_read_browser_action("Copia de la declaracion")
+    def test_declaration_pdf_action_allowed(self) -> None:
+        _assert_read_browser_action("open-cotejo-pdf")
 
     def test_submitted_file_download_action_allowed(self) -> None:
-        _assert_read_browser_action("Descarga fichero presentado")
+        _assert_read_browser_action("download-filed-data-file")
+
+    def test_unclassified_browser_action_rejected(self) -> None:
+        with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+            _assert_read_browser_action("new-unreviewed-declarations-click")
 
     def test_register_download_get_allowed(self) -> None:
         _assert_read_http(

@@ -18,7 +18,7 @@ engine actually reads.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from datetime import date
 from typing import Protocol, runtime_checkable
 
@@ -110,13 +110,38 @@ class ModeloInputsProviderProtocol(Protocol):
         ...
 
 
+class WorkflowExpedienteProtocol(Protocol):
+    modelo: str | None
+    ejercicio: int | None
+
+
+class WorkflowNotificationProtocol(Protocol):
+    tipo: str
+    leida: bool | None
+    certificado_id: str
+    concepto: str
+
+
+class WorkflowNotificationsSnapshotProtocol(Protocol):
+    rows: Sequence[WorkflowNotificationProtocol]
+
+
+ExpedientesSource = Callable[[object, str | None], Awaitable[tuple[WorkflowExpedienteProtocol, ...]]]
+NotificationsSource = Callable[[object], Awaitable[WorkflowNotificationsSnapshotProtocol]]
+
+
 # Re-exported for adapter convenience (tests use the fully-qualified
 # path directly, so this exists purely to keep `_adapters.py` tidy).
 __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineProtocol",
+    "ExpedientesSource",
     "ModeloDraftBuilderProtocol",
     "ModeloInputsProviderProtocol",
+    "NotificationsSource",
     "RegistryModeloDraftProtocol",
     "SubmissionEngineProtocol",
+    "WorkflowExpedienteProtocol",
+    "WorkflowNotificationProtocol",
+    "WorkflowNotificationsSnapshotProtocol",
 ]

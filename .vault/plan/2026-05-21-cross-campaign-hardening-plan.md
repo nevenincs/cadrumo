@@ -49,13 +49,13 @@ application↔domain private-import sites.
 - [x] `P03.S11` - XDOM-3: import `FiledDeclaracionObservation` from the public `sede` surface; `src/aeat/adapters/outbound/aeat/sede`.
 - [x] `P03.S12` - XDOM-4: promote `_normalise_key` to the `domain.profile` public surface; `src/aeat/domain/profile`.
 - [x] `P03.S13` - XDOM-5: add public accessor for `_profile_binding_selectors` on `domain.user_profile`; `src/aeat/domain/user_profile`.
-- [ ] `P03.S14` - XDOM-6: add public export for the auth-diagnostics namespace constant; `src/aeat/application/auth`.
+- [x] `P03.S14` - XDOM-6: add public export for the auth-diagnostics namespace constant; `src/aeat/application/auth`.
 
 ### Phase `P04` - HIGH: binding-source retirement
 
 Close the `"invoice"` source-kind drift.
 
-- [ ] `P04.S15` - BIND-1: close the `"invoice"` wildcard in `resolve_counterpart_binding_row_values`; `src/aeat/domain/calculations/registry`.
+- [x] `P04.S15` - BIND-1: close the `"invoice"` wildcard in `resolve_counterpart_binding_row_values`; `src/aeat/domain/calculations/registry`.
 - [ ] `P04.S16` - BIND-2: snapshot-build rejection of retired `source = "invoice"` bindings; `src/aeat/domain/calculations/registry`.
 
 ### Phase `P05` - HIGH: provenance + roundtrip coverage

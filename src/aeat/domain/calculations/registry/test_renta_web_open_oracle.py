@@ -6,9 +6,14 @@ from decimal import Decimal
 
 import pytest
 
+from aeat.core.config import Settings
+
+from ._errors import RegistryValidationError
 from ._live_parity import ParityFieldComparison
 from ._remote_state_guard import (
+    RemoteOperation,
     RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
 from ._renta_web_open_oracle import (
@@ -29,6 +34,7 @@ def _open_simulator_policy() -> RemoteStateGuardPolicy:
         evidence_tier="executable_parity_evidence",
         surface="open_simulator",
         guard_policy_id="modelo-100-renta-web-open-read-only",
+        oracle_id="modelo-100-renta-web-open",
         allowed_hosts=("sede.agenciatributaria.gob.es", "www2.agenciatributaria.gob.es"),
         allowed_methods=("GET", "POST"),
         forbidden_actions=(
@@ -76,6 +82,37 @@ def test_planned_operations_lists_get_navigate_fill_scrape_and_discard() -> None
     http_operations = tuple(op for op in plan if op.kind == "http")
     assert len(http_operations) == 1
     assert http_operations[0].method == "GET"
+
+
+def test_live_driver_plans_casilla_override_and_scrape_navigation() -> None:
+    from aeat.adapters.outbound.aeat.sede._renta_web_open import RentaWebOpenSedeDriver
+
+    payload = b'{"casilla_overrides": {"0528": "5000,00"}, "scrape_casillas": ["0695"]}'
+    plan = RentaWebOpenSedeDriver().planned_operations(payload, expected={"0180": object()})
+    actions = tuple(op.action for op in plan if op.kind == "browser_action")
+
+    assert "navigate-to-casilla:0528" in actions
+    assert "apply-casilla-override:0528" in actions
+    assert "navigate-to-resumen" in actions
+    assert "navigate-to-casilla:0695" in actions
+
+
+def test_renta_policy_rejects_unclassified_browser_action() -> None:
+    policy = _open_simulator_policy()
+
+    assert (
+        "requires-renta-web-open-driver"
+        in Settings.external_constants().aeat.live_safety.renta_web_open_browser_action_patterns
+    )
+    assert_remote_operation_allowed(
+        policy,
+        RemoteOperation(kind="browser_action", action="requires-renta-web-open-driver"),
+    )
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        assert_remote_operation_allowed(
+            policy,
+            RemoteOperation(kind="browser_action", action="new-unreviewed-renta-click"),
+        )
 
 
 def test_planned_operations_rejects_empty_expected_mapping() -> None:

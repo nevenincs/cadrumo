@@ -21,6 +21,7 @@ from aeat.adapters.outbound.aeat.sede._nif_iva_check import (
     NifIvaCheckObservation,
     NifIvaCheckResult,
     NifIvaCheckSedeDriver,
+    _assert_query_browser_action,
     extract_verdict_from_response_text,
     is_aeat_auth_gate_redirect,
 )
@@ -65,6 +66,13 @@ def test_planned_operations_rejects_empty_expected() -> None:
 
     with pytest.raises(RegistryValidationError, match="at least one expected NIF"):
         driver.planned_operations(b"", expected={})
+
+
+def test_direct_driver_query_guard_rejects_unclassified_browser_action() -> None:
+    _assert_query_browser_action("open-nif-iva-form")
+    _assert_query_browser_action("check-nif-DE111222333")
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        _assert_query_browser_action("new-unreviewed-nif-iva-action")
 
 
 def test_default_timeout_is_thirty_seconds() -> None:

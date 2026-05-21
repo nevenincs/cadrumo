@@ -15,6 +15,8 @@ from __future__ import annotations
 import pytest
 from pydantic import AnyUrl
 
+from aeat.core.config import Settings
+
 from ._errors import RegistryValidationError
 from ._groi_oracle import (
     AEAT_GROI_URL,
@@ -41,6 +43,9 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
         allowed_hosts=("www2.agenciatributaria.gob.es",),
+        allowed_browser_action_patterns=(
+            Settings.external_constants().aeat.live_safety.consult_oracle_browser_action_patterns
+        ),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=True,
         requires_authentication=False,
@@ -110,6 +115,14 @@ def test_verify_payload_without_driver_returns_unverifiable_after_guard_prefligh
     assert result.oracle_id == GROI_ORACLE_ID
     assert result.cross_reference_id == policy.id
     assert "no executable driver configured" in result.narrative
+
+
+def test_groi_policy_rejects_unclassified_browser_action() -> None:
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        assert_remote_operation_allowed(
+            _aeat_policy(),
+            RemoteOperation(kind="browser_action", action="new-unreviewed-groi-click"),
+        )
 
 
 def test_verify_payload_reports_guard_block_when_aeat_host_not_in_policy() -> None:

@@ -17,11 +17,9 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ._authenticator import BrowserResponseLike
 
 import pytest
 
@@ -36,10 +34,23 @@ from ._clave_movil import (
     ClaveMovilFailureMode,
     _classify_identity,
     _ClaveMovilSessionMetadata,
+    _extract_verification_code_from_html,
 )
 from ._providers import AuthProviderKind, ClaveMovilSessionDetail
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
+if TYPE_CHECKING:
+    from ._authenticator import BrowserResponseLike
+
+_EXTERNAL = Settings.external_constants()
+_DOMAINS = _EXTERNAL.aeat.domains
+_CLAVE_SURFACE = _EXTERNAL.aeat.clave_movil
+_PRE303_SURFACE = _EXTERNAL.aeat.pre303
+
+
+def _aeat_url(origin: str, path: str) -> str:
+    return f"{origin}{path}"
 
 
 @pytest.fixture(autouse=True)
@@ -78,11 +89,11 @@ class _RecordingPage:
         del timeout
         self.gotos.append(url)
         # Simulate AEAT's selector dispatch. An authenticated resume
-        # navigation to SelectorAccesos.html bounces straight through to
+        # navigation to the AEAT selector bounces straight through to
         # the protected target path. Fresh-login navigations land on the
         # selector page itself (then our provider clicks through).
-        if self._authenticated and "SelectorAccesos.html" in url:
-            self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
+        if self._authenticated and _CLAVE_SURFACE.selector_access_path_marker in url:
+            self.url = _aeat_url(_DOMAINS.www6, self._target_path)
         else:
             self.url = url
 
@@ -95,12 +106,12 @@ class _RecordingPage:
         self.clicks.append(selector)
         # First click advances the selector to the QR page; subsequent clicks
         # are for the non-QR fallback (continue, continuar).
-        if selector == 'button[name="autoriza-P"]':
-            self.url = "https://www2.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovilQR"
-        elif selector == 'a[href*="ObtenerClaveMovil?qAA=2"]':
-            self.url = "https://www2.agenciatributaria.gob.es/wlpl/BUCV-JDIT/AutenticaDniNieContrasteh"
-        elif selector == "#botonContinuar":
-            self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
+        if selector == _CLAVE_SURFACE.authorize_button_selector:
+            self.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_qr_path)
+        elif selector == _CLAVE_SURFACE.non_qr_link_selector:
+            self.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.autentica_dni_nie_contraste_path)
+        elif selector in (_CLAVE_SURFACE.continue_button_selector, _PRE303_SURFACE.representation_submit_selector):
+            self.url = _aeat_url(_DOMAINS.www6, self._target_path)
 
     async def fill(self, selector: str, value: str) -> None:
         self.fills.append((selector, value))
@@ -113,8 +124,8 @@ class _RecordingPage:
         del selector, timeout
 
     async def text_content(self, selector: str) -> str | None:
-        if selector == "#spanCodigoVerificacion":
-            self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
+        if selector == _CLAVE_SURFACE.verification_code_selector:
+            self.url = _aeat_url(_DOMAINS.www6, self._target_path)
             return self._verification_code
         return None
 
@@ -124,12 +135,29 @@ class _RecordingPage:
     async def wait_for_url(self, matcher: str | Callable[[str], bool], *, timeout: float | None = None) -> None:
         del timeout
         # Simulate AEAT browser completion that redirects to the target.
-        self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
+        self.url = _aeat_url(_DOMAINS.www6, self._target_path)
         if not isinstance(matcher, str) and not matcher(self.url):
             raise TimeoutError("matcher rejected simulated URL")
 
     async def close(self) -> None:
         self.closed = True
+
+
+class _SelectorDispatchPage(_RecordingPage):
+    async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
+        del timeout
+        self.gotos.append(url)
+        self.url = url
+
+        class _RecordingResponse:
+            status = 200
+
+        return _RecordingResponse()
+
+    async def click(self, selector: str) -> None:
+        self.clicks.append(selector)
+        if selector == _CLAVE_SURFACE.authorize_button_selector:
+            self.url = _aeat_url(_DOMAINS.www1, self._target_path)
 
 
 class _PendingPetitionPage(_RecordingPage):
@@ -143,6 +171,33 @@ class _PendingPetitionPage(_RecordingPage):
 class _NoPushWaitStatePage(_RecordingPage):
     async def content(self) -> str:
         return "<html><body>Servicio no disponible temporalmente</body></html>"
+
+
+class _CancelResponse:
+    def __init__(self, *, status: int = 200) -> None:
+        self.status = status
+        self.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.cancelar_clave_movil_path)
+
+
+class _CancelableClavePage(_RecordingPage):
+    def __init__(self, *, target_path: str, status: int = 200) -> None:
+        super().__init__(target_path=target_path)
+        self.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
+        self.cancel_response = _CancelResponse(status=status)
+        self.evaluate_calls = 0
+        self.wait_for_response_calls = 0
+
+    async def evaluate(self, script: str) -> bool:
+        del script
+        self.evaluate_calls += 1
+        return True
+
+    async def wait_for_response(self, matcher: Callable[[object], bool], *, timeout: float | None = None) -> object:
+        del timeout
+        self.wait_for_response_calls += 1
+        if matcher(self.cancel_response):
+            return self.cancel_response
+        raise TimeoutError("cancel response matcher did not match")
 
 
 class _RecordingContext:
@@ -177,6 +232,13 @@ class _RecordingContext:
 
     async def close(self) -> None:
         self.closed = True
+
+
+class _SelectorDispatchContext(_RecordingContext):
+    async def new_page(self) -> _SelectorDispatchPage:
+        page = _SelectorDispatchPage(target_path=self._target_path)
+        self.pages.append(page)
+        return page
 
 
 class _RecordingBrowserSession:
@@ -216,6 +278,20 @@ class _RecordingBrowserSession:
 
     async def close(self) -> None:
         self.closed = True
+
+
+class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
+    async def create_context(
+        self,
+        *,
+        provisioner: object | None = None,
+        storage_state_path: Path | None = None,
+        storage_state: dict[str, object] | None = None,
+    ) -> _SelectorDispatchContext:
+        del provisioner, storage_state_path, storage_state
+        context = _SelectorDispatchContext(target_path=self._target_path)
+        self.contexts.append(context)
+        return context
 
 
 def _settings_for(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
@@ -322,15 +398,15 @@ class TestAuthenticateFresh:
             assert browser_session.contexts, "a context must have been created"
             page = browser_session.contexts[0].pages[0]
             assert page.gotos[0].startswith(
-                "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/"
+                _CLAVE_SURFACE.selector_access_url_template.split("{target}", 1)[0]
             )
-            assert 'button[name="autoriza-P"]' in page.clicks
+            assert _CLAVE_SURFACE.authorize_button_selector in page.clicks
             # No form fill (QR flow skips the non-QR form entirely)
             assert page.fills == []
             # provider_detail is Cl@ve-shaped
             assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
             assert session.provider_detail.dni_nie == "12345678Z"
-            assert session.provider_detail.landing_url == (f"https://www6.agenciatributaria.gob.es{target_path}")
+            assert session.provider_detail.landing_url == _aeat_url(_DOMAINS.www6, target_path)
 
         asyncio.run(run())
 
@@ -357,8 +433,56 @@ class TestAuthenticateFresh:
             page = browser_session.contexts[0].pages[0]
             assert ("#NIF", "12345678Z") in page.types
             assert ("#FECHA", "2030-01-01") in page.types
-            assert page.clicks.count('button[name="autoriza-P"]') == 1
-            assert "#botonContinuar" in page.clicks
+            assert page.clicks.count(_CLAVE_SURFACE.authorize_button_selector) == 1
+            assert _CLAVE_SURFACE.continue_button_selector in page.clicks
+
+        asyncio.run(run())
+
+    def test_non_qr_fallback_fills_nie_support_form(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(
+            tmp_path,
+            monkeypatch,
+            AEAT_CLAVE_MOVIL_DNI_NIE="Y0000000Z",
+            AEAT_CLAVE_MOVIL_NIE_SOPORTE="E00000000",
+            AEAT_CLAVE_PREFER_NON_QR="true",
+        )
+        provider = ClaveMovilAuthProvider(settings)
+        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+
+        async def run() -> None:
+            session = await provider.authenticate(browser_session=browser_session)
+            detail = session.provider_detail
+            assert isinstance(detail, ClaveMovilSessionDetail)
+            assert detail.used_non_qr_fallback is True
+            page = browser_session.contexts[0].pages[0]
+            assert ("#NIF", "Y0000000Z") in page.types
+            assert ("#SOPORTE", "E00000000") in page.types
+            assert page.clicks.count(_CLAVE_SURFACE.authorize_button_selector) == 1
+            assert _CLAVE_SURFACE.continue_button_selector in page.clicks
+
+        asyncio.run(run())
+
+    def test_non_qr_fallback_rejects_missing_nie_support(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(
+            tmp_path,
+            monkeypatch,
+            AEAT_CLAVE_MOVIL_DNI_NIE="Y0000000Z",
+            AEAT_CLAVE_PREFER_NON_QR="true",
+        )
+        provider = ClaveMovilAuthProvider(settings)
+        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+
+        async def run() -> None:
+            with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE"):
+                await provider.authenticate(browser_session=browser_session)
 
         asyncio.run(run())
 
@@ -399,24 +523,135 @@ class TestAuthenticateFresh:
 
 
 class TestPostAuthLanding:
-    def test_representation_dispatcher_is_not_auto_submitted(
+    def test_verify_clicks_selector_for_explicit_target_probe(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from ._authenticator import AeatLoginAssertionError
+        from ._authenticator import AeatSession
 
         settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
-        page = _RecordingPage(target_path=settings.aeat_sede_expedientes_path)
-        page.url = "https://www6.agenciatributaria.gob.es/wlpl/OVCT-CXEW/DialogoRepresentacion"
+        external = settings.external_constants()
+        target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
+        target_path = provider._target_path_from_url(target_url)
+        context = _SelectorDispatchContext(target_path=target_path)
+        provider._context = context
+        now = datetime.now(UTC)
+        session = AeatSession(
+            provider_kind=AuthProviderKind.CLAVE_MOVIL,
+            authenticated_at=now,
+            idle_deadline=now + timedelta(minutes=18),
+            storage_state_path=None,
+            identity_nif="12345678Z",
+            provider_detail=ClaveMovilSessionDetail(
+                dni_nie="12345678Z",
+                used_non_qr_fallback=True,
+                verification_code="YLL",
+                landing_url=None,
+            ),
+        )
 
         async def run() -> None:
-            with pytest.raises(AeatLoginAssertionError, match="does not expose evaluate"):
-                await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=100)
+            assertion = await provider.verify(session, target_url=target_url)
+            assert assertion.is_valid is True
 
         asyncio.run(run())
-        assert page.clicks == []
+
+        page = context.pages[0]
+        assert external.aeat.clave_movil.selector_access_path_marker in page.gotos[0]
+        assert external.aeat.clave_movil.authorize_button_selector in page.clicks
+
+    def test_explicit_verification_target_uses_selector_dispatch(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        external = settings.external_constants()
+        target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
+        target_path = provider._target_path_from_url(target_url)
+
+        probe_url = provider._probe_url_for_verification(
+            explicit_target_url=target_url,
+            resolved_target_url=target_url,
+            target_path=target_path,
+        )
+
+        assert external.aeat.clave_movil.selector_access_path_marker in probe_url
+        assert probe_url != target_url
+
+    def test_implicit_verification_target_keeps_recorded_landing(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        external = settings.external_constants()
+        landing_url = f"{external.aeat.domains.www6}{external.aeat.sede_paths.expedientes_resumen}"
+        target_path = provider._target_path_from_url(landing_url)
+
+        probe_url = provider._probe_url_for_verification(
+            explicit_target_url=None,
+            resolved_target_url=landing_url,
+            target_path=target_path,
+        )
+
+        assert probe_url == landing_url
+
+    def test_authenticated_landing_accepts_pre303_post_auth_redirect(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        external = settings.external_constants()
+
+        accepted = provider._is_authenticated_aeat_landing(
+            landing_url=f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}",
+            target_path=external.aeat.pre303.presentation_service_path,
+        )
+        auth_gate = provider._is_authenticated_aeat_landing(
+            landing_url=f"{external.aeat.domains.sede}{external.aeat.sede_paths.auth_gate_4033}",
+            target_path=external.aeat.pre303.presentation_service_path,
+        )
+        selector = provider._is_authenticated_aeat_landing(
+            landing_url=external.aeat.clave_movil.selector_access_url_template.format(
+                target=external.aeat.pre303.presentation_service_path
+            ),
+            target_path=external.aeat.pre303.presentation_service_path,
+        )
+        other_app = provider._is_authenticated_aeat_landing(
+            landing_url=f"{external.aeat.domains.www1}{external.aeat.sede_paths.iva_compensation_wallet}",
+            target_path=external.aeat.pre303.presentation_service_path,
+        )
+
+        assert accepted is True
+        assert auth_gate is False
+        assert selector is False
+        assert other_app is False
+
+    def test_representation_dispatcher_continues_only_own_name(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _RecordingPage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
+
+        async def run() -> None:
+            await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=1_000)
+
+        asyncio.run(run())
+        assert page.clicks == [
+            _PRE303_SURFACE.representation_own_name_label_selector,
+            _PRE303_SURFACE.representation_submit_selector,
+        ]
 
 
 class TestPendingPetitionRefusal:
@@ -449,7 +684,7 @@ class TestPendingPetitionRefusal:
         settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
-        page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovil?qAA=2"
+        page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
 
         async def run() -> None:
             with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"Cl@ve|pending|prior|refused") as excinfo:
@@ -460,8 +695,48 @@ class TestPendingPetitionRefusal:
 
         asyncio.run(run())
 
+    def test_pending_request_cancellation_waits_for_aeat_cancel_response(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _CancelableClavePage(target_path=settings.aeat_sede_expedientes_path)
+
+        async def run() -> None:
+            await provider._cancel_pending_auth_request(page)
+
+        asyncio.run(run())
+
+        assert page.evaluate_calls == 1
+        assert page.wait_for_response_calls == 1
+
+    def test_pending_request_cancel_confirmation_rejects_failed_response(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _CancelableClavePage(target_path=settings.aeat_sede_expedientes_path, status=500)
+
+        async def run() -> bool:
+            return await provider._wait_for_cancel_confirmation(page)
+
+        assert asyncio.run(run()) is False
+
 
 class TestClaveWaitState:
+    def test_extracts_verification_code_from_rendered_non_qr_html(self) -> None:
+        html = """
+        <div class="negrita codigoVerificacion">Código de verificación</div>
+        <div class="negrita codigoVerificacion fuenteTamanyo3em">IL9</div>
+        <form><input id="inputDNIReadonly" value="00000000T"></form>
+        """
+
+        assert _extract_verification_code_from_html(html) == "IL9"
+
     def test_login_refuses_to_wait_without_observed_confirmation_state(
         self,
         tmp_path: Path,
@@ -470,7 +745,7 @@ class TestClaveWaitState:
         settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _NoPushWaitStatePage(target_path=settings.aeat_sede_expedientes_path)
-        page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
+        page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.autentica_dni_nie_contraste_path)
 
         async def run() -> None:
             with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"confirmation waiting state") as excinfo:
@@ -496,7 +771,7 @@ class TestClaveWaitState:
         settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _NoPushWaitStatePage(target_path=settings.aeat_sede_expedientes_path)
-        page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
+        page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.autentica_dni_nie_contraste_path)
 
         async def run() -> None:
             await provider._assert_push_wait_state(
@@ -603,7 +878,7 @@ class TestResume:
             # Verify() is called by the resume path; assertion should be valid.
             assert browser_session_b.contexts, "resume must have opened a new context"
             page = browser_session_b.contexts[0].pages[0]
-            assert page.gotos == [f"https://www6.agenciatributaria.gob.es{target_path}"]
+            assert page.gotos == [_aeat_url(_DOMAINS.www6, target_path)]
             await resumed_provider.close()
 
         asyncio.run(run_resume())

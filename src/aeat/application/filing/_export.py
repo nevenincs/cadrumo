@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
@@ -44,6 +45,7 @@ from ...domain.calculations.registry import (
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,
+    ModeloCasillaProvenance,
     ModeloDraft,
     ModeloDraftStatus,
 )
@@ -125,6 +127,7 @@ class DeclaracionExportResult(BaseModel):
     file_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
     exported_at: datetime
     narrative: str
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
 
     @field_validator("file_sha256")
     @classmethod
@@ -167,6 +170,10 @@ class DeclaracionVerifyResult(BaseModel):
             ``output_path`` was renamed in between.
         verified_at: UTC timestamp of when the verdict was produced.
         narrative: Translation key for operator-facing summary.
+        casilla_provenance: Regulatory grounding for the draft
+            casillas covered by the export parser/layout.
+        mismatched_casilla_provenance: Regulatory grounding for the
+            subset of ``mismatched_casillas``.
     """
 
     model_config = _STRICT_FROZEN
@@ -176,6 +183,8 @@ class DeclaracionVerifyResult(BaseModel):
     verdict: DeclaracionVerifyVerdict
     mismatched_casillas: tuple[str, ...] = ()
     unchecked_casillas: tuple[str, ...] = ()
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
+    mismatched_casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     file_sha256: str | None = Field(default=None)
     verified_at: datetime
     narrative: str
@@ -225,6 +234,7 @@ def export_draft(
     if not subview.export_layout_ids:
         raise FilingExportError(f"modelo {draft.modelo!r} registry snapshot declares no export layout")
     payload = _render_layout(subview.export_layouts[0], draft=draft, headers=headers)
+    casilla_provenance = _exported_casilla_provenance(subview.export_layouts[0], draft=draft)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(payload)
     digest = hashlib.sha256(payload).hexdigest()
@@ -238,6 +248,7 @@ def export_draft(
         file_sha256=digest,
         exported_at=datetime.now(tz=UTC),
         narrative="filing.export.written",
+        casilla_provenance=casilla_provenance,
     )
 
 
@@ -273,7 +284,7 @@ def verify_export(
     payload = file_path.read_bytes()
     digest = hashlib.sha256(payload).hexdigest()
     try:
-        mismatched = _mismatched_casillas(subview.export_layouts[0], draft=draft, payload=payload)
+        mismatched, checked = _mismatched_casillas(subview.export_layouts[0], draft=draft, payload=payload)
     except RegistryValidationError:
         _logger.warning("declaration export verification could not parse %s", file_path, exc_info=True)
         return DeclaracionVerifyResult(
@@ -289,6 +300,8 @@ def verify_export(
         file_path=file_path,
         verdict=DeclaracionVerifyVerdict.MATCH if not mismatched else DeclaracionVerifyVerdict.DRIFT,
         mismatched_casillas=mismatched,
+        casilla_provenance=_provenance_for_casillas(draft, checked),
+        mismatched_casilla_provenance=_provenance_for_casillas(draft, mismatched),
         file_sha256=digest,
         verified_at=datetime.now(tz=UTC),
         narrative="filing.export.verified",
@@ -560,19 +573,48 @@ def _mismatched_casillas(
     *,
     draft: ModeloDraft,
     payload: bytes,
-) -> tuple[str, ...]:
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
     values = {value.casilla_id: value.value for value in draft.values}
     mismatched: list[str] = []
+    checked: list[str] = []
     for parsed in parse_export_payload(layout, payload).casillas:
         if parsed.casilla_id is None:
             continue
+        checked.append(parsed.casilla_id)
         expected = values.get(parsed.casilla_id) or Decimal("0")
         if isinstance(parsed.value, Decimal):
             if Decimal(str(expected)).quantize(_MONEY_QUANT) != parsed.value.quantize(_MONEY_QUANT):
                 mismatched.append(parsed.casilla_id)
         elif str(expected) != str(parsed.value):
             mismatched.append(parsed.casilla_id)
-    return tuple(dict.fromkeys(mismatched))
+    return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
+
+
+def _provenance_for_casillas(
+    draft: ModeloDraft,
+    casilla_ids: Iterable[str],
+) -> tuple[ModeloCasillaProvenance, ...]:
+    provenance_by_id = {entry.casilla_id: entry for entry in draft.casilla_provenance}
+    return tuple(
+        provenance_by_id[casilla_id]
+        for casilla_id in dict.fromkeys(casilla_ids)
+        if casilla_id in provenance_by_id
+    )
+
+
+def _exported_casilla_provenance(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+) -> tuple[ModeloCasillaProvenance, ...]:
+    draft_casillas = {value.casilla_id for value in draft.values}
+    layout_casillas = (
+        field.casilla
+        for record in sorted(layout.records, key=lambda item: item.order)
+        for field in record.fields
+        if field.kind == "casilla" and field.casilla is not None and field.casilla in draft_casillas
+    )
+    return _provenance_for_casillas(draft, layout_casillas)
 
 
 def _period_parts(period: str) -> tuple[str, str]:

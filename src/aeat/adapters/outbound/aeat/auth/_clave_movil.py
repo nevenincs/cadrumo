@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import contextlib
+import hashlib
 import json
 import re
 import sys
@@ -39,6 +41,7 @@ from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from ....persistence.storage.sql import SecureObjectRepository
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from . import _session_store
@@ -69,17 +72,42 @@ log = get_logger(__name__)
 
 _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
 _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS: Final[float] = 5.0
+_OWN_NAME_REPRESENTATION_ACTION: Final[str] = "representation-gate-own-name-continue"
 
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
 """Distinct from certificate metadata v1 so stale certificate objects are rejected."""
 
-_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
+CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
+_DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+
+
+def _auth_browser_action_policy(settings: _Settings) -> RemoteStateGuardPolicy:
+    external = settings.external_constants()
+    return RemoteStateGuardPolicy(
+        id="aeat-clave-movil-auth-browser-actions",
+        evidence_tier="official_source_guidance",
+        classification="authenticated_read_surface",
+        allowed_hosts=(
+            urlsplit(external.aeat.domains.sede).netloc,
+            urlsplit(external.aeat.domains.www6).netloc,
+            urlsplit(external.aeat.domains.www12).netloc,
+        ),
+        allowed_browser_action_patterns=external.aeat.live_safety.auth_browser_action_patterns,
+        synthetic_data_allowed=False,
+        requires_authentication=True,
+        requires_aeat_authorization=True,
+    )
 
 
 # NIE: X/Y/Z + 7 digits + letter. DNI: 8 digits + letter.
 _DNI_RE: Final[re.Pattern[str]] = re.compile(r"^\d{8}[A-Z]$", re.IGNORECASE)
 _NIE_RE: Final[re.Pattern[str]] = re.compile(r"^[XYZ]\d{7}[A-Z]$", re.IGNORECASE)
+_HTML_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<[^>]+>")
+_VERIFICATION_CODE_TEXT_RE: Final[re.Pattern[str]] = re.compile(
+    r"c[oó]digo\s+de\s+verificaci[oó]n\s+(?P<code>[A-Z0-9]{3,8})",
+    re.IGNORECASE,
+)
 
 
 class ClaveMovilConfigurationError(AuthConfigurationError):
@@ -179,6 +207,38 @@ def _classify_identity(raw: str) -> str:
     )
 
 
+def _extract_verification_code_from_html(html: str) -> str | None:
+    """Return the visible Cl@ve Móvil verification code from rendered HTML."""
+
+    text = _HTML_TAG_RE.sub(" ", html.replace("\xa0", " "))
+    normalized = " ".join(text.split())
+    match = _VERIFICATION_CODE_TEXT_RE.search(normalized)
+    if match is None:
+        return None
+    return match.group("code").strip().upper() or None
+
+
+def _url_diagnostic(value: str) -> dict[str, object]:
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return {"parse": "invalid"}
+    query_keys = tuple(part.split("=", 1)[0] for part in parsed.query.split("&") if part)
+    return {
+        "host": parsed.netloc,
+        "path": parsed.path,
+        "query_keys": query_keys,
+    }
+
+
+def _diagnostic_fingerprint(value: object) -> str:
+    text = str(value or "").strip().upper()
+    if not text:
+        return ""
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    return f"sha256:{digest}"
+
+
 def _render_progress_banner(
     *,
     verification_code: str | None,
@@ -197,7 +257,8 @@ def _render_progress_banner(
         lines.extend(
             (
                 " • AEAT is showing the Cl@ve Móvil non-QR confirmation flow.",
-                " • Continue in the Cl@ve app if it presents this request.",
+                " • Open the Cl@ve app; a push notification may not appear.",
+                " • Approve only if the app request matches the AEAT verification code below.",
             )
         )
     else:
@@ -205,6 +266,7 @@ def _render_progress_banner(
             (
                 " • A browser window just opened showing a QR code.",
                 " • Scan the QR with the Cl@ve app if it is available to you.",
+                " • This is the QR branch, not the configured non-QR fallback.",
             )
         )
     if verification_code:
@@ -230,9 +292,9 @@ class ClaveMovilAuthProvider:
     """Cl@ve Móvil implementation of the :class:`AuthProvider` protocol.
 
     Constructed by :func:`aeat.adapters.outbound.aeat.auth.select_provider` when
-    ``kind == AuthProviderKind.CLAVE_MOVIL``. A fresh login opens a
-    headed Playwright window so the operator can scan the QR; resume
-    runs headlessly because the stored cookies are sufficient.
+    ``kind == AuthProviderKind.CLAVE_MOVIL``. Fresh login can run the
+    configured non-QR confirmation flow or the alternate QR flow;
+    resume runs headlessly because the stored cookies are sufficient.
     """
 
     kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
@@ -343,13 +405,10 @@ class ClaveMovilAuthProvider:
                 self._browser_session = session_like
                 self._context = context
                 self._active_session = session
-                # Prefer an explicit target, then the recorded landing URL
-                # from the successful login. If neither is available, fall back to the
-                # default target — a bare selector URL would always return
-                # 200 against static HTML and falsely report an invalid
-                # session.
-                probe_target = target_url or metadata.landing_url or self._default_target_url()
-                assertion = await self.verify(session, target_url=probe_target)
+                # Explicit caller targets need selector dispatch; recorded
+                # landing metadata is already carried by the session detail
+                # and remains a direct probe.
+                assertion = await self.verify(session, target_url=target_url)
                 # Refresh idle TTL on successful probe so long-running
                 # discovery sessions stay alive without re-auth. AEAT's
                 # own 18-minute idle window resets on every authenticated
@@ -412,13 +471,11 @@ class ClaveMovilAuthProvider:
     ) -> AeatLoginAssertion:
         """Re-probe that ``session``'s cookies still unlock a Sede page.
 
-        When ``target_url`` points at a concrete post-auth AEAT URL recorded
-        at login time, the probe navigates there directly and treats a
-        200 response that stays off the Cl@ve selector /
-        ``mi-area-personal`` as a live session. Otherwise — rarely — the
-        probe falls back to driving the selector dispatch manually
-        (which still requires a full auth round-trip and so is only
-        ever used on session-less contexts).
+        Explicit ``target_url`` probes go through AEAT's selector dispatcher,
+        because some Cl@ve-backed apps only establish target-local state when
+        dispatched from the selector. When no explicit target is supplied and
+        the session metadata has a concrete post-auth landing URL, the probe
+        can navigate there directly.
         """
         context = self._context
         if context is None:
@@ -436,14 +493,11 @@ class ClaveMovilAuthProvider:
             if resolved_target_url
             else self._settings.aeat_sede_expedientes_path
         )
-        if resolved_target_url and target_path in resolved_target_url:
-            probe_url = resolved_target_url
-        else:
-            # No recorded post-auth URL — probe via the button's
-            # AEAT's representation dispatcher, which requires auth cookies
-            # to forward through.
-            dispatcher_target = resolved_target_url or self._selector_url(target_path)
-            probe_url = dispatcher_target
+        probe_url = self._probe_url_for_verification(
+            explicit_target_url=target_url,
+            resolved_target_url=resolved_target_url,
+            target_path=target_path,
+        )
         attempted_at = datetime.now(UTC)
         start = time.perf_counter()
         status_code = 0
@@ -457,11 +511,14 @@ class ClaveMovilAuthProvider:
             if response is not None:
                 status_code = int(response.status)
                 landing_url = getattr(page, "url", None)
+                if landing_url and self._clave_surface().selector_access_path_marker in landing_url:
+                    await self._click_clave_movil_button(page)
+                    await self._wait_for_post_auth_landing(page, target_path, self._navigation_timeout_ms)
+                    landing_url = getattr(page, "url", None)
                 if (
                     200 <= status_code < 400
                     and landing_url
-                    and self._clave_surface().selector_access_path_marker not in landing_url
-                    and target_path in landing_url
+                    and self._is_authenticated_aeat_landing(landing_url=landing_url, target_path=target_path)
                 ):
                     session_cookie_present = True
         except Exception as exc:
@@ -558,6 +615,163 @@ class ClaveMovilAuthProvider:
 
     def _clave_surface(self):
         return self._settings.external_constants().aeat.clave_movil
+
+    def _probe_url_for_verification(
+        self,
+        *,
+        explicit_target_url: str | None,
+        resolved_target_url: str | None,
+        target_path: str,
+    ) -> str:
+        if explicit_target_url:
+            return self._selector_url(target_path)
+        if resolved_target_url and target_path in resolved_target_url:
+            return resolved_target_url
+        return resolved_target_url or self._selector_url(target_path)
+
+    def _is_authenticated_aeat_landing(self, *, landing_url: str, target_path: str) -> bool:
+        """Return True for a protected AEAT page reached after Cl@ve dispatch."""
+
+        external = self._settings.external_constants()
+        surface = external.aeat.clave_movil
+        try:
+            parsed = urlsplit(landing_url)
+        except ValueError:
+            return False
+        host = parsed.netloc.casefold()
+        host_suffix = external.aeat.domains.host_suffix.casefold()
+        if host != host_suffix and not host.endswith(f".{host_suffix}"):
+            return False
+        path = parsed.path.casefold()
+        if external.aeat.sede_paths.auth_gate_4033.casefold() in path:
+            return False
+        clave_path_markers = (
+            surface.selector_access_path_marker,
+            surface.dialogo_representacion_path_marker,
+            surface.obtener_clave_movil_path_marker,
+            surface.obtener_clave_movil_qr_path_marker,
+            surface.cancelar_clave_movil_path_marker,
+        )
+        if any(marker.casefold() in path for marker in clave_path_markers):
+            return False
+        if target_path in landing_url:
+            return True
+        return self._same_aeat_application_path(landing_path=path, target_path=target_path)
+
+    @staticmethod
+    def _same_aeat_application_path(*, landing_path: str, target_path: str) -> bool:
+        target_path_only = urlsplit(target_path).path.casefold()
+        landing_parts = tuple(part for part in landing_path.split("/") if part)
+        target_parts = tuple(part for part in target_path_only.split("/") if part)
+        if len(landing_parts) < 2 or len(target_parts) < 2:
+            return False
+        if target_parts[0] == "wlpl":
+            return landing_parts[:2] == target_parts[:2]
+        if target_parts[0] == "sede":
+            return landing_parts[:2] == target_parts[:2]
+        return False
+
+    def _attempt_context(self) -> dict[str, object]:
+        identity = (self._settings.aeat_clave_movil_dni_nie or "").strip()
+        try:
+            identity_kind = _classify_identity(identity)
+        except ClaveMovilConfigurationError:
+            identity_kind = "invalid_or_missing"
+        auth_mode = "non_qr" if self._settings.aeat_clave_prefer_non_qr else "qr"
+        context = {
+            "auth_mode": auth_mode,
+            "identity_kind": identity_kind,
+            "clave_identity_configured": bool(identity),
+            "clave_identity_fingerprint": _diagnostic_fingerprint(identity),
+            "dni_fecha_configured": bool((self._settings.aeat_clave_movil_dni_fecha or "").strip()),
+            "dni_fecha_fingerprint": _diagnostic_fingerprint(self._settings.aeat_clave_movil_dni_fecha),
+            "nie_soporte_configured": bool((self._settings.aeat_clave_movil_nie_soporte or "").strip()),
+            "nie_soporte_fingerprint": _diagnostic_fingerprint(self._settings.aeat_clave_movil_nie_soporte),
+            "prefer_non_qr": self._settings.aeat_clave_prefer_non_qr,
+            "headless": self._settings.aeat_browser_headless,
+            "timeout_ms": self._settings.aeat_clave_movil_timeout_ms,
+            "certificate_path_configured": self._settings.aeat_certificate_path is not None,
+            "certificate_password_configured": self._settings.aeat_certificate_password_secret is not None,
+            "certificate_backend": self._settings.aeat_certificate_backend.value,
+            "certificate_file_present": bool(
+                self._settings.aeat_certificate_path is not None
+                and self._settings.aeat_certificate_path.is_file()
+            ),
+            "certificate_path_fingerprint": _diagnostic_fingerprint(self._settings.aeat_certificate_path),
+        }
+        context.update(self._active_profile_diagnostic_context(identity))
+        return context
+
+    def _active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
+        try:
+            from .....adapters.persistence.storage import (
+                activate_master_key_provider,
+                get_master_key_provider,
+                has_active_bucket_session,
+            )
+            from .....application.user_profile._orchestration import build_lifecycle_service
+            from .....application.user_profile._projections import record_to_path_values, record_to_values
+            from .....application.workflow._models import resolve_active_bucket_id
+            from .....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+            from .....core.config import override_settings
+            from .....domain.user_profile import ProfileNotFoundError
+
+            bucket_id = resolve_active_bucket_id()
+            pointer = read_profile_bucket_by_id(bucket_id) if bucket_id else None
+            context: dict[str, object] = {
+                "active_profile_id": bucket_id or "",
+                "active_profile_label": pointer.label if pointer is not None else "",
+                "active_profile_registered": pointer is not None,
+                "profile_record_present": False,
+                "profile_tax_id_present": False,
+                "profile_tax_id_fingerprint": "",
+                "identity_alignment": "profile_tax_id_missing",
+            }
+            if bucket_id is None:
+                context["identity_alignment"] = "no_active_profile"
+                return context
+            try:
+                if has_active_bucket_session():
+                    record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
+                else:
+                    with override_settings(aeat_active_profile=bucket_id):
+                        service = build_lifecycle_service(bucket_id=bucket_id)
+                        with activate_master_key_provider(
+                            get_master_key_provider(),
+                            fallback_bucket_id=bucket_id,
+                        ):
+                            record = service.read(bucket_id)
+            except ProfileNotFoundError:
+                return context
+
+            path_values = record_to_path_values(record)
+            profile_identity = str(path_values.get("identity.tax_id") or "").strip().upper()
+            if not profile_identity:
+                selector_values = record_to_values(record)
+                profile_identity = str(selector_values.get("tax.id") or "").strip().upper()
+            context["profile_record_present"] = True
+            context["profile_tax_id_present"] = bool(profile_identity)
+            context["profile_tax_id_fingerprint"] = _diagnostic_fingerprint(profile_identity)
+            if not provider_identity:
+                context["identity_alignment"] = "clave_identity_missing"
+            elif not profile_identity:
+                context["identity_alignment"] = "profile_tax_id_missing"
+            elif profile_identity == provider_identity.strip().upper():
+                context["identity_alignment"] = "matches"
+            else:
+                context["identity_alignment"] = "mismatch"
+            return context
+        except Exception as exc:
+            log.debug("ClaveMovilAuthProvider: profile diagnostic context unavailable: %s", exc, exc_info=True)
+            return {
+                "active_profile_id": "",
+                "active_profile_label": "",
+                "active_profile_registered": False,
+                "profile_record_present": False,
+                "profile_tax_id_present": False,
+                "profile_tax_id_fingerprint": "",
+                "identity_alignment": "profile_context_unavailable",
+            }
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 
@@ -656,6 +870,7 @@ class ClaveMovilAuthProvider:
         target = target_url or self._default_target_url()
         target_path = self._target_path_from_url(target)
         selector_url = self._selector_url(target_path)
+        attempt_context = self._attempt_context()
 
         session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
         context: BrowserContextLike | None = None
@@ -668,6 +883,12 @@ class ClaveMovilAuthProvider:
 
             use_non_qr = self._settings.aeat_clave_prefer_non_qr
             verification_code: str | None = None
+            log.info(
+                "ClaveMovilAuthProvider: starting fresh login mode=%s identity_kind=%s headless=%s",
+                attempt_context["auth_mode"],
+                attempt_context["identity_kind"],
+                attempt_context["headless"],
+            )
 
             if use_non_qr:
                 await self._drive_non_qr_fallback(page, dni_nie)
@@ -693,6 +914,7 @@ class ClaveMovilAuthProvider:
                 await self._wait_for_post_auth_landing(page, target_path, timeout_ms)
             except (TimeoutError, PlaywrightTimeoutError) as exc:
                 diagnostic_id = await self._dump_diagnostic(page, reason="post-auth-landing-timeout")
+                await self._cancel_pending_auth_request(page)
                 current_url = getattr(page, "url", "") or ""
                 raise ClaveMovilApprovalTimeoutError(
                     f"Cl@ve Móvil browser authentication did not complete after {timeout_ms // 1000} seconds. "
@@ -700,7 +922,7 @@ class ClaveMovilAuthProvider:
                     failure_mode=ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT,
                     context={
                         "timeout_ms": timeout_ms,
-                        "current_url": current_url,
+                        "current_url": _url_diagnostic(current_url),
                         "target_path": target_path,
                         "diagnostic_id": diagnostic_id,
                         "phone_state": "unknown",
@@ -711,10 +933,14 @@ class ClaveMovilAuthProvider:
                             "app_did_not_prompt",
                             "operator_did_not_check",
                         ),
+                        **attempt_context,
+                        "verification_code_present": bool(verification_code),
                     },
                     suggestion=(
-                        "Report the Cl@ve app state for this attempt using the AEAT page verification code: "
-                        "prompted and accepted, prompted but not accepted, no prompt appeared, or not checked."
+                        "`aeat config auth diagnostics report "
+                        f"{diagnostic_id} --phone-state app_did_not_prompt` if no Cl@ve app prompt appeared, "
+                        "or use app_prompted_and_accepted / app_prompted_not_accepted / operator_did_not_check "
+                        "for the observed phone state."
                     ),
                 ) from exc
 
@@ -824,7 +1050,7 @@ class ClaveMovilAuthProvider:
             self._context = context
             self._active_session = session
 
-            assertion = await self.verify(session, target_url=target_url or metadata.landing_url)
+            assertion = await self.verify(session, target_url=target_url)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil resume failed live verification: "
@@ -897,17 +1123,24 @@ class ClaveMovilAuthProvider:
     async def _extract_verification_code(self, page: BrowserPageLike) -> str | None:
         wait_for = getattr(page, "wait_for_selector", None)
         text_content = getattr(page, "text_content", None)
-        if wait_for is None or text_content is None:
+        if wait_for is not None and text_content is not None:
+            selector = self._clave_surface().verification_code_selector
+            try:
+                await wait_for(selector, timeout=int(self._settings.aeat_browser_selector_probe_timeout_ms))
+                raw = await text_content(selector)
+            except (PlaywrightTimeoutError, PlaywrightError):
+                raw = None
+            if raw is not None and raw.strip():
+                return raw.strip()
+
+        content = getattr(page, "content", None)
+        if content is None:
             return None
-        selector = self._clave_surface().verification_code_selector
         try:
-            await wait_for(selector, timeout=_NAVIGATION_TIMEOUT_MS_DEFAULT)
-            raw = await text_content(selector)
-        except (PlaywrightTimeoutError, PlaywrightError):
+            html = await content()
+        except PlaywrightError:
             return None
-        if raw is None:
-            return None
-        return raw.strip() or None
+        return _extract_verification_code_from_html(html)
 
     async def _drive_non_qr_fallback(self, page: BrowserPageLike, dni_nie: str) -> None:
         click = getattr(page, "click", None)
@@ -999,7 +1232,7 @@ class ClaveMovilAuthProvider:
             failure_mode=ClaveMovilFailureMode.PUSH_WAIT_STATE_NOT_REACHED,
             context={
                 "reason": "aeat-clave-movil-wait-state-not-reached",
-                "current_url": current_url,
+                "current_url": _url_diagnostic(current_url),
                 "target_path": target_path,
                 "used_non_qr_fallback": used_non_qr_fallback,
                 "verification_code_present": bool(verification_code),
@@ -1050,6 +1283,92 @@ class ClaveMovilAuthProvider:
                 translated_message="adapters.aeat.clave_movil.errors.pending_petition_blocked",
             )
 
+    async def _cancel_pending_auth_request(self, page: BrowserPageLike) -> None:
+        """Best-effort cancellation for a Cl@ve request left open by timeout."""
+
+        current_url = getattr(page, "url", "") or ""
+        if self._clave_surface().obtener_clave_movil_path_marker not in current_url:
+            return
+        evaluate = getattr(page, "evaluate", None)
+        try:
+            if evaluate is not None:
+                cancelled = await asyncio.wait_for(
+                    evaluate(
+                        """
+                        () => {
+                          const button = document.querySelector("#botonCancelar");
+                          if (button && typeof button.click === "function") {
+                            button.click();
+                            return true;
+                          }
+                          const clave = window.ObtenerClaveMovil;
+                          if (clave && typeof clave.cancelarPeticion === "function") {
+                            clave.cancelarPeticion();
+                            return true;
+                          }
+                          return false;
+                        }
+                        """
+                    ),
+                    timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
+                )
+                if cancelled and await self._wait_for_cancel_confirmation(page):
+                    log.info("ClaveMovilAuthProvider: confirmed cancellation of pending Cl@ve request")
+                    return
+            click = getattr(page, "click", None)
+            if click is not None:
+                await asyncio.wait_for(
+                    click("#botonCancelar"),
+                    timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
+                )
+                if await self._wait_for_cancel_confirmation(page):
+                    log.info("ClaveMovilAuthProvider: confirmed cancellation of pending Cl@ve request")
+                    return
+            log.warning("ClaveMovilAuthProvider: pending Cl@ve cancellation was requested but not confirmed")
+        except Exception as exc:  # cancellation is cleanup; preserve the original auth timeout
+            log.warning("ClaveMovilAuthProvider: pending Cl@ve cancellation failed: %s", exc)
+
+    async def _wait_for_cancel_confirmation(self, page: BrowserPageLike) -> bool:
+        wait_for_response = getattr(page, "wait_for_response", None)
+        if wait_for_response is not None:
+            surface = self._clave_surface()
+            try:
+                response = await asyncio.wait_for(
+                    wait_for_response(
+                        lambda candidate: surface.cancelar_clave_movil_path_marker
+                        in str(getattr(candidate, "url", ""))
+                        and int(getattr(candidate, "status", 599)) < 400,
+                        timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS * 1000,
+                    ),
+                    timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
+                )
+                return int(getattr(response, "status", 599)) < 400
+            except (TimeoutError, PlaywrightTimeoutError, PlaywrightError):
+                return False
+
+        wait_for_timeout = getattr(page, "wait_for_timeout", None)
+        if wait_for_timeout is not None:
+            with contextlib.suppress(TimeoutError, PlaywrightTimeoutError):
+                await asyncio.wait_for(
+                    wait_for_timeout(1000),
+                    timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
+                )
+        else:
+            await asyncio.sleep(1)
+        return not await self._page_still_shows_pending_request(page)
+
+    async def _page_still_shows_pending_request(self, page: BrowserPageLike) -> bool:
+        content = getattr(page, "content", None)
+        if content is None:
+            return True
+        try:
+            html = await content()
+        except PlaywrightError:
+            return True
+        normalized = " ".join(html.replace("\xa0", " ").split()).lower()
+        pending_markers = self._clave_surface().pending_petition_text_markers
+        return any(marker in normalized for marker in pending_markers)
+
     @staticmethod
     def _attach_dialog_autodismiss(page: BrowserPageLike) -> None:
         """Auto-accept any JS dialog AEAT pops during login.
@@ -1097,6 +1416,7 @@ class ClaveMovilAuthProvider:
                 "reason": reason,
                 "url": url,
                 "captured_at": datetime.now(UTC).isoformat(),
+                "auth_attempt": self._attempt_context(),
             }
             content = getattr(page, "content", None)
             if content is not None:
@@ -1154,12 +1474,10 @@ class ClaveMovilAuthProvider:
     ) -> None:
         """Poll until the browser reaches ``target_path`` or timeout.
 
-        After Cl@ve completion AEAT may interpose
-        AEAT's own-name representation dispatcher — the representation
-        dispatcher. When AEAT has already selected "own name", the
-        provider confirms that read-only acting scope and continues. It
-        must never select "representative" or enter represented-party
-        data.
+        After Cl@ve completion AEAT may interpose the representation
+        dispatcher. Only the authenticated user's own-name continuation
+        is allowed here; representative/third-party action remains
+        fail-closed because it would require represented-taxpayer data.
         """
         deadline = time.perf_counter() + timeout_ms / 1000
         while time.perf_counter() < deadline:
@@ -1189,61 +1507,31 @@ class ClaveMovilAuthProvider:
         raise TimeoutError(f"page did not navigate to {target_path!r} within {timeout_ms}ms")
 
     async def _continue_own_name_representation(self, page: BrowserPageLike) -> None:
-        """Continue AEAT's own-name representation gate after login.
+        """Continue only through AEAT's authenticated own-name selector."""
 
-        The page is an authenticated routing gate. The provider only
-        accepts the server-rendered own-name state; it refuses to choose
-        a representative identity or enter represented-party data.
-        """
-        evaluate = getattr(page, "evaluate", None)
-        if evaluate is None:
-            raise AeatLoginAssertionError(
-                "Playwright page does not expose evaluate(); cannot continue AEAT representation gate"
-            )
-        result = await evaluate(
-            """
-            () => {
-              const visible = (el) => {
-                if (!el) return false;
-                const style = window.getComputedStyle(el);
-                return style.display !== "none" && style.visibility !== "hidden";
-              };
-
-              const alertModal = document.querySelector("#alertsModal");
-              if (visible(alertModal)) {
-                const buttons = [...alertModal.querySelectorAll("button")];
-                const continueButton = buttons.find((button) =>
-                  (button.textContent || "").trim().toLowerCase() === "continuar"
-                );
-                if (!continueButton) {
-                  throw new Error("AEAT alert modal has no Continuar button");
-                }
-                continueButton.click();
-                return "alert-continued";
-              }
-
-              const ownName = document.querySelector('input[name="representacion"][id="propio"]');
-              const representative = document.querySelector(
-                'input[name="representacion"][id="representante"]'
-              );
-              if (!ownName || !representative) {
-                return "not-ready";
-              }
-              if (representative.checked || !ownName.checked) {
-                throw new Error("AEAT representation gate is not in own-name state");
-              }
-              const form = ownName.closest("form");
-              const submit = form ? form.querySelector('button[type="submit"]') : null;
-              if (!submit) {
-                throw new Error("AEAT representation gate has no submit button");
-              }
-              submit.click();
-              return "own-name-confirmed";
-            }
-            """
+        assert_remote_operation_allowed(
+            _auth_browser_action_policy(self._settings),
+            RemoteOperation(kind="browser_action", action=_OWN_NAME_REPRESENTATION_ACTION),
         )
-        if result in {"alert-continued", "own-name-confirmed"}:
-            log.info("ClaveMovilAuthProvider: representation gate action=%s", result)
+        pre303 = self._settings.external_constants().aeat.pre303
+        try:
+            await page.wait_for_selector(
+                pre303.representation_own_name_label_selector,
+                timeout=self._settings.aeat_browser_selector_probe_timeout_ms,
+            )
+            await page.click(pre303.representation_own_name_label_selector)
+            await page.click(pre303.representation_submit_selector)
+        except PlaywrightError as exc:
+            raise AeatLoginAssertionError(
+                "AEAT representation gate did not expose the own-name continuation expected for the "
+                "authenticated profile user.",
+                context={
+                    "failure_mode": "representation_gate_own_name_unavailable",
+                    "landing_url": getattr(page, "url", None),
+                    "blocked_operation": "representative_or_unknown_representation_gate",
+                },
+                suggestion="Do not provide represented-third-party data through this driver.",
+            ) from exc
 
 
 __all__ = [

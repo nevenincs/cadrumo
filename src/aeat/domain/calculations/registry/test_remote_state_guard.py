@@ -18,6 +18,7 @@ from ._remote_state_guard import (
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
+from ._schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -82,6 +83,64 @@ def test_remote_state_guard_blocks_stateful_tokens_in_browser_actions() -> None:
 
     assert result.decision == "blocked"
     assert "presentar" in result.reason
+
+
+def test_remote_state_guard_blocks_unclassified_browser_action_when_allow_list_declared() -> None:
+    policy = _open_policy().model_copy(update={"allowed_browser_action_patterns": ("open-safe-dialog",)})
+
+    assert_remote_operation_allowed(
+        policy,
+        RemoteOperation(kind="browser_action", action="open-safe-dialog"),
+    )
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        assert_remote_operation_allowed(
+            policy,
+            RemoteOperation(kind="browser_action", action="new-unreviewed-click"),
+        )
+
+
+def test_remote_state_guard_supports_allowed_browser_action_wildcards() -> None:
+    policy = _open_policy().model_copy(update={"allowed_browser_action_patterns": ("check-nif-*",)})
+
+    result = assert_remote_operation_allowed(
+        policy,
+        RemoteOperation(kind="browser_action", action="check-nif-ESB12345678"),
+    )
+
+    assert result.decision == "allowed"
+
+
+def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() -> None:
+    decision = LiveCrossReferenceDecision(
+        id="modelo-349-groi-spanish-counterparty-check",
+        evidence_tier="executable_parity_evidence",
+        surface="authenticated_simulator",
+        guard_policy_id="modelo-349-groi-spanish-roi-check",
+        allowed_hosts=("www2.agenciatributaria.gob.es",),
+        allowed_methods=("GET", "POST"),
+        forbidden_actions=(
+            "server-side-save",
+            "signing",
+            "presentation",
+            "payment",
+            "amendment",
+            "cancellation",
+            "document-submission",
+            "declaration-submission",
+        ),
+        synthetic_data_allowed=True,
+        requires_authentication=True,
+        requires_aeat_authorization=False,
+        oracle_id="aeat-groi-spanish-roi-checker",
+        legal_refs=("ley-58-2003:art-93",),
+        source_refs=("aeat-vies-gestiones-procedure",),
+    )
+    policy = remote_state_policy_from_cross_reference(decision)
+
+    assert "check-nif-*" in policy.allowed_browser_action_patterns
+    assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="check-nif-A28015865"))
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="unreviewed-click"))
 
 
 def test_remote_state_guard_blocks_unknown_aeat_host() -> None:
@@ -183,6 +242,39 @@ def test_remote_state_guard_allows_authenticated_read_surface_get() -> None:
     )
 
     assert result.decision == "allowed"
+
+
+def test_remote_state_guard_allows_declared_authenticated_read_post_path_only() -> None:
+    policy = RemoteStateGuardPolicy(
+        id="wallet-read",
+        evidence_tier="official_source_guidance",
+        classification="authenticated_read_surface",
+        allowed_hosts=("www6.agenciatributaria.gob.es",),
+        allowed_read_post_paths=("/wlpl/DAI3-RUTI/CarteraCuotas",),
+        synthetic_data_allowed=False,
+        requires_authentication=True,
+        requires_aeat_authorization=True,
+    )
+
+    result = assert_remote_operation_allowed(
+        policy,
+        RemoteOperation(
+            kind="http",
+            method="POST",
+            url=AnyUrl("https://www6.agenciatributaria.gob.es/wlpl/DAI3-RUTI/CarteraCuotas"),
+        ),
+    )
+
+    assert result.decision == "allowed"
+    with pytest.raises(RegistryValidationError, match="remote write method"):
+        assert_remote_operation_allowed(
+            policy,
+            RemoteOperation(
+                kind="http",
+                method="POST",
+                url=AnyUrl("https://www6.agenciatributaria.gob.es/wlpl/OTHER/MutatingPath"),
+            ),
+        )
 
 
 def test_remote_state_guard_rejects_authenticated_read_as_parity() -> None:

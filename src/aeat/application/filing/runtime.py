@@ -31,6 +31,10 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check required by Modelo 100 snapshots.
+import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
+
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     CasillaDefinition,

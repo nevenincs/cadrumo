@@ -8,7 +8,15 @@ from typing import Annotated, Literal
 
 import typer
 
-from ...application.live import FiledDataListingRow, capture_filed_data, capture_source_filed_data, list_filed_data
+from ...application.live import (
+    FiledDataListingRow,
+    IvaCompensationHistoryReport,
+    IvaWalletCaptureReport,
+    capture_filed_data,
+    capture_source_filed_data,
+    list_filed_data,
+)
+from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ._common import _emit
 
@@ -45,7 +53,10 @@ iva_wallet_app = typer.Typer(
     name="iva-wallet",
     help=tr(
         "cli.app.live.iva_wallet.app_help",
-        default="AEAT IVA compensation wallet capture (read-only).",
+        default=(
+            "AEAT IVA compensation wallet capture (read-only; allows only own-name representation and "
+            "the guarded wallet read query)."
+        ),
     ),
     no_args_is_help=True,
     add_completion=False,
@@ -57,11 +68,24 @@ def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
 
 
+_IVA_WALLET_LIVE_SAFETY_LINES = (
+    _metric_line("safety_policy", "read_only_fail_closed"),
+    _metric_line("representation_gate_policy", "own_name_only_no_represented_taxpayer_choice"),
+    _metric_line(
+        "aeat_form_submission_policy",
+        "wallet_execute_read_query_only_no_filing_or_represented_taxpayer_data",
+    ),
+)
+
+
 @iva_wallet_app.command(
     "pull",
     help=tr(
         "cli.app.live.iva_wallet.pull_help",
-        default="Live-fetch and persist AEAT's IVA compensation wallet.",
+        default=(
+            "Live-fetch and persist AEAT's IVA compensation wallet. The only AEAT form action allowed is "
+            "the guarded wallet read query; representation gates only continue in own-name mode."
+        ),
     ),
 )
 def iva_wallet_pull_cmd(
@@ -98,10 +122,13 @@ def iva_wallet_pull_cmd(
             taxpayer_nif=taxpayer_nif,
         )
     )
-    _emit(
-        ctx,
-        report,
-        (
+    _emit(ctx, report, _iva_wallet_pull_lines(report))
+
+
+def _iva_wallet_pull_lines(report: IvaWalletCaptureReport) -> tuple[str, ...]:
+    return (
+        *_IVA_WALLET_LIVE_SAFETY_LINES,
+        *(
             _metric_line("taxpayer_ref", report.taxpayer_ref),
             _metric_line("target_year", report.target_year),
             _metric_line("target_period", report.target_period),
@@ -122,16 +149,35 @@ def iva_wallet_pull_cmd(
     "history",
     help=tr(
         "cli.app.live.iva_wallet.history_help",
-        default="List secure local IVA compensation history derived from filed Modelo 303 captures.",
+        default=(
+            "List secure local IVA compensation history, carry-forward lots, and persisted wallet "
+            "authority decisions derived from Modelo 303 captures."
+        ),
     ),
 )
-def iva_wallet_history_cmd(ctx: typer.Context) -> None:
+def iva_wallet_history_cmd(
+    ctx: typer.Context,
+    as_of_year: Annotated[
+        int | None,
+        typer.Option("--as-of-year", min=2000, max=2099, help=tr("cli.app.live.iva_wallet.as_of_year_help")),
+    ] = None,
+) -> None:
     """List the profile-local IVA compensation history without contacting AEAT."""
 
     from ...application.live import list_iva_compensation_history
 
-    report = list_iva_compensation_history()
-    lines = [_metric_line("row_count", report.row_count)]
+    report = list_iva_compensation_history(as_of_year=as_of_year)
+    _emit(ctx, report, _iva_wallet_history_lines(report))
+
+
+def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str, ...]:
+    lines = [
+        _metric_line("row_count", report.row_count),
+        _metric_line("as_of_year", report.as_of_year),
+        _metric_line("carry_forward_lot_count", report.carry_forward_lot_count),
+        _metric_line("unallocated_applied_amount", report.unallocated_applied_amount),
+        _metric_line("authority_decision_count", report.authority_decision_count),
+    ]
     for row in report.rows:
         lines.append(
             _metric_line(
@@ -152,14 +198,61 @@ def iva_wallet_history_cmd(ctx: typer.Context) -> None:
                 ),
             )
         )
-    _emit(ctx, report, lines)
+    for lot in report.carry_forward_lots:
+        lines.append(
+            _metric_line(
+                "carry_forward_lot",
+                "\t".join(
+                    (
+                        str(lot.source_filing_year),
+                        lot.source_period,
+                        f"generated={lot.generated_amount}",
+                        f"applied={lot.applied_amount}",
+                        f"remaining={lot.remaining_amount}",
+                        f"age_years={lot.age_years}",
+                        f"expiry_review_state={lot.expiry_review_state}",
+                        f"source={lot.source_observation_key}",
+                        f"taxpayer_ref={lot.taxpayer_ref}",
+                    )
+                ),
+            )
+        )
+    for decision in report.authority_decisions:
+        lines.append(
+            _metric_line(
+                "authority_decision",
+                "\t".join(
+                    (
+                        str(decision.target_year),
+                        decision.target_period,
+                        f"selected_authority={decision.selected_authority}",
+                        f"selected_amount={decision.selected_amount}",
+                        f"wallet_amount={decision.wallet_amount}",
+                        f"local_recurrence_amount={decision.local_recurrence_amount}",
+                        f"override_amount={decision.override_amount}",
+                        f"divergence={decision.divergence}",
+                        f"blocked={decision.blocked}",
+                        f"stale_wallet={decision.stale_wallet}",
+                        f"taxpayer_ref={decision.taxpayer_ref}",
+                    )
+                ),
+            )
+        )
+        for source in decision.authority_sources:
+            lines.append(
+                _metric_line("authority_source", f"{decision.target_year}\t{decision.target_period}\t{source}")
+            )
+    return tuple(lines)
 
 
 @iva_wallet_app.command(
     "capture-history",
     help=tr(
         "cli.app.live.iva_wallet.capture_history_help",
-        default="Live-capture filed Modelo 303 history and persist secure IVA compensation state.",
+        default=(
+            "Live-capture filed Modelo 303 history and persist secure IVA compensation state. "
+            "No AEAT filing or wallet form choices are submitted."
+        ),
     ),
 )
 def iva_wallet_capture_history_cmd(
@@ -195,6 +288,7 @@ def iva_wallet_capture_history_cmd(
         )
     )
     lines = (
+        *_IVA_WALLET_LIVE_SAFETY_LINES,
         _metric_line("year_from", report.year_from),
         _metric_line("year_to", report.year_to),
         _metric_line("captured_count", report.captured_count),
@@ -601,12 +695,12 @@ def portals_show(
         str, typer.Argument(help=tr("cli.app.live.portals.portal_id_help", default="Portal enum value."))
     ],
 ) -> None:
-    from ...domain.portals import get_portal
+    from ...domain.portals import UnknownPortalError, get_portal
 
     try:
         metadata = get_portal(portal_id)
-    except Exception as exc:  # PortalLookupError + similar typed registry errors
-        raise typer.BadParameter(str(exc)) from exc
+    except UnknownPortalError as exc:
+        raise typer.BadParameter(resolve_error_message(exc)) from exc
     payload = _portal_row(metadata)
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
     _emit(ctx, payload, lines)

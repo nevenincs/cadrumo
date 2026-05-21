@@ -88,6 +88,8 @@ from ._errors import (
     SedeParseError,
 )
 from ._iva_compensation_wallet import (
+    IVA_COMPENSATION_WALLET_URL,
+    PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
     parse_iva_compensation_wallet_html,
 )
@@ -124,6 +126,8 @@ from ._walker import (
 )
 
 __all__ = [
+    "IVA_COMPENSATION_WALLET_URL",
+    "PRE303_PRESENTATION_SERVICE_URL",
     "Declaracion",
     "DeclaracionesRegisterSession",
     "Expediente",
@@ -150,16 +154,16 @@ __all__ = [
     "capture_relation_source_observations",
     "collect_renta_web_open_observation",
     "extract_renta_web_open_summary_value",
+    "fetch_iva_compensation_wallet",
     "fetch_notifications_query",
     "fetch_notifications_summary",
-    "fetch_iva_compensation_wallet",
     "find_expediente",
     "open_declarations_register",
     "parse_expediente_detail",
+    "parse_iva_compensation_wallet_html",
     "parse_notifications_query",
     "parse_notifications_summary",
     "parse_resumen_tree",
-    "parse_iva_compensation_wallet_html",
     "registry_observation_from_filed_declaration",
     "resolve_justificante_ref",
     "resolve_previous_filing_bindings_from_filed_declarations",

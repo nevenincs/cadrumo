@@ -50,6 +50,11 @@ from ...domain.iva import (
     lookup_rate,
 )
 from ._errors import AggregationValidationError, t
+from ._source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
 
 _LedgerId = Annotated[
     str,
@@ -248,8 +253,35 @@ def aggregate_oss_ioss_bindings(
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)
 
 
+class OssIossLedgerSourceResolver:
+    """Source mesh resolver for Modelo 369 OSS / IOSS ledger candidates."""
+
+    resolver_id = "ledger_oss_aggregation"
+    owned_sources = ("ledger_oss_aggregation",)
+
+    def __init__(self, *, candidates: Sequence[OssIossLedgerCandidate]) -> None:
+        self._candidates = tuple(candidates)
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        observations = validate_oss_ioss_observations(self._candidates)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=resolve_ledger_oss_aggregation_binding_values(context.revision, observations),
+            source_transaction_ids=tuple(sorted(observation.ledger_id for observation in observations)),
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="ledger_oss_aggregation",
+                    source_ref=f"transaction:{observation.ledger_id}",
+                )
+                for observation in observations
+            ),
+        )
+
+
 __all__ = [
     "OssIossLedgerCandidate",
+    "OssIossLedgerSourceResolver",
     "aggregate_oss_ioss_bindings",
     "validate_oss_ioss_observation",
     "validate_oss_ioss_observations",

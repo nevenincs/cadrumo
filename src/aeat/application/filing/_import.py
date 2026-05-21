@@ -264,7 +264,7 @@ def _build_submission_record(
     stays stable across re-imports of the same PDF and remains distinct
     from locally-created attempt ids.
     """
-    from ...domain.submission import SubmissionAttempt, SubmissionStatus, ModeloPresentado
+    from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
     submitted_at = justificante.presented_at.replace(tzinfo=_MADRID_TZ).astimezone(UTC)
     submission_id = hashlib.sha256(f"{justificante.csv}:{draft.draft_id}".encode()).hexdigest()[:16]

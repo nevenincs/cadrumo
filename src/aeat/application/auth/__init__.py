@@ -157,17 +157,21 @@ from ._acquisition_lock import (
 )
 from ._actions import update_auth
 from ._diagnostics import (
+    AUTH_DIAGNOSTIC_PHONE_STATES,
     AuthDiagnosticDetail,
     AuthDiagnosticListReport,
+    AuthDiagnosticReportResult,
     AuthDiagnosticSummary,
     list_auth_diagnostics,
     load_auth_diagnostic,
+    record_auth_diagnostic_phone_state,
 )
 from ._models import AuthState
 from ._operator import (
     AuthClearResult,
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureResult,
+    AuthLoginResult,
     AuthProviderReservedError,
     AuthProvidersReport,
     AuthStatusResult,
@@ -175,10 +179,12 @@ from ._operator import (
     configure_operator_auth,
     inspect_operator_auth,
     list_operator_auth_providers,
+    login_operator_auth,
     test_operator_auth,
 )
 from ._sessions import (
     AuthenticatedAeatSessionResult,
+    AuthProfileIdentityMismatchError,
     AuthSessionUnavailableError,
     CorruptAuthSessionError,
     PersistedAuthSession,
@@ -191,6 +197,7 @@ from ._sessions import (
 )
 
 __all__ = [
+    "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
     "AuthAcquisitionLockRecord",
     "AuthAcquisitionLockState",
@@ -201,7 +208,10 @@ __all__ = [
     "AuthConfigureResult",
     "AuthDiagnosticDetail",
     "AuthDiagnosticListReport",
+    "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
+    "AuthLoginResult",
+    "AuthProfileIdentityMismatchError",
     "AuthProvider",
     "AuthProviderDescription",
     "AuthProviderKind",
@@ -234,6 +244,8 @@ __all__ = [
     "list_operator_auth_providers",
     "load_auth_diagnostic",
     "load_persisted_session",
+    "login_operator_auth",
+    "record_auth_diagnostic_phone_state",
     "require_verified_aeat_session",
     "select_provider",
     "storage_state_paths",
