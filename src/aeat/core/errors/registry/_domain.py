@@ -1040,6 +1040,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._actions.CasillaProvenanceMissingError",
+        ErrorCode(
+            code="ERROR_MODELO_CASILLA_PROVENANCE_MISSING",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_casilla_provenance_missing",
+            default_suggestion="aeat app modelo work status WORK_UNIT_ID",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._actions.ModeloAggregationBindingError",
         ErrorCode(
             code="ERROR_MODELO_AGGREGATION_BINDING",
