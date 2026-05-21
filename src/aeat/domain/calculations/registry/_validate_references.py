@@ -8,7 +8,9 @@ from ._errors import RegistryValidationError
 from ._schema import ModeloRevision
 
 if TYPE_CHECKING:
+    from ._schema import ExtractionProfileDefinition
     from ._snapshot import RegistrySnapshot
+
 
 class _IdReferenceChecker:
     """Accumulates dangling typed-ID reference diagnostics for one snapshot.
@@ -203,7 +205,7 @@ def _check_extraction_profile_refs(checker: _IdReferenceChecker, revision: Model
 def _check_text_casilla_strategy(
     checker: _IdReferenceChecker,
     ep: str,
-    profile: object,
+    profile: ExtractionProfileDefinition,
 ) -> None:
     """Enforce that a declaracion_pdf profile targeting a text-typed casilla uses named_label.
 
@@ -212,9 +214,6 @@ def _check_text_casilla_strategy(
     casilla without the ``named_label`` strategy is a silent-extraction stub and must
     fail the snapshot-build gate.
     """
-    from ._schema import ExtractionProfileDefinition
-
-    assert isinstance(profile, ExtractionProfileDefinition)
     for target in profile.target_casillas:
         data_type = checker.casilla_data_types.get(target.casilla_id)
         if data_type == "text" and target.match_strategy != "named_label":
@@ -331,9 +330,7 @@ def _check_algorithm_binding_refs(checker: _IdReferenceChecker, revision: Modelo
     for alg_binding in revision.algorithm_bindings:
         abp = f"algorithm_binding {alg_binding.id}"
         if alg_binding.provider not in provider_ids:
-            checker.failures.append(
-                f"{checker.prefix}: {abp}.provider references unknown id {alg_binding.provider!r}"
-            )
+            checker.failures.append(f"{checker.prefix}: {abp}.provider references unknown id {alg_binding.provider!r}")
         # target is CasillaId | str; treat as CasillaId candidate.
         checker.chk(f"{abp}.target", alg_binding.target, checker.casilla_ids)
         for input_name, input_id in alg_binding.inputs.items():
@@ -443,6 +440,4 @@ def _check_binding_selector_shapes(checker: _IdReferenceChecker, revision: Model
     from ._bindings import validate_binding_selector_shape
 
     for binding in revision.bindings:
-        checker.failures.extend(
-            f"{checker.prefix}: {fail}" for fail in validate_binding_selector_shape(binding)
-        )
+        checker.failures.extend(f"{checker.prefix}: {fail}" for fail in validate_binding_selector_shape(binding))

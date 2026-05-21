@@ -13,6 +13,7 @@ from ....core.paths import PROJECT_ROOT
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
     RegistrySnapshot,
     RegistrySnapshotError,
     ValidatedRegistryAuthority,
@@ -398,7 +399,7 @@ def _extract_profile_values(
 
 def _find_casilla_hits(
     pages: tuple[str, ...],
-    target: object,
+    target: ExtractionTargetDefinition,
 ) -> list[tuple[int, str]]:
     """Find all regex hits for ``target`` across ``pages``.
 
@@ -413,9 +414,6 @@ def _find_casilla_hits(
 
     Returns a list of ``(1-based page number, captured raw value)`` tuples.
     """
-    from ....domain.calculations.registry._schema import ExtractionTargetDefinition
-
-    assert isinstance(target, ExtractionTargetDefinition)
 
     if target.match_strategy == "numeric_casilla":
         pattern = re.compile(
