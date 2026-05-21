@@ -449,6 +449,8 @@ cli:
         period_help: Token de periode per resoldre la revisio del model; per a Modelo
           036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1 i
           2026-01
+        period_token_invalid: '--period ''%{period}'' no és un token de període vàlid
+          per al model %{modelo}. Tokens vàlids: %{tokens}.'
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
@@ -1926,9 +1928,9 @@ wizard:
     unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
       \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
       \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\
-      \ profile edit %{profile_name} --quiet --<camp> VALOR\n\nO torna a executar l'edició\
-      \ guiada des d'una sessió de terminal interactiva:\n  aeat config profile edit\
-      \ %{profile_name}"
+      \ profile edit %{profile_name} --quiet --<camp> VALOR\n\nO torna a executar\
+      \ l'edició guiada des d'una sessió de terminal interactiva:\n  aeat config profile\
+      \ edit %{profile_name}"
   other:
     description: Other configuration options
     section:

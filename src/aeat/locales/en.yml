@@ -424,6 +424,8 @@ cli:
         period_help: Period token used to resolve the modelo revision; for Modelo
           036 use alta, modificacion, or baja; periodic examples include 2026Q1 and
           2026-01
+        period_token_invalid: '--period ''%{period}'' is not a valid period token
+          for modelo %{modelo}. Valid tokens: %{tokens}.'
       export:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:

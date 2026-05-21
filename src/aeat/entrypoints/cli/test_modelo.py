@@ -881,3 +881,44 @@ def test_period_token_error_enumerates_modelo_specific_tokens() -> None:
     # falls back to the generic period-shape hint.
     assert _declared_period_tokens(None) == ()
     assert _declared_period_tokens("999") == ()
+
+
+@pytest.mark.parametrize(
+    "modelo,bad_period,expected_token",
+    [
+        ("100", "INVALID", "0A"),
+        ("303", "99", "1T"),
+    ],
+)
+def test_describe_invalid_period_enumerates_modelo_tokens(
+    modelo: str, bad_period: str, expected_token: str
+) -> None:
+    """``modelo describe --period INVALID`` lists the modelo's valid tokens.
+
+    A malformed bare ``--period`` previously surfaced only the generic
+    ``period must be YYYY...`` registry shape hint. The error now names
+    the registry-declared period tokens for the modelo.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "describe", modelo, "--period", bad_period])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = result.output.replace("\n", " ")
+    assert expected_token in flat, f"expected token {expected_token!r} not enumerated: {result.output}"
+
+
+def test_describe_unknown_modelo_keeps_its_own_error() -> None:
+    """An unknown modelo with a period flag keeps the unknown-modelo error.
+
+    The period-token enrichment must not mask a genuine unknown-modelo
+    refusal as a period-token problem.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "describe", "999", "--period", "0A"])
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ").lower()
+    assert "999" in flat
+    # The error is about the modelo, not the (valid) period token.
+    assert "period token" not in flat

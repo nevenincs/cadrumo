@@ -257,7 +257,20 @@ def describe_modelo(
     period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.describe.period_help"))] = None,
     as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.describe.as_of_help"))] = None,
 ) -> None:
-    report = _run_query(lambda: _service().describe_modelo(modelo, period=period, as_of=_as_of(as_of)))
+    try:
+        report = _service().describe_modelo(modelo, period=period, as_of=_as_of(as_of))
+    except (ValueError, RegistrySnapshotError) as exc:
+        # A malformed --period yields a generic shape hint from the
+        # registry parser; enrich it with the modelo's declared period
+        # tokens so the operator sees exactly which tokens are valid.
+        # Only the period-parse / period-not-declared errors are
+        # rewritten — an unknown-modelo error keeps its own message.
+        message = str(exc)
+        if period is not None and "period" in message.lower():
+            raise typer.BadParameter(
+                _bare_period_error(modelo, period, fallback=message)
+            ) from exc
+        raise typer.BadParameter(message) from exc
     _emit(
         ctx,
         report,
@@ -502,6 +515,30 @@ def _period_token_error(
         ),
         token=token,
         year=year,
+    )
+
+
+def _bare_period_error(modelo: str, period: str, *, fallback: str) -> str:
+    """Build an operator-facing error for an invalid bare ``--period`` token.
+
+    Used by surfaces (``describe``, ``casillas``) that take a bare
+    period rather than a composed ``--year/--period`` pair. When the
+    modelo's declared period tokens are known the error enumerates them;
+    otherwise it falls back to the raw registry shape hint.
+    """
+
+    declared = _declared_period_tokens(modelo)
+    if not declared:
+        return fallback
+    return tr(
+        "cli.app.modelo.describe.period_token_invalid",
+        default=(
+            f"--period {period!r} is not a valid period token for modelo "
+            f"{modelo}. Valid tokens: {', '.join(declared)}."
+        ),
+        period=period,
+        modelo=modelo,
+        tokens=", ".join(declared),
     )
 
 
