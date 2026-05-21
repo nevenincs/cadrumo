@@ -1,7 +1,7 @@
 [modelo]
 id = "111"
 title = "IRPF retenciones e ingresos a cuenta"
-official_name = "Retenciones e ingresos a cuenta del IRPF. Rendimientos del trabajo y de actividades economicas, premios y determinadas ganancias patrimoniales e imputaciones de renta."
+official_name = "Retenciones e ingresos a cuenta del IRPF. Rendimientos del trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales e imputaciones de renta."
 tax_domain = "irpf"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

@@ -1,7 +1,7 @@
 [modelo]
 id = "353"
-title = "IVA. Grupo de entidades. Modelo agregado. Autoliquidacion mensual"
-official_name = "Modelo 353. Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo agregado. Autoliquidacion mensual."
+title = "IVA. Grupo de entidades. Modelo agregado. Autoliquidación mensual"
+official_name = "Modelo 353. Impuesto sobre el Valor Añadido. Grupo de entidades. Modelo agregado. Autoliquidación mensual."
 tax_domain = "iva"
 cadence = "monthly"
 jurisdiction = "ES-AEAT"

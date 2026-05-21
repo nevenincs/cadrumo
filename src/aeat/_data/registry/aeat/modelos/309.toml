@@ -1,7 +1,7 @@
 [modelo]
 id = "309"
-title = "IVA. Declaracion-liquidacion no periodica"
-official_name = "Modelo 309. Impuesto sobre el Valor Anadido. Declaracion-liquidacion no periodica."
+title = "IVA. Declaración-liquidación no periódica"
+official_name = "Modelo 309. Impuesto sobre el Valor Añadido. Declaración-liquidación no periódica."
 tax_domain = "iva"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"

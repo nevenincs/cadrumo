@@ -1,7 +1,7 @@
 [modelo]
 id = "369"
-title = "IVA. Autoliquidacion regimenes especiales OSS / IOSS"
-official_name = "Modelo 369. Impuesto sobre el Valor Anadido. Autoliquidacion de los regimenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condicion de sujetos pasivos, que efectuen ventas a distancia de bienes y ciertas entregas interiores de bienes."
+title = "IVA. Autoliquidación regímenes especiales OSS / IOSS"
+official_name = "Modelo 369. Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes."
 tax_domain = "iva"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"

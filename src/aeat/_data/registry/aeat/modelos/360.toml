@@ -1,7 +1,7 @@
 [modelo]
 id = "360"
-title = "IVA. Solicitud de devolucion del IVA soportado en otros Estados miembros (8a Directiva)"
-official_name = "Modelo 360. Solicitud de devolucion del Impuesto sobre el Valor Anadido soportado por empresarios o profesionales establecidos en el territorio de aplicacion del Impuesto, correspondientes a operaciones efectuadas en la Comunidad con excepcion de las realizadas en dicho territorio."
+title = "IVA. Solicitud de devolución del IVA soportado en otros Estados miembros (8ª Directiva)"
+official_name = "Modelo 360. Solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto, correspondientes a operaciones efectuadas en la Comunidad con excepción de las realizadas en dicho territorio."
 tax_domain = "iva"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"

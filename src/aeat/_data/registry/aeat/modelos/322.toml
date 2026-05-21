@@ -1,7 +1,7 @@
 [modelo]
 id = "322"
-title = "IVA. Grupo de entidades. Modelo individual. Autoliquidacion mensual"
-official_name = "Modelo 322. Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidacion mensual."
+title = "IVA. Grupo de entidades. Modelo individual. Autoliquidación mensual"
+official_name = "Modelo 322. Impuesto sobre el Valor Añadido. Grupo de entidades. Modelo individual. Autoliquidación mensual."
 tax_domain = "iva"
 cadence = "monthly"
 jurisdiction = "ES-AEAT"

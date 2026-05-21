@@ -1,7 +1,7 @@
 [modelo]
 id = "184"
-title = "Entidades en regimen de atribucion de rentas (informativa anual)"
-official_name = "Modelo 184. Declaracion informativa anual de Entidades en regimen de atribucion de rentas."
+title = "Entidades en régimen de atribución de rentas (informativa anual)"
+official_name = "Modelo 184. Declaración informativa anual de Entidades en régimen de atribución de rentas."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
@@ -69,6 +69,8 @@ label = "Clave del tipo de renta atribuida (A=capital mobiliario, C=capital inmo
 section = ["declarado", "renta"]
 data_type = "text"
 semantic_role = "tipo_renta_atribuida_clave"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 184 tipo-2 clave is the single attributed-income type key field in the annual information return."
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
@@ -81,6 +83,8 @@ label = "Subclave del tipo de renta atribuida (granularidad por origen geografic
 section = ["declarado", "renta"]
 data_type = "text"
 semantic_role = "tipo_renta_atribuida_subclave"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 184 tipo-2 subclave is the single attributed-income subtype field in the annual information return."
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]

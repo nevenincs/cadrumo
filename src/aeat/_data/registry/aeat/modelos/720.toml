@@ -1,7 +1,7 @@
 [modelo]
 id = "720"
 title = "Bienes y derechos en el extranjero (informativa anual)"
-official_name = "Modelo 720. Declaracion informativa sobre bienes y derechos situados en el extranjero."
+official_name = "Modelo 720. Declaración informativa sobre bienes y derechos situados en el extranjero."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
