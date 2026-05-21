@@ -32,10 +32,10 @@ import pytest
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.tests.cli_runner import invoke_cached_cli
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
 if TYPE_CHECKING:
     from click.testing import Result
-
-pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 # In-process budget for a state-free surface. `--version` resolves in
 # ~15 ms and `--help` in ~25 ms once imports are warm; 200 ms is the
