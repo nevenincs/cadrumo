@@ -35,11 +35,10 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from enum import StrEnum
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...application.diagnostics import secure_object_unreadable_total
-from ...application.workflow import WorkflowState, workflow_state_repository
 from ...domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
@@ -51,9 +50,6 @@ from ...domain.deadlines import (
     shift_deadline,
 )
 from ...domain.deadlines._festivos import DeadlineValidationError
-from ...domain.filing import ModeloDraftRepository
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ._errors import (
     OverviewAgendaError,
     OverviewBacklogError,
@@ -61,6 +57,10 @@ from ._errors import (
     OverviewError,
     OverviewExplainError,
 )
+
+if TYPE_CHECKING:
+    from ..state_projection import OperatorStateProjection
+    from ..workflow import WorkflowState
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for overview records."""
@@ -293,7 +293,11 @@ class OverviewCalendar(BaseModel):
 
 
 class OverviewStatusReport(BaseModel):
-    """Current active-profile readiness counters for ``overview status``."""
+    """Current active-profile readiness counters for ``overview status``.
+
+    Derived from the canonical :class:`OperatorStateProjection`; this
+    report is the CLI emit shape, not a second state-assembly path.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -304,6 +308,15 @@ class OverviewStatusReport(BaseModel):
     transactions: int = Field(ge=0)
     invoices: int = Field(ge=0)
     drafts: int = Field(ge=0)
+    work_units: int = Field(default=0, ge=0)
+    """Count of ``WorkUnitCatalogue`` entries written by ``modelo work create``.
+
+    Carried distinctly from ``drafts`` (the legacy ``ModeloDraft``
+    store) so an operator who used the ``modelo work`` flow does not
+    see a silently-zero counter.
+    """
+    calculation_revisions: int = Field(default=0, ge=0)
+    """Count of ``CalculationRevisionCatalogue`` entries written by ``modelo work calculate``."""
     unreadable_rows: int = Field(ge=0)
 
 
@@ -476,77 +489,44 @@ def build_overview_calendar(
     )
 
 
+def overview_status_report_from_projection(projection: OperatorStateProjection) -> OverviewStatusReport:
+    """Project the canonical state projection into the ``overview status`` emit shape.
+
+    The :class:`OverviewStatusReport` is a CLI emit shape derived from
+    the one :class:`OperatorStateProjection`; it is not a second
+    state-assembly path. Both the legacy ``ModeloDraft`` count and the
+    ``WorkUnitCatalogue`` count are carried distinctly.
+    """
+
+    return OverviewStatusReport(
+        active_profile=projection.active_profile.profile_id,
+        active_profile_name=projection.active_profile.label,
+        transactions=projection.workspace.transactions,
+        invoices=projection.workspace.invoices,
+        drafts=projection.workspace.drafts,
+        work_units=projection.workspace.work_units,
+        calculation_revisions=projection.workspace.calculation_revisions,
+        unreadable_rows=projection.workspace.unreadable_rows,
+    )
+
+
 def build_overview_status_report(
     *,
     state: WorkflowState | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
-    draft_repository: ModeloDraftRepository | None = None,
-    unreadable_rows: int | None = None,
 ) -> OverviewStatusReport:
-    """Build the typed readiness report used by root and overview status."""
+    """Build the typed readiness report used by root and overview status.
 
-    from ..workflow._models import resolve_active_bucket_id
-
-    active_profile = resolve_active_bucket_id()
-    if state is not None:
-        current = state
-    elif active_profile is None:
-        current = WorkflowState()
-    else:
-        current = workflow_state_repository().load()
-    bucket_id = current.active_profile_bucket_id()
-    if transaction_repository is None:
-        transactions = (
-            TransactionCatalogueRepository(bucket_id=bucket_id).load()
-            if bucket_id is not None
-            else TransactionCatalogue()
-        )
-    else:
-        transactions = transaction_repository.load()
-    invoices = (
-        InvoiceCatalogue()
-        if invoice_repository is None and active_profile is None
-        else (invoice_repository or InvoiceCatalogueRepository()).load()
-    )
-    drafts = (
-        ()
-        if draft_repository is None and active_profile is None
-        else tuple((draft_repository or ModeloDraftRepository()).iter_drafts())
-    )
-    unreadable_total = (
-        0
-        if unreadable_rows is None and active_profile is None
-        else secure_object_unreadable_total() if unreadable_rows is None else unreadable_rows
-    )
-    return OverviewStatusReport(
-        active_profile=active_profile,
-        active_profile_name=_resolve_active_profile_name(active_profile),
-        transactions=len(transactions.transactions),
-        invoices=len(invoices),
-        drafts=len(drafts),
-        unreadable_rows=unreadable_total,
-    )
-
-
-def _resolve_active_profile_name(bucket_id: str | None) -> str | None:
-    """Resolve a bucket UUID to its operator-chosen display name.
-
-    Reads the plaintext profile-bucket manifest (no secret access, no
-    active session required); returns ``None`` when no profile is active
-    or the manifest cannot be located so the renderer falls back to the
-    UUID.
+    Consumes the canonical :func:`build_operator_state_projection`; the
+    bespoke per-surface store assembly this function once carried is
+    deleted. ``overview status`` therefore reports the same counters as
+    every other operator surface — including the ``modelo work`` work
+    units the old assembly never read.
     """
 
-    if bucket_id is None:
-        return None
-    from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ..state_projection import build_operator_state_projection
 
-    try:
-        pointer = read_profile_bucket_by_id(bucket_id)
-    except (OSError, ValueError):
-        return None
-    return pointer.label if pointer is not None else None
+    projection = build_operator_state_projection(state=state)
+    return overview_status_report_from_projection(projection)
 
 
 def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
@@ -558,6 +538,8 @@ def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...
         f"transactions\t{report.transactions}",
         f"invoices\t{report.invoices}",
         f"drafts\t{report.drafts}",
+        f"work_units\t{report.work_units}",
+        f"calculation_revisions\t{report.calculation_revisions}",
     ]
     if report.unreadable_rows > 0:
         lines.append(f"integrity-warning\tunreadable_rows={report.unreadable_rows}")
@@ -579,6 +561,7 @@ __all__ = [
     "OverviewStatusReport",
     "build_overview_calendar",
     "build_overview_status_report",
+    "overview_status_report_from_projection",
     "render_overview_status_lines",
     "user_state_for",
 ]

@@ -104,7 +104,7 @@ def test_load_active_autonomo_profile_returns_autonomo_record_for_minimal_profil
     state = register_minimal_profile(
         WorkflowState(),
         profile_id="operator",
-        overrides={"activities.description": "design"},
+        overrides={"activities.description": "design", "identity.tax_id": "00000000T"},
     )
     profile = load_active_autonomo_profile(state)
     assert profile.tax_id == "00000000T"

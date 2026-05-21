@@ -23,6 +23,8 @@ from pydantic import BaseModel
 
 from ...core.i18n import Translatable as tr
 from ._commands import (
+    _CCAA_CHOICE_VALUES,
+    _SETUP_OPTION_INFOS,
     _canonical_from_flag_value,
     _flag_name,
     _help_key,
@@ -84,6 +86,31 @@ def _flow(*questions: WizardQuestion) -> WizardFlow:
 def test_flag_name_prefixes_double_dash_to_question_id() -> None:
     question = _question(qid="tax_id")
     assert _flag_name(question) == "--tax_id"
+
+
+def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
+    """The CCAA option declares a short metavar so the help table does not
+    wrap the 15-choice list mid-token inside its bracket.
+
+    Before fix: Rich rendered the full ``[andalucia|...|murcia]`` choice
+    list as one ~150-char metavar and broke it inside a token (``com``
+    / ``unidad_valenciana``).
+    After fix: the metavar is the compact ``CCAA`` token and choices
+    are not shown in the metavar bracket.
+    """
+
+    option = _SETUP_OPTION_INFOS["tax-residence-ccaa"]
+
+    assert option.metavar == "CCAA"
+    assert option.show_choices is False
+
+
+def test_tax_residence_ccaa_choices_match_the_ccaa_enum() -> None:
+    """The CCAA choice tokens are derived from the canonical CCAA enum."""
+
+    from ...domain.profile._ccaa import CCAA
+
+    assert _CCAA_CHOICE_VALUES == [member.value for member in CCAA]
 
 
 def test_no_flag_name_inserts_no_prefix_for_confirm_questions() -> None:

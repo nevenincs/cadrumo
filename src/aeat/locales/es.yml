@@ -203,6 +203,8 @@ application:
         modelo_blank: El identificador de modelo no puede estar en blanco.
   user_profile:
     errors:
+      duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
+        debe tener un solo perfil.
       no_active_profile_selected: No hay un perfil activo seleccionado.
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta `aeat config
         profile switch NAME` para activarlo o `aeat config profile delete NAME` primero.
@@ -543,6 +545,7 @@ cli:
         amend_help: Construir una declaración complementaria sobre una declaración
           presentada externamente. Requiere un filing record con evidencia oficial
           importada de la AEAT
+        amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
         amendment_kind_help: Tipo legal de la amendación (complementaria o sustitutiva)
         amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
           operador)
@@ -561,6 +564,9 @@ cli:
           periodo, revisión)
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
+        discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
+          a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
+        discard_yes_help: Confirmar explícitamente la operación de descarte
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         from_filing_record_help: Identificador estable del filing record base a amendar.
@@ -599,10 +605,16 @@ cli:
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
         status_help: Mostrar los metadatos de una unidad de trabajo
+        unknown_modelo: 'Modelo desconocido %{modelo}; el registro de cálculo conoce
+          estos modelos: %{known}.'
+        unknown_revision: 'Revisión desconocida %{revision} para el modelo %{modelo};
+          revisiones declaradas: %{declared}.'
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
+        year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
+          un año entre %{minimum} y %{maximum}.
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
@@ -921,14 +933,14 @@ cli:
     workflow_help: Mostrar ayuda del flujo de configuración
   diagnostics:
     browser:
-      http_status_label: cli.diagnostics.browser.http_status_label
-      markers_label: cli.diagnostics.browser.markers_label
-      markers_none: cli.diagnostics.browser.markers_none
-      observed_at_label: cli.diagnostics.browser.observed_at_label
-      retry_after_label: cli.diagnostics.browser.retry_after_label
-      state_label: cli.diagnostics.browser.state_label
-      target_browser: cli.diagnostics.browser.target_browser
-      target_label: cli.diagnostics.browser.target_label
+      http_status_label: Estado HTTP
+      markers_label: Marcadores
+      markers_none: ninguno
+      observed_at_label: Observado el
+      retry_after_label: Reintentar tras
+      state_label: Estado
+      target_browser: navegador
+      target_label: Destino
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
     next_action:
@@ -1406,6 +1418,9 @@ cli:
       transactions_empty: Aun no se han importado movimientos bancarios.
       transactions_present: '%{count} movimiento(s) bancarios estan disponibles en
         el libro.'
+      work_units_empty: Aun no se ha iniciado ninguna unidad de trabajo de modelos.
+      work_units_present: '%{count} unidad(es) de trabajo de modelos existen en este
+        almacenamiento local.'
     status_help: Mostrar el estado del perfil, libro y modelos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
@@ -1542,6 +1557,8 @@ cli:
     app_help_help: Mostrar ayuda del flujo de app
     debug_help: Mostrar logs internos de depuración en stderr
     detail_help: Mostrar también el resumen detallado del registro
+    errors:
+      did_you_mean_command: ¿Quería decir '%{command}'?
     format_help: Formato de salida para los resultados del comando
     help_help: Mostrar ayuda orientada al flujo de trabajo
     landing:
@@ -1917,6 +1934,8 @@ wizard:
     checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
     invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
     invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
+      postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
     invalid_tax_id: 'NIF/NIE/CIF no válido para %{prompt_key}: %{raw}. %{detail}.'
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
@@ -2037,7 +2056,7 @@ wizard:
       tax-id:
         help: Identificador fiscal (NIF/NIE) del perfil activo
       tax-residence-ccaa:
-        help: Comunidad autónoma de residencia fiscal
+        help: 'Comunidad autónoma de residencia fiscal. Una de: %{choices}.'
       taxation-type:
         help: 'Tipo de declaración de Renta: 1 = individual, 2 = conjunta (unidad
           familiar).'

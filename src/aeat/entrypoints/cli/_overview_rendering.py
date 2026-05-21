@@ -14,6 +14,7 @@ def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str,
         _transactions_line(report),
         _invoices_line(report),
         _drafts_line(report),
+        _work_units_line(report),
         *_storage_lines(report),
         "",
         tr("cli.overview.status.next_heading"),
@@ -24,17 +25,29 @@ def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str,
     return tuple(lines)
 
 
+def _work_units_line(report: OverviewStatusReport) -> str:
+    if report.work_units == 0:
+        return tr(
+            "cli.overview.status.work_units_empty",
+            default="No modelo work units have been started yet.",
+        )
+    return tr(
+        "cli.overview.status.work_units_present",
+        default="%{count} modelo work unit(s) exist in this local storage.",
+        count=report.work_units,
+    )
+
+
 def _profile_line(report: OverviewStatusReport) -> str:
     if report.active_profile is None:
         return tr("cli.overview.status.profile_missing")
-    # Prefer the operator-chosen display name; the immutable bucket UUID
-    # is shown as a parenthetical secondary so the line is still
-    # unambiguous after the UUID-identity cutover. Fall back to the UUID
-    # alone when the manifest carried no display name.
+    # The prose line names the operator-chosen display name only; the
+    # immutable bucket UUID is structured-payload noise in prose and is
+    # carried solely on the JSON / secondary `profile_id` field. Fall
+    # back to the UUID alone when the manifest carried no display name.
     name = report.active_profile_name
     if name:
-        line = tr("cli.overview.status.profile_active", profile=name)
-        return f"{line} ({report.active_profile})"
+        return tr("cli.overview.status.profile_active", profile=name)
     return tr("cli.overview.status.profile_active", profile=report.active_profile)
 
 

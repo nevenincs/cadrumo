@@ -182,6 +182,8 @@ application:
         modelo_blank: Modelo identifier must not be blank.
   user_profile:
     errors:
+      duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
+        one taxpayer must have one profile.
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run `aeat config
         profile switch NAME` to activate it or `aeat config profile delete NAME` first.
@@ -498,6 +500,8 @@ cli:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
         amend_help: Build a corrective amendment over an externally-filed return.
           Requires a filing record with imported AEAT-attested evidence
+        amend_missing_options: 'An amendment requires every one of these options:
+          %{missing}.'
         amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
@@ -512,6 +516,9 @@ cli:
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
         discard_help: Mark a work unit as discarded (auditable state transition)
+        discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
+          app modelo work discard %{work_unit_id} --yes' to confirm.
+        discard_yes_help: Explicitly confirm the discard operation
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         from_filing_record_help: Stable id of the baseline filing record to amend.
@@ -547,10 +554,16 @@ cli:
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
         status_help: Show the metadata of one work unit
+        unknown_modelo: 'Unknown modelo %{modelo}; the calculation registry knows
+          these modelos: %{known}.'
+        unknown_revision: 'Unknown revision %{revision} for modelo %{modelo}; declared
+          revisions: %{declared}.'
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
+        year_out_of_range: Filing year %{year} is out of range; supply a year between
+          %{minimum} and %{maximum}.
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -859,14 +872,14 @@ cli:
     workflow_help: Show config workflow help
   diagnostics:
     browser:
-      http_status_label: cli.diagnostics.browser.http_status_label
-      markers_label: cli.diagnostics.browser.markers_label
-      markers_none: cli.diagnostics.browser.markers_none
-      observed_at_label: cli.diagnostics.browser.observed_at_label
-      retry_after_label: cli.diagnostics.browser.retry_after_label
-      state_label: cli.diagnostics.browser.state_label
-      target_browser: cli.diagnostics.browser.target_browser
-      target_label: cli.diagnostics.browser.target_label
+      http_status_label: HTTP status
+      markers_label: Markers
+      markers_none: none
+      observed_at_label: Observed at
+      retry_after_label: Retry after
+      state_label: State
+      target_browser: browser
+      target_label: Target
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
     next_action:
@@ -1344,6 +1357,8 @@ cli:
       title: Workspace status
       transactions_empty: No bank transactions have been imported yet.
       transactions_present: '%{count} bank transaction(s) are available in the ledger.'
+      work_units_empty: No modelo work units have been started yet.
+      work_units_present: '%{count} modelo work unit(s) exist in this local storage.'
     status_help: Show profile, ledger, and modelo readiness
     verbose_help: Show details and next action when available
   registry:
@@ -1475,6 +1490,8 @@ cli:
     app_help_help: Show app workflow help
     debug_help: Show internal debug logs on stderr
     detail_help: Also show the detailed registry summary
+    errors:
+      did_you_mean_command: Did you mean '%{command}'?
     format_help: Output format for command results
     help_help: Show workflow-oriented help
     landing:
@@ -1844,6 +1861,8 @@ wizard:
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
+      is 5 digits (province code 01-52 followed by three digits).'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
@@ -1963,7 +1982,7 @@ wizard:
       tax-id:
         help: Tax identifier (NIF/NIE) for the active profile
       tax-residence-ccaa:
-        help: Tax-residence autonomous community
+        help: 'Tax-residence autonomous community. One of: %{choices}.'
       taxation-type:
         help: 'Income-tax return type: 1 = individual, 2 = joint (family unit).'
       taxpayer-birth-date:

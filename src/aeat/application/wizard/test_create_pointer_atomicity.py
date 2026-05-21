@@ -1,21 +1,19 @@
 """A failed wizard ``profile create`` must not strand the active-profile pointer.
 
-The wizard ``create`` path writes the active-profile pointer EARLY — the
-per-bucket SQLAlchemy engine resolves its URL from the pointer chain, so
-the pointer must exist before the workflow-state repository opens its
-engine. ``register_active_profile`` re-writes the pointer at the tail of
-its own work and rolls back the pointer when the encrypted-record write
-raises. But a failure BETWEEN the wizard's early pointer write and that
-internal rollback would otherwise leave the pointer aimed at a profile
-whose record was never persisted — the ``missing_profile_record`` torn
-state ``repair profile`` reports.
+The wizard ``create`` path delegates the whole cross-store create —
+bucket directory, manifest, encrypted record, AND the active-profile
+pointer — to ``ProfileRepository.create`` as one unit of work. The
+pointer write is part of that unit; a failure rolls it back to its
+pre-create state. There is no early caller-side pointer write to
+strand, so the ``missing_profile_record`` torn state (pointer aimed at
+a profile whose record was never persisted) is unreachable.
 
-These tests force a *real* failure inside ``register_active_profile``:
-the wizard ``create`` targets a display label that already belongs to a
-live profile, so ``register_active_profile``'s own duplicate-label guard
-raises. No mock, no patched failure — the rejection is the genuine
-guard. The contract under test: a crashed ``create`` leaves the
-active-profile pointer exactly as it was found.
+These tests force a *real* failure inside the create: the wizard
+``create`` targets a display label that already belongs to a live
+profile, so the repository's duplicate-label guard raises. No mock, no
+patched failure — the rejection is the genuine guard. The contract
+under test: a refused ``create`` leaves the active-profile pointer
+exactly as it was found.
 """
 
 from __future__ import annotations

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from datetime import date
 from pathlib import Path
 
@@ -17,6 +18,43 @@ _ValidationCacheValue = tuple[ModeloDefinition, RegistryCatalogues]
 
 _SNAPSHOT_CACHE: dict[_SnapshotCacheKey, _SnapshotCacheValue] = {}
 _VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
+
+# Peer-domain modules that register a ``CrossDomainSnapshotCheck`` with the
+# registry validator as an import side effect. Each module calls
+# ``register_cross_domain_snapshot_check`` at import time; the registry never
+# imports the peer statically (that would reverse the dependency direction the
+# restructure ADR fixes, defect F7). The registry only owns this *list of
+# names* -- the dependency-inversion contract the ``CrossDomainSnapshotCheck``
+# Protocol declares. ``_install_cross_domain_snapshot_checks`` imports them by
+# name so the registration is deterministic at snapshot build, independent of
+# whatever else the importing process happened to load first.
+_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
+    "aeat.domain.renta._first_slice_routing_integrity",
+)
+
+_cross_domain_checks_installed = False
+
+
+def _install_cross_domain_snapshot_checks() -> None:
+    """Import every peer-domain check module so its registration runs.
+
+    Idempotent: the import side effect (``register_cross_domain_snapshot_check``)
+    is itself idempotent and the module cache makes a second ``import_module``
+    a no-op, but the module-level flag short-circuits the common path. Called
+    at the start of every snapshot build so a Modelo 100 snapshot validated on
+    an import path that never imported ``aeat.domain.renta`` still has the
+    renta first-slice routing referential-integrity gate registered. This
+    removes the import-order dependency: registration no longer relies on a
+    composition root happening to import ``renta`` before the first M100
+    snapshot.
+    """
+
+    global _cross_domain_checks_installed
+    if _cross_domain_checks_installed:
+        return
+    for module_name in _CROSS_DOMAIN_CHECK_MODULES:
+        importlib.import_module(module_name)
+    _cross_domain_checks_installed = True
 
 
 def build_snapshot(
@@ -72,6 +110,7 @@ def _build_validated_snapshot(
 ) -> RegistrySnapshot:
     """Return a selected snapshot after the caller has validated ``modelo``."""
 
+    _install_cross_domain_snapshot_checks()
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)

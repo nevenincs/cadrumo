@@ -140,6 +140,44 @@ def test_render_config_repair_text_is_operator_readable(
     assert f"{tr('cli.diagnostics.repair.logs_label')}\t" in rendered
 
 
+def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
+    """``config repair connectivity`` row keys must resolve, not leak ``.label``.
+
+    Before fix: the browser diagnostics locale keys were unfilled, so
+    ``tr('cli.diagnostics.browser.target_label')`` fell back to the
+    humanised last segment and rendered ``Target label`` — the i18n
+    ``.label`` key suffix bled into the operator-facing string.
+    After fix: each key resolves to a real translated label.
+    """
+
+    from aeat.adapters.outbound.aeat.browser._site_health import (
+        SiteHealthEvidence,
+        SiteHealthState,
+        SiteHealthStatus,
+    )
+
+    from .diagnostics import render_browser_connectivity_text
+
+    status = SiteHealthStatus(
+        state=SiteHealthState.OK,
+        evidence=SiteHealthEvidence(
+            url="https://example.org/",
+            http_status=200,
+            html_fragment="<html></html>",
+            detected_markers=("healthy",),
+        ),
+        observed_at=datetime(2026, 5, 21, 12, 0, 0, tzinfo=UTC),
+        retry_after_seconds=None,
+    )
+
+    rendered = render_browser_connectivity_text(status)
+
+    assert "label" not in rendered.lower()
+    assert "cli.diagnostics" not in rendered
+    first_keys = {line.split("\t", 1)[0] for line in rendered.splitlines()}
+    assert all(key for key in first_keys)
+
+
 def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_master_key(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,

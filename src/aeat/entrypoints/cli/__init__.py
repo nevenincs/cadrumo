@@ -40,6 +40,7 @@ from ...application.overview import build_overview_status_report
 from ...application.workflow import workflow_state_repository
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from . import _config
+from ._command_suggestions import AeatTyperGroup
 from ._common import _FORMAT_TEXT, _emit
 from ._errors import decorate_typer_app, write_stderr
 from ._log_levels import apply_to_root_logger, resolve_log_level
@@ -308,6 +309,7 @@ app_app = typer.Typer(
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
+    cls=AeatTyperGroup,
 )
 
 

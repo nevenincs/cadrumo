@@ -25,6 +25,7 @@ from ....application.workflow._models import resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path
+from .._command_suggestions import AeatTyperGroup
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 
@@ -38,7 +39,12 @@ app = typer.Typer(
     invoke_without_command=True,
     add_help_option=False,
 )
-profile_app = typer.Typer(name="profile", help=tr("cli.config.profile.help"), no_args_is_help=True)
+profile_app = typer.Typer(
+    name="profile",
+    help=tr("cli.config.profile.help"),
+    no_args_is_help=True,
+    cls=AeatTyperGroup,
+)
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
 auth_diagnostics_app = typer.Typer(
     name="diagnostics",
@@ -577,6 +583,10 @@ def _atomic_create_profile(*, display_name, facts) -> str:
                     profile_id=profile_id,
                     display_name=display_name,
                     facts=facts,
+                    # `duplicate` and `import` legitimately reproduce an
+                    # existing profile's tax id; the duplicate-tax-id
+                    # refusal applies to a fresh `profile create` only.
+                    enforce_unique_tax_id=False,
                 )
             )
     except Exception:
@@ -832,7 +842,16 @@ def config_profile_show(
     from ....domain.user_profile import ProfileNotFoundError
 
     if name is not None:
-        pointer = _resolve_profile_by_label(name)
+        # ``show`` is the inspect surface: a tombstoned profile is still
+        # resolvable by name so the operator can confirm a delete and
+        # read the retained record. The verb renders the tombstoned
+        # status; it never reports the profile as a live ``ready`` one.
+        try:
+            pointer = read_profile_bucket(name, include_tombstoned=True)
+        except ValueError as exc:
+            raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
+        if pointer is None:
+            raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
     else:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
@@ -850,20 +869,28 @@ def config_profile_show(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=exc
         )
         raise typer.Exit(code=2) from exc
+    from ....domain.user_profile import UserProfileStatus
+
     report = service._validator.validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
+    is_tombstoned = record.status is UserProfileStatus.TOMBSTONED
     values = record_to_path_values(record)
     payload = {
         "profile_id": record.profile_id,
         "display_name": record.display_name,
         "status": record.status.value,
-        "valid": not blocking,
+        # A tombstoned profile is never "valid" as a live profile, no
+        # matter what the schema validator says about its fields — the
+        # readiness verdict must not contradict the status line.
+        "valid": not blocking and not is_tombstoned,
         "schema_version": report.schema_version,
         "issues": [issue.model_dump(mode="json") for issue in report.issues],
         "facts": [{"path": path, "value": value} for path, value in sorted(values.items())],
     }
     lines: list[str] = []
-    if blocking:
+    if is_tombstoned:
+        lines.append("readiness\ttombstoned")
+    elif blocking:
         lines.append(f"readiness\tblocked\tissues={len(blocking)}")
     else:
         lines.append(f"readiness\tready\tissues={len(report.issues)}")

@@ -117,14 +117,16 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     # diagnose a missing-profile condition. The sentinel label keeps
     # the Profile model satisfied without pretending to be a real
     # profile.
-    profile_name = resolve_active_bucket_id() or "diagnostic-probe"
+    bucket_id = resolve_active_bucket_id() or "diagnostic-probe"
     # Profile.storage_state_path is superseded by every auth-provider
     # passing an explicit kind-namespaced storage_state_path to
     # BrowserSession.create_context(). The value here is a fallback
     # for hypothetical future callers that do not override it; no
-    # shipping provider currently relies on it.
-    storage_state_path = settings.aeat_token_dir / f"{profile_name}-storage.json"
-    profile = Profile(name=profile_name, storage_state_path=storage_state_path)
+    # shipping provider currently relies on it. The storage-state
+    # filename is keyed by the active bucket UUID, consistent with the
+    # other token/lock filename call sites.
+    storage_state_path = settings.aeat_token_dir / f"{bucket_id}-storage.json"
+    profile = Profile(name=bucket_id, storage_state_path=storage_state_path)
     return await create_browser_session(settings, profile)
 
 

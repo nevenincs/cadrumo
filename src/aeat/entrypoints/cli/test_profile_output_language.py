@@ -84,12 +84,13 @@ def test_config_profile_create_writes_profile_output_language(
         from aeat.application.user_profile._orchestration import fact_value
 
         assert fact_value(record, "preferences.output_language") == "en"
-        assert ("profile.created", "default", "default") in [
+        profile_id = record.profile_id
+        assert ("profile.created", profile_id, profile_id) in [
             (event.action, event.bucket_id, event.object_id) for event in state.bucket_events
         ]
         assert any(
             event.action == "profile.values.updated"
-            and event.bucket_id == "default"
+            and event.bucket_id == profile_id
             and event.object_id is not None
             and event.object_id.startswith("keys:")
             for event in state.bucket_events
@@ -256,3 +257,52 @@ def test_global_language_flag_overrides_profile_for_invocation(
         from aeat.application.user_profile._orchestration import fact_value
 
         assert fact_value(record, "preferences.output_language") == "ca"
+
+
+def test_create_error_renders_in_command_line_output_language(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A creation-time error renders in the ``--output-language`` given on create.
+
+    Before fix: a refusal raised during ``profile create`` (e.g. a
+    missing ``--activity`` under ``--quiet``) rendered in the default
+    language even when ``--output-language en`` was supplied.
+    After fix: the create flag drives the error language too — it is
+    available at parse time, before the profile exists.
+    """
+
+    _isolate(monkeypatch, tmp_path)
+
+    english = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "needslang",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--output-language",
+            "en",
+        ]
+    )
+    spanish = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "needslang2",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--output-language",
+            "es",
+        ]
+    )
+
+    assert english.exit_code != 0, english.output
+    assert spanish.exit_code != 0, spanish.output
+    # The English run names the missing flag in English prose; the
+    # Spanish run does not carry the English wording.
+    assert "Required flags are missing" in english.output
+    assert "Required flags are missing" not in spanish.output

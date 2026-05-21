@@ -587,6 +587,70 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
     assert f"amends_filing_record_id\t{amends_id}" in lines
 
 
+def test_work_discard_refuses_without_yes() -> None:
+    """``work discard`` without ``--yes`` is refused with the exact re-run command.
+
+    The discard gate is symmetric with ``config profile delete``: an
+    auditable state transition must not fire on an unconfirmed run.
+    """
+
+    work_unit_id = "a" * 64
+    result = invoke_cached_cli(["app", "modelo", "work", "discard", work_unit_id])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "--yes" in result.output
+    assert work_unit_id in result.output.replace("\n", "")
+
+
+def test_work_discard_help_advertises_yes_flag() -> None:
+    """``work discard --help`` advertises the ``--yes`` confirmation flag."""
+
+    result = invoke_cached_cli(["app", "modelo", "work", "discard", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "--yes" in result.output
+
+
+def test_work_amend_batch_reports_all_missing_options() -> None:
+    """``work amend`` with no flags reports every missing required option at once.
+
+    Before fix: typer surfaced the missing options one at a time,
+    forcing the operator to rediscover each on a fresh invocation.
+    After fix: a single refusal names every absent required flag.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "work", "amend"])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = result.output.replace("\n", " ")
+    for flag in ("--from-filing-record", "--kind", "--reason", "--set"):
+        assert flag in flat, f"{flag} not reported; output: {result.output}"
+
+
+def test_work_amend_batch_reports_partial_missing_options() -> None:
+    """A run missing two of four required options reports both, not just one."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "amend",
+            "--from-filing-record",
+            "f" * 64,
+            "--kind",
+            "complementaria",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "--reason" in flat
+    assert "--set" in flat
+
+
 def test_work_calculate_help_exposes_by_actor_flag() -> None:
     """``aeat app modelo work calculate --help`` advertises a ``--by ACTOR``
     option so operators can attribute a calculation revision to a specific
@@ -634,7 +698,7 @@ def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
             "--period",
             period,
             "--revision",
-            "v1",
+            "2009-y-siguientes",
         ]
     )
 
@@ -642,6 +706,96 @@ def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
     assert "Traceback" not in result.output
     output_lower = result.output.lower()
     assert "period must be" in output_lower or "invalid value" in output_lower
+
+
+def test_work_create_rejects_unknown_modelo() -> None:
+    """``work create --modelo 999`` is refused naming the registry's known modelos.
+
+    Before fix: an unknown modelo code provisioned a work unit that
+    ``calculate`` then silently treated as a Modelo 303 default.
+    After fix: a ``typer.BadParameter`` fires at create time grounded
+    in the validated registry authority.
+    """
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "999",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+            "--revision",
+            "2009-y-siguientes",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "999" in result.output
+
+
+@pytest.mark.parametrize("year", ["1899", "2100", "1000"])
+def test_work_create_rejects_out_of_range_year(year: str) -> None:
+    """``work create --year 1899`` is refused with the bad year named.
+
+    Before fix: an out-of-range year built a token like ``1899-Q1``,
+    passed the period regex, then failed deep in WorkUnit validation
+    and surfaced only the generic English "command input failed
+    validation" boundary error.
+    After fix: the refusal names the year and the supported range.
+    """
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "303",
+            "--year",
+            year,
+            "--period",
+            "Q1",
+            "--revision",
+            "2009-y-siguientes",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert year in result.output
+    assert "config repair" not in result.output
+
+
+def test_work_create_rejects_unknown_revision() -> None:
+    """``work create --revision nope`` is refused naming the modelo's revisions."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+            "--revision",
+            "nonexistent-revision",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "nonexistent-revision" in result.output
 
 
 @pytest.mark.parametrize(

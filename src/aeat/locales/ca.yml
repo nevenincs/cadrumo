@@ -203,6 +203,8 @@ application:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
   user_profile:
     errors:
+      duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
+        contribuent ha de tenir un sol perfil.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa `aeat config
         profile switch NAME` per activar-lo o `aeat config profile delete NAME` primer.
@@ -530,6 +532,7 @@ cli:
         amend_help: Construir una declaració complementària sobre una declaració presentada
           externament. Requereix un filing record amb evidència oficial importada
           de l'AEAT
+        amend_missing_options: 'Una esmena requereix totes aquestes opcions: %{missing}.'
         amendment_kind_help: Tipus legal de l'amendació (complementaria o sustitutiva)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
@@ -548,6 +551,9 @@ cli:
           període, revisió)
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
+        discard_requires_yes: El descart és una transició d'estat auditable. Torneu
+          a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
+        discard_yes_help: Confirmar explícitament l'operació de descart
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
         from_filing_record_help: Identificador estable del filing record base a amendar.
@@ -586,10 +592,16 @@ cli:
         set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
           almenys un requerit)
         status_help: Mostrar les metadades d'una unitat de treball
+        unknown_modelo: 'Model desconegut %{modelo}; el registre de càlcul coneix
+          aquests models: %{known}.'
+        unknown_revision: 'Revisió desconeguda %{revision} per al model %{modelo};
+          revisions declarades: %{declared}.'
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
+        year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
+          any entre %{minimum} i %{maximum}.
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -905,14 +917,14 @@ cli:
     workflow_help: Mostrar ajuda del flux de configuració
   diagnostics:
     browser:
-      http_status_label: cli.diagnostics.browser.http_status_label
-      markers_label: cli.diagnostics.browser.markers_label
-      markers_none: cli.diagnostics.browser.markers_none
-      observed_at_label: cli.diagnostics.browser.observed_at_label
-      retry_after_label: cli.diagnostics.browser.retry_after_label
-      state_label: cli.diagnostics.browser.state_label
-      target_browser: cli.diagnostics.browser.target_browser
-      target_label: cli.diagnostics.browser.target_label
+      http_status_label: Estat HTTP
+      markers_label: Marcadors
+      markers_none: cap
+      observed_at_label: Observat el
+      retry_after_label: Reintentar després de
+      state_label: Estat
+      target_browser: navegador
+      target_label: Destinació
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
     next_action:
@@ -1384,6 +1396,9 @@ cli:
       title: Estat de l'espai de treball
       transactions_empty: Encara no s'han importat moviments bancaris.
       transactions_present: '%{count} moviment(s) bancaris estan disponibles al llibre.'
+      work_units_empty: Encara no s'ha iniciat cap unitat de treball de models.
+      work_units_present: '%{count} unitat(s) de treball de models existeixen en aquest
+        emmagatzematge local.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
@@ -1516,6 +1531,8 @@ cli:
     app_help_help: Mostrar ajuda del flux d'app
     debug_help: Mostrar logs interns de depuració a stderr
     detail_help: Also show the detailed registry summary
+    errors:
+      did_you_mean_command: Volíeu dir '%{command}'?
     format_help: Format de sortida per als resultats de l'ordre
     help_help: Mostrar ajuda orientada al flux de treball
     landing:
@@ -1888,6 +1905,8 @@ wizard:
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Codi postal no vàlid per a %{prompt_key}: %{raw}. Un codi postal
+      espanyol té 5 dígits (codi de província 01-52 seguit de tres dígits).'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
@@ -2007,7 +2026,7 @@ wizard:
       tax-id:
         help: Identificador fiscal (NIF/NIE) del perfil actiu
       tax-residence-ccaa:
-        help: Comunitat autònoma de residència fiscal
+        help: 'Comunitat autònoma de residència fiscal. Una de: %{choices}.'
       taxation-type:
         help: 'Tipus de declaració de Renda: 1 = individual, 2 = conjunta (unitat
           familiar).'

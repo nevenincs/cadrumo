@@ -197,6 +197,8 @@ application:
         modelo_blank: A modelo azonosító nem lehet üres.
   user_profile:
     errors:
+      duplicate_tax_id: A(z) '%{tax_id}' adóazonosítót már használja a(z) '%{profile}'
+        profil; egy adóalanynak egy profilja lehet.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
       profile_already_exists: A(z) '%{profile}' profil már létezik; futtasd az `aeat
         config profile switch NAME` parancsot az aktiválásához, vagy előbb az `aeat
@@ -521,6 +523,8 @@ cli:
         amend_help: Helyesbítő (complementaria) bevallás építése egy külsőleg leadott
           bevallás fölött. Importált AEAT-hitelesített evidenciával rendelkező filing
           record szükséges
+        amend_missing_options: 'A módosításhoz az alábbi összes kapcsoló szükséges:
+          %{missing}.'
         amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
         amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése
@@ -535,6 +539,9 @@ cli:
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
           revízió) kulcsra
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
+        discard_requires_yes: Az elvetés auditálható állapotátmenet. A megerősítéshez
+          futtassa újra az 'aeat app modelo work discard %{work_unit_id} --yes' parancsot.
+        discard_yes_help: Az elvetési művelet kifejezett megerősítése
         file_help: Ellenőrzött revízió belsőleg leadottként megjelölése. NEM küldi
           el az AEAT-nak
         from_filing_record_help: A helyesbítendő alap filing record stabil azonosítója.
@@ -571,10 +578,16 @@ cli:
         set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy kötelező)
         status_help: Egy munkaegység metaadatainak megjelenítése
+        unknown_modelo: 'Ismeretlen modelo %{modelo}; a kalkulációs nyilvántartás
+          ezeket a modellóket ismeri: %{known}.'
+        unknown_revision: 'Ismeretlen revízió %{revision} a(z) %{modelo} modellóhoz;
+          deklarált revíziók: %{declared}.'
         verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
+        year_out_of_range: A(z) %{year} adóév tartományon kívül esik; adjon meg egy
+          évet %{minimum} és %{maximum} között.
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
@@ -888,14 +901,14 @@ cli:
     workflow_help: Konfigurációs munkafolyamat súgójának megjelenítése
   diagnostics:
     browser:
-      http_status_label: cli.diagnostics.browser.http_status_label
-      markers_label: cli.diagnostics.browser.markers_label
-      markers_none: cli.diagnostics.browser.markers_none
-      observed_at_label: cli.diagnostics.browser.observed_at_label
-      retry_after_label: cli.diagnostics.browser.retry_after_label
-      state_label: cli.diagnostics.browser.state_label
-      target_browser: cli.diagnostics.browser.target_browser
-      target_label: cli.diagnostics.browser.target_label
+      http_status_label: HTTP-állapot
+      markers_label: Jelölők
+      markers_none: nincs
+      observed_at_label: Megfigyelve
+      retry_after_label: Újrapróbálkozás ezután
+      state_label: Állapot
+      target_browser: böngésző
+      target_label: Cél
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
     next_action:
@@ -1365,6 +1378,8 @@ cli:
       title: Munkaterulet allapota
       transactions_empty: Meg nincs importalt banki tranzakcio.
       transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
+      work_units_empty: Meg nincs elinditott modello munkaegyseg.
+      work_units_present: '%{count} modello munkaegyseg letezik ebben a helyi tarolasban.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
@@ -1498,6 +1513,8 @@ cli:
     app_help_help: Show app workflow help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
+    errors:
+      did_you_mean_command: 'Erre gondolt: ''%{command}''?'
     format_help: A parancseredmények kimeneti formátuma
     help_help: Show workflow-oriented help
     landing:
@@ -1870,6 +1887,8 @@ wizard:
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Érvénytelen irányítószám ehhez: %{prompt_key}: %{raw}. A spanyol
+      irányítószám 5 számjegy (01-52 tartományi kód, majd három számjegy).'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
@@ -1989,7 +2008,7 @@ wizard:
       tax-id:
         help: Az aktív profil adóazonosítója (NIF/NIE)
       tax-residence-ccaa:
-        help: Adóügyi rezidens autonóm közösség
+        help: 'Adóügyi rezidens autonóm közösség. Az egyike: %{choices}.'
       taxation-type:
         help: 'A jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
       taxpayer-birth-date:

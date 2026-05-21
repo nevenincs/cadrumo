@@ -1,24 +1,25 @@
-"""The Modelo 100 cross-domain snapshot gate must never silently skip.
+"""The Modelo 100 cross-domain snapshot gate registers deterministically.
 
 The registry validator runs peer-domain referential-integrity checks
 through the abstract ``CrossDomainSnapshotCheck`` Protocol. The concrete
-renta first-slice routing check registers itself only as an import side
-effect of the ``aeat.domain.renta`` package. A snapshot validated on an
-import path that never imports ``renta`` would otherwise pass the BOE-
-prescribed first-slice routing referential-integrity gate silently
-absent.
+renta first-slice routing check lives in
+``aeat.domain.renta._first_slice_routing_integrity`` and registers itself
+as an import side effect.
 
-``_check_cross_domain_snapshot_routing`` defends against that: when the
-snapshot under validation is a Modelo 100 revision and zero cross-domain
-checks are registered, the validator fails loudly instead of skipping a
-known-required gate. The gate runs inside ``_check_all_id_references``,
-which ``_build_validated_snapshot`` invokes for every snapshot it
-constructs.
+That registration must NOT depend on import order. ``_build_validated_snapshot``
+calls ``_install_cross_domain_snapshot_checks`` before the referential-
+integrity gate runs; the installer imports every peer-domain check module
+named in ``_CROSS_DOMAIN_CHECK_MODULES`` by name. The registry never
+imports ``renta`` statically (that would reverse the dependency direction
+the restructure ADR fixes, defect F7) -- it owns only the list of peer
+module names. A Modelo 100 snapshot therefore validates the BOE-prescribed
+first-slice routing gate regardless of whether the importing process ever
+imported ``aeat.domain.renta`` first.
 
 These tests run in fresh subprocesses so the registry's module-level
 ``_CROSS_DOMAIN_SNAPSHOT_CHECKS`` list reflects exactly the import path
 under test -- a guarantee no in-process test can give once any sibling
-test in the session has imported ``renta`` and populated that list.
+test in the session has populated that list.
 """
 
 from __future__ import annotations
@@ -49,15 +50,17 @@ def _run_python(*fragments: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_m100_build_on_renta_free_import_path_fails_loudly() -> None:
-    """Building an M100 snapshot without ``renta`` imported must raise.
+def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
+    """An M100 build registers the renta gate without ``renta`` pre-imported.
 
-    The subprocess imports only the registry (never ``aeat.domain.renta``)
-    and builds a Modelo 100 snapshot from the bundled registry. With zero
-    cross-domain checks registered the referential-integrity gate inside
-    ``_build_validated_snapshot`` must raise ``RegistryValidationError``
-    naming the missing renta first-slice routing check -- it must NOT
-    build clean with the gate silently skipped.
+    The subprocess imports only the registry -- it never imports
+    ``aeat.domain.renta`` itself -- and confirms zero cross-domain checks
+    are registered up front. Building a Modelo 100 snapshot then runs
+    ``_install_cross_domain_snapshot_checks`` inside ``_build_validated_snapshot``,
+    which imports the peer-domain check module by name. The build must
+    succeed with the renta first-slice routing check registered, proving
+    the registration is import-order-independent rather than a side effect
+    of some upstream ``import aeat.domain.renta``.
     """
 
     result = _run_python(
@@ -65,18 +68,15 @@ def test_m100_build_on_renta_free_import_path_fails_loudly() -> None:
         import sys
 
         from aeat.core.resources import bundled_path
-        from aeat.domain.calculations.registry import (
-            RegistryValidationError,
-            load_registry_tree,
-        )
+        from aeat.domain.calculations.registry import load_registry_tree
         from aeat.domain.calculations.registry._snapshot import _build_validated_snapshot
         from aeat.domain.calculations.registry._validate import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "aeat.domain.renta" not in sys.modules, (
-            "renta must not be imported on this path"
+            "renta must not be imported before the snapshot build on this path"
         )
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS == [], (
-            "no cross-domain checks must be registered without renta imported"
+            "no cross-domain checks must be registered before the snapshot build"
         )
 
         source_root = bundled_path("registry", "aeat")
@@ -85,31 +85,26 @@ def test_m100_build_on_renta_free_import_path_fails_loudly() -> None:
         revision = next(iter(modelo_100.revisions.values()))
         period = next(iter(revision.period_selector.periods))
 
-        try:
-            _build_validated_snapshot(
-                modelo_100,
-                catalogues,
-                filing_year=int(revision.id),
-                period=period,
-                revision_id=revision.id,
-            )
-        except RegistryValidationError as exc:
-            message = str(exc)
-            assert "cross-domain snapshot check" in message, message
-            assert "modelo 100" in message, message
-            print("LOUD_FAILURE_RAISED")
-        else:
-            raise AssertionError(
-                "M100 snapshot built with the renta first-slice routing "
-                "gate silently skipped"
-            )
+        snapshot = _build_validated_snapshot(
+            modelo_100,
+            catalogues,
+            filing_year=int(revision.id),
+            period=period,
+            revision_id=revision.id,
+        )
+        assert snapshot.modelo.id == "100"
+        assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
+            "building an M100 snapshot must register the renta first-slice "
+            "routing cross-domain check"
+        )
+        print("M100_GATE_REGISTERED")
         """
     )
 
     assert result.returncode == 0, (
         f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
     )
-    assert "LOUD_FAILURE_RAISED" in result.stdout, result.stdout
+    assert "M100_GATE_REGISTERED" in result.stdout, result.stdout
 
 
 def test_m100_build_succeeds_when_renta_is_imported() -> None:

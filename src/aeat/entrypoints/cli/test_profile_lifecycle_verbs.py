@@ -5,17 +5,56 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner, Result
 
+from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
+from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
+from aeat.core.config import load_settings
 from aeat.entrypoints.cli import app as root_app
 from aeat.entrypoints.cli._config import profile_app, repair_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
+    """Stage a bucket directory + manifest with no secure record.
+
+    A bucket directory and plaintext manifest with no encrypted
+    profile-value row is exactly the ``missing_profile_record`` torn
+    state these CLI verbs must detect; this helper materialises that
+    state directly through the bucket-layout primitives, since
+    ``ProfileRepository`` always writes the record alongside.
+    """
+
+    root = load_settings().aeat_local_storage_root
+    paths = provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=label,
+            created_at=datetime.now(UTC),
+            last_unlocked_at=None,
+            kdf_params=ManifestKdfParams(
+                algorithm="argon2id",
+                version=0x13,
+                memory_cost=19_456,
+                time_cost=2,
+                parallelism=1,
+                salt=b"0123456789abcdef",
+                output_length=32,
+            ),
+            recovery_enrolled=False,
+            schema_version=1,
+        ),
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -40,8 +79,15 @@ def cli_runner() -> CliRunner:
     return CliRunner()
 
 
-def _seed(name: str = "default") -> None:
-    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=name))
+def _seed(name: str = "default", *, tax_id: str | None = None) -> None:
+    # ``register_minimal_profile`` derives a profile-unique NIF by
+    # default so two ``_seed`` calls never collide on the
+    # duplicate-tax-id refusal; a test that asserts a specific tax id
+    # passes it explicitly.
+    overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(state, profile_id=name, overrides=overrides)
+    )
 
 
 def _json_payload(result: Result) -> dict[str, object]:
@@ -64,9 +110,7 @@ def test_config_profile_switch_refuses_unknown_profile(cli_runner: CliRunner) ->
 
 
 def test_config_profile_switch_reports_manifest_without_profile_record(cli_runner: CliRunner) -> None:
-    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
-
-    _ensure_profile_bucket_manifest("operator", label="operator")
+    _stage_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(profile_app, ["switch", "operator"])
 
@@ -77,9 +121,7 @@ def test_config_profile_switch_reports_manifest_without_profile_record(cli_runne
 
 
 def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runner: CliRunner) -> None:
-    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
-
-    _ensure_profile_bucket_manifest("operator", label="operator")
+    _stage_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(profile_app, ["show", "operator"])
 
@@ -90,9 +132,7 @@ def test_config_profile_show_does_not_suggest_switch_for_missing_record(cli_runn
 
 
 def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunner) -> None:
-    from aeat.application.user_profile._orchestration import _ensure_profile_bucket_manifest
-
-    _ensure_profile_bucket_manifest("operator", label="operator")
+    _stage_bucket_manifest("operator", label="operator")
 
     result = cli_runner.invoke(
         profile_app,
@@ -117,13 +157,10 @@ def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunn
 
 
 def test_repair_profile_named_active_clear_active_clears_pointer(cli_runner: CliRunner, tmp_path: Path) -> None:
-    from aeat.application.user_profile._orchestration import (
-        _ensure_profile_bucket_manifest,
-        _write_active_profile_pointer,
-    )
+    from aeat.application.user_profile._orchestration import _write_active_profile_pointer
     from aeat.core._bucket_pointer_io import read_pointer
 
-    _ensure_profile_bucket_manifest("operator", label="operator")
+    _stage_bucket_manifest("operator", label="operator")
     _write_active_profile_pointer("operator")
 
     result = cli_runner.invoke(repair_app, ["profile", "--profile", "operator", "--clear-active", "--yes"])
@@ -210,7 +247,7 @@ def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunn
 
 
 def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -> None:
-    _seed("operator")
+    _seed("operator", tax_id="00000000T")
     result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code == 0, result.output
     assert "profile_id\toperator" in result.output
@@ -218,8 +255,8 @@ def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -
 
 
 def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: CliRunner) -> None:
-    _seed("operator")
-    _seed("spouse")
+    _seed("operator", tax_id="00000001R")
+    _seed("spouse", tax_id="00000000T")
     result = cli_runner.invoke(profile_app, ["show", "spouse"])
     assert result.exit_code == 0, result.output
     assert "profile_id\tspouse" in result.output
@@ -242,6 +279,97 @@ def test_config_profile_delete_tombstones_with_yes(cli_runner: CliRunner) -> Non
     from aeat.application.workflow._models import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None
+
+
+def test_config_profile_list_excludes_a_tombstoned_profile(cli_runner: CliRunner) -> None:
+    """After ``delete`` the profile leaves ``config profile list``.
+
+    Closes the leak where a tombstoned profile stayed visible in the
+    listing, indistinguishable from a live one.
+    """
+
+    _seed("operator")
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+    result = cli_runner.invoke(profile_app, ["list"])
+    assert result.exit_code == 0, result.output
+    assert "operator" not in result.output
+    assert "<none>" in result.output
+
+
+def test_config_profile_switch_refuses_a_tombstoned_profile(cli_runner: CliRunner) -> None:
+    """Switching to a tombstoned profile is refused, not silently activated.
+
+    Closes the leak where ``switch`` made a deleted profile the active
+    one with exit code 0.
+    """
+
+    from aeat.application.workflow._models import resolve_active_bucket_id
+
+    _seed("operator")
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+    result = cli_runner.invoke(profile_app, ["switch", "operator"])
+    assert result.exit_code != 0, result.output
+    # The tombstoned profile was not made active.
+    assert resolve_active_bucket_id() is None
+
+
+def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned(
+    cli_runner: CliRunner,
+) -> None:
+    """``show`` of a tombstoned profile renders ``readiness tombstoned``.
+
+    Closes the self-contradiction where ``show`` reported
+    ``readiness ready issues=0`` directly above ``status tombstoned``.
+    """
+
+    _seed("operator")
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+    result = cli_runner.invoke(profile_app, ["show", "operator"])
+    assert result.exit_code == 0, result.output
+    assert "status\ttombstoned" in result.output
+    assert "readiness\ttombstoned" in result.output
+    assert "readiness\tready" not in result.output
+
+
+def test_deleted_profile_name_is_reusable_by_create_and_rename(
+    cli_runner: CliRunner,
+) -> None:
+    """After ``delete`` the freed display name is reusable.
+
+    Per the profile-UUID-identity ADR, display-name uniqueness is
+    enforced only among live profiles; a tombstoned profile's name is
+    free to reuse by both ``create`` and ``rename``.
+    """
+
+    _seed("operator", tax_id="00000000T")
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+
+    created = cli_runner.invoke(
+        profile_app,
+        [
+            "create",
+            "operator",
+            "--quiet",
+            "--accept-defaults",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Operator",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+    assert created.exit_code == 0, created.output
+
+    # And the freed name is reachable through ``rename`` too. Delete the
+    # recreated profile, seed a live one, rename it onto the freed name.
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+    _seed("colleague", tax_id="00000001R")
+    renamed = cli_runner.invoke(profile_app, ["rename", "colleague", "operator"])
+    assert renamed.exit_code == 0, renamed.output
+    assert "display_name\toperator" in renamed.output
 
 
 def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> None:
@@ -427,13 +555,30 @@ def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iter
         dispose_engine()
 
 
-def _create_via_cli(runner: CliRunner, name: str) -> None:
+_NIF_CONTROL_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
+
+
+def _distinct_nif(name: str) -> str:
+    """Return a checksum-valid NIF derived deterministically from ``name``.
+
+    ``profile create`` refuses two profiles that share a tax id, so a
+    test creating several profiles needs a distinct, valid NIF per
+    profile rather than one hard-coded literal.
+    """
+
+    import hashlib
+
+    number = int(hashlib.sha256(name.encode("utf-8")).hexdigest(), 16) % 100_000_000
+    return f"{number:08d}{_NIF_CONTROL_LETTERS[number % 23]}"
+
+
+def _create_via_cli(runner: CliRunner, name: str, *, tax_id: str | None = None) -> None:
     result = runner.invoke(
         root_app,
         [
             "config", "profile", "create", name,
             "--quiet",
-            "--tax-id", "12345678Z",
+            "--tax-id", tax_id or _distinct_nif(name),
             "--name", name.capitalize(),
             "--activity", "design",
             "--iva-regime", "GENERAL",

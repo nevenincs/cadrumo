@@ -34,7 +34,11 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
-from ...adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from ...adapters.persistence.storage.bucket._manifest import (
+    BucketLifecycleStatus,
+    BucketManifest,
+    ManifestKdfParams,
+)
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
@@ -59,6 +63,36 @@ if TYPE_CHECKING:
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _BUCKETS_DIRNAME = "buckets"
+
+
+_TAX_ID_FACT_PATH = "identity.tax_id"
+"""Profile-fact path carrying the taxpayer's Spanish NIF / NIE / CIF."""
+
+
+def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
+    """Return the canonical (upper-cased, trimmed) tax id from ``facts``.
+
+    Returns :data:`None` when no ``identity.tax_id`` fact is present or
+    it carries no value, so a profile without a tax id never collides.
+    """
+
+    for fact in facts:
+        if fact.path == _TAX_ID_FACT_PATH and fact.value is not None:
+            text = str(fact.value).strip().upper()
+            if text:
+                return text
+    return None
+
+
+def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
+    """Map the encrypted-record lifecycle status to its manifest mirror.
+
+    The two enums carry identical string values; the mapping is by
+    value so a new lifecycle state in either enum surfaces here as a
+    :class:`KeyError` rather than silently mismatching.
+    """
+
+    return BucketLifecycleStatus(status.value)
 
 
 def _default_kdf_params() -> ManifestKdfParams:
@@ -145,8 +179,16 @@ class ProfileRepository:
         label: str,
         facts: Sequence[UserProfileFact] = (),
         profile_id: str | None = None,
+        enforce_unique_tax_id: bool = True,
     ) -> ProfileAggregate:
         """Create a new profile as a cross-store unit of work.
+
+        ``enforce_unique_tax_id`` (default :data:`True`) refuses a create
+        whose tax id is already carried by a live profile — a fresh
+        ``config profile create`` must not split one taxpayer's filing
+        history across two profiles. ``config profile duplicate`` and
+        ``config profile import`` legitimately reproduce an existing
+        profile's tax id and pass :data:`False`.
 
         Mints a fresh UUID identity (unless ``profile_id`` is supplied
         for a caller that already minted one), then performs the
@@ -196,6 +238,8 @@ class ProfileRepository:
                 f"profile {resolved_id!r} already has a registered bucket manifest at {paths.bucket_dir}"
             )
         self._refuse_duplicate_label(label)
+        if enforce_unique_tax_id:
+            self._refuse_duplicate_tax_id(facts)
 
         kdf_params = _default_kdf_params()
         created_at = datetime.now(UTC)
@@ -220,6 +264,7 @@ class ProfileRepository:
                     kdf_params=kdf_params,
                     recovery_enrolled=False,
                     schema_version=manifest_schema_version,
+                    status=BucketLifecycleStatus.ACTIVE,
                 ),
             )
 
@@ -331,6 +376,7 @@ class ProfileRepository:
                 kdf_params=aggregate.kdf_params,
                 recovery_enrolled=aggregate.recovery_enrolled,
                 schema_version=aggregate.manifest_schema_version,
+                status=_manifest_status_for(aggregate.status),
             ),
         )
         self._lifecycle_repository(aggregate.profile_id).save(aggregate.record)
@@ -426,6 +472,19 @@ class ProfileRepository:
             self._clear_pointer()
         result = self._lifecycle_service(profile_id).remove(RemoveProfileCommand(profile_id=profile_id))
         tombstoned_record = result.profile
+        # Mirror the tombstone onto the plaintext manifest so the
+        # manifest scan excludes this profile from every live operator
+        # surface (list / switch / name-uniqueness) without unlocking
+        # the encrypted bucket. The repository is the sole writer of
+        # both stores, so the two never drift.
+        paths = bucket_paths(self._root, profile_id)
+        manifest = read_manifest(paths)
+        write_manifest(
+            paths,
+            manifest.model_copy(
+                update={"status": _manifest_status_for(tombstoned_record.status)}
+            ),
+        )
         return aggregate.model_copy(
             update={"record": tombstoned_record, "status": tombstoned_record.status}
         )
@@ -440,12 +499,24 @@ class ProfileRepository:
         active-profile pointer. The pointer is the only store this
         mutates; identity and lifecycle metadata are untouched.
 
+        A tombstoned profile is not a selectable profile: ``delete`` is
+        a soft removal that retains the bucket for audit, but the
+        profile has left the live surface. Selecting it is refused with
+        the same :class:`ProfileNotFoundError` class as an unknown
+        profile so the operator cannot unknowingly work inside a
+        deleted profile.
+
         Raises:
-            ProfileNotFoundError: If the profile is not registered.
+            ProfileNotFoundError: If the profile is not registered, or
+                is registered but tombstoned.
             ProfileIntegrityError: If the stores disagree on the UUID.
         """
 
         aggregate = self.load(profile_id)
+        if aggregate.status is UserProfileStatus.TOMBSTONED:
+            raise ProfileNotFoundError(
+                f"profile {profile_id!r} is tombstoned and cannot be selected"
+            )
         write_pointer(self._root, BucketPointer(bucket_id=profile_id, schema_version=1))
         return aggregate
 
@@ -456,8 +527,10 @@ class ProfileRepository:
 
         Scans ``<root>/buckets/*/manifest.toml`` — never unlocks an
         encrypted bucket. The lifecycle status reported is the manifest
-        projection's: an ``ACTIVE`` manifest with a tombstoned record
-        is exactly the cross-store drift :meth:`load` surfaces.
+        ``status`` mirror, kept in lockstep with the encrypted record
+        by every :class:`ProfileRepository` write. Tombstoned profiles
+        are included so callers that need the full inventory (repair,
+        audit) see them; live-surface callers filter on ``status``.
         """
 
         buckets_root = self._root / _BUCKETS_DIRNAME
@@ -474,16 +547,11 @@ class ProfileRepository:
             if not manifest_path(paths).is_file():
                 continue
             manifest = read_manifest(paths)
-            try:
-                record = self._lifecycle_repository(manifest.bucket_id).load(manifest.bucket_id)
-                status = record.status
-            except ProfileNotFoundError:
-                status = UserProfileStatus.ACTIVE
             summaries.append(
                 ProfileSummary(
                     profile_id=manifest.bucket_id,
                     label=manifest.label,
-                    status=status,
+                    status=UserProfileStatus(manifest.status.value),
                 )
             )
         summaries.sort(key=lambda row: row.profile_id)
@@ -514,6 +582,47 @@ class ProfileRepository:
                 profile=label,
             ),
         )
+
+    def _refuse_duplicate_tax_id(self, facts: Sequence[UserProfileFact]) -> None:
+        """Refuse a create whose tax id is already carried by a live profile.
+
+        The Spanish tax id (NIF / NIE / CIF) identifies the taxpayer; two
+        profiles carrying the same id are an operator mistake — a second
+        profile for the same person silently splits that taxpayer's
+        filing history. The refusal scans every registered profile's
+        encrypted record, compares the canonical (upper-cased, trimmed)
+        tax id, and fires before any store write so there is nothing to
+        roll back. A torn bucket whose record cannot be loaded cannot
+        claim a tax id and is skipped.
+        """
+
+        new_tax_id = _canonical_tax_id(facts)
+        if new_tax_id is None:
+            return
+        from ._orchestration import ProfileAlreadyRegisteredError
+
+        for summary in self.list():
+            # A tombstoned profile has left the live surface; its tax id
+            # is free to reuse, exactly as its display name is.
+            if summary.status is UserProfileStatus.TOMBSTONED:
+                continue
+            try:
+                aggregate = self.load(summary.profile_id)
+            except Exception:  # noqa: BLE001 — a torn / unreadable bucket cannot claim an id
+                continue
+            existing_tax_id = _canonical_tax_id(aggregate.record.facts)
+            if existing_tax_id is not None and existing_tax_id == new_tax_id:
+                raise ProfileAlreadyRegisteredError(
+                    tr(
+                        "application.user_profile.errors.duplicate_tax_id",
+                        default=(
+                            "Tax id '%{tax_id}' is already used by profile "
+                            "'%{profile}'; one taxpayer must have one profile."
+                        ),
+                        tax_id=new_tax_id,
+                        profile=summary.label,
+                    ),
+                )
 
     def _lifecycle_repository(self, profile_id: str) -> UserProfileLifecycleRepository:
         """Return a secure-record repository bound to ``profile_id``'s db.

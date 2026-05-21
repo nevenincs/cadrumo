@@ -22,6 +22,16 @@ from ._schema import ModeloDefinition, ModeloRevision
 
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:[-]?Q(?P<quarter>[1-4])|-(?P<month>0[1-9]|1[0-2]))?$", re.I)
 
+#: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
+#: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
+#: no filing year. ``describe`` accepts them to narrow a modelo to a
+#: revision that declares the token, without forcing the operator to
+#: compose an artificial ``YYYY``-prefixed string.
+_BARE_PERIOD_RE = re.compile(
+    r"^(?:0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$",
+    re.I,
+)
+
 
 class ModeloListRow(BaseModel):
     model_config = ConfigDict(frozen=True)
@@ -341,6 +351,27 @@ class RegistryQueryService:
         if period is None:
             revision = max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
             return definition, revision, None, None
+        bare = period.strip().upper()
+        if _BARE_PERIOD_RE.fullmatch(bare):
+            candidates = [
+                revision
+                for revision in definition.revisions.values()
+                if bare in {token.upper() for token in revision.period_selector.periods}
+            ]
+            if not candidates:
+                declared = sorted(
+                    {
+                        token
+                        for revision in definition.revisions.values()
+                        for token in revision.period_selector.periods
+                    }
+                )
+                raise RegistryValidationError(
+                    f"period {period!r} is not declared by any revision of modelo "
+                    f"{definition.id}; declared periods: {', '.join(declared)}"
+                )
+            revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
+            return definition, revision, None, bare
         filing_year, registry_period = parse_modelo_period(period)
         snapshot = self._authority.snapshot(
             str(definition.id),

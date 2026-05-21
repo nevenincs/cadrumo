@@ -21,8 +21,8 @@ from pathlib import Path
 import pytest
 
 from ._layout import bucket_paths
-from ._manifest import BucketManifest, ManifestKdfParams
-from ._manifest_io import read_manifest, write_manifest
+from ._manifest import BucketLifecycleStatus, BucketManifest, ManifestKdfParams
+from ._manifest_io import manifest_path, read_manifest, write_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -33,7 +33,9 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
     The salt is a 32-byte random sequence so a base64 mis-encoding
     surfaces as a salt-byte inequality. ``last_unlocked_at`` is set
     to a real UTC timestamp so the None-vs-absent code path on the
-    read side does NOT mask its presence on the write side.
+    read side does NOT mask its presence on the write side. ``status``
+    is set to the non-default ``TOMBSTONED`` so a save-drops /
+    load-re-defaults regression on the lifecycle marker surfaces.
     """
 
     now = datetime.now(UTC).replace(microsecond=0)
@@ -53,6 +55,7 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
         ),
         recovery_enrolled=True,
         schema_version=1,
+        status=BucketLifecycleStatus.TOMBSTONED,
     )
 
 
@@ -82,6 +85,10 @@ def test_bucket_manifest_round_trips_strictly_via_toml(tmp_path: Path) -> None:
     assert loaded.kdf_params.memory_cost == 65536
     assert loaded.last_unlocked_at == original.last_unlocked_at
     assert loaded.recovery_enrolled is True
+    # The lifecycle marker is the plaintext mirror the manifest scan
+    # filters on; a save-drops / load-re-defaults regression would
+    # silently flip a tombstoned profile back onto the live surface.
+    assert loaded.status is BucketLifecycleStatus.TOMBSTONED
 
 
 def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
@@ -117,3 +124,61 @@ def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
     loaded = read_manifest(paths)
     assert loaded == original
     assert loaded.last_unlocked_at is None
+
+
+def test_manifest_status_mutation_surfaces_as_strict_inequality(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology: rewriting the on-disk ``status`` is caught by reload.
+
+    The fixture manifest is tombstoned. Mutating the persisted TOML to
+    flip ``status`` back to ``active`` and reloading must yield a
+    manifest that is strictly unequal to the original. If this test
+    ever passes with the field flattened, the lifecycle-marker
+    roundtrip is tautological and the tombstone leak could recur.
+    """
+
+    paths = bucket_paths(tmp_path, "test-bucket-status-antitautology")
+    paths.bucket_dir.mkdir(parents=True, exist_ok=True)
+
+    original = _populated_manifest(paths.bucket_id)
+    assert original.status is BucketLifecycleStatus.TOMBSTONED
+    write_manifest(paths, original)
+
+    target = manifest_path(paths)
+    on_disk = target.read_text(encoding="utf-8")
+    assert 'status = "tombstoned"' in on_disk
+    target.write_text(
+        on_disk.replace('status = "tombstoned"', 'status = "active"'),
+        encoding="utf-8",
+    )
+
+    reloaded = read_manifest(paths)
+    assert reloaded != original
+    assert reloaded.status is BucketLifecycleStatus.ACTIVE
+
+
+def test_manifest_without_status_key_hydrates_to_active(tmp_path: Path) -> None:
+    """A manifest predating the lifecycle marker reads back as ``ACTIVE``.
+
+    The ``status`` key is hydrated to ``ACTIVE`` when absent so an
+    on-disk manifest written before the field existed is treated as a
+    live profile, never silently as a tombstoned one.
+    """
+
+    paths = bucket_paths(tmp_path, "test-bucket-legacy-no-status")
+    paths.bucket_dir.mkdir(parents=True, exist_ok=True)
+
+    original = _populated_manifest(paths.bucket_id)
+    write_manifest(paths, original)
+
+    target = manifest_path(paths)
+    on_disk = target.read_text(encoding="utf-8")
+    stripped = "\n".join(
+        line for line in on_disk.splitlines() if not line.startswith("status = ")
+    )
+    target.write_text(stripped + "\n", encoding="utf-8")
+    assert "status = " not in target.read_text(encoding="utf-8")
+
+    loaded = read_manifest(paths)
+    assert loaded.status is BucketLifecycleStatus.ACTIVE

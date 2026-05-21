@@ -87,7 +87,13 @@ def _build_settings(tmp_path: Path) -> Settings:
 def _seed_all_sources(tmp_path: Path) -> Settings:
     """Materialise one pending item in every source under tmp_path."""
     settings = _build_settings(tmp_path)
-    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="default",
+            overrides={"identity.tax_id": "00000000T"},
+        )
+    )
 
     raw = RawTransaction(
         transaction_id="prov-1",

@@ -55,6 +55,19 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
+def _active_bucket_id() -> str:
+    """Resolve the active profile's bucket id — a generated ``profile_id`` UUID.
+
+    Profile identity is the decoupled ``profile_id`` UUID, not the
+    operator-facing label passed to ``profile create``. Ledger and
+    evidence records key on this UUID, so seeds and assertions must
+    resolve it at runtime rather than assume the human label.
+    """
+    status = _invoke(["--format", "json", "config", "profile", "status"])
+    assert status.exit_code == 0, status.output
+    return cast(str, json.loads(status.output)["profile_id"])
+
+
 def _create_manual_ledger_row(description: str, *, amount: str = "-25.00", key: str) -> dict[str, object]:
     result = _invoke(
         [
@@ -155,7 +168,7 @@ def _run_ledger_cli_json(args: list[str]) -> dict[str, object]:
     return cast(dict[str, object], json.loads(result.output))
 
 
-def _ledger_add_manual_transaction() -> dict[str, object]:
+def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
     """Create the seed manual transaction the rest of the workflow operates on."""
     payload = _run_ledger_cli_json(
         [
@@ -173,7 +186,7 @@ def _ledger_add_manual_transaction() -> dict[str, object]:
             "--idempotency-key", "cash-office-2026-05-02",
         ]
     )
-    assert payload["bucket_id"] == "operator"
+    assert payload["bucket_id"] == bucket_id
     assert len(cast(str, payload["transaction_id"])) == 64
     transaction = cast(dict[str, object], payload["transaction"])
     assert transaction["business_classification"] == "BUSINESS"
@@ -183,16 +196,16 @@ def _ledger_add_manual_transaction() -> dict[str, object]:
     return payload
 
 
-def _ledger_list_and_view(transaction_id: str) -> None:
+def _ledger_list_and_view(transaction_id: str, *, bucket_id: str) -> None:
     """The list verb returns the seed row, the view verb returns its full record."""
     listed = _run_ledger_cli_json(["app", "ledger", "list"])
-    assert listed["bucket_id"] == "operator"
+    assert listed["bucket_id"] == bucket_id
     rows = cast(list[dict[str, object]], listed["rows"])
     assert [row["transaction_id"] for row in rows] == [transaction_id]
     assert rows[0]["review_status"] == "reviewed"
 
     read = _run_ledger_cli_json(["app", "ledger", "view", transaction_id])
-    assert read["bucket_id"] == "operator"
+    assert read["bucket_id"] == bucket_id
     assert read["transaction_id"] == transaction_id
     assert read["review_status"] == "reviewed"
     transaction = cast(dict[str, object], read["transaction"])
@@ -271,10 +284,10 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
     return allocated
 
 
-def _assert_ledger_status_one_ready_row() -> None:
+def _assert_ledger_status_one_ready_row(bucket_id: str) -> None:
     """After one reviewed transaction the status verb reports a single ready row."""
     status = _run_ledger_cli_json(["app", "ledger", "status", "--period", "2026-05"])
-    assert status["bucket_id"] == "operator"
+    assert status["bucket_id"] == bucket_id
     assert status["total_count"] == 1
     assert status["active_count"] == 1
     assert status["reviewed_count"] == 1
@@ -288,10 +301,11 @@ def _assert_ledger_track_returns_lineage(
     transaction_id: str,
     *,
     expected_created_event_id: str,
+    bucket_id: str,
 ) -> None:
     """The track verb returns the transaction body plus its lineage triple."""
     tracked = _run_ledger_cli_json(["app", "ledger", "track", transaction_id])
-    assert tracked["bucket_id"] == "operator"
+    assert tracked["bucket_id"] == bucket_id
     transaction = cast(dict[str, object], tracked["transaction"])
     assert transaction["transaction_id"] == transaction_id
     tracking = cast(dict[str, object], tracked["tracking"])
@@ -332,12 +346,13 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
         ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"]
     )
     assert init.exit_code == 0, init.output
+    bucket_id = _active_bucket_id()
 
-    created = _ledger_add_manual_transaction()
+    created = _ledger_add_manual_transaction(bucket_id)
     transaction_id = cast(str, created["transaction_id"])
     created_event_id = cast(list[str], created["bucket_event_ids"])[0]
 
-    _ledger_list_and_view(transaction_id)
+    _ledger_list_and_view(transaction_id, bucket_id=bucket_id)
     # Each downstream verb may rewrite the transaction id because the
     # ledger row is content-addressed (changing amount/category changes
     # the SHA). Re-thread the new id between steps so the verb chain
@@ -346,11 +361,13 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     transaction_id = cast(str, edited["transaction_id"])
     classified = _ledger_classify_transaction(transaction_id)
     transaction_id = cast(str, classified["transaction_id"])
-    _seed_usage_ratio_for_telefonia(bucket_id="operator")
+    _seed_usage_ratio_for_telefonia(bucket_id=bucket_id)
     allocated = _ledger_allocate_transaction(transaction_id)
     transaction_id = cast(str, allocated["transaction_id"])
-    _assert_ledger_status_one_ready_row()
-    _assert_ledger_track_returns_lineage(transaction_id, expected_created_event_id=created_event_id)
+    _assert_ledger_status_one_ready_row(bucket_id)
+    _assert_ledger_track_returns_lineage(
+        transaction_id, expected_created_event_id=created_event_id, bucket_id=bucket_id
+    )
     _assert_ledger_review_returns_transaction(transaction_id)
     _assert_ledger_review_filtered_by_period_returns_empty(transaction_id)
 
@@ -365,6 +382,7 @@ class _LedgerLifecycleOutcome:
     payload + path, and the reset payload.
     """
 
+    bucket_id: str
     purchase_invoice_evidence_id: str
     attached_payload: dict[str, object]
     archived_payload: dict[str, object]
@@ -395,8 +413,9 @@ def _drive_ledger_lifecycle_round_trip(
         ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"]
     )
     assert init.exit_code == 0, init.output
+    bucket_id = _active_bucket_id()
 
-    purchase_evidence_id = _seed_purchase_invoice_evidence()
+    purchase_evidence_id = _seed_purchase_invoice_evidence(bucket_id)
 
     attached = _ledger_lifecycle_attach(purchase_invoice_evidence_id=purchase_evidence_id)
     archived = _ledger_lifecycle_lifecycle_transition("archive", reason="wrong account", key="cli-archive-row")
@@ -407,6 +426,7 @@ def _drive_ledger_lifecycle_round_trip(
     reset_outcome = _ledger_lifecycle_reset()
 
     return _LedgerLifecycleOutcome(
+        bucket_id=bucket_id,
         purchase_invoice_evidence_id=purchase_evidence_id,
         attached_payload=attached,
         archived_payload=archived,
@@ -422,7 +442,7 @@ def _drive_ledger_lifecycle_round_trip(
     )
 
 
-def _seed_purchase_invoice_evidence() -> str:
+def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
     """Persist one RECEIVED purchase invoice and return its id."""
     from aeat.adapters.persistence.storage import (
         activate_master_key_provider,
@@ -449,7 +469,7 @@ def _seed_purchase_invoice_evidence() -> str:
     purchase_evidence = Invoice.model_validate(
         {
             "kind": InvoiceKind.RECEIVED,
-            "bucket_id": "operator",
+            "bucket_id": bucket_id,
             "invoice_number": "P-2026-CLI-001",
             "issued_at": date(2026, 5, 3),
             "counterparty_name": "Proveedor SL",
@@ -597,7 +617,7 @@ def test_app_ledger_lifecycle_export_targets_active_profile_bucket(
     tmp_path: Path,
 ) -> None:
     outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
-    assert outcome.export_payload["bucket_id"] == "operator"
+    assert outcome.export_payload["bucket_id"] == outcome.bucket_id
 
 
 def test_app_ledger_lifecycle_export_records_three_rows(

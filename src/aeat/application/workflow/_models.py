@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ...core._bucket_pointer_io import resolve_active_bucket_id
 from ...core.i18n import tr
 from ..auth._models import AuthState
@@ -112,12 +113,16 @@ class ProfileBucketPointer(BaseModel):
     ``bucket_id`` is the immutable UUIDv4 profile identity and the
     name of the bucket directory on disk. ``label`` is the decoupled
     mutable operator-chosen display name read from the bucket manifest.
+    ``status`` is the plaintext lifecycle marker carried on the
+    manifest; the live-surface scanners filter on it so a tombstoned
+    profile never leaks into ``list`` / ``switch`` / name-uniqueness.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     bucket_id: str = Field(min_length=1, max_length=128)
     label: str = Field(min_length=1, max_length=160)
+    status: BucketLifecycleStatus = BucketLifecycleStatus.ACTIVE
 
     @field_validator("bucket_id", "label")
     @classmethod

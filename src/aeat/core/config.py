@@ -131,8 +131,16 @@ class Settings(BaseSettings):
 
     # ── Token Storage ───────────────────────────────────────────────────────
     aeat_token_dir: Path = Field(
-        default=PROJECT_ROOT / ".tokens",
-        description="Directory for cached authentication tokens",
+        default=PROJECT_ROOT,
+        description=(
+            "Directory for cached authentication token and lock files. The "
+            "``PROJECT_ROOT`` default here is a placeholder: when the field "
+            "is not explicitly set, the model validator roots it at "
+            "``<aeat_local_storage_root>/tokens`` so every profile store, "
+            "token and lock files included, lives under one state root. An "
+            "explicit ``AEAT_TOKEN_DIR`` override wins over the derived "
+            "default."
+        ),
     )
 
     # ── AEAT ────────────────────────────────────────────────────────────────
@@ -915,6 +923,36 @@ class Settings(BaseSettings):
             self,
             "aeat_database_url",
             f"sqlite:///{bucket_db_path.as_posix()}",
+        )
+        return self
+
+    @model_validator(mode="after")
+    def _resolve_token_dir_under_storage_root(self) -> Settings:
+        """Root ``aeat_token_dir`` under ``aeat_local_storage_root``.
+
+        When the field is not explicitly supplied (the production
+        default), this validator computes
+        ``<aeat_local_storage_root>/tokens`` so that auth token and
+        lock files live inside the one state root that
+        ``AEAT_LOCAL_STORAGE_ROOT`` scopes — making the isolation
+        contract tests and the persona harness rely on actually true.
+
+        An explicit ``AEAT_TOKEN_DIR`` env var (or a value supplied via
+        an ``override_settings`` block in tests) registers the field in
+        ``model_fields_set`` and wins: the validator only computes the
+        derived path when the field was left at its placeholder
+        default.
+
+        ``mode="after"`` guarantees ``aeat_local_storage_root`` is
+        already populated when this runs.
+        """
+
+        if "aeat_token_dir" in self.model_fields_set:
+            return self
+        object.__setattr__(
+            self,
+            "aeat_token_dir",
+            self.aeat_local_storage_root / "tokens",
         )
         return self
 

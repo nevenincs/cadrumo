@@ -17,6 +17,7 @@ ends with ``-tax-id``) route through
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from ...core.i18n import tr
@@ -28,6 +29,16 @@ _TRUE_TOKENS = frozenset({"true", "yes", "1", "y"})
 _FALSE_TOKENS = frozenset({"false", "no", "0", "n"})
 
 _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
+
+_POSTCODE_QUESTION_IDS: frozenset[str] = frozenset({"address-postcode"})
+"""Question ids whose answer must be a Spanish 5-digit postcode."""
+
+_SPANISH_POSTCODE_RE = re.compile(r"^(0[1-9]|[1-4][0-9]|5[0-2])[0-9]{3}$")
+"""Spanish postcode: 5 digits whose first two are a province code 01-52.
+
+The field is a string throughout — leading zeros are significant
+(``01001`` is Vitoria-Gasteiz) and must never be int-coerced.
+"""
 
 
 def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardValidationError:
@@ -63,6 +74,11 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
     :class:`WizardValidationError` carrying
     ``wizard.errors.invalid_tax_id`` so renderers surface the
     translated message rather than the raw checksum complaint.
+
+    The ``address-postcode`` question additionally enforces the
+    Spanish 5-digit postcode format (province code 01-52 followed by
+    three digits). The answer stays a string throughout so leading
+    zeros are preserved; it is never int-coerced.
     """
 
     value = raw.strip()
@@ -77,6 +93,8 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
             validate_identity(value)
         except IdentityError as exc:
             raise _fail(question, "invalid_tax_id", raw=raw, detail=str(exc)) from exc
+    if value and question.id in _POSTCODE_QUESTION_IDS and not _SPANISH_POSTCODE_RE.match(value):
+        raise _fail(question, "invalid_postcode", raw=raw)
     return value
 
 

@@ -245,7 +245,6 @@ def test_config_app_round_trip_review_queue_lists_imported_row(_isolated_cli_bac
 
 _REVIEW_ROW_EXPECTATIONS = (
     ("source_kind", "ledger_transaction"),
-    ("bucket_id", "operator"),
     ("period", "2026-04"),
 )
 
@@ -256,6 +255,18 @@ def test_config_app_round_trip_review_row_records_field(
 ) -> None:
     outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
     assert outcome.review_payload["rows"][0][key] == expected
+
+
+def test_config_app_round_trip_review_row_records_bucket_id(_isolated_cli_backend: Path) -> None:
+    """The review row carries the profile bucket id, a generated UUID.
+
+    Profile identity is the decoupled ``profile_id`` UUID, not the
+    operator-facing label. The review row's ``bucket_id`` must equal
+    the active profile's ``profile_id`` reported by ``profile status``.
+    """
+
+    outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
+    assert outcome.review_payload["rows"][0]["bucket_id"] == outcome.status_payload["profile_id"]
 
 
 def test_config_app_round_trip_review_row_has_affected_object(_isolated_cli_backend: Path) -> None:

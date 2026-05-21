@@ -159,47 +159,47 @@ def modelo_readiness(
         ),
     ] = None,
 ) -> None:
-    """Walk the ProfilePreflightService over the active profile for one modelo target.
+    """Report active-profile readiness for one modelo target.
 
     Carries the behaviour previously surfaced as
     ``aeat config profile preflight``. Lives on the modelo surface so
     the readiness check sits alongside the other modelo verbs that
     operate on ``(modelo, revision, year, period)`` tuples.
+
+    Consumes the canonical :func:`build_operator_state_projection`: the
+    readiness datum is computed once in the projection, so this surface
+    cannot disagree with any other operator-facing surface.
     """
 
-    from ...application.user_profile._orchestration import (
-        _shared_schema,
-        build_lifecycle_service,
+    from ...application.state_projection import (
+        ModeloReadinessRequest,
+        build_operator_state_projection,
     )
-    from ...application.user_profile._preflight import ProfilePreflightService
     from ...application.workflow._models import resolve_active_bucket_id
-    from ...application.workflow._profile_bucket_scan import read_profile_bucket_by_id
     from ...core.i18n import tr as _tr
     from ...domain.user_profile import ProfileNotFoundError
     from ._errors import CliRefusedBoundaryError
 
-    active = resolve_active_bucket_id()
-    if active is None:
+    if resolve_active_bucket_id() is None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    pointer = read_profile_bucket_by_id(active)
-    if pointer is None:
-        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
-    try:
-        record = service.read(active)
-    except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=active)) from exc
-    preflight = ProfilePreflightService(schema=_shared_schema())
-    report = preflight.report(
-        record=record,
+    request = ModeloReadinessRequest(
         modelo=modelo,
         revision_id=revision_id,
         filing_year=filing_year,
         period=period or "",
     )
+    try:
+        projection = build_operator_state_projection(modelo_readiness_requests=(request,))
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(
+            _tr("cli.config.profile.unknown_profile", name=resolve_active_bucket_id() or "")
+        ) from exc
+    if not projection.modelo_readiness:
+        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+    report = projection.modelo_readiness[0]
     payload = report.model_dump(mode="json")
     lines = [
-        f"profile_id\t{record.profile_id}",
+        f"profile_id\t{report.profile_id}",
         f"modelo\t{modelo}",
         f"revision_id\t{revision_id}",
         f"filing_year\t{filing_year}",
@@ -824,6 +824,76 @@ def _work_unit_lines(unit: WorkUnit) -> list[str]:
     return lines
 
 
+_FILING_YEAR_MIN = 2000
+_FILING_YEAR_MAX = 2099
+"""Filing-year bounds enforced by :class:`WorkUnit` (``ge=2000, le=2099``).
+
+Validating the bound at the CLI boundary turns an out-of-range year
+into a clean, translated, value-naming refusal instead of a generic
+pydantic-validation boundary error.
+"""
+
+
+def _validate_filing_year(year: int) -> None:
+    """Refuse a filing year outside the registry-supported range.
+
+    ``--year 1899`` previously composed the token ``1899-Q1``, passed
+    the period regex, then failed deep in :class:`WorkUnit` validation
+    and surfaced only the generic English "command input failed
+    validation" boundary error. The refusal now names the bad year and
+    renders in the operator's language.
+    """
+
+    if not _FILING_YEAR_MIN <= year <= _FILING_YEAR_MAX:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.year_out_of_range",
+                year=year,
+                minimum=_FILING_YEAR_MIN,
+                maximum=_FILING_YEAR_MAX,
+            )
+        )
+
+
+def _validate_registry_target(modelo: str, revision_id: str) -> None:
+    """Refuse a work-unit create that names an unknown modelo or revision.
+
+    Without this gate ``modelo work create --modelo 999 --revision
+    nonexistent`` provisions a work unit that ``calculate`` then
+    silently treats as a Modelo 303 default. Both axes are checked
+    against the validated registry authority — the single source of
+    truth for modelo / revision identity — and refused cleanly with a
+    translated error naming the unknown value.
+    """
+
+    from ...core.resources import resources
+
+    authority = resources().modelos.authority
+    modelo_code = modelo.strip()
+    try:
+        definition = authority.modelo(modelo_code)
+    except RegistrySnapshotError as exc:
+        known = ", ".join(sorted(str(item.id) for item in authority.modelos))
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.unknown_modelo",
+                modelo=modelo_code,
+                known=known,
+            )
+        ) from exc
+    revision = revision_id.strip()
+    if revision not in definition.revisions:
+        declared = ", ".join(sorted(str(item) for item in definition.revisions))
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.unknown_revision",
+                revision=revision,
+                modelo=modelo_code,
+                declared=declared,
+            )
+        )
+
+
 @work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
 def work_create(
     ctx: typer.Context,
@@ -854,6 +924,8 @@ def work_create(
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
+    _validate_filing_year(year)
+    _validate_registry_target(modelo, revision)
     resolved_year, resolved_period = _resolve_year_period(year, period)
     unit = create_work_unit(
         bucket_id=bucket_id,
@@ -990,6 +1062,10 @@ def work_discard(
         str | None,
         typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),
     ] = None,
+    confirmed: Annotated[
+        bool,
+        typer.Option("--yes", help=tr("cli.app.modelo.work.discard_yes_help")),
+    ] = False,
 ) -> None:
     """Transition a work unit to discarded state.
 
@@ -998,9 +1074,20 @@ def work_discard(
     with actor + reason captured, and subsequent mutations are
     rejected. Discarded units are excluded from default
     ``aeat app modelo work list`` output.
+
+    The transition is gated by ``--yes``, symmetric with
+    ``config profile delete``: an unconfirmed run is refused with
+    the exact re-run command.
     """
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
+    if not confirmed:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.discard_requires_yes",
+                work_unit_id=work_unit_id,
+            )
+        )
     try:
         unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
@@ -1613,26 +1700,26 @@ def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
 def work_amend(
     ctx: typer.Context,
     from_filing_record_id: Annotated[
-        str,
+        str | None,
         typer.Option(
             "--from-filing-record",
             help=tr("cli.app.modelo.work.from_filing_record_help"),
         ),
-    ],
+    ] = None,
     kind: Annotated[
-        str,
+        str | None,
         typer.Option(
             "--kind",
             help=tr("cli.app.modelo.work.amendment_kind_help"),
         ),
-    ],
+    ] = None,
     reason: Annotated[
-        str,
+        str | None,
         typer.Option(
             "--reason",
             help=tr("cli.app.modelo.work.amendment_reason_help"),
         ),
-    ],
+    ] = None,
     actor: Annotated[
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
@@ -1642,7 +1729,37 @@ def work_amend(
         typer.Option("--set", help=tr("cli.app.modelo.work.set_override_help")),
     ] = None,
 ) -> None:
-    """Build a complementaria amendment over an externally-filed return."""
+    """Build a complementaria amendment over an externally-filed return.
+
+    The four required inputs (``--from-filing-record``, ``--kind``,
+    ``--reason``, and at least one ``--set``) are batch-validated so a
+    run missing several flags reports every absent one in a single
+    refusal instead of forcing the operator to rediscover them one
+    invocation at a time.
+    """
+
+    missing: list[str] = []
+    if not from_filing_record_id or not from_filing_record_id.strip():
+        missing.append("--from-filing-record")
+    if not kind or not kind.strip():
+        missing.append("--kind")
+    if not reason or not reason.strip():
+        missing.append("--reason")
+    if not set_overrides:
+        missing.append("--set")
+    if missing:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.amend_missing_options",
+                missing=", ".join(missing),
+            )
+        )
+
+    # The batch check above guarantees all four required inputs are
+    # present and non-blank; narrow the optional types for the calls.
+    assert from_filing_record_id is not None
+    assert kind is not None
+    assert reason is not None
 
     try:
         amendment_kind = CalculationRevisionAmendmentKind(kind.strip())

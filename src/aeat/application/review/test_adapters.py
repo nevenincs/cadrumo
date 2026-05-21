@@ -91,7 +91,13 @@ def _build_settings(tmp_path: Path) -> Settings:
 
 def _seed_active_profile() -> None:
     """Register the minimal placeholder profile so drafts match the active tax id."""
-    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="default",
+            overrides={"identity.tax_id": "00000000T"},
+        )
+    )
 
 
 def _summary(text: str = "demo") -> tr:

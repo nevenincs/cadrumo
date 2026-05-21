@@ -438,7 +438,9 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
         filing_year=2025,
         period="0A",
         inputs={
-            "0540": Decimal("8000.00"),
+            # 0540 is now computed via the art.66 ahorro-base estatal
+            # escala (subtract of 0536/0538) and cannot be supplied as
+            # an input.
             "0541": Decimal("7000.00"),
             "0588": Decimal("100.00"),
             "0414": Decimal("200.00"),
