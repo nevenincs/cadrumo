@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
 from importlib import import_module
@@ -949,7 +950,7 @@ class RegistryValidator:
         *,
         prefix: str,
         revision: ModeloRevision,
-        construct_by_id: Mapping[str, object],
+        construct_by_id: Mapping[str, ConstructDefinition],
         relation_by_id: Mapping[str, RelationDefinition],
     ) -> None:
         for classification in revision.dependency_classifications:
@@ -1908,8 +1909,8 @@ class RegistryValidator:
         scope: str,
         revision: ModeloRevision,
         *,
-        surfaces: set[str],
-        communication_surfaces: set[str],
+        surfaces: AbstractSet[str],
+        communication_surfaces: AbstractSet[str],
         modelo_requires_communication: bool,
     ) -> list[str]:
         failures: list[str] = []
@@ -1932,7 +1933,7 @@ class RegistryValidator:
         scope: str,
         revision: ModeloRevision,
         *,
-        surfaces: set[str],
+        surfaces: AbstractSet[str],
     ) -> list[str]:
         failures: list[str] = []
         if "filing" in surfaces:
