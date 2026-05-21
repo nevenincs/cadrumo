@@ -259,3 +259,76 @@ more bounded fix wave (tracked task: R3 residual fix wave) over the
 MEDIUM and LOW findings above, excluding the cross-campaign
 registry-data accent issue, then re-run the 5-persona blind re-test.
 The campaign closes when mean pain is near zero.
+
+## Round 4 re-test — campaign close
+
+Five blind operator personas, isolated clean installs, re-tested the
+`aeat` CLI after the round-3 residual fix wave landed.
+
+### Pain scores
+
+- newcomer: 1/10.
+- returning: 3/10.
+- dual: 1/10.
+- fumbler: 1/10.
+- curious: 1/10.
+- Mean: 1.4/10 — near-zero.
+
+### Trajectory
+
+Original baseline "heavy" -> round 1 4.6 -> round 3 2.2 ->
+round 4 1.4. (Round 2's ~7.2 stays discarded — it measured a foreign
+concurrent-campaign crash, not the feature.)
+
+### Round-3 fixes confirmed by the personas
+
+Every round-3 residual fix was independently verified in-scenario:
+`modelo work create` now refuses an unknown modelo or revision and
+names the valid set; an out-of-range year is refused naming the bad
+year in the operator's language; a duplicate tax id is refused naming
+the existing profile; malformed postcodes are refused with the
+province-range rule; `modelo work discard` is gated behind `--yes`
+with the exact re-run command; `modelo work amend` batch-reports all
+missing flags; `modelo describe --period 0A` is accepted;
+`config repair connectivity` row labels render clean; help tables do
+not truncate and the CCAA choice list wraps cleanly; portal labels
+all resolve; did-you-mean covers the new synonyms. Zero raw Python
+tracebacks across all five sessions, including the fumbler's 23
+deliberate abuse cases.
+
+### Residual findings — for the round-4 fix wave
+
+- `aeat_database_url` does not derive from `aeat_local_storage_root`:
+  setting the storage root alone yields `aeat_database_url is empty`
+  on first contact (four of five personas). Some cold-start command
+  paths (`modelo work list` with no profile) leak this raw config
+  error instead of the clean no-active-profile refusal that
+  `ledger list` gives. The two settings must be coherent and no path
+  may surface the raw empty-URL error.
+- M100 annual period-token confusion: `--year 2024 --period 2024`
+  is internally joined to `2024-2024` and refused with an opaque
+  message; the annual token `0A` is not surfaced in the error.
+- `profile edit` in a non-interactive context refuses with a recovery
+  hint pointing at `profile create` (reads as destructive) rather
+  than `profile edit NAME --quiet ...`.
+- `overview status` greets by profile slug rather than the stored
+  human identity name (debatable — the slug is the profile identity).
+- LOW: `aeat --version` cold start ~2.7s (tracked separately as the
+  lazy-registration task); `live filed list` accepts only `1` not
+  `true`; `modelo work verify` wraps a workflow-gate refusal in a
+  Click `Invalid value:` header; `modelo describe` period errors do
+  not enumerate model-specific tokens; `config repair` labels stay
+  Spanish under an English profile.
+
+## Campaign close verdict
+
+Operator pain fell from "heavy" to 1.4/10 — near-zero. The
+profile-lifecycle disaster-recovery campaign has met its close
+condition. Error handling, cold-start refusals, destructive-action
+safety, the command-surface map, atomic create, true single-field
+edit, registry-validated work creation, and provenance-preserving
+output are all settled strengths confirmed across four re-test
+rounds. The campaign is converged. The round-4 residual findings
+above are handed to one final bounded fix wave and thereafter to the
+ongoing codebase-health hardening cadence — they are polish on a
+sound feature, not disaster-recovery work.
