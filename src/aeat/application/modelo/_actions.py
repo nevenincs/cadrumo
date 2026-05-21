@@ -1867,11 +1867,8 @@ def _reject_unknown_import_casillas(
     filing_year: int,
     period: str,
     casilla_values: Mapping[str, Decimal],
-) -> None:
-    """Refuse imported casilla ids the registry does not declare for the modelo / year / period."""
-
-    if not casilla_values:
-        return
+) -> RegistrySnapshot:
+    """Refuse imported casilla ids the registry does not declare and return the resolved snapshot."""
 
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
@@ -1899,6 +1896,26 @@ def _reject_unknown_import_casillas(
             f"external-filing import carries casilla ids that are not declared in registry "
             f"modelo={modelo!r} filing_year={filing_year} period={period!r}: {unknown!r}"
         )
+    return snapshot
+
+
+def _external_filing_observations(
+    *,
+    casilla_values: Mapping[str, Decimal],
+    snapshot: RegistrySnapshot,
+) -> tuple[CasillaObservation, ...]:
+    """Build registry-grounded observations for externally imported casilla values."""
+
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    return tuple(
+        _casilla_observation_for(
+            casilla_id=casilla_id,
+            value=value,
+            entry=None,
+            registry_casilla=casillas_by_id.get(casilla_id),
+        )
+        for casilla_id, value in casilla_values.items()
+    )
 
 
 def _required_input_casillas_for_revision(
@@ -2990,7 +3007,7 @@ def import_external_filing_evidence(
     if work_unit.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
 
-    _reject_unknown_import_casillas(
+    snapshot = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
@@ -3000,6 +3017,7 @@ def import_external_filing_evidence(
     inputs_snapshot: dict[str, str] = {}
     binding_overrides: dict[str, str] = {}
     outputs = dict(casilla_values)
+    observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
 
     now = clock or datetime.now(UTC)
     revision_id = derive_calculation_revision_id(
@@ -3028,6 +3046,7 @@ def import_external_filing_evidence(
         verified_by=actor.strip(),
         filed_at=now,
         filed_by=actor.strip(),
+        observations=observations,
     )
     revisions = upsert_calculation_revision(revisions, revision)
 
