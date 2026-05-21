@@ -1,13 +1,11 @@
-"""Real-behaviour W02.S10 persona tests for the applicability engine.
+"""Real-behaviour persona tests for the modelo-applicability engine.
 
-Each test pins one persona from the round-3 finding / taxpayer-type
-ADR and asserts the derived modelo verdict. Expected modelo sets are
-taken from the taxpayer-type-applicability research document
-(``.vault/research/2026-05-21-taxpayer-type-applicability-research.md``),
-not hand-invented:
+Each test pins one operator persona and asserts the derived modelo
+verdict. Expected modelo sets are taken from the taxpayer-type
+applicability research grounding, not hand-invented:
 
 * A pure landlord (capital inmobiliario only) → Modelo 100, NOT 130
-  (research §1.1 — Bernat, the round-3 Q1 defect).
+  (research §1.1 — a pure landlord, the wrong-guidance defect).
 * A salaried-only taxpayer → Modelo 100, no quarterly modelos
   (research §1.1 — rendimientos del trabajo).
 * A pensioner → Modelo 100, no quarterly modelos (research §1.1 —
@@ -15,7 +13,7 @@ not hand-invented:
 * An autónomo en estimación directa → 130 / 303 (research §1.1, §2.1 —
   the unchanged-by-design persona).
 * A sociedad limitada → 200 / 202, NOT 100 / 130 (research §1.2).
-* An undeclared profile → ``incomplete`` (W02.S09 safe default).
+* An undeclared profile → ``incomplete`` (the safe default).
 
 No mocks, no skips, no tautologies — every verdict is the real output
 of :func:`derive_modelo_applicability` over a constructed profile.
@@ -111,7 +109,7 @@ def _undeclared() -> TaxpayerProfile:
 
 
 # ---------------------------------------------------------------------
-# Landlord — Modelo 100, NOT 130 (round-3 Q1 defect closed)
+# Landlord — Modelo 100, NOT 130 (wrong-guidance defect closed)
 # ---------------------------------------------------------------------
 
 
@@ -125,7 +123,7 @@ def test_landlord_owes_modelo_100() -> None:
 
 
 def test_landlord_does_not_owe_modelo_130() -> None:
-    """The round-3 Q1 fix: a landlord has no actividad económica and
+    """A landlord has no actividad económica and
     therefore no Modelo 130 obligation — verdict NOT_APPLICABLE, never
     'applicable and overdue'."""
 
@@ -245,7 +243,7 @@ def test_sociedad_limitada_does_not_owe_irpf_modelos() -> None:
 
 
 # ---------------------------------------------------------------------
-# Undeclared profile — incomplete (W02.S09)
+# Undeclared profile — incomplete (the safe default)
 # ---------------------------------------------------------------------
 
 
@@ -258,9 +256,9 @@ def test_undeclared_profile_is_not_declared() -> None:
 
 
 def test_undeclared_profile_yields_incomplete_for_every_modelo() -> None:
-    """W02.S09: an undeclared taxpayer model yields an explicit
-    incomplete verdict — never a confident wrong obligation, never the
-    autónomo guess."""
+    """An undeclared taxpayer model yields an explicit incomplete
+    verdict — never a confident wrong obligation, never the autónomo
+    guess."""
 
     profile = _undeclared()
     for modelo in ("100", "130", "303", "200", "202"):
@@ -287,9 +285,9 @@ def test_natural_person_without_income_categories_is_incomplete() -> None:
 
 
 def test_modelo_without_seed_rule_is_incomplete() -> None:
-    """A modelo outside the W02.S10 seed set has no derived rule yet:
-    it reports incomplete (Wave W03 completes coverage) rather than a
-    confident guess."""
+    """A modelo outside the seed rule set has no derived rule yet:
+    it reports incomplete (the deferred expansion completes coverage)
+    rather than a confident guess."""
 
     result = derive_modelo_applicability(_autonomo(), "349")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE

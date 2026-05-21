@@ -100,8 +100,8 @@ def test_explain_profile_facts_surface_taxpayer_model_axes() -> None:
 
 
 def test_explain_undeclared_profile_yields_incomplete_verdict() -> None:
-    """W02.S09: an undeclared taxpayer model yields an explicit
-    INCOMPLETE verdict — never a confident wrong obligation."""
+    """An undeclared taxpayer model yields an explicit INCOMPLETE
+    verdict — never a confident wrong obligation."""
 
     result = build_overview_explain(_undeclared_profile(), modelo="130", year=2026)
 

@@ -5,8 +5,8 @@
 verdict is DERIVED from the three-axis
 :class:`~aeat.domain.deadlines.TaxpayerProfile` taxpayer model through
 the registry-grounded rule table in :mod:`._applicability` — never
-assumed from an autónomo default (W02.S07). An undeclared taxpayer
-model yields an explicit ``incomplete`` verdict (W02.S09): the service
+assumed from an autónomo default. An undeclared taxpayer
+model yields an explicit ``incomplete`` verdict: the service
 reports "declare your taxpayer type first" rather than a confident
 wrong obligation.
 
@@ -176,8 +176,8 @@ def build_overview_explain(
 
     The ``applicable`` flag and the ``verdict`` are DERIVED from the
     three-axis taxpayer model through :func:`derive_modelo_applicability`
-    — never from an autónomo default (W02.S07). An undeclared taxpayer
-    model yields an ``INCOMPLETE`` verdict (W02.S09): the service
+    — never from an autónomo default. An undeclared taxpayer
+    model yields an ``INCOMPLETE`` verdict: the service
     reports "declare your taxpayer type first" instead of a confident
     wrong obligation.
 

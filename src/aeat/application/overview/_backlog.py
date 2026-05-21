@@ -55,7 +55,7 @@ class OverviewBacklog(BaseModel):
         taxpayer_model_declared: Whether the profile carries a usable
             three-axis taxpayer model. When ``False`` the backlog is
             empty and the operator must declare their taxpayer type
-            first (W02.S09).
+            first.
         incomplete_reason: "declare your taxpayer type first" guidance,
             present only when ``taxpayer_model_declared`` is ``False``.
     """

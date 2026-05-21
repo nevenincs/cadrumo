@@ -126,7 +126,7 @@ def overview_calendar(
         raw_values=raw_values,
     )
     if not cal.taxpayer_model_declared:
-        # W02.S09: the taxpayer model is undeclared — the engine refuses
+        # The taxpayer model is undeclared — the engine refuses
         # to guess. Surface the "declare your taxpayer type first"
         # guidance instead of an empty calendar with no explanation.
         raise _bad(cal.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
