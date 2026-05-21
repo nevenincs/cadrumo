@@ -1,7 +1,7 @@
 [modelo]
 id = "202"
 title = "IS pago fraccionado"
-official_name = "Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol). Pago fraccionado."
+official_name = "Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español). Pago fraccionado."
 tax_domain = "is"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

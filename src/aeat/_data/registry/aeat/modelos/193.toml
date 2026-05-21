@@ -1,7 +1,7 @@
 [modelo]
 id = "193"
 title = "Resumen anual de retenciones sobre capital mobiliario"
-official_name = "Modelo 193. Declaracion informativa. Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas. Resumen anual."
+official_name = "Modelo 193. Declaración informativa. Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas. Resumen anual."
 tax_domain = "cross_tax"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

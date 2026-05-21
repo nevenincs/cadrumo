@@ -1,7 +1,7 @@
 [modelo]
 id = "131"
-title = "IRPF pago fraccionado estimacion objetiva"
-official_name = "Modelo 131. IRPF. Empresarios y profesionales en Estimacion Objetiva. Pago fraccionado."
+title = "IRPF pago fraccionado estimación objetiva"
+official_name = "Modelo 131. IRPF. Empresarios y profesionales en Estimación Objetiva. Pago fraccionado."
 tax_domain = "irpf"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

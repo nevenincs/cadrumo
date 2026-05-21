@@ -1,7 +1,7 @@
 [modelo]
 id = "036"
 title = "Censo de empresarios, profesionales y retenedores"
-official_name = "Modelo 036. Declaracion censal de alta, modificacion y baja en el Censo de empresarios, profesionales y retenedores."
+official_name = "Modelo 036. Declaración censal de alta, modificación y baja en el Censo de empresarios, profesionales y retenedores."
 tax_domain = "census"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"

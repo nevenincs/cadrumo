@@ -1,7 +1,7 @@
 [modelo]
 id = "130"
-title = "IRPF pago fraccionado estimacion directa"
-official_name = "Impuesto sobre la Renta de las Personas Fisicas. Actividades economicas en estimacion directa. Pago fraccionado."
+title = "IRPF pago fraccionado estimación directa"
+official_name = "Impuesto sobre la Renta de las Personas Físicas. Actividades económicas en estimación directa. Pago fraccionado."
 tax_domain = "irpf"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

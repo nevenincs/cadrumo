@@ -1,7 +1,7 @@
 [modelo]
 id = "347"
 title = "Operaciones con terceras personas (informativa anual)"
-official_name = "Modelo 347. Declaracion anual de operaciones con terceras personas."
+official_name = "Modelo 347. Declaración anual de operaciones con terceras personas."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
