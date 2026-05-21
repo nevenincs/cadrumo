@@ -65,7 +65,7 @@ roundtrip / anti-tautology gaps.
 
 - [x] `P05.S17` - CALC-2: `import_external_filing` builds registry-sourced `CasillaObservation` rows; `src/aeat/application/filing`.
 - [x] `P05.S18` - CALC-3: snapshot validator asserts every `input_kind="bound"` casilla has a binding definition; `src/aeat/domain/calculations/registry`.
-- [x] `P05.S19` - PERS-4: no-op on verification - `SecureObjectRecord.object_key` and `SecureObjectWrite.object_key` are both already `str`; the audit's `bytes`-vs-`str` premise was wrong. `test_secure_object_record_roundtrip_preserves_full_record_fields` already proves natural-key identity across the save→HMAC-column→load cycle; `src/aeat/adapters/persistence`.
+- [x] `P05.S19` - PERS-4: no-op on verification - `SecureObjectRecord.object_key` and `SecureObjectWrite.object_key` are both already `str`; `the audit's `bytes`-vs-`str` premise was wrong. `test_secure_object_record_roundtrip_preserves_full_record_fields` already proves natural-key identity across the save→HMAC-column→load cycle; `src/aeat/adapters/persistence`.
 - [x] `P05.S20` - PERS-5: `RecoveryRecord` serialization anti-tautology proof (5850e665e) - re-verified: no file-Envelope path exists; `added drop-field + mutate-field anti-tautology tests; 11 tests green; `src/aeat/adapters/persistence`.
 - [x] `P05.S21` - PERS-6: `peek_metadata` consistency test + on-disk schema-version-drift anti-tautology (50cd0b7fe); `12 secure-objects tests green; `src/aeat/adapters/persistence`.
 - [x] `P05.S22` - PERS-7: two-instance upsert-convergence test for `SecureObjectRepository` (45b383329) - two repos, one key, asserts single-row last-write-wins; `13 tests green; `src/aeat/adapters/persistence`.
@@ -76,7 +76,7 @@ roundtrip / anti-tautology gaps.
 
 Lock export-adjacent coverage after the critical provenance path lands.
 
-- [ ] `P06.S25` - EXIM-4: document and test Google Sheets as a one-way export mirror; `src/aeat/adapters/outbound/google`.
+- [x] `P06.S25` - EXIM-4: document and test Google Sheets as a one-way export mirror (b37445ce2) - found and fixed a live defect: `_classify_metadata_match` never compared `registry_sha`, so a drifted-registry workbook classified `matches`; added the gate, the one-way-mirror docstring contract, and the malformed-sheet pull probe; 33 google tests green; `src/aeat/adapters/outbound/google`.
 - [ ] `P06.S26` - EXIM-5: export tests for no-layout modelos, `binding_rows`, and computed fields; `src/aeat/application/filing`.
 
 ### Phase `P07` - MED cluster

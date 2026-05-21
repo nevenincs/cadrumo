@@ -142,6 +142,8 @@ CLEAN: CLI mounting (config + app roots only); workflow state transitions (froze
 
 ### EXIM-4 — HIGH — Google Sheets write surface (`_calc_sheets_apply.py`) not explicitly documented/guarded as a one-way export mirror. **Remediation:** docstring contract + a malformed-sheet pull test.
 
+**Resolution (2026-05-21, P06.S25, b37445ce2) — fixed; remediation uncovered a live defect.** The malformed-sheet investigation found that `_calc_sheets_pull._classify_metadata_match` never compared `registry_sha`, despite the pull module docstring and `_registry_sha`'s own docstring both promising that gate. A workbook compiled against a drifted registry slice (same modelo / revision / year / period, shifted casilla numbering or formula chains) classified `matches` and flowed silently into the local recompute; `test_classify_metadata_returns_matches_for_aligned_pairs` passed with a bogus `"abc123"` SHA, proving the gate was dead code. Fix: added `metadata.registry_sha == _registry_sha(snapshot)` to the match predicate; documented the one-way export-mirror contract on `_calc_sheets_apply.py` (Sheets is never an authority — no path writes sheet content into the local store, registry, or an AEAT submission); corrected the aligned-pairs test to stamp the real SHA and added `test_classify_metadata_returns_stale_for_drifted_registry_sha` as the malformed-sheet probe. 33 google pull/apply tests green.
+
 ### EXIM-5 — HIGH — modelo export tests cover only 130/131; no negative test for no-layout modelos or `binding_rows`/computed-field shapes. **Remediation:** add the missing export-layout cases.
 
 ### EXIM-6 — MED — verify verdict's `unchecked_casillas` never reports RESERVED-field casillas. **Remediation:** track reserved casillas in the verify path.
