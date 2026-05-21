@@ -1473,6 +1473,12 @@ def registry_observation_from_filed_declaration(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
             "has no registry casilla observations"
         )
+    # External-API exception: these observations come from the AEAT
+    # Sede filed-declaration extraction, which carries no legal-normative
+    # grounding. legal_refs / source_refs are intentionally left empty —
+    # the values are consumed only for binding-value resolution and are
+    # never persisted as CalculationRevision.observations, so the empty
+    # provenance here is not a grounding bug.
     return RegistryModeloObservation(
         modelo=observation.modelo,
         filing_year=observation.ejercicio,
