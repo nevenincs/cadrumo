@@ -25,7 +25,6 @@ from __future__ import annotations
 import ast
 import re
 from pathlib import Path
-from typing import TypeGuard
 
 from aeat.core.logging import get_logger
 
@@ -74,8 +73,9 @@ def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> N
     for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False):
         if default is None or arg.arg not in {"translated_message", "message_key"}:
             continue
-        if _is_dotted_literal_constant(default):
-            findings.add(default.value)
+        value = _dotted_literal_value(default)
+        if value is not None:
+            findings.add(value)
 
 
 def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
@@ -115,8 +115,11 @@ def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
     alike."""
 
     for kw in node.keywords:
-        if kw.arg in {"message_key", "translated_message"} and _is_dotted_literal_constant(kw.value):
-            findings.add(kw.value.value)
+        if kw.arg not in {"message_key", "translated_message"}:
+            continue
+        value = _dotted_literal_value(kw.value)
+        if value is not None:
+            findings.add(value)
 
 
 def _collect_build_entry_keys(node: ast.Call, findings: set[str]) -> None:
@@ -130,12 +133,15 @@ def _collect_build_entry_keys(node: ast.Call, findings: set[str]) -> None:
     keyword arguments explicitly here."""
 
     for kw in node.keywords:
-        if kw.arg in {"label", "purpose"} and _is_dotted_literal_constant(kw.value):
-            findings.add(kw.value.value)
+        if kw.arg in {"label", "purpose"}:
+            value = _dotted_literal_value(kw.value)
+            if value is not None:
+                findings.add(value)
         elif kw.arg == "notes" and isinstance(kw.value, ast.Tuple | ast.List):
             for element in kw.value.elts:
-                if _is_dotted_literal_constant(element):
-                    findings.add(element.value)
+                element_value = _dotted_literal_value(element)
+                if element_value is not None:
+                    findings.add(element_value)
 
 
 def _callee_name(callee: ast.expr) -> str | None:
@@ -146,30 +152,32 @@ def _callee_name(callee: ast.expr) -> str | None:
     return None
 
 
-def _is_dotted_literal_constant(node: ast.expr | None) -> TypeGuard[ast.Constant]:
-    """Return True when ``node`` is an ``ast.Constant`` carrying a dotted key.
+def _dotted_literal_value(node: ast.expr | None) -> str | None:
+    """Return the dotted-literal key string ``node`` carries, else ``None``.
 
-    Annotated as a :class:`TypeGuard` so callers gain static narrowing
-    to ``ast.Constant`` inside positive branches — that removes the
-    ``# type: ignore[attr-defined]`` escapes that previously wrapped
-    every ``node.value`` access. The runtime predicate is unchanged:
-    the node must be a Constant, its value must be a string, and the
-    string must match the dotted-literal shape.
+    Returns the resolved ``str`` directly so callers obtain a typed
+    value without a separate ``node.value`` access — ``ast.Constant.value``
+    is a broad ``str | bytes | int | ...`` union the type system cannot
+    narrow through a predicate. The runtime check is unchanged: the node
+    must be a Constant, its value must be a string, and the string must
+    match the dotted-literal shape.
     """
 
-    return (
+    if (
         isinstance(node, ast.Constant)
         and isinstance(node.value, str)
         and _is_dotted_literal(node.value)
-    )
+    ):
+        return node.value
+    return None
 
 
 def _add_first_dotted_arg(node: ast.Call, findings: set[str]) -> None:
     if not node.args:
         return
-    first = node.args[0]
-    if _is_dotted_literal_constant(first):
-        findings.add(first.value)
+    value = _dotted_literal_value(node.args[0])
+    if value is not None:
+        findings.add(value)
 
 
 _KEY_PREFIX_RE = re.compile(r"^\w+(?:\.\w+)*\.$", re.UNICODE)
