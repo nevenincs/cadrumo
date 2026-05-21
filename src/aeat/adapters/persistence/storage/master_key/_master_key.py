@@ -54,7 +54,11 @@ from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 if TYPE_CHECKING:
+    from contextlib import AbstractContextManager
+    from types import TracebackType
+
     from .....core.config import Settings
+    from ._bucket_session import BucketSession
 
 from .....core._bucket_pointer_io import resolve_active_bucket_id
 from .....core.locks import exclusive_file_lock, fsync_parent_dir
@@ -116,7 +120,16 @@ class MasterKeyProvider(Protocol):
     Providers are context managers: entering activates the backend's
     session (idle-timeout guard, in-memory key cache) and exiting tears
     it down. Every concrete provider implements the protocol verbatim.
+
+    The ``_session`` / ``_activation_cm`` slots are the bookkeeping the
+    shared enter/exit machinery binds onto: entering stores the opened
+    :class:`BucketSession` and its activation context manager, exiting
+    tears both down. Every concrete provider declares them in
+    ``__init__``.
     """
+
+    _session: BucketSession | None
+    _activation_cm: AbstractContextManager[None] | None
 
     def get_master_key(self) -> bytes:
         """Return the 32-byte AES-256 master key.
@@ -131,7 +144,12 @@ class MasterKeyProvider(Protocol):
         """Activate the provider's backend session for the ``with`` block."""
         ...
 
-    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         """Tear down the provider's backend session on block exit."""
         ...
 
@@ -396,13 +414,18 @@ class KeyringMasterKeyProvider:
         self._service = service
         self._username = username
         self._client: KeyringClient = client or _RealKeyringClient()
-        self._session: object | None = None
-        self._activation_cm: object | None = None
+        self._session: BucketSession | None = None
+        self._activation_cm: AbstractContextManager[None] | None = None
 
     def __enter__(self) -> object:
         return _provider_enter(self)
 
-    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         _provider_exit(self, exc_type, exc, tb)
 
     def _probe_backend(self) -> None:
@@ -534,13 +557,18 @@ class FileFallbackMasterKeyProvider:
         """
         self._store_dir = Path(store_dir)
         self._passphrase_callback = passphrase_callback or _default_passphrase_callback
-        self._session: object | None = None
-        self._activation_cm: object | None = None
+        self._session: BucketSession | None = None
+        self._activation_cm: AbstractContextManager[None] | None = None
 
     def __enter__(self) -> object:
         return _provider_enter(self)
 
-    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         _provider_exit(self, exc_type, exc, tb)
 
     @property
@@ -843,8 +871,8 @@ class EphemeralMasterKeyProvider:
                 f"ephemeral master key must be {KEY_SIZE} bytes; got {len(key)}",
             )
         self._key = key
-        self._session: object | None = None
-        self._activation_cm: object | None = None
+        self._session: BucketSession | None = None
+        self._activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
         return self._key
@@ -872,7 +900,12 @@ class EphemeralMasterKeyProvider:
         self._activation_cm = activation
         return session
 
-    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         activation = self._activation_cm
         session = self._session
         self._activation_cm = None
@@ -895,7 +928,9 @@ _UNSECURED_PUBLISHED_KEY: Final[bytes] = _UNSECURED_KEY_PREFIX + b"\x00" * (KEY_
 assert len(_UNSECURED_PUBLISHED_KEY) == KEY_SIZE
 
 
-def _provider_enter(provider: object, *, fallback_bucket_id: str | None = None) -> object:
+def _provider_enter(
+    provider: MasterKeyProvider, *, fallback_bucket_id: str | None = None
+) -> BucketSession:
     """Open and activate a :class:`BucketSession` for ``provider``.
 
     Resolves the active bucket id via the canonical precedence chain
@@ -917,7 +952,7 @@ def _provider_enter(provider: object, *, fallback_bucket_id: str | None = None) 
     from ._active_session import activate_session
     from ._bucket_session import BucketSession
 
-    if getattr(provider, "_session", None) is not None:
+    if provider._session is not None:
         raise RuntimeError(
             f"{type(provider).__name__} context manager is not re-entrant",
         )
@@ -930,7 +965,7 @@ def _provider_enter(provider: object, *, fallback_bucket_id: str | None = None) 
             "decrypt stored records.",
         )
 
-    key_bytes = provider.get_master_key()  # type: ignore[attr-defined]
+    key_bytes = provider.get_master_key()
     session = BucketSession.open(
         bucket_id=bucket_id,
         kek=key_bytes,
@@ -940,12 +975,17 @@ def _provider_enter(provider: object, *, fallback_bucket_id: str | None = None) 
     )
     activation = activate_session(session)
     activation.__enter__()
-    provider._session = session  # type: ignore[attr-defined]
-    provider._activation_cm = activation  # type: ignore[attr-defined]
+    provider._session = session
+    provider._activation_cm = activation
     return session
 
 
-def _provider_exit(provider: object, exc_type: object, exc: object, tb: object) -> None:
+def _provider_exit(
+    provider: MasterKeyProvider,
+    exc_type: type[BaseException] | None,
+    exc: BaseException | None,
+    tb: TracebackType | None,
+) -> None:
     """Tear down the activation + session opened by :func:`_provider_enter`.
 
     Idempotent on the provider's bookkeeping attributes; tolerant of
@@ -953,10 +993,10 @@ def _provider_exit(provider: object, exc_type: object, exc: object, tb: object) 
     them.
     """
 
-    activation = getattr(provider, "_activation_cm", None)
-    session = getattr(provider, "_session", None)
-    provider._activation_cm = None  # type: ignore[attr-defined]
-    provider._session = None  # type: ignore[attr-defined]
+    activation = provider._activation_cm
+    session = provider._session
+    provider._activation_cm = None
+    provider._session = None
     if activation is not None:
         activation.__exit__(exc_type, exc, tb)
     if session is not None:
@@ -1005,8 +1045,8 @@ class UnsecuredMasterKeyProvider:
     """
 
     def __init__(self) -> None:
-        self._session: object | None = None
-        self._activation_cm: object | None = None
+        self._session: BucketSession | None = None
+        self._activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
         return _UNSECURED_PUBLISHED_KEY
@@ -1014,7 +1054,12 @@ class UnsecuredMasterKeyProvider:
     def __enter__(self) -> object:
         return _provider_enter(self, fallback_bucket_id="unsecured")
 
-    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         _provider_exit(self, exc_type, exc, tb)
 
 

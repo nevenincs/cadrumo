@@ -65,6 +65,7 @@ from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
+from aeat.domain.modelos._work_unit import WorkUnit
 
 from .test_file_flow import _file_revision
 
@@ -272,10 +273,10 @@ class _AmendOutcome:
     record produced by ``amend_modelo_revision``.
     """
 
-    work_unit: object
-    baseline_revision: object
-    baseline: object
-    new_filing: object
+    work_unit: WorkUnit
+    baseline_revision: CalculationRevision
+    baseline: ModeloRecord
+    new_filing: ModeloRecord
 
 
 def _drive_amend_creates_complementaria(repos) -> _AmendOutcome:  # type: ignore[no-untyped-def]

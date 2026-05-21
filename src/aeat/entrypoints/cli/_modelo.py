@@ -9,7 +9,7 @@ from contextlib import suppress
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 import typer
 
@@ -52,6 +52,9 @@ from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date, _profile_to_autonomo
+
+if TYPE_CHECKING:
+    from ...application.modelo._reconcile import ModeloReconciliationReport
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 
@@ -2516,7 +2519,7 @@ def modelo_history(
     _emit(ctx, payload, lines)
 
 
-def _render_reconciliation_report(ctx: typer.Context, report: object) -> None:
+def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport) -> None:
     """Render a :class:`ModeloReconciliationReport` to the active emitter."""
 
     payload = report.model_dump(mode="json")
