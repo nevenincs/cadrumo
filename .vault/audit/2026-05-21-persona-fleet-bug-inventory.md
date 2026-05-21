@@ -172,3 +172,31 @@ independently) - not the transient crash above.
 Clusters A and B are dispatched first (confirmed blockers). C-G follow
 as tracked remediation waves; each fix lands with a real-behavior
 regression test and a re-run of the originating persona task.
+
+## Remediation progress
+
+Wave 1 (landed, verified):
+
+- **B1 + M5 + M6 + M7** - `623795a8d`. `switch`/`delete` open a
+  target-scoped bucket session (matching how `create` is exempt), so
+  deleting the active profile no longer locks the operator out;
+  delete-active now states the pointer was cleared; `delete` resolves
+  the name first so an unknown profile gets a clear refusal.
+- **B2** - `0775cfb63`. `ModeloWorkflowGateError` holds a private
+  `_result` with a clean primitive context; `_stringify_context_value`
+  hardened as a defensive funnel so no error class can dump a raw
+  object repr. `work verify` / `work file` now render cleanly.
+- **M1** - `31d22895b`. Date-typed profile fields validate as real
+  ISO-8601 calendar dates at `ProfileValidationService`; all nine
+  schema date fields are covered, not just birth-date.
+
+Note: a transient batch of ~6 pytest-collection-order failures in
+`test_profile_lifecycle_verbs.py` traces to a sibling campaign's
+uncommitted WIP in `auth/_sessions.py` + `core/errors/registry/_application.py`
+(an import-order-fragile `AuthProfileIdentityMismatchError`
+registration). At the real CLI level error rendering works; the
+failures resolve when that campaign commits. Not actioned here -
+foreign uncommitted WIP.
+
+Wave 2 (dispatched): clusters C (auth coherence), D (ledger UX),
+E (modelo-work UX). Cluster F (`repair` detail) follows C.
