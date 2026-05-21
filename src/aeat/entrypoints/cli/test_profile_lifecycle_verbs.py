@@ -12,7 +12,11 @@ import pytest
 from typer.testing import CliRunner, Result
 
 from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from aeat.adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from aeat.adapters.persistence.storage.bucket._manifest import (
+    BucketLifecycleStatus,
+    BucketManifest,
+    ManifestKdfParams,
+)
 from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
@@ -53,6 +57,7 @@ def _stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
             ),
             recovery_enrolled=False,
             schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
         ),
     )
 
