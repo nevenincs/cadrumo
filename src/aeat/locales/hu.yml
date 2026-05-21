@@ -1736,6 +1736,10 @@ errors:
     unknown_input_casillas: 'Ismeretlen cellaazonosítók a bemenetben: {casilla_ids}.'
   financial:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
+  internal:
+    internal_cli_unexpected_boundary: 'A parancs váratlan belső hiba miatt meghiúsult.'
+  refused:
+    refused_cli_validation_boundary: 'A parancs bemenete nem ment át az ellenőrzésen. Futtasd az `aeat config repair` parancsot, vagy állítsd vissza a profil állapotát.'
   transaction:
     import_source_invalid: a forrás nem érvényes könyvelési dokumentum
     ledger_import_failed: 'A könyvelési fájl nem importálható: {reason}'
@@ -1749,6 +1753,9 @@ filing:
     required_missing: Hiányzó kötelező mező
     schema_mismatch: Eltérés a várt sémától
 profile:
+  errors:
+    foral_regime: 'A(z) {tax_region} foral adórendszer kívül esik e profil hatókörén.'
+    not_configured: 'Nincs adóügyi illetőségi profil beállítva a RENTA-hoz.'
   keys:
     description: Profile configuration keys and their descriptions
     tax:

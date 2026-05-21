@@ -1784,6 +1784,10 @@ errors:
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
   financial:
     source_file_not_found: 'El archivo de origen no existe: {path}'
+  internal:
+    internal_cli_unexpected_boundary: 'El comando falló por un error interno inesperado.'
+  refused:
+    refused_cli_validation_boundary: 'La entrada del comando no superó la validación. Ejecuta `aeat config repair` o restablece el estado del perfil.'
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
     ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'
@@ -1797,6 +1801,9 @@ filing:
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
 profile:
+  errors:
+    foral_regime: '{tax_region} es un régimen foral fuera del alcance de este perfil.'
+    not_configured: 'No hay ningún perfil de residencia fiscal configurado para RENTA.'
   keys:
     description: Profile configuration keys and their descriptions
     tax:

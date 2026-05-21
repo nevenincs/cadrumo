@@ -87,6 +87,16 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
     if name == "build_entry":
         _collect_build_entry_keys(node, findings)
         return
+    if name == "__init__":
+        # ``*Error`` subclasses that wrap another exception delegate to
+        # ``super().__init__(translated_message="dotted.key", ...)`` from
+        # inside their own ``__init__``. The callee here is ``__init__``,
+        # not an ``*Error`` name, so collect the translation-key kwargs
+        # explicitly — the kwarg name alone identifies them.
+        for kw in node.keywords:
+            if kw.arg in {"message_key", "translated_message"} and _is_dotted_literal_constant(kw.value):
+                findings.add(kw.value.value)
+        return
     if not (name.endswith("Error") or name.endswith("Exception")):
         return
     _add_first_dotted_arg(node, findings)
