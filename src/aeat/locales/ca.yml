@@ -1396,8 +1396,9 @@ cli:
       title: Estat de l'espai de treball
       transactions_empty: Encara no s'han importat moviments bancaris.
       transactions_present: '%{count} moviment(s) bancaris estan disponibles al llibre.'
-      work_units_empty: cli.overview.status.work_units_empty
-      work_units_present: cli.overview.status.work_units_present
+      work_units_empty: Encara no s'ha iniciat cap unitat de treball de models.
+      work_units_present: '%{count} unitat(s) de treball de models existeixen en aquest
+        emmagatzematge local.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:

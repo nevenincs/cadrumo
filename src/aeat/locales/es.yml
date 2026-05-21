@@ -1418,8 +1418,9 @@ cli:
       transactions_empty: Aun no se han importado movimientos bancarios.
       transactions_present: '%{count} movimiento(s) bancarios estan disponibles en
         el libro.'
-      work_units_empty: cli.overview.status.work_units_empty
-      work_units_present: cli.overview.status.work_units_present
+      work_units_empty: Aun no se ha iniciado ninguna unidad de trabajo de modelos.
+      work_units_present: '%{count} unidad(es) de trabajo de modelos existen en este
+        almacenamiento local.'
     status_help: Mostrar el estado del perfil, libro y modelos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:

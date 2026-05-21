@@ -1378,8 +1378,8 @@ cli:
       title: Munkaterulet allapota
       transactions_empty: Meg nincs importalt banki tranzakcio.
       transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
-      work_units_empty: cli.overview.status.work_units_empty
-      work_units_present: cli.overview.status.work_units_present
+      work_units_empty: Meg nincs elinditott modello munkaegyseg.
+      work_units_present: '%{count} modello munkaegyseg letezik ebben a helyi tarolasban.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:

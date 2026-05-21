@@ -281,6 +281,97 @@ def test_config_profile_delete_tombstones_with_yes(cli_runner: CliRunner) -> Non
     assert resolve_active_bucket_id() is None
 
 
+def test_config_profile_list_excludes_a_tombstoned_profile(cli_runner: CliRunner) -> None:
+    """After ``delete`` the profile leaves ``config profile list``.
+
+    Closes the leak where a tombstoned profile stayed visible in the
+    listing, indistinguishable from a live one.
+    """
+
+    _seed("operator")
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+    result = cli_runner.invoke(profile_app, ["list"])
+    assert result.exit_code == 0, result.output
+    assert "operator" not in result.output
+    assert "<none>" in result.output
+
+
+def test_config_profile_switch_refuses_a_tombstoned_profile(cli_runner: CliRunner) -> None:
+    """Switching to a tombstoned profile is refused, not silently activated.
+
+    Closes the leak where ``switch`` made a deleted profile the active
+    one with exit code 0.
+    """
+
+    from aeat.application.workflow._models import resolve_active_bucket_id
+
+    _seed("operator")
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+    result = cli_runner.invoke(profile_app, ["switch", "operator"])
+    assert result.exit_code != 0, result.output
+    # The tombstoned profile was not made active.
+    assert resolve_active_bucket_id() is None
+
+
+def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned(
+    cli_runner: CliRunner,
+) -> None:
+    """``show`` of a tombstoned profile renders ``readiness tombstoned``.
+
+    Closes the self-contradiction where ``show`` reported
+    ``readiness ready issues=0`` directly above ``status tombstoned``.
+    """
+
+    _seed("operator")
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+    result = cli_runner.invoke(profile_app, ["show", "operator"])
+    assert result.exit_code == 0, result.output
+    assert "status\ttombstoned" in result.output
+    assert "readiness\ttombstoned" in result.output
+    assert "readiness\tready" not in result.output
+
+
+def test_deleted_profile_name_is_reusable_by_create_and_rename(
+    cli_runner: CliRunner,
+) -> None:
+    """After ``delete`` the freed display name is reusable.
+
+    Per the profile-UUID-identity ADR, display-name uniqueness is
+    enforced only among live profiles; a tombstoned profile's name is
+    free to reuse by both ``create`` and ``rename``.
+    """
+
+    _seed("operator", tax_id="00000000T")
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+
+    created = cli_runner.invoke(
+        profile_app,
+        [
+            "create",
+            "operator",
+            "--quiet",
+            "--accept-defaults",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Operator",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+    assert created.exit_code == 0, created.output
+
+    # And the freed name is reachable through ``rename`` too. Delete the
+    # recreated profile, seed a live one, rename it onto the freed name.
+    assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
+    _seed("colleague", tax_id="00000001R")
+    renamed = cli_runner.invoke(profile_app, ["rename", "colleague", "operator"])
+    assert renamed.exit_code == 0, renamed.output
+    assert "display_name\toperator" in renamed.output
+
+
 def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> None:
     import re
 

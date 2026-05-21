@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ._layout import BucketPaths
-from ._manifest import BucketManifest
+from ._manifest import BucketLifecycleStatus, BucketManifest
 
 _MANIFEST_FILENAME = "manifest.toml"
 
@@ -65,6 +65,7 @@ def _serialise_manifest(manifest: BucketManifest) -> str:
         lines.append(f"last_unlocked_at = {_format_scalar(manifest.last_unlocked_at)}")
     lines.append(f"recovery_enrolled = {_format_scalar(manifest.recovery_enrolled)}")
     lines.append(f"schema_version = {_format_scalar(manifest.schema_version)}")
+    lines.append(f"status = {_format_scalar(manifest.status.value)}")
     lines.append("")
     lines.append("[kdf_params]")
     lines.append(f"algorithm = {_format_scalar(kdf.algorithm)}")
@@ -121,6 +122,11 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     # signals "never unlocked" and is hydrated to ``None`` at the boundary so
     # the strict pydantic model still rejects unknown keys.
     payload.setdefault("last_unlocked_at", None)
+    # A manifest written before the lifecycle marker existed carries no
+    # ``status`` key; hydrate it to ``ACTIVE`` so a pre-existing live
+    # profile is never read as tombstoned. The strict model still
+    # rejects an unknown key, so this is the one tolerated absence.
+    payload.setdefault("status", BucketLifecycleStatus.ACTIVE.value)
     return BucketManifest.model_validate(payload)
 
 
