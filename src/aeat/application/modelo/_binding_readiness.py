@@ -15,7 +15,11 @@ profile) so the registry-query CLI stays a thin caller.
 
 from __future__ import annotations
 
-from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority
+from ...domain.calculations.registry import (
+    RegistrySnapshotError,
+    RegistryValidationError,
+    ValidatedRegistryAuthority,
+)
 from ...domain.user_profile import ProfileNotFoundError
 from ._profile_binding import resolve_profile_sourced_bindings
 
@@ -85,7 +89,7 @@ def _annual_period_for_year(
 
     try:
         definition = authority.validate_modelo(modelo.strip())
-    except Exception:
+    except (RegistrySnapshotError, RegistryValidationError):
         return None
     covering = [
         revision
