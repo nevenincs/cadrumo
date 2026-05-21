@@ -18,11 +18,49 @@ def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str,
         *_storage_lines(report),
         "",
         tr("cli.overview.status.next_heading"),
+        *_next_step_lines(report),
+    ]
+    return tuple(lines)
+
+
+def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
+    """Return next-step guidance that reflects the actual workspace state.
+
+    A workspace with ledger data already recorded must not be told to
+    "import a bank statement" — that step is done. The guidance walks
+    the operator forward: import when the ledger is empty, classify /
+    work-modelo when transactions exist, continue the modelo flow when
+    work units are already in progress.
+    """
+
+    if report.work_units > 0:
+        return (
+            tr(
+                "cli.overview.status.next_work_calculate_command",
+                default="  aeat app modelo work list - resume an in-progress modelo work unit.",
+            ),
+            tr(
+                "cli.overview.status.next_work_create_command",
+                default="  aeat app modelo work create - start a work unit for another modelo.",
+            ),
+            tr("cli.overview.status.next_landing_command"),
+        )
+    if report.transactions > 0 or report.invoices > 0:
+        return (
+            tr(
+                "cli.overview.status.next_review_command",
+            ),
+            tr(
+                "cli.overview.status.next_modelo_work_command",
+                default="  aeat app modelo work create - start a modelo declaration from your ledger data.",
+            ),
+            tr("cli.overview.status.next_landing_command"),
+        )
+    return (
         tr("cli.overview.status.next_import_command"),
         tr("cli.overview.status.next_review_command"),
         tr("cli.overview.status.next_landing_command"),
-    ]
-    return tuple(lines)
+    )
 
 
 def _work_units_line(report: OverviewStatusReport) -> str:
@@ -33,7 +71,10 @@ def _work_units_line(report: OverviewStatusReport) -> str:
         )
     return tr(
         "cli.overview.status.work_units_present",
-        default="%{count} modelo work unit(s) exist in this local storage.",
+        default=(
+            "%{count} modelo work unit(s) are in progress in this local storage "
+            "- your modelo work is saved; resume it with `aeat app modelo work list`."
+        ),
         count=report.work_units,
     )
 
@@ -65,6 +106,20 @@ def _invoices_line(report: OverviewStatusReport) -> str:
 
 def _drafts_line(report: OverviewStatusReport) -> str:
     if report.drafts == 0:
+        # Two independent operators read the bare "no saved declaration
+        # drafts" line - which sits next to the work-units line - as
+        # "your work is gone". When work units exist, the line must say
+        # so explicitly: legacy drafts and modelo work units are
+        # separate stores, and an empty draft store never means lost
+        # modelo work.
+        if report.work_units > 0:
+            return tr(
+                "cli.overview.status.drafts_empty_with_work_units",
+                default=(
+                    "No legacy declaration drafts are saved - this is normal and "
+                    "does not affect your modelo work units below."
+                ),
+            )
         return tr("cli.overview.status.drafts_empty")
     return tr("cli.overview.status.drafts_present", count=report.drafts)
 
