@@ -124,10 +124,10 @@ verifies both modelos end to end.
 
 Record the registry-TOML authoring direction in the fichero-BOE export ADR and extract the Modelo 130 and Modelo 303 record specs from the corpus AEAT Diseno de Registros.
 
-- [ ] `P01.S01` - Append an amendment recording that fichero-BOE export layouts are authored as registry TOML per the 2026-05-03 registry-truth direction, an amendment to the existing accepted ADR rather than a new ADR; `.vault/adr/2026-04-22-aeat-fichero-boe-export-adr.md`.
-- [ ] `P01.S02` - Study the canonical registry-TOML fichero-BOE export layouts for modelos 180, 202, and 232 as the authoring template, capturing the record / field / encoding / line-ending grammar; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/export_layouts/`.
-- [ ] `P01.S03` - Extract the Modelo 130 single fixed-width record spec - byte offsets, field kinds, encoding, padding - from the corpus AEAT Diseno de Registros xlsx and record it as the authoring reference; `src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_130/`.
-- [ ] `P01.S04` - Extract the Modelo 303 eight-segment envelope record spec - DP30300 / DP30301-05 / DP303DID / trailer offsets, field kinds, encoding, segment repetition - from the corpus AEAT Diseno de Registros xlsx; `src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/`.
+- [x] `P01.S01` - Append an amendment recording that fichero-BOE export layouts are authored as registry TOML per the 2026-05-03 registry-truth direction, an amendment to the existing accepted ADR rather than a new ADR; `.vault/adr/2026-04-22-aeat-fichero-boe-export-adr.md`.
+- [x] `P01.S02` - Study the canonical registry-TOML fichero-BOE export layouts for modelos 180, 202, and 232 as the authoring template, capturing the record / field / encoding / line-ending grammar; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/export_layouts/`.
+- [x] `P01.S03` - Extract the Modelo 130 single fixed-width record spec - byte offsets, field kinds, encoding, padding - from the corpus AEAT Diseno de Registros xlsx and record it as the authoring reference; `src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_130/`.
+- [x] `P01.S04` - Extract the Modelo 303 eight-segment envelope record spec - DP30300 / DP30301-05 / DP303DID / trailer offsets, field kinds, encoding, segment repetition - from the corpus AEAT Diseno de Registros xlsx; `src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/`.
 
 ### Phase `P02` - Modelo 130 export layout
 
