@@ -72,6 +72,38 @@ def test_explain_profile_facts_surface_deadline_relevant_fields() -> None:
     assert "iva.oss_enrolled" in result.profile_facts
 
 
+def test_explain_degrades_gracefully_for_modelo_without_deadline_windows() -> None:
+    """A known registry modelo with no deadline windows for the year
+    must degrade gracefully: report a (False) applicability flag and an
+    informational rationale rather than raising OverviewExplainError.
+
+    Modelo 100 (Renta) is a real registry modelo, but its annual filing
+    window is not registered for every year (see registry-track gap
+    R1). The CLI must still answer instead of crashing.
+    """
+
+    result = build_overview_explain(_profile(), modelo="100", year=2026)
+
+    assert isinstance(result, OverviewExplain)
+    assert result.modelo == "100"
+    assert result.applicable is False
+    # The rationale is an informational substitute, not an error string.
+    assert result.rationale
+    assert "100" in result.rationale
+    # Profile facts are still surfaced so the operator sees the inputs.
+    assert "tax_id" in result.profile_facts
+
+
+def test_explain_unknown_modelo_still_raises_not_degrades() -> None:
+    """A modelo identifier absent from the calculation registry must
+    still raise OverviewExplainError. Graceful degradation applies only
+    to known modelos missing deadline-window data, not to operator
+    typos / unknown identifiers."""
+
+    with pytest.raises(OverviewExplainError, match=r"could not evaluate"):
+        build_overview_explain(_profile(), modelo="999999", year=2026)
+
+
 def test_explain_applicability_matches_deadline_engine() -> None:
     """The applicable flag must equal the value the same DeadlineEngine
     instance would return; explain and the operational views cannot

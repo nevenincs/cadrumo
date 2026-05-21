@@ -19,6 +19,11 @@ from datetime import UTC, date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.i18n import tr
+from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.deadlines._errors import DeadlineValidationError, ScheduleComputationError
+from ._errors import OverviewExplainError
+
 _ProfileFactValue = str | bool | int
 """Closed value type for the explain payload's ``profile_facts`` map.
 
@@ -29,11 +34,6 @@ coerced via ``.value``), and integers (numeric thresholds). Widening
 this union is a contract change; keep it tight so the boundary
 remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
-
-from ...core.i18n import tr
-from ...domain.deadlines import AutonomoProfile, DeadlineEngine
-from ...domain.deadlines._errors import DeadlineValidationError, ScheduleComputationError
-from ._errors import OverviewExplainError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -109,6 +109,26 @@ def _extract_profile_facts(profile: AutonomoProfile) -> dict[str, _ProfileFactVa
     return facts
 
 
+def _modelo_is_registered(modelo: str) -> bool:
+    """Return whether ``modelo`` is a known modelo in the calculation registry.
+
+    Distinguishes a genuinely unknown modelo identifier from a real
+    modelo whose registry entry simply has no deadline-window data for
+    the requested year. The former is an operator error; the latter is
+    a registry-data gap the CLI should degrade gracefully around rather
+    than crash on.
+    """
+
+    from ...core.resources import resources
+    from ...core.resources._errors import ResourceNotFoundError
+
+    try:
+        resources().modelos.get(modelo)
+    except ResourceNotFoundError:
+        return False
+    return True
+
+
 def build_overview_explain(
     profile: AutonomoProfile,
     *,
@@ -125,11 +145,17 @@ def build_overview_explain(
     obligations for this modelo, so explain and the operational views
     cannot diverge.
 
+    When the modelo is a known registry modelo but no deadline windows
+    are registered for the requested year, the service degrades
+    gracefully: it still reports the (necessarily ``False``)
+    applicability flag and substitutes an informational rationale
+    rather than raising. A genuinely unknown modelo identifier still
+    raises :class:`OverviewExplainError`.
+
     Raises:
-        OverviewExplainError: When the deadline engine cannot find any
-            registry windows for the modelo in the supplied year
-            (typically because the modelo is unknown or the year
-            predates the registry's earliest revision).
+        OverviewExplainError: When the modelo identifier is blank or
+            unknown to the registry, or when the deadline engine fails
+            for a reason other than a missing deadline-window dataset.
     """
 
     if not modelo.strip():
@@ -138,8 +164,27 @@ def build_overview_explain(
     deadline_engine = engine or DeadlineEngine()
     try:
         applicable = deadline_engine.applies_to(profile, modelo, year=resolved_year)
-        rationale = deadline_engine.explain(profile, modelo, year=resolved_year)
     except (ScheduleComputationError, DeadlineValidationError) as exc:
+        raise OverviewExplainError(
+            f"could not evaluate modelo {modelo!r} for year {resolved_year}: {exc}",
+        ) from exc
+    try:
+        rationale = deadline_engine.explain(profile, modelo, year=resolved_year)
+    except ScheduleComputationError as exc:
+        # A known modelo with no registered deadline windows for this
+        # year is a registry-data gap, not an operator error: degrade
+        # to an informational rationale instead of crashing.
+        if _modelo_is_registered(modelo):
+            rationale = tr(
+                "application.overview.explain.no_deadline_windows",
+                modelo=modelo,
+                year=resolved_year,
+            )
+        else:
+            raise OverviewExplainError(
+                f"could not evaluate modelo {modelo!r} for year {resolved_year}: {exc}",
+            ) from exc
+    except DeadlineValidationError as exc:
         raise OverviewExplainError(
             f"could not evaluate modelo {modelo!r} for year {resolved_year}: {exc}",
         ) from exc

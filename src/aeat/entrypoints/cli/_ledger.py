@@ -546,6 +546,11 @@ def ledger_categories(ctx: typer.Context) -> None:
     refused. The grouped view lets an operator discover the correct id
     before classifying a transaction rather than after modelo
     calculations surface the drift.
+
+    The taxonomy is deductible-expense only. Income (INCOMING)
+    transactions are classified by direction alone and need no
+    ``--category-id``; ``ledger check`` / ``ledger preflight`` do not
+    flag a pure-income transaction as ``missing_category``.
     """
 
     families: list[dict[str, object]] = []
@@ -571,9 +576,11 @@ def ledger_categories(ctx: typer.Context) -> None:
             lines.append(f"{category_id}\t{family.value}")
     if first_category_id is not None:
         lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
+    lines.append(tr("cli.ledger.categories.income_note"))
     payload = {
         "families": families,
         "category_ids": [category.value for category in SpendingCategory],
+        "income_requires_category": False,
     }
     _emit(ctx, payload, lines)
 
