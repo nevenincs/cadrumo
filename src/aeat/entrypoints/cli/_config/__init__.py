@@ -283,22 +283,57 @@ def repair_profile(
         "--clear-active",
         help=tr("cli.config.repair.profile_clear_active_help"),
     ),
+    repair_manifest_status: bool = typer.Option(
+        False,
+        "--repair-manifest-status",
+        help=tr(
+            "cli.config.repair.profile_repair_manifest_status_help",
+            default="Backfill a legacy active bucket manifest status from the encrypted profile record.",
+        ),
+    ),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
 ) -> None:
-    """Inspect profile health or safely clear a degraded active-profile pointer."""
+    """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
 
     from ....application.workflow._models import resolve_active_bucket_id
-    from ....application.workflow._profile_health import repair_active_profile_pointer
+    from ....application.workflow._profile_health import (
+        repair_active_profile_manifest_status,
+        repair_active_profile_pointer,
+    )
 
-    if profile is not None and not clear_active:
+    if clear_active and repair_manifest_status:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.repair.profile_one_action",
+                default="Choose either --clear-active or --repair-manifest-status, not both.",
+            )
+        )
+    if profile is not None and not clear_active and not repair_manifest_status:
         _emit_profile_record_status(ctx, profile)
         return
     if profile is not None:
         resolved = _resolve_profile_by_label(profile)
         if resolved.bucket_id != resolve_active_bucket_id():
             raise CliRefusedBoundaryError(tr("cli.config.repair.profile_clear_active_mismatch", profile=profile))
-    if clear_active and not yes:
+    if (clear_active or repair_manifest_status) and not yes:
         raise CliRefusedBoundaryError(tr("cli.config.repair.profile_requires_yes"))
+    if repair_manifest_status:
+        result = repair_active_profile_manifest_status(confirmed=yes)
+        health = result.after or result.before
+        lines = [
+            f"dry_run\t{result.dry_run}",
+            f"repaired\t{result.repaired}",
+            f"active_profile\t{health.active_profile or ''}",
+            f"status\t{health.status}",
+            f"manifest_status\t{result.status or ''}",
+            f"reason\t{result.reason}",
+        ]
+        if health.profile_record_error:
+            lines.append(f"profile_record_error\t{health.profile_record_error}")
+        if health.next_action:
+            lines.append(f"next_action\t{health.next_action}")
+        _emit(ctx, result.model_dump(mode="json"), lines)
+        return
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=yes)
     health = result.after or result.before
     payload = result.model_dump(mode="json")
@@ -506,6 +541,83 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
 
 
 repair_app.add_typer(integrity_app, name="integrity")
+
+
+@repair_app.command(
+    "list",
+    help=tr(
+        "cli.config.repair.list_help",
+        default="List secure-object keys in one namespace without mutating storage.",
+    ),
+)
+def repair_list(
+    ctx: typer.Context,
+    namespace: str = typer.Argument(
+        ...,
+        help=tr("cli.config.repair.list_namespace_help", default="Namespace to inventory."),
+    ),
+    include_all: bool = typer.Option(
+        False,
+        "--all",
+        help=tr("cli.config.repair.list_all_help", default="Return every key, including readable rows."),
+    ),
+    only_unreadable: bool = typer.Option(
+        False,
+        "--unreadable",
+        help=tr("cli.config.repair.list_unreadable_help", default="Restrict output to undecryptable rows."),
+    ),
+) -> None:
+    """Render a read-only secure-object key inventory for one namespace."""
+
+    from ....application.repair_integrity import build_repair_list_report
+
+    if include_all and only_unreadable:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.repair.list_conflicting_flags",
+                default="--all and --unreadable cannot be combined; pass one or neither.",
+            )
+        )
+    if resolve_active_bucket_id() is None:
+        _emit(
+            ctx,
+            {"namespace": namespace, "rows_total": 0, "reason": "no-active-profile"},
+            (
+                f"namespace\t{namespace}",
+                "rows_total\t0",
+                "reason\tno active profile; nothing to inventory",
+            ),
+        )
+        return
+    report = build_repair_list_report(
+        namespace=namespace,
+        include_all=include_all,
+        only_unreadable=only_unreadable,
+    )
+    lines = [
+        f"namespace\t{report.namespace}",
+        f"filter\t{report.filter_mode}",
+        f"readable\t{report.integrity.readable}",
+        f"unreadable\t{report.integrity.unreadable}",
+        f"rows_total\t{report.rows_total}",
+    ]
+    for row in report.rows:
+        parts = [
+            f"key\t{row.object_key_digest}",
+            f"readable\t{'' if row.readable is None else row.readable}",
+        ]
+        if row.row_id is not None:
+            parts.append(f"row_id\t{row.row_id}")
+        if row.classification:
+            parts.append(f"class\t{row.classification}")
+        if row.schema_version is not None:
+            parts.append(f"schema\t{row.schema_version}")
+        if row.written_at is not None:
+            parts.append(f"written_at\t{row.written_at.isoformat()}")
+        if row.reason:
+            parts.append(f"reason\t{row.reason}")
+        lines.append("\t".join(parts))
+    _emit(ctx, report.model_dump(mode="json"), lines)
 
 
 @repair_app.command("connectivity", help=tr("cli.config.repair.connectivity_help"))
@@ -1716,6 +1828,7 @@ def auth_diagnostics_show(
             f"certificate_path_fingerprint\t{detail.certificate_path_fingerprint}",
             f"phone_state\t{detail.phone_state}",
             f"phone_state_reported_at\t{reported_at}",
+            f"operator_report_commands\t{'; '.join(detail.operator_report_commands)}",
             f"html_captured\t{detail.html_captured}",
             f"screenshot_captured\t{detail.screenshot_captured}",
             f"html_excerpt\t{detail.html_excerpt or ''}",
@@ -2015,10 +2128,23 @@ def _parse_bucket_event_types(event_type: list[str] | None):  # type: ignore[no-
         return None
     from ....domain.buckets import BucketEventType
 
-    try:
-        return tuple(BucketEventType(value.strip()) for value in event_type)
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
+    parsed: list[BucketEventType] = []
+    for value in event_type:
+        token = value.strip()
+        try:
+            parsed.append(BucketEventType(token))
+        except ValueError as exc:
+            # str(exc) here is Python's raw "'x' is not a valid
+            # BucketEventType" — untranslated and dev-flavoured. Surface a
+            # localized refusal naming the bad token and the valid set.
+            raise typer.BadParameter(
+                tr(
+                    "cli.config.bucket.history.invalid_event_type",
+                    value=token,
+                    valid=", ".join(member.value for member in BucketEventType),
+                ),
+            ) from exc
+    return tuple(parsed)
 
 
 def _parse_bucket_history_instant(raw: str | None, *, flag: str):  # type: ignore[no-untyped-def]

@@ -84,6 +84,10 @@ app = typer.Typer(
 )
 
 
+def _invoice_link_error_bad_parameter() -> typer.BadParameter:
+    return _bad(tr("errors.error.error_financial_invoices_invoice_link"))
+
+
 def _parse_decimal(raw: str | None, *, label: str) -> Decimal | None:
     if raw is None:
         return None
@@ -1010,7 +1014,7 @@ def ledger_link(
                 transaction_repository=transaction_repository,
             )
         except InvoiceLinkError as exc:
-            raise _bad(str(exc)) from exc
+            raise _invoice_link_error_bad_parameter() from exc
 
     evidence_result_payload: dict[str, object] = {}
     if evidence_id is not None:
