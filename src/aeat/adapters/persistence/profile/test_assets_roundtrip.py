@@ -191,3 +191,57 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
                 assets_repo.load()
         finally:
             engine.dispose()
+
+
+def test_assets_ledger_missing_cost_basis_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: a *deleted* cost_basis must surface at load.
+
+    The sibling test corrupts ``cost_basis`` to a wrong value; this one
+    deletes the key entirely from the encrypted JSON payload. A
+    save-drops-field / load-re-defaults-field regression is invisible
+    to a mutation test — only an absent-field probe catches it. The
+    load path must raise ``ValidationError`` (``cost_basis`` is
+    required, or a re-defaulted value fails the VAT decomposition
+    cross-check), never silently rehydrate an asset with no cost basis.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...persistence.storage.sql._orm import SecureObjectRow
+    from ...persistence.storage.sql.session import session_scope
+    from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "assets-missing-cost-basis.db"
+        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine)
+            assets_repo = AssetsLedgerRepository()
+            assets_repo.save(AssetsLedgerDocument(assets=(_populated_asset(),)))
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == _ASSETS_NAMESPACE,
+                    SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+                )
+                row = session.execute(stmt).scalar_one()
+                document = _json.loads(row.payload.decode("utf-8"))
+                asset_dict = document["assets"][0]
+                assert "cost_basis" in asset_dict
+                del asset_dict["cost_basis"]
+                row.payload = _json.dumps(document).encode("utf-8")
+
+            with pytest.raises(pydantic.ValidationError, match="cost_basis"):
+                assets_repo.load()
+        finally:
+            engine.dispose()
