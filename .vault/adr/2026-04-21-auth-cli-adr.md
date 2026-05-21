@@ -16,6 +16,18 @@ related:
 
 # `auth-cli` adr: `issue-285 aeat auth login / list-providers / status / logout` | (**status:** `accepted`)
 
+## Supersession note (2026-05-21)
+
+The top-level `aeat auth` command surface this ADR designed (`login` /
+`list-providers` / `status` / `logout`) was retired by the later
+accepted `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`, which
+states "Top-level `aeat auth` is not introduced" and places AEAT-Sede
+authentication under `aeat config auth` (verbs `providers` /
+`configure` / `status` / `test` / `clear`). The auth application and
+domain layer this ADR mandated remains in force; only the CLI surface
+shape is superseded. This ADR is therefore superseded-by-redesign at the
+CLI-surface level.
+
 ## CLI Backend Boundary
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
