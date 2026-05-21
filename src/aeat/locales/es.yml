@@ -755,6 +755,14 @@ cli:
       key_help: Clave a leer (ej. tax.id, iva.regime)
     google:
       client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
+      detail:
+        client_json_bad_wrapper: 'el JSON de cliente en {path} tiene un envoltorio "installed" que no es un objeto'
+        client_json_invalid: 'el JSON de cliente en {path} no es JSON válido: {reason}'
+        client_json_not_desktop: 'el JSON de cliente en {path} no es un cliente de escritorio de Cloud Console; se esperaba una clave envoltorio "installed"'
+        client_json_schema_invalid: 'el JSON de cliente en {path} no superó la validación de esquema: {reason}'
+        client_json_unreadable: 'no se pudo leer el JSON de cliente en {path}: {reason}'
+        client_unregistered: no hay ningún cliente OAuth registrado para el perfil {profile}
+        no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no se puede renovar sin un inicio de sesión previo
       errors:
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
@@ -1023,12 +1031,18 @@ cli:
       target_label: Destino
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_integrity_internal: Problema interno de la aplicación; no es un fallo
+        de tu perfil ni algo que puedas corregir tú.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
+      audience_internal: problema interno de la aplicación
       auth_label: Autenticación
       checks_heading: Comprobaciones
       detail_label: Detalle
+      finding_label: '-'
+      finding_optional: opcional
+      finding_required: obligatorio
       logs_label: Logs
       next_label: Siguiente
       note_label: Nota

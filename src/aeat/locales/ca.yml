@@ -744,6 +744,14 @@ cli:
       key_help: Clau a llegir (ex. tax.id, iva.regime)
     google:
       client_json_help: Ruta al fitxer JSON del client OAuth Desktop de Cloud Console
+      detail:
+        client_json_bad_wrapper: 'el JSON de client a {path} té un embolcall "installed" que no és un objecte'
+        client_json_invalid: 'el JSON de client a {path} no és JSON vàlid: {reason}'
+        client_json_not_desktop: 'el JSON de client a {path} no és un client d''escriptori de Cloud Console; calia una clau embolcall "installed"'
+        client_json_schema_invalid: 'el JSON de client a {path} no ha superat la validació d''esquema: {reason}'
+        client_json_unreadable: 'no s''ha pogut llegir el JSON de client a {path}: {reason}'
+        client_unregistered: no hi ha cap client OAuth registrat per al perfil {profile}
+        no_metadata_for_refresh: no hi ha cap sessió OAuth per al perfil {profile}; no es pot renovar sense un inici de sessió previ
       errors:
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
         browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a
@@ -1008,12 +1016,18 @@ cli:
       target_label: Destinació
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_integrity_internal: Problema intern de l'aplicació; no és un error
+        del teu perfil ni una cosa que puguis corregir tu.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
+      audience_internal: problema intern de l'aplicació
       auth_label: Autenticació
       checks_heading: Comprovacions
       detail_label: Detall
+      finding_label: '-'
+      finding_optional: opcional
+      finding_required: obligatori
       logs_label: Logs
       next_label: Següent
       note_label: Nota

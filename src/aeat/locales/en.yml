@@ -697,6 +697,14 @@ cli:
       key_help: Key to read (e.g. tax.id, iva.regime)
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
+      detail:
+        client_json_bad_wrapper: 'client JSON at {path} has a non-object "installed" wrapper'
+        client_json_invalid: 'client JSON at {path} is not valid JSON: {reason}'
+        client_json_not_desktop: 'client JSON at {path} is not a Cloud Console Desktop client; expected an "installed" wrapper key'
+        client_json_schema_invalid: 'client JSON at {path} failed schema validation: {reason}'
+        client_json_unreadable: 'could not read client JSON from {path}: {reason}'
+        client_unregistered: no OAuth client is registered for profile {profile}
+        no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh without a prior login
       errors:
         auth_failed: 'Google authentication failed: {detail}'
         browser_open: 'Could not open a browser to authorise Google access: {detail}'
@@ -953,12 +961,18 @@ cli:
       target_label: Target
     dead_end:
       registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_integrity_internal: Internal application problem; not a fault in your
+        profile and not something you can fix yourself.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     repair:
+      audience_internal: internal application issue
       auth_label: Auth
       checks_heading: Checks
       detail_label: Detail
+      finding_label: '-'
+      finding_optional: optional
+      finding_required: required
       logs_label: Logs
       next_label: Next
       note_label: Note
