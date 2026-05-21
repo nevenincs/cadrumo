@@ -1206,9 +1206,14 @@ cli:
       all_rows_skipped: 'Nem importáltunk új bejegyzést: mind a(z) {skipped} elemzett
         sor már létezik a főkönyvben (ismétlődő tranzakcióazonosítók).'
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
-      dry_run_preview: cli.ledger.import.dry_run_preview
+      dry_run_preview: 'Próbafuttatás: nem mentettünk egyetlen sort sem. A fenti számok
+        előzetes képet adnak arról, hogy egy valódi importálás mit adna hozzá és mit
+        hagyna ki.'
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
-      likely_duplicates: cli.ledger.import.likely_duplicates
+      likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy már
+        a főkönyvben szereplő tranzakcióéval, de eltérő a leírásuk - valószínűleg ugyanannak
+        a mozgásnak egy másik fájlból vagy formátumból importált ismétlődése. Ellenőrizze
+        őket az `aeat app ledger list` paranccsal.'
       no_rows_imported: 'Nem importáltunk bejegyzést: a fájl elemezhető volt, de nem
         tartalmazott adatsorokat. Egy bank CSV-jének tartalmaznia kell egy fejlécsort
         dátum-, összeg- és leírásoszloppal, majd legalább egy adatsort.'
@@ -1268,7 +1273,7 @@ cli:
       taxable_base: Adóalap
       valid: Érvényes
       value_date: Értéknap
-      warning: cli.ledger.labels.warning
+      warning: Figyelmeztetés
       warnings: Figyelmeztetések
       'yes': Igen
     link:
