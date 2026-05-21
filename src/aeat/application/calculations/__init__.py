@@ -38,6 +38,7 @@ from ._iva_wallet_reconciliation import (
     IvaCompensationReconciliationDecision,
     IvaCompensationReconciliationInputError,
     IvaCompensationReconciliationReport,
+    IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
@@ -76,6 +77,7 @@ __all__ = [
     "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
     "IvaWalletDecisionRepository",
+    "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
     "MultiYearResolver",
     "PrefilledBinding",
