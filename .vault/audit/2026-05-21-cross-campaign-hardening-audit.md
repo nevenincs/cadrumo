@@ -82,6 +82,8 @@ report.
 
 ### CALC-6 — MED — tautological calc test: `test_formula_runtime.py:120` hand-computes sign expectations from the same registry formula. **Remediation:** workbook-parity assertion or a structural assertion.
 
+**Resolution (2026-05-21, P07.S27, 4c486e840) — fixed.** CALC-4 and CALC-5 verified already-satisfied: the `_reject_non_decimal` defence-in-depth note already exists at `_formula_runtime.py:178-182`, and per-source typed selector models (`_PreviousModeloSelector`, `_InvoiceSelector`, `_OssIossLedgerSelector`, `_IvaLedgerSelector`, `_RentaLedgerExpenseSelector`, `_WithholdingSelector`, `_RelatedPartySelector`, `_ForeignAssetSelector`, `_AtributionSelector`) with `_validated_*_selector` typed accessors and a snapshot-time selector-shape gate already exist in `_bindings.py`/`_validate_references.py`. For CALC-6, the flagged assertions are sign-only (`07 < 0`, `11 < 0`, `12 >= 0`) — no Decimal is manufactured, so they are the rule-permitted "structural assertion" alternative, not a numeric tautology. Added a docstring grounding them as a sign-propagation + `MAX(_,0)`-floor structural test of the modelo-130 pago-fraccionado graph; the assertions already discriminate (they fail if the formula graph is wrong against AEAT).
+
 ### CALC-7 — LOW — `ModeloInputsProviderProtocol.load_inputs` returns `Mapping[str, object]`; tighten to `Mapping[str, str | Decimal]`.
 
 ## Axis B — persistence-boundary identity
