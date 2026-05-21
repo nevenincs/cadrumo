@@ -85,6 +85,8 @@ aggregation:
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért aggregációs buckettel.
+      candidate_outside_period: aggregation.iva_ledger.errors.candidate_outside_period
+      unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
   modelo_bindings:
     errors:
       unsupported_period: Nem támogatott modelo időszak a főkönyvi aggregációhoz.
@@ -130,6 +132,12 @@ application:
         operator_completion_required: Kész; kezelői Cl@ve befejezést igényel.
     operator:
       errors:
+        certificate_file_required: A tanúsítvány-szolgáltatóhoz tanúsítványfájl szükséges.
+          Futtasd az `aeat config auth configure --provider certificate --file ÚTVONAL`
+          parancsot a PKCS#12 (.p12/.pfx) csomag útvonalával.
+        certificate_file_unresolved: A tanúsítvány útvonala ('%{certificate_path}')
+          nem mutat létező fájlra. Futtasd az `aeat config auth configure --provider
+          certificate --file ÚTVONAL` parancsot a PKCS#12 (.p12/.pfx) csomag útvonalával.
         dangling_active_profile: Az aktív profil mutatója ('%{active_profile}') nem
           regisztrált profil bucketre mutat. Futtasd az `aeat config profile list`
           parancsot a regisztrált profilok megtekintéséhez, majd az `aeat config profile
@@ -585,10 +593,15 @@ cli:
           a kapott érték {spec}.
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
           szűrve
+        missing_binding_guidance: '%{base} Add meg az értéket a --binding KEY=VALUE
+          opcióval ezen a parancson, vagy futtasd a `%{discover}` parancsot a kalkulációhoz
+          még hiányzó összes binding listázásához.'
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         name_help: A munkaegység opcionális megjelenítési neve
         notes_help: A filing recordhoz fűzött opcionális megjegyzések
-        override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
+        override_help: Binding érték KEY=VALUE szintaxissal (ismételhető); futtasd
+          az `aeat app modelo bindings list --missing` parancsot a kalkulációhoz szükséges
+          bindingok listájához.
         period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
           vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
         period_token_invalid: 'A(z) ''%{token}'' --period nem érvényes időszak-token
@@ -608,7 +621,8 @@ cli:
         resume_help: Ellenőrizd, hogy újrapróbálhatsz-e megszakadt folyamatfutást
           AEAT-kapcsolat nélkül
         resume_workflow_run_id_help: 16 karakteres folyamatfutás-azonosító
-        revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
+        revision_help: A célzott regisztrációs modellrevízió stabil azonosítója; futtasd
+          az `aeat app modelo describe MODELL` parancsot az elérhető revízióazonosítókért.
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
         set_not_decimal: A(z) --set értéke decimális szám kell legyen; a kapott érték
@@ -815,8 +829,8 @@ cli:
         snapshot_id_help: Konkrét snapshot azonosító (előtagok elfogadottak)
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
       delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutatója
-        törlődött. Futtasd az 'aeat config profile switch NÉV' vagy az 'aeat config profile
-        create NÉV' parancsot a munka folytatásához.
+        törlődött. Futtasd az 'aeat config profile switch NÉV' vagy az 'aeat config
+        profile create NÉV' parancsot a munka folytatásához.
       delete_help: Törölj egy profilt és a helyi állapotát; a --yes megerősíti
       delete_name_help: Törlendő profil neve
       delete_requires_yes: 'A törlés destruktív. Megerősítéshez futtasd újra: ''aeat
@@ -1043,6 +1057,10 @@ cli:
       id_help: Főkönyvi tranzakcióazonosító, amelyhez bizonyítékot kell csatolni
       purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
         azonosítója
+    categories:
+      header: ELISMERT FŐKÖNYVI KÖLTSÉGKATEGÓRIÁK
+      help: A --category-id által elfogadott kategóriaazonosítók listája, családonként
+        csoportosítva
     check:
       bucket_id_help: A vizsgálandó bucket azonosítója (alapértelmezésben az aktív
         profil bucketje).
@@ -1060,6 +1078,8 @@ cli:
       iva_rate_help: IVA kulcs tizedesként, például 0.21
       taxable_base_help: Adóalap összege
     errors:
+      command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
+      command_input_invalid_fallback: egy vagy több mező nem ment át az ellenőrzésen
       confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez,
         vagy használd előbb a --dry-run kapcsolót
       filter_parse_error: A naplószűrő elemzése sikertelen
@@ -1074,6 +1094,10 @@ cli:
       id_prefix_too_long: A %{prefix!r} tranzakció-azonosító előtag hosszabb 64 karakternél
         (egy teljes SHA-256 digest).
       invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
+      unknown_category: Ismeretlen --category-id {category!r}. Futtasd az `aeat app
+        ledger categories` parancsot az elismert kategóriaazonosítók listájához.
+      unknown_provider: 'Ismeretlen importáló --provider {provider!r}. Elismert szolgáltatók:
+        {providers}.'
     export:
       actor_help: A bucket eseményen rögzített kezelő neve
       format_help: Exportálási szerializációs formátum
@@ -1085,11 +1109,16 @@ cli:
       id_help: Tranzakcióazonosító (vagy egyértelmű előtag)
       include_split_siblings_help: Vond be ugyanazon felosztási csoport testvértranzakcióit
     import:
+      all_rows_skipped: 'Nem importáltunk új bejegyzést: mind a(z) {skipped} elemzett
+        sor már létezik a főkönyvben (ismétlődő tranzakcióazonosítók).'
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
+      no_rows_imported: 'Nem importáltunk bejegyzést: a fájl elemezhető volt, de nem
+        tartalmazott adatsorokat. Egy bank CSV-jének tartalmaznia kell egy fejlécsort
+        dátum-, összeg- és leírásoszloppal, majd legalább egy adatsort.'
       path_help: A bankkivonat fájl vagy könyvtár útvonala
       period_help: Az importálás adózási időszaka
-      provider_help: Kivonatformátum-szolgáltató (pl. N26, Revolut)
+      provider_help: 'Kivonatformátum-szolgáltató. Elismert értékek: {providers}'
       source_help: Az importált sorok ellenőrzéséhez használt eredeti fájl
       verbose_help: Részletes információk megjelenítése az importálás során
       verify_help: Bejegyzések ellenőrzése az importálás után
@@ -1113,6 +1142,7 @@ cli:
       lifecycle_state: Életciklus állapot
       merged_id: osszevont_id
       'no': Nem
+      notice: Megjegyzés
       output: Kimenet
       parent_id: szulo_id
       pending: Felülvizsgálatra vár
@@ -1399,6 +1429,8 @@ cli:
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
     status:
       drafts_empty: Nem talalhato mentett bevallastervezet.
+      drafts_empty_with_work_units: Nincs mentett regi bevallastervezet; ez normalis,
+        es nem erinti az alabb lathato modello munkaegysegeidet.
       drafts_present: '%{count} mentett bevallastervezet van ebben a helyi taroloban.
         Egy friss, ures munkaterulet normal esetben 0-t mutat, tehat ez a profil/adatbazis
         mar tartalmaz helyi tervezetallapotot.'
@@ -1411,7 +1443,13 @@ cli:
       next_import_command: '  aeat app ledger import <banki-kivonat.csv> --provider
         csv - banki tranzakciok importalasa.'
       next_landing_command: '  aeat --help - vissza a parancsutmutatohoz.'
+      next_modelo_work_command: '  aeat app modelo work create - modello bevallas
+        inditasa a naplo adataibol.'
       next_review_command: '  aeat app ledger review - importalt sorok ellenorzese.'
+      next_work_calculate_command: '  aeat app modelo work list - folyamatban levo
+        modello munkaegyseg folytatasa.'
+      next_work_create_command: '  aeat app modelo work create - munkaegyseg inditasa
+        egy masik modellohoz.'
       profile_active: A(z) `%{profile}` profilon dolgozol.
       profile_missing: Nincs aktiv profil beallitva. Adatok importalasa elott futtasd
         az `aeat config profile create NAME` parancsot.
@@ -1423,7 +1461,9 @@ cli:
       transactions_empty: Meg nincs importalt banki tranzakcio.
       transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
       work_units_empty: Meg nincs elinditott modello munkaegyseg.
-      work_units_present: '%{count} modello munkaegyseg letezik ebben a helyi tarolasban.'
+      work_units_present: '%{count} modello munkaegyseg van folyamatban ebben a helyi
+        tarolasban; a modello munkad mentve van, folytasd az `aeat app modelo work
+        list` paranccsal.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
@@ -1745,6 +1785,38 @@ entries:
     label: AEAT elektronikus ügyintézési portál
     purpose: Az AEAT elektronikus ügyintézési portáljának kezdőlapja.
 errors:
+  auth:
+    auth_aeat_login_assertion: errors.auth.auth_aeat_login_assertion
+    auth_aeat_session_expired: errors.auth.auth_aeat_session_expired
+    auth_auth: errors.auth.auth_auth
+    auth_auth_authenticator_persisted_session_invalid: errors.auth.auth_auth_authenticator_persisted_session_invalid
+    auth_auth_certificate: errors.auth.auth_auth_certificate
+    auth_auth_certificate_expired: errors.auth.auth_auth_certificate_expired
+    auth_auth_certificate_handshake: errors.auth.auth_auth_certificate_handshake
+    auth_auth_certificate_load: errors.auth.auth_auth_certificate_load
+    auth_auth_certificate_nif_parse: errors.auth.auth_auth_certificate_nif_parse
+    auth_auth_certificate_password: errors.auth.auth_auth_certificate_password
+    auth_auth_certificate_pre_expiry: errors.auth.auth_auth_certificate_pre_expiry
+    auth_auth_clave_movil_clave_movil_approval_timeout: errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout
+    auth_auth_clave_movil_clave_movil_configuration: errors.auth.auth_auth_clave_movil_clave_movil_configuration
+    auth_auth_configuration: errors.auth.auth_auth_configuration
+    auth_auth_validation: errors.auth.auth_auth_validation
+    auth_google: errors.auth.auth_google
+    auth_google_client_not_registered: errors.auth.auth_google_client_not_registered
+    auth_google_client_revoked: errors.auth.auth_google_client_revoked
+    auth_google_expired: errors.auth.auth_google_expired
+    auth_google_revoked: errors.auth.auth_google_revoked
+    auth_google_scope_insufficient: errors.auth.auth_google_scope_insufficient
+    auth_outbound_storage_permission: errors.auth.auth_outbound_storage_permission
+    auth_session_corrupt: errors.auth.auth_session_corrupt
+    auth_session_unavailable: errors.auth.auth_session_unavailable
+    auth_storage_bucket_recovery_verification: errors.auth.auth_storage_bucket_recovery_verification
+    auth_storage_keyring_unavailable: errors.auth.auth_storage_keyring_unavailable
+    auth_storage_master_key_kdf_version: errors.auth.auth_storage_master_key_kdf_version
+    auth_storage_master_key_keychain_locked: errors.auth.auth_storage_master_key_keychain_locked
+    auth_storage_master_key_material_missing: errors.auth.auth_storage_master_key_material_missing
+    auth_storage_master_key_passphrase_mismatch: errors.auth.auth_storage_master_key_passphrase_mismatch
+    auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
   calc:
     binding_value_missing: A {binding_id} kötés nem rendelkezik értékkel.
     bracket_negative_base: A(z) {parameter_id} sávos paraméter nem fogad el negatív
@@ -1781,6 +1853,198 @@ errors:
       a NIF-hez van regisztrálva.
     sede_no_census: Az AEAT portálja nem adott vissza beolvasható censót a(z) {profile_id}
       profilhoz.
+  error:
+    error_access_gate_submission: errors.error.error_access_gate_submission
+    error_access_gate_submission_preflight: errors.error.error_access_gate_submission_preflight
+    error_aeat_core: errors.error.error_aeat_core
+    error_aeat_observability: errors.error.error_aeat_observability
+    error_application_live: errors.error.error_application_live
+    error_application_registry: errors.error.error_application_registry
+    error_borrador_artefact_not_recognised: errors.error.error_borrador_artefact_not_recognised
+    error_calculations_registry: errors.error.error_calculations_registry
+    error_calculations_registry_load: errors.error.error_calculations_registry_load
+    error_calculations_registry_snapshot: errors.error.error_calculations_registry_snapshot
+    error_calculations_registry_validation: errors.error.error_calculations_registry_validation
+    error_categories: errors.error.error_categories
+    error_categories_validation: errors.error.error_categories_validation
+    error_deadlines_deadline: errors.error.error_deadlines_deadline
+    error_deadlines_profile: errors.error.error_deadlines_profile
+    error_deadlines_schedule_computation: errors.error.error_deadlines_schedule_computation
+    error_deadlines_validation: errors.error.error_deadlines_validation
+    error_declaracion_template_not_detected: errors.error.error_declaracion_template_not_detected
+    error_domain: errors.error.error_domain
+    error_domain_submission: errors.error.error_domain_submission
+    error_domain_submission_preflight: errors.error.error_domain_submission_preflight
+    error_domain_validation: errors.error.error_domain_validation
+    error_filing_amendment: errors.error.error_filing_amendment
+    error_filing_application: errors.error.error_filing_application
+    error_filing_builder: errors.error.error_filing_builder
+    error_filing_computation: errors.error.error_filing_computation
+    error_filing_draft: errors.error.error_filing_draft
+    error_filing_export: errors.error.error_filing_export
+    error_filing_export_validation: errors.error.error_filing_export_validation
+    error_financial_aggregation: errors.error.error_financial_aggregation
+    error_financial_aggregation_period: errors.error.error_financial_aggregation_period
+    error_financial_aggregation_validation: errors.error.error_financial_aggregation_validation
+    error_financial_attachments_attachment: errors.error.error_financial_attachments_attachment
+    error_financial_attachments_attachment_not_found: errors.error.error_financial_attachments_attachment_not_found
+    error_financial_invoices_invoice: errors.error.error_financial_invoices_invoice
+    error_financial_invoices_invoice_catalogue: errors.error.error_financial_invoices_invoice_catalogue
+    error_financial_invoices_invoice_link: errors.error.error_financial_invoices_invoice_link
+    error_financial_invoices_invoice_not_found: errors.error.error_financial_invoices_invoice_not_found
+    error_financial_provider: errors.error.error_financial_provider
+    error_financial_transactions_transaction: errors.error.error_financial_transactions_transaction
+    error_financial_usage_ratios_usage_ratio: errors.error.error_financial_usage_ratios_usage_ratio
+    error_financial_vat: errors.error.error_financial_vat
+    error_financial_vat_catalogue: errors.error.error_financial_vat_catalogue
+    error_financial_vat_category_not_found: errors.error.error_financial_vat_category_not_found
+    error_financial_vat_classification: errors.error.error_financial_vat_classification
+    error_financial_vat_rate_not_found: errors.error.error_financial_vat_rate_not_found
+    error_financial_vat_rate_overlap: errors.error.error_financial_vat_rate_overlap
+    error_fixture_provisioning: errors.error.error_fixture_provisioning
+    error_invoice_link_inconsistency: errors.error.error_invoice_link_inconsistency
+    error_invoice_validation: errors.error.error_invoice_validation
+    error_justificante: errors.error.error_justificante
+    error_justificante_csv_not_found: errors.error.error_justificante_csv_not_found
+    error_llm: errors.error.error_llm
+    error_manuals_manual: errors.error.error_manuals_manual
+    error_manuals_manual_not_found: errors.error.error_manuals_manual_not_found
+    error_manuals_manual_review_required: errors.error.error_manuals_manual_review_required
+    error_manuals_rule_extraction: errors.error.error_manuals_rule_extraction
+    error_manuals_validation: errors.error.error_manuals_validation
+    error_modelo_aggregation_binding: errors.error.error_modelo_aggregation_binding
+    error_modelo_amendment_evidence_missing: errors.error.error_modelo_amendment_evidence_missing
+    error_modelo_amendment_target_state: errors.error.error_modelo_amendment_target_state
+    error_modelo_calculation_registry_unavailable: errors.error.error_modelo_calculation_registry_unavailable
+    error_modelo_calculation_revision_not_found: errors.error.error_modelo_calculation_revision_not_found
+    error_modelo_calculation_revision_state: errors.error.error_modelo_calculation_revision_state
+    error_modelo_casilla_provenance_missing: errors.error.error_modelo_casilla_provenance_missing
+    error_modelo_external_filing_import: errors.error.error_modelo_external_filing_import
+    error_modelo_filing_record_not_found: errors.error.error_modelo_filing_record_not_found
+    error_modelo_iva_wallet_reconciliation_blocked: errors.error.error_modelo_iva_wallet_reconciliation_blocked
+    error_modelo_verification_report_not_found: errors.error.error_modelo_verification_report_not_found
+    error_modelo_work_unit_already_discarded: errors.error.error_modelo_work_unit_already_discarded
+    error_modelo_work_unit_mutation_refused: errors.error.error_modelo_work_unit_mutation_refused
+    error_modelo_work_unit_not_found: errors.error.error_modelo_work_unit_not_found
+    error_modelos: errors.error.error_modelos
+    error_modelos_validation: errors.error.error_modelos_validation
+    error_normatives_normative: errors.error.error_normatives_normative
+    error_normatives_normative_not_found: errors.error.error_normatives_normative_not_found
+    error_normatives_validation: errors.error.error_normatives_validation
+    error_outbound_storage_not_found: errors.error.error_outbound_storage_not_found
+    error_pdf_import_pdf_modelo_import: errors.error.error_pdf_import_pdf_modelo_import
+    error_pdf_import_scrub: errors.error.error_pdf_import_scrub
+    error_period: errors.error.error_period
+    error_period_validation: errors.error.error_period_validation
+    error_portals_portal_registry: errors.error.error_portals_portal_registry
+    error_portals_unknown_portal: errors.error.error_portals_unknown_portal
+    error_portals_validation: errors.error.error_portals_validation
+    error_profile_amortization_ledger: errors.error.error_profile_amortization_ledger
+    error_profile_asset_record: errors.error.error_profile_asset_record
+    error_profile_cross_store_drift: errors.error.error_profile_cross_store_drift
+    error_profile_inventory_ledger: errors.error.error_profile_inventory_ledger
+    error_profile_tax_residence: errors.error.error_profile_tax_residence
+    error_profile_validation: errors.error.error_profile_validation
+    error_renta: errors.error.error_renta
+    error_renta_validation: errors.error.error_renta_validation
+    error_rental_amortization_cap_exceeded: errors.error.error_rental_amortization_cap_exceeded
+    error_rental_contract_not_found: errors.error.error_rental_contract_not_found
+    error_rental_finca_not_found: errors.error.error_rental_finca_not_found
+    error_rental_register: errors.error.error_rental_register
+    error_rental_tier_resolution: errors.error.error_rental_tier_resolution
+    error_rental_validation: errors.error.error_rental_validation
+    error_resources_backend: errors.error.error_resources_backend
+    error_resources_load: errors.error.error_resources_load
+    error_resources_not_found: errors.error.error_resources_not_found
+    error_resources_validation: errors.error.error_resources_validation
+    error_review: errors.error.error_review
+    error_sanitization: errors.error.error_sanitization
+    error_sede: errors.error.error_sede
+    error_sede_expediente_not_found: errors.error.error_sede_expediente_not_found
+    error_sede_navigation: errors.error.error_sede_navigation
+    error_storage_bucket: errors.error.error_storage_bucket
+    error_submission_validation: errors.error.error_submission_validation
+    error_transaction_catalogue: errors.error.error_transaction_catalogue
+    error_transaction_llm_classifier: errors.error.error_transaction_llm_classifier
+    error_transaction_not_found: errors.error.error_transaction_not_found
+    error_transaction_persistence: errors.error.error_transaction_persistence
+    error_transaction_validation: errors.error.error_transaction_validation
+    error_usage_ratios_validation: errors.error.error_usage_ratios_validation
+    error_user_profile: errors.error.error_user_profile
+    error_vat_prorrata: errors.error.error_vat_prorrata
+    error_vat_prorrata_input: errors.error.error_vat_prorrata_input
+    error_vat_prorrata_sector: errors.error.error_vat_prorrata_sector
+    error_vat_validation: errors.error.error_vat_validation
+    error_wizard: errors.error.error_wizard
+    error_wizard_compile: errors.error.error_wizard_compile
+    error_workflow: errors.error.error_workflow
+    error_workflow_component: errors.error.error_workflow_component
+  fail:
+    census_sync: errors.fail.census_sync
+    currency_error: errors.fail.currency_error
+    declaration_parse: errors.fail.declaration_parse
+    exchange_rate_provider: errors.fail.exchange_rate_provider
+    fail_borrador_parse: errors.fail.fail_borrador_parse
+    fail_browser_evasion: errors.fail.fail_browser_evasion
+    fail_browser_session_browser: errors.fail.fail_browser_session_browser
+    fail_browser_validation: errors.fail.fail_browser_validation
+    fail_declaracion_parse: errors.fail.fail_declaracion_parse
+    fail_export: errors.fail.fail_export
+    fail_export_format: errors.fail.fail_export_format
+    fail_filing_import: errors.fail.fail_filing_import
+    fail_financial_attachments_attachment_persistence: errors.fail.fail_financial_attachments_attachment_persistence
+    fail_financial_invoices_invoice_persistence: errors.fail.fail_financial_invoices_invoice_persistence
+    fail_financial_ledger_storage: errors.fail.fail_financial_ledger_storage
+    fail_financial_usage_ratios_usage_ratio_persistence: errors.fail.fail_financial_usage_ratios_usage_ratio_persistence
+    fail_google_browser_open: errors.fail.fail_google_browser_open
+    fail_google_loopback_bind: errors.fail.fail_google_loopback_bind
+    fail_google_network: errors.fail.fail_google_network
+    fail_justificante_parse: errors.fail.fail_justificante_parse
+    fail_llm_cache: errors.fail.fail_llm_cache
+    fail_llm_provider: errors.fail.fail_llm_provider
+    fail_llm_rate_limit: errors.fail.fail_llm_rate_limit
+    fail_locale_manager: errors.fail.fail_locale_manager
+    fail_manuals_manual_parse: errors.fail.fail_manuals_manual_parse
+    fail_mcp_launch: errors.fail.fail_mcp_launch
+    fail_modelo_calculation_revision_persistence: errors.fail.fail_modelo_calculation_revision_persistence
+    fail_modelo_filing_record_persistence: errors.fail.fail_modelo_filing_record_persistence
+    fail_modelo_verification_report_persistence: errors.fail.fail_modelo_verification_report_persistence
+    fail_modelo_work_unit_persistence: errors.fail.fail_modelo_work_unit_persistence
+    fail_normatives_normative_parse: errors.fail.fail_normatives_normative_parse
+    fail_outbound_storage: errors.fail.fail_outbound_storage
+    fail_outbound_storage_network: errors.fail.fail_outbound_storage_network
+    fail_outbound_storage_unavailable: errors.fail.fail_outbound_storage_unavailable
+    fail_review_source_load: errors.fail.fail_review_source_load
+    fail_sanitization_source_parse: errors.fail.fail_sanitization_source_parse
+    fail_sede_census_parse: errors.fail.fail_sede_census_parse
+    fail_sede_justificante_fetch: errors.fail.fail_sede_justificante_fetch
+    fail_sede_parse: errors.fail.fail_sede_parse
+    fail_sede_validation: errors.fail.fail_sede_validation
+    fail_site_health: errors.fail.fail_site_health
+    fail_storage: errors.fail.fail_storage
+    fail_storage_blob_not_found: errors.fail.fail_storage_blob_not_found
+    fail_storage_bucket_recovery_unavailable: errors.fail.fail_storage_bucket_recovery_unavailable
+    fail_storage_persistence: errors.fail.fail_storage_persistence
+    fail_storage_repository: errors.fail.fail_storage_repository
+    fail_storage_secret_not_found: errors.fail.fail_storage_secret_not_found
+    fail_storage_secret_store: errors.fail.fail_storage_secret_store
+    fail_user_profile_not_found: errors.fail.fail_user_profile_not_found
+    fail_user_profile_schema_load: errors.fail.fail_user_profile_schema_load
+    ledger_check: errors.fail.ledger_check
+    ledger_link: errors.fail.ledger_link
+    missing_exchange_rate: errors.fail.missing_exchange_rate
+    modelo_036_lifecycle: errors.fail.modelo_036_lifecycle
+    modelo_export: errors.fail.modelo_export
+    modelo_export_manifest: errors.fail.modelo_export_manifest
+    overview: errors.fail.overview
+    overview_agenda: errors.fail.overview_agenda
+    overview_backlog: errors.fail.overview_backlog
+    overview_calendar: errors.fail.overview_calendar
+    overview_explain: errors.fail.overview_explain
+    profile_export: errors.fail.profile_export
+    profile_import: errors.fail.profile_import
+    reconciliation: errors.fail.reconciliation
+    stale_exchange_rate: errors.fail.stale_exchange_rate
   financial:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
   identity:
@@ -1790,26 +2054,194 @@ errors:
       várt érték {expected}, kapott érték {got}.'
     cif_check_letter_mismatch_kind: 'A CIF ellenőrző betűje helytelen ({kind} típus):
       várt érték {expected}, kapott érték {got}.'
-    cif_invalid_shape: A(z) {candidate} nem érvényes CIF.
+    cif_invalid_shape: 'A(z) {candidate} nem CIF alakú: a CIF egy kezdőbetűből (A-H,
+      J, N, P-S, U, V vagy W), majd 7 számjegyből és egy ellenőrző karakterből áll.'
     document_empty: Az azonosító okmány üres.
-    nie_check_letter_mismatch: 'A NIE ellenőrző betűje helytelen: várt érték {expected},
-      kapott érték {got}.'
-    nie_invalid_shape: A(z) {candidate} nem érvényes NIE.
-    nif_check_letter_mismatch: 'A NIF ellenőrző betűje helytelen: várt érték {expected},
-      kapott érték {got}.'
-    nif_invalid_shape: A(z) {candidate} nem érvényes NIF.
+    nie_check_letter_mismatch: 'A NIE ellenőrző betűje helytelen: a(z) {body} esetén
+      az ellenőrző betűnek {expected} értékűnek kell lennie, nem {got}. Javítsd a
+      NIE-t erre: {body}{expected}.'
+    nie_invalid_shape: 'A(z) {candidate} nem NIE alakú: a NIE X, Y vagy Z betűvel
+      kezdődik, majd 7 számjegy és egy ellenőrző betű következik.'
+    nif_check_letter_mismatch: 'A NIF ellenőrző betűje helytelen: a(z) {digits} esetén
+      az ellenőrző betűnek {expected} értékűnek kell lennie, nem {got}. Javítsd a
+      NIF-et erre: {digits}{expected}.'
+    nif_invalid_shape: 'A(z) {candidate} nem NIF alakú: a NIF 8 számjegyből, majd
+      egy ellenőrző betűből áll.'
     validate_expects_str: Az azonosító ellenőrzése szöveges értéket vár; a kapott
       típus {got_type}.
+  integrity:
+    integrity_aeat_core_validation: errors.integrity.integrity_aeat_core_validation
+    integrity_cli_output_schema: errors.integrity.integrity_cli_output_schema
+    integrity_filing_amendment_validation: errors.integrity.integrity_filing_amendment_validation
+    integrity_filing_fixture: errors.integrity.integrity_filing_fixture
+    integrity_filing_validation: errors.integrity.integrity_filing_validation
+    integrity_financial_attachments_attachment_validation: errors.integrity.integrity_financial_attachments_attachment_validation
+    integrity_identity_document: errors.integrity.integrity_identity_document
+    integrity_justificante_verification: errors.integrity.integrity_justificante_verification
+    integrity_manuals_manifest: errors.integrity.integrity_manuals_manifest
+    integrity_observability_aeat_corpus_drift: errors.integrity.integrity_observability_aeat_corpus_drift
+    integrity_observability_run_trace_validation: errors.integrity.integrity_observability_run_trace_validation
+    integrity_outbound_storage: errors.integrity.integrity_outbound_storage
+    integrity_portals_portal_integrity: errors.integrity.integrity_portals_portal_integrity
+    integrity_profile_snapshot_hash_mismatch: errors.integrity.integrity_profile_snapshot_hash_mismatch
+    integrity_profile_snapshot_not_found: errors.integrity.integrity_profile_snapshot_not_found
+    integrity_storage_blob: errors.integrity.integrity_storage_blob
+    integrity_storage_classification: errors.integrity.integrity_storage_classification
+    integrity_storage_corpus_manifest: errors.integrity.integrity_storage_corpus_manifest
+    integrity_storage_corpus_manifest_drift: errors.integrity.integrity_storage_corpus_manifest_drift
+    integrity_storage_corpus_manifest_tamper: errors.integrity.integrity_storage_corpus_manifest_tamper
+    integrity_storage_decryption: errors.integrity.integrity_storage_decryption
+    integrity_storage_encryption: errors.integrity.integrity_storage_encryption
+    integrity_storage_envelope_version: errors.integrity.integrity_storage_envelope_version
+    integrity_storage_key_derivation: errors.integrity.integrity_storage_key_derivation
+    integrity_storage_nonce_collision: errors.integrity.integrity_storage_nonce_collision
+    integrity_storage_path_containment: errors.integrity.integrity_storage_path_containment
+    integrity_storage_retention_policy: errors.integrity.integrity_storage_retention_policy
+    integrity_storage_secure_object_unreadable: errors.integrity.integrity_storage_secure_object_unreadable
+    integrity_storage_validation: errors.integrity.integrity_storage_validation
+    integrity_verification: errors.integrity.integrity_verification
+    profile_import_signature: errors.integrity.profile_import_signature
   internal:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
+    internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
+      próbáltunk rögzíteni aktív futási kontextuson kívül.'
+    internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
+      megjeleníteni.'
+    internal_wizard_script_overflow: 'Belső hiba: a varázsló fel nem használt, előre
+      megírt válaszokkal zárult le.'
+    internal_wizard_script_underflow: 'Belső hiba: a varázsló több választ kért, mint
+      amennyi előre meg volt írva.'
+    internal_workflow_abort_signal: 'Belső hiba: egy munkafolyamat-szakasz megszakítási
+      jelzést adott.'
+  locked:
+    locked_access_gate_live_submit_forbidden: Az AEAT felé történő élő beküldés véglegesen
+      tiltott. Ez az alkalmazás bevallásokat állít össze, ellenőriz és exportál; a
+      benyújtást az alkalmazáson kívül kell elvégezni.
+    locked_auth_acquisition: Egy másik folyamat éppen most végzi az AEAT-hitelesítést.
+      Várd meg, amíg befejeződik, és próbáld újra.
+    locked_google_keychain: A Google-hitelesítő adatokat tároló operációs rendszeri
+      kulcstartó zárolva van vagy nem érhető el. Oldd fel a kulcstartót, és próbáld
+      újra.
+    locked_storage_bucket_busy: A tárolóegységet egy másik folyamat használja. Várd
+      meg, amíg az a folyamat befejeződik, és próbáld újra.
+    locked_storage_bucket_session: Ehhez a művelethez feloldott tárolóegység szükséges.
+      Futtasd az `aeat config unlock` parancsot, és próbáld újra.
+    locked_storage_lock_acquisition: A kizárólagos fájlzárolást nem sikerült megszerezni
+      az időkorláton belül. Egy másik folyamat tartja; várj, és próbáld újra.
   refused:
+    auth_configure_no_active_bucket: errors.refused.auth_configure_no_active_bucket
+    auth_profile_identity_mismatch: errors.refused.auth_profile_identity_mismatch
+    bootstrap_already_complete: errors.refused.bootstrap_already_complete
+    census_apply_conflict: errors.refused.census_apply_conflict
+    census_field_validation: errors.refused.census_field_validation
+    census_not_available: errors.refused.census_not_available
+    ledger_preflight: errors.refused.ledger_preflight
+    modelo_036_prior_alta_required: errors.refused.modelo_036_prior_alta_required
+    modelo_036_terminal_state: errors.refused.modelo_036_terminal_state
+    modelo_census_stale: errors.refused.modelo_census_stale
+    modelo_export_cross_bucket: errors.refused.modelo_export_cross_bucket
+    modelo_export_no_active_bucket: errors.refused.modelo_export_no_active_bucket
+    profile_already_registered: errors.refused.profile_already_registered
+    profile_import_collision: errors.refused.profile_import_collision
+    profile_locked: errors.refused.profile_locked
+    profile_name_collision: errors.refused.profile_name_collision
+    reconciliation_cross_bucket: errors.refused.reconciliation_cross_bucket
+    reconciliation_declaration_source_unsupported: errors.refused.reconciliation_declaration_source_unsupported
+    reconciliation_drift: errors.refused.reconciliation_drift
+    reconciliation_evidence_invalid: errors.refused.reconciliation_evidence_invalid
+    refused_access_gate_live_read_not_enabled: errors.refused.refused_access_gate_live_read_not_enabled
+    refused_apoderado_live_check_unavailable: errors.refused.refused_apoderado_live_check_unavailable
+    refused_apoderado_not_configured: errors.refused.refused_apoderado_not_configured
+    refused_apoderado_unknown_scope: errors.refused.refused_apoderado_unknown_scope
+    refused_application_live_input: errors.refused.refused_application_live_input
+    refused_application_registry_input: errors.refused.refused_application_registry_input
+    refused_calculations_casilla_constraint: errors.refused.refused_calculations_casilla_constraint
+    refused_cli_boundary: errors.refused.refused_cli_boundary
+    refused_cli_log_level_resolution: errors.refused.refused_cli_log_level_resolution
+    refused_cli_non_tty: errors.refused.refused_cli_non_tty
     refused_cli_validation_boundary: A parancs bemenete nem ment át az ellenőrzésen.
       Futtasd az `aeat config repair` parancsot, vagy állítsd vissza a profil állapotát.
+    refused_config_reset_unconfirmed: errors.refused.refused_config_reset_unconfirmed
+    refused_evidence_bundle_not_found: errors.refused.refused_evidence_bundle_not_found
+    refused_evidence_bundle_verification: errors.refused.refused_evidence_bundle_verification
+    refused_filing_calculate: errors.refused.refused_filing_calculate
+    refused_financial_aggregation_category_coverage: errors.refused.refused_financial_aggregation_category_coverage
+    refused_financial_aggregation_missing_classification: errors.refused.refused_financial_aggregation_missing_classification
+    refused_financial_aggregation_unsupported_modelo: errors.refused.refused_financial_aggregation_unsupported_modelo
+    refused_financial_ledger_no_active_bucket: errors.refused.refused_financial_ledger_no_active_bucket
+    refused_financial_ledger_transaction_id_prefix: errors.refused.refused_financial_ledger_transaction_id_prefix
+    refused_financial_provider_invalid_source: errors.refused.refused_financial_provider_invalid_source
+    refused_financial_provider_unsupported_source: errors.refused.refused_financial_provider_unsupported_source
+    refused_financial_provider_validation: errors.refused.refused_financial_provider_validation
+    refused_financial_usage_ratios_census_mismatch: errors.refused.refused_financial_usage_ratios_census_mismatch
+    refused_google_profile_unbound: errors.refused.refused_google_profile_unbound
+    refused_google_unsecured_mode: errors.refused.refused_google_unsecured_mode
+    refused_google_validation: errors.refused.refused_google_validation
+    refused_inventory_actividad_conflict: errors.refused.refused_inventory_actividad_conflict
+    refused_inventory_actividad_not_found: errors.refused.refused_inventory_actividad_not_found
+    refused_inventory_service_input: errors.refused.refused_inventory_service_input
+    refused_ledger_business_operation_invoice_input: errors.refused.refused_ledger_business_operation_invoice_input
+    refused_ledger_business_operation_invoice_not_found: errors.refused.refused_ledger_business_operation_invoice_not_found
+    refused_ledger_evidence_input: errors.refused.refused_ledger_evidence_input
+    refused_ledger_evidence_not_found: errors.refused.refused_ledger_evidence_not_found
+    refused_live_borrador_snapshot_not_found: errors.refused.refused_live_borrador_snapshot_not_found
+    refused_live_censo_snapshot_not_found: errors.refused.refused_live_censo_snapshot_not_found
+    refused_live_expedientes_snapshot_not_found: errors.refused.refused_live_expedientes_snapshot_not_found
+    refused_live_notifications_snapshot_not_found: errors.refused.refused_live_notifications_snapshot_not_found
+    refused_live_portal_not_found: errors.refused.refused_live_portal_not_found
+    refused_live_verify_observation_not_found: errors.refused.refused_live_verify_observation_not_found
+    refused_llm_config: errors.refused.refused_llm_config
+    refused_llm_validation: errors.refused.refused_llm_validation
+    refused_modelo_100_borrador_binding: errors.refused.refused_modelo_100_borrador_binding
+    refused_modelo_amendment_override_casilla: errors.refused.refused_modelo_amendment_override_casilla
+    refused_modelo_amendment_verification: errors.refused.refused_modelo_amendment_verification
+    refused_modelo_workflow_gate: errors.refused.refused_modelo_workflow_gate
+    refused_no_active_profile: errors.refused.refused_no_active_profile
+    refused_operator_surface_contract: errors.refused.refused_operator_surface_contract
+    refused_outbound_storage_conflict: errors.refused.refused_outbound_storage_conflict
+    refused_outbound_storage_quota: errors.refused.refused_outbound_storage_quota
+    refused_outbound_storage_validation: errors.refused.refused_outbound_storage_validation
+    refused_output_format: errors.refused.refused_output_format
+    refused_profile_already_exists: errors.refused.refused_profile_already_exists
+    refused_profile_asset_validation: errors.refused.refused_profile_asset_validation
+    refused_profile_basis_cap_exceeded: errors.refused.refused_profile_basis_cap_exceeded
+    refused_profile_foral_regime: errors.refused.refused_profile_foral_regime
+    refused_profile_inventory_validation: errors.refused.refused_profile_inventory_validation
+    refused_profile_lifo_forbidden: errors.refused.refused_profile_lifo_forbidden
+    refused_profile_not_configured: errors.refused.refused_profile_not_configured
+    refused_profile_not_found: errors.refused.refused_profile_not_found
+    refused_profile_preflight_missing: errors.refused.refused_profile_preflight_missing
+    refused_profile_schema_validation: errors.refused.refused_profile_schema_validation
+    refused_review_edit_parse: errors.refused.refused_review_edit_parse
+    refused_review_filter_parse: errors.refused.refused_review_filter_parse
+    refused_review_kind_reserved: errors.refused.refused_review_kind_reserved
+    refused_sanitization_already_sanitized: errors.refused.refused_sanitization_already_sanitized
+    refused_sanitization_signature_present: errors.refused.refused_sanitization_signature_present
+    refused_sanitization_unknown_surface: errors.refused.refused_sanitization_unknown_surface
+    refused_sanitization_validation: errors.refused.refused_sanitization_validation
+    refused_storage_bucket_already_present: errors.refused.refused_storage_bucket_already_present
+    refused_storage_bucket_no_active: errors.refused.refused_storage_bucket_no_active
+    refused_storage_master_key_no_active_session: errors.refused.refused_storage_master_key_no_active_session
+    refused_storage_passphrase_too_short: errors.refused.refused_storage_passphrase_too_short
+    refused_storage_secret_already_exists: errors.refused.refused_storage_secret_already_exists
+    refused_storage_session_expired: errors.refused.refused_storage_session_expired
+    refused_storage_unsecured_mode: errors.refused.refused_storage_unsecured_mode
+    refused_topic_not_found: errors.refused.refused_topic_not_found
+    refused_user_profile_validation: errors.refused.refused_user_profile_validation
+    refused_wizard_missing_flag: errors.refused.refused_wizard_missing_flag
+    refused_wizard_status: errors.refused.refused_wizard_status
+    refused_wizard_unsupported_console: errors.refused.refused_wizard_unsupported_console
+    refused_wizard_validation: errors.refused.refused_wizard_validation
+    refused_workflow_aborted: errors.refused.refused_workflow_aborted
+    refused_workflow_resume: errors.refused.refused_workflow_resume
+    unsupported_currency: errors.refused.unsupported_currency
   transaction:
     import_source_invalid: a forrás nem érvényes könyvelési dokumentum
     ledger_import_failed: 'A könyvelési fájl nem importálható: {reason}'
     ledger_import_requires_bucket: A könyvelési forrás importálásához aktív profil
       szükséges, kivéve próbafuttatási módban.
+    unknown_ledger_provider: 'Ismeretlen főkönyvi szolgáltató: {provider!r}. Elismert
+      szolgáltatók: {providers}.'
 filing:
   validation:
     deadline_missed: A benyújtási határidő lejárt
@@ -1969,7 +2401,7 @@ wizard:
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_postcode: 'Érvénytelen irányítószám ehhez: %{prompt_key}: %{raw}. A spanyol
       irányítószám 5 számjegy (01-52 tartományi kód, majd három számjegy).'
-    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
+    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
@@ -2283,6 +2715,15 @@ wizard:
         prompt: Az első adózó neme
       title: Az első adózó
     title: Beállítás varázsló
+    verifier:
+      activity_present: wizard.setup.verifier.activity_present
+      eu_eea_country_missing: wizard.setup.verifier.eu_eea_country_missing
+      eu_eea_country_ok: wizard.setup.verifier.eu_eea_country_ok
+      obligations_consistency_ok: wizard.setup.verifier.obligations_consistency_ok
+      obligations_inconsistent: wizard.setup.verifier.obligations_inconsistent
+      spouse_consistency_missing: wizard.setup.verifier.spouse_consistency_missing
+      spouse_consistency_ok: wizard.setup.verifier.spouse_consistency_ok
+      tax_id_present: wizard.setup.verifier.tax_id_present
   test:
     description: Test your configuration and connectivity
     example:

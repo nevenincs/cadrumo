@@ -132,7 +132,7 @@ def _validate_nif(candidate: str) -> IdentityDocument:
     if letter != expected:
         raise IdentityError(
             translated_message="errors.identity.nif_check_letter_mismatch",
-            context={"expected": expected, "got": letter},
+            context={"digits": digits, "expected": expected, "got": letter},
         )
     return IdentityDocument.NIF
 
@@ -151,7 +151,7 @@ def _validate_nie(candidate: str) -> IdentityDocument:
     if letter != expected:
         raise IdentityError(
             translated_message="errors.identity.nie_check_letter_mismatch",
-            context={"expected": expected, "got": letter},
+            context={"body": prefix + digits, "expected": expected, "got": letter},
         )
     return IdentityDocument.NIE
 
