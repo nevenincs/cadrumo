@@ -735,18 +735,29 @@ cli:
       client_json_help: A Cloud Console Desktop OAuth kliens JSON fájl útvonala
       errors:
         auth_failed: 'A Google-hitelesítés sikertelen: {detail}'
-        browser_open: 'Nem sikerült böngészőt megnyitni a Google-hozzáférés engedélyezéséhez: {detail}'
-        client_not_registered: 'Nincs Google OAuth-kliens regisztrálva ehhez a profilhoz. Először futtasd: `aeat config google register --client-json <útvonal>`.'
-        client_revoked: 'A regisztrált Google OAuth-klienst visszavonták. Regisztráld újra: `aeat config google register`.'
-        keychain_locked: 'A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolva van vagy nem érhető el.'
-        loopback_bind: 'Nem sikerült helyi portot nyitni a Google-bejelentkezés befejezéséhez: {detail}'
+        browser_open: 'Nem sikerült böngészőt megnyitni a Google-hozzáférés engedélyezéséhez:
+          {detail}'
+        client_not_registered: 'Nincs Google OAuth-kliens regisztrálva ehhez a profilhoz.
+          Először futtasd: `aeat config google register --client-json <útvonal>`.'
+        client_revoked: 'A regisztrált Google OAuth-klienst visszavonták. Regisztráld
+          újra: `aeat config google register`.'
+        keychain_locked: A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolva
+          van vagy nem érhető el.
+        loopback_bind: 'Nem sikerült helyi portot nyitni a Google-bejelentkezés befejezéséhez:
+          {detail}'
         network: 'Nem sikerült elérni a Google-t: {detail}'
-        profile_unbound: 'Nincs aktív profil. Futtasd az `aeat config profile switch <név>` parancsot, vagy add meg a `--profile` kapcsolót.'
-        scope_insufficient: 'A Google-höz megadott hozzáférésből hiányoznak a szükséges engedélyek. Futtasd az `aeat config google login` parancsot, és fogadj el minden engedélyt.'
+        profile_unbound: Nincs aktív profil. Futtasd az `aeat config profile switch
+          <név>` parancsot, vagy add meg a `--profile` kapcsolót.
+        scope_insufficient: A Google-höz megadott hozzáférésből hiányoznak a szükséges
+          engedélyek. Futtasd az `aeat config google login` parancsot, és fogadj el
+          minden engedélyt.
         storage: 'Nem sikerült elérni a Google Drive tárhelyet: {detail}'
-        token_expired: 'A Google-hozzáférés lejárt (a tesztprojektek tokenjei 7 nap után lejárnak). Futtasd: `aeat config google login`.'
-        token_revoked: 'A Google-hozzáférést visszavonták. Futtasd az `aeat config google login` parancsot az újbóli engedélyezéshez.'
-        unsecured_mode: 'A Google-hozzáférés le van tiltva, amíg a titoktár nem biztonságos módban fut egy valós NIF-fel rendelkező profilnál.'
+        token_expired: 'A Google-hozzáférés lejárt (a tesztprojektek tokenjei 7 nap
+          után lejárnak). Futtasd: `aeat config google login`.'
+        token_revoked: A Google-hozzáférést visszavonták. Futtasd az `aeat config
+          google login` parancsot az újbóli engedélyezéshez.
+        unsecured_mode: A Google-hozzáférés le van tiltva, amíg a titoktár nem biztonságos
+          módban fut egy valós NIF-fel rendelkező profilnál.
         validation: 'A Google-höz megadott adatok nem mentek át az ellenőrzésen: {detail}'
       folder:
         folder_id_help: Google Drive mappaazonosító
@@ -2199,112 +2210,204 @@ errors:
     locked_storage_lock_acquisition: A kizárólagos fájlzárolást nem sikerült megszerezni
       az időkorláton belül. Egy másik folyamat tartja; várj, és próbáld újra.
   refused:
-    auth_configure_no_active_bucket: errors.refused.auth_configure_no_active_bucket
-    auth_profile_identity_mismatch: errors.refused.auth_profile_identity_mismatch
-    bootstrap_already_complete: errors.refused.bootstrap_already_complete
-    census_apply_conflict: errors.refused.census_apply_conflict
-    census_field_validation: errors.refused.census_field_validation
-    census_not_available: errors.refused.census_not_available
-    ledger_preflight: errors.refused.ledger_preflight
-    modelo_036_prior_alta_required: errors.refused.modelo_036_prior_alta_required
-    modelo_036_terminal_state: errors.refused.modelo_036_terminal_state
-    modelo_census_stale: errors.refused.modelo_census_stale
-    modelo_export_cross_bucket: errors.refused.modelo_export_cross_bucket
-    modelo_export_no_active_bucket: errors.refused.modelo_export_no_active_bucket
-    profile_already_registered: errors.refused.profile_already_registered
-    profile_import_collision: errors.refused.profile_import_collision
-    profile_locked: errors.refused.profile_locked
-    profile_name_collision: errors.refused.profile_name_collision
-    reconciliation_cross_bucket: errors.refused.reconciliation_cross_bucket
-    reconciliation_declaration_source_unsupported: errors.refused.reconciliation_declaration_source_unsupported
-    reconciliation_drift: errors.refused.reconciliation_drift
-    reconciliation_evidence_invalid: errors.refused.reconciliation_evidence_invalid
-    refused_access_gate_live_read_not_enabled: errors.refused.refused_access_gate_live_read_not_enabled
-    refused_apoderado_live_check_unavailable: errors.refused.refused_apoderado_live_check_unavailable
-    refused_apoderado_not_configured: errors.refused.refused_apoderado_not_configured
-    refused_apoderado_unknown_scope: errors.refused.refused_apoderado_unknown_scope
-    refused_application_live_input: errors.refused.refused_application_live_input
-    refused_application_registry_input: errors.refused.refused_application_registry_input
-    refused_calculations_casilla_constraint: errors.refused.refused_calculations_casilla_constraint
-    refused_cli_boundary: errors.refused.refused_cli_boundary
-    refused_cli_log_level_resolution: errors.refused.refused_cli_log_level_resolution
-    refused_cli_non_tty: errors.refused.refused_cli_non_tty
+    auth_configure_no_active_bucket: A hitelesítés nem konfigurálható aktív profil
+      nélkül. Hozz létre profilt az `aeat config profile create NÉV` paranccsal, és
+      próbáld újra.
+    auth_profile_identity_mismatch: Az aktív profil azonosítója nem lehet a kért hitelesítési
+      munkamenet tulajdonosa.
+    bootstrap_already_complete: Már létezik profil; az első indítási beállítás csak
+      egyszer fut le. Használd az `aeat config profile switch NÉV` parancsot a profilváltáshoz.
+    census_apply_conflict: A nyilvántartás nem alkalmazható, mert egy függő egységen
+      folyamatban lévő munka van. Először oldd fel a függőben lévő állapotot.
+    census_field_validation: Az AEAT nyilvántartása olyan értéket adott vissza, amelyet
+      a séma nem fogad el. Egyeztesd a megjelölt mezőt a tanácsadóddal.
+    census_not_available: Az AEAT nem adott vissza olvasható nyilvántartást. Lehet,
+      hogy nem vagy regisztrálva az IAE-ben, vagy a tanúsítványod nincs a NIF-edhez
+      rendelve.
+    ledger_preflight: A könyvelési előellenőrzés elutasította a modell futtatását,
+      mert még nem benyújtható.
+    modelo_036_prior_alta_required: A 036-os modell módosítása vagy törlése nem kérhető
+      előzetes regisztráció nélkül.
+    modelo_036_terminal_state: A 036-os modell rekordja már törölt állapotban van,
+      és nem fogad el további műveleteket.
+    modelo_census_stale: 'A művelet elutasítva, mert új nyilvántartást alkalmaztál
+      a munka létrehozása után. Az AEAT a kötelező érvényű jogi forrás: hozd létre
+      újra az aktuális nyilvántartással.'
+    modelo_export_cross_bucket: A megcímzett revízió az aktív profilétól eltérő tárolóegységhez
+      tartozik. Az exportálás csak az aktív profil tárolóegységén belül működik.
+    modelo_export_no_active_bucket: Az exportáláshoz aktív profil szükséges. Hozz
+      létre vagy válassz profilt, és próbáld újra.
+    profile_already_registered: Már létezik ilyen nevű profil. Használd az `aeat config
+      profile switch NÉV` parancsot a rá váltáshoz.
+    profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.
+    profile_locked: Ehhez a művelethez feloldott profil szükséges. Futtasd az `aeat
+      config unlock` parancsot, és próbáld újra.
+    profile_name_collision: A megadott profilnév már használatban van. Válassz másik
+      nevet.
+    reconciliation_cross_bucket: A megcímzett munkaegység az aktív profilétól eltérő
+      tárolóegységhez tartozik. Az egyeztetés csak az aktív profil tárolóegységén
+      belül működik.
+    reconciliation_declaration_source_unsupported: A bevallásból történő egyeztetés
+      még nem érhető el.
+    reconciliation_drift: Az egyeztetés számtani vagy azonossági eltérést észlelt
+      a bevallások között. Ellenőrizd az összegeket a folytatás előtt.
+    reconciliation_evidence_invalid: A megadott külső bizonyítékot nem sikerült értelmezni.
+      Ellenőrizd az igazolásfájlt.
+    refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférése le
+      van tiltva. Ez a művelet a jelenlegi konfigurációval nem tud kapcsolatba lépni
+      az AEAT-tal.
+    refused_apoderado_live_check_unavailable: A meghatalmazottak élő ellenőrzése nem
+      érhető el, vagy az AEAT-tal való kapcsolatfelvétel sikertelen volt.
+    refused_apoderado_not_configured: Nincs beállítva meghatalmazott. Állítsd be a
+      meghatalmazottat az állapotának ellenőrzése előtt.
+    refused_apoderado_unknown_scope: A megadott meghatalmazási hatókör nincs az elérhető
+      katalógusban.
+    refused_application_live_input: Az élő AEAT olvasási kérés a megadott bemenettel
+      nem hajtható végre.
+    refused_application_registry_input: A modellnyilvántartási kérés a megadott bemenettel
+      nem hajtható végre.
+    refused_calculations_casilla_constraint: Egy kiszámított rovatérték a rovathoz
+      megadott határokon kívül esik. Ellenőrizd a számítás bemeneteit.
+    refused_cli_boundary: A parancs elutasította a kérést.
+    refused_cli_log_level_resolution: A megadott naplózási szint beállításai ellentmondóak.
+      Csak egyet használj a --quiet, --verbose vagy --debug közül.
+    refused_cli_non_tty: Ehhez a parancshoz interaktív bemenet kell, de a szabványos
+      bemenet át van irányítva. Futtasd interaktív terminálban.
     refused_cli_validation_boundary: A parancs bemenete nem ment át az ellenőrzésen.
       Futtasd az `aeat config repair` parancsot, vagy állítsd vissza a profil állapotát.
-    refused_config_reset_unconfirmed: errors.refused.refused_config_reset_unconfirmed
-    refused_evidence_bundle_not_found: errors.refused.refused_evidence_bundle_not_found
-    refused_evidence_bundle_verification: errors.refused.refused_evidence_bundle_verification
-    refused_filing_calculate: errors.refused.refused_filing_calculate
-    refused_financial_aggregation_category_coverage: errors.refused.refused_financial_aggregation_category_coverage
-    refused_financial_aggregation_missing_classification: errors.refused.refused_financial_aggregation_missing_classification
-    refused_financial_aggregation_unsupported_modelo: errors.refused.refused_financial_aggregation_unsupported_modelo
-    refused_financial_ledger_no_active_bucket: errors.refused.refused_financial_ledger_no_active_bucket
-    refused_financial_ledger_transaction_id_prefix: errors.refused.refused_financial_ledger_transaction_id_prefix
-    refused_financial_provider_invalid_source: errors.refused.refused_financial_provider_invalid_source
-    refused_financial_provider_unsupported_source: errors.refused.refused_financial_provider_unsupported_source
-    refused_financial_provider_validation: errors.refused.refused_financial_provider_validation
-    refused_financial_usage_ratios_census_mismatch: errors.refused.refused_financial_usage_ratios_census_mismatch
-    refused_google_profile_unbound: errors.refused.refused_google_profile_unbound
-    refused_google_unsecured_mode: errors.refused.refused_google_unsecured_mode
-    refused_google_validation: errors.refused.refused_google_validation
-    refused_inventory_actividad_conflict: errors.refused.refused_inventory_actividad_conflict
-    refused_inventory_actividad_not_found: errors.refused.refused_inventory_actividad_not_found
-    refused_inventory_service_input: errors.refused.refused_inventory_service_input
-    refused_ledger_business_operation_invoice_input: errors.refused.refused_ledger_business_operation_invoice_input
-    refused_ledger_business_operation_invoice_not_found: errors.refused.refused_ledger_business_operation_invoice_not_found
-    refused_ledger_evidence_input: errors.refused.refused_ledger_evidence_input
-    refused_ledger_evidence_not_found: errors.refused.refused_ledger_evidence_not_found
-    refused_live_borrador_snapshot_not_found: errors.refused.refused_live_borrador_snapshot_not_found
-    refused_live_censo_snapshot_not_found: errors.refused.refused_live_censo_snapshot_not_found
-    refused_live_expedientes_snapshot_not_found: errors.refused.refused_live_expedientes_snapshot_not_found
-    refused_live_notifications_snapshot_not_found: errors.refused.refused_live_notifications_snapshot_not_found
-    refused_live_portal_not_found: errors.refused.refused_live_portal_not_found
-    refused_live_verify_observation_not_found: errors.refused.refused_live_verify_observation_not_found
-    refused_llm_config: errors.refused.refused_llm_config
-    refused_llm_validation: errors.refused.refused_llm_validation
-    refused_modelo_100_borrador_binding: errors.refused.refused_modelo_100_borrador_binding
-    refused_modelo_amendment_override_casilla: errors.refused.refused_modelo_amendment_override_casilla
-    refused_modelo_amendment_verification: errors.refused.refused_modelo_amendment_verification
-    refused_modelo_workflow_gate: errors.refused.refused_modelo_workflow_gate
-    refused_no_active_profile: errors.refused.refused_no_active_profile
-    refused_operator_surface_contract: errors.refused.refused_operator_surface_contract
-    refused_outbound_storage_conflict: errors.refused.refused_outbound_storage_conflict
-    refused_outbound_storage_quota: errors.refused.refused_outbound_storage_quota
-    refused_outbound_storage_validation: errors.refused.refused_outbound_storage_validation
-    refused_output_format: errors.refused.refused_output_format
-    refused_profile_already_exists: errors.refused.refused_profile_already_exists
-    refused_profile_asset_validation: errors.refused.refused_profile_asset_validation
-    refused_profile_basis_cap_exceeded: errors.refused.refused_profile_basis_cap_exceeded
-    refused_profile_foral_regime: errors.refused.refused_profile_foral_regime
-    refused_profile_inventory_validation: errors.refused.refused_profile_inventory_validation
-    refused_profile_lifo_forbidden: errors.refused.refused_profile_lifo_forbidden
-    refused_profile_not_configured: errors.refused.refused_profile_not_configured
-    refused_profile_not_found: errors.refused.refused_profile_not_found
-    refused_profile_preflight_missing: errors.refused.refused_profile_preflight_missing
-    refused_profile_schema_validation: errors.refused.refused_profile_schema_validation
-    refused_review_edit_parse: errors.refused.refused_review_edit_parse
-    refused_review_filter_parse: errors.refused.refused_review_filter_parse
-    refused_review_kind_reserved: errors.refused.refused_review_kind_reserved
-    refused_sanitization_already_sanitized: errors.refused.refused_sanitization_already_sanitized
-    refused_sanitization_signature_present: errors.refused.refused_sanitization_signature_present
-    refused_sanitization_unknown_surface: errors.refused.refused_sanitization_unknown_surface
-    refused_sanitization_validation: errors.refused.refused_sanitization_validation
-    refused_storage_bucket_already_present: errors.refused.refused_storage_bucket_already_present
-    refused_storage_bucket_no_active: errors.refused.refused_storage_bucket_no_active
-    refused_storage_master_key_no_active_session: errors.refused.refused_storage_master_key_no_active_session
-    refused_storage_passphrase_too_short: errors.refused.refused_storage_passphrase_too_short
-    refused_storage_secret_already_exists: errors.refused.refused_storage_secret_already_exists
-    refused_storage_session_expired: errors.refused.refused_storage_session_expired
-    refused_storage_unsecured_mode: errors.refused.refused_storage_unsecured_mode
-    refused_topic_not_found: errors.refused.refused_topic_not_found
-    refused_user_profile_validation: errors.refused.refused_user_profile_validation
-    refused_wizard_missing_flag: errors.refused.refused_wizard_missing_flag
-    refused_wizard_status: errors.refused.refused_wizard_status
-    refused_wizard_unsupported_console: errors.refused.refused_wizard_unsupported_console
-    refused_wizard_validation: errors.refused.refused_wizard_validation
-    refused_workflow_aborted: errors.refused.refused_workflow_aborted
-    refused_workflow_resume: errors.refused.refused_workflow_resume
-    unsupported_currency: errors.refused.unsupported_currency
+    refused_config_reset_unconfirmed: A konfiguráció visszaállítása nem lett megerősítve.
+      Futtasd újra a parancsot a művelet megerősítésével.
+    refused_evidence_bundle_not_found: Nem létezik a megadott azonosítójú bizonyítékcsomag.
+    refused_evidence_bundle_verification: A bizonyítékcsomag ellenőrzése sikertelen
+      volt, és a műveletet nem kényszerítettük ki.
+    refused_filing_calculate: A bevallás számítása vagy összegzése nem teljesítette
+      a feltételeit.
+    refused_financial_aggregation_category_coverage: Egy tranzakció nem rendelkezik
+      kategória- vagy profillefedettséggel. Sorold be a tranzakciót az összesítés
+      előtt.
+    refused_financial_aggregation_missing_classification: Az időszak néhány tranzakciója
+      még besorolásra vár. Sorold be mindet az összesítés előtt.
+    refused_financial_aggregation_unsupported_modelo: A kért modellhez nem áll rendelkezésre
+      összesítési szerződés.
+    refused_financial_ledger_no_active_bucket: A könyvelési művelethez aktív profil
+      szükséges. Hozz létre vagy válassz profilt, és próbáld újra.
+    refused_financial_ledger_transaction_id_prefix: A tranzakcióazonosító-előtag nulla
+      vagy több tranzakcióra illeszkedik. Adj meg hosszabb előtagot.
+    refused_financial_provider_invalid_source: A forrásdokumentum nem olvasható, vagy
+      a szerkezete érvénytelen.
+    refused_financial_provider_unsupported_source: Egyetlen szolgáltató sem tudja
+      értelmezni ezt a forrásdokumentumot.
+    refused_financial_provider_validation: A pénzügyi dokumentum egy mezője (dátum
+      vagy összeg) nem felelt meg az ellenőrzésnek.
+    refused_financial_usage_ratios_census_mismatch: Egy mentett otthoni iroda használati
+      arány eltér a nyilvántartástól, amely a kötelező érvényű jogi forrás. Igazítsd
+      a nyilvántartás értékéhez.
+    refused_google_profile_unbound: Nincs aktív profil hozzárendelve. Válassz profilt,
+      vagy használd a --profile kapcsolót.
+    refused_google_unsecured_mode: A Google nem engedélyezhető titkosítatlan tárolási
+      módban olyan profillal, amely valódi NIF-et tartalmaz.
+    refused_google_validation: A megadott Google-paraméterek nem feleltek meg az ellenőrzésnek.
+    refused_inventory_actividad_conflict: Már létezik leltár ehhez a tevékenységhez
+      és évhez.
+    refused_inventory_actividad_not_found: Nem létezik leltár a megadott tevékenységhez
+      és évhez.
+    refused_inventory_service_input: Egy megadott bemenet megsérti a leltárszerződést.
+      Javítsd a bemenetet, és próbáld újra.
+    refused_ledger_business_operation_invoice_input: Egy megadott bemenet megsérti
+      az üzleti művelet számlaszerződését. Javítsd a bemenetet, és próbáld újra.
+    refused_ledger_business_operation_invoice_not_found: Nem létezik a megadott azonosítójú
+      üzleti művelet számla.
+    refused_ledger_evidence_input: Egy megadott bizonyítékbemenet megsérti a beszerzési
+      számlaszerződést. Javítsd a bemenetet, és próbáld újra.
+    refused_ledger_evidence_not_found: Nem létezik a megadott azonosítójú beszerzési
+      számla bizonyíték.
+    refused_live_borrador_snapshot_not_found: Nem létezik a megadott azonosítójú 100-as
+      modell piszkozat-pillanatkép.
+    refused_live_censo_snapshot_not_found: Nem létezik a megadott azonosítójú 036-os
+      modell nyilvántartás-pillanatkép.
+    refused_live_expedientes_snapshot_not_found: Nem létezik a megadott azonosítójú
+      ügyiratok-pillanatkép.
+    refused_live_notifications_snapshot_not_found: Nem létezik a megadott azonosítójú
+      értesítés-pillanatkép.
+    refused_live_portal_not_found: Nem létezik a megadott azonosítójú AEAT-portál.
+    refused_live_verify_observation_not_found: Nem létezik a megadott azonosítójú
+      ellenőrzési észrevétel.
+    refused_llm_config: A nyelvi modell ügyfél-konfigurációja érvénytelen vagy hiányos.
+    refused_llm_validation: Egy nyelvi modell objektum nem felelt meg az ellenőrzésnek.
+    refused_modelo_100_borrador_binding: A 100-as modell piszkozat értékei nem használhatók
+      fel a számításhoz.
+    refused_modelo_amendment_override_casilla: Egy módosító felülírás olyan rovatra
+      mutat, amelyet a nyilvántartás nem deklarál az adott modellhez, évhez és időszakhoz.
+    refused_modelo_amendment_verification: A módosító bevallás javított rovattérképe
+      nem felelt meg az ellenőrzésnek. Kötelező rovatok hiányoznak.
+    refused_modelo_workflow_gate: A munkafolyamat-ellenőrzés elutasította a bevallás
+      átmenetét. A bevallás nem tekinthető jogszerűen benyújtottnak.
+    refused_no_active_profile: Ehhez a művelethez aktív profil szükséges. Hozz létre
+      vagy válassz profilt, és próbáld újra.
+    refused_operator_surface_contract: A kért felület az elfogadott szerződésen kívül
+      esik.
+    refused_outbound_storage_conflict: A tárolóművelet ütközik egy már létező objektummal.
+    refused_outbound_storage_quota: A tároló elutasította a műveletet, mert a kvóta
+      kimerült.
+    refused_outbound_storage_validation: A tárolóművelet paraméterei nem feleltek
+      meg az ellenőrzésnek.
+    refused_output_format: A kért kimeneti formátum nem támogatott.
+    refused_profile_already_exists: Már létezik profil ezekkel az adatokkal.
+    refused_profile_asset_validation: Egy profil eszközrekordja nem felelt meg az
+      ellenőrzésnek.
+    refused_profile_basis_cap_exceeded: A halmozott értékcsökkenés meghaladná az eszköz
+      bekerülési alapját.
+    refused_profile_foral_regime: A kiválasztott foral adórendszert ez a profil nem
+      modellezi. Válassz támogatott adórendszert.
+    refused_profile_inventory_validation: Egy profil leltárkönyve nem felelt meg az
+      ellenőrzésnek.
+    refused_profile_lifo_forbidden: A LIFO készletértékelés adózási célból nem megengedett.
+      Használj FIFO-t, súlyozott átlagárat vagy átlagköltséget.
+    refused_profile_not_configured: A RENTA-bevallás ellenőrzéséhez adóügyi illetőségi
+      profil szükséges. Töltsd ki a profilt a folytatás előtt.
+    refused_profile_not_found: Nem létezik a megadott azonosítójú profil.
+    refused_profile_preflight_missing: A modell-előellenőrzés nem talált egy kötelező
+      profilválasztót. Töltsd ki a profilt a folytatás előtt.
+    refused_profile_schema_validation: A profiladatok megsértik a sémaszerződést.
+      Javítsd a megjelölt értékeket.
+    refused_review_edit_parse: A `--set KULCS=ÉRTÉK` nem volt értelmezhető. Ellenőrizd
+      a megadott érték szintaxisát.
+    refused_review_filter_parse: A `--filter KULCS=ÉRTÉK` nem volt értelmezhető. Ellenőrizd
+      a megadott szűrő szintaxisát.
+    refused_review_kind_reserved: A megadott `--kind` érték fenntartott, és nem használható.
+    refused_sanitization_already_sanitized: A forrásdokumentum már korábban tisztítva
+      lett.
+    refused_sanitization_signature_present: A forrás PDF digitális aláírást tartalmaz.
+      A módosítása érvénytelenítené az aláírást; emberi felülvizsgálat szükséges.
+    refused_sanitization_unknown_surface: Olyan személyesadat-felületet észleltünk,
+      amelyet a tisztító nem tud kezelni. Emberi felülvizsgálat szükséges.
+    refused_sanitization_validation: A tisztító paraméterei nem feleltek meg az ellenőrzésnek.
+    refused_storage_bucket_already_present: Az importálás ütközik egy már létező tárolóegységgel.
+    refused_storage_bucket_no_active: Nem sikerült aktív tárolóegységet meghatározni.
+      Válassz profilt, és próbáld újra.
+    refused_storage_master_key_no_active_session: A titkosításhoz aktív munkamenet
+      szükséges. Futtasd az `aeat config unlock` parancsot, és próbáld újra.
+    refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakter
+      hosszúnak kell lennie.
+    refused_storage_secret_already_exists: Már létezik titok ezzel a kulccsal. A felülíráshoz
+      használd a felülírás beállítást.
+    refused_storage_session_expired: Az aktív munkamenet inaktivitás miatt lejárt.
+      Aktiváld újra az `aeat config profile switch NÉV` paranccsal.
+    refused_storage_unsecured_mode: A titkosítatlan tárolót a szükséges engedélyezés
+      nélkül kérted. Valódi adatokhoz nem biztonságos.
+    refused_topic_not_found: A kért téma nem található.
+    refused_user_profile_validation: Egy felhasználói profil érték érvénytelen. Javítsd
+      a megjelölt mezőt.
+    refused_wizard_missing_flag: A --quiet futtatás kihagyott egy kötelező kérdést.
+      Add meg a hiányzó értéket, vagy futtasd a varázslót interaktívan.
+    refused_wizard_status: A varázsló nem tudta feloldani az aktív profilt.
+    refused_wizard_unsupported_console: A jelenlegi terminál nem tudja futtatni az
+      interaktív varázslót. Futtasd támogatott terminálban.
+    refused_wizard_validation: A varázsló egy válasza nem felelt meg az ellenőrzésnek.
+      Javítsd a megjelölt értéket.
+    refused_workflow_aborted: A munkafolyamat megszakadt.
+    refused_workflow_resume: A korábbi munkafolyamat-futtatás nem folytatható.
+    unsupported_currency: A megadott pénznemkód nem támogatott.
   transaction:
     import_source_invalid: a forrás nem érvényes könyvelési dokumentum
     ledger_import_failed: 'A könyvelési fájl nem importálható: {reason}'

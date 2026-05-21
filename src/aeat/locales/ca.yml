@@ -746,19 +746,31 @@ cli:
       client_json_help: Ruta al fitxer JSON del client OAuth Desktop de Cloud Console
       errors:
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
-        browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a Google: {detail}'
-        client_not_registered: 'No hi ha cap client OAuth de Google registrat per a aquest perfil. Executa primer `aeat config google register --client-json <ruta>`.'
-        client_revoked: 'El client OAuth de Google registrat ha estat revocat. Torna a registrar-lo amb `aeat config google register`.'
-        keychain_locked: 'El clauer del sistema que desa les credencials de Google està blocat o no disponible.'
-        loopback_bind: 'No s''ha pogut obrir un port local per completar l''inici de sessió a Google: {detail}'
+        browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a
+          Google: {detail}'
+        client_not_registered: No hi ha cap client OAuth de Google registrat per a
+          aquest perfil. Executa primer `aeat config google register --client-json
+          <ruta>`.
+        client_revoked: El client OAuth de Google registrat ha estat revocat. Torna
+          a registrar-lo amb `aeat config google register`.
+        keychain_locked: El clauer del sistema que desa les credencials de Google
+          està blocat o no disponible.
+        loopback_bind: 'No s''ha pogut obrir un port local per completar l''inici
+          de sessió a Google: {detail}'
         network: 'No s''ha pogut contactar amb Google: {detail}'
-        profile_unbound: 'No hi ha cap perfil actiu. Executa `aeat config profile switch <nom>` o indica `--profile`.'
-        scope_insufficient: 'L''accés concedit a Google no inclou els permisos necessaris. Executa `aeat config google login` i accepta tots els permisos.'
+        profile_unbound: No hi ha cap perfil actiu. Executa `aeat config profile switch
+          <nom>` o indica `--profile`.
+        scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
+          Executa `aeat config google login` i accepta tots els permisos.
         storage: 'No s''ha pogut accedir a l''emmagatzematge de Google Drive: {detail}'
-        token_expired: 'L''accés a Google ha caducat (els tokens dels projectes en proves caduquen al cap de 7 dies). Executa `aeat config google login`.'
-        token_revoked: 'L''accés a Google ha estat revocat. Executa `aeat config google login` per autoritzar-lo de nou.'
-        unsecured_mode: 'L''accés a Google està blocat mentre el magatzem de secrets funciona en mode no segur per a un perfil amb un NIF real.'
-        validation: 'Les dades proporcionades per a Google no han superat la validació: {detail}'
+        token_expired: L'accés a Google ha caducat (els tokens dels projectes en proves
+          caduquen al cap de 7 dies). Executa `aeat config google login`.
+        token_revoked: L'accés a Google ha estat revocat. Executa `aeat config google
+          login` per autoritzar-lo de nou.
+        unsecured_mode: L'accés a Google està blocat mentre el magatzem de secrets
+          funciona en mode no segur per a un perfil amb un NIF real.
+        validation: 'Les dades proporcionades per a Google no han superat la validació:
+          {detail}'
       folder:
         folder_id_help: Id de la carpeta de Google Drive
         get_help: Mostra la carpeta arrel de Google Drive configurada
@@ -2227,112 +2239,216 @@ errors:
       fitxer dins del temps d'espera. Un altre procés el reté; espera i torna-ho a
       provar.
   refused:
-    auth_configure_no_active_bucket: errors.refused.auth_configure_no_active_bucket
-    auth_profile_identity_mismatch: errors.refused.auth_profile_identity_mismatch
-    bootstrap_already_complete: errors.refused.bootstrap_already_complete
-    census_apply_conflict: errors.refused.census_apply_conflict
-    census_field_validation: errors.refused.census_field_validation
-    census_not_available: errors.refused.census_not_available
-    ledger_preflight: errors.refused.ledger_preflight
-    modelo_036_prior_alta_required: errors.refused.modelo_036_prior_alta_required
-    modelo_036_terminal_state: errors.refused.modelo_036_terminal_state
-    modelo_census_stale: errors.refused.modelo_census_stale
-    modelo_export_cross_bucket: errors.refused.modelo_export_cross_bucket
-    modelo_export_no_active_bucket: errors.refused.modelo_export_no_active_bucket
-    profile_already_registered: errors.refused.profile_already_registered
-    profile_import_collision: errors.refused.profile_import_collision
-    profile_locked: errors.refused.profile_locked
-    profile_name_collision: errors.refused.profile_name_collision
-    reconciliation_cross_bucket: errors.refused.reconciliation_cross_bucket
-    reconciliation_declaration_source_unsupported: errors.refused.reconciliation_declaration_source_unsupported
-    reconciliation_drift: errors.refused.reconciliation_drift
-    reconciliation_evidence_invalid: errors.refused.reconciliation_evidence_invalid
-    refused_access_gate_live_read_not_enabled: errors.refused.refused_access_gate_live_read_not_enabled
-    refused_apoderado_live_check_unavailable: errors.refused.refused_apoderado_live_check_unavailable
-    refused_apoderado_not_configured: errors.refused.refused_apoderado_not_configured
-    refused_apoderado_unknown_scope: errors.refused.refused_apoderado_unknown_scope
-    refused_application_live_input: errors.refused.refused_application_live_input
-    refused_application_registry_input: errors.refused.refused_application_registry_input
-    refused_calculations_casilla_constraint: errors.refused.refused_calculations_casilla_constraint
-    refused_cli_boundary: errors.refused.refused_cli_boundary
-    refused_cli_log_level_resolution: errors.refused.refused_cli_log_level_resolution
-    refused_cli_non_tty: errors.refused.refused_cli_non_tty
+    auth_configure_no_active_bucket: No es pot configurar l'autenticació sense un
+      perfil actiu. Crea un perfil amb `aeat config profile create NOM` i torna-ho
+      a provar.
+    auth_profile_identity_mismatch: La identitat del perfil actiu no pot ser titular
+      de la sessió d'autenticació sol·licitada.
+    bootstrap_already_complete: Ja existeix un perfil; la configuració inicial només
+      s'executa una vegada. Fes servir `aeat config profile switch NOM` per canviar
+      de perfil.
+    census_apply_conflict: No es pot aplicar el cens perquè hi ha feina en curs sobre
+      una unitat dependent. Resol primer l'estat pendent.
+    census_field_validation: El cens de l'AEAT ha retornat un valor que l'esquema
+      no admet. Revisa el camp indicat amb el teu assessor.
+    census_not_available: L'AEAT no ha retornat cap cens llegible. És possible que
+      no estiguis donat d'alta a l'IAE o que el teu certificat no estigui registrat
+      al teu NIF.
+    ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
+      model perquè encara no es pot presentar.
+    modelo_036_prior_alta_required: No es pot sol·licitar una modificació o baixa
+      del Model 036 sense una alta prèvia.
+    modelo_036_terminal_state: El registre del Model 036 ja està en estat de baixa;
+      no admet més operacions.
+    modelo_census_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
+      de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
+      amb el cens actual.'
+    modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
+      perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
+    modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
+      selecciona un perfil i torna-ho a provar.
+    profile_already_registered: Ja existeix un perfil amb aquest nom. Fes servir `aeat
+      config profile switch NOM` per canviar-hi.
+    profile_import_collision: L'identificador del perfil importat coincideix amb un
+      que ja existeix.
+    profile_locked: Aquesta operació requereix un perfil desbloquejat. Executa `aeat
+      config unlock` i torna-ho a provar.
+    profile_name_collision: El nom de perfil indicat ja s'està utilitzant. Tria un
+      nom diferent.
+    reconciliation_cross_bucket: La unitat de treball apuntada pertany a un bucket
+      diferent del perfil actiu. La conciliació només opera dins el bucket del perfil
+      actiu.
+    reconciliation_declaration_source_unsupported: La conciliació a partir d'una declaració
+      encara no està disponible.
+    reconciliation_drift: La conciliació ha detectat una discrepància aritmètica o
+      d'identitat entre declaracions. Revisa els imports abans de continuar.
+    reconciliation_evidence_invalid: L'evidència externa aportada no s'ha pogut interpretar.
+      Comprova el fitxer del justificant.
+    refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
+      està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
+      actual.
+    refused_apoderado_live_check_unavailable: La comprovació en viu d'apoderaments
+      no està disponible o ha fallat el contacte amb l'AEAT.
+    refused_apoderado_not_configured: No hi ha cap apoderat configurat. Configura
+      l'apoderat abans de consultar-ne l'estat.
+    refused_apoderado_unknown_scope: L'àmbit d'apoderament indicat no és al catàleg
+      disponible.
+    refused_application_live_input: La sol·licitud de lectura en viu a l'AEAT no es
+      pot executar amb les dades indicades.
+    refused_application_registry_input: La sol·licitud al registre de models no es
+      pot executar amb les dades indicades.
+    refused_calculations_casilla_constraint: Un valor de casella calculat queda fora
+      dels límits declarats per a aquesta casella. Revisa les dades d'entrada del
+      càlcul.
+    refused_cli_boundary: L'ordre ha rebutjat la sol·licitud.
+    refused_cli_log_level_resolution: Les opcions de nivell de registre indicades
+      són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
+    refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
+      estàndard està redirigida. Executa-la en una terminal interactiva.
     refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
       Executa `aeat config repair` o restableix l'estat del perfil.
-    refused_config_reset_unconfirmed: errors.refused.refused_config_reset_unconfirmed
-    refused_evidence_bundle_not_found: errors.refused.refused_evidence_bundle_not_found
-    refused_evidence_bundle_verification: errors.refused.refused_evidence_bundle_verification
-    refused_filing_calculate: errors.refused.refused_filing_calculate
-    refused_financial_aggregation_category_coverage: errors.refused.refused_financial_aggregation_category_coverage
-    refused_financial_aggregation_missing_classification: errors.refused.refused_financial_aggregation_missing_classification
-    refused_financial_aggregation_unsupported_modelo: errors.refused.refused_financial_aggregation_unsupported_modelo
-    refused_financial_ledger_no_active_bucket: errors.refused.refused_financial_ledger_no_active_bucket
-    refused_financial_ledger_transaction_id_prefix: errors.refused.refused_financial_ledger_transaction_id_prefix
-    refused_financial_provider_invalid_source: errors.refused.refused_financial_provider_invalid_source
-    refused_financial_provider_unsupported_source: errors.refused.refused_financial_provider_unsupported_source
-    refused_financial_provider_validation: errors.refused.refused_financial_provider_validation
-    refused_financial_usage_ratios_census_mismatch: errors.refused.refused_financial_usage_ratios_census_mismatch
-    refused_google_profile_unbound: errors.refused.refused_google_profile_unbound
-    refused_google_unsecured_mode: errors.refused.refused_google_unsecured_mode
-    refused_google_validation: errors.refused.refused_google_validation
-    refused_inventory_actividad_conflict: errors.refused.refused_inventory_actividad_conflict
-    refused_inventory_actividad_not_found: errors.refused.refused_inventory_actividad_not_found
-    refused_inventory_service_input: errors.refused.refused_inventory_service_input
-    refused_ledger_business_operation_invoice_input: errors.refused.refused_ledger_business_operation_invoice_input
-    refused_ledger_business_operation_invoice_not_found: errors.refused.refused_ledger_business_operation_invoice_not_found
-    refused_ledger_evidence_input: errors.refused.refused_ledger_evidence_input
-    refused_ledger_evidence_not_found: errors.refused.refused_ledger_evidence_not_found
-    refused_live_borrador_snapshot_not_found: errors.refused.refused_live_borrador_snapshot_not_found
-    refused_live_censo_snapshot_not_found: errors.refused.refused_live_censo_snapshot_not_found
-    refused_live_expedientes_snapshot_not_found: errors.refused.refused_live_expedientes_snapshot_not_found
-    refused_live_notifications_snapshot_not_found: errors.refused.refused_live_notifications_snapshot_not_found
-    refused_live_portal_not_found: errors.refused.refused_live_portal_not_found
-    refused_live_verify_observation_not_found: errors.refused.refused_live_verify_observation_not_found
-    refused_llm_config: errors.refused.refused_llm_config
-    refused_llm_validation: errors.refused.refused_llm_validation
-    refused_modelo_100_borrador_binding: errors.refused.refused_modelo_100_borrador_binding
-    refused_modelo_amendment_override_casilla: errors.refused.refused_modelo_amendment_override_casilla
-    refused_modelo_amendment_verification: errors.refused.refused_modelo_amendment_verification
-    refused_modelo_workflow_gate: errors.refused.refused_modelo_workflow_gate
-    refused_no_active_profile: errors.refused.refused_no_active_profile
-    refused_operator_surface_contract: errors.refused.refused_operator_surface_contract
-    refused_outbound_storage_conflict: errors.refused.refused_outbound_storage_conflict
-    refused_outbound_storage_quota: errors.refused.refused_outbound_storage_quota
-    refused_outbound_storage_validation: errors.refused.refused_outbound_storage_validation
-    refused_output_format: errors.refused.refused_output_format
-    refused_profile_already_exists: errors.refused.refused_profile_already_exists
-    refused_profile_asset_validation: errors.refused.refused_profile_asset_validation
-    refused_profile_basis_cap_exceeded: errors.refused.refused_profile_basis_cap_exceeded
-    refused_profile_foral_regime: errors.refused.refused_profile_foral_regime
-    refused_profile_inventory_validation: errors.refused.refused_profile_inventory_validation
-    refused_profile_lifo_forbidden: errors.refused.refused_profile_lifo_forbidden
-    refused_profile_not_configured: errors.refused.refused_profile_not_configured
-    refused_profile_not_found: errors.refused.refused_profile_not_found
-    refused_profile_preflight_missing: errors.refused.refused_profile_preflight_missing
-    refused_profile_schema_validation: errors.refused.refused_profile_schema_validation
-    refused_review_edit_parse: errors.refused.refused_review_edit_parse
-    refused_review_filter_parse: errors.refused.refused_review_filter_parse
-    refused_review_kind_reserved: errors.refused.refused_review_kind_reserved
-    refused_sanitization_already_sanitized: errors.refused.refused_sanitization_already_sanitized
-    refused_sanitization_signature_present: errors.refused.refused_sanitization_signature_present
-    refused_sanitization_unknown_surface: errors.refused.refused_sanitization_unknown_surface
-    refused_sanitization_validation: errors.refused.refused_sanitization_validation
-    refused_storage_bucket_already_present: errors.refused.refused_storage_bucket_already_present
-    refused_storage_bucket_no_active: errors.refused.refused_storage_bucket_no_active
-    refused_storage_master_key_no_active_session: errors.refused.refused_storage_master_key_no_active_session
-    refused_storage_passphrase_too_short: errors.refused.refused_storage_passphrase_too_short
-    refused_storage_secret_already_exists: errors.refused.refused_storage_secret_already_exists
-    refused_storage_session_expired: errors.refused.refused_storage_session_expired
-    refused_storage_unsecured_mode: errors.refused.refused_storage_unsecured_mode
-    refused_topic_not_found: errors.refused.refused_topic_not_found
-    refused_user_profile_validation: errors.refused.refused_user_profile_validation
-    refused_wizard_missing_flag: errors.refused.refused_wizard_missing_flag
-    refused_wizard_status: errors.refused.refused_wizard_status
-    refused_wizard_unsupported_console: errors.refused.refused_wizard_unsupported_console
-    refused_wizard_validation: errors.refused.refused_wizard_validation
-    refused_workflow_aborted: errors.refused.refused_workflow_aborted
-    refused_workflow_resume: errors.refused.refused_workflow_resume
-    unsupported_currency: errors.refused.unsupported_currency
+    refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
+      Torna a executar l'ordre confirmant l'operació.
+    refused_evidence_bundle_not_found: No existeix cap paquet d'evidències amb l'identificador
+      indicat.
+    refused_evidence_bundle_verification: La verificació del paquet d'evidències ha
+      fallat i l'operació no s'ha forçat.
+    refused_filing_calculate: El càlcul o resum de la declaració no ha superat les
+      seves invariants.
+    refused_financial_aggregation_category_coverage: Una transacció no té cobertura
+      de categoria o de perfil. Classifica la transacció abans d'agregar.
+    refused_financial_aggregation_missing_classification: Encara hi ha transaccions
+      del període sense classificar. Classifica-les totes abans d'agregar.
+    refused_financial_aggregation_unsupported_modelo: No hi ha cap contracte d'agregació
+      disponible per al model sol·licitat.
+    refused_financial_ledger_no_active_bucket: L'operació del llibre necessita un
+      perfil actiu. Crea o selecciona un perfil i torna-ho a provar.
+    refused_financial_ledger_transaction_id_prefix: El prefix d'identificador de transacció
+      no coincideix amb cap transacció o coincideix amb diverses. Indica un prefix
+      més llarg.
+    refused_financial_provider_invalid_source: El document d'origen no es pot llegir
+      o la seva estructura no és vàlida.
+    refused_financial_provider_unsupported_source: Cap proveïdor pot interpretar aquest
+      document d'origen.
+    refused_financial_provider_validation: Un camp del document financer (data o import)
+      no ha superat la validació.
+    refused_financial_usage_ratios_census_mismatch: Un percentatge d'ús d'oficina
+      a casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
+      amb el valor del cens.
+    refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
+      un perfil o fes servir --profile.
+    refused_google_unsecured_mode: No es pot autoritzar Google en mode d'emmagatzematge
+      no xifrat amb un perfil que porta un NIF real.
+    refused_google_validation: Els paràmetres de Google indicats no han superat la
+      validació.
+    refused_inventory_actividad_conflict: Ja existeix un inventari per a aquesta activitat
+      i aquest any.
+    refused_inventory_actividad_not_found: No existeix cap inventari per a l'activitat
+      i l'any indicats.
+    refused_inventory_service_input: Una dada indicada infringeix el contracte de
+      l'inventari. Corregeix l'entrada i torna-ho a provar.
+    refused_ledger_business_operation_invoice_input: Una dada indicada infringeix
+      el contracte de la factura d'operació. Corregeix l'entrada i torna-ho a provar.
+    refused_ledger_business_operation_invoice_not_found: No existeix cap factura d'operació
+      amb l'identificador indicat.
+    refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
+      de la factura de compra. Corregeix l'entrada i torna-ho a provar.
+    refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
+      amb l'identificador indicat.
+    refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
+      del Model 100 amb l'identificador indicat.
+    refused_live_censo_snapshot_not_found: No existeix cap instantània del cens del
+      Model 036 amb l'identificador indicat.
+    refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients
+      amb l'identificador indicat.
+    refused_live_notifications_snapshot_not_found: No existeix cap instantània de
+      notificacions amb l'identificador indicat.
+    refused_live_portal_not_found: No existeix cap portal de l'AEAT amb l'identificador
+      indicat.
+    refused_live_verify_observation_not_found: No existeix cap observació de verificació
+      amb l'identificador indicat.
+    refused_llm_config: La configuració del client de model de llenguatge no és vàlida
+      o està incompleta.
+    refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
+    refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
+      es poden fer servir per al càlcul.
+    refused_modelo_amendment_override_casilla: Una sobreescriptura de la declaració
+      complementària apunta a una casella que el registre no declara per a aquest
+      model, any i període.
+    refused_modelo_amendment_verification: El mapa de caselles corregit de la declaració
+      complementària no ha superat la verificació. Falten caselles obligatòries.
+    refused_modelo_workflow_gate: El control del flux de treball ha rebutjat la transició
+      de la declaració. La declaració no es pot considerar presentada legalment.
+    refused_no_active_profile: Aquesta operació necessita un perfil actiu. Crea o
+      selecciona un perfil i torna-ho a provar.
+    refused_operator_surface_contract: La superfície sol·licitada queda fora del contracte
+      acceptat.
+    refused_outbound_storage_conflict: L'operació d'emmagatzematge col·lisiona amb
+      un objecte que ja existeix.
+    refused_outbound_storage_quota: L'emmagatzematge ha rebutjat l'operació perquè
+      s'ha esgotat la quota.
+    refused_outbound_storage_validation: Els paràmetres de l'operació d'emmagatzematge
+      no han superat la validació.
+    refused_output_format: El format de sortida sol·licitat no és compatible.
+    refused_profile_already_exists: Ja existeix un perfil amb aquestes dades.
+    refused_profile_asset_validation: Un registre d'actiu del perfil no ha superat
+      la validació.
+    refused_profile_basis_cap_exceeded: L'amortització acumulada superaria la base
+      de cost de l'actiu.
+    refused_profile_foral_regime: El règim foral seleccionat no està modelat per aquest
+      perfil. Selecciona un règim admès.
+    refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
+      la validació.
+    refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
+      està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
+    refused_profile_not_configured: La verificació de la declaració de la Renda necessita
+      un perfil de residència fiscal. Completa el perfil abans de continuar.
+    refused_profile_not_found: No existeix cap perfil amb l'identificador indicat.
+    refused_profile_preflight_missing: La comprovació prèvia del model no ha trobat
+      una dada de perfil obligatòria. Completa el perfil abans de continuar.
+    refused_profile_schema_validation: Les dades del perfil infringeixen el contracte
+      de l'esquema. Corregeix els valors indicats.
+    refused_review_edit_parse: No s'ha pogut interpretar `--set CLAU=VALOR`. Comprova
+      la sintaxi del valor indicat.
+    refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
+      Comprova la sintaxi del filtre indicat.
+    refused_review_kind_reserved: El valor de `--kind` indicat està reservat i no
+      es pot fer servir.
+    refused_sanitization_already_sanitized: El document d'origen ja ha estat sanejat
+      anteriorment.
+    refused_sanitization_signature_present: El PDF d'origen porta una signatura digital.
+      Modificar-lo invalidaria la signatura; cal una revisió humana.
+    refused_sanitization_unknown_surface: S'ha detectat una superfície amb dades personals
+      que el sanejador no sap tractar. Cal una revisió humana.
+    refused_sanitization_validation: Els paràmetres del sanejador no han superat la
+      validació.
+    refused_storage_bucket_already_present: La importació col·lisiona amb un bucket
+      d'emmagatzematge que ja existeix.
+    refused_storage_bucket_no_active: No s'ha pogut determinar cap bucket actiu. Selecciona
+      un perfil i torna-ho a provar.
+    refused_storage_master_key_no_active_session: El xifratge requereix una sessió
+      activa. Executa `aeat config unlock` i torna-ho a provar.
+    refused_storage_passphrase_too_short: La frase de contrasenya és massa curta.
+      Ha de tenir com a mínim 8 caràcters.
+    refused_storage_secret_already_exists: Ja existeix un secret amb aquesta clau.
+      Fes servir l'opció de sobreescriptura si el vols reemplaçar.
+    refused_storage_session_expired: La sessió activa ha caducat per inactivitat.
+      Torna a activar-la amb `aeat config profile switch NOM`.
+    refused_storage_unsecured_mode: L'emmagatzematge sense xifrar s'ha sol·licitat
+      sense l'habilitació necessària. No és segur per a dades reals.
+    refused_topic_not_found: No s'ha trobat el tema sol·licitat.
+    refused_user_profile_validation: Un valor del perfil d'usuari no és vàlid. Corregeix
+      la dada indicada.
+    refused_wizard_missing_flag: L'execució amb --quiet ha omès una pregunta obligatòria.
+      Aporta el valor que falta o executa l'assistent de manera interactiva.
+    refused_wizard_status: L'assistent no ha pogut resoldre el perfil actiu.
+    refused_wizard_unsupported_console: El terminal actual no admet l'assistent interactiu.
+      Executa'l en una terminal compatible.
+    refused_wizard_validation: Una resposta de l'assistent no ha superat la validació.
+      Corregeix el valor indicat.
+    refused_workflow_aborted: El flux de treball s'ha cancel·lat.
+    refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
+    unsupported_currency: El codi de moneda indicat no és compatible.
   transaction:
     import_source_invalid: l'origen no és un extracte bancari vàlid
     ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'

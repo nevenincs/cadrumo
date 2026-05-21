@@ -1833,7 +1833,11 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProvider:
         return detected
     if provider_id in {"pdf", "pdf-n26"}:
         return PdfN26Provider()
-    raise TransactionValidationError(f"unknown ledger provider: {provider}")
+    known = "auto, csv, ofx, qfx, xlsx, excel, n26, pdf, pdf-n26"
+    raise TransactionValidationError(
+        translated_message="errors.transaction.unknown_ledger_provider",
+        context={"provider": provider, "providers": known},
+    )
 
 
 def _validate_import_source(provider: FinancialProvider, path: Path) -> ProviderValidation:

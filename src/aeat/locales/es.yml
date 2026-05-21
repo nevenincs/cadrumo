@@ -2262,112 +2262,216 @@ errors:
     locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
       dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
   refused:
-    auth_configure_no_active_bucket: errors.refused.auth_configure_no_active_bucket
-    auth_profile_identity_mismatch: errors.refused.auth_profile_identity_mismatch
-    bootstrap_already_complete: errors.refused.bootstrap_already_complete
-    census_apply_conflict: errors.refused.census_apply_conflict
-    census_field_validation: errors.refused.census_field_validation
-    census_not_available: errors.refused.census_not_available
-    ledger_preflight: errors.refused.ledger_preflight
-    modelo_036_prior_alta_required: errors.refused.modelo_036_prior_alta_required
-    modelo_036_terminal_state: errors.refused.modelo_036_terminal_state
-    modelo_census_stale: errors.refused.modelo_census_stale
-    modelo_export_cross_bucket: errors.refused.modelo_export_cross_bucket
-    modelo_export_no_active_bucket: errors.refused.modelo_export_no_active_bucket
-    profile_already_registered: errors.refused.profile_already_registered
-    profile_import_collision: errors.refused.profile_import_collision
-    profile_locked: errors.refused.profile_locked
-    profile_name_collision: errors.refused.profile_name_collision
-    reconciliation_cross_bucket: errors.refused.reconciliation_cross_bucket
-    reconciliation_declaration_source_unsupported: errors.refused.reconciliation_declaration_source_unsupported
-    reconciliation_drift: errors.refused.reconciliation_drift
-    reconciliation_evidence_invalid: errors.refused.reconciliation_evidence_invalid
-    refused_access_gate_live_read_not_enabled: errors.refused.refused_access_gate_live_read_not_enabled
-    refused_apoderado_live_check_unavailable: errors.refused.refused_apoderado_live_check_unavailable
-    refused_apoderado_not_configured: errors.refused.refused_apoderado_not_configured
-    refused_apoderado_unknown_scope: errors.refused.refused_apoderado_unknown_scope
-    refused_application_live_input: errors.refused.refused_application_live_input
-    refused_application_registry_input: errors.refused.refused_application_registry_input
-    refused_calculations_casilla_constraint: errors.refused.refused_calculations_casilla_constraint
-    refused_cli_boundary: errors.refused.refused_cli_boundary
-    refused_cli_log_level_resolution: errors.refused.refused_cli_log_level_resolution
-    refused_cli_non_tty: errors.refused.refused_cli_non_tty
+    auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
+      perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve
+      a intentarlo.
+    auth_profile_identity_mismatch: La identidad del perfil activo no puede ser titular
+      de la sesión de autenticación solicitada.
+    bootstrap_already_complete: Ya existe un perfil; la configuración inicial solo
+      se ejecuta una vez. Usa `aeat config profile switch NOMBRE` para cambiar de
+      perfil.
+    census_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
+      sobre una unidad dependiente. Resuelve primero el estado pendiente.
+    census_field_validation: El censo de la AEAT devolvió un valor que el esquema
+      no admite. Revisa el campo indicado con tu asesor.
+    census_not_available: La AEAT no devolvió ningún censo legible. Es posible que
+      no estés dado de alta en el IAE o que tu certificado no esté registrado a tu
+      NIF.
+    ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
+      porque aún no se puede presentar.
+    modelo_036_prior_alta_required: No se puede solicitar una modificación o baja
+      del Modelo 036 sin un alta previa.
+    modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
+      no admite más operaciones.
+    modelo_census_stale: 'La operación se rechaza porque aplicaste un censo nuevo
+      después de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve
+      a generarlo con el censo actual.'
+    modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
+      del perfil activo. La exportación solo opera dentro del bucket del perfil activo.
+    modelo_export_no_active_bucket: La exportación necesita un perfil activo. Crea
+      o selecciona un perfil y vuelve a intentarlo.
+    profile_already_registered: Ya existe un perfil con ese nombre. Usa `aeat config
+      profile switch NOMBRE` para cambiar a él.
+    profile_import_collision: El identificador del perfil importado coincide con uno
+      que ya existe.
+    profile_locked: Esta operación requiere un perfil desbloqueado. Ejecuta `aeat
+      config unlock` y vuelve a intentarlo.
+    profile_name_collision: El nombre de perfil indicado ya está en uso. Elige un
+      nombre distinto.
+    reconciliation_cross_bucket: La unidad de trabajo apuntada pertenece a un bucket
+      distinto del perfil activo. La conciliación solo opera dentro del bucket del
+      perfil activo.
+    reconciliation_declaration_source_unsupported: La conciliación a partir de una
+      declaración todavía no está disponible.
+    reconciliation_drift: La conciliación detectó una discrepancia aritmética o de
+      identidad entre declaraciones. Revisa los importes antes de continuar.
+    reconciliation_evidence_invalid: La evidencia externa aportada no se pudo interpretar.
+      Comprueba el archivo del justificante.
+    refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
+      está desactivado. Esta operación no puede contactar con la AEAT en la configuración
+      actual.
+    refused_apoderado_live_check_unavailable: La comprobación en vivo de apoderamientos
+      no está disponible o falló el contacto con la AEAT.
+    refused_apoderado_not_configured: No hay ningún apoderado configurado. Configura
+      el apoderado antes de consultar su estado.
+    refused_apoderado_unknown_scope: El ámbito de apoderamiento indicado no está en
+      el catálogo disponible.
+    refused_application_live_input: La solicitud de lectura en vivo a la AEAT no se
+      puede ejecutar con los datos indicados.
+    refused_application_registry_input: La solicitud al registro de modelos no se
+      puede ejecutar con los datos indicados.
+    refused_calculations_casilla_constraint: Un valor de casilla calculado queda fuera
+      de los límites declarados para esa casilla. Revisa los datos de entrada del
+      cálculo.
+    refused_cli_boundary: El comando rechazó la solicitud.
+    refused_cli_log_level_resolution: Las opciones de nivel de registro indicadas
+      son contradictorias. Usa solo una de --quiet, --verbose o --debug.
+    refused_cli_non_tty: Este comando necesita una entrada interactiva, pero la entrada
+      estándar está redirigida. Ejecútalo en una terminal interactiva.
     refused_cli_validation_boundary: La entrada del comando no superó la validación.
       Ejecuta `aeat config repair` o restablece el estado del perfil.
-    refused_config_reset_unconfirmed: errors.refused.refused_config_reset_unconfirmed
-    refused_evidence_bundle_not_found: errors.refused.refused_evidence_bundle_not_found
-    refused_evidence_bundle_verification: errors.refused.refused_evidence_bundle_verification
-    refused_filing_calculate: errors.refused.refused_filing_calculate
-    refused_financial_aggregation_category_coverage: errors.refused.refused_financial_aggregation_category_coverage
-    refused_financial_aggregation_missing_classification: errors.refused.refused_financial_aggregation_missing_classification
-    refused_financial_aggregation_unsupported_modelo: errors.refused.refused_financial_aggregation_unsupported_modelo
-    refused_financial_ledger_no_active_bucket: errors.refused.refused_financial_ledger_no_active_bucket
-    refused_financial_ledger_transaction_id_prefix: errors.refused.refused_financial_ledger_transaction_id_prefix
-    refused_financial_provider_invalid_source: errors.refused.refused_financial_provider_invalid_source
-    refused_financial_provider_unsupported_source: errors.refused.refused_financial_provider_unsupported_source
-    refused_financial_provider_validation: errors.refused.refused_financial_provider_validation
-    refused_financial_usage_ratios_census_mismatch: errors.refused.refused_financial_usage_ratios_census_mismatch
-    refused_google_profile_unbound: errors.refused.refused_google_profile_unbound
-    refused_google_unsecured_mode: errors.refused.refused_google_unsecured_mode
-    refused_google_validation: errors.refused.refused_google_validation
-    refused_inventory_actividad_conflict: errors.refused.refused_inventory_actividad_conflict
-    refused_inventory_actividad_not_found: errors.refused.refused_inventory_actividad_not_found
-    refused_inventory_service_input: errors.refused.refused_inventory_service_input
-    refused_ledger_business_operation_invoice_input: errors.refused.refused_ledger_business_operation_invoice_input
-    refused_ledger_business_operation_invoice_not_found: errors.refused.refused_ledger_business_operation_invoice_not_found
-    refused_ledger_evidence_input: errors.refused.refused_ledger_evidence_input
-    refused_ledger_evidence_not_found: errors.refused.refused_ledger_evidence_not_found
-    refused_live_borrador_snapshot_not_found: errors.refused.refused_live_borrador_snapshot_not_found
-    refused_live_censo_snapshot_not_found: errors.refused.refused_live_censo_snapshot_not_found
-    refused_live_expedientes_snapshot_not_found: errors.refused.refused_live_expedientes_snapshot_not_found
-    refused_live_notifications_snapshot_not_found: errors.refused.refused_live_notifications_snapshot_not_found
-    refused_live_portal_not_found: errors.refused.refused_live_portal_not_found
-    refused_live_verify_observation_not_found: errors.refused.refused_live_verify_observation_not_found
-    refused_llm_config: errors.refused.refused_llm_config
-    refused_llm_validation: errors.refused.refused_llm_validation
-    refused_modelo_100_borrador_binding: errors.refused.refused_modelo_100_borrador_binding
-    refused_modelo_amendment_override_casilla: errors.refused.refused_modelo_amendment_override_casilla
-    refused_modelo_amendment_verification: errors.refused.refused_modelo_amendment_verification
-    refused_modelo_workflow_gate: errors.refused.refused_modelo_workflow_gate
-    refused_no_active_profile: errors.refused.refused_no_active_profile
-    refused_operator_surface_contract: errors.refused.refused_operator_surface_contract
-    refused_outbound_storage_conflict: errors.refused.refused_outbound_storage_conflict
-    refused_outbound_storage_quota: errors.refused.refused_outbound_storage_quota
-    refused_outbound_storage_validation: errors.refused.refused_outbound_storage_validation
-    refused_output_format: errors.refused.refused_output_format
-    refused_profile_already_exists: errors.refused.refused_profile_already_exists
-    refused_profile_asset_validation: errors.refused.refused_profile_asset_validation
-    refused_profile_basis_cap_exceeded: errors.refused.refused_profile_basis_cap_exceeded
-    refused_profile_foral_regime: errors.refused.refused_profile_foral_regime
-    refused_profile_inventory_validation: errors.refused.refused_profile_inventory_validation
-    refused_profile_lifo_forbidden: errors.refused.refused_profile_lifo_forbidden
-    refused_profile_not_configured: errors.refused.refused_profile_not_configured
-    refused_profile_not_found: errors.refused.refused_profile_not_found
-    refused_profile_preflight_missing: errors.refused.refused_profile_preflight_missing
-    refused_profile_schema_validation: errors.refused.refused_profile_schema_validation
-    refused_review_edit_parse: errors.refused.refused_review_edit_parse
-    refused_review_filter_parse: errors.refused.refused_review_filter_parse
-    refused_review_kind_reserved: errors.refused.refused_review_kind_reserved
-    refused_sanitization_already_sanitized: errors.refused.refused_sanitization_already_sanitized
-    refused_sanitization_signature_present: errors.refused.refused_sanitization_signature_present
-    refused_sanitization_unknown_surface: errors.refused.refused_sanitization_unknown_surface
-    refused_sanitization_validation: errors.refused.refused_sanitization_validation
-    refused_storage_bucket_already_present: errors.refused.refused_storage_bucket_already_present
-    refused_storage_bucket_no_active: errors.refused.refused_storage_bucket_no_active
-    refused_storage_master_key_no_active_session: errors.refused.refused_storage_master_key_no_active_session
-    refused_storage_passphrase_too_short: errors.refused.refused_storage_passphrase_too_short
-    refused_storage_secret_already_exists: errors.refused.refused_storage_secret_already_exists
-    refused_storage_session_expired: errors.refused.refused_storage_session_expired
-    refused_storage_unsecured_mode: errors.refused.refused_storage_unsecured_mode
-    refused_topic_not_found: errors.refused.refused_topic_not_found
-    refused_user_profile_validation: errors.refused.refused_user_profile_validation
-    refused_wizard_missing_flag: errors.refused.refused_wizard_missing_flag
-    refused_wizard_status: errors.refused.refused_wizard_status
-    refused_wizard_unsupported_console: errors.refused.refused_wizard_unsupported_console
-    refused_wizard_validation: errors.refused.refused_wizard_validation
-    refused_workflow_aborted: errors.refused.refused_workflow_aborted
-    refused_workflow_resume: errors.refused.refused_workflow_resume
-    unsupported_currency: errors.refused.unsupported_currency
+    refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
+      confirmó. Vuelve a ejecutar el comando confirmando la operación.
+    refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con
+      el identificador indicado.
+    refused_evidence_bundle_verification: La verificación del paquete de evidencias
+      falló y la operación no se forzó.
+    refused_filing_calculate: El cálculo o resumen de la declaración no superó sus
+      invariantes.
+    refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
+      de categoría o de perfil. Clasifica la transacción antes de agregar.
+    refused_financial_aggregation_missing_classification: Aún hay transacciones del
+      periodo sin clasificar. Clasifícalas todas antes de agregar.
+    refused_financial_aggregation_unsupported_modelo: No hay un contrato de agregación
+      disponible para el modelo solicitado.
+    refused_financial_ledger_no_active_bucket: La operación del libro necesita un
+      perfil activo. Crea o selecciona un perfil y vuelve a intentarlo.
+    refused_financial_ledger_transaction_id_prefix: El prefijo de identificador de
+      transacción no coincide con ninguna transacción o coincide con varias. Indica
+      un prefijo más largo.
+    refused_financial_provider_invalid_source: El documento de origen no se puede
+      leer o su estructura no es válida.
+    refused_financial_provider_unsupported_source: Ningún proveedor puede interpretar
+      este documento de origen.
+    refused_financial_provider_validation: Un campo del documento financiero (fecha
+      o importe) no superó la validación.
+    refused_financial_usage_ratios_census_mismatch: Un porcentaje de uso de oficina
+      en casa guardado no coincide con el censo, que es la fuente legal vinculante.
+      Alinéalo con el valor del censo.
+    refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona
+      un perfil o usa --profile.
+    refused_google_unsecured_mode: No se puede autorizar Google en modo de almacenamiento
+      no cifrado con un perfil que lleva un NIF real.
+    refused_google_validation: Los parámetros de Google indicados no superaron la
+      validación.
+    refused_inventory_actividad_conflict: Ya existe un inventario para esa actividad
+      y ese año.
+    refused_inventory_actividad_not_found: No existe ningún inventario para la actividad
+      y el año indicados.
+    refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
+      Corrige la entrada y vuelve a intentarlo.
+    refused_ledger_business_operation_invoice_input: Un dato indicado infringe el
+      contrato de la factura de operación. Corrige la entrada y vuelve a intentarlo.
+    refused_ledger_business_operation_invoice_not_found: No existe ninguna factura
+      de operación con el identificador indicado.
+    refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
+      de la factura de compra. Corrige la entrada y vuelve a intentarlo.
+    refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra
+      con el identificador indicado.
+    refused_live_borrador_snapshot_not_found: No existe ningún snapshot del borrador
+      de Modelo 100 con el identificador indicado.
+    refused_live_censo_snapshot_not_found: No existe ningún snapshot del censo de
+      Modelo 036 con el identificador indicado.
+    refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes
+      con el identificador indicado.
+    refused_live_notifications_snapshot_not_found: No existe ningún snapshot de notificaciones
+      con el identificador indicado.
+    refused_live_portal_not_found: No existe ningún portal de la AEAT con el identificador
+      indicado.
+    refused_live_verify_observation_not_found: No existe ninguna observación de verificación
+      con el identificador indicado.
+    refused_llm_config: La configuración del cliente de modelo de lenguaje no es válida
+      o está incompleta.
+    refused_llm_validation: Un objeto del modelo de lenguaje no superó la validación.
+    refused_modelo_100_borrador_binding: Los valores del borrador de Modelo 100 no
+      se pueden usar para el cálculo.
+    refused_modelo_amendment_override_casilla: Una sobrescritura de la declaración
+      complementaria apunta a una casilla que el registro no declara para ese modelo,
+      año y periodo.
+    refused_modelo_amendment_verification: El mapa de casillas corregido de la declaración
+      complementaria no superó la verificación. Faltan casillas obligatorias.
+    refused_modelo_workflow_gate: El control del flujo de trabajo rechazó la transición
+      de la declaración. La declaración no puede considerarse presentada legalmente.
+    refused_no_active_profile: Esta operación necesita un perfil activo. Crea o selecciona
+      un perfil y vuelve a intentarlo.
+    refused_operator_surface_contract: La superficie solicitada queda fuera del contrato
+      aceptado.
+    refused_outbound_storage_conflict: La operación de almacenamiento colisiona con
+      un objeto que ya existe.
+    refused_outbound_storage_quota: El almacenamiento rechazó la operación porque
+      se ha agotado la cuota.
+    refused_outbound_storage_validation: Los parámetros de la operación de almacenamiento
+      no superaron la validación.
+    refused_output_format: El formato de salida solicitado no es compatible.
+    refused_profile_already_exists: Ya existe un perfil con esos datos.
+    refused_profile_asset_validation: Un registro de activo del perfil no superó la
+      validación.
+    refused_profile_basis_cap_exceeded: La amortización acumulada superaría la base
+      de coste del activo.
+    refused_profile_foral_regime: El régimen foral seleccionado no está modelado por
+      este perfil. Selecciona un régimen admitido.
+    refused_profile_inventory_validation: Un libro de inventario del perfil no superó
+      la validación.
+    refused_profile_lifo_forbidden: La valoración de existencias por el método LIFO
+      no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
+    refused_profile_not_configured: La verificación de la declaración de la Renta
+      necesita un perfil de residencia fiscal. Completa el perfil antes de continuar.
+    refused_profile_not_found: No existe ningún perfil con el identificador indicado.
+    refused_profile_preflight_missing: La comprobación previa del modelo no encontró
+      un dato de perfil obligatorio. Completa el perfil antes de continuar.
+    refused_profile_schema_validation: Los datos del perfil infringen el contrato
+      del esquema. Corrige los valores indicados.
+    refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
+      la sintaxis del valor indicado.
+    refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
+      la sintaxis del filtro indicado.
+    refused_review_kind_reserved: El valor de `--kind` indicado está reservado y no
+      se puede usar.
+    refused_sanitization_already_sanitized: El documento de origen ya ha sido saneado
+      anteriormente.
+    refused_sanitization_signature_present: El PDF de origen lleva una firma digital.
+      Modificarlo invalidaría la firma; requiere revisión humana.
+    refused_sanitization_unknown_surface: Se detectó una superficie con datos personales
+      que el saneador no sabe tratar. Requiere revisión humana.
+    refused_sanitization_validation: Los parámetros del saneador no superaron la validación.
+    refused_storage_bucket_already_present: La importación colisiona con un bucket
+      de almacenamiento que ya existe.
+    refused_storage_bucket_no_active: No se pudo determinar ningún bucket activo.
+      Selecciona un perfil y vuelve a intentarlo.
+    refused_storage_master_key_no_active_session: El cifrado requiere una sesión activa.
+      Ejecuta `aeat config unlock` y vuelve a intentarlo.
+    refused_storage_passphrase_too_short: La frase de contraseña es demasiado corta.
+      Debe tener al menos 8 caracteres.
+    refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
+      la opción de sobrescritura si quieres reemplazarlo.
+    refused_storage_session_expired: La sesión activa ha caducado por inactividad.
+      Vuelve a activarla con `aeat config profile switch NOMBRE`.
+    refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
+      habilitación necesaria. No es seguro para datos reales.
+    refused_topic_not_found: No se encontró el tema solicitado.
+    refused_user_profile_validation: Un valor del perfil de usuario no es válido.
+      Corrige el dato indicado.
+    refused_wizard_missing_flag: La ejecución con --quiet omitió una pregunta obligatoria.
+      Aporta el valor que falta o ejecuta el asistente de forma interactiva.
+    refused_wizard_status: El asistente no pudo resolver el perfil activo.
+    refused_wizard_unsupported_console: El terminal actual no admite el asistente
+      interactivo. Ejecútalo en una terminal compatible.
+    refused_wizard_validation: Una respuesta del asistente no superó la validación.
+      Corrige el valor indicado.
+    refused_workflow_aborted: El flujo de trabajo se canceló.
+    refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
+      reanudar.
+    unsupported_currency: El código de moneda indicado no es compatible.
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
     ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'

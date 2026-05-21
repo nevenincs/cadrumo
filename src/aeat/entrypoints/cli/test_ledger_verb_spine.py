@@ -27,6 +27,7 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "allocate",
         "archive",
         "attach",
+        "categories",
         "check",
         "classify",
         "export",
