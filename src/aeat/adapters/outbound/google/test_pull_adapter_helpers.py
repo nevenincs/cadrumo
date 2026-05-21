@@ -7,8 +7,10 @@ Guards behaviour of two load-bearing helpers:
     Decimal | str | bool | None contract callers expect.
   * ``_classify_metadata_match`` — decides whether a pulled workbook's
     developer-metadata pairs identify the same snapshot as the
-    caller supplied. The compute refusal path I added in
-    `compute_from_pull` depends entirely on this verdict.
+    caller supplied, including the registry-SHA gate that refuses a
+    workbook compiled against a drifted calculation surface. The
+    compute refusal path in ``compute_from_pull`` depends entirely on
+    this verdict.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....application.storage.calc_sheets._engine import _registry_sha
 from ....core.resources import resources
 from ._calc_sheets_pull import _classify_metadata_match, _coerce_decimal, _coerce_value
 
@@ -105,7 +108,9 @@ def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
         "aeat_filing_year": "2025",
         "aeat_period": "1T",
         "aeat_engine_version": "calc-sheets/0.1.0",
-        "aeat_registry_sha": "abc123",
+        # The registry-SHA stamp must match the live snapshot's
+        # calculation-surface hash, not just the modelo coordinates.
+        "aeat_registry_sha": _registry_sha(snapshot),
     }
     verdict, metadata = _classify_metadata_match(pairs, snapshot)
     assert verdict == "matches"
@@ -161,3 +166,37 @@ def test_classify_metadata_returns_stale_when_filing_year_is_garbage() -> None:
     verdict, metadata = _classify_metadata_match(pairs, snapshot)
     assert verdict == "stale"
     assert metadata.filing_year == 0
+
+
+def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
+    """A workbook compiled against a different registry slice is stale.
+
+    The pull module's docstring promises ``aeat_registry_sha`` is part
+    of the metadata gate: a workbook whose modelo / revision / year /
+    period all align but whose registry-SHA stamp diverges was compiled
+    against a different calculation surface — casilla numbering, formula
+    chains, and bracket tables may have shifted. ``_classify_metadata_match``
+    must classify it ``stale`` so ``compute_from_pull`` refuses the
+    merge. Google Sheets is an export mirror, never an authority for a
+    registry slice it no longer binds.
+
+    This is the malformed-sheet probe: before the registry-SHA gate was
+    enforced, this exact workbook classified ``matches`` and a stale
+    calculation surface flowed silently into the local recompute.
+    """
+
+    snapshot = _modelo_130_snapshot()
+    pairs = {
+        "aeat_modelo_id": "130",
+        "aeat_revision_id": "2019-y-siguientes",
+        "aeat_filing_year": "2025",
+        "aeat_period": "1T",
+        "aeat_engine_version": "calc-sheets/0.1.0",
+        # Every modelo coordinate aligns; only the registry-SHA stamp
+        # diverges from the live snapshot's calculation-surface hash.
+        "aeat_registry_sha": "deadbeefdeadbeef",
+    }
+    verdict, metadata = _classify_metadata_match(pairs, snapshot)
+    assert verdict == "stale"
+    assert metadata.registry_sha == "deadbeefdeadbeef"
+    assert metadata.registry_sha != _registry_sha(snapshot)

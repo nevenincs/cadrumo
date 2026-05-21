@@ -35,6 +35,7 @@ from typing import Any, Final, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....application.storage.calc_sheets import collect_row_sets
+from ....application.storage.calc_sheets._engine import _registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....domain.calculations.registry._formula_runtime import (
@@ -297,11 +298,19 @@ def _classify_metadata_match(
         registry_sha=pairs.get("aeat_registry_sha", ""),
         exported_at=pairs.get("aeat_exported_at"),
     )
+    # The registry-SHA gate the module docstring promises: a workbook
+    # whose `aeat_registry_sha` stamp diverges from the live snapshot's
+    # calculation-surface hash was compiled against a different registry
+    # slice (casilla numbering, formula chains, bracket tables may have
+    # shifted) even when modelo / revision / year / period still align.
+    # Such a workbook is `stale`, never `matches` — `compute_from_pull`
+    # refuses to merge it.
     matches = (
         metadata.modelo_id == snapshot.modelo.id
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
         and metadata.period == snapshot.period
+        and metadata.registry_sha == _registry_sha(snapshot)
     )
     return ("matches" if matches else "stale"), metadata
 
@@ -764,7 +773,7 @@ class PullCoverageDiscrepancy(BaseModel):
 
 def verify_pull_coverage(
     plan: SheetExportPlan,
-    pull: "PullResult",
+    pull: PullResult,
 ) -> tuple[PullCoverageDiscrepancy, ...]:
     """Return every coverage mismatch between ``plan`` and ``pull``.
 
