@@ -17,7 +17,6 @@ from ._bindings import (
 )
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
-from ._relations import _derive_offset_source_period
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
     CasillaDefinition,
@@ -33,7 +32,6 @@ from ._schema import (
     LegalReference,
     ModeloDefinition,
     ModeloRevision,
-    PeriodSelector,
     RegistryCatalogues,
     RelationDefinition,
     SourceCitation,
@@ -43,6 +41,11 @@ from ._sources import verify_source_catalogue
 from ._text import normalise_corpus_text
 from ._validate_application_links import validate_application_link_closure
 from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
+from ._validate_relation_sources import (
+    period_selectors_overlap,
+    validate_previous_filing_binding_closure,
+    validate_relation_closure,
+)
 from ._validate_revision_identity import (
     _collect_record_id_lists,
     _duplicates,
@@ -236,8 +239,8 @@ class RegistryValidator:
             failures.extend(self._validate_modelo(modelo, validate_catalogues=False))
 
         if len(modelos_by_id) == len(modelo_tuple):
-            failures.extend(self._validate_relation_closure(modelo_tuple, modelos_by_id))
-            failures.extend(self._validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
+            failures.extend(validate_relation_closure(modelo_tuple, modelos_by_id))
+            failures.extend(validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
 
         # Per-source selector-shape gate at registry-tree validation
         # level. Without this loop, callers that exercise
@@ -1165,7 +1168,7 @@ class RegistryValidator:
             previous_to = previous.valid_to
             if (
                 previous_to is None or previous_to >= current.valid_from
-            ) and RegistryValidator._period_selectors_overlap(previous.period_selector, current.period_selector):
+            ) and period_selectors_overlap(previous.period_selector, current.period_selector):
                 failures.append(
                     f"modelo {modelo.id}: revisions {previous.id!r} and {current.id!r} overlap on period selector"
                 )
@@ -1202,417 +1205,6 @@ class RegistryValidator:
                         "only 'informational' and 'manual' are permitted"
                     )
         return failures
-
-    @staticmethod
-    def _validate_relation_closure(
-        modelos: Iterable[ModeloDefinition],
-        modelos_by_id: Mapping[str, ModeloDefinition],
-    ) -> list[str]:
-        failures: list[str] = []
-        for modelo in modelos:
-            for revision in modelo.revisions.values():
-                prefix = f"modelo {modelo.id} revision {revision.id}"
-                for relation in revision.relations:
-                    failures.extend(
-                        RegistryValidator._validate_single_relation(
-                            relation,
-                            revision=revision,
-                            relation_scope=f"{prefix}: relation {relation.id!r}",
-                            modelos_by_id=modelos_by_id,
-                        )
-                    )
-        return failures
-
-    @staticmethod
-    def _validate_single_relation(
-        relation: RelationDefinition,
-        *,
-        revision: ModeloRevision,
-        relation_scope: str,
-        modelos_by_id: Mapping[str, ModeloDefinition],
-    ) -> list[str]:
-        failures: list[str] = []
-        source_modelo = modelos_by_id.get(relation.source_modelo)
-        if source_modelo is None:
-            failures.append(f"{relation_scope} references unknown source modelo {relation.source_modelo!r}")
-            return failures
-        source_periods, period_failures = RegistryValidator._relation_source_periods_for_validation(relation)
-        failures.extend(f"{relation_scope} {failure}" for failure in period_failures)
-        if not source_periods:
-            failures.append(f"{relation_scope} must declare source periods")
-        if not relation.target_periods:
-            failures.append(f"{relation_scope} must declare target periods")
-        aggregation = relation.aggregation or {"op": "copy"}
-        op = aggregation.get("op")
-        if op not in {"copy", "sum"}:
-            failures.append(f"{relation_scope} uses unsupported aggregation op {op!r}")
-        source_revisions, selector_failures = RegistryValidator._select_relation_source_revisions(
-            source_modelo,
-            relation.source_revision_selector,
-        )
-        failures.extend(f"{relation_scope} {failure}" for failure in selector_failures)
-        if not source_revisions:
-            failures.append(
-                f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
-                f"matches no source revisions in modelo {source_modelo.id}"
-            )
-            return failures
-        for source_revision in source_revisions:
-            failures.extend(
-                RegistryValidator._validate_relation_source_revision(
-                    relation,
-                    source_revision=source_revision,
-                    relation_scope=relation_scope,
-                )
-            )
-        failures.extend(
-            RegistryValidator._validate_source_year_coverage(
-                relation_scope,
-                target_selector=revision.period_selector,
-                source_revisions=source_revisions,
-                source_periods=source_periods,
-                filing_year_delta=RegistryValidator._relation_filing_year_delta(
-                    relation.source_revision_selector
-                ),
-                fixed_source_year=RegistryValidator._relation_fixed_source_year(
-                    relation.source_revision_selector
-                ),
-            )
-        )
-        return failures
-
-    @staticmethod
-    def _validate_relation_source_revision(
-        relation: RelationDefinition,
-        *,
-        source_revision: ModeloRevision,
-        relation_scope: str,
-    ) -> list[str]:
-        failures: list[str] = []
-        source_scope = f"{relation_scope} source revision {source_revision.id!r}"
-        source_values = RegistryValidator._revision_output_ids(source_revision)
-        if relation.source_output not in source_values:
-            failures.append(f"{source_scope} has no source output {relation.source_output!r}")
-        source_periods, period_failures = RegistryValidator._relation_source_periods_for_validation(relation)
-        failures.extend(f"{source_scope} {failure}" for failure in period_failures)
-        unknown_source_periods = sorted(
-            set(source_periods).difference(source_revision.period_selector.periods)
-        )
-        if unknown_source_periods:
-            failures.append(
-                f"{source_scope} does not support source periods {unknown_source_periods!r}"
-            )
-        return failures
-
-    @staticmethod
-    def _relation_source_periods_for_validation(relation: RelationDefinition) -> tuple[tuple[str, ...], list[str]]:
-        if relation.source_periods:
-            return relation.source_periods, []
-        if relation.source_period_offset_from_target is None:
-            return (), []
-        derived: list[str] = []
-        failures: list[str] = []
-        for target_period in relation.target_periods:
-            try:
-                source_period = _derive_offset_source_period(relation, target_period=target_period)
-            except RegistryValidationError as exc:
-                failures.append(str(exc))
-                continue
-            if source_period is not None:
-                derived.append(source_period)
-        return tuple(dict.fromkeys(derived)), failures
-
-    @staticmethod
-    def _validate_previous_filing_binding_closure(
-        modelos: Iterable[ModeloDefinition],
-        modelos_by_id: Mapping[str, ModeloDefinition],
-    ) -> list[str]:
-        failures: list[str] = []
-        for modelo in modelos:
-            for revision in modelo.revisions.values():
-                prefix = f"modelo {modelo.id} revision {revision.id}"
-                for binding in revision.bindings:
-                    if binding.source != "previous_filing":
-                        continue
-                    failures.extend(
-                        RegistryValidator._validate_previous_filing_binding(
-                            binding,
-                            binding_scope=f"{prefix}: binding {binding.id!r}",
-                            modelos_by_id=modelos_by_id,
-                        )
-                    )
-        return failures
-
-    @staticmethod
-    def _validate_previous_filing_binding(
-        binding: DataBindingDefinition,
-        *,
-        binding_scope: str,
-        modelos_by_id: Mapping[str, ModeloDefinition],
-    ) -> list[str]:
-        failures: list[str] = []
-        source_modelo_id = binding.selector.get("source_modelo")
-        if not isinstance(source_modelo_id, str):
-            failures.append(f"{binding_scope} must declare string selector source_modelo")
-            return failures
-        source_modelo = modelos_by_id.get(source_modelo_id)
-        if source_modelo is None:
-            failures.append(f"{binding_scope} references unknown source modelo {source_modelo_id!r}")
-            return failures
-
-        source_periods = RegistryValidator._binding_source_periods(binding)
-        matching_revisions = tuple(
-            source_revision
-            for source_revision in source_modelo.revisions.values()
-            if not source_periods
-            or set(source_periods).issubset(set(source_revision.period_selector.periods))
-        )
-        if not matching_revisions:
-            failures.append(
-                f"{binding_scope} matches no source revisions in modelo {source_modelo.id} "
-                f"for periods {source_periods!r}"
-            )
-            return failures
-
-        source_outputs = RegistryValidator._binding_source_outputs(binding)
-        if not source_outputs:
-            return failures
-
-        revision_outputs = set().union(
-            *(
-                RegistryValidator._revision_output_ids(source_revision)
-                for source_revision in matching_revisions
-            )
-        )
-        for source_output in source_outputs:
-            if source_output not in revision_outputs:
-                failures.append(
-                    f"{binding_scope} source output {source_output!r} is not defined by any "
-                    f"period-compatible {source_modelo.id} revision"
-                )
-        return failures
-
-    @staticmethod
-    def _binding_source_periods(binding: DataBindingDefinition) -> tuple[str, ...]:
-        source_periods = binding.selector.get("source_periods")
-        if isinstance(source_periods, tuple) and all(isinstance(period, str) for period in source_periods):
-            return source_periods
-        period = binding.selector.get("period")
-        if isinstance(period, str):
-            return (period,)
-        return ()
-
-    @staticmethod
-    def _binding_source_outputs(binding: DataBindingDefinition) -> tuple[str, ...]:
-        source_casillas = binding.selector.get("source_casillas")
-        if isinstance(source_casillas, tuple) and all(isinstance(casilla, str) for casilla in source_casillas):
-            return source_casillas
-        source_output = binding.selector.get("source_output")
-        if isinstance(source_output, str):
-            return (source_output,)
-        return ()
-
-    @staticmethod
-    def _revision_output_ids(revision: ModeloRevision) -> set[str]:
-        outputs = {casilla.id for casilla in revision.casillas}
-        outputs.update(binding.id for binding in revision.bindings)
-        outputs.update(output for binding in revision.algorithm_bindings for output in binding.outputs.values())
-        return outputs
-
-    @staticmethod
-    def _select_relation_source_revisions(
-        modelo: ModeloDefinition,
-        selector: Mapping[str, str | int],
-    ) -> tuple[tuple[ModeloRevision, ...], list[str]]:
-        failures = RegistryValidator._validate_relation_source_selector_keys(selector)
-        revision_id = selector.get("revision_id", selector.get("revision"))
-        year = selector.get("year")
-        year_from = selector.get("year_from")
-        year_to = selector.get("year_to")
-        selected = tuple(
-            revision
-            for revision in modelo.revisions.values()
-            if RegistryValidator._relation_source_revision_matches(
-                revision,
-                revision_id=revision_id if isinstance(revision_id, str) else None,
-                year=year if isinstance(year, int) else None,
-                year_from=year_from if isinstance(year_from, int) else None,
-                year_to=year_to if isinstance(year_to, int) else None,
-            )
-        )
-        return selected, failures
-
-    @staticmethod
-    def _validate_relation_source_selector_keys(selector: Mapping[str, str | int]) -> list[str]:
-        """Return every shape failure on the relation source-revision selector dict.
-
-        Concerns checked in one pass: unknown keys, type-shape on
-        revision_id / year / year_from / year_to / filing_year_delta,
-        and the year-vs-year_range exclusivity / order invariants.
-        """
-        allowed = {"revision", "revision_id", "year", "year_from", "year_to", "filing_year_delta"}
-        failures = [f"selector uses unknown key {key!r}" for key in sorted(set(selector).difference(allowed))]
-        revision_id = selector.get("revision_id", selector.get("revision"))
-        if revision_id is not None and not isinstance(revision_id, str):
-            failures.append("selector revision_id must be a string")
-        for key in ("year", "year_from", "year_to"):
-            value = selector.get(key)
-            if value is not None and not isinstance(value, int):
-                failures.append(f"selector {key} must be an integer")
-        delta = selector.get("filing_year_delta")
-        if delta is not None and not isinstance(delta, int):
-            failures.append("selector filing_year_delta must be an integer")
-        year = selector.get("year")
-        year_from = selector.get("year_from")
-        year_to = selector.get("year_to")
-        if year is not None and (year_from is not None or year_to is not None):
-            failures.append("selector must use year or year_from/year_to, not both")
-        if year_to is not None and year_from is None:
-            failures.append("selector year_to requires year_from")
-        if isinstance(year_from, int) and isinstance(year_to, int) and year_to < year_from:
-            failures.append("selector year_to must be on or after year_from")
-        return failures
-
-    @staticmethod
-    def _relation_source_revision_matches(
-        revision: ModeloRevision,
-        *,
-        revision_id: str | None,
-        year: int | None,
-        year_from: int | None,
-        year_to: int | None,
-    ) -> bool:
-        """Return True when ``revision`` satisfies every dimension of the relation source selector."""
-        if revision_id is not None and revision.id != revision_id:
-            return False
-        if year is not None and not revision.period_selector.includes_year(year):
-            return False
-        return year_from is None or RegistryValidator._revision_intersects_year_range(
-            revision,
-            year_from=year_from,
-            year_to=year_to,
-        )
-
-    @staticmethod
-    def _relation_filing_year_delta(selector: Mapping[str, str | int]) -> int:
-        if "year" in selector:
-            return 0
-        delta = selector.get("filing_year_delta", 0)
-        if isinstance(delta, int):
-            return delta
-        return 0
-
-    @staticmethod
-    def _relation_fixed_source_year(selector: Mapping[str, str | int]) -> int | None:
-        year = selector.get("year")
-        if isinstance(year, int):
-            return year
-        return None
-
-    @staticmethod
-    def _validate_source_year_coverage(
-        scope: str,
-        *,
-        target_selector: PeriodSelector,
-        source_revisions: Iterable[ModeloRevision],
-        source_periods: Iterable[str],
-        filing_year_delta: int,
-        fixed_source_year: int | None = None,
-    ) -> list[str]:
-        if fixed_source_year is None:
-            required_intervals = tuple(
-                (start + filing_year_delta, None if end is None else end + filing_year_delta)
-                for start, end in RegistryValidator._selector_year_intervals(target_selector)
-            )
-        else:
-            required_intervals = ((fixed_source_year, fixed_source_year),)
-        source_period_set = set(source_periods)
-        covered_intervals = tuple(
-            interval
-            for source_revision in source_revisions
-            if not source_period_set or source_period_set.issubset(set(source_revision.period_selector.periods))
-            for interval in RegistryValidator._selector_year_intervals(source_revision.period_selector)
-        )
-        failures: list[str] = []
-        for start, end in required_intervals:
-            if not RegistryValidator._interval_is_covered(start, end, covered_intervals):
-                if end is None:
-                    failures.append(f"{scope} lacks source revision year coverage from {start}")
-                elif start == end:
-                    failures.append(f"{scope} lacks source revision year coverage for {start}")
-                else:
-                    failures.append(f"{scope} lacks source revision year coverage for {start}-{end}")
-        return failures
-
-    @staticmethod
-    def _selector_year_intervals(selector: PeriodSelector) -> tuple[tuple[int, int | None], ...]:
-        if selector.years:
-            return tuple((year, year) for year in sorted(selector.years))
-        if selector.year_from is None:
-            return ()
-        return ((selector.year_from, selector.year_to),)
-
-    @staticmethod
-    def _interval_is_covered(
-        start: int,
-        end: int | None,
-        intervals: Iterable[tuple[int, int | None]],
-    ) -> bool:
-        remaining_start = start
-        for covered_start, covered_end in sorted(intervals, key=lambda item: item[0]):
-            if covered_start > remaining_start:
-                continue
-            if covered_end is None:
-                return True
-            if covered_end < remaining_start:
-                continue
-            remaining_start = covered_end + 1
-            if end is not None and remaining_start > end:
-                return True
-        return False if end is None else remaining_start > end
-
-    @staticmethod
-    def _revision_intersects_year_range(
-        revision: ModeloRevision,
-        *,
-        year_from: int,
-        year_to: int | None,
-    ) -> bool:
-        if revision.period_selector.years:
-            return any(
-                year >= year_from and (year_to is None or year <= year_to) for year in revision.period_selector.years
-            )
-        revision_from = revision.period_selector.year_from
-        if revision_from is None:
-            return False
-        revision_to = revision.period_selector.year_to
-        if revision_to is not None and revision_to < year_from:
-            return False
-        return not (year_to is not None and revision_from > year_to)
-
-    @staticmethod
-    def _period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
-        if not set(left.periods).intersection(right.periods):
-            return False
-        return RegistryValidator._year_selectors_overlap(left, right)
-
-    @staticmethod
-    def _year_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
-        if left.years and right.years:
-            return bool(set(left.years).intersection(right.years))
-        if left.years:
-            return any(right.includes_year(year) for year in left.years)
-        if right.years:
-            return any(left.includes_year(year) for year in right.years)
-        left_from = left.year_from
-        right_from = right.year_from
-        if left_from is None or right_from is None:
-            return False
-        left_to = left.year_to
-        right_to = right.year_to
-        if left_to is not None and left_to < right_from:
-            return False
-        return not (right_to is not None and right_to < left_from)
 
     @staticmethod
     def _validate_dated_values(scope: str, parameter_id: str, values: Iterable[DatedValue]) -> list[str]:
