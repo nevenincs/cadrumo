@@ -214,9 +214,9 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
         ManualLedgerTransactionCommand(
             bucket_id=bucket_id,
             booked_date=date(2026, 2, 10),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.INCOMING,
-            description="business sale without category",
+            amount=Decimal("-121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="business expense without category",
             business_classification=BusinessClassification.BUSINESS,
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("0.21"),
