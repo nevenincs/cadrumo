@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -28,14 +27,13 @@ from ._schema import (
     ModeloRevision,
     RegistryCatalogues,
     RelationDefinition,
-    SourceCitation,
     SourceReference,
 )
 from ._sources import verify_source_catalogue
-from ._text import normalise_corpus_text
 from ._validate_application_links import validate_application_link_closure
 from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
 from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
+from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import validate_dotted_callable, validate_extraction_profile_artefacts
 from ._validate_formulas import validate_formula_dag, validate_formula_expression
 from ._validate_relation_sources import (
@@ -83,17 +81,9 @@ _RegistryValidationCacheValue = tuple[
     Mapping[str, SourceReference],
     tuple[str, ...],
 ]
-_SourceTextCacheKey = tuple[str, str, int, int]
-_SourceTextCacheValue = tuple[Path, str]
 _CATALOGUE_FAILURE_CACHE: dict[_CatalogueCacheKey, _CatalogueCacheValue] = {}
 _MODELO_VALIDATION_CACHE: dict[_ModeloValidationCacheKey, _ModeloValidationCacheValue] = {}
 _REGISTRY_VALIDATION_CACHE: dict[_RegistryValidationCacheKey, _RegistryValidationCacheValue] = {}
-_NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, _SourceTextCacheValue] = {}
-
-
-@lru_cache(maxsize=4096)
-def _normalise_required_text(text: str) -> str:
-    return normalise_corpus_text(text)
 
 
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
@@ -111,39 +101,6 @@ def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     return is_layout_binding_selector(binding.selector)
 
 
-def _extract_pdf_text(path: Path) -> str:
-    stat = path.stat()
-    return _extract_pdf_text_cached(str(path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
-
-
-@lru_cache(maxsize=256)
-def _extract_pdf_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
-    del byte_count, modified_ns
-    try:
-        import pypdfium2 as pdfium
-    except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
-        raise OSError("pypdfium2 is required to validate manual PDF citations") from exc
-    try:
-        pdf = pdfium.PdfDocument(path)
-        pages: list[str] = []
-        try:
-            for index in range(len(pdf)):
-                page = pdf[index]
-                try:
-                    text_page = page.get_textpage()
-                    try:
-                        pages.append(text_page.get_text_range())
-                    finally:
-                        text_page.close()
-                finally:
-                    page.close()
-        finally:
-            pdf.close()
-        return "\n".join(pages)
-    except Exception as exc:
-        raise OSError(f"could not extract text from manual PDF {path}") from exc
-
-
 class RegistryValidator:
     """Validate legal/source closure and calculability for modelos."""
 
@@ -158,7 +115,11 @@ class RegistryValidator:
         self._sources = catalogues.sources
         self._source_root = source_root
         self._user_profile_schema = user_profile_schema
-        self._source_text_cache: dict[str, str] = {}
+        self._evidence = EvidenceValidator(
+            legal_refs=self._legal,
+            source_refs=self._sources,
+            source_root=self._source_root,
+        )
         self._catalogue_failures: tuple[str, ...] | None = None
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
@@ -531,9 +492,11 @@ class RegistryValidator:
             failures.extend(
                 self._missing_refs(prefix, f"formula {formula.id}", formula.source_refs, self._sources, "source")
             )
-            failures.extend(self._require_legal_authority_refs(prefix, f"formula {formula.id}", formula.legal_refs))
             failures.extend(
-                self._require_source_tier(
+                self._evidence.require_legal_authority_refs(prefix, f"formula {formula.id}", formula.legal_refs)
+            )
+            failures.extend(
+                self._evidence.require_source_tier(
                     prefix,
                     f"formula {formula.id}",
                     formula.source_refs,
@@ -541,7 +504,7 @@ class RegistryValidator:
                 )
             )
             failures.extend(
-                self._validate_source_citations(
+                self._evidence.validate_source_citations(
                     prefix,
                     f"formula {formula.id}",
                     formula.source_refs,
@@ -581,10 +544,10 @@ class RegistryValidator:
                 self._missing_refs(prefix, f"parameter {parameter.id}", parameter.source_refs, self._sources, "source")
             )
             failures.extend(
-                self._require_legal_authority_refs(prefix, f"parameter {parameter.id}", parameter.legal_refs)
+                self._evidence.require_legal_authority_refs(prefix, f"parameter {parameter.id}", parameter.legal_refs)
             )
             failures.extend(
-                self._require_source_tier(
+                self._evidence.require_source_tier(
                     prefix,
                     f"parameter {parameter.id}",
                     parameter.source_refs,
@@ -592,7 +555,7 @@ class RegistryValidator:
                 )
             )
             failures.extend(
-                self._validate_source_citations(
+                self._evidence.validate_source_citations(
                     prefix,
                     f"parameter {parameter.id}",
                     parameter.source_refs,
@@ -627,10 +590,12 @@ class RegistryValidator:
             failures.extend(
                 self._missing_refs(prefix, f"binding {binding.id}", binding.source_refs, self._sources, "source")
             )
-            failures.extend(self._require_legal_authority_refs(prefix, f"binding {binding.id}", binding.legal_refs))
+            failures.extend(
+                self._evidence.require_legal_authority_refs(prefix, f"binding {binding.id}", binding.legal_refs)
+            )
             if _is_layout_binding(binding):
                 failures.extend(
-                    self._require_source_tier(
+                    self._evidence.require_source_tier(
                         prefix,
                         f"binding {binding.id}",
                         binding.source_refs,
@@ -639,7 +604,7 @@ class RegistryValidator:
                 )
             else:
                 failures.extend(
-                    self._require_source_tier(
+                    self._evidence.require_source_tier(
                         prefix,
                         f"binding {binding.id}",
                         binding.source_refs,
@@ -647,7 +612,7 @@ class RegistryValidator:
                     )
                 )
                 failures.extend(
-                    self._validate_source_citations(
+                    self._evidence.validate_source_citations(
                         prefix,
                         f"binding {binding.id}",
                         binding.source_refs,
@@ -897,7 +862,7 @@ class RegistryValidator:
             owner = f"export {layout.id}"
             failures.extend(self._missing_refs(prefix, owner, layout.legal_refs, self._legal, "legal"))
             failures.extend(self._missing_refs(prefix, owner, layout.source_refs, self._sources, "source"))
-            failures.extend(self._require_source_tier(prefix, owner, layout.source_refs, "layout_authority"))
+            failures.extend(self._evidence.require_source_tier(prefix, owner, layout.source_refs, "layout_authority"))
             for record in layout.records:
                 self._validate_export_record(
                     failures,
@@ -1058,7 +1023,12 @@ class RegistryValidator:
             failures.extend(self._missing_refs(prefix, owner, cross_reference.legal_refs, self._legal, "legal"))
             failures.extend(self._missing_refs(prefix, owner, cross_reference.source_refs, self._sources, "source"))
             failures.extend(
-                self._require_source_tier(prefix, owner, cross_reference.source_refs, cross_reference.evidence_tier)
+                self._evidence.require_source_tier(
+                    prefix,
+                    owner,
+                    cross_reference.source_refs,
+                    cross_reference.evidence_tier,
+                )
             )
             if cross_reference.oracle_id is not None:
                 prior = oracle_bindings.get(cross_reference.oracle_id)
@@ -1164,87 +1134,3 @@ class RegistryValidator:
         ref_kind: str,
     ) -> list[str]:
         return [f"{scope}: {owner} references unknown {ref_kind} id {ref!r}" for ref in refs if ref not in catalogue]
-
-    def _require_legal_authority_refs(self, scope: str, owner: str, refs: Iterable[str]) -> list[str]:
-        failures: list[str] = []
-        for ref in refs:
-            legal = self._legal.get(ref)
-            if legal is not None and legal.evidence_tier != "legal_authority":
-                failures.append(f"{scope}: {owner} legal ref {ref!r} is not legal authority")
-        return failures
-
-    def _require_source_tier(
-        self,
-        scope: str,
-        owner: str,
-        refs: Iterable[str],
-        required_tier: str,
-    ) -> list[str]:
-        if any(
-            (source := self._sources.get(ref)) is not None and source.evidence_tier == required_tier for ref in refs
-        ):
-            return []
-        return [f"{scope}: {owner} requires {required_tier} source evidence"]
-
-    def _validate_source_citations(
-        self,
-        scope: str,
-        owner: str,
-        refs: Iterable[str],
-        citations: Iterable[SourceCitation],
-        required_tier: str,
-    ) -> list[str]:
-        failures: list[str] = []
-        refs_set = set(refs)
-        citations_tuple = tuple(citations)
-        if not citations_tuple:
-            return [f"{scope}: {owner} requires source citations"]
-        for citation in citations_tuple:
-            if citation.source_ref not in refs_set:
-                failures.append(
-                    f"{scope}: {owner} source citation {citation.source_ref!r} is not listed in source_refs"
-                )
-                continue
-            source = self._sources.get(citation.source_ref)
-            if source is None:
-                continue
-            if source.evidence_tier != required_tier:
-                failures.append(
-                    f"{scope}: {owner} source citation {citation.source_ref!r} is not {required_tier} evidence"
-                )
-                continue
-            if self._source_root is None:
-                continue
-            try:
-                source_text = self._source_text(source)
-            except OSError as exc:
-                failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
-                continue
-            for required in citation.required_text:
-                if _normalise_required_text(required) not in source_text:
-                    failures.append(
-                        f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}"
-                    )
-        return failures
-
-    def _source_text(self, source: SourceReference) -> str:
-        cached = self._source_text_cache.get(source.id)
-        if cached is not None:
-            return cached
-        if self._source_root is None:
-            return ""
-        source_path = self._source_root / source.corpus_path
-        stat = source_path.stat()
-        source_key = (source.kind, str(source_path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
-        global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
-        if global_cached is not None and global_cached[0] == source_path:
-            self._source_text_cache[source.id] = global_cached[1]
-            return global_cached[1]
-        if source.kind == "manual_pdf":
-            text = _extract_pdf_text(source_path)
-        else:
-            text = source_path.read_text(encoding="utf-8", errors="replace")
-        normalised = normalise_corpus_text(text)
-        _NORMALISED_SOURCE_TEXT_CACHE[source_key] = (source_path, normalised)
-        self._source_text_cache[source.id] = normalised
-        return normalised
