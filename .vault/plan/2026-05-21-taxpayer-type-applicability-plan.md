@@ -30,47 +30,41 @@ text before encoding.
 
 ## Wave `W01` - schema: the three-axis taxpayer model
 
-- [ ] `W01.S01` - add a typed `entity_type` to the profile schema:
-  natural person vs legal entity (S.L., S.A., cooperativa, ...) vs
-  attribution entity (comunidad de bienes, sociedad civil sin objeto
-  mercantil).
-- [ ] `W01.S02` - add the natural-person IRPF income-category set
-  (actividad económica, trabajo, capital inmobiliario, capital
-  mobiliario, ganancias patrimoniales, pensión) as typed facts.
-- [ ] `W01.S03` - model the tax-regime axis: IRPF estimación directa
-  normal / simplificada / objetiva; the IVA regime variants incl.
-  REAGP.
-- [ ] `W01.S04` - model the special-enrolment axis (SII / REDEME,
-  recargo de equivalencia, OSS/IOSS, ...).
-- [ ] `W01.S05` - rename `AutonomoProfile` to a name that is true for
-  every entity type; the wizard collects the three axes in plain
-  operator language.
-- [ ] `W01.S06` - roundtrip + anti-tautology tests for the new typed
-  profile facts.
+This wave lands the typed three-axis taxpayer model on the profile
+schema - entity type, tax regime, and special enrolments - replacing
+the autónomo-by-default assumption with explicit operator-declared
+facts collected by the wizard.
+
+- [x] `W01.S01` - Add a typed entity_type axis covering natural person, legal entity, and attribution entity to the profile schema; `src/aeat/domain/profile`.
+- [x] `W01.S02` - Add the natural-person IRPF income-category set as typed facts; `src/aeat/domain/profile`.
+- [x] `W01.S03` - Model the tax-regime axis for IRPF estimación directa normal, simplificada, objetiva, and the IVA regime variants including REAGP; `src/aeat/domain/profile`.
+- [x] `W01.S04` - Model the special-enrolment axis covering SII / REDEME, recargo de equivalencia, and OSS/IOSS; `src/aeat/domain/profile`.
+- [x] `W01.S05` - Rename AutonomoProfile to a name true for every entity type and collect the three axes in the wizard in plain operator language; `src/aeat/domain/profile`.
+- [x] `W01.S06` - Add roundtrip and anti-tautology tests for the new typed profile facts; `src/aeat/domain/profile`.
 
 ## Wave `W02` - derivation engine
 
-- [ ] `W02.S07` - rewrite the `overview` applicability engine to
-  derive each modelo's `applicable` verdict from the taxpayer model
-  via registry rules; remove the autónomo default.
-- [ ] `W02.S08` - derive the filing calendar, calculation selection,
-  and bracket/rate resolution from the taxpayer model.
-- [ ] `W02.S09` - an undeclared taxpayer model yields an explicit
-  `incomplete` applicability answer - never a confident wrong
-  obligation.
-- [ ] `W02.S10` - tests proving a landlord, a salaried-only taxpayer,
-  a pensioner, and a sociedad limitada each get the correct modelo
-  set (e.g. landlord: 100, not 130; S.L.: 200/202, not 100/130).
+This wave rewrites the overview applicability engine so every modelo
+verdict, the filing calendar, calculation selection, and bracket
+resolution derive from the taxpayer model rather than the autónomo
+default, with an undeclared model yielding an explicit incomplete
+answer instead of a confident wrong obligation.
+
+- [x] `W02.S07` - Rewrite the overview applicability engine to derive each modelo applicable verdict from the taxpayer model via registry rules and remove the autónomo default; `src/aeat/application/overview`.
+- [ ] `W02.S08` - Derive the filing calendar, calculation selection, and bracket/rate resolution from the taxpayer model; `src/aeat/application/overview`.
+- [x] `W02.S09` - Yield an explicit incomplete applicability answer for an undeclared taxpayer model rather than a confident wrong obligation; `src/aeat/application/overview`.
+- [x] `W02.S10` - Add tests proving a landlord, a salaried-only taxpayer, a pensioner, and a sociedad limitada each receive the correct modelo set; `src/aeat/application/overview`.
 
 ## Wave `W03` - registry rules and grounding
 
-- [ ] `W03.S11` - register per-entity / per-regime modelo
-  applicability rules, each carrying `legal_refs`.
-- [ ] `W03.S12` - register the missing Modelo 100 / 303 / 347
-  deadline windows (round-3 finding R1) and the corporate calendar
-  (Modelo 200/202), verified against BOE article text.
-- [ ] `W03.S13` - register the bracket/rate schedules per entity type
-  (IRPF tarifa vs IS rate schedule), with `legal_refs`.
+This wave registers the BOE-grounded registry data the derivation
+engine consumes - per-entity and per-regime modelo applicability
+rules, the missing deadline windows, and the bracket/rate schedules
+per entity type - each carrying its legal references.
+
+- [ ] `W03.S11` - Register per-entity and per-regime modelo applicability rules each carrying legal_refs; `src/aeat/domain/calculations/registry`.
+- [ ] `W03.S12` - Register the missing Modelo 100, 303, and 347 deadline windows and the corporate Modelo 200/202 calendar verified against BOE article text; `src/aeat/domain/calculations/registry`.
+- [ ] `W03.S13` - Register the bracket/rate schedules per entity type covering IRPF tarifa and IS rate schedule with legal_refs; `src/aeat/domain/calculations/registry`.
 
 ## Child ADRs (spawn before their dependent waves)
 
@@ -92,3 +86,4 @@ text before encoding.
   each closes with a `.vault/audit/` note.
 - Owner approval of this plan is required before W01 execution; the
   ADR is accepted, the plan is the next gate.
+</content>
