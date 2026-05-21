@@ -27,6 +27,7 @@ from ._schema import (
     SourceReference,
 )
 from ._sources import verify_source_catalogue
+from ._validate_algorithms import validate_algorithm_binding_section, validate_algorithm_provider_section
 from ._validate_application_links import validate_application_link_closure
 from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
 from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
@@ -363,8 +364,14 @@ class RegistryValidator:
             relation_by_id=relation_by_id,
         )
         self._validate_filing_schedule_section(failures, prefix=prefix, revision=revision)
-        self._validate_algorithm_provider_section(failures, prefix=prefix, revision=revision)
-        self._validate_algorithm_binding_section(
+        validate_algorithm_provider_section(
+            failures,
+            prefix=prefix,
+            revision=revision,
+            legal_refs=self._legal,
+            source_refs=self._sources,
+        )
+        validate_algorithm_binding_section(
             failures,
             prefix=prefix,
             revision=revision,
@@ -372,6 +379,8 @@ class RegistryValidator:
             casillas=casillas,
             resolvable_values=resolvable_values,
             parameters=parameters,
+            legal_refs=self._legal,
+            source_refs=self._sources,
         )
 
         validate_export_layout_section(
@@ -840,51 +849,6 @@ class RegistryValidator:
                 failures.extend(
                     self._missing_refs(prefix, condition_owner, condition.source_refs, self._sources, "source")
                 )
-
-    def _validate_algorithm_provider_section(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-    ) -> None:
-        for provider in revision.algorithm_providers:
-            owner = f"algorithm provider {provider.id}"
-            failures.extend(self._missing_refs(prefix, owner, provider.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(prefix, owner, provider.source_refs, self._sources, "source"))
-
-    def _validate_algorithm_binding_section(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-        providers: set[str],
-        casillas: set[str],
-        resolvable_values: set[str],
-        parameters: set[str],
-    ) -> None:
-        for alg_binding in revision.algorithm_bindings:
-            owner = f"algorithm binding {alg_binding.id}"
-            failures.extend(self._missing_refs(prefix, owner, alg_binding.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(prefix, owner, alg_binding.source_refs, self._sources, "source"))
-            if alg_binding.provider not in providers:
-                failures.append(f"{prefix}: {owner} references unknown provider {alg_binding.provider!r}")
-            if alg_binding.target not in casillas:
-                failures.append(f"{prefix}: {owner} targets unknown casilla {alg_binding.target!r}")
-            for input_name, input_value in alg_binding.inputs.items():
-                if input_value not in resolvable_values:
-                    failures.append(
-                        f"{prefix}: {owner} input {input_name!r} references unknown value {input_value!r}"
-                    )
-            for output_name, output_value in alg_binding.outputs.items():
-                if output_value not in casillas:
-                    failures.append(
-                        f"{prefix}: {owner} output {output_name!r} references unknown casilla {output_value!r}"
-                    )
-            for constant in alg_binding.constants:
-                if constant not in parameters:
-                    failures.append(f"{prefix}: {owner} references unknown constant {constant!r}")
 
     def _validate_extraction_profile_section(
         self,
