@@ -39,7 +39,13 @@ from ._catalogue import SETUP_FLOW
 from ._errors import WizardMissingFlagError
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
-from ._prompter import Prompter, QuestionaryPrompter, ScriptedPrompter
+from ._prompter import (
+    Prompter,
+    QuestionaryPrompter,
+    ScriptedPrompter,
+    WizardEditUnsupportedConsoleError,
+    WizardUnsupportedConsoleError,
+)
 from ._runner import run_flow
 
 
@@ -496,7 +502,33 @@ def _run_full_flow(
         answers = run_flow(flow, _scripted_from_canonical(flow, canonical))
     else:
         active = _prompter if _prompter is not None else QuestionaryPrompter()
-        answers = run_flow(flow, active, defaults=canonical)
+        try:
+            answers = run_flow(flow, active, defaults=canonical)
+        except WizardUnsupportedConsoleError as exc:
+            # The shared no-console message points at `profile create`,
+            # which is correct for `create` but reads as a destructive
+            # replacement when an operator hit it via `profile edit`.
+            # Re-raise an edit-specific hint that names the
+            # non-interactive `profile edit` patch form instead.
+            if mode == "edit":
+                raise WizardEditUnsupportedConsoleError(
+                    tr(
+                        "wizard.errors.unsupported_console_edit",
+                        default=(
+                            "The guided setup could not open an interactive "
+                            "prompt in this run.\nNothing has been saved yet.\n\n"
+                            "Edit this profile non-interactively by naming the "
+                            "field to change:\n"
+                            f"  aeat config profile edit {profile_name} "
+                            "--quiet --<field> VALUE\n\n"
+                            "Or re-run the guided edit from an interactive "
+                            "terminal session:\n"
+                            f"  aeat config profile edit {profile_name}"
+                        ),
+                        profile_name=profile_name,
+                    )
+                ) from exc
+            raise
 
     # `create` writes the full answer set. An interactive `edit`
     # re-walks every visible question, so the full answer set is the

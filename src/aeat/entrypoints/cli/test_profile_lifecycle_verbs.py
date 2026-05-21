@@ -481,6 +481,29 @@ def test_config_profile_edit_quiet_emits_updated_confirmation(cli_runner: CliRun
     assert "status\tupdated" in result.output
 
 
+def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(cli_runner: CliRunner) -> None:
+    """A non-interactive ``profile edit`` (no flags) refuses with an edit-specific hint.
+
+    The shared no-console message names ``profile create``, which reads
+    as a destructive replacement when reached via ``profile edit``. The
+    refusal must instead name the non-interactive ``profile edit``
+    patch form so the operator does not believe their profile will be
+    overwritten.
+    """
+
+    _seed("editme")
+
+    result = cli_runner.invoke(profile_app, ["edit", "editme"])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = result.output.replace("\n", " ")
+    # The recovery hint names the non-interactive `profile edit` form.
+    assert "profile edit editme --quiet" in flat
+    # It must NOT steer the operator to a destructive `profile create`.
+    assert "profile create" not in flat
+
+
 # --- Fix 3: degraded profile status exits non-zero ---
 
 
