@@ -183,6 +183,14 @@ requires_snapshot = true
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-347-2008-form"]
 
+[[revisions."2008-y-siguientes".application_links]]
+id = "modelo-347-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
 [[revisions."2008-y-siguientes".filing_schedules]]
 id = "modelo-347-anual"
 period_kind = "annual"
@@ -281,6 +289,22 @@ closes_on = 2027-02-28
 legal_refs = ["orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-347-2008-form"]
 
+[[revisions."2008-y-siguientes".extraction_profiles]]
+id = "modelo-347-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio\s+al\s+que\s+se\s+refiere\s+la\s+declaraci[oó]n'},
+    {casilla_id = "decl.tipo-declaracion", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Tipo\s+de\s+declaraci[oó]n'},
+]
+confidence = "strict"
+min_coverage = "1.0"
+failure_semantics = "fail_hard"
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
 [[revisions."2008-y-siguientes".constructs]]
 id = "modelo-347-informative"
 title = "Modelo 347 informative declaration of operaciones con terceras personas"
@@ -308,8 +332,10 @@ application_links = [
     "modelo-347-filing",
     "modelo-347-verification",
     "modelo-347-deadline",
+    "modelo-347-extractor",
 ]
 filing_schedules = ["modelo-347-anual"]
+extraction_profiles = ["modelo-347-declaracion-pdf"]
 deadline_windows = [
     "modelo-347-2018-0a",
     "modelo-347-2019-0a",
