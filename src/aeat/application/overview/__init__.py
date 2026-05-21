@@ -50,6 +50,7 @@ from ...domain.deadlines import (
     TaxpayerProfile,
     shift_deadline,
 )
+from ...domain.deadlines._errors import ScheduleComputationError
 from ...domain.deadlines._festivos import DeadlineValidationError
 from ._applicability import (
     ApplicabilityVerdict,
@@ -454,14 +455,16 @@ def build_overview_calendar(
             wants to share across queries. When ``None``, a default
             engine is constructed.
 
+    A year inside the range with no registered deadline windows is
+    treated as a "no data yet" state: that year contributes zero
+    entries and the calendar still succeeds for every year that does
+    have window data. This is the same graceful degradation
+    ``overview explain`` applies to a modelo/year pair with no
+    registered windows.
+
     Returns:
         A :class:`OverviewCalendar` with one entry per
         ``(modelo, period)`` whose filing window intersects the range.
-
-    Raises:
-        ValueError: When the engine cannot compute a year inside the
-            range. Re-raised verbatim from
-            :class:`aeat.domain.deadlines.ScheduleComputationError`.
     """
     if not taxpayer_model_is_declared(profile):
         # An undeclared taxpayer model yields an explicit
@@ -480,7 +483,18 @@ def build_overview_calendar(
     deadline_engine = engine if engine is not None else DeadlineEngine()
     schedules: list[Schedule] = []
     for year in calendar_range.covered_years():
-        schedules.append(deadline_engine.compute(profile, year, today=today))
+        try:
+            schedules.append(deadline_engine.compute(profile, year, today=today))
+        except ScheduleComputationError:
+            # A year inside the range with no registered deadline
+            # windows is a normal "no data yet" state, not an error
+            # (registry-track gap R1). The year contributes zero
+            # entries; the calendar still answers for every year that
+            # does have window data. This mirrors the graceful
+            # degradation ``overview explain`` already applies via the
+            # same ``ScheduleComputationError`` catch when a
+            # modelo/year pair has no registered windows.
+            continue
 
     entries: list[OverviewCalendarEntry] = []
     for schedule in schedules:

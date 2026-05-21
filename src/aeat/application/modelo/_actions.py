@@ -1594,6 +1594,9 @@ _FILING_PERIOD_ORDINALS: Mapping[str, int] = {
     "10": 10,
     "11": 11,
     "12": 12,
+    "1P": 1,
+    "2P": 2,
+    "3P": 3,
 }
 """Numeric ordinal for every registry-native period token.
 
@@ -1603,6 +1606,11 @@ Each work unit carries exactly one period family (a Modelo 303
 work unit is quarterly or monthly, never both), so the ordinal
 alone is an unambiguous numeric projection of that work unit's
 period for the ``decl.periodo`` informational casilla.
+
+The ``nP`` tokens are the Impuesto sobre Sociedades pago-fraccionado
+instalment claves (Modelo 202); the ordinal mirrors the digit AEAT
+expects in the ``periodo`` clave (``1P`` → ``1``, ``2P`` → ``2``,
+``3P`` → ``3``).
 """
 
 
