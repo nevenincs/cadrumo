@@ -607,7 +607,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     Reproduces cluster F / M14: a bare ``N/M`` counter or a one-word
     ``warn`` verdict told the operator nothing actionable. The fixed row
     carries one :class:`DiagnosticFinding` per unset required key, each
-    with the exact ``aeat config profile set ...`` command.
+    with the exact ``aeat config profile edit NAME`` command.
     """
 
     from aeat.application.wizard._status import WizardStatusReport

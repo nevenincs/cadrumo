@@ -244,8 +244,11 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
     projection = build_operator_state_projection(probe_live_backend=True)
 
     auth = projection.auth
-    if auth.health_summary == "certificate path not configured":
-        assert auth.configured is False, (
-            "configured must not contradict the health summary — "
-            f"got configured={auth.configured!r}, health_summary={auth.health_summary!r}"
-        )
+    assert auth.health_summary == "certificate path not configured", (
+        "fixture must reach the not-configured health state for this test to "
+        f"be meaningful — got health_summary={auth.health_summary!r}"
+    )
+    assert auth.configured is False, (
+        "configured must not contradict the health summary — "
+        f"got configured={auth.configured!r}, health_summary={auth.health_summary!r}"
+    )
