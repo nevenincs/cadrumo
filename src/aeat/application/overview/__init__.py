@@ -40,13 +40,13 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...domain.deadlines import (
-    AutonomoProfile,
     DeadlineEngine,
     HolidayJurisdiction,
     ModeloDeadline,
     ObligationStatus,
     Recovery,
     Schedule,
+    TaxpayerProfile,
     shift_deadline,
 )
 from ...domain.deadlines._festivos import DeadlineValidationError
@@ -408,7 +408,7 @@ def _build_completeness_and_warnings(
 
 
 def build_overview_calendar(
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     calendar_range: OverviewCalendarRange,
     *,
     today: date,
@@ -423,7 +423,7 @@ def build_overview_calendar(
     mapping, and returns the typed result.
 
     Args:
-        profile: The operator's :class:`AutonomoProfile`.
+        profile: The operator's :class:`TaxpayerProfile`.
         calendar_range: Inclusive date window to enumerate.
         today: Reference date for engine status classification.
         engine: Optional :class:`DeadlineEngine` instance the caller

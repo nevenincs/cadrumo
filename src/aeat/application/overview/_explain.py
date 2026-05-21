@@ -20,7 +20,7 @@ from datetime import UTC, date, datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.i18n import tr
-from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ...domain.deadlines._errors import DeadlineValidationError, ScheduleComputationError
 from ._errors import OverviewExplainError
 
@@ -48,7 +48,7 @@ class OverviewExplain(BaseModel):
         rationale: Registry-backed prose describing why the modelo does
             or does not apply. Sourced from
             :meth:`DeadlineEngine.explain`.
-        profile_facts: Subset of the operator's :class:`AutonomoProfile`
+        profile_facts: Subset of the operator's :class:`TaxpayerProfile`
             fields the deadline engine reads when evaluating
             applicability for this modelo. Keys are stable field names;
             values are JSON-serialisable scalars.
@@ -80,11 +80,11 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
 )
 
 
-def _extract_profile_facts(profile: AutonomoProfile) -> dict[str, _ProfileFactValue]:
+def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactValue]:
     """Return the deadline-engine-consumed fields as a plain dict.
 
     The deadline engine's applicability conditions are written against
-    these AutonomoProfile attributes; surfacing them here lets the
+    these TaxpayerProfile attributes; surfacing them here lets the
     operator see which facts the answer depends on without having to
     re-derive the engine's introspection.
     """
@@ -130,7 +130,7 @@ def _modelo_is_registered(modelo: str) -> bool:
 
 
 def build_overview_explain(
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     *,
     modelo: str,
     year: int | None = None,

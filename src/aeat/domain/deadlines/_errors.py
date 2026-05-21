@@ -14,7 +14,7 @@ class DeadlineError(AeatError):
 
 
 class ProfileError(DeadlineError):
-    """Raised when an :class:`aeat.domain.deadlines.AutonomoProfile` cannot be loaded or validated."""
+    """Raised when an :class:`aeat.domain.deadlines.TaxpayerProfile` cannot be loaded or validated."""
 
 
 class ScheduleComputationError(DeadlineError):

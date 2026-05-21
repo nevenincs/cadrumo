@@ -12,8 +12,8 @@ Key entry points:
 
 * :class:`ModeloOperatorProfile` — pydantic v2 record satisfying the
   filing-profile Protocol.
-* :func:`filing_profile_from_autonomo` — projects taxpayer identity from a
-  domain :class:`aeat.domain.deadlines.AutonomoProfile` into the runtime
+* :func:`filing_profile_from_taxpayer` — projects taxpayer identity from a
+  domain :class:`aeat.domain.deadlines.TaxpayerProfile` into the runtime
   profile shape without deriving legal filing obligations.
 * :func:`load_default_filing_profile` — loads the active profile bucket
   and returns a runtime profile.
@@ -54,7 +54,7 @@ from ...domain.filing._errors import ModeloBuilderError
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class AutonomoProfileIdentity(Protocol):
+class TaxpayerProfileIdentity(Protocol):
     """Structural identity surface accepted by the filing profile projector."""
 
     @property
@@ -164,12 +164,12 @@ class RegistrySchemaProvider:
             raise ModeloBuilderError(f"modelo {modelo!r} is not present in the calculation registry") from exc
 
 
-def filing_profile_from_autonomo(
-    profile: AutonomoProfileIdentity,
+def filing_profile_from_taxpayer(
+    profile: TaxpayerProfileIdentity,
     *,
     display_name: str | None = None,
 ) -> ModeloOperatorProfile:
-    """Project an :class:`AutonomoProfile` into a :class:`ModeloOperatorProfile`.
+    """Project an :class:`TaxpayerProfile` into a :class:`ModeloOperatorProfile`.
 
     This helper deliberately copies only taxpayer identity. Modelo
     applicability is legal filing truth and must come from validated
@@ -211,15 +211,15 @@ def load_default_filing_profile(
         ModeloBuilderError: When no profile is active in the workflow
             state.
     """
-    from ..wizard._status import WizardStatusError, load_active_autonomo_profile
+    from ..wizard._status import WizardStatusError, load_active_taxpayer_profile
     from ..workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     try:
-        profile = load_active_autonomo_profile(state)
+        profile = load_active_taxpayer_profile(state)
     except WizardStatusError as exc:
         raise ModeloBuilderError(str(exc)) from exc
-    return filing_profile_from_autonomo(profile, display_name=display_name)
+    return filing_profile_from_taxpayer(profile, display_name=display_name)
 
 
 def build_runtime_schema_provider(
@@ -432,6 +432,6 @@ __all__ = [
     "RegistryModeloSubview",
     "RegistrySchemaProvider",
     "build_runtime_schema_provider",
-    "filing_profile_from_autonomo",
+    "filing_profile_from_taxpayer",
     "load_default_filing_profile",
 ]

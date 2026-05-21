@@ -1,6 +1,6 @@
 """Tests for the census-driven activity-window gate on the deadline engine.
 
-Closes #502 (2/2): AutonomoProfile census fields (activity_start_date /
+Closes #502 (2/2): TaxpayerProfile census fields (activity_start_date /
 activity_end_date) now have a real deadline-rule consumer in
 :func:`aeat.domain.deadlines._engine._window_outside_activity_period`.
 The engine skips obligation windows that fall entirely before alta
@@ -16,7 +16,6 @@ from datetime import date
 import pytest
 
 from aeat.domain.deadlines._engine import _window_outside_activity_period
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -70,7 +69,7 @@ def test_window_straddling_baja_is_retained() -> None:
 def test_no_census_dates_means_no_filtering() -> None:
     """When the operator has not yet captured a census, both dates
     are None and the gate never fires — backwards-compatible with
-    every existing AutonomoProfile that pre-dates the census schema fields."""
+    every existing TaxpayerProfile that pre-dates the census schema fields."""
 
     assert _window_outside_activity_period(
         opens_on=date(2024, 4, 1),

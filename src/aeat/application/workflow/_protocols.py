@@ -20,11 +20,15 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from datetime import date
+from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
 from ...adapters.outbound.aeat.export import ModeloDraftLike
 from ...application.auth import AuthProviderDescription
-from ...domain.deadlines import AutonomoProfile, Schedule
+from ...domain.deadlines import Schedule, TaxpayerProfile
+
+type ModeloInputValue = str | Decimal
+type ModeloInputs = Mapping[str, ModeloInputValue]
 
 
 @runtime_checkable
@@ -33,7 +37,7 @@ class DeadlineEngineProtocol(Protocol):
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
@@ -58,7 +62,7 @@ class ModeloDraftBuilderProtocol(Protocol):
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
@@ -115,8 +119,8 @@ class ModeloInputsProviderProtocol(Protocol):
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
+        profile: TaxpayerProfile,
+    ) -> ModeloInputs:
         """Return the filing inputs for the draft build."""
         ...
 
@@ -159,6 +163,8 @@ __all__ = [
     "DeadlineEngineProtocol",
     "ExpedientesSource",
     "ModeloDraftBuilderProtocol",
+    "ModeloInputValue",
+    "ModeloInputs",
     "ModeloInputsProviderProtocol",
     "NotificationsSource",
     "RegistryModeloDraftProtocol",

@@ -1,10 +1,10 @@
-"""Profile-status projection and the active-profile to ``AutonomoProfile`` bridge.
+"""Profile-status projection and the active-profile to ``TaxpayerProfile`` bridge.
 
 ``build_wizard_status`` projects the active workflow state into a
 strict :class:`WizardStatusReport` consumed by the config repair surface
-and the ``aeat config status`` command. ``load_active_autonomo_profile``
+and the ``aeat config status`` command. ``load_active_taxpayer_profile``
 is the typed bridge the deadline engine and the filing runtime call
-to obtain an ``AutonomoProfile`` from the active profile bucket.
+to obtain an ``TaxpayerProfile`` from the active profile bucket.
 """
 
 from __future__ import annotations
@@ -13,10 +13,10 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ...core.i18n import tr
 from ...domain.deadlines._models import (
-    AutonomoProfile,
     IVARegime,
     ModeloEnrollment,
     ModeloIVAProfile,
+    TaxpayerProfile,
 )
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile._projections import record_to_path_values
@@ -137,11 +137,11 @@ def _next_wizard_action(
     return "aeat app overview status"
 
 
-def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
-    """Build an :class:`AutonomoProfile` from the active profile values.
+def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
+    """Build an :class:`TaxpayerProfile` from the active profile values.
 
     The bridge runs the canonical-token dict through ``project_answers``
-    and re-shapes the typed fields onto the ``AutonomoProfile`` record
+    and re-shapes the typed fields onto the ``TaxpayerProfile`` record
     consumed by the deadline engine and the filing runtime. Values come
     from the profile bucket selected by the workflow state.
 
@@ -174,7 +174,7 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
             tr("application.wizard.status.errors.missing_tax_id"),
             context={"active_profile": resolve_active_bucket_id()},
         )
-    return AutonomoProfile(
+    return TaxpayerProfile(
         tax_id=typed.tax_id,
         iva_regime=IVARegime(
             values.get("iva.regime", IVARegime.GENERAL.value)
@@ -205,5 +205,5 @@ __all__ = [
     "WizardStatusError",
     "WizardStatusReport",
     "build_wizard_status",
-    "load_active_autonomo_profile",
+    "load_active_taxpayer_profile",
 ]

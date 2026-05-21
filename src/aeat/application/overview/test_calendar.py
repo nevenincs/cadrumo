@@ -7,9 +7,9 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ...domain.deadlines import (
-    AutonomoProfile,
     IVARegime,
     ObligationStatus,
+    TaxpayerProfile,
 )
 from . import (
     OverviewCalendar,
@@ -23,8 +23,8 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _profile() -> AutonomoProfile:
-    return AutonomoProfile(
+def _profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
         has_employees=False,
@@ -314,7 +314,7 @@ def test_calendar_omits_warnings_when_raw_values_not_supplied() -> None:
     """Without raw_values the aggregator returns no warnings or completeness rows.
 
     Existing callers that build the calendar from a fully-resolved
-    ``AutonomoProfile`` without surfacing the user_cli raw mapping
+    ``TaxpayerProfile`` without surfacing the user_cli raw mapping
     must not see new warning behaviour. The empty defaults on
     OverviewCalendar.warnings / completeness preserve backwards
     compatibility for those callers.

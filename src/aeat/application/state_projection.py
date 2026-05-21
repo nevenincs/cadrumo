@@ -34,10 +34,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..core.config import Settings
 from ..core.logging import get_logger
 from ..domain.deadlines import (
-    AutonomoProfile,
     DeadlineEngine,
     ObligationStatus,
     Schedule,
+    TaxpayerProfile,
     compute_obligation_schedule,
 )
 from ..domain.filing import ModeloDraftRepository
@@ -431,23 +431,23 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
     )
 
 
-def _autonomo_profile_from_state(state: WorkflowState) -> AutonomoProfile:
-    """Project the active profile record into an :class:`AutonomoProfile`.
+def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
+    """Project the active profile record into an :class:`TaxpayerProfile`.
 
-    Mirrors the CLI ``_profile_to_autonomo`` helper so the deadline
+    Mirrors the CLI ``_profile_to_taxpayer`` helper so the deadline
     engine receives the same profile shape every surface would compute.
     """
 
-    from ..domain.deadlines import autonomo_profile_from_mapping
+    from ..domain.deadlines import taxpayer_profile_from_mapping
     from .user_profile._projections import record_to_values
 
     record = state.active_profile_record()
     raw = record_to_values(record) if record is not None else {}
-    return autonomo_profile_from_mapping(raw, tax_id_default="00000000T")
+    return taxpayer_profile_from_mapping(raw, tax_id_default="00000000T")
 
 
 def _build_pending_obligations(
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     *,
     today: date,
 ) -> tuple[ProjectionObligation, ...]:
@@ -676,7 +676,7 @@ def build_operator_state_projection(
 
     if has_active_profile:
         pending_obligations = _build_pending_obligations(
-            _autonomo_profile_from_state(resolved_state),
+            _taxpayer_profile_from_state(resolved_state),
             today=reference_today,
         )
     else:

@@ -32,7 +32,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.deadlines import AutonomoProfile
+from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -54,7 +54,7 @@ from ..filing import (
     build_draft,
     build_runtime_schema_provider,
     export_draft,
-    filing_profile_from_autonomo,
+    filing_profile_from_taxpayer,
 )
 from ._actions import (
     CalculationRevisionNotFoundError,
@@ -200,7 +200,7 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
     """Return ``(surnames, name)`` from the active bucket's persisted profile.
 
     The operator's legal name is not carried on the deadline-engine
-    :class:`AutonomoProfile` (which holds only ``tax_id``); it lives in
+    :class:`TaxpayerProfile` (which holds only ``tax_id``); it lives in
     the schema-driven user-profile fact catalogue under the canonical
     ``identity.surnames`` / ``identity.name`` paths. Export needs both
     because every modelo fichero-BOE envelope declares ``surnames`` and
@@ -252,7 +252,7 @@ def _compose_export_headers(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,
-    workflow_profile: AutonomoProfile,
+    workflow_profile: TaxpayerProfile,
     filing_year: int,
     registry_period: str,
 ) -> dict[str, str]:
@@ -341,7 +341,7 @@ def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
 def export_modelo_revision(
     command: ModeloExportCommand,
     *,
-    workflow_profile: AutonomoProfile,
+    workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -406,7 +406,7 @@ def export_modelo_revision(
         draft = build_draft(
             modelo=work_unit.modelo,
             period=canonical_period,
-            profile=filing_profile_from_autonomo(workflow_profile),
+            profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
         )

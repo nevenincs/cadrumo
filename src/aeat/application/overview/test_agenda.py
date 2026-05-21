@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from aeat.domain.deadlines import AutonomoProfile
+from aeat.domain.deadlines import TaxpayerProfile
 from aeat.domain.deadlines._models import IVARegime
 
 from ._agenda import OverviewAgenda, build_overview_agenda
@@ -14,8 +14,8 @@ from ._agenda import OverviewAgenda, build_overview_agenda
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _profile() -> AutonomoProfile:
-    return AutonomoProfile(
+def _profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
     )

@@ -724,7 +724,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     tmp_path: Path,
 ) -> None:
     """Profile creation must persist ``iva.regime`` for the deadline engine."""
-    from aeat.application.user_profile._projections import projection_for_autonomo
+    from aeat.application.user_profile._projections import projection_for_taxpayer
     from aeat.application.workflow import workflow_state_repository
     from aeat.domain.deadlines import IVARegime
 
@@ -752,7 +752,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        profile = projection_for_autonomo(record, tax_id_default="00000000T")
+        profile = projection_for_taxpayer(record, tax_id_default="00000000T")
     assert profile.iva_regime is IVARegime.GENERAL
 
 
@@ -761,7 +761,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     tmp_path: Path,
 ) -> None:
     """Boolean profile flags must survive creation and reach the engine."""
-    from aeat.application.user_profile._projections import projection_for_autonomo
+    from aeat.application.user_profile._projections import projection_for_taxpayer
     from aeat.application.workflow import workflow_state_repository
 
     _isolate_user_cli(monkeypatch, tmp_path)
@@ -793,7 +793,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        profile = projection_for_autonomo(record, tax_id_default="00000000T")
+        profile = projection_for_taxpayer(record, tax_id_default="00000000T")
     assert profile.does_intracomunitario is True
 
 
