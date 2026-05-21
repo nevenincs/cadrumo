@@ -86,22 +86,20 @@ def _populated_ledger() -> InventoryLedger:
 
 def test_inventory_ledger_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """InventoryLedgerDocument roundtrips strictly with non-default movements + layers."""
 
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "inventory-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
         engine = create_engine_from_settings(
             Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
-            repo = InventoryLedgerRepository()
+            repo = InventoryLedgerRepository(objects=objects)
             ledger = _populated_ledger()
             original_doc = InventoryLedgerDocument(ledgers=(ledger,))
             repo.save(original_doc)
@@ -130,7 +128,6 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(
 
 def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: corrupting the opening-layer balance must surface.
 
@@ -162,14 +159,13 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "inventory-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
         engine = create_engine_from_settings(
             Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
-            repo = InventoryLedgerRepository()
+            objects = SecureObjectRepository(engine=engine)
+            repo = InventoryLedgerRepository(objects=objects)
             ledger = _populated_ledger()
             repo.save(InventoryLedgerDocument(ledgers=(ledger,)))
 
