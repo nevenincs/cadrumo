@@ -68,6 +68,7 @@ def _transaction(
     description: str,
     classification: BusinessClassification,
     business_pct: Decimal | None = None,
+    import_fingerprint: str | None = None,
 ) -> Transaction:
     payload: dict[str, object] = {
         "raw": _raw(provider_id, amount, description),
@@ -76,6 +77,8 @@ def _transaction(
     }
     if business_pct is not None:
         payload["business_pct"] = business_pct
+    if import_fingerprint is not None:
+        payload["import_fingerprint"] = import_fingerprint
     return Transaction.model_validate(payload)
 
 
@@ -105,6 +108,7 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
                 description="Internet provider - mixed use",
                 classification=BusinessClassification.MIXED,
                 business_pct=Decimal("0.60"),
+                import_fingerprint="f" * 64,
             )
             personal_txn = _transaction(
                 provider_id="provider-row-2",
@@ -126,8 +130,10 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
             # Per-field witnesses on non-default identity-bearing axes.
             assert loaded_mixed.business_classification is BusinessClassification.MIXED
             assert loaded_mixed.business_pct == Decimal("0.60")
+            assert loaded_mixed.import_fingerprint == "f" * 64
             assert loaded_personal.business_classification is BusinessClassification.PERSONAL
             assert loaded_personal.business_pct is None
+            assert loaded_personal.import_fingerprint is None
             # Provenance must survive ingest.
             assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
             assert loaded_mixed.raw.provenance.source_row_index == 7
@@ -205,7 +211,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
             regression_caught = False
             try:
                 mutated = repo.load()
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:  # boundary may raise different exception types
                 regression_caught = True
             else:
                 if mutated != original:

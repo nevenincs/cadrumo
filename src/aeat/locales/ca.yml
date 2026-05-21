@@ -121,6 +121,10 @@ aggregation:
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
+  source_mesh:
+    errors:
+      duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
+      duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
 application:
   auth:
     acquisition_lock:
@@ -358,13 +362,21 @@ cli:
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
-        app_help: Captura de la cartera de compensació d'IVA de l'AEAT (només lectura).
+        app_help: Captura de la cartera de compensació d'IVA de l'AEAT (només lectura;
+          només permet representació en nom propi i la consulta de lectura protegida
+          de cartera).
+        as_of_year_help: Exercici usat per calcular l'antiguitat dels saldos de compensació
+          d'IVA.
         capture_history_help: Captura en directe l'historial de Modelo 303 presentats
-          i persisteix l'estat segur de compensació d'IVA.
-        history_help: Llista l'historial local segur de compensació d'IVA derivat
-          de les captures de Modelo 303 presentats.
+          i persisteix l'estat segur de compensació d'IVA. No s'envien opcions de
+          presentació AEAT ni formularis de cartera.
+        history_help: Llista l'historial local segur de compensació d'IVA, saldos
+          arrossegats i decisions d'autoritat de cartera persistides derivades de
+          les captures de Modelo 303 presentats.
         pull_help: Descarrega en directe i persisteix la cartera de compensació d'IVA
-          de l'AEAT.
+          de l'AEAT. L'única acció de formulari AEAT permesa és la consulta de lectura
+          protegida de cartera; les portes de representació només continuen en mode
+          nom propi.
         taxpayer_nif_help: NIF del contribuent; per defecte, la identitat autenticada.
       limit_help: Nombre màxim de files a capturar
       modelo_help: Codi de model
@@ -448,8 +460,8 @@ cli:
         missing_required_options: 'Falten opcions obligatòries: %{options}'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
-          exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: 'Token de periode: 0A anual, 1T-4T trimestres, 01-12 mesos; per
+          a models censals (036) usa alta, modificacion o baja.'
         preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense
           mutar l'estat
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
@@ -467,9 +479,9 @@ cli:
       describe:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Token de periode per resoldre la revisio del model; per a Modelo
-          036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1 i
-          2026-01
+        period_help: 'Token de periode per resoldre la revisio del model: 0A anual,
+          1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion
+          o baja.'
         period_token_invalid: '--period ''%{period}'' no és un token de període vàlid
           per al model %{modelo}. Tokens vàlids: %{tokens}.'
       export:
@@ -577,7 +589,9 @@ cli:
           consultar aquesta amb `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
-        casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible)
+        casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible). CASILLA
+          admet l'id de casella, el número del registre o el número de casella imprès
+          al BOE mostrats per `aeat app modelo casillas`.
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
         create_created: Nova unitat de treball creada.
@@ -631,8 +645,8 @@ cli:
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
           `aeat app modelo bindings list --missing` per veure els bindings que necessita
           el càlcul.
-        period_help: Token de periode de la unitat; per a Modelo 036 usa alta, modificacion
-          o baja; exemples periodics inclouen Q1, 4T, 0A i 01
+        period_help: 'Token de periode de la unitat: 0A anual, 1T-4T trimestres, 01-12
+          mesos; per a models censals (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no és un token de període vàlid
           per al model %{modelo}. --year i --period es componen per separat: passa
           --year %{year} per a l''exercici fiscal i un dels tokens de període declarats
@@ -647,6 +661,7 @@ cli:
         relation_not_decimal: 'El valor de --relation per a {key} no és un decimal:
           {value}.'
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
+        result_summary_header: 'resum del resultat  Modelo %{modelo} %{year} %{period}'
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT
         resume_workflow_run_id_help: Id d'execució de flux de 16 caràcters
@@ -1136,9 +1151,13 @@ cli:
       purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
         el moviment
     categories:
+      family_column: família
       header: CATEGORIES DE DESPESA RECONEGUDES DEL LLIBRE
       help: Llista els identificadors de categoria acceptats per --category-id, agrupats
         per família
+      id_column: category-id (passa aquest valor exacte)
+      usage_example: Passa l'id sense prefix, p. ex. --category-id {example} (no una
+        clau composta ni amb prefix de família).
     check:
       bucket_id_help: Id del bucket a examinar (per defecte el bucket del perfil actiu).
       help: Examina els moviments del llibre del bucket adreçat (per defecte el bucket
@@ -1146,6 +1165,11 @@ cli:
         període que els moviments toquin. Local; mai contacta amb AEAT.
     classify:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      business_pct_help: Percentatge d'ús professional de 0 a 1; obligatori amb --classification
+        MIXED i rebutjat per a qualsevol altra classificació
+      business_pct_requires_mixed: Rebutjat. --business-pct només s'aplica a una classificació
+        MIXED. Una fila BUSINESS o PERSONAL és totalment professional o totalment
+        privada; treu --business-pct o passa --classification MIXED.
       category_help: Id de categoria de despesa o ingrés
       classification_help: Estat de classificació professional del moviment
       help: Classificar un moviment del llibre al bucket del perfil actiu
@@ -1153,6 +1177,9 @@ cli:
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
+      mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
+        professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
+        fila com a BUSINESS o PERSONAL.
       taxable_base_help: Import de base imposable
     errors:
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
@@ -1170,8 +1197,9 @@ cli:
       id_prefix_too_long: El prefix d'id de transacció %{prefix!r} té més de 64 caràcters
         (un digest SHA-256 complet).
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}'
-      unknown_category: --category-id {category!r} no reconegut. Executa `aeat app
-        ledger categories` per veure els identificadors de categoria reconeguts.
+      unknown_category: --category-id {category!r} no reconegut. Passa un id de categoria
+        sense prefix com {example!r}, no una clau composta ni amb prefix de família.
+        Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
     export:
@@ -1189,7 +1217,13 @@ cli:
       all_rows_skipped: 'No s''ha importat cap entrada nova: les {skipped} fila(es)
         analitzades ja existeixen al llibre (ids de transacció duplicats).'
       dry_run_help: Executar la importació en mode de prova (sense desar)
+      dry_run_preview: 'Mode de prova: no s''ha desat cap fila. Els recomptes anteriors
+        són una vista prèvia del que una importació real afegiria i ometria.'
       help: Importar extractes bancaris o registres al llibre comptable
+      likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
+        amb una transacció que ja és al llibre però tenen una descripció diferent:
+        un probable duplicat del mateix moviment importat des d''un altre arxiu o
+        format. Revisa-les amb `aeat app ledger list`.'
       no_rows_imported: 'No s''ha importat cap entrada: l''arxiu s''ha analitzat però
         no contenia files de dades. Un CSV bancari ha de tenir una fila de capçalera
         amb una columna de data, import i descripció seguida d''almenys una fila de
@@ -1250,6 +1284,7 @@ cli:
       taxable_base: Base imposable
       valid: Vàlid
       value_date: Data valor
+      warning: Avís
       warnings: Avisos
       'yes': Sí
     link:
@@ -1528,8 +1563,12 @@ cli:
       integrity_next: Executeu `aeat config repair` per veure el detall. No poseu
         files en quarantena tret que vulgueu arxivar deliberadament dades locals antigues
         illegibles.
-      invoices_empty: Encara no s'han importat operacions de negoci.
-      invoices_present: '%{count} operacio(ns) de negoci estan disponibles per revisar.'
+      invoices_empty: No hi ha factures emeses ni rebudes al registre de factures.
+        Es un magatzem diferent del llibre bancari i no compta les transaccions del
+        llibre classificades. Un registre de factures buit es normal si nomes uses
+        el llibre bancari.
+      invoices_present: '%{count} factura(es) emesa(es)/rebuda(es) al registre de
+        factures (un magatzem diferent del llibre bancari).'
       next_heading: Que escriure ara
       next_import_command: '  aeat app ledger import <extracte-bancari.csv> --provider
         csv - importar moviments bancaris.'

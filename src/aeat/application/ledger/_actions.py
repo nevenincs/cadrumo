@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from ...adapters.inbound.financial.providers import (
     CsvProvider,
@@ -58,6 +58,8 @@ from ...domain.transactions import (
     TransactionLifecycleState,
     TransactionNotFoundError,
     TransactionValidationError,
+    derive_import_fingerprint,
+    derive_movement_day_key,
     derive_split_group_id,
     derive_transaction_id,
 )
@@ -236,6 +238,86 @@ def attach_manual_transaction_evidence(
     )
 
 
+def _transaction_dedup_fingerprint(transaction: Transaction) -> str:
+    """Return the import-dedup fingerprint for an already-stored transaction.
+
+    Rows imported after the cross-format dedup landed carry a stamped
+    :attr:`Transaction.import_fingerprint`; that value is the canonical
+    identity and is used verbatim. Hand-entered rows (and any legacy
+    imported row that predates the stamp) have no fingerprint, so the
+    fingerprint is derived from the current ``raw`` as a best-effort
+    fallback — this keeps re-imports of legacy rows idempotent.
+    """
+
+    return transaction.import_fingerprint or derive_import_fingerprint(transaction.raw)
+
+
+class _ImportRowPlan(NamedTuple):
+    """Per-row outcome of evaluating an import batch against a catalogue.
+
+    ``imported`` rows are new movements; ``skipped_refs`` rows already
+    exist (a confident fingerprint match — re-import or cross-format
+    re-export of a row already present); ``likely_duplicate_refs`` rows
+    are imported but share an effective date and amount with an existing
+    row under a divergent narrative, so the operator is warned.
+    """
+
+    imported: tuple[Transaction, ...]
+    skipped_refs: tuple[BucketTransactionRef, ...]
+    likely_duplicate_refs: tuple[BucketTransactionRef, ...]
+
+
+def _evaluate_import_rows(
+    *,
+    bucket_id: str,
+    catalogue: TransactionCatalogue,
+    raw_rows: tuple[RawTransaction, ...],
+    direction_resolver: Callable[[RawTransaction], object],
+) -> _ImportRowPlan:
+    """Classify every raw row as imported / skipped / likely-duplicate.
+
+    Deduplication keys on :func:`derive_import_fingerprint` — an
+    identity that is stable across both later edits of a transaction
+    and a re-export of the same movement in a different file format.
+    This single classifier backs both the persisting import path and
+    the ``--dry-run`` preview, so the preview count is exact.
+    """
+
+    existing_fingerprints = {
+        _transaction_dedup_fingerprint(transaction) for transaction in catalogue.values()
+    }
+    existing_day_keys = {derive_movement_day_key(transaction.raw) for transaction in catalogue.values()}
+    imported: list[Transaction] = []
+    skipped_refs: list[BucketTransactionRef] = []
+    likely_duplicate_refs: list[BucketTransactionRef] = []
+    batch_fingerprints: set[str] = set()
+    for raw in raw_rows:
+        fingerprint = derive_import_fingerprint(raw)
+        if fingerprint in existing_fingerprints or fingerprint in batch_fingerprints:
+            skipped_refs.append(
+                BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw))
+            )
+            continue
+        transaction = Transaction.model_validate(
+            {
+                "raw": raw,
+                "direction": direction_resolver(raw),
+                "import_fingerprint": fingerprint,
+            }
+        )
+        batch_fingerprints.add(fingerprint)
+        imported.append(transaction)
+        if derive_movement_day_key(raw) in existing_day_keys:
+            likely_duplicate_refs.append(
+                BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id)
+            )
+    return _ImportRowPlan(
+        imported=tuple(imported),
+        skipped_refs=tuple(skipped_refs),
+        likely_duplicate_refs=tuple(likely_duplicate_refs),
+    )
+
+
 def import_ledger_transactions(
     *,
     bucket_id: str,
@@ -254,33 +336,33 @@ def import_ledger_transactions(
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repository.load()
     raw_rows = tuple(raw_transactions)
-    existing_ids = set(catalogue.transactions.keys())
-    imported_refs: list[BucketTransactionRef] = []
-    skipped_refs: list[BucketTransactionRef] = []
-    imported_transactions: list[Transaction] = []
+    plan = _evaluate_import_rows(
+        bucket_id=bucket_id,
+        catalogue=catalogue,
+        raw_rows=raw_rows,
+        direction_resolver=direction_resolver,
+    )
+    imported_transactions = list(plan.imported)
+    imported_refs = [
+        BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id)
+        for transaction in imported_transactions
+    ]
+    skipped_refs = list(plan.skipped_refs)
     updated_transactions = dict(catalogue.transactions)
+    for transaction in imported_transactions:
+        updated_transactions[transaction.transaction_id] = transaction
     import_batch_id = _import_batch_id(
         bucket_id=bucket_id,
         source_command=source_command,
         imported_transaction_ids=tuple(derive_transaction_id(raw) for raw in raw_rows),
     )
-    for raw in raw_rows:
-        tx_id = derive_transaction_id(raw)
-        ref = BucketTransactionRef(bucket_id=bucket_id, transaction_id=tx_id)
-        if tx_id in existing_ids:
-            skipped_refs.append(ref)
-            continue
-        transaction = Transaction.model_validate({"raw": raw, "direction": direction_resolver(raw)})
-        updated_transactions[transaction.transaction_id] = transaction
-        existing_ids.add(transaction.transaction_id)
-        imported_refs.append(ref)
-        imported_transactions.append(transaction)
     summary = ImportSummary(
         imported=len(imported_refs),
         skipped=len(skipped_refs),
         bucket_id=bucket_id,
         imported_refs=tuple(imported_refs),
         skipped_refs=tuple(skipped_refs),
+        likely_duplicate_refs=plan.likely_duplicate_refs,
         catalogue_path=f"db://secure_objects/{TX_BUCKET_NAMESPACE}/transaction-catalogue:{bucket_id}",
     )
     if not imported_transactions:
@@ -358,13 +440,27 @@ def import_ledger_source(
         else ()
     )
     if command.dry_run:
+        # A dry run must preview the *real* outcome: how many rows would
+        # be imported and how many skipped as duplicates against the
+        # already-stored catalogue. Reporting a flat zero made the
+        # preview useless and misleading. The classification reuses the
+        # exact persisting-path dedup logic, then discards every row.
+        dry_run_plan = _evaluate_import_rows(
+            bucket_id=command.bucket_id or "preview",
+            catalogue=existing_catalogue,
+            raw_rows=raw_transactions,
+            direction_resolver=_direction_from_amount,
+        )
         return LedgerSourceImportResult(
             rows=len(raw_transactions),
-            imported=0,
-            skipped=0,
+            imported=len(dry_run_plan.imported),
+            skipped=len(dry_run_plan.skipped_refs),
+            likely_duplicates=len(dry_run_plan.likely_duplicate_refs),
             dry_run=True,
             verify=command.verify,
             period=command.period,
+            bucket_id=command.bucket_id,
+            likely_duplicate_transaction_refs=dry_run_plan.likely_duplicate_refs,
             validation=_validation_report(validation),
             source=source_verification,
             diagnostics=diagnostics,
@@ -399,6 +495,7 @@ def import_ledger_source(
         rows=len(raw_transactions),
         imported=summary.imported,
         skipped=summary.skipped,
+        likely_duplicates=len(summary.likely_duplicate_refs),
         dry_run=False,
         verify=command.verify,
         period=command.period,
@@ -407,6 +504,7 @@ def import_ledger_source(
         bucket_event_ids=result.bucket_event_ids + tuple(event.event_id for event in diagnostic_events),
         imported_transaction_refs=summary.imported_refs,
         skipped_transaction_refs=summary.skipped_refs,
+        likely_duplicate_transaction_refs=summary.likely_duplicate_refs,
         validation=_validation_report(validation),
         source=source_verification,
         diagnostics=diagnostics,
@@ -1066,6 +1164,7 @@ def update_manual_transaction(
         existing_edit_lineage=current.edit_lineage,
         lifecycle_state=current.lifecycle_state,
         lifecycle_lineage=current.lifecycle_lineage,
+        import_fingerprint=current.import_fingerprint,
     )
     if _mutation_signature(current) == _mutation_signature(replacement):
         raise TransactionValidationError(
@@ -1119,6 +1218,7 @@ def update_manual_transaction(
         ),
         bucket_event_id=primary_event_id,
         evidence_event_ids=evidence_event_ids,
+        import_fingerprint=current.import_fingerprint,
     )
     _save_transaction_catalogue_and_events(
         transaction_repository=repository,
@@ -2754,6 +2854,7 @@ def _transaction_from_command(
     lifecycle_lineage: tuple[TransactionLifecycleLineageEntry, ...] = (),
     edit_lineage_entry: TransactionEditLineageEntry | None = None,
     evidence_event_ids: Mapping[tuple[str, str], str] | None = None,
+    import_fingerprint: str | None = None,
 ) -> Transaction:
     raw = RawTransaction(
         transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
@@ -2802,6 +2903,7 @@ def _transaction_from_command(
         "edit_lineage": (
             (*existing_edit_lineage, edit_lineage_entry) if edit_lineage_entry is not None else existing_edit_lineage
         ),
+        "import_fingerprint": import_fingerprint,
         "notes": command.notes,
     }
     if command.business_classification is not BusinessClassification.NOT_YET_PROCESSED:

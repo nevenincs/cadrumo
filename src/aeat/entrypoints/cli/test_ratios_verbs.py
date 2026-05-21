@@ -149,7 +149,7 @@ def _capture_census_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     bucket_id = resolve_active_bucket_id() or ""
     service = CensoSnapshotService(bucket_id=bucket_id)
     service.capture(
-        profile_id=resolve_active_bucket_id(),
+        profile_id=bucket_id,
         captured_at=datetime.now(UTC),
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
         censo_facts={

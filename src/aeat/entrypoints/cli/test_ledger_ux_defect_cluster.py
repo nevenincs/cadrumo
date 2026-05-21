@@ -363,3 +363,379 @@ def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     assert transaction["taxable_base"] == "200"
     assert transaction["iva_rate"] == "0.21"
     assert transaction["iva_amount"] == "42"
+
+
+# ---------------------------------------------------------------------------
+# B1-B3: import dry-run preview + edit-stable / cross-format deduplication
+# ---------------------------------------------------------------------------
+
+_FOUR_ROW_CSV = (
+    _N26_HEADER
+    + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n"
+    + "2026-04-16,Proveedor SA,Compra material,-50.00,EUR,n26-002\n"
+    + "2026-04-17,Cliente Dos,Factura dos,200.00,EUR,n26-003\n"
+    + "2026-04-18,Cafe Oscar,Reunion negocios,-12.00,EUR,n26-004\n"
+)
+
+_FOUR_ROW_OFX = """OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX><BANKMSGSRSV1><STMTTRNRS><TRNUID>1<STATUS><CODE>0<SEVERITY>INFO</STATUS>\
+<STMTRS><CURDEF>EUR<BANKACCTFROM><BANKID>0001<ACCTID>ES111<ACCTTYPE>CHECKING\
+</BANKACCTFROM><BANKTRANLIST><DTSTART>20260401<DTEND>20260430\
+<STMTTRN><TRNTYPE>CREDIT<DTPOSTED>20260415<TRNAMT>121.00<FITID>ofx-001\
+<NAME>Client SL<MEMO>Invoice 1</STMTTRN>\
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260416<TRNAMT>-50.00<FITID>ofx-002\
+<NAME>Proveedor SA<MEMO>Compra material</STMTTRN>\
+<STMTTRN><TRNTYPE>CREDIT<DTPOSTED>20260417<TRNAMT>200.00<FITID>ofx-003\
+<NAME>Cliente Dos<MEMO>Factura dos</STMTTRN>\
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260418<TRNAMT>-12.00<FITID>ofx-004\
+<NAME>Cafe Oscar<MEMO>Reunion negocios</STMTTRN>\
+</BANKTRANLIST><LEDGERBAL><BALAMT>259.00<DTASOF>20260430</LEDGERBAL>\
+</STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>
+"""
+
+
+def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> None:
+    """`import --dry-run` previews the true count, never a flat zero.
+
+    The defect: a dry run reported `imported 0` even when a real import
+    of the same file added four rows. The preview must report what a
+    real import would add.
+    """
+    _create_profile()
+    statement = tmp_path / "statement.csv"
+    statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+
+    dry_run = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "import", str(statement),
+         "--provider", "csv", "--dry-run"],
+    )
+    assert dry_run.exit_code == 0, dry_run.output
+    payload = json.loads(dry_run.output)
+    assert payload["dry_run"] is True
+    assert payload["imported"] == 4
+    assert payload["skipped"] == 0
+    assert "dry_run_notice" in payload
+
+    # A real import of the same file adds exactly what the preview said.
+    real = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "import", str(statement),
+              "--provider", "csv"],
+    )
+    assert real.exit_code == 0, real.output
+    assert json.loads(real.output)["imported"] == 4
+
+
+def test_import_dry_run_counts_existing_rows_as_would_skip(tmp_path: Path) -> None:
+    """After a real import the dry run previews every row as a would-skip."""
+    _create_profile()
+    statement = tmp_path / "statement.csv"
+    statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+
+    first = _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
+    )
+    assert first.exit_code == 0, first.output
+
+    dry_run = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "import", str(statement),
+              "--provider", "csv", "--dry-run"],
+    )
+    assert dry_run.exit_code == 0, dry_run.output
+    payload = json.loads(dry_run.output)
+    assert payload["imported"] == 0
+    assert payload["skipped"] == 4
+
+
+def test_reimport_after_editing_a_transaction_still_deduplicates(
+    tmp_path: Path,
+) -> None:
+    """An edited transaction is not re-imported as a fresh duplicate.
+
+    The defect: editing a row changed its content-derived id, so a
+    re-import of the source statement re-added the edited row. The
+    stamped import fingerprint is stable across the edit.
+    """
+    _create_profile()
+    statement = tmp_path / "statement.csv"
+    statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+
+    first = _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
+    )
+    assert first.exit_code == 0, first.output
+
+    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    rows = json.loads(listed.output)["rows"]
+    assert len(rows) == 4
+    target = rows[0]["transaction_id"]
+
+    edited = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "update", "--id", target,
+         "--description", "Invoice 1 - corrected narrative"],
+    )
+    assert edited.exit_code == 0, edited.output
+
+    reimport = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "import", str(statement),
+              "--provider", "csv"],
+    )
+    assert reimport.exit_code == 0, reimport.output
+    payload = json.loads(reimport.output)
+    assert payload["imported"] == 0, payload
+    assert payload["skipped"] == 4
+    # The catalogue still holds exactly four rows — no duplicate of the
+    # edited transaction.
+    after = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    assert len(json.loads(after.output)["rows"]) == 4
+
+
+def test_cross_format_import_of_the_same_movements_deduplicates(
+    tmp_path: Path,
+) -> None:
+    """Importing the same movements as OFX after CSV adds nothing.
+
+    The defect: an OFX re-export of bank movements already imported
+    from a CSV duplicated every row, because the dedup key folded in
+    the provider id and file format.
+    """
+    _create_profile()
+    csv_statement = tmp_path / "statement.csv"
+    csv_statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+    ofx_statement = tmp_path / "statement.ofx"
+    ofx_statement.write_text(_FOUR_ROW_OFX, encoding="ascii")
+
+    csv_import = _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(csv_statement), "--provider", "csv"]
+    )
+    assert csv_import.exit_code == 0, csv_import.output
+
+    ofx_import = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "import", str(ofx_statement),
+              "--provider", "ofx"],
+    )
+    assert ofx_import.exit_code == 0, ofx_import.output
+    payload = json.loads(ofx_import.output)
+    assert payload["imported"] == 0, payload
+    assert payload["skipped"] == 4
+    after = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    assert len(json.loads(after.output)["rows"]) == 4
+
+
+def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
+    """A same-date same-amount row with a divergent narrative is flagged.
+
+    When a confident fingerprint match cannot be made but the date and
+    amount coincide with an existing row, the row is imported and the
+    operator is warned about a likely duplicate rather than silently
+    double-counting it.
+    """
+    _create_profile()
+    first = tmp_path / "first.csv"
+    first.write_text(
+        _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+    assert _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(first), "--provider", "csv"]
+    ).exit_code == 0
+
+    # Same date and amount, deliberately different reference text.
+    second = tmp_path / "second.csv"
+    second.write_text(
+        _N26_HEADER + "2026-04-15,Client SL,TRANSFER 99887766,121.00,EUR,xx-999\n",
+        encoding="utf-8",
+    )
+    result = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "import", str(second),
+              "--provider", "csv"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["imported"] == 1
+    assert payload["likely_duplicates"] == 1
+    assert "likely_duplicate_notice" in payload
+
+
+# ---------------------------------------------------------------------------
+# C1: classify surfaces the specific validator cause
+# ---------------------------------------------------------------------------
+
+
+def test_classify_with_negative_taxable_base_names_the_real_cause(
+    tmp_path: Path,
+) -> None:
+    """A negative `--taxable-base` on classify surfaces the validator cause.
+
+    The opaque "command input failed validation. Run config repair"
+    refusal is replaced with the specific reason; `config repair`
+    cannot fix a bad CLI argument and must not be suggested.
+    """
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", "--id", txn,
+         "--classification", "BUSINESS", "--taxable-base", "-397.11"],
+    )
+    assert result.exit_code != 0
+    assert "taxable_base" in result.output
+    assert "config repair" not in result.output
+
+
+def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None:
+    """A non-negative `--taxable-base` classifies the row normally."""
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--id", txn,
+         "--classification", "BUSINESS", "--taxable-base", "100.00"],
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["transaction"]["taxable_base"] == "100"
+
+
+# ---------------------------------------------------------------------------
+# C2: categories output is unambiguous about the --category-id value
+# ---------------------------------------------------------------------------
+
+
+def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
+    """The catalogue makes the exact `--category-id` value unmistakable."""
+    _create_profile()
+    result = _RUNNER.invoke(app, ["app", "ledger", "categories"])
+    assert result.exit_code == 0, result.output
+    output = result.output
+    # A header row names the id column, and an example line shows the
+    # bare-id shape so operators do not guess a compound key.
+    assert "category-id" in output
+    assert "--category-id" in output
+    assert SpendingCategory.MATERIAL_OFICINA.value in output
+
+
+def test_invalid_category_error_shows_a_concrete_valid_example(
+    tmp_path: Path,
+) -> None:
+    """A rejected `--category-id` names one concrete valid id."""
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", "--id", txn,
+         "--classification", "BUSINESS", "--category-id", "office:material_oficina"],
+    )
+    assert result.exit_code != 0
+    valid_ids = {category.value for category in SpendingCategory}
+    # The refusal demonstrates the bare-id shape with a real example.
+    assert any(category_id in result.output for category_id in valid_ids)
+    assert "ledger categories" in result.output
+
+
+# ---------------------------------------------------------------------------
+# C4: sibling-command consistency
+# ---------------------------------------------------------------------------
+
+
+def test_classify_accepts_business_pct_for_a_mixed_row(tmp_path: Path) -> None:
+    """`classify --classification MIXED --business-pct` works in one step."""
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--id", txn,
+         "--classification", "MIXED", "--business-pct", "0.5"],
+    )
+    assert result.exit_code == 0, result.output
+    transaction = json.loads(result.output)["transaction"]
+    assert transaction["business_classification"] == "MIXED"
+    assert transaction["business_pct"] == "0.5"
+
+
+def test_classify_mixed_without_business_pct_names_the_flag(tmp_path: Path) -> None:
+    """`classify --classification MIXED` without the share names `--business-pct`."""
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", "--id", txn, "--classification", "MIXED"],
+    )
+    assert result.exit_code != 0
+    assert "--business-pct" in result.output
+    assert "config repair" not in result.output
+
+
+def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> None:
+    """`--business-pct` with a non-MIXED classification is refused, not dropped."""
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", "--id", txn,
+         "--classification", "BUSINESS", "--business-pct", "0.5"],
+    )
+    assert result.exit_code != 0
+    assert "--business-pct" in result.output
+    assert "MIXED" in result.output
+
+
+def test_history_accepts_the_id_positionally_like_view(tmp_path: Path) -> None:
+    """`ledger history <id>` takes the id positionally, matching `ledger view`."""
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+    result = _RUNNER.invoke(
+        app, ["--format", "json", "app", "ledger", "history", txn]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["transaction_id"] == txn
+    assert payload["event_count"] >= 1
+
+
+# ---------------------------------------------------------------------------
+# B4: accented descriptions render identically in `list` and `view`
+# ---------------------------------------------------------------------------
+
+
+def test_list_and_view_render_accented_descriptions_identically(
+    tmp_path: Path,
+) -> None:
+    """Accented Spanish / Catalan descriptions survive `list` and `view`.
+
+    `ledger list` and `ledger view` must render the same stored
+    narrative byte-for-byte; an operator must not see one surface
+    corrupt accents the other shows correctly. The accented text is
+    asserted present, intact, in both surfaces.
+    """
+    _create_profile()
+    accented = "Reunió de negòcis amb Òscar à Lleida"
+    statement = tmp_path / "accents.csv"
+    statement.write_text(
+        _N26_HEADER + f"2026-04-15,Proveedor SA,{accented},-50.00,EUR,n26-acc\n",
+        encoding="utf-8",
+    )
+    imported = _RUNNER.invoke(
+        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
+    )
+    assert imported.exit_code == 0, imported.output
+
+    listed = _RUNNER.invoke(app, ["app", "ledger", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert accented in listed.output
+    assert "?" not in listed.output
+
+    txn = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    transaction_id = json.loads(txn.output)["rows"][0]["transaction_id"]
+    viewed = _RUNNER.invoke(app, ["app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    assert accented in viewed.output

@@ -378,6 +378,7 @@ class LedgerSourceImportResult(BaseModel):
     rows: int = Field(ge=0)
     imported: int = Field(ge=0)
     skipped: int = Field(ge=0)
+    likely_duplicates: int = Field(default=0, ge=0)
     dry_run: bool
     verify: bool
     period: str | None = None
@@ -386,6 +387,7 @@ class LedgerSourceImportResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
     imported_transaction_refs: tuple[BucketTransactionRef, ...] = ()
     skipped_transaction_refs: tuple[BucketTransactionRef, ...] = ()
+    likely_duplicate_transaction_refs: tuple[BucketTransactionRef, ...] = ()
     validation: LedgerSourceValidationReport
     source: LedgerSourceVerificationReport
     diagnostics: tuple[LedgerImportDiagnosticReport, ...] = ()

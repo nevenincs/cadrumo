@@ -116,6 +116,10 @@ aggregation:
         buckettel.
       modelo_mismatch: Az adómodell nem egyezik a Renta nyilvántartás várt modeljével.
       period_mismatch: Az időszak nem egyezik a Renta nyilvántartás várt időszakával.
+  source_mesh:
+    errors:
+      duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
+      duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
 application:
   auth:
     acquisition_lock:
@@ -354,12 +358,18 @@ cli:
       filed_app_help: Benyújtott bevallások csak olvasható megfigyelései
       from_year_help: Első benyújtási év
       iva_wallet:
-        app_help: Az AEAT áfa-kompenzációs tárcájának rögzítése (csak olvasható).
+        app_help: Az AEAT áfa-kompenzációs tárcájának rögzítése (csak olvasható;
+          csak saját név módot és a védett tárcaolvasási lekérdezést engedi).
+        as_of_year_help: Az év, amely szerint az áfa-kompenzációs továbbvitt egyenlegek
+          kora számítódik.
         capture_history_help: Élőben rögzíti a benyújtott Modelo 303 előzményeket,
-          és biztonságosan eltárolja az áfa-kompenzációs állapotot.
-        history_help: Listázza a benyújtott Modelo 303 rögzítésekből származó, helyben
-          biztonságosan tárolt áfa-kompenzációs előzményeket.
+          és biztonságosan eltárolja az áfa-kompenzációs állapotot. Nem küld AEAT
+          benyújtási vagy tárcaűrlap-választást.
+        history_help: Listázza a helyben biztonságosan tárolt áfa-kompenzációs előzményeket,
+          továbbvitt tételeket és eltárolt tárca-hatósági döntéseket.
         pull_help: Élőben letölti és eltárolja az AEAT áfa-kompenzációs tárcáját.
+          Az egyetlen engedélyezett AEAT űrlapművelet a védett tárcaolvasási lekérdezés;
+          a képviseleti kapuk csak saját név módban folytatódnak.
         taxpayer_nif_help: Az adózó NIF-je; alapértelmezetten a hitelesített identitás.
       limit_help: Rögzítendő sorok maximális száma
       modelo_help: Modelo kód
@@ -445,8 +455,8 @@ cli:
         missing_required_options: 'Hiányzó kötelező opciók: %{options}'
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
-        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
-          periodikus peldak: 2026Q1 es 2026-01'
+        period_help: 'Idoszak token: 0A eves, 1T-4T negyedevek, 01-12 honapok; censusos
+          modellekhez (036) hasznalj alta, modificacion vagy baja erteket.'
         preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció
           nélkül
         unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések ehhez:
@@ -465,8 +475,9 @@ cli:
       describe:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: 'Idoszak token a modellrevizio feloldasahoz; Modelo 036 eseten
-          alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
+        period_help: 'Idoszak token a modellrevizio feloldasahoz: 0A eves, 1T-4T negyedevek,
+          01-12 honapok; censusos modellekhez (036) hasznalj alta, modificacion vagy
+          baja erteket.'
         period_token_invalid: 'A(z) ''%{period}'' --period nem érvényes időszak-token
           a(z) %{modelo} modellhez. Érvényes tokenek: %{tokens}.'
       export:
@@ -570,7 +581,9 @@ cli:
           megtekintése az `aeat app modelo work revision %{revision_id}` paranccsal.'
         calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256
           azonosítója
-        casilla_help: Cella értéke CASILLA=DECIMAL szintaxissal (ismételhető)
+        casilla_help: Cella értéke CASILLA=DECIMAL szintaxissal (ismételhető). A CASILLA
+          elfogadja a cella azonosítóját, a registry számát vagy a BOE-n nyomtatott
+          cellaszámot, amelyeket az `aeat app modelo casillas` mutat.
         casilla_not_decimal: 'A(z) {key} --casilla értéke nem decimális szám: {value}.'
         create_created: Új munkaegység létrehozva.
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
@@ -620,8 +633,9 @@ cli:
         override_help: Binding érték KEY=VALUE szintaxissal (ismételhető); futtasd
           az `aeat app modelo bindings list --missing` parancsot a kalkulációhoz szükséges
           bindingok listájához.
-        period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
-          vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
+        period_help: 'Munkaegyseg idoszak token: 0A eves, 1T-4T negyedevek, 01-12
+          honapok; censusos modellekhez (036) hasznalj alta, modificacion vagy baja
+          erteket.'
         period_token_invalid: 'A(z) ''%{token}'' --period nem érvényes időszak-token
           a(z) %{modelo} modellhez. A --year és a --period külön áll össze: add meg
           a --year %{year} értéket az adóévhez, és a --period értékhez az egyik deklarált
@@ -636,6 +650,7 @@ cli:
           egy registry relációazonosító; a VALUE decimális. Ismételhető.
         relation_not_decimal: 'A(z) {key} --relation értéke nem decimális szám: {value}.'
         rename_help: Munkaegység megjelenítési nevének módosítása
+        result_summary_header: 'eredmeny-osszegzes  Modelo %{modelo} %{year} %{period}'
         resume_help: Ellenőrizd, hogy újrapróbálhatsz-e megszakadt folyamatfutást
           AEAT-kapcsolat nélkül
         resume_workflow_run_id_help: 16 karakteres folyamatfutás-azonosító
@@ -1123,9 +1138,13 @@ cli:
       purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
         azonosítója
     categories:
+      family_column: csalad
       header: ELISMERT FŐKÖNYVI KÖLTSÉGKATEGÓRIÁK
       help: A --category-id által elfogadott kategóriaazonosítók listája, családonként
         csoportosítva
+      id_column: category-id (pontosan ezt az erteket add at)
+      usage_example: Add at a csupasz azonositot, pl. --category-id {example} (nem
+        csaladnevvel vagy osszetett kulccsal).
     check:
       bucket_id_help: A vizsgálandó bucket azonosítója (alapértelmezésben az aktív
         profil bucketje).
@@ -1134,6 +1153,12 @@ cli:
         amelyet egy tranzakció érint. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
     classify:
       actor_help: A bucket eseményen rögzített kezelő neve
+      business_pct_help: Uzleti felhasznalasi arany 0 es 1 kozott; a --classification
+        MIXED eseten kotelezo, barmely mas besorolasnal elutasitott
+      business_pct_requires_mixed: Elutasitva. A --business-pct csak MIXED besorolasra
+        ervenyes. Egy BUSINESS vagy PERSONAL sor teljesen uzleti vagy teljesen maganjellegu;
+        hagyd el a --business-pct kapcsolot, vagy add at a --classification MIXED
+        erteket.
       category_help: Kiadási vagy bevételi kategória azonosítója
       classification_help: A tranzakció üzleti besorolási állapota
       help: Egy főkönyvi tranzakció besorolása az aktív profil bucketjében
@@ -1141,6 +1166,9 @@ cli:
       irpf_category_help: IRPF kategória modell-számításokhoz
       iva_amount_help: IVA összeg
       iva_rate_help: IVA kulcs tizedesként, például 0.21
+      mixed_requires_business_pct: Elutasitva. A --classification MIXED uzleti aranyt
+        igenyel. Add at a --business-pct kapcsolot 0 es 1 kozotti ertekkel, vagy soroldat
+        a sort BUSINESS vagy PERSONAL kategoriaba.
       taxable_base_help: Adóalap összege
     errors:
       command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
@@ -1159,8 +1187,9 @@ cli:
       id_prefix_too_long: A %{prefix!r} tranzakció-azonosító előtag hosszabb 64 karakternél
         (egy teljes SHA-256 digest).
       invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
-      unknown_category: Ismeretlen --category-id {category!r}. Futtasd az `aeat app
-        ledger categories` parancsot az elismert kategóriaazonosítók listájához.
+      unknown_category: Ismeretlen --category-id {category!r}. Add at a csupasz kategoriaazonositot,
+        mint {example!r}, nem osszetett vagy csaladnevvel ellatott kulcsot. Futtasd
+        az `aeat app ledger categories` parancsot minden elismert azonositohoz.
       unknown_provider: 'Ismeretlen importáló --provider {provider!r}. Elismert szolgáltatók:
         {providers}.'
     export:
@@ -1177,7 +1206,9 @@ cli:
       all_rows_skipped: 'Nem importáltunk új bejegyzést: mind a(z) {skipped} elemzett
         sor már létezik a főkönyvben (ismétlődő tranzakcióazonosítók).'
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
+      dry_run_preview: cli.ledger.import.dry_run_preview
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
+      likely_duplicates: cli.ledger.import.likely_duplicates
       no_rows_imported: 'Nem importáltunk bejegyzést: a fájl elemezhető volt, de nem
         tartalmazott adatsorokat. Egy bank CSV-jének tartalmaznia kell egy fejlécsort
         dátum-, összeg- és leírásoszloppal, majd legalább egy adatsort.'
@@ -1237,6 +1268,7 @@ cli:
       taxable_base: Adóalap
       valid: Érvényes
       value_date: Értéknap
+      warning: cli.ledger.labels.warning
       warnings: Figyelmeztetések
       'yes': Igen
     link:
@@ -1514,8 +1546,11 @@ cli:
       integrity_next: Futtasd az `aeat config repair` parancsot a reszletekert. Ne
         helyezz karantenba sorokat, hacsak nem szandekosan akarod archivalni a nem
         olvashato regi helyi adatokat.
-      invoices_empty: Meg nincs importalt uzleti muveleti rekord.
-      invoices_present: '%{count} uzleti muveleti rekord var felulvizsgalatra.'
+      invoices_empty: Nincs kimeno vagy bejovo szamla a szamlanyilvantartasban. Ez
+        a banki fokonyvtol kulon tarolo, es nem szamolja a besorolt fokonyvi teteleket.
+        Az ures szamlanyilvantartas normalis, ha csak a banki fokonyvet hasznalod.
+      invoices_present: '%{count} kimeno/bejovo szamla a szamlanyilvantartasban (a
+        banki fokonyvtol kulon tarolo).'
       next_heading: Mit irj be kovetkezokent
       next_import_command: '  aeat app ledger import <banki-kivonat.csv> --provider
         csv - banki tranzakciok importalasa.'

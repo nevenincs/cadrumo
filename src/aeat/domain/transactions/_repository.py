@@ -62,12 +62,19 @@ class ImportSummary(BaseModel):
 
     Attributes:
         imported: Number of new transactions persisted by this call.
-        skipped: Number of input rows already present in the catalogue
-            (idempotency hit; the deterministic
-            :func:`derive_transaction_id` ensures re-imports do not
-            duplicate).
+        skipped: Number of input rows already present in the catalogue.
+            A row is a duplicate when its stable import fingerprint
+            (:func:`derive_import_fingerprint`) is already present —
+            the fingerprint is stamped at import and survives both
+            later edits and a re-export in a different file format.
         errors: Reserved for future per-row error counts; today the
             repository raises on any error rather than tallying.
+        likely_duplicate_refs: Rows that were imported but share an
+            effective date and amount with an existing transaction
+            while carrying a divergent narrative — a probable, but
+            not confident, cross-format duplicate. The operator is
+            warned so they can review rather than discovering a silent
+            double-count later.
         catalogue_path: Logical URI of the encrypted database object.
     """
 
@@ -79,6 +86,7 @@ class ImportSummary(BaseModel):
     bucket_id: str = Field(min_length=1)
     imported_refs: tuple[BucketTransactionRef, ...] = ()
     skipped_refs: tuple[BucketTransactionRef, ...] = ()
+    likely_duplicate_refs: tuple[BucketTransactionRef, ...] = ()
     catalogue_path: str
 
 

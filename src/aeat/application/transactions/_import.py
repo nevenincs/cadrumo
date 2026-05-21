@@ -5,7 +5,6 @@ Emits structured diagnostics during ledger-import verification.
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 from collections.abc import Iterable
 from datetime import timedelta
 from pathlib import Path
@@ -13,10 +12,11 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.transactions import TransactionCatalogue
-from ...domain.transactions._models import derive_transaction_id
+from ...domain.transactions._models import derive_import_fingerprint, derive_transaction_id
 from ._diagnostics import (
     LedgerImportDiagnostic,
     LedgerImportDiagnosticKind,
@@ -58,7 +58,15 @@ def import_ledger_with_diagnostics(
     skipped_count = 0
 
     rows = tuple(raw_transactions)
-    seen_ids: set[str] = set()
+    seen_fingerprints: set[str] = set()
+    # The duplicate check keys on the stable import fingerprint — the
+    # same identity the persisting import path deduplicates on — so a
+    # verify run's preview agrees with what a real import would do,
+    # including across file formats and after a transaction is edited.
+    existing_fingerprints = {
+        transaction.import_fingerprint or derive_import_fingerprint(transaction.raw)
+        for transaction in existing_catalogue.values()
+    }
 
     if not rows:
         diagnostics.append(
@@ -75,8 +83,9 @@ def import_ledger_with_diagnostics(
     dates = []
     for raw in rows:
         tx_id = derive_transaction_id(raw)
+        fingerprint = derive_import_fingerprint(raw)
 
-        if tx_id in existing_catalogue:
+        if fingerprint in existing_fingerprints:
             skipped_count += 1
             diagnostics.append(
                 build_ledger_import_diagnostic(
@@ -87,7 +96,7 @@ def import_ledger_with_diagnostics(
                     affected_transaction_ids=(tx_id,),
                 )
             )
-        elif tx_id in seen_ids:
+        elif fingerprint in seen_fingerprints:
             skipped_count += 1
             diagnostics.append(
                 build_ledger_import_diagnostic(
@@ -100,7 +109,7 @@ def import_ledger_with_diagnostics(
             )
         else:
             imported_count += 1
-            seen_ids.add(tx_id)
+            seen_fingerprints.add(fingerprint)
 
         date = raw.value_date or raw.booked_date
         if date:

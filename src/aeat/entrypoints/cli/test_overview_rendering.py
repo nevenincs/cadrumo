@@ -129,3 +129,29 @@ def test_work_units_line_shown_when_only_discarded_exist() -> None:
     work_unit_line = next(line for line in lines if "discarded" in line.lower())
     assert "0" in work_unit_line
     assert "2" in work_unit_line
+
+
+def test_empty_invoice_register_line_does_not_read_as_lost_ledger_work() -> None:
+    """C3: an empty invoice register must not read as lost ledger work.
+
+    The `invoices` counter is the sales/purchase invoice register - a
+    store separate from the bank ledger. An operator who has classified
+    several ledger transactions must not see this line as "your work is
+    gone": the wording names the invoice register explicitly and states
+    it does not count ledger transactions.
+    """
+
+    lines = render_cli_overview_status_lines(_report(transactions=8, invoices=0))
+    invoice_line = next(line for line in lines if "invoice" in line.lower())
+    # The line names the separate store and rules out the misreading.
+    assert "register" in invoice_line.lower()
+    assert "ledger" in invoice_line.lower()
+
+
+def test_invoice_register_line_with_records_names_the_register() -> None:
+    """A populated invoice register line still names the separate store."""
+
+    lines = render_cli_overview_status_lines(_report(invoices=3))
+    invoice_line = next(line for line in lines if "invoice" in line.lower())
+    assert "3" in invoice_line
+    assert "register" in invoice_line.lower()
