@@ -29,6 +29,12 @@ revision; the profile id is wired into the construct's
 Source grounding: `aeat-dr-369-2021`, `aeat-modelo-369-procedure`
 (HAC/610/2021 Diseño xlsx + procedure HTML in corpus).
 
+**PROVISIONAL LABEL PATTERNS**: The corpus artefacts are a diseño de registro (EDI
+record-layout spec) and procedure HTML, NOT a real printed-declaración-form PDF
+specimen. The `label_pattern` values were derived from registry casilla LABEL fields
+and are unverified guesses. Verification requires a W05 round-trip parse test against
+a real M369 printed-form PDF. No such PDF exists in the corpus yet.
+
 Note: Only the Esquema Union (trimestral) revision has been profiled.
 The Esquema Importacion (IOSS monthly) and Esquema Exterior revisions
 have analogous structures; their profiles are deferred — no corpus PDF

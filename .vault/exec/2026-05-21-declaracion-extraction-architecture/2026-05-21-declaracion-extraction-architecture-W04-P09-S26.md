@@ -30,6 +30,12 @@ Wired both into the `modelo-840-iae-declaration` construct.
 Source grounding: `aeat-dr-840`, `boe-modelo-840-2003-form`
 (Orden HAC/2572/2003, AEAT Diseño PDF in corpus).
 
+**PROVISIONAL LABEL PATTERNS**: The corpus artefact is a diseño de registro (EDI
+record-layout spec), NOT a real printed-declaración-form PDF specimen. The
+`label_pattern` values were derived from registry casilla LABEL fields and are
+unverified guesses. Verification requires a W05 round-trip parse test against a
+real M840 printed-form PDF. No such PDF exists in the corpus yet.
+
 ## Commit
 
 `3af7ea87e` — W04: author named_label declaracion_pdf profiles for M036, M347, M369, M840

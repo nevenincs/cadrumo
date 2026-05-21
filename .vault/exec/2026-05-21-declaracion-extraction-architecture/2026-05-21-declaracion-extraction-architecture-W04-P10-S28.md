@@ -29,6 +29,12 @@ Wired both into the `modelo-036-census-foundation` construct.
 Source grounding: `aeat-dr-036-2025`, `aeat-modelo-036-procedure`
 (Diseño xlsx 2025 + instructions HTML in corpus).
 
+**PROVISIONAL LABEL PATTERNS**: The corpus artefacts are a diseño de registro (EDI
+record-layout spec) and instructions HTML, NOT a real printed-declaración-form PDF
+specimen. The `label_pattern` values were derived from registry casilla LABEL fields
+and are unverified guesses. Verification requires a W05 round-trip parse test against
+a real M036 printed-form PDF. No such PDF exists in the corpus yet.
+
 ## Commit
 
 `3af7ea87e` — W04: author named_label declaracion_pdf profiles for M036, M347, M369, M840
