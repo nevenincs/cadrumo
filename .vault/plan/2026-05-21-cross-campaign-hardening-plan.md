@@ -66,7 +66,7 @@ roundtrip / anti-tautology gaps.
 - [x] `P05.S17` - CALC-2: `import_external_filing` builds registry-sourced `CasillaObservation` rows; `src/aeat/application/filing`.
 - [ ] `P05.S18` - CALC-3: snapshot validator asserts every `input_kind="bound"` casilla has a binding definition; `src/aeat/domain/calculations/registry`.
 - [ ] `P05.S19` - PERS-4: unify `object_key` type across record/write and add identity roundtrip test; `src/aeat/adapters/persistence`.
-- [ ] `P05.S20` - PERS-5: `RecoveryRecord` envelope-file roundtrip and base64 anti-tautology; `src/aeat/adapters/persistence`.
+- [x] `P05.S20` - PERS-5: `RecoveryRecord` serialization anti-tautology proof (5850e665e) - re-verified: no file-Envelope path exists; added drop-field + mutate-field anti-tautology tests; 11 tests green; `src/aeat/adapters/persistence`.
 - [ ] `P05.S21` - PERS-6: `SecureObjectMetadata` peek consistency test and anti-tautology; `src/aeat/adapters/persistence`.
 - [ ] `P05.S22` - PERS-7: concurrent-write serialization test for `SecureObjectRepository`; `src/aeat/adapters/persistence`.
 - [x] `P05.S23` - EXIM-2: fichero-BOE RESERVED-field anti-tautology proof (ed4b529ac) - corrupt-the-literal test, 9 roundtrip tests green; `src/aeat/adapters/outbound/aeat/export/_formats`.
