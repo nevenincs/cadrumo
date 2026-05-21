@@ -1102,3 +1102,42 @@ def test_verify_reports_missing_for_modelo_without_registry_export_layout(tmp_pa
     assert verdict.verdict is DeclaracionVerifyVerdict.MISSING
     assert verdict.narrative == "filing.export.missing_registry_layout"
     assert verdict.mismatched_casillas == ()
+
+
+def test_verify_reports_unchecked_casillas_outside_the_parsed_set(tmp_path: Path) -> None:
+    """verify_export surfaces draft casillas the export parser never re-reads.
+
+    The modelo-130 draft carries casillas the fichero-BOE layout does not
+    expose as deserialised currency fields (``saldo-negativo-fin-periodo``
+    is a registry-named carry-forward casilla, not a numbered wire slot).
+    A ``MATCH`` verdict must not silently imply full coverage: those
+    casillas belong in ``unchecked_casillas``. This asserts the coverage
+    contract — unchecked casillas are real draft casillas, are disjoint
+    from both the parser-confirmed (``casilla_provenance``) set and the
+    ``mismatched_casillas`` set, and the known carry-forward casilla is
+    reported.
+    """
+
+    draft = _approved_registry_draft()
+    provider = _schema_provider()
+    exported = tmp_path / "modelo-130.txt"
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_130_export_headers(),
+        schema_provider=provider,
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    draft_casillas = {value.casilla_id for value in draft.values}
+    confirmed = {entry.casilla_id for entry in verdict.casilla_provenance}
+    unchecked = set(verdict.unchecked_casillas)
+
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
+    assert unchecked, "modelo 130 has a non-currency casilla the layout never re-reads"
+    assert unchecked <= draft_casillas
+    assert unchecked.isdisjoint(confirmed)
+    assert unchecked.isdisjoint(set(verdict.mismatched_casillas))
+    # The registry carry-forward casilla is the concrete unchecked entry.
+    assert "saldo-negativo-fin-periodo" in unchecked
