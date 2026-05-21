@@ -151,6 +151,7 @@ Scoped discovery sweep of the named-field modelo corpus and registry presence.
 - [ ] `W04.P08.S24` - Sweep the named-field modelo corpus and registry presence for modelos 036, 037, 369, 720, and 840 and append any surfaced schema-tweak Steps via the vault plan CLI; `src/aeat/_data/registry/aeat/modelos/`.
 - [ ] `W04.P08.S80` - Classify per dead-stub modelo 184 193 232 347 349 720 and 840 whether each non-matchable decl slug target resolves to a numeric casilla or a named-field target; `src/aeat/_data/registry/aeat/modelos/`.
 - [ ] `W04.P08.S86` - Decide fetch-versus-defer for the source-blocked Modelo 037 which has no Diseno instructions or fixtures in the corpus and record the fetch-or-descope decision; `src/aeat/_data/registry/aeat/modelos/037/`.
+- [ ] `W04.P08.S91` - Record that W02 code-review fix removed the dead declaracion_pdf profiles for Modelo 347 (revision 2008-y-siguientes) and Modelo 840 (revision 2003-y-siguientes) because both carried decl.tipo-declaracion (data_type=text) with match_strategy=numeric_casilla; W04 P09 and P10 must author real named-field profiles for these two modelos; `src/aeat/_data/registry/aeat/modelos/347.toml src/aeat/_data/registry/aeat/modelos/840.toml`.
 
 ### Phase `W04.P09` - dead-stub repair and modelo 037 registration
 
