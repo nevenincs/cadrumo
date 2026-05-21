@@ -124,9 +124,15 @@ class SubmissionEngineAdapter:
         """Store the wrapped :class:`SubmissionEngine`."""
         self._engine = engine
 
-    def preflight(self, draft: RegistryModeloDraftProtocol, *, today: date) -> None:
+    def preflight(
+        self,
+        draft: RegistryModeloDraftProtocol,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
         """Delegate to the engine's public preflight method."""
-        self._engine.preflight(draft, today=today)
+        self._engine.preflight(draft, today=today, skip_deadline_window=skip_deadline_window)
 
 
 async def _live_expedientes_source(session: object, modelo: str | None) -> object:

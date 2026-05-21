@@ -1030,7 +1030,12 @@ cli:
         törölheti; a(z) '%{profile}' nem aktív.
       profile_help: Az aktív profilmutató vizsgálata és javítása.
       profile_name_help: Egy adott regisztrált profil-bucket vizsgálata.
-      profile_requires_yes: Add meg a --yes kapcsolót az aktív profilmutató törléséhez.
+      profile_one_action: Válaszd a --clear-active vagy a --repair-manifest-status
+        kapcsolót, de ne mindkettőt.
+      profile_repair_manifest_status_help: Régi aktív bucket-manifeszt állapotának
+        pótlása a titkosított profilrekordból.
+      profile_requires_yes: Add meg a --yes kapcsolót az aktív profil javításának
+        alkalmazásához.
       quarantine_dry_run_help: A karanténba helyezendő sorok előnézete bármi mozgatása
         nélkül
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;

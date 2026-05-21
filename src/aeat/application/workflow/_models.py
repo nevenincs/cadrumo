@@ -78,6 +78,32 @@ class WorkflowStage(StrEnum):
     ABORTED = "ABORTED"
 
 
+class WorkflowPurpose(StrEnum):
+    """Why the workflow engine is being driven.
+
+    The purpose decides whether the filing-window deadline is an abort
+    gate or merely informational context:
+
+    * ``FILE`` — the end-to-end filing pipeline (``work file`` and the
+      end-to-end ``WorkflowEngine`` run). Filing without a pending
+      obligation is refused: the ``COMPUTING_DEADLINES`` stage aborts
+      with :attr:`WorkflowAbortReason.NO_PENDING_OBLIGATION` when the
+      schedule carries no matching obligation and with
+      :attr:`WorkflowAbortReason.DEADLINE_PASSED` when the obligation
+      window has already closed.
+    * ``VERIFY`` — the ``work verify`` calculation check. Verification
+      asserts a calculation is internally sound against the registry's
+      verification expectations; it has no honest dependency on the
+      AEAT filing calendar. The ``COMPUTING_DEADLINES`` stage records
+      the filing-window state as informational context and never
+      aborts on it, so a correct calculation can be confirmed early,
+      offline, or for a past period.
+    """
+
+    FILE = "FILE"
+    VERIFY = "VERIFY"
+
+
 class WorkflowAbortReason(StrEnum):
     """Closed set of reasons the workflow may abort."""
 

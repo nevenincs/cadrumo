@@ -106,6 +106,7 @@ from ..workflow import (
     DeadlineEngineAdapter,
     RegistryModeloDraftProtocol,
     WorkflowEngine,
+    WorkflowPurpose,
     WorkflowResult,
     WorkflowRunRepository,
     WorkflowStage,
@@ -325,8 +326,15 @@ def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
     return f"{modelo}-{filing_year}-{period}"
 
 
-def _workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
-    """Return the canonical period token consumed by WorkflowEngine."""
+def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
+    """Return the canonical period token consumed by WorkflowEngine.
+
+    The work unit stores the period as a short token (``"1T"``,
+    ``"0A"``, ``"03"``); the :class:`WorkflowEngine` consumes a
+    year-qualified token (``"2026Q1"``, ``"2026"``, ``"2026-03"``).
+    This is the single producer of that mapping, used by the workflow
+    gate and by run-id resolution so they cannot diverge.
+    """
 
     if work_unit.period.endswith("T") and len(work_unit.period) == 2:
         quarter = work_unit.period[0]
@@ -345,7 +353,7 @@ class _RevisionInputsProvider:
     def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
         self._revision = revision
         self._modelo = work_unit.modelo
-        self._period = _workflow_period_for_work_unit(work_unit)
+        self._period = workflow_period_for_work_unit(work_unit)
 
     def load_inputs(
         self,
@@ -467,14 +475,16 @@ def _run_revision_workflow_gate(
     runs_dir: Path | None,
     run_repository: WorkflowRunRepository,
     resumed_from: str | None = None,
+    purpose: WorkflowPurpose = WorkflowPurpose.FILE,
 ) -> WorkflowResult:
     result = asyncio.run(
         engine.run_for_period(
             profile,
             work_unit.modelo,
-            _workflow_period_for_work_unit(work_unit),
+            workflow_period_for_work_unit(work_unit),
             today=today,
             resumed_from=resumed_from,
+            purpose=purpose,
         )
     )
     run_repository.save(result, runs_dir=runs_dir)
@@ -1999,7 +2009,12 @@ def verify_modelo_revision(
        the calculation revision transitions DRAFT →
        VERIFICADO_COMPLETO.
     5. If the report would grant ``VERIFICADO_COMPLETO``, run the
-       WorkflowEngine-owned gate before mutating state.
+       WorkflowEngine-owned gate before mutating state. The gate runs
+       with :attr:`WorkflowPurpose.VERIFY`: it validates the draft
+       against the registry but is independent of the AEAT filing
+       calendar — it never refuses because the filing window is closed
+       or absent. The ``NO_PENDING_OBLIGATION`` guard stays on the
+       filing path (``file_modelo_revision``).
     6. Persist the report in the verification-report catalogue.
        Failed attempts persist so the audit trail explains why a
        transition was refused.
@@ -2089,6 +2104,7 @@ def verify_modelo_revision(
             today=now.date(),
             runs_dir=workflow_runs_dir,
             run_repository=run_repo,
+            purpose=WorkflowPurpose.VERIFY,
         )
 
     # Persist the report regardless of outcome — failed attempts
@@ -3184,4 +3200,5 @@ __all__ = [
     "mark_revision_verificado_completo",
     "rename_work_unit",
     "verify_modelo_revision",
+    "workflow_period_for_work_unit",
 ]

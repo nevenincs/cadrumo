@@ -55,6 +55,7 @@ from . import (
     RegistryModeloDraftProtocol,
     WorkflowAbortReason,
     WorkflowEngine,
+    WorkflowPurpose,
     WorkflowStage,
 )
 
@@ -146,9 +147,17 @@ class _ConcreteDraftBuilder:
 class _ConcreteSubmissionEngine:
     preflight_exc: BaseException | None = None
     preflight_calls: list[date] = field(default_factory=list)
+    skip_deadline_window_calls: list[bool] = field(default_factory=list)
 
-    def preflight(self, draft: RegistryModeloDraftProtocol, *, today: date) -> None:
+    def preflight(
+        self,
+        draft: RegistryModeloDraftProtocol,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
         self.preflight_calls.append(today)
+        self.skip_deadline_window_calls.append(skip_deadline_window)
         if self.preflight_exc is not None:
             raise self.preflight_exc
 
@@ -613,6 +622,152 @@ class TestAbortReasons:
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
         assert result.steps[-1].stage is WorkflowStage.COMPUTING_DEADLINES
+
+
+class TestVerifyPurpose:
+    """``WorkflowPurpose.VERIFY`` makes the run deadline-independent.
+
+    Verification asserts a calculation is internally sound; it has no
+    honest dependency on the AEAT filing calendar (see the work-verify
+    deadline-independence ADR). For ``VERIFY`` the ``COMPUTING_DEADLINES``
+    stage never aborts with ``NO_PENDING_OBLIGATION`` or
+    ``DEADLINE_PASSED``, and the preflight stage skips the filing-window
+    gate. ``FILE`` (the default) keeps both as hard refusals.
+    """
+
+    def test_verify_reaches_done_without_a_pending_obligation(self) -> None:
+        """No scheduled obligation: ``FILE`` aborts, ``VERIFY`` proceeds."""
+        fx = _fixtures()
+        fx.deadline_engine.obligation = None
+
+        file_result = asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                purpose=WorkflowPurpose.FILE,
+            )
+        )
+        assert file_result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+
+        verify_result = asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                purpose=WorkflowPurpose.VERIFY,
+            )
+        )
+        assert verify_result.final_stage is WorkflowStage.DONE
+        assert verify_result.aborted_reason is None
+
+    def test_verify_reaches_done_for_a_closed_filing_window(self) -> None:
+        """Closed-window target: ``FILE`` aborts DEADLINE_PASSED, ``VERIFY`` proceeds."""
+        fx = _fixtures()
+        past = _obligation(period="2025Q4", closes_on=date(2026, 1, 20))
+        fx.deadline_engine = _ConcreteDeadlineEngine(obligation=past, profile=fx.profile)
+        fx.draft = _ConcreteDraft(period=past.period, profile_tax_id=fx.profile.tax_id)
+        fx.draft_builder.draft = fx.draft
+
+        file_result = asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                past.modelo,
+                past.period,
+                today=fx.today,
+                purpose=WorkflowPurpose.FILE,
+            )
+        )
+        assert file_result.aborted_reason is WorkflowAbortReason.DEADLINE_PASSED
+
+        verify_result = asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                past.modelo,
+                past.period,
+                today=fx.today,
+                purpose=WorkflowPurpose.VERIFY,
+            )
+        )
+        assert verify_result.final_stage is WorkflowStage.DONE
+        assert verify_result.aborted_reason is None
+
+    def test_verify_records_deadline_stage_as_informational(self) -> None:
+        """The verify ``COMPUTING_DEADLINES`` step is a success step
+        tagged ``deadline_role=informational``."""
+        fx = _fixtures()
+        fx.deadline_engine.obligation = None
+
+        result = asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                purpose=WorkflowPurpose.VERIFY,
+            )
+        )
+        deadline_step = next(
+            s for s in result.steps if s.stage is WorkflowStage.COMPUTING_DEADLINES
+        )
+        assert deadline_step.success is True
+        assert deadline_step.details is not None
+        assert deadline_step.details["deadline_role"] == "informational"
+        assert deadline_step.details["filing_window"] == "absent"
+
+    def test_verify_skips_the_preflight_deadline_window_gate(self) -> None:
+        """The verify preflight call passes ``skip_deadline_window=True``;
+        the default ``FILE`` run passes ``False``."""
+        fx = _fixtures()
+
+        asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                purpose=WorkflowPurpose.VERIFY,
+            )
+        )
+        assert fx.submission_engine.skip_deadline_window_calls == [True]
+
+        fresh = _fixtures()
+        asyncio.run(
+            fresh.engine().run_for_period(
+                fresh.profile,
+                fresh.obligation.modelo,
+                fresh.obligation.period,
+                today=fresh.today,
+                purpose=WorkflowPurpose.FILE,
+            )
+        )
+        assert fresh.submission_engine.skip_deadline_window_calls == [False]
+
+    def test_verify_still_refuses_an_unsound_draft(self) -> None:
+        """Deadline-independence does not weaken verification: a draft
+        carrying ERROR findings still aborts ``DRAFT_HAS_ERRORS``."""
+        fx = _fixtures()
+        fx.deadline_engine.obligation = None
+        fx.draft = _ConcreteDraft(
+            profile_tax_id=fx.profile.tax_id,
+            findings=(
+                ModeloFinding(severity=BaseSeverity.ERROR, message="translation"),
+            ),
+        )
+        fx.draft_builder.draft = fx.draft
+
+        result = asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                purpose=WorkflowPurpose.VERIFY,
+            )
+        )
+        assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
 
 
 class TestSiteUnavailableArm:

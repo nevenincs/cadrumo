@@ -51,6 +51,7 @@ from ._actions import (
     mark_revision_verificado_completo,
     rename_work_unit,
     verify_modelo_revision,
+    workflow_period_for_work_unit,
 )
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
@@ -115,4 +116,5 @@ __all__ = [
     "rename_work_unit",
     "resolve_modelo_100_borrador_bindings",
     "verify_modelo_revision",
+    "workflow_period_for_work_unit",
 ]

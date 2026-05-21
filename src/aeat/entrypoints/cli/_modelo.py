@@ -2170,6 +2170,108 @@ def work_file(
     _emit(ctx, payload, lines)
 
 
+_WORKFLOW_RUN_ID_RE = r"[0-9a-f]{16}"
+
+
+def _resolve_workflow_run_id(target: str) -> str:
+    """Resolve a ``work resume`` argument to a 16-character run id.
+
+    The operator may pass either the run id directly, or the
+    64-character work-unit id — the only identifier most operators
+    have to hand. A run id is a hash an operator cannot derive, so a
+    work-unit id is resolved to the latest persisted run for that
+    work unit's ``(modelo, period)``.
+
+    Raises:
+        typer.BadParameter: When ``target`` is neither a 16-character
+            run id nor a 64-character work-unit id, when the work
+            unit does not exist, or when no run targets it yet.
+    """
+
+    from ...application.modelo import workflow_period_for_work_unit
+    from ...application.workflow import WorkflowError, find_latest_run_for_period
+
+    stripped = target.strip()
+    if re.fullmatch(_WORKFLOW_RUN_ID_RE, stripped):
+        return stripped
+    if re.fullmatch(_WORK_UNIT_ID_RE, stripped):
+        try:
+            unit = get_work_unit(stripped)
+        except WorkUnitNotFoundError as exc:
+            raise _bad_parameter_from_error(exc) from exc
+        try:
+            run = find_latest_run_for_period(
+                modelo=unit.modelo,
+                period=workflow_period_for_work_unit(unit),
+            )
+        except WorkflowError as exc:
+            raise _bad_parameter_from_error(exc) from exc
+        return run.run_id
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.resume_invalid_target",
+            default=(
+                "resume target must be a 16-character workflow run id or a "
+                f"64-character work-unit id; got {target!r}. "
+                "Run `aeat app modelo work runs` to list run ids."
+            ),
+        )
+    )
+
+
+@work_app.command(
+    "runs",
+    help=tr(
+        "cli.app.modelo.work.runs_help",
+        default=(
+            "List persisted workflow runs with their run ids, newest first. "
+            "Use a run id with `aeat app modelo work resume`. Local-only: "
+            "never contacts AEAT."
+        ),
+    ),
+)
+def work_runs(ctx: typer.Context) -> None:
+    """List persisted workflow runs so an operator can discover run ids."""
+
+    from ...application.workflow import list_runs
+
+    runs = list_runs()
+    payload = {
+        "operation": "modelo.work.runs",
+        "run_count": len(runs),
+        "runs": [
+            {
+                "run_id": run.run_id,
+                "modelo": run.obligation.modelo if run.obligation is not None else None,
+                "period": run.obligation.period if run.obligation is not None else None,
+                "final_stage": run.final_stage.value,
+                "aborted_reason": (run.aborted_reason.value if run.aborted_reason is not None else None),
+                "started_at": run.started_at.isoformat(),
+            }
+            for run in runs
+        ],
+    }
+    lines = [
+        "operation\tmodelo.work.runs",
+        f"run_count\t{len(runs)}",
+        "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                run.run_id,
+                run.obligation.modelo if run.obligation is not None else "-",
+                run.obligation.period if run.obligation is not None else "-",
+                run.final_stage.value,
+                run.aborted_reason.value if run.aborted_reason is not None else "-",
+                run.started_at.isoformat(),
+            )
+        )
+        for run in runs
+    )
+    _emit(ctx, payload, lines)
+
+
 @work_app.command(
     "resume",
     help=tr(
@@ -2177,18 +2279,23 @@ def work_file(
         default=(
             "Validate that an aborted workflow run may be retried. Emits the "
             "(modelo, period, obligation) context the engine would consume to "
-            "drive a fresh attempt. Local-only: never contacts AEAT."
+            "drive a fresh attempt. Accepts a workflow run id or a work-unit "
+            "id. Local-only: never contacts AEAT."
         ),
     ),
 )
 def work_resume(
     ctx: typer.Context,
-    workflow_run_id: Annotated[
+    target: Annotated[
         str,
         typer.Argument(
             help=tr(
-                "cli.app.modelo.work.resume_workflow_run_id_help",
-                default="16-character workflow run id (see aeat config workflow runs list).",
+                "cli.app.modelo.work.resume_target_help",
+                default=(
+                    "16-character workflow run id, or the 64-character "
+                    "work-unit id (its latest run is resolved automatically). "
+                    "Run `aeat app modelo work runs` to list run ids."
+                ),
             ),
         ),
     ],
@@ -2200,6 +2307,8 @@ def work_resume(
         WorkflowResumeRefusedError,
         resume_modelo_workflow,
     )
+
+    workflow_run_id = _resolve_workflow_run_id(target)
 
     try:
         result = resume_modelo_workflow(workflow_run_id)

@@ -28,6 +28,7 @@ Coverage:
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
@@ -69,7 +70,9 @@ from aeat.application.modelo import (
 )
 from aeat.application.workflow import (
     DeadlineEngineAdapter,
+    WorkflowAbortReason,
     WorkflowEngine,
+    WorkflowPurpose,
     WorkflowStage,
 )
 from aeat.core.config import Settings
@@ -778,6 +781,147 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
         ),
     )
     assert verification_events == ()
+
+
+def test_verify_grants_for_a_closed_past_period_real_registry(repos) -> None:
+    """``work verify`` is independent of the AEAT filing calendar.
+
+    A modelo 130 calculation for 2024 Q1 — whose filing window closed
+    in April 2024 — is verified at a 2026 clock. ``compute_obligation``
+    derives the schedule from ``today.year`` (2026), so no obligation
+    exists for the 2024 period at all. The pre-deadline-independence
+    behaviour aborted here with ``NO_PENDING_OBLIGATION``; verify must
+    now still grant ``VERIFICADO_COMPLETO`` because the calculation is
+    sound and verification does not depend on the filing window.
+    """
+
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo, filing_year=2024)
+
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    report = _verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    assert report.granted_verificado_completo is True
+    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
+
+    refreshed = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
+
+
+def test_verify_records_deadline_state_as_informational_not_abort(repos) -> None:
+    """The verify run's ``COMPUTING_DEADLINES`` step never aborts.
+
+    For a closed past period it records the filing-window state as an
+    informational success step, so ``readiness`` and ``verify`` agree:
+    a readiness-ready modelo stays reachable by verify.
+    """
+
+    wu_repo, cr_repo, _, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo, filing_year=2024)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    gate = _workflow_gate(revision=revision, work_unit=work_unit, clock=_T2)
+    result = asyncio.run(
+        gate.engine.run_for_period(
+            gate.profile,
+            work_unit.modelo,
+            _canonical_work_unit_period(work_unit),
+            today=_T2.date(),
+            purpose=WorkflowPurpose.VERIFY,
+        )
+    )
+
+    assert result.final_stage is WorkflowStage.DONE
+    assert result.aborted_reason is None
+    deadline_steps = [s for s in result.steps if s.stage is WorkflowStage.COMPUTING_DEADLINES]
+    assert len(deadline_steps) == 1
+    deadline_step = deadline_steps[0]
+    assert deadline_step.success is True
+    assert deadline_step.details is not None
+    assert deadline_step.details["deadline_role"] == "informational"
+
+
+def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos) -> None:
+    """The ``NO_PENDING_OBLIGATION`` guard stays on the filing path.
+
+    Deadline-independence applies to ``verify`` only. Filing a modelo
+    130 revision for 2024 Q1 at a 2026 clock — when no obligation
+    exists for that period — must still abort: filing without a
+    pending obligation stays refused.
+    """
+
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo, filing_year=2024)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    _verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    with pytest.raises(ModeloWorkflowGateError) as gate_error:
+        _file_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T3,
+        )
+
+    assert gate_error.value.result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+    refreshed = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
 
 def test_filing_record_supersession_preserves_audit_history(repos) -> None:

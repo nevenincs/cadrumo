@@ -24,6 +24,7 @@ from ...core.logging import get_logger
 from ...domain.deadlines import (
     AutonomoProfile,
     ModeloDeadline,
+    ObligationStatus,
     Schedule,
     compute_obligation_schedule,
     next_deadline,
@@ -36,6 +37,7 @@ from ._models import (
     DeclaracionPointer,
     SiteHealthAlert,
     WorkflowAbortReason,
+    WorkflowPurpose,
     WorkflowResult,
     WorkflowStage,
     WorkflowState,
@@ -248,6 +250,7 @@ class WorkflowEngine:
         fail_on_warning: bool = False,
         today: date | None = None,
         resumed_from: str | None = None,
+        purpose: WorkflowPurpose = WorkflowPurpose.FILE,
     ) -> WorkflowResult:
         """Drive the workflow for a caller-specified ``(modelo, period)``.
 
@@ -263,6 +266,11 @@ class WorkflowEngine:
                 can trace the resume chain. The engine does not validate
                 the prior run by itself; the upstream resume action
                 resolves and gates the prior context before invoking.
+            purpose: Why the run is being driven. ``FILE`` (the
+                default) treats the filing-window deadline as an abort
+                gate; ``VERIFY`` records it as informational context
+                and never aborts on it, so a calculation can be
+                verified independently of the AEAT calendar.
 
         Returns:
             A fully populated :class:`WorkflowResult`.
@@ -282,6 +290,7 @@ class WorkflowEngine:
             fail_on_warning=fail_on_warning,
             today=today,
             resumed_from=resumed_from,
+            purpose=purpose,
         )
 
     # ------------------------------------------------------------------ driver
@@ -295,6 +304,7 @@ class WorkflowEngine:
         fail_on_warning: bool,
         today: date | None,
         resumed_from: str | None = None,
+        purpose: WorkflowPurpose = WorkflowPurpose.FILE,
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
         started_at = _utcnow()
@@ -324,6 +334,7 @@ class WorkflowEngine:
                 target_period=target_period,
                 today=reference_today,
                 steps=steps,
+                purpose=purpose,
             )
             self._run_obligation = obligation
             await self._stage_checking_inbox(
@@ -342,6 +353,7 @@ class WorkflowEngine:
                 draft=draft,
                 today=reference_today,
                 steps=steps,
+                purpose=purpose,
             )
             final_stage = WorkflowStage.DONE
         except WorkflowAbortSignalError as abort:
@@ -444,6 +456,7 @@ class WorkflowEngine:
         target_period: str | None,
         today: date,
         steps: list[WorkflowStep],
+        purpose: WorkflowPurpose = WorkflowPurpose.FILE,
     ) -> ModeloDeadline:
         """Stage 3 — compute the target obligation.
 
@@ -455,10 +468,19 @@ class WorkflowEngine:
         its own narrow filtering (``next_deadline`` or per-target
         ``(modelo, period)`` match) over that shared schedule.
 
-        Aborts with ``NO_PENDING_OBLIGATION`` when the schedule is
-        empty or the narrow-target is absent, and with
-        ``DEADLINE_PASSED`` when the selected obligation has already
-        closed against ``today``.
+        For :attr:`WorkflowPurpose.FILE`, aborts with
+        ``NO_PENDING_OBLIGATION`` when the schedule is empty or the
+        narrow-target is absent, and with ``DEADLINE_PASSED`` when the
+        selected obligation has already closed against ``today``.
+
+        For :attr:`WorkflowPurpose.VERIFY`, neither abort fires:
+        verification asserts a calculation is internally sound and has
+        no honest dependency on the AEAT filing calendar. The
+        filing-window state is recorded as informational step
+        ``details`` instead. When no scheduled obligation matches the
+        verify target, a context-only :class:`ModeloDeadline` is
+        synthesised purely so the downstream draft/validation stages
+        have the ``(modelo, period)`` to build against.
         """
         started = _utcnow()
         try:
@@ -486,6 +508,16 @@ class WorkflowEngine:
             obligation = matches[0] if matches else None
         else:
             obligation = next_deadline(schedule, today=today)
+
+        if purpose is WorkflowPurpose.VERIFY:
+            return self._record_verify_deadline_context(
+                obligation=obligation,
+                target_modelo=target_modelo,
+                target_period=target_period,
+                today=today,
+                started=started,
+                steps=steps,
+            )
 
         if obligation is None:
             no_summary = _summary_text("No pending filing obligation for this profile")
@@ -545,6 +577,95 @@ class WorkflowEngine:
             )
         )
         return obligation
+
+    def _record_verify_deadline_context(
+        self,
+        *,
+        obligation: ModeloDeadline | None,
+        target_modelo: str | None,
+        target_period: str | None,
+        today: date,
+        started: datetime,
+        steps: list[WorkflowStep],
+    ) -> ModeloDeadline:
+        """Record the filing-window state for a verify run without aborting.
+
+        Verification of a calculation is independent of the AEAT filing
+        calendar (see the work-verify deadline-independence ADR). This
+        helper turns the ``COMPUTING_DEADLINES`` stage into a purely
+        informational step for :attr:`WorkflowPurpose.VERIFY`: it never
+        raises ``NO_PENDING_OBLIGATION`` or ``DEADLINE_PASSED``.
+
+        When a scheduled obligation matches the verify target, its real
+        filing window is surfaced as informational ``details``. When
+        none matches, a context-only :class:`ModeloDeadline` is
+        synthesised so the downstream draft/validation stages still
+        have a ``(modelo, period)`` carrier; the synthetic record is
+        explicitly marked ``NOT_APPLICABLE`` and never reaches a
+        filing path.
+        """
+        if obligation is not None:
+            window_state = "open" if obligation.closes_on >= today else "closed"
+            steps.append(
+                WorkflowStep(
+                    stage=WorkflowStage.COMPUTING_DEADLINES,
+                    started_at=started,
+                    ended_at=_utcnow(),
+                    success=True,
+                    summary=_summary_text(
+                        f"Filing window for modelo={obligation.modelo} "
+                        f"period={obligation.period} {window_state} "
+                        f"(closes_on={obligation.closes_on.isoformat()}); "
+                        "informational only — verification does not depend on it"
+                    ),
+                    details={
+                        "modelo": obligation.modelo,
+                        "period": obligation.period,
+                        "opens_on": obligation.opens_on.isoformat(),
+                        "closes_on": obligation.closes_on.isoformat(),
+                        "filing_window": window_state,
+                        "deadline_role": "informational",
+                    },
+                )
+            )
+            return obligation
+
+        if target_modelo is None or target_period is None:
+            raise WorkflowError(
+                "verify workflow requires an explicit (modelo, period) target",
+            )
+        synthetic = ModeloDeadline(
+            modelo=target_modelo,
+            period=target_period,
+            opens_on=today,
+            closes_on=today,
+            status=ObligationStatus.NOT_APPLICABLE,
+            applies_because=(
+                "Verification context only: no AEAT filing window is "
+                "open for this period. Verifying a calculation does not "
+                "depend on the filing calendar."
+            ),
+        )
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.COMPUTING_DEADLINES,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=True,
+                summary=_summary_text(
+                    f"No open filing window for modelo={target_modelo} "
+                    f"period={target_period}; informational only — "
+                    "verification does not depend on it"
+                ),
+                details={
+                    "modelo": target_modelo,
+                    "period": target_period,
+                    "filing_window": "absent",
+                    "deadline_role": "informational",
+                },
+            )
+        )
+        return synthetic
 
     async def _stage_checking_inbox(
         self,
@@ -868,12 +989,20 @@ class WorkflowEngine:
         draft: RegistryModeloDraftProtocol,
         today: date,
         steps: list[WorkflowStep],
+        purpose: WorkflowPurpose = WorkflowPurpose.FILE,
     ) -> None:
         """Stage 7 — run preflight gates and verify the auth provider.
 
         Aborts with ``CERT_INVALID`` if the auth-provider Protocol
         raises, and with ``PREFLIGHT_FAILED`` on any
         :class:`aeat.adapters.outbound.aeat.export.SubmissionPreflightError`.
+
+        For :attr:`WorkflowPurpose.VERIFY` the AEAT filing-window
+        preflight gate is skipped: verification of a calculation is
+        independent of the filing calendar (see the work-verify
+        deadline-independence ADR). The draft-soundness and
+        auth-provider gates still run, so an unsound calculation is
+        still refused.
         """
         started = _utcnow()
         cert_details: dict[str, str]
@@ -973,7 +1102,11 @@ class WorkflowEngine:
             cert_details = {"cert_skipped": "not_wired"}
 
         try:
-            self._submission_engine.preflight(draft, today=today)
+            self._submission_engine.preflight(
+                draft,
+                today=today,
+                skip_deadline_window=purpose is WorkflowPurpose.VERIFY,
+            )
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
