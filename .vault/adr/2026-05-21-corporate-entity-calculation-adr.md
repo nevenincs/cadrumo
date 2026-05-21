@@ -9,7 +9,7 @@ related:
   - "[[2026-05-21-taxpayer-type-applicability-research]]"
 ---
 
-# `cli-workflow-redesign` adr: `The corporate-entity calculation model — a legal entity is routed to the Impuesto sobre Sociedades schedule (Modelo 200/202, LIS rate scale), an attribution entity to member pass-through, and never to the IRPF tarifa` | (**status:** `proposed`)
+# `cli-workflow-redesign` adr: `The corporate-entity calculation model — a legal entity is routed to the Impuesto sobre Sociedades schedule (Modelo 200/202, LIS rate scale), an attribution entity to member pass-through, and never to the IRPF tarifa` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -275,11 +275,13 @@ to confirm.
 - Fiscal-consolidation (Modelo 220/222, régimen de consolidación
   fiscal) is explicitly **out of scope** — a future profile flag
   and a separate adjudication if needed.
-- **Owner decision required.** This ADR makes a tax-semantics
-  decision (three-branch routing, IS vs IRPF vs attribution
-  pass-through, Modelo 202 modality derivation). Status `proposed`
-  pending owner confirmation; no schema, engine or registry change
-  lands before this ADR and the parent plan's Wave 1 are accepted.
+- **Owner decision (2026-05-21): accepted.** This ADR makes a
+  tax-semantics decision (three-branch routing, IS vs IRPF vs
+  attribution pass-through, Modelo 202 modality derivation). The
+  owner approved the parent plan and its child ADRs to proceed; the
+  parent plan's Wave 1 is landed. The ADR is `accepted`;
+  implementation of the IS routing belongs to W02.S08, and the
+  corrected Art. 29 rate scale and Modelo 202 calendar to Wave 3.
 
 ## Sources
 
