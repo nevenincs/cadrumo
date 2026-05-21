@@ -425,8 +425,9 @@ def test_calculation_completeness_gate_is_live_for_every_calculation_bearing_mod
                 dormant += 1
 
     assert gated > 0, "expected calculation-bearing modelo revisions"
-    # Modelo 308 and Modelo 360 carry no calculation surface.
-    assert dormant == 2
+    # Modelo 308, Modelo 347, Modelo 360, and Modelo 840 are informative
+    # declarations with no calculation surface and carry no manifest.
+    assert dormant == 4
 
 
 def test_diseno_coverage_report_inventories_modelo_200_form_data() -> None:
