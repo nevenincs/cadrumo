@@ -111,7 +111,12 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 @runtime_checkable
 class MasterKeyProvider(Protocol):
-    """Source of the master key used by every at-rest crypto consumer."""
+    """Source of the master key used by every at-rest crypto consumer.
+
+    Providers are context managers: entering activates the backend's
+    session (idle-timeout guard, in-memory key cache) and exiting tears
+    it down. Every concrete provider implements the protocol verbatim.
+    """
 
     def get_master_key(self) -> bytes:
         """Return the 32-byte AES-256 master key.
@@ -120,6 +125,14 @@ class MasterKeyProvider(Protocol):
             MasterKeyUnavailableError: If the master key cannot be
                 acquired from this provider.
         """
+        ...
+
+    def __enter__(self) -> object:
+        """Activate the provider's backend session for the ``with`` block."""
+        ...
+
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        """Tear down the provider's backend session on block exit."""
         ...
 
 

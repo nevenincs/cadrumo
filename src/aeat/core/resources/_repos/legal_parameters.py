@@ -5,7 +5,7 @@ from __future__ import annotations
 from .._repository import ResourceCacheRepository
 
 
-class LegalParameterRepository(ResourceCacheRepository[object, type(None)]):
+class LegalParameterRepository(ResourceCacheRepository[object, None]):
     """Singleton-keyed repository for the registry-wide legal parameters.
 
     Wraps :func:`aeat.domain.calculations.registry.load_legal_parameters_only`

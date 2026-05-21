@@ -5,7 +5,7 @@ from __future__ import annotations
 from .._repository import ResourceCacheRepository
 
 
-class RecargoBandsRepository(ResourceCacheRepository[object, type(None)]):
+class RecargoBandsRepository(ResourceCacheRepository[object, None]):
     """Singleton-keyed repository for the Ley 58/2003 recargo bands.
 
     Wraps :func:`aeat.domain.deadlines.load_recargo_bands`.

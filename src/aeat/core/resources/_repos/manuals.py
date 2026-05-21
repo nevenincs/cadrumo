@@ -18,7 +18,10 @@ from .._keys import TypedResourceKey
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from ....core.config import Settings
+    from ....domain.manuals import ManualId, ManualPart
 
 _FROZEN_STRICT = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -67,11 +70,11 @@ class ManualRepository(ResourceCacheRepository[object, ManualKey]):
             settings=self._settings(),
         )
 
-    def catalogue(self) -> object:
-        """Return the project-wide :class:`ManualCatalogue` aggregate."""
+    def catalogue(self, specs: Iterable[tuple[ManualId, int, ManualPart]]) -> object:
+        """Return a :class:`ManualCatalogue` aggregate for ``specs``."""
         from ....domain.manuals import load_catalogue
 
-        return load_catalogue(settings=self._settings())
+        return load_catalogue(specs, settings=self._settings())
 
     def find_rules(self, *args: object, **kwargs: object) -> object:
         """Delegate to :func:`aeat.domain.manuals.find_rules` for rule queries."""

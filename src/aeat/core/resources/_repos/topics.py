@@ -5,7 +5,7 @@ from __future__ import annotations
 from .._repository import ResourceCacheRepository
 
 
-class TopicCatalogueRepository(ResourceCacheRepository[object, type(None)]):
+class TopicCatalogueRepository(ResourceCacheRepository[object, None]):
     """Singleton-keyed repository for the topic catalogue.
 
     Wraps :func:`aeat.application.topics.load_topic_catalogue`.
