@@ -56,14 +56,14 @@ application↔domain private-import sites.
 Close the `"invoice"` source-kind drift.
 
 - [x] `P04.S15` - BIND-1: close the `"invoice"` wildcard in `resolve_counterpart_binding_row_values`; `src/aeat/domain/calculations/registry`.
-- [ ] `P04.S16` - BIND-2: snapshot-build rejection of retired `source = "invoice"` bindings; `src/aeat/domain/calculations/registry`.
+- [x] `P04.S16` - BIND-2: snapshot-build rejection of retired `source = "invoice"` bindings; `src/aeat/domain/calculations/registry`.
 
 ### Phase `P05` - HIGH: provenance + roundtrip coverage
 
 Provenance on import; snapshot validation; and the persistence
 roundtrip / anti-tautology gaps.
 
-- [ ] `P05.S17` - CALC-2: `import_external_filing` builds registry-sourced `CasillaObservation` rows; `src/aeat/application/filing`.
+- [x] `P05.S17` - CALC-2: `import_external_filing` builds registry-sourced `CasillaObservation` rows; `src/aeat/application/filing`.
 - [ ] `P05.S18` - CALC-3: snapshot validator asserts every `input_kind="bound"` casilla has a binding definition; `src/aeat/domain/calculations/registry`.
 - [ ] `P05.S19` - PERS-4: unify `object_key` type across record/write and add identity roundtrip test; `src/aeat/adapters/persistence`.
 - [ ] `P05.S20` - PERS-5: `RecoveryRecord` envelope-file roundtrip and base64 anti-tautology; `src/aeat/adapters/persistence`.
