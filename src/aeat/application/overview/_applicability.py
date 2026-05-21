@@ -85,24 +85,24 @@ with :attr:`ApplicabilityVerdict.INCOMPLETE` and a rationale pointing
 at the deferred expansion — never a confident guess.
 """
 
-_IS_RATE_SCHEDULE_DEFERRAL = (
-    "The IS numeric rate schedule and the lookup_parameter_by_entity_type "
-    "rate dispatch are NOT wired here. The corporate-entity ADR §5 records "
-    "that the registry's flat is.modelo-200.tipo-gravamen-pyme = 23 is "
-    "wrong per LIS Art. 29 (a two-bracket micro-empresa scale); W03.S13 "
-    "supplies the corrected bracket data and connects the dispatch. The "
-    "Modelo 202 deadline windows / corporate filing calendar and the "
-    "Modelo 202 modality (Art. 40.2 vs 40.3) INCN-threshold selection are "
-    "registry-data gaps deferred to the W03 registry track."
+_IS_RATE_SCHEDULE_BOUNDARY = (
+    "The IS rate schedule lives in the registry, not in this module. "
+    "The LIS Art. 29 tipo de gravamen and the entity-type rate dispatch "
+    "are registry data on Modelo 200 (the is.modelo-200.tipo-gravamen-* "
+    "parameters and the modelo-200-tipo-gravamen-por-forma-juridica "
+    "formula). This module routes a profile to its tax and derives "
+    "modelo applicability only; it does not encode rates or the "
+    "corporate calendar. The Modelo 202 deadline windows / corporate "
+    "filing calendar and the Modelo 202 modality (Art. 40.2 vs 40.3) "
+    "INCN-threshold selection remain registry-data gaps."
 )
-"""Explicit marker for the W02.S08 → W03 deferral boundary.
+"""Explicit marker for the applicability / rate-schedule boundary.
 
 This module routes a profile to its *tax* (entity-type → IRPF / IS /
-attribution pass-through) and derives modelo applicability. It does not
-encode the IS rate schedule or the corporate calendar — those require
-registry data the W03 track supplies. A design-only rate shell is
-forbidden by ``.claude/rules/aeat-source-hygiene.md``; this constant
-records the boundary instead of shipping an empty shell.
+attribution pass-through) and derives modelo applicability. The IS rate
+schedule and the corporate calendar are registry data, not application
+logic; this constant records the boundary so no rate shell is added
+here in violation of ``.claude/rules/aeat-source-hygiene.md``.
 """
 
 

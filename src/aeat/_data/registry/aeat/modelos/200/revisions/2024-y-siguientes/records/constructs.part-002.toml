@@ -1425,14 +1425,22 @@ casillas = [
     "03645",
     "03646",
 ]
-parameters = ["is.modelo-200.tipo-gravamen-general"]
+parameters = [
+    "is.modelo-200.tipo-gravamen-general",
+    "is.modelo-200.tipo-gravamen-cooperative-protected",
+    "is.modelo-200.tipo-gravamen-non-profit-special-regime",
+]
 formulas = [
+    "modelo-200-tipo-gravamen-por-forma-juridica",
     "modelo-200-base-imponible-despues-reserva-nivelacion",
     "modelo-200-cuota-integra",
     "modelo-200-cuota-ejercicio-a-ingresar-devolver",
     "modelo-200-cuota-diferencial",
 ]
-bindings = ["modelo-200-2024-pagos-fraccionados-anuales"]
+bindings = [
+    "modelo-200-2024-pagos-fraccionados-anuales",
+    "modelo-200-2024-profile-legal-entity-form",
+]
 relations = ["modelo-200-2024-rel-202-pagos-fraccionados"]
 dependency_classifications = ["modelo-200-2024-dep-202-instalments"]
 workbook_parity_refs = ["modelo-200-2024-dr-xls"]
