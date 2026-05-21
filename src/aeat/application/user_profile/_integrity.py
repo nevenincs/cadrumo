@@ -39,8 +39,10 @@ def verify_profile_integrity(
     directory_name: str,
     manifest_bucket_id: str,
     record_profile_id: str,
+    manifest_status: str,
+    record_status: str,
 ) -> None:
-    """Assert every physical store agrees on the profile UUID.
+    """Assert every physical store agrees on the profile UUID and status.
 
     The three cross-store identity claims are:
 
@@ -51,13 +53,25 @@ def verify_profile_integrity(
     - ``record_profile_id`` — the ``profile_id`` on the decrypted
       :class:`UserProfileRecord`.
 
-    All three must equal ``profile_id``. A mismatch raises
-    :class:`ProfileIntegrityError` naming the disagreeing stores so a
-    ``repair`` surface — or the operator — can act on a concrete delta
-    rather than a silent inconsistency.
+    All three must equal ``profile_id``.
+
+    The lifecycle status is denormalised: the encrypted
+    :class:`UserProfileRecord` carries the authoritative status and the
+    plaintext manifest mirrors it so the manifest scan can exclude a
+    tombstoned profile without decryption. ``manifest_status`` and
+    ``record_status`` are the two copies of that mirror, compared by
+    their string value. A disagreement is the drift state that
+    re-opens the tombstone leak — a manifest saying ``active`` over a
+    tombstoned record would let ``list`` / ``switch`` serve a deleted
+    profile — so it must be surfaced, never served.
+
+    A mismatch raises :class:`ProfileIntegrityError` naming the
+    disagreeing stores so a ``repair`` surface — or the operator — can
+    act on a concrete delta rather than a silent inconsistency.
 
     Raises:
-        ProfileIntegrityError: If any store disagrees on the UUID.
+        ProfileIntegrityError: If any store disagrees on the UUID, or
+            the manifest and record disagree on the lifecycle status.
     """
 
     mismatches: list[str] = []
@@ -72,6 +86,12 @@ def verify_profile_integrity(
             f"profile {profile_id!r} has cross-store drift: "
             + ", ".join(mismatches)
             + f" do not agree with the profile id {profile_id!r}"
+        )
+    if manifest_status != record_status:
+        raise ProfileIntegrityError(
+            f"profile {profile_id!r} has cross-store lifecycle drift: "
+            f"manifest status {manifest_status!r} does not agree with "
+            f"secure-record status {record_status!r}"
         )
 
 
