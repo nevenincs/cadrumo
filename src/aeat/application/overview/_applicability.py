@@ -25,12 +25,15 @@ Three verdicts are possible:
   categories). The engine refuses to guess: it never reports a
   confident wrong obligation.
 
-Every rule carries ``legal_refs`` — opaque BOE / AEAT citation keys —
-per ``.claude/rules/aeat-calculation-grounding.md``: applicability is
-regulatory data and must be registry-grounded. The seed table below
-covers only the modelos the operator personas exercise; per-entity /
-per-regime expansion to the full modelo set is intentionally deferred,
-marked at :data:`_SEED_COVERAGE_NOTICE`.
+Every rule carries ``legal_refs`` — scoped registry citation keys in
+the ``law-slug:art-N`` form (e.g. ``ley-35-2006:art-99``) that resolve
+against ``src/aeat/_data/registry/aeat/legal/*.toml`` — per
+``.claude/rules/aeat-calculation-grounding.md``: applicability is
+regulatory data and must be registry-grounded, and every typed-ID
+reference must point at an existing registry entity. The seed table
+below covers only the modelos the operator personas exercise;
+per-entity / per-regime expansion to the full modelo set is
+intentionally deferred, marked at :data:`_SEED_COVERAGE_NOTICE`.
 """
 
 from __future__ import annotations
@@ -89,9 +92,10 @@ class ModeloApplicability(BaseModel):
         reason: Operator-facing prose explaining the verdict. For an
             ``INCOMPLETE`` verdict this is the "declare your taxpayer
             type first" guidance.
-        legal_refs: Opaque BOE / AEAT citation keys grounding the rule.
-            Always at least one entry — applicability is regulatory
-            data and must be grounded
+        legal_refs: Scoped registry citation keys (``law-slug:art-N``)
+            grounding the rule, each resolvable against the registry
+            ``legal/*.toml`` tables. Always at least one entry —
+            applicability is regulatory data and must be grounded
             (``.claude/rules/aeat-calculation-grounding.md``). For an
             ``INCOMPLETE`` verdict the refs ground the *concept* being
             asked about (the LIRPF / LIS taxpayer definitions) so the
@@ -143,7 +147,9 @@ class ModeloApplicabilityRule(BaseModel):
             ``APPLICABLE`` verdict.
         not_applicable_reason: Operator-facing prose for the
             ``NOT_APPLICABLE`` verdict.
-        legal_refs: Opaque BOE / AEAT citation keys grounding the rule.
+        legal_refs: Scoped registry citation keys (``law-slug:art-N``)
+            grounding the rule, each resolvable against the registry
+            ``legal/*.toml`` tables.
     """
 
     model_config = _STRICT_FROZEN
@@ -193,12 +199,14 @@ class ModeloApplicabilityRule(BaseModel):
         )
 
 
-# Citation keys grounding the "declare your taxpayer type first" answer.
-# An undeclared profile cannot be decided, but the verdict still carries
-# the LIRPF / LIS definitions that the operator must answer against.
+# Scoped registry citation keys grounding the "declare your taxpayer
+# type first" answer. An undeclared profile cannot be decided, but the
+# verdict still carries the LIRPF / LIS articles that frame the question
+# the operator must answer. Both keys resolve in the registry legal
+# tables (irpf.toml / is.toml).
 _INCOMPLETE_LEGAL_REFS: tuple[str, ...] = (
-    "ley-35-2006",  # LIRPF — defines the IRPF contribuyente (BOE-A-2006-20764).
-    "ley-27-2014",  # LIS — defines the IS contribuyente (BOE-A-2014-12328).
+    "ley-35-2006:art-99",  # LIRPF art. 99 — IRPF contribuyente / pagos a cuenta.
+    "ley-27-2014:art-124",  # LIS art. 124 — obligación de declarar del IS.
 )
 
 _INCOMPLETE_REASON = (
@@ -228,9 +236,11 @@ def _incomplete_applicability(modelo: str) -> ModeloApplicability:
 # Seed rule table — core persona coverage (see _SEED_COVERAGE_NOTICE)
 # ---------------------------------------------------------------------
 #
-# Every rule below is grounded against the BOE / AEAT sources for the
-# taxpayer-type applicability model. Citation keys are opaque stable
-# slugs, never URLs. Full per-entity / per-regime coverage of every
+# Every rule below is grounded against the registry legal tables for the
+# taxpayer-type applicability model. Citation keys are scoped registry
+# keys (``law-slug:art-N``) that resolve against
+# ``src/aeat/_data/registry/aeat/legal/*.toml`` — never URLs, never
+# invented slugs. Full per-entity / per-regime coverage of every
 # registered modelo is a deferred expansion.
 
 _NATURAL_PERSON: frozenset[EntityType] = frozenset({EntityType.NATURAL_PERSON})
@@ -256,7 +266,11 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "Renta. Una entidad jurídica tributa por el Impuesto sobre "
             "Sociedades (Modelo 200)."
         ),
-        legal_refs=("ley-35-2006",),  # LIRPF — BOE-A-2006-20764.
+        # LIRPF art. 99 — régimen general de pagos a cuenta del IRPF,
+        # que identifica al contribuyente del IRPF; art. 17 —
+        # rendimientos del trabajo, la categoría de renta más común que
+        # obliga a la persona física a presentar la Renta.
+        legal_refs=("ley-35-2006:art-99", "ley-35-2006:art-17"),
     ),
     # Modelo 130 — pago fraccionado del IRPF, estimación directa. Triggered
     # ONLY by the rendimientos de actividades económicas income category
@@ -279,10 +293,10 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "económicas. Las rentas del capital inmobiliario, del trabajo "
             "o las pensiones no generan obligación de Modelo 130."
         ),
-        legal_refs=(
-            "ley-35-2006",  # LIRPF Arts. 27-32 — actividades económicas.
-            "boe-a-2007-6032",  # Orden EHA/672/2007 — modelos 130 y 131.
-        ),
+        # LIRPF art. 27 — definición de los rendimientos de actividades
+        # económicas, la categoría de renta que dispara el Modelo 130;
+        # art. 99 — pagos fraccionados como pagos a cuenta del IRPF.
+        legal_refs=("ley-35-2006:art-27", "ley-35-2006:art-99"),
     ),
     # Modelo 303 — autoliquidación periódica del IVA. Triggered by carrying
     # on an actividad económica subject to IVA: a natural person with
@@ -305,7 +319,10 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "Modelo 303 no aplica: sin una actividad económica sujeta al "
             "IVA no hay autoliquidación periódica del impuesto."
         ),
-        legal_refs=("ley-37-1992",),  # LIVA — Ley 37/1992 del IVA.
+        # LIVA art. 99 — ejercicio del derecho a la deducción mediante
+        # las declaraciones-liquidaciones periódicas del IVA que liquida
+        # el Modelo 303.
+        legal_refs=("ley-37-1992:art-99",),
     ),
     # Modelo 200 — autoliquidación anual del Impuesto sobre Sociedades.
     # Applies, in general, to every IS contribuyente — a legal entity with
@@ -325,7 +342,9 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "a las entidades jurídicas. Una persona física tributa por el "
             "IRPF (Modelo 100)."
         ),
-        legal_refs=("ley-27-2014",),  # LIS Art. 124 — BOE-A-2014-12328.
+        # LIS art. 124 — obligación de presentar la declaración del
+        # Impuesto sobre Sociedades, que el Modelo 200 liquida.
+        legal_refs=("ley-27-2014:art-124",),
     ),
     # Modelo 202 — pago fraccionado del Impuesto sobre Sociedades. Filed by
     # IS contribuyentes in April / October / December. A natural person
@@ -343,10 +362,10 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "Modelo 202 no aplica: el pago fraccionado del Impuesto sobre "
             "Sociedades solo corresponde a las entidades jurídicas."
         ),
-        legal_refs=(
-            "ley-27-2014",  # LIS Art. 40 — pago fraccionado.
-            "boe-a-2017-2778",  # Orden HFP/227/2017 — modelos 202 y 222.
-        ),
+        # LIS art. 40 — pago fraccionado del Impuesto sobre Sociedades,
+        # las modalidades y el calendario de abril, octubre y diciembre
+        # que liquida el Modelo 202.
+        legal_refs=("ley-27-2014:art-40",),
     ),
 }
 """Seed modelo-applicability rules — core persona coverage.

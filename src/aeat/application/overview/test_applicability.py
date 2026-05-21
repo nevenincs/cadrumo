@@ -33,6 +33,8 @@ from aeat.domain.deadlines._models import (
 )
 
 from ._applicability import (
+    _INCOMPLETE_LEGAL_REFS,
+    _MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,
     derive_modelo_applicability,
     taxpayer_model_is_declared,
@@ -291,3 +293,40 @@ def test_modelo_without_seed_rule_is_incomplete() -> None:
 
     result = derive_modelo_applicability(_autonomo(), "349")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+
+
+# ---------------------------------------------------------------------
+# Registry grounding — every seed legal_ref must resolve in the registry
+# ---------------------------------------------------------------------
+
+
+def test_seed_legal_refs_resolve_against_the_registry() -> None:
+    """Every ``legal_refs`` key carried by the seed applicability table
+    must point at a real registry legal entity.
+
+    Per ``.claude/rules/aeat-calculation-grounding.md``, every typed-ID
+    reference must resolve against an existing registry entity — no
+    invented BOE / AEAT slugs. This test loads the committed registry
+    legal catalogue and asserts each seed key (rule table plus the
+    undeclared-profile refs) is a member of it; a fabricated or
+    law-only slug would fail loudly here.
+    """
+
+    from aeat.core.resources import bundled_path
+    from aeat.domain.calculations.registry._loader import load_registry_tree
+
+    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    registered_legal_ids = set(catalogues.legal)
+    assert registered_legal_ids, "registry legal catalogue is empty"
+
+    seed_refs: set[str] = set(_INCOMPLETE_LEGAL_REFS)
+    for rule in _MODELO_APPLICABILITY_RULES.values():
+        seed_refs.update(rule.legal_refs)
+    assert seed_refs, "seed table carries no legal_refs"
+
+    unresolved = sorted(ref for ref in seed_refs if ref not in registered_legal_ids)
+    assert not unresolved, f"seed legal_refs absent from the registry: {unresolved}"
+
+    # Every seed key is a scoped article reference, not a bare law slug.
+    for ref in sorted(seed_refs):
+        assert ":" in ref, f"seed legal_ref is not in scoped article form: {ref!r}"

@@ -279,10 +279,13 @@ class OverviewCalendar(BaseModel):
             to.
         entries: Tuple of :class:`OverviewCalendarEntry` rows ordered
             by ``(closes_on, modelo, period)`` — same key the engine
-            uses, so the CLI table is deterministic. Obligations the
-            taxpayer model positively excludes (e.g. Modelo 130 for a
-            pure landlord) are filtered out; an undeclared taxpayer
-            model yields an empty tuple plus
+            uses, so the CLI table is deterministic. Only modelos with a
+            positively ``APPLICABLE`` applicability verdict appear:
+            obligations the taxpayer model excludes (e.g. Modelo 130 for
+            a pure landlord) and modelos the seed rule table cannot yet
+            decide (``INCOMPLETE``) are filtered out, keeping the
+            calendar consistent with ``explain``. An undeclared
+            taxpayer model yields an empty tuple plus
             ``taxpayer_model_declared = False``.
         generated_at: UTC timestamp of when the aggregator ran. The
             only non-deterministic field.
@@ -484,14 +487,19 @@ def build_overview_calendar(
         for obligation in schedule.obligations:
             if not _entry_intersects_range(obligation, calendar_range):
                 continue
-            # Each modelo's applicability is DERIVED from the
-            # taxpayer model. An obligation the taxpayer model positively
-            # excludes (e.g. Modelo 130 for a pure landlord) is dropped.
-            # A modelo without a seed rule is left in place — the seed
-            # covers the core persona set; full per-modelo coverage
-            # is a deferred expansion.
+            # Each modelo's applicability is DERIVED from the taxpayer
+            # model. Only a positively ``APPLICABLE`` verdict earns a
+            # calendar row. An obligation the taxpayer model excludes
+            # (``NOT_APPLICABLE`` — e.g. Modelo 130 for a pure landlord)
+            # is dropped; so is a modelo the seed table cannot yet
+            # decide (``INCOMPLETE`` — no seed rule). Surfacing an
+            # un-ruled modelo as a confident due row would diverge from
+            # ``explain`` (which reports the same modelo INCOMPLETE) and
+            # re-create the confident-wrong-obligation defect. The seed
+            # covers the core persona set; full per-modelo coverage is a
+            # deferred expansion (see ``_SEED_COVERAGE_NOTICE``).
             applicability = derive_modelo_applicability(profile, obligation.modelo)
-            if applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
+            if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
                 continue
             try:
                 shift = shift_deadline(

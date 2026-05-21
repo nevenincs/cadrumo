@@ -444,3 +444,129 @@ def test_calendar_undeclared_profile_yields_incomplete_empty_calendar() -> None:
     assert cal.incomplete_reason is not None
     # The reason is the localised "declare your taxpayer model" guidance.
     assert "perfil" in cal.incomplete_reason
+
+
+def _fully_enrolled_autonomo() -> TaxpayerProfile:
+    """An autónomo whose enrolment flags trigger un-ruled modelos.
+
+    The deadline engine produces Modelos 111 / 115 / 349 for this
+    profile, none of which carries a seed applicability rule (the seed
+    table covers only 100 / 130 / 303 / 200 / 202). Those modelos are
+    therefore the ``INCOMPLETE``-verdict leak candidates the calendar
+    must exclude.
+    """
+
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        has_employees=True,
+        pays_professionals_with_retencion=True,
+        pays_rent_with_retencion=True,
+        does_intracomunitario=True,
+        third_party_transactions_above_347_threshold=True,
+        bienes_extranjero_above_threshold=True,
+    )
+
+
+def test_calendar_excludes_un_ruled_incomplete_modelos() -> None:
+    """A modelo with no seed applicability rule must never appear as a
+    confident calendar row.
+
+    The deadline engine yields Modelos 111 / 115 / 349 for a fully
+    enrolled autónomo; ``derive_modelo_applicability`` returns
+    ``INCOMPLETE`` for each because the seed rule table does not cover
+    them. The calendar must drop INCOMPLETE verdicts exactly the way it
+    drops NOT_APPLICABLE — an un-ruled modelo absent is correct, an
+    un-ruled modelo shown as confidently due is the W02 defect. The
+    only modelos that survive are the seed-ruled APPLICABLE ones
+    (130 / 303 for this persona).
+    """
+
+    from ._applicability import ApplicabilityVerdict, derive_modelo_applicability
+
+    profile = _fully_enrolled_autonomo()
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(profile, rng, today=date(2026, 4, 1))
+
+    calendar_modelos = {entry.modelo for entry in cal.entries}
+    # The un-ruled modelos the engine schedules are INCOMPLETE...
+    for un_ruled in ("111", "115", "349"):
+        assert derive_modelo_applicability(profile, un_ruled).verdict is ApplicabilityVerdict.INCOMPLETE
+        # ...and therefore absent from the calendar.
+        assert un_ruled not in calendar_modelos, un_ruled
+    # Only positively APPLICABLE seed-ruled modelos survive.
+    assert calendar_modelos == {"130", "303"}
+    for entry in cal.entries:
+        assert derive_modelo_applicability(profile, entry.modelo).verdict is ApplicabilityVerdict.APPLICABLE
+
+
+def test_agenda_and_backlog_inherit_the_incomplete_exclusion() -> None:
+    """Agenda and backlog compose the calendar, so the INCOMPLETE
+    exclusion must reach them too — neither may leak an un-ruled modelo
+    as a confident due / late row."""
+
+    from ._agenda import build_overview_agenda
+    from ._backlog import build_overview_backlog
+
+    profile = _fully_enrolled_autonomo()
+
+    # A horizon that keeps the agenda window inside 2026 (the agenda
+    # adds a 90-day overdue lookback, so the horizon must leave room).
+    agenda = build_overview_agenda(profile, as_of=date(2026, 4, 1), horizon_days=200)
+    agenda_modelos = {
+        entry.modelo for bucket in (agenda.due_today, agenda.due_soon, agenda.overdue) for entry in bucket
+    }
+    assert agenda_modelos, "expected the enrolled autónomo to have agenda obligations"
+    for un_ruled in ("111", "115", "349"):
+        assert un_ruled not in agenda_modelos, un_ruled
+
+    backlog = build_overview_backlog(
+        profile,
+        from_date=date(2026, 1, 1),
+        to_date=date(2026, 12, 31),
+        as_of=date(2026, 12, 31),
+    )
+    backlog_modelos = {item.modelo for item in backlog.items}
+    for un_ruled in ("111", "115", "349"):
+        assert un_ruled not in backlog_modelos, un_ruled
+
+
+# ---------------------------------------------------------------------
+# Undeclared-profile operator message — locale delivery
+# ---------------------------------------------------------------------
+
+
+def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
+    """The undeclared-profile guidance must be a shipped locale string,
+    not the raw translation key.
+
+    ``build_overview_calendar`` populates ``incomplete_reason`` via
+    ``tr("cli.overview.taxpayer_model_undeclared")``. python-i18n
+    returns the literal key when no catalogue entry exists, so the
+    contract here is: the rendered text differs from the key, is
+    non-trivially long, and resolves to genuine guidance in every
+    supported language (es / en / ca / hu).
+    """
+
+    from aeat.core.i18n import tr
+
+    key = "cli.overview.taxpayer_model_undeclared"
+    for locale in ("es", "en", "ca", "hu"):
+        rendered = tr(key, locale=locale)
+        # Not the raw key, not the python-i18n "[missing translation]" stub.
+        assert rendered != key, locale
+        assert "[missing" not in rendered.lower(), locale
+        assert "translation" not in rendered.lower() or len(rendered) > 40, locale
+        # Real operator guidance — a full sentence, not a one-token stub.
+        assert len(rendered) > 30, (locale, rendered)
+        assert " " in rendered.strip(), (locale, rendered)
+
+    # The calendar surface delivers exactly that resolved text.
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_undeclared_profile(), rng, today=date(2026, 4, 1))
+    assert cal.incomplete_reason == tr(key)
+    assert cal.incomplete_reason is not None
+    assert cal.incomplete_reason != key
