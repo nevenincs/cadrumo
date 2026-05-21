@@ -1754,12 +1754,18 @@ errors:
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
+  censo:
+    no_snapshot_captured: 'No s''ha capturat cap instantània del cens per al perfil {profile_id}.'
+    profile_not_found: 'El perfil {profile_id} no existeix; crea''l abans d''aplicar el cens.'
+    sede_g313_no_census: 'La seu electrònica de l''AEAT (G313) no ha retornat cap cens llegible per al perfil {profile_id}; confirma que el teu certificat o Cl@ve està registrat per a aquest NIF.'
+    sede_no_census: 'La seu electrònica de l''AEAT no ha retornat cap cens llegible per al perfil {profile_id}.'
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
   internal:
-    internal_cli_unexpected_boundary: 'L''ordre ha fallat per un error intern inesperat.'
+    internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
   refused:
-    refused_cli_validation_boundary: 'L''entrada de l''ordre no ha superat la validació. Executa `aeat config repair` o restableix l''estat del perfil.'
+    refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
+      Executa `aeat config repair` o restableix l'estat del perfil.
   transaction:
     import_source_invalid: l'origen no és un extracte bancari vàlid
     ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'
@@ -1775,7 +1781,7 @@ filing:
 profile:
   errors:
     foral_regime: '{tax_region} és un règim foral fora de l''abast d''aquest perfil.'
-    not_configured: 'No hi ha cap perfil de residència fiscal configurat per a RENTA.'
+    not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
   keys:
     description: Profile configuration keys and their descriptions
     tax:

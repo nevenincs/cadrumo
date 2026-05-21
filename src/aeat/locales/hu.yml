@@ -1734,12 +1734,18 @@ errors:
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} reláció nem rendelkezik értékkel.
     unknown_input_casillas: 'Ismeretlen cellaazonosítók a bemenetben: {casilla_ids}.'
+  censo:
+    no_snapshot_captured: 'Nem készült census-pillanatkép a(z) {profile_id} profilhoz.'
+    profile_not_found: 'A(z) {profile_id} profil nem létezik; hozd létre a census alkalmazása előtt.'
+    sede_g313_no_census: 'Az AEAT G313 portálja nem adott vissza beolvasható censót a(z) {profile_id} profilhoz; ellenőrizd, hogy a tanúsítványod vagy Cl@ve-d ehhez a NIF-hez van regisztrálva.'
+    sede_no_census: 'Az AEAT portálja nem adott vissza beolvasható censót a(z) {profile_id} profilhoz.'
   financial:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
   internal:
-    internal_cli_unexpected_boundary: 'A parancs váratlan belső hiba miatt meghiúsult.'
+    internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
   refused:
-    refused_cli_validation_boundary: 'A parancs bemenete nem ment át az ellenőrzésen. Futtasd az `aeat config repair` parancsot, vagy állítsd vissza a profil állapotát.'
+    refused_cli_validation_boundary: A parancs bemenete nem ment át az ellenőrzésen.
+      Futtasd az `aeat config repair` parancsot, vagy állítsd vissza a profil állapotát.
   transaction:
     import_source_invalid: a forrás nem érvényes könyvelési dokumentum
     ledger_import_failed: 'A könyvelési fájl nem importálható: {reason}'
@@ -1754,8 +1760,8 @@ filing:
     schema_mismatch: Eltérés a várt sémától
 profile:
   errors:
-    foral_regime: 'A(z) {tax_region} foral adórendszer kívül esik e profil hatókörén.'
-    not_configured: 'Nincs adóügyi illetőségi profil beállítva a RENTA-hoz.'
+    foral_regime: A(z) {tax_region} foral adórendszer kívül esik e profil hatókörén.
+    not_configured: Nincs adóügyi illetőségi profil beállítva a RENTA-hoz.
   keys:
     description: Profile configuration keys and their descriptions
     tax:

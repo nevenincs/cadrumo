@@ -169,7 +169,8 @@ class CensoSyncService:
         facts = dict(fact_source())
         if not facts:
             raise CensoNotAvailableError(
-                f"sede returned no parseable census for profile {profile_id!r}",
+                translated_message="errors.censo.sede_no_census",
+                context={"profile_id": profile_id},
             )
         return self._snapshots.capture(
             profile_id=profile_id,
@@ -216,8 +217,8 @@ class CensoSyncService:
         facts = census_fact_set_to_mapping(fact_set)
         if not facts:
             raise CensoNotAvailableError(
-                f"sede G313 returned no parseable census for profile {profile_id!r}; "
-                "confirm your certificate / cl@ve is registered against this NIF",
+                translated_message="errors.censo.sede_g313_no_census",
+                context={"profile_id": profile_id},
             )
         return self._snapshots.capture(
             profile_id=profile_id,
@@ -239,7 +240,8 @@ class CensoSyncService:
         active = self._snapshots.latest_active(profile_id=profile_id)
         if active is None:
             raise CensoNotAvailableError(
-                f"no census snapshot captured for profile {profile_id!r}",
+                translated_message="errors.censo.no_snapshot_captured",
+                context={"profile_id": profile_id},
             )
         return active
 
@@ -292,7 +294,8 @@ class CensoSyncService:
         snapshot = self.show_census(profile_id=profile_id, snapshot_id=snapshot_id)
         if not self._profiles.exists(profile_id):
             raise CensoApplyConflictError(
-                f"profile {profile_id!r} does not exist; create it before applying census",
+                translated_message="errors.censo.profile_not_found",
+                context={"profile_id": profile_id},
             )
         profile = self._profiles.load(profile_id)
         before = _profile_facts_by_path(profile)
