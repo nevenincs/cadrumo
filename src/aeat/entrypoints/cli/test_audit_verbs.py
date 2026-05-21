@@ -22,6 +22,7 @@ from aeat.application.evidence import EvidenceBundleService
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import Settings
+from aeat.core.i18n import tr
 from aeat.entrypoints.cli import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -215,26 +216,43 @@ def test_audit_help_text_uses_accepted_vocabulary(cli_runner: CliRunner) -> None
         "replay": (("bundle", "paquete"), ("aeat",)),
     }
 
+    # A forbidden term is only a violation when it *asserts* a live path.
+    # A disclaimer ("never performs submission", "nunca contacta con AEAT")
+    # contains the same words to deny them — so a bare substring ban is a
+    # false positive. Require the term to be un-negated to count as a hit.
+    negations = ("never", "not ", "no ", "without ", "nunca", "ni ", "sin ")
+
     for verb, required_groups in accepted_per_verb.items():
         result = cli_runner.invoke(app, ["app", "modelo", "audit", verb, "--help"])
         assert result.exit_code == 0, (verb, result.output)
         lower = result.output.lower()
         for group in required_groups:
             assert any(term in lower for term in group), (verb, group, result.output)
+        # Collapse help-panel line wrapping so a negation and the term it
+        # negates land adjacent regardless of where the renderer broke.
+        normalised = " ".join(lower.split())
         for bad in forbidden_en + forbidden_es:
-            assert bad not in lower, (verb, bad, result.output)
+            idx = normalised.find(bad)
+            while idx != -1:
+                preceding = normalised[max(0, idx - 28) : idx]
+                assert any(neg in preceding for neg in negations), (verb, bad, result.output)
+                idx = normalised.find(bad, idx + 1)
 
 
-def test_audit_replay_help_disclaims_aeat_contact(cli_runner: CliRunner) -> None:
+def test_audit_replay_help_disclaims_aeat_contact() -> None:
     """The evidence-bundle ADR mandates replay never contacts AEAT.
-    The help text must say so explicitly so operators do not assume
-    replay re-submits or re-verifies against AEAT-side state. Locks
-    the disclaimer phrasing in the default (Spanish) locale."""
 
-    result = cli_runner.invoke(app, ["app", "modelo", "audit", "replay", "--help"])
-    assert result.exit_code == 0, result.output
-    lower = result.output.lower()
-    assert "nunca" in lower and "aeat" in lower, result.output
+    The replay help text must say so explicitly in every shipped locale
+    so operators never assume replay re-submits or re-verifies against
+    AEAT-side state. Asserted at the translation source: Typer bakes
+    ``help=`` strings at import, so a rendered ``--help`` is locked to a
+    single import-time locale and cannot cover every shipped one —
+    ``tr`` renders each locale's `replay_help` value directly."""
+
+    disclaimer_word = {"es": "nunca", "en": "never"}
+    for locale, word in disclaimer_word.items():
+        help_text = tr("cli.app.modelo.audit.replay_help", locale=locale).lower()
+        assert word in help_text and "aeat" in help_text, (locale, help_text)
 
 
 def test_audit_verbs_refuse_without_active_profile(cli_runner: CliRunner) -> None:
