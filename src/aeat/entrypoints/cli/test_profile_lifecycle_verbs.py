@@ -195,6 +195,53 @@ def test_config_profile_create_refuses_existing_profile(cli_runner: CliRunner) -
     assert "already exists" in result.output
 
 
+def test_config_profile_create_bare_name_refusal_names_both_recovery_paths(
+    cli_runner: CliRunner,
+) -> None:
+    """A first-timer running `profile create NAME` with no flags, in a
+    shell with no interactive terminal, must get a refusal that spells
+    out BOTH recovery paths in plain language and leaks no internals.
+
+    Before fix: the refusal mentioned only the interactive path, then a
+    trailing `-> Run` line that referenced `--quiet` as if the operator
+    had chosen it. After fix: the message itself names the interactive
+    path AND the one-step flag path, and never claims `--quiet` was a
+    precondition the operator violated.
+    """
+
+    result = cli_runner.invoke(root_app, ["config", "profile", "create", "Cafe Luna"])
+
+    assert result.exit_code != 0
+    output = result.output
+    # Both concrete recovery paths are named in the message body.
+    assert "aeat config profile create NAME" in output
+    assert "--quiet --tax-id NIF --activity ACTIVITY" in output
+    # No internal tokens leak into the operator-facing refusal.
+    assert "flow_id" not in output
+    assert "('tax-id'" not in output
+    assert "missing:" not in output
+
+
+def test_config_profile_create_quiet_without_flags_names_the_missing_flags(
+    cli_runner: CliRunner,
+) -> None:
+    """`profile create NAME --quiet` with the required values omitted
+    must name the actual flags to add (`--tax-id`, `--activity`), not a
+    raw Python identifier tuple, and must not leak `flow_id`.
+    """
+
+    result = cli_runner.invoke(root_app, ["config", "profile", "create", "Cafe Luna", "--quiet"])
+
+    assert result.exit_code != 0
+    output = result.output
+    assert "--tax-id" in output
+    assert "--activity" in output
+    # The internal flow id and the raw missing-id tuple never surface.
+    assert "flow_id" not in output
+    assert "('tax-id'" not in output
+    assert "missing:" not in output
+
+
 def test_config_profile_edit_refuses_missing_profile_without_creating_bucket(cli_runner: CliRunner) -> None:
     from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
 

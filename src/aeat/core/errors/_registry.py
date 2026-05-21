@@ -35,7 +35,15 @@ _SECRET_FIELD_PATTERN = re.compile(
 # surfaced in user-facing error output (text mode or JSON envelope).
 # They remain accessible on the exception's `.context` attribute for
 # internal diagnostics and tests.
-_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset({"prompt_key", "question_id"})
+#
+# `flow_id` and `missing` are wizard internals: the wizard flow's
+# identifier and the raw tuple of question ids. The operator-facing
+# refusal names the missing flags inside its own message body
+# (`missing_flags`, also internal once interpolated) instead of leaking
+# a raw `('tax-id', 'activity')` tuple as a stray context line.
+_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
+    {"prompt_key", "question_id", "flow_id", "missing", "missing_flags"}
+)
 
 
 class ErrorCategory(StrEnum):

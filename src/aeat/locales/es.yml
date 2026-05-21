@@ -222,8 +222,9 @@ application:
     errors:
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
         'default' implícito).
-      quiet_missing_flags: Faltan flags obligatorios para una ejecución del asistente
-        con --quiet.
+      quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
+        Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
+        sin --quiet desde una terminal interactiva para usar el asistente guiado.'
     status:
       errors:
         missing_tax_id: El perfil activo no tiene tax.id.
@@ -2749,12 +2750,13 @@ wizard:
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
-    unsupported_console: "No pude abrir el asistente guiado en esta ejecución.\nTodavía\
-      \ no se ha guardado nada.\n\nPrueba otra vez el asistente desde una sesión de\
-      \ terminal interactiva:\n  aeat config profile create NAME\n\nSi el estado del\
-      \ perfil puede estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\
-      \nPara descartar solo el estado local del perfil y empezar de nuevo:\n  aeat\
-      \ config reset --scope profile --yes"
+    unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
+      \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
+      \ de crear este perfil de dos maneras:\n\n1. Ejecuta el comando otra vez desde\
+      \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
+      \ profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios\
+      \ como flags:\n     aeat config profile create NAME --quiet --tax-id NIF --activity\
+      \ ACTIVITY"
     unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
       Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
       \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
