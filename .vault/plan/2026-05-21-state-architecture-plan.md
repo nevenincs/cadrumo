@@ -128,6 +128,25 @@ Source: UUID-identity ADR + aggregate ADR.
   integrity verified; testimonial regression batch across the
   `profile`, `auth`, `overview`, and `verify` surfaces.
 
+## Wave `W06` - tombstone lifecycle correctness
+
+Source: the W05.S22 / W03.S15 testimonial regression
+(`[[2026-05-21-state-architecture-testimonial-regression-audit]]`).
+A real-operator persona found `profile delete` tombstones a profile
+but the tombstoned profile still leaked into the live surface -
+listed, switchable, reported ready, and its name stayed reserved
+(violating the identity ADR's "tombstoned names reusable").
+
+- [x] `W06.S23` - exclude tombstoned profiles from the live surface:
+  `list` omits them, `switch` refuses them, `show` reflects the
+  tombstoned status, name and tax-id uniqueness consider only live
+  profiles. A plaintext `status` marker on `BucketManifest` lets the
+  manifest scan filter without decryption.
+- [ ] `W06.S24` - close the denormalization drift: `verify_profile_integrity`
+  rejects a manifest status that disagrees with the record status,
+  and `delete` writes the manifest mirror before the record tombstone
+  so a crashed delete fails closed.
+
 ## Tracking
 
 | Wave | Intent | ADR | State |
@@ -136,7 +155,8 @@ Source: UUID-identity ADR + aggregate ADR.
 | W02 | aggregate + repository + unit-of-work | aggregate | complete |
 | W03 | rename collapse + name-as-id sweep | identity + aggregate | complete (S15 testimonial regression pending) |
 | W04 | canonical read-projection | read-projection | complete (engine obligation-gate rewire tracked as follow-up) |
-| W05 | one state root + full verification | identity + aggregate | complete (S22 testimonial regression pending) |
+| W05 | one state root + full verification | identity + aggregate | complete |
+| W06 | tombstone lifecycle correctness | testimonial | in progress |
 
 ## Audit cadence
 
