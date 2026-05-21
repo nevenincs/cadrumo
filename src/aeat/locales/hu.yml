@@ -2875,6 +2875,10 @@ wizard:
     flags:
       activity:
         help: Gazdasági tevékenység szabad szövegként, vagy IAE-kód, ha ismered
+      activity-start-date:
+        help: Nyilvántartásba vétel / a gazdasági tevékenység kezdetének dátuma (ÉÉÉÉ-HH-NN).
+          Opcionális; ha megadod, az ezt megelőző időszakok kötelezettségei nem jelennek
+          meg.
       address-postcode:
         help: Adózási cím irányítószáma
       bienes-extranjero-above-threshold:
@@ -3037,6 +3041,11 @@ wizard:
       activity:
         prompt: Gazdasági tevékenység (szabad szöveg is elég; használd az IAE-kódot,
           ha ismered)
+      activity-start-date:
+        help: Ha megadod, az ezt megelőző időszakok bevallásai nem jelennek meg lejártként.
+          Hagyd üresen, ha nem ismered.
+        prompt: Mely dátumtól van bevallási kötelezettséged / mikor jelentkeztél be?
+          (ÉÉÉÉ-HH-NN, opcionális)
       address-postcode:
         prompt: Adózási cím irányítószáma
       iva-regime:

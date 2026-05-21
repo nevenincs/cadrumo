@@ -124,6 +124,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "surnames": typer.Option("--surnames", help=tr("wizard.setup.flags.surnames.help")),
     "activity": typer.Option("--activity", help=tr("wizard.setup.flags.activity.help")),
     "address-postcode": typer.Option("--address-postcode", help=tr("wizard.setup.flags.address-postcode.help")),
+    "activity-start-date": typer.Option(
+        "--activity-start-date",
+        help=tr("wizard.setup.flags.activity-start-date.help"),
+    ),
     "taxation-type": typer.Option(
         "--taxation-type",
         click_type=click.Choice(["1", "2"]),

@@ -304,6 +304,19 @@ _PROFILE_SECTION = WizardSection(
             answer_type=str,
         ),
         WizardQuestion(
+            # Optional census alta date. When set, the deadline engine
+            # suppresses obligation windows that close before it, so a
+            # recent registrant is not shown overdue returns for periods
+            # that precede their alta.
+            id="activity-start-date",
+            profile_key="census.activity_start_date",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.activity-start-date.prompt"),
+            help=tr("wizard.setup.profile.activity-start-date.help"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
             id="taxation-type",
             profile_key="filing_export.declaration_type",
             widget=WizardWidget.TEXT,

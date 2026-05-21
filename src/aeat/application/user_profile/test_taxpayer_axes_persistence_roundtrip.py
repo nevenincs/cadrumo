@@ -23,6 +23,7 @@ loads cleanly under the v2 schema and projects the new axes to their
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -243,3 +244,52 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
     assert profile.irpf_estimation_regime is None
     assert profile.iva.sii_enrolled is False
     assert profile.iva.redeme_enrolled is False
+    # The optional census alta date is also undeclared for a v1 record.
+    assert profile.activity_start_date is None
+
+
+def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
+    secure_objects: SecureObjectRepository,
+    schema,
+) -> None:
+    """The optional census alta date survives the real encrypted-SQL cycle.
+
+    Round-4 testimonial finding D1 added an optional
+    ``census.activity_start_date`` profile fact. A profile carrying it
+    at a NON-DEFAULT value (a real 2026 date, not the ``None`` default)
+    must round-trip through the encrypted store and reconstruct the
+    typed ``date`` on :class:`TaxpayerProfile.activity_start_date`, so
+    the deadline engine's pre-registration-obligation gate receives the
+    persisted alta date.
+    """
+
+    alta = date(2026, 3, 1)
+    facts = (
+        *(
+            UserProfileFact(path="iva.regime", value="GENERAL") if f.path == "iva.regime" else f
+            for f in _required_facts(schema)
+        ),
+        UserProfileFact(path="census.activity_start_date", value=alta.isoformat()),
+    )
+
+    state = register_active_profile(
+        WorkflowState(),
+        profile_id="activity-start-date-roundtrip",
+        display_name="2026 registrant",
+        facts=facts,
+        secure_objects=secure_objects,
+        schema=schema,
+    )
+
+    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
+    assert record is not None
+    assert record.profile_id == "activity-start-date-roundtrip"
+    # The fact survives the encrypted boundary with its exact value;
+    # the schema declares the field ``type = "date"``, so the persisted
+    # fact reloads as a typed ``date``, not a string.
+    assert _fact_value(record, "census.activity_start_date") == alta
+
+    # The reloaded record reconstructs the typed date on the taxpayer
+    # model, so the deadline-engine gate can suppress pre-alta windows.
+    profile = projection_for_taxpayer(record)
+    assert profile.activity_start_date == alta

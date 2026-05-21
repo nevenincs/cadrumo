@@ -2806,6 +2806,9 @@ wizard:
     flags:
       activity:
         help: Business activity as plain text, or the IAE heading if you know it
+      activity-start-date:
+        help: Census registration / start-of-activity date (YYYY-MM-DD). Optional; when
+          set, obligations for periods before this date are not shown.
       address-postcode:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
@@ -2964,6 +2967,11 @@ wizard:
       activity:
         prompt: Business activity (plain text is fine; use the IAE heading if you
           know it)
+      activity-start-date:
+        help: When set, returns for periods before this date are not shown as overdue.
+          Leave blank if you do not know it.
+        prompt: From what date do you have filing obligations / when did you register?
+          (YYYY-MM-DD, optional)
       address-postcode:
         prompt: Tax address postcode
       iva-regime:
