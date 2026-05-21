@@ -34,17 +34,18 @@ from ...domain.buckets import (
 )
 from ...domain.calculations.registry import (
     CasillaDefinition,
+    CasillaObservation,
     ModeloRevision,
     RegistryCalculationEntry,
     RegistryCalculationResult,
     RegistrySnapshot,
-)
-from ...domain.calculations.registry._bindings import CasillaObservation
-from ...domain.calculations.registry._runtime_graph import (
+    calculate_registry_snapshot,
     enum_consumed_binding_ids,
+    expression_binding_refs,
     input_casilla_alias_map,
+    materialize_relation_binding_values,
 )
-from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
@@ -99,11 +100,12 @@ from ..filing import (
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
-    filing_profile_from_autonomo,
+    filing_profile_from_taxpayer,
 )
 from ..live import Borrador100SnapshotRepository
 from ..workflow import (
     DeadlineEngineAdapter,
+    ModeloInputs,
     RegistryModeloDraftProtocol,
     WorkflowEngine,
     WorkflowPurpose,
@@ -364,8 +366,8 @@ class _RevisionInputsProvider:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
+        profile: TaxpayerProfile,
+    ) -> ModeloInputs:
         del profile
         if modelo != self._modelo or period != self._period:
             raise ValueError("workflow input request does not match calculation revision")
@@ -393,14 +395,14 @@ class _RevisionDraftBuilder:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         draft = build_draft(
             modelo=modelo,
             period=period,
-            profile=filing_profile_from_autonomo(profile),
+            profile=filing_profile_from_taxpayer(profile),
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
@@ -420,7 +422,7 @@ class _RevisionDraftBuilder:
 class _RevisionDeadlineWindowChecker:
     """Checks the same deadline schedule the workflow gate already computed."""
 
-    def __init__(self, *, profile: AutonomoProfile, engine: DeadlineEngine) -> None:
+    def __init__(self, *, profile: TaxpayerProfile, engine: DeadlineEngine) -> None:
         self._profile = profile
         self._engine = engine
 
@@ -439,7 +441,7 @@ def _build_revision_workflow_engine(
     *,
     revision: CalculationRevision,
     work_unit: WorkUnit,
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     actor: str,
     clock: datetime,
     settings: Settings | None,
@@ -473,7 +475,7 @@ def _build_revision_workflow_engine(
 def _run_revision_workflow_gate(
     *,
     engine: WorkflowEngine,
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     work_unit: WorkUnit,
     today: date,
     runs_dir: Path | None,
@@ -864,13 +866,6 @@ def calculate_modelo_revision(
     ``verify_modelo_revision`` and ``file_modelo_revision``
     explicitly to advance through the lifecycle.
     """
-
-    from ...domain.calculations.registry._formula_runtime import (
-        calculate_registry_snapshot,
-    )
-    from ...domain.calculations.registry._relations import (
-        materialize_relation_binding_values,
-    )
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -1496,8 +1491,6 @@ def _reject_binding_channel_mismatch(
 def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: str) -> bool:
     """Return whether any formula expression references ``binding_id``."""
 
-    from ...domain.calculations.registry._runtime_graph import expression_binding_refs
-
     return any(
         binding_id in expression_binding_refs(formula.expression) for formula in revision.formulas
     )
@@ -1984,7 +1977,7 @@ def verify_modelo_revision(
     calculation_revision_id: str,
     *,
     actor: str,
-    workflow_profile: AutonomoProfile,
+    workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
@@ -2423,7 +2416,7 @@ def file_modelo_revision(
     calculation_revision_id: str,
     *,
     actor: str,
-    workflow_profile: AutonomoProfile,
+    workflow_profile: TaxpayerProfile,
     notes: str | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,

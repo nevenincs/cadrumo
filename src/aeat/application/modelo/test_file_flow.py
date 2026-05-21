@@ -47,7 +47,7 @@ from aeat.application.filing import (
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
-    filing_profile_from_autonomo,
+    filing_profile_from_taxpayer,
 )
 from aeat.application.modelo import (
     CalculationRevisionNotFoundError,
@@ -70,6 +70,7 @@ from aeat.application.modelo import (
 )
 from aeat.application.workflow import (
     DeadlineEngineAdapter,
+    ModeloInputs,
     WorkflowAbortReason,
     WorkflowEngine,
     WorkflowPurpose,
@@ -82,7 +83,7 @@ from aeat.domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from aeat.domain.deadlines import AutonomoProfile, DeadlineEngine, IVARegime
+from aeat.domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from aeat.domain.modelos._filing_record import ModeloRecordStatus
@@ -207,8 +208,8 @@ _DEFAULT_130_BASELINE_INPUTS: dict[str, Decimal] = {
 }
 
 
-def _workflow_profile() -> AutonomoProfile:
-    return AutonomoProfile(
+def _workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
         has_employees=False,
@@ -240,8 +241,8 @@ class _RevisionInputsProvider:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-    ) -> dict[str, object]:
+        profile: TaxpayerProfile,
+    ) -> ModeloInputs:
         del profile
         assert modelo == self._modelo
         assert period == self._period
@@ -267,14 +268,14 @@ class _RevisionDraftBuilder:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
     ):
         draft = build_draft(
             modelo=modelo,
             period=period,
-            profile=filing_profile_from_autonomo(profile),
+            profile=filing_profile_from_taxpayer(profile),
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
@@ -290,7 +291,7 @@ class _RevisionDraftBuilder:
 
 
 class _DeadlineWindowChecker:
-    def __init__(self, *, profile: AutonomoProfile, engine: DeadlineEngine) -> None:
+    def __init__(self, *, profile: TaxpayerProfile, engine: DeadlineEngine) -> None:
         self._profile = profile
         self._engine = engine
 
@@ -328,7 +329,7 @@ class _AuthProvider:
 @dataclass
 class _WorkflowGate:
     engine: WorkflowEngine
-    profile: AutonomoProfile
+    profile: TaxpayerProfile
     auth_provider: _AuthProvider = field(default_factory=_AuthProvider)
 
 

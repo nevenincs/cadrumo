@@ -89,7 +89,7 @@ class ModeloIVAProfile(BaseModel):
     intracommunity_operations_exceed_50000_eur: bool = False
 
 
-class AutonomoProfile(BaseModel):
+class TaxpayerProfile(BaseModel):
     """The profile of a Spanish autónomo for filing-deadline computation.
 
     Attributes:
@@ -277,7 +277,7 @@ class Schedule(BaseModel):
     """The full filing schedule for an autónomo for a given year.
 
     Attributes:
-        profile: The :class:`AutonomoProfile` the schedule was computed
+        profile: The :class:`TaxpayerProfile` the schedule was computed
             for.
         year: The target year.
         obligations: Tuple of :class:`ModeloDeadline` ordered by
@@ -288,7 +288,7 @@ class Schedule(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile: AutonomoProfile
+    profile: TaxpayerProfile
     year: int = Field(ge=1900, le=2999)
     obligations: tuple[ModeloDeadline, ...]
     generated_at: datetime

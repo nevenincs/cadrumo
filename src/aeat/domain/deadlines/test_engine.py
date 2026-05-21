@@ -7,15 +7,15 @@ from datetime import date
 import pytest
 
 from . import (
-    AutonomoProfile,
     DeadlineEngine,
+    IVARegime,
+    ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
-    ModeloDeadline,
-    IVARegime,
     ObligationStatus,
     Schedule,
     ScheduleComputationError,
+    TaxpayerProfile,
     applies_to,
     explain,
     next_deadline,
@@ -24,14 +24,14 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _profile(**overrides: object) -> AutonomoProfile:
+def _profile(**overrides: object) -> TaxpayerProfile:
     base: dict[str, object] = {
         "tax_id": "X1234567L",
         "iva_regime": IVARegime.GENERAL,
         "professional_income_withholding_ge_70pct": False,
     }
     base.update(overrides)
-    return AutonomoProfile.model_validate(base)
+    return TaxpayerProfile.model_validate(base)
 
 
 def _engine() -> DeadlineEngine:

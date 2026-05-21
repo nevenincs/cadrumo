@@ -17,7 +17,7 @@ from ._common import (
     _emit,
     _load_drafts,
     _parse_iso_date,
-    _profile_to_autonomo,
+    _profile_to_taxpayer,
     _state,
 )
 from ._overview_rendering import render_cli_overview_status_lines
@@ -120,7 +120,7 @@ def overview_calendar(
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     cal: OverviewCalendar = build_overview_calendar(
-        _profile_to_autonomo(current),
+        _profile_to_taxpayer(current),
         rng,
         today=_date.today(),
         raw_values=raw_values,
@@ -212,7 +212,7 @@ def overview_agenda(
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     agenda = build_overview_agenda(
-        _profile_to_autonomo(current),
+        _profile_to_taxpayer(current),
         as_of=as_of_date,
         horizon_days=horizon_days,
         raw_values=raw_values,
@@ -300,7 +300,7 @@ def overview_backlog(
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     backlog = build_overview_backlog(
-        _profile_to_autonomo(current),
+        _profile_to_taxpayer(current),
         from_date=parsed_from,
         to_date=parsed_to,
         raw_values=raw_values,
@@ -367,7 +367,7 @@ def overview_explain(
     current = _state()
     try:
         result = build_overview_explain(
-            _profile_to_autonomo(current),
+            _profile_to_taxpayer(current),
             modelo=modelo,
             year=year,
         )

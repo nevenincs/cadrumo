@@ -42,16 +42,17 @@ from ...application.auth import AuthProviderDescription, AuthProviderKind
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...domain.deadlines import (
-    AutonomoProfile,
     IVARegime,
     ModeloDeadline,
     ObligationStatus,
     Schedule,
+    TaxpayerProfile,
 )
 from ...domain.submission import SubmissionPreflightError
 from ...tests import FIXTURES_DIR
 from ..filing.runtime import build_runtime_schema_provider
 from . import (
+    ModeloInputs,
     RegistryModeloDraftProtocol,
     WorkflowAbortReason,
     WorkflowEngine,
@@ -103,12 +104,12 @@ class _ConcreteDraft:
 @dataclass
 class _ConcreteDeadlineEngine:
     obligation: ModeloDeadline | None
-    profile: AutonomoProfile
+    profile: TaxpayerProfile
     raise_exc: BaseException | None = None
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
@@ -134,7 +135,7 @@ class _ConcreteDraftBuilder:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
@@ -222,7 +223,7 @@ class _ConcreteCertificateBundle:
 
 @dataclass
 class _ConcreteInputsProvider:
-    inputs: Mapping[str, object] = field(default_factory=lambda: {"01": "1000"})
+    inputs: ModeloInputs = field(default_factory=lambda: {"01": "1000"})
     raise_exc: BaseException | None = None
 
     def load_inputs(
@@ -230,8 +231,8 @@ class _ConcreteInputsProvider:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
+        profile: TaxpayerProfile,
+    ) -> ModeloInputs:
         if self.raise_exc is not None:
             raise self.raise_exc
         return self.inputs
@@ -240,8 +241,8 @@ class _ConcreteInputsProvider:
 # ── Fixture factory ─────────────────────────────────────────────────────
 
 
-def _profile() -> AutonomoProfile:
-    return AutonomoProfile(
+def _profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
         has_employees=False,
@@ -274,7 +275,7 @@ def _obligation(
 class _Fixtures:
     """A healthy-happy-path bundle that individual tests can tweak."""
 
-    profile: AutonomoProfile
+    profile: TaxpayerProfile
     obligation: ModeloDeadline
     draft: _ConcreteDraft
     deadline_engine: _ConcreteDeadlineEngine

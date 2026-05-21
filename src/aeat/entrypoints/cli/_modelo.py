@@ -53,7 +53,7 @@ from ...domain.modelos._calculation_revision import CalculationRevision, Calcula
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
-from ._common import _emit, _parse_iso_date, _profile_to_autonomo
+from ._common import _emit, _parse_iso_date, _profile_to_taxpayer
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
@@ -2098,7 +2098,7 @@ def work_verify(
     try:
         from ...application.workflow._persistence import workflow_state_repository
 
-        workflow_profile = _profile_to_autonomo(workflow_state_repository().load())
+        workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
         report = verify_modelo_revision(
             calculation_revision_id,
             actor=actor or _resolve_default_actor(),
@@ -2148,7 +2148,7 @@ def work_file(
     try:
         from ...application.workflow._persistence import workflow_state_repository
 
-        workflow_profile = _profile_to_autonomo(workflow_state_repository().load())
+        workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
         record = file_modelo_revision(
             calculation_revision_id,
             actor=actor or _resolve_default_actor(),
@@ -3222,7 +3222,7 @@ def modelo_export_verb(
     from ...application.workflow._persistence import workflow_state_repository
 
     workflow_state = workflow_state_repository().load()
-    workflow_profile = _profile_to_autonomo(workflow_state)
+    workflow_profile = _profile_to_taxpayer(workflow_state)
 
     target_revision_id = revision
     if target_revision_id is None:

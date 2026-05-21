@@ -1,7 +1,7 @@
 """Profile construction helpers for deadline and schedule consumers.
 
 The helper projects a ``ProfileRecord.values``-shaped mapping into an
-:class:`AutonomoProfile` by deferring to the wizard descriptor's
+:class:`TaxpayerProfile` by deferring to the wizard descriptor's
 typed projection (``project_answers``). The wizard catalogue is the
 single source of truth for the canonical-token shape of every field;
 this helper composes the typed answer over the deadline-engine's
@@ -15,16 +15,16 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from ._errors import ProfileError
-from ._models import AutonomoProfile, ModeloEnrollment, ModeloIVAProfile, IVARegime
+from ._models import IVARegime, ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
 
 
-def autonomo_profile_from_mapping(
+def taxpayer_profile_from_mapping(
     values: Mapping[str, object],
     *,
     tax_id_default: str,
     iva_regime_default: IVARegime = IVARegime.GENERAL,
-) -> AutonomoProfile:
-    """Build an :class:`AutonomoProfile` from a profile-values mapping.
+) -> TaxpayerProfile:
+    """Build an :class:`TaxpayerProfile` from a profile-values mapping.
 
     The mapping is projected through the descriptor's
     :func:`project_answers` so canonical-token semantics for every
@@ -81,7 +81,7 @@ def autonomo_profile_from_mapping(
     tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
     iva_regime = _resolve_iva_regime(canonical.get("iva.regime"), iva_regime_default)
 
-    return AutonomoProfile(
+    return TaxpayerProfile(
         tax_id=tax_id,
         iva_regime=iva_regime,
         has_employees=typed.has_employees,

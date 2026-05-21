@@ -97,7 +97,7 @@ def test_iae_epigraph_is_wired_to_model_selectors(
 ) -> None:
     """Closes the dead-field bug on the census mapping: the
     activities.iae_epigraph field had no model_selectors so it never
-    reached AutonomoProfile or the 036 binding layer."""
+    reached TaxpayerProfile or the 036 binding layer."""
 
     field = _field(schema, ("activities", "iae_epigraph"))
     assert field.model_selectors

@@ -20,7 +20,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from . import (
     CalendarCompleteness,
     CalendarWarning,
@@ -76,7 +76,7 @@ class OverviewAgenda(BaseModel):
 
 
 def build_overview_agenda(
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     *,
     as_of: date,
     horizon_days: int = _DEFAULT_HORIZON_DAYS,

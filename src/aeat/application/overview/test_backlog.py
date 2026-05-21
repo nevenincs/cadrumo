@@ -14,7 +14,7 @@ from typing import TypedDict
 
 import pytest
 
-from aeat.domain.deadlines import AutonomoProfile
+from aeat.domain.deadlines import TaxpayerProfile
 from aeat.domain.deadlines._models import IVARegime
 
 from ._backlog import OverviewBacklog, build_overview_backlog
@@ -28,8 +28,8 @@ class _WindowArgs(TypedDict):
     as_of: date
 
 
-def _profile() -> AutonomoProfile:
-    return AutonomoProfile(
+def _profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
     )

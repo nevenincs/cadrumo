@@ -26,9 +26,9 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import AeatSession
 from ...core.logging import get_logger
 from ...domain.deadlines import (
-    AutonomoProfile,
     DeadlineEngine,
     Schedule,
+    TaxpayerProfile,
 )
 from ...domain.submission import SubmissionEngine, SubmissionPreflightError
 from ..filing import (
@@ -62,7 +62,7 @@ class DeadlineEngineAdapter:
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
@@ -88,15 +88,15 @@ class ModeloDraftBuilderAdapter:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         """Delegate to :func:`build_draft`.
 
-        ``cast`` is used for ``profile`` because :class:`AutonomoProfile`
+        ``cast`` is used for ``profile`` because :class:`TaxpayerProfile`
         and :class:`aeat.application.filing.ModeloProfile` are structurally
-        compatible (both expose ``tax_id``) but ``AutonomoProfile`` does not
+        compatible (both expose ``tax_id``) but ``TaxpayerProfile`` does not
         declare ``display_name`` and therefore does not satisfy the Protocol
         statically. At this adapter boundary the structural bridging is
         intentional.

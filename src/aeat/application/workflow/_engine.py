@@ -13,7 +13,6 @@ Safety invariants enforced by this module:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from typing import Literal, NoReturn, cast
 
@@ -22,10 +21,10 @@ from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
 from ...domain.deadlines import (
-    AutonomoProfile,
     ModeloDeadline,
     ObligationStatus,
     Schedule,
+    TaxpayerProfile,
     compute_obligation_schedule,
     next_deadline,
 )
@@ -50,6 +49,7 @@ from ._protocols import (
     DeadlineEngineProtocol,
     ExpedientesSource,
     ModeloDraftBuilderProtocol,
+    ModeloInputs,
     ModeloInputsProviderProtocol,
     NotificationsSource,
     RegistryModeloDraftProtocol,
@@ -218,7 +218,7 @@ class WorkflowEngine:
 
     async def run_next(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         *,
         fail_on_warning: bool = False,
         today: date | None = None,
@@ -226,7 +226,7 @@ class WorkflowEngine:
         """Drive the workflow for the caller's next obligation.
 
         Args:
-            profile: The :class:`AutonomoProfile` to run for.
+            profile: The :class:`TaxpayerProfile` to run for.
             fail_on_warning: Forwarded to the filing draft builder.
             today: Reference date for deadline / preflight checks.
                 Defaults to :meth:`date.today`.
@@ -244,7 +244,7 @@ class WorkflowEngine:
 
     async def run_for_period(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         modelo: str,
         period: str,
         *,
@@ -256,7 +256,7 @@ class WorkflowEngine:
         """Drive the workflow for a caller-specified ``(modelo, period)``.
 
         Args:
-            profile: The :class:`AutonomoProfile` to run for.
+            profile: The :class:`TaxpayerProfile` to run for.
             modelo: Target modelo identifier.
             period: Target period identifier.
             fail_on_warning: See :meth:`run_next`.
@@ -299,7 +299,7 @@ class WorkflowEngine:
     async def _drive(
         self,
         *,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         target_modelo: str | None,
         target_period: str | None,
         fail_on_warning: bool,
@@ -429,7 +429,7 @@ class WorkflowEngine:
 
     def _stage_loading_profile(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         steps: list[WorkflowStep],
     ) -> None:
         """Validate the incoming profile.
@@ -452,7 +452,7 @@ class WorkflowEngine:
     def _stage_computing_deadlines(
         self,
         *,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         target_modelo: str | None,
         target_period: str | None,
         today: date,
@@ -671,7 +671,7 @@ class WorkflowEngine:
     async def _stage_checking_inbox(
         self,
         *,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         obligation: ModeloDeadline,
         steps: list[WorkflowStep],
     ) -> None:
@@ -748,7 +748,7 @@ class WorkflowEngine:
     async def _stage_building_draft(
         self,
         *,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         obligation: ModeloDeadline,
         fail_on_warning: bool,
         steps: list[WorkflowStep],
@@ -814,7 +814,7 @@ class WorkflowEngine:
                 )
 
         try:
-            inputs: Mapping[str, object] = self._inputs_provider.load_inputs(
+            inputs: ModeloInputs = self._inputs_provider.load_inputs(
                 modelo=obligation.modelo,
                 period=obligation.period,
                 profile=profile,
@@ -901,7 +901,7 @@ class WorkflowEngine:
         *,
         draft: RegistryModeloDraftProtocol,
         obligation: ModeloDeadline,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         started: datetime,
         steps: list[WorkflowStep],
     ) -> None:

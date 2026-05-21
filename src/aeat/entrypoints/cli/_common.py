@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from ...application.auth import AuthProviderListing
     from ...application.workflow import WorkflowState
     from ...domain.calculations.registry import ModeloRevision
-    from ...domain.deadlines import AutonomoProfile
+    from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft, ModeloDraftRepository
     from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
     from ...domain.profile import ProfileKey
@@ -157,13 +157,13 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
         raise _bad(tr("cli.common.errors.invalid_iso_date", label=label, raw=raw)) from exc
 
 
-def _profile_to_autonomo(state: WorkflowState) -> AutonomoProfile:
-    from ...application.user_profile._projections import projection_for_autonomo
+def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
+    from ...application.user_profile._projections import projection_for_taxpayer
 
     record = state.active_profile_record()
     if record is None:
-        return projection_for_autonomo({}, tax_id_default="00000000T")
-    return projection_for_autonomo(record, tax_id_default="00000000T")
+        return projection_for_taxpayer({}, tax_id_default="00000000T")
+    return projection_for_taxpayer(record, tax_id_default="00000000T")
 
 
 # ---------------------------------------------------------------------

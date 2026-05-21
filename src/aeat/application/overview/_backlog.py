@@ -19,7 +19,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from . import (
     CalendarCompleteness,
     CalendarWarning,
@@ -66,7 +66,7 @@ class OverviewBacklog(BaseModel):
 
 
 def build_overview_backlog(
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     *,
     from_date: date | None = None,
     to_date: date | None = None,
