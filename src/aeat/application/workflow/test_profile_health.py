@@ -9,7 +9,11 @@ import pytest
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from ...adapters.persistence.storage.bucket._manifest import BucketManifest, ManifestKdfParams
+from ...adapters.persistence.storage.bucket._manifest import (
+    BucketLifecycleStatus,
+    BucketManifest,
+    ManifestKdfParams,
+)
 from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._testing import register_minimal_profile
@@ -50,6 +54,7 @@ def _stage_bucket_manifest(root: Path, bucket_id: str, *, label: str) -> None:
             ),
             recovery_enrolled=False,
             schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
         ),
     )
 
