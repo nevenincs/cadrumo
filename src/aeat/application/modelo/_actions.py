@@ -255,12 +255,35 @@ class ModeloWorkflowGateError(ModeloError):
     """
 
     def __init__(self, result: WorkflowResult) -> None:
-        self.result = result
+        # The live WorkflowResult is retained on a private attribute so it
+        # never reaches the CLI error boundary. `render_error_text` merges
+        # every *public* instance attribute into the operator-facing
+        # context via `vars(error)`; a public `result` attribute would
+        # leak a raw Python object repr (datetime constructors, enum
+        # reprs, nested WorkflowStep tuples) straight at a non-technical
+        # taxpayer. The context below carries only already-stringified
+        # primitives — the clean summary the operator needs.
+        self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
+        summary = result.summary.strip() or "the workflow gate aborted this transition"
         super().__init__(
-            f"workflow gate aborted run_id={result.run_id!r} final_stage={result.final_stage.value!r} "
-            f"reason={reason!r}: {result.summary}"
+            summary,
+            context={
+                "abort_code": reason,
+                "stage": result.final_stage.value,
+            },
         )
+
+    @property
+    def result(self) -> WorkflowResult:
+        """Return the live :class:`WorkflowResult` that triggered the abort.
+
+        Exposed as a property (not a plain instance attribute) so the
+        CLI error boundary's ``vars(error)`` context merge never picks
+        it up and renders its raw Python repr to the operator.
+        """
+
+        return self._result
 
 
 class AmendmentOverrideCasillaError(ModeloError):
