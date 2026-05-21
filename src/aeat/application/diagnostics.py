@@ -401,7 +401,14 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
         try:
             await session.navigate(page, url)
         except SiteHealthError as exc:
-            return exc.status
+            from ..adapters.outbound.aeat.browser import SiteHealthStatus
+
+            status = exc.status
+            if not isinstance(status, SiteHealthStatus):
+                raise TypeError(
+                    "SiteHealthError carried a non-SiteHealthStatus payload"
+                ) from exc
+            return status
         return _ok_site_health_status(url)
     finally:
         if context is not None:

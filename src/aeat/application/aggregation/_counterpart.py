@@ -18,12 +18,20 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
-_CANONICAL_SOURCE_KINDS: frozenset[str] = frozenset(
+CounterpartSourceKind = Literal[
+    "ledger_transaction",
+    "purchase_invoice_evidence",
+    "payable_invoice",
+    "collectible_invoice",
+]
+
+_CANONICAL_SOURCE_KINDS: frozenset[CounterpartSourceKind] = frozenset(
     {
         "ledger_transaction",
         "purchase_invoice_evidence",
@@ -33,13 +41,14 @@ _CANONICAL_SOURCE_KINDS: frozenset[str] = frozenset(
 )
 
 
-def _validate_source_kind(value: str) -> str:
-    if value not in _CANONICAL_SOURCE_KINDS:
-        raise ValueError(
-            "unsupported source_kind; use one of ledger_transaction, "
-            "purchase_invoice_evidence, payable_invoice, collectible_invoice",
-        )
-    return value
+def _validate_source_kind(value: str) -> CounterpartSourceKind:
+    for canonical in _CANONICAL_SOURCE_KINDS:
+        if value == canonical:
+            return canonical
+    raise ValueError(
+        "unsupported source_kind; use one of ledger_transaction, "
+        "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+    )
 
 
 def _validate_country(value: str, *, field_name: str) -> str:
@@ -81,7 +90,7 @@ class CounterpartObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    source_kind: str = Field(min_length=1)
+    source_kind: CounterpartSourceKind
     source_object_id: str = Field(min_length=1)
     counterparty_nif: str = Field(min_length=1, max_length=20)
     counterparty_name: str = Field(default="", max_length=200)
@@ -94,9 +103,11 @@ class CounterpartObservation(BaseModel):
     groi_verified: bool = False
     nif_iva_verified: bool = False
 
-    @field_validator("source_kind")
+    @field_validator("source_kind", mode="before")
     @classmethod
-    def _source_kind_is_canonical(cls, value: str) -> str:
+    def _source_kind_is_canonical(cls, value: object) -> CounterpartSourceKind:
+        if not isinstance(value, str):
+            raise ValueError("source_kind must be a string")
         return _validate_source_kind(value)
 
     @field_validator("counterparty_country")
@@ -110,7 +121,7 @@ class CounterpartRollup(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    source_kind: str = Field(min_length=1)
+    source_kind: CounterpartSourceKind
     counterparty_nif: str = Field(min_length=1, max_length=20)
     counterparty_name: str = Field(default="", max_length=200)
     counterparty_country: str = Field(min_length=2, max_length=2)
@@ -124,9 +135,11 @@ class CounterpartRollup(BaseModel):
     nif_iva_ready: bool = True
     declarable_readiness_satisfied: bool = True
 
-    @field_validator("source_kind")
+    @field_validator("source_kind", mode="before")
     @classmethod
-    def _source_kind_is_canonical(cls, value: str) -> str:
+    def _source_kind_is_canonical(cls, value: object) -> CounterpartSourceKind:
+        if not isinstance(value, str):
+            raise ValueError("source_kind must be a string")
         return _validate_source_kind(value)
 
     @field_validator("counterparty_country")
